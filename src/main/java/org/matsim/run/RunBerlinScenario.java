@@ -39,35 +39,23 @@ import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 public class RunBerlinScenario {
 
 	private static final Logger log = Logger.getLogger(RunBerlinScenario.class);
-
-	private static String configFile;
-	private static String outputDirectory;
-	private static String runId;
 	
 	public static void main(String[] args) {
 		
+		Config config;
+		
 		if ( args.length==0 || args[0]=="" ) {
-			
-			configFile = "data/input/berlin-5.0_config.xml";
-			outputDirectory = "data/output/berlin-5.0_run1/";
-			runId = "run1";
+			String configFile = "data/input/berlin-5.0_config.xml";
+			log.info("config file: " + configFile);
+			config = ConfigUtils.loadConfig(configFile);
 			
 		} else {
-			configFile = args[0] ;
+			String configFile = args[0];
+			log.info("config file: " + configFile);
+			config = ConfigUtils.loadConfig(configFile);
 		}
 		
-		RunBerlinScenario runner = new RunBerlinScenario();
-		runner.run();
-	}
-
-	public void run() {
-		
-		Config config = ConfigUtils.loadConfig(configFile);
-		
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.failIfDirectoryExists);
-		config.controler().setOutputDirectory(outputDirectory);
-		config.controler().setRunId(runId);
-		
 		config.subtourModeChoice().setProbaForRandomSingleTripMode(0.5);
 		
 		Scenario scenario = ScenarioUtils.loadScenario(config);
@@ -97,7 +85,6 @@ public class RunBerlinScenario {
 		controler.run();
 	
 		log.info("Done.");
-		
 	}
 
 }
