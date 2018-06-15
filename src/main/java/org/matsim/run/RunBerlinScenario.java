@@ -56,6 +56,13 @@ public class RunBerlinScenario {
 		}
 		
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.failIfDirectoryExists);
+
+		RunBerlinScenario runBerlinScenario = new RunBerlinScenario();
+		runBerlinScenario.run(config);
+	}
+
+	void run(Config config) {
+		
 		config.subtourModeChoice().setProbaForRandomSingleTripMode(0.5);
 		
 		Scenario scenario = ScenarioUtils.loadScenario(config);

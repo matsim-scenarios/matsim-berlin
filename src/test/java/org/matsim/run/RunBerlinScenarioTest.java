@@ -16,43 +16,65 @@
  *   See also COPYING, LICENSE and WARRANTY file                           *
  *                                                                         *
  * *********************************************************************** */
-package org.matsim.example;
+package org.matsim.run;
 
 import org.apache.log4j.Logger;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
-import org.matsim.api.core.v01.Scenario;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
-import org.matsim.core.scenario.ScenarioUtils;
 
 /**
- * @author nagel
+ * @author ikaddoura
  *
  */
-public class HelloWorldTest {
-
+public class RunBerlinScenarioTest {
+	
 	@Test
-	public final void testMain() {
+	public final void test0() {
 		try {
-			Config config = ConfigUtils.createConfig() ;
-			config.controler().setLastIteration(1);
+			Config config;
+
+			String configFile = "data/input/berlin-5.0_config.xml";
+			config = ConfigUtils.loadConfig(configFile);
+			config.plans().setInputFile(null);
+			config.controler().setLastIteration(0);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
+			config.controler().setOutputDirectory("test/output/test0/");
 
-			Scenario scenario = ScenarioUtils.loadScenario(config) ;
-
-			Controler controler = new Controler( scenario ) ;
-
-			controler.run();
-		} catch ( Exception ee ) {
-			Logger.getLogger(this.getClass()).fatal("there was an exception: \n" + ee ) ;
+			RunBerlinScenario runBerlin = new RunBerlinScenario();
+			runBerlin.run(config);
 			
-			// if one catches an exception, then one needs to explicitly fail the test:
-			Assert.fail();
+		} catch ( Exception ee ) {
+			Logger.getLogger(this.getClass()).fatal("there was an exception: \n" + ee ) ;			
+			Assert.fail("Wasn't able to run the berlin scenario without a population.");
 		}
 
+	}
+	
+	@Ignore
+	@Test
+	public final void test1() {
+		try {
+			Config config;
+
+			String configFile = "data/input/berlin-5.0_config.xml";
+			config = ConfigUtils.loadConfig(configFile);
+			config.controler().setLastIteration(0);
+			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
+			config.controler().setOutputDirectory("test/output/test1/");
+
+			RunBerlinScenario runBerlin = new RunBerlinScenario();
+			runBerlin.run(config);
+			
+			//TODO: compare scores and maybe also modal split
+			
+		} catch ( Exception ee ) {
+			Logger.getLogger(this.getClass()).fatal("there was an exception: \n" + ee ) ;			
+			Assert.fail("Wasn't able to run the berlin scenario with the full population.");
+		}
 
 	}
 
