@@ -100,7 +100,7 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>org.matsim.gui.MATSimGUI</mainClass>
+							<mainClass>org.matsim.gui.RunBerlinScenarioGUI</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

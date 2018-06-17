@@ -22,7 +22,7 @@ package org.matsim.gui;
 import org.matsim.run.RunBerlinScenario;
 import org.matsim.run.gui.Gui;
 
-public class MATSimGUI {
+public class RunBerlinScenarioGUI {
 
 	public static void main(String[] args) {
 		Gui.show("MATSim GUI from example project", RunBerlinScenario.class);
