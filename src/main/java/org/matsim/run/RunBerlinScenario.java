@@ -45,7 +45,7 @@ public class RunBerlinScenario {
 		Config config;
 		
 		if ( args.length==0 || args[0]=="" ) {
-			String configFile = "data/input/berlin-5.0_config.xml";
+			String configFile = "scenarios/berlin-v5.0-2018-06-18/input/berlin-5.0_config.xml";
 			log.info("config file: " + configFile);
 			config = ConfigUtils.loadConfig(configFile);
 			

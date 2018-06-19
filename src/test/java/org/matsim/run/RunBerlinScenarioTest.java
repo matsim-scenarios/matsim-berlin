@@ -32,12 +32,13 @@ import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
  */
 public class RunBerlinScenarioTest {
 	
+	// Run the Berlin scenario for 1 iteration without a population
 	@Test
 	public final void test0() {
 		try {
 			Config config;
 
-			String configFile = "data/input/berlin-5.0_config.xml";
+			String configFile = "scenarios/berlin-v5.0-2018-06-18/input/berlin-5.0_config.xml";
 			config = ConfigUtils.loadConfig(configFile);
 			config.plans().setInputFile(null);
 			config.controler().setLastIteration(0);
@@ -60,7 +61,7 @@ public class RunBerlinScenarioTest {
 		try {
 			Config config;
 
-			String configFile = "data/input/berlin-5.0_config.xml";
+			String configFile = "scenarios/berlin-v5.0-2018-06-18/input/berlin-5.0_config.xml";
 			config = ConfigUtils.loadConfig(configFile);
 			config.controler().setLastIteration(0);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);

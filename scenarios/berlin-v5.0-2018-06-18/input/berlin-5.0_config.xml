@@ -38,7 +38,7 @@
 	
 	<module name="controler">
 		<param name="runId" value="b5_1" />
-		<param name="outputDirectory" value="./data/output/berlin-5.0_1/" />
+		<param name="outputDirectory" value="./scenarios/berlin-v5.0-2018-06-18/output/b5_1/" />
 		<param name="firstIteration" value="0" />
 		<param name="lastIteration" value="500" />
 		<param name="eventsFileFormat" value="xml" />
