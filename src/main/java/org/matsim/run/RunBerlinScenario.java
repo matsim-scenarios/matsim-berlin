@@ -22,12 +22,15 @@ package org.matsim.run;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
+import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 
 import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
@@ -45,7 +48,7 @@ public class RunBerlinScenario {
 		Config config;
 		
 		if ( args.length==0 || args[0]=="" ) {
-			String configFile = "scenarios/berlin-v5.0-2018-06-18/input/berlin-5.0_config.xml";
+			String configFile = "scenarios/berlin-v5.0-0.1pct-2018-06-18/input/berlin-5.0_config_reduced.xml";
 			log.info("config file: " + configFile);
 			config = ConfigUtils.loadConfig(configFile);
 			
@@ -55,8 +58,9 @@ public class RunBerlinScenario {
 			config = ConfigUtils.loadConfig(configFile);
 		}
 		
-		config.controler().setOverwriteFileSetting(OverwriteFileSetting.failIfDirectoryExists);
-
+//		config.controler().setOverwriteFileSetting(OverwriteFileSetting.failIfDirectoryExists);
+		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
+		
 		RunBerlinScenario runBerlinScenario = new RunBerlinScenario();
 		runBerlinScenario.run(config);
 	}
@@ -65,8 +69,13 @@ public class RunBerlinScenario {
 		
 		config.subtourModeChoice().setProbaForRandomSingleTripMode(0.5);
 		
+		// ---
+		
 		Scenario scenario = ScenarioUtils.loadScenario(config);
-		Controler controler = new Controler(scenario);
+
+		// ---
+		
+		     Controler controler = new Controler(scenario);
 		
 		// use the sbb pt raptor router
 		controler.addOverridingModule(new AbstractModule() {

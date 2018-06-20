@@ -12,7 +12,7 @@
 	</module>
 	
 	<module name="plans">
-		<param name="inputPlansFile" value="./population/berlin-5.0_plans.xml.gz" />
+		<param name="inputPlansFile" value="./population/berlin-5.0-1pct_plans.xml.gz" />
 		<param name="inputPersonAttributesFile" value="./population/berlin-5.0_person-attributes.xml.gz" />
 		<param name="removingUnnecessaryPlanAttributes" value="true"/>
 	</module>
@@ -23,7 +23,6 @@
 	
 	<module name="qsim">
 		<param name="mainMode" value="car,freight" />
-		<param name="creatingVehiclesForAllNetworkModes" value="true" />
 		<param name="flowCapacityFactor" value="0.10" />
 		<param name="storageCapacityFactor" value="0.13" />
 		<param name="removeStuckVehicles" value="false" />
@@ -38,9 +37,9 @@
 	
 	<module name="controler">
 		<param name="runId" value="b5_1" />
-		<param name="outputDirectory" value="./scenarios/berlin-v5.0-2018-06-18/output/b5_1/" />
+		<param name="outputDirectory" value="./data/output/berlin-5.0_1/" />
 		<param name="firstIteration" value="0" />
-		<param name="lastIteration" value="500" />
+		<param name="lastIteration" value="0" />
 		<param name="eventsFileFormat" value="xml" />
 		<param name="mobsim" value="qsim" />
 		<param name="writePlansInterval" value="100" />
