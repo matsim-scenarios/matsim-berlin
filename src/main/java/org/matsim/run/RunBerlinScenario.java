@@ -44,28 +44,19 @@ public class RunBerlinScenario {
 	private static final Logger log = Logger.getLogger(RunBerlinScenario.class);
 	
 	public static void main(String[] args) {
-		
-		Config config;
-		
+		String configFile ;
 		if ( args.length==0 || args[0]=="" ) {
-			String configFile = "scenarios/berlin-v5.0-0.1pct-2018-06-18/input/berlin-5.0_config_reduced.xml";
-			log.info("config file: " + configFile);
-			config = ConfigUtils.loadConfig(configFile);
-			
+			configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config_reduced.xml";
 		} else {
-			String configFile = args[0];
-			log.info("config file: " + configFile);
-			config = ConfigUtils.loadConfig(configFile);
+			configFile = args[0];
 		}
-		
-//		config.controler().setOverwriteFileSetting(OverwriteFileSetting.failIfDirectoryExists);
-		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
-		
-		RunBerlinScenario runBerlinScenario = new RunBerlinScenario();
-		runBerlinScenario.run(config);
+		log.info("config file: " + configFile);
+		run(ConfigUtils.loadConfig(configFile));
+		// If modification of config is desired, should be done in run method, not here, to help
+		// with regression testing. kai, jun'18
 	}
 
-	void run(Config config) {
+	static void run(Config config) {
 		
 		config.subtourModeChoice().setProbaForRandomSingleTripMode(0.5);
 		
@@ -75,7 +66,7 @@ public class RunBerlinScenario {
 
 		// ---
 		
-		     Controler controler = new Controler(scenario);
+		Controler controler = new Controler(scenario);
 		
 		// use the sbb pt raptor router
 		controler.addOverridingModule(new AbstractModule() {

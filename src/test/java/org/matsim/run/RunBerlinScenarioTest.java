@@ -21,16 +21,19 @@ package org.matsim.run;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
+import org.matsim.testcases.MatsimTestUtils;
 
 /**
  * @author ikaddoura
  *
  */
 public class RunBerlinScenarioTest {
+	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 	
 	// Run the Berlin scenario for 1 iteration without a population
 	@Test
@@ -43,10 +46,9 @@ public class RunBerlinScenarioTest {
 			config.plans().setInputFile(null);
 			config.controler().setLastIteration(0);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
-			config.controler().setOutputDirectory("test/output/test0/");
+			config.controler().setOutputDirectory( utils.getOutputDirectory() );
 
-			RunBerlinScenario runBerlin = new RunBerlinScenario();
-			runBerlin.run(config);
+			RunBerlinScenario.run(config);
 			
 		} catch ( Exception ee ) {
 			Logger.getLogger(this.getClass()).fatal("there was an exception: \n" + ee ) ;			
@@ -65,10 +67,9 @@ public class RunBerlinScenarioTest {
 			config = ConfigUtils.loadConfig(configFile);
 			config.controler().setLastIteration(0);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
-			config.controler().setOutputDirectory("test/output/test1/");
+			config.controler().setOutputDirectory( utils.getOutputDirectory() );
 
-			RunBerlinScenario runBerlin = new RunBerlinScenario();
-			runBerlin.run(config);
+			RunBerlinScenario.run(config);
 			
 			//TODO: compare scores and maybe also modal split
 			
