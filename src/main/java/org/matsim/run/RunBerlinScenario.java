@@ -22,15 +22,11 @@ package org.matsim.run;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.population.Person;
-import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
-import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
-import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 
 import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
@@ -56,7 +52,7 @@ public class RunBerlinScenario {
 		// with regression testing. kai, jun'18
 	}
 
-	static void run(Config config) {
+	static Controler run(Config config) {
 		
 		config.subtourModeChoice().setProbaForRandomSingleTripMode(0.5);
 		
@@ -92,6 +88,7 @@ public class RunBerlinScenario {
 		controler.run();
 	
 		log.info("Done.");
+		return controler;
 	}
 
 }

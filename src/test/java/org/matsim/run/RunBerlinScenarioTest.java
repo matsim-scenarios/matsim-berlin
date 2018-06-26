@@ -20,11 +20,12 @@ package org.matsim.run;
 
 import org.apache.log4j.Logger;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.matsim.analysis.ScoreStatsControlerListener.ScoreItem;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.testcases.MatsimTestUtils;
 
@@ -35,49 +36,36 @@ import org.matsim.testcases.MatsimTestUtils;
 public class RunBerlinScenarioTest {
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 	
-	// Run the Berlin scenario for 1 iteration without a population
-	@Test
-	public final void test0() {
-		try {
-			Config config;
-
-			String configFile = "scenarios/berlin-v5.0-2018-06-18/input/berlin-5.0_config.xml";
-			config = ConfigUtils.loadConfig(configFile);
-			config.plans().setInputFile(null);
-			config.controler().setLastIteration(0);
-			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
-			config.controler().setOutputDirectory( utils.getOutputDirectory() );
-
-			RunBerlinScenario.run(config);
-			
-		} catch ( Exception ee ) {
-			Logger.getLogger(this.getClass()).fatal("there was an exception: \n" + ee ) ;			
-			Assert.fail("Wasn't able to run the berlin scenario without a population.");
-		}
-
-	}
-	
-	@Ignore
+	// 10pct, testing the scores in the second iteration
 	@Test
 	public final void test1() {
 		try {
 			Config config;
 
-			String configFile = "scenarios/berlin-v5.0-2018-06-18/input/berlin-5.0_config.xml";
+			String configFile = "scenarios/berlin-v5.0-10pct-2018-06-18/input/berlin-5.0_config_new.xml";
 			config = ConfigUtils.loadConfig(configFile);
-			config.controler().setLastIteration(0);
+			config.controler().setLastIteration(1);
+			config.strategy().setFractionOfIterationsToDisableInnovation(1.0);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
-
-			RunBerlinScenario.run(config);
 			
-			//TODO: compare scores and maybe also modal split
+			Controler controler = RunBerlinScenario.run(config);
 			
+			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 115.776237215495, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Wrong avg. EXECUTED score in iteration 0.", 115.776237215495, controler.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(0), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Wrong avg. AVG score in iteration 1.", 112.63253571598504, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Wrong avg. EXECUTED score in iteration 1.", 109.36898212837285, controler.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(1), MatsimTestUtils.EPSILON);
+	
 		} catch ( Exception ee ) {
 			Logger.getLogger(this.getClass()).fatal("there was an exception: \n" + ee ) ;			
 			Assert.fail("Wasn't able to run the berlin scenario with the full population.");
 		}
-
 	}
+	
+	// 1pct, testing the scores in the second iteration
+	// TODO
+	
+	// 1pct, testing the modal split after 100 iterations
+	// TODO
 
 }
