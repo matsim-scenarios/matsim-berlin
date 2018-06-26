@@ -36,26 +36,22 @@ import org.matsim.testcases.MatsimTestUtils;
 public class RunBerlinScenarioTest {
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 	
-	// 10pct, testing the scores in the second iteration
+	// 10pct, testing the scores in iteration 0
 	@Test
 	public final void test1() {
 		try {
 			Config config;
 
-			String configFile = "scenarios/berlin-v5.0-10pct-2018-06-18/input/berlin-5.0_config_new.xml";
+			String configFile = "scenarios/berlin-v5.0-10pct-2018-06-18/input/berlin-5.0_config.xml";
 			config = ConfigUtils.loadConfig(configFile);
-			config.controler().setLastIteration(1);
-			config.strategy().setFractionOfIterationsToDisableInnovation(1.0);
+			config.controler().setLastIteration(0);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
 			
 			Controler controler = RunBerlinScenario.run(config);
 			
 			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 115.776237215495, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Wrong avg. EXECUTED score in iteration 0.", 115.776237215495, controler.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(0), MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Wrong avg. AVG score in iteration 1.", 112.63253571598504, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Wrong avg. EXECUTED score in iteration 1.", 109.36898212837285, controler.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(1), MatsimTestUtils.EPSILON);
-	
+			
 		} catch ( Exception ee ) {
 			Logger.getLogger(this.getClass()).fatal("there was an exception: \n" + ee ) ;			
 			Assert.fail("Wasn't able to run the berlin scenario with the full population.");
