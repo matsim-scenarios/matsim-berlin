@@ -69,14 +69,18 @@ public class RunBerlinScenarioTest {
 			String configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config.xml";
 			config = ConfigUtils.loadConfig(configFile);
 			config.controler().setLastIteration(1);
+			config.qsim().setNumberOfThreads(1); // to have it fully deterministic
 			config.strategy().setFractionOfIterationsToDisableInnovation(1.);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
 			
 			Controler controler = RunBerlinScenario.run(config);
 			
-			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 111.84928125172443, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 109.27928497494945, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
+//			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 111.84928125172443, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 111.86181227250829, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
+
+//			Assert.assertEquals("Wrong avg. AVG score in iteration 1.", 109.27928497494945, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Wrong avg. AVG score in iteration 1.", 109.66490119816777, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
 
 		} catch ( Exception ee ) {
 			Logger.getLogger(this.getClass()).fatal("there was an exception: \n" + ee ) ;			
@@ -94,14 +98,18 @@ public class RunBerlinScenarioTest {
 			config = ConfigUtils.loadConfig(configFile);
 			config.controler().setLastIteration(1);
 			config.qsim().setEndTime(30 * 3600.); // TODO: adjust in the config file!
+			config.qsim().setNumberOfThreads(1); // to have it fully deterministic
 			config.strategy().setFractionOfIterationsToDisableInnovation(1.);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
 			
 			Controler controler = RunBerlinScenario.run(config);
 			
-			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 111.84928125172443, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 109.27928497494945, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
+//			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 111.84928125172443, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 111.86181227250829, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
+
+//			Assert.assertEquals("Wrong avg. AVG score in iteration 1.", 109.27928497494945, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Wrong avg. AVG score in iteration 1.", 109.66490119816777, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
 
 		} catch ( Exception ee ) {
 			Logger.getLogger(this.getClass()).fatal("there was an exception: \n" + ee ) ;			
@@ -117,6 +125,7 @@ public class RunBerlinScenarioTest {
 
 			String configFile = "scenarios/berlin-v5.0-0.1pct-2018-06-18/input/berlin-5.0_config.xml";
 			config = ConfigUtils.loadConfig(configFile);
+			config.qsim().setNumberOfThreads(1); // to have it fully deterministic
 			config.controler().setLastIteration(1);
 			config.strategy().setFractionOfIterationsToDisableInnovation(1.);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
@@ -124,8 +133,11 @@ public class RunBerlinScenarioTest {
 			
 			Controler controler = RunBerlinScenario.run(config);
 			
+//			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 84.66967102654722, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
 			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 84.66967102654722, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 84.76497660204434, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
+
+//			Assert.assertEquals("Wrong avg. AVG score in iteration 1.", 84.76497660204434, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Wrong avg. AVG score in iteration 1.", 84.77015469857638, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
 
 		} catch ( Exception ee ) {
 			Logger.getLogger(this.getClass()).fatal("there was an exception: \n" + ee ) ;			
@@ -143,14 +155,18 @@ public class RunBerlinScenarioTest {
 			config = ConfigUtils.loadConfig(configFile);
 			config.controler().setLastIteration(1);
 			config.qsim().setEndTime(30 * 3600.); // TODO: adjust in the config file!
+			config.qsim().setNumberOfThreads(1); // to have it fully deterministic			
 			config.strategy().setFractionOfIterationsToDisableInnovation(1.);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
 			
 			Controler controler = RunBerlinScenario.run(config);
 			
+//			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 84.66967102654722, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
 			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 84.66967102654722, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 84.76497660204434, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
+
+//			Assert.assertEquals("Wrong avg. AVG score in iteration 1.", 84.76497660204434, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Wrong avg. AVG score in iteration 1.", 84.77015469857638, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
 
 		} catch ( Exception ee ) {
 			Logger.getLogger(this.getClass()).fatal("there was an exception: \n" + ee ) ;			
@@ -159,6 +175,7 @@ public class RunBerlinScenarioTest {
 	}
 	
 	// 1pct, testing the 100th iteration
+	@Ignore
 	@Test
 	public final void test4() {
 		try {
@@ -174,6 +191,7 @@ public class RunBerlinScenarioTest {
 			
 			Assert.assertEquals("Wrong avg. AVG score in iteration 100.", 114.45259157449782, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(100), MatsimTestUtils.EPSILON);
 			// TODO: add test for modal split and / or other calibration values
+			// TODO: set number of threads in qsim to 1, might change the scores
 			
 		} catch ( Exception ee ) {
 			Logger.getLogger(this.getClass()).fatal("there was an exception: \n" + ee ) ;			
