@@ -60,7 +60,6 @@ public class RunBerlinScenario {
 	}
 	
 	RunBerlinScenario( Config config ) {
-		config.transit().setUsingTransitInMobsim( false );
 		
 		config.controler().setRoutingAlgorithmType( FastAStarLandmarks );
 		
