@@ -23,21 +23,21 @@
 	
 	<module name="qsim">
 		<param name="mainMode" value="car,freight" />
-		<param name="flowCapacityFactor" value="0.10" />
-		<param name="storageCapacityFactor" value="0.13" />
+		<param name="flowCapacityFactor" value="0.001" />
+		<param name="storageCapacityFactor" value="0.001" />
 		<param name="removeStuckVehicles" value="false" />
-		<param name="stuckTime" value="30.0" />
+		<param name="stuckTime" value="36.0" />
 		<param name="usePersonIdForMissingVehicleId" value ="true"/>
 		<param name="usingFastCapacityUpdate" value="true"/>
-		<param name="numberOfThreads" value="8" />
+		<param name="numberOfThreads" value="1" />
 		<param name="startTime" value="00:00:00" />
-		<param name="endTime" value="30:00:00" />
+		<param name="endTime" value="36:00:00" />
 		<param name="vehiclesSource" value="modeVehicleTypesFromVehiclesData" />
 	</module>
 	
 	<module name="controler">
+		<param name="overwriteFiles" value="deleteDirectoryIfExists" />
 		<param name="runId" value="b5_1" />
-		<param name="outputDirectory" value="./scenarios/berlin-v5.0-10pct-2018-06-18/output/b5_1/" />
 		<param name="firstIteration" value="0" />
 		<param name="lastIteration" value="0" />
 		<param name="eventsFileFormat" value="xml" />
@@ -49,7 +49,7 @@
 	
 	<module name="strategy">
 		<param name="maxAgentPlanMemorySize" value="5" />
-	
+
 		<parameterset type="strategysettings" >
 			<param name="strategyName" value="ChangeExpBeta" />
 			<param name="subpopulation" value="person" />

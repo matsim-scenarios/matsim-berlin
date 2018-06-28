@@ -5,7 +5,7 @@
 		<param name="mutationRange" value="7200.0" />
 	</module>
 	<module name="controler" >
-		<param name="lastIteration" value="0" />
+		<param name="lastIteration" value="100" />
 		<param name="overwriteFiles" value="deleteDirectoryIfExists" />
 		<param name="runId" value="b5_1" />
 		<param name="writeEventsInterval" value="100" />
@@ -44,7 +44,7 @@
 		<param name="numberOfThreads" value="1" />
 		<param name="startTime" value="00:00:00" />
 		<param name="storageCapacityFactor" value="0.001" />
-		<param name="stuckTime" value="30.0" />
+		<param name="stuckTime" value="36.0" />
 		<param name="trafficDynamics" value="kinematicWaves" />
 		<param name="vehiclesSource" value="modeVehicleTypesFromVehiclesData" />
 	</module>
@@ -5301,88 +5301,54 @@
 				<param name="activityType" value="other_97200.0" />
 				<param name="typicalDuration" value="27:00:00" />
 			</parameterset>
-			<parameterset type="activityParams" >
-				<param name="activityType" value="freight interaction" />
-				<param name="scoringThisActivityAtAll" value="false" />
-				<param name="typicalDuration" value="undefined" />
+
+			<parameterset type="modeParams" >
+				<param name="mode" value="car" />
+				<param name="constant" value="-1.5" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="monetaryDistanceRate" value="-0.0002" />
 			</parameterset>
-			<parameterset type="activityParams" >
-				<param name="activityType" value="ride interaction" />
-				<param name="scoringThisActivityAtAll" value="false" />
-				<param name="typicalDuration" value="undefined" />
+
+			<parameterset type="modeParams" >
+				<param name="mode" value="ride" />
+				<param name="constant" value="0.0" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="monetaryDistanceRate" value="-0.0002" />
 			</parameterset>
-		</parameterset>
+
+			<parameterset type="modeParams" >
+				<param name="mode" value="freight" />
+				<param name="constant" value="0.0" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="monetaryDistanceRate" value="-0.0004" />
+			</parameterset>
+
+			<parameterset type="modeParams" >
+				<param name="constant" value="-0.6" />
+				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="mode" value="pt" />
+				<param name="monetaryDistanceRate" value="0.0" />
+			</parameterset>
+
+			<parameterset type="modeParams" >
+				<param name="constant" value="-1.85" />
+				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="mode" value="bicycle" />
+				<param name="monetaryDistanceRate" value="0.0" />
+			</parameterset>
+
+			<parameterset type="modeParams" >
+				<param name="constant" value="0.0" />
+				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="mode" value="walk" />
+				<param name="monetaryDistanceRate" value="0.0" />
+			</parameterset>
 
 
-		<parameterset type="modeParams" >
-			<param name="mode" value="car" />
-			<param name="constant" value="-1.5" />
-			<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-			<param name="monetaryDistanceRate" value="-0.0002" />
 		</parameterset>
-		
-		<parameterset type="modeParams" >
-			<param name="mode" value="ride" />
-			<param name="constant" value="0.0" />
-			<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-			<param name="monetaryDistanceRate" value="-0.0002" />
-		</parameterset>
-		
-		<parameterset type="modeParams" >
-			<param name="mode" value="freight" />
-			<param name="constant" value="0.0" />
-			<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-			<param name="monetaryDistanceRate" value="-0.0004" />
-		</parameterset>
-
-		<parameterset type="modeParams" >
-			<param name="constant" value="-0.6" />
-			<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-			<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-			<param name="mode" value="pt" />
-			<param name="monetaryDistanceRate" value="0.0" />
-		</parameterset>
-
-		<parameterset type="modeParams" >
-			<param name="constant" value="-1.85" />
-			<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-			<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-			<param name="mode" value="bicycle" />
-			<param name="monetaryDistanceRate" value="0.0" />
-		</parameterset>
-
-		<parameterset type="modeParams" >
-			<param name="constant" value="0.0" />
-			<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-			<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-			<param name="mode" value="walk" />
-			<param name="monetaryDistanceRate" value="0.0" />
-		</parameterset>
-		
-		<parameterset type="modeParams" >
-			<param name="constant" value="0.0" />
-			<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-			<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-			<param name="mode" value="transit_walk" />
-			<param name="monetaryDistanceRate" value="0.0" />
-		</parameterset>
-		
-		<parameterset type="modeParams" >
-			<param name="constant" value="0.0" />
-			<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-			<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-			<param name="mode" value="access_walk" />
-			<param name="monetaryDistanceRate" value="0.0" />
-		</parameterset>
-		
-		<parameterset type="modeParams" >
-			<param name="constant" value="0.0" />
-			<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-			<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-			<param name="mode" value="egress_walk" />
-			<param name="monetaryDistanceRate" value="0.0" />
-		</parameterset>	
-
 	</module>
 
 </config>
