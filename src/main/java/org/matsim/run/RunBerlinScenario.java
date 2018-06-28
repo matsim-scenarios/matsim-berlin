@@ -20,6 +20,7 @@
 package org.matsim.run;
 
 import org.apache.log4j.Logger;
+import org.matsim.analysis.ScoreStats;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.core.config.Config;
@@ -28,6 +29,7 @@ import org.matsim.core.config.groups.ControlerConfigGroup;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.controler.MatsimServices;
 import org.matsim.core.scenario.ScenarioUtils;
 
 import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
@@ -41,6 +43,7 @@ import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorith
 public class RunBerlinScenario {
 
 	private static final Logger log = Logger.getLogger(RunBerlinScenario.class);
+	private final Controler controler;
 	
 	public static void main(String[] args) {
 		String configFile ;
@@ -51,52 +54,64 @@ public class RunBerlinScenario {
 			configFile = args[0];
 		}
 		log.info("config file: " + configFile);
-		run(ConfigUtils.loadConfig(configFile));
+		new RunBerlinScenario( ConfigUtils.loadConfig( configFile ) ).run() ;
 		// If modification of config is desired, should be done in run method, not here, to help
 		// with regression testing. kai, jun'18
 	}
-
-	static void run(Config config) {
+	
+	RunBerlinScenario( Config config ) {
+		config.transit().setUsingTransitInMobsim( false );
 		
-		config.transit().setUsingTransitInMobsim(false);
+		config.controler().setRoutingAlgorithmType( FastAStarLandmarks );
 		
-		config.controler().setRoutingAlgorithmType(FastAStarLandmarks);
-		
-		config.subtourModeChoice().setProbaForRandomSingleTripMode(0.5);
+		config.subtourModeChoice().setProbaForRandomSingleTripMode( 0.5 );
 		
 		// vsp defaults
-		config.plansCalcRoute().setInsertingAccessEgressWalk(true);
-		config.qsim().setUsingTravelTimeCheckInTeleportation(true);
-		config.qsim().setTrafficDynamics(TrafficDynamics.kinematicWaves);
+		config.plansCalcRoute().setInsertingAccessEgressWalk( true );
+		config.qsim().setUsingTravelTimeCheckInTeleportation( true );
+		config.qsim().setTrafficDynamics( TrafficDynamics.kinematicWaves );
+		
+		// ---
+		
+		// so that config settings in code, which come after the settings from the initial config file, can
+		// be overridden without having to change the jar file.  Normally empty.
+		ConfigUtils.loadConfig( config, "overridingConfig.xml" );
 		
 		
 		// ---
 		
-		Scenario scenario = ScenarioUtils.loadScenario(config);
-
+		Scenario scenario = ScenarioUtils.loadScenario( config );
+		
 		// ---
 		
-		Controler controler = new Controler(scenario);
+		this.controler = new Controler( scenario );
 		
 		// use the sbb pt raptor router
-		controler.addOverridingModule(new AbstractModule() {
+		controler.addOverridingModule( new AbstractModule() {
 			@Override
 			public void install() {
-				install(new SwissRailRaptorModule());
+				install( new SwissRailRaptorModule() );
 			}
-		});
+		} );
 		
 		// use the (congested) car travel time for the teleported ride mode
-		controler.addOverridingModule(new AbstractModule(){
+		controler.addOverridingModule( new AbstractModule() {
 			@Override
 			public void install() {
-				addTravelTimeBinding(TransportMode.ride).to(networkTravelTime());
-				addTravelDisutilityFactoryBinding(TransportMode.ride).to(carTravelDisutilityFactoryKey());        }
-	    });
+				addTravelTimeBinding( TransportMode.ride ).to( networkTravelTime() );
+				addTravelDisutilityFactoryBinding( TransportMode.ride ).to( carTravelDisutilityFactoryKey() );
+			}
+		} );
 		
-		controler.run();
+	}
 	
+	void run() {
+		controler.run();
 		log.info("Done.");
+	}
+	
+	 final ScoreStats getScoreStats() {
+		return controler.getScoreStats() ;
 	}
 
 }

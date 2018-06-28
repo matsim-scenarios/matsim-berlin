@@ -38,7 +38,7 @@
 		</parameterset>
 	</module>
 	<module name="qsim" >
-		<param name="endTime" value="36:00:00" />
+		<param name="endTime" value="30:00:00" />
 		<param name="flowCapacityFactor" value="0.01" />
 		<param name="mainMode" value="car,freight" />
 		<param name="numberOfThreads" value="6" />
