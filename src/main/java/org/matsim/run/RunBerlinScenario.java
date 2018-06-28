@@ -57,8 +57,6 @@ public class RunBerlinScenario {
 	}
 
 	static void run(Config config) {
-//		config.controler().setLastIteration(0);
-//		config.qsim().setEndTime(900);
 		
 		config.transit().setUsingTransitInMobsim(false);
 		
@@ -99,7 +97,6 @@ public class RunBerlinScenario {
 		controler.run();
 	
 		log.info("Done.");
-		return controler;
 	}
 
 }
