@@ -23,13 +23,13 @@
 	
 	<module name="qsim">
 		<param name="mainMode" value="car,freight" />
-		<param name="flowCapacityFactor" value="0.001" />
-		<param name="storageCapacityFactor" value="0.001" />
+		<param name="flowCapacityFactor" value="0.1" />
+		<param name="storageCapacityFactor" value="0.1" />
 		<param name="removeStuckVehicles" value="false" />
 		<param name="stuckTime" value="36.0" />
 		<param name="usePersonIdForMissingVehicleId" value ="true"/>
 		<param name="usingFastCapacityUpdate" value="true"/>
-		<param name="numberOfThreads" value="1" />
+		<param name="numberOfThreads" value="8" />
 		<param name="startTime" value="00:00:00" />
 		<param name="endTime" value="36:00:00" />
 		<param name="vehiclesSource" value="modeVehicleTypesFromVehiclesData" />
