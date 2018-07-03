@@ -48,8 +48,9 @@ public class RunBerlinScenario {
 	public static void main(String[] args) {
 		String configFile ;
 		if ( args.length==0 || args[0].equals("")) {
+//			configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config.xml";
 			configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config_reduced.xml";
-//			configFile = "scenarios/berlin-v5.0-0.1pct-2018-06-18/input/berlin-5.0_config_full.xml";
+//			configFile = "scenarios/berlin-v5.0-10pct-2018-06-18/input/berlin-5.0_config.xml";
 		} else {
 			configFile = args[0];
 		}
