@@ -5,9 +5,10 @@
 		<param name="mutationRange" value="7200.0" />
 	</module>
 	<module name="controler" >
-		<param name="lastIteration" value="0" />
+		<param name="lastIteration" value="100" />
 		<param name="overwriteFiles" value="deleteDirectoryIfExists" />
 		<param name="runId" value="b5_1" />
+		<param name="outputDirectory" value="./output_from-reduced-config" />
 		<param name="writeEventsInterval" value="100" />
 		<param name="writePlansInterval" value="100" />
 	</module>
@@ -38,7 +39,7 @@
 		</parameterset>
 	</module>
 	<module name="qsim" >
-		<param name="endTime" value="30:00:00" />
+		<param name="endTime" value="36:00:00" />
 		<param name="flowCapacityFactor" value="0.01" />
 		<param name="mainMode" value="car,freight" />
 		<param name="numberOfThreads" value="6" />
