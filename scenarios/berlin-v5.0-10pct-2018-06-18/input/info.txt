@@ -16,3 +16,5 @@ File renaming:
 * berlin-5.0_transit-schedule.xml.gz: previous file name: transitSchedule_GTFS_631760.xml.gz
 * berlin-5.0_transit-vehicles.xml.gz: previous file name: transitVehicles_GTFS_631760.xml.gz
 
+2018-07-04:
+berlin-5.1_10pct_plans.xml.gz: bug fix: population is the same as version 5.0 except that the route information is deleted for main-mode-trips without access and egress walk trips
