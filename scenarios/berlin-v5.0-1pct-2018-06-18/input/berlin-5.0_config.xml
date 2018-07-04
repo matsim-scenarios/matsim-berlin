@@ -23,8 +23,8 @@
 	
 	<module name="qsim">
 		<param name="mainMode" value="car,freight" />
-		<param name="flowCapacityFactor" value="0.01" />
-		<param name="storageCapacityFactor" value="0.01" />
+		<param name="flowCapacityFactor" value="0.015" />
+		<param name="storageCapacityFactor" value="0.015" />
 		<param name="removeStuckVehicles" value="false" />
 		<param name="stuckTime" value="30.0" />
 		<param name="usePersonIdForMissingVehicleId" value ="true"/>
