@@ -23,13 +23,12 @@ import org.apache.log4j.Logger;
 import org.matsim.analysis.ScoreStats;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.config.groups.ControlerConfigGroup;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
-import org.matsim.core.controler.MatsimServices;
 import org.matsim.core.scenario.ScenarioUtils;
 
 import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
@@ -49,7 +48,8 @@ public class RunBerlinScenario {
 		String configFile ;
 		if ( args.length==0 || args[0].equals("")) {
 //			configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config.xml";
-			configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config_reduced.xml";
+//			configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config_reduced.xml";
+			configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.1_config_reduced.xml";
 //			configFile = "scenarios/berlin-v5.0-10pct-2018-06-18/input/berlin-5.0_config.xml";
 		} else {
 			configFile = args[0];
@@ -110,8 +110,12 @@ public class RunBerlinScenario {
 		log.info("Done.");
 	}
 	
-	 final ScoreStats getScoreStats() {
+	final ScoreStats getScoreStats() {
 		return controler.getScoreStats() ;
+	}
+	
+	final Population getPopulation() {
+		return controler.getScenario().getPopulation();
 	}
 
 }
