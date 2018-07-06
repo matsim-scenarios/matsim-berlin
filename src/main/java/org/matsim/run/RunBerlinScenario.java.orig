@@ -52,12 +52,25 @@ public class RunBerlinScenario {
 	private boolean hasPreparedControler = false ;
 	
 	public static void main(String[] args) {
-		String configFileName ;
+<<<<<<< HEAD
+		String configFile ;
 		if ( args.length==0 || args[0].equals("")) {
-//			configFileName = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config.xml";
-//			configFileName = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config_reduced.xml";
-			configFileName = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.1_config_reduced.xml";
+//			configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config.xml";
+//			configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config_reduced.xml";
+			configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.1_config_reduced.xml";
+//			configFile = "scenarios/berlin-v5.0-10pct-2018-06-18/input/berlin-5.0_config.xml";
+||||||| merged common ancestors
+		String configFile ;
+		if ( args.length==0 || args[0].equals("")) {
+			configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config_reduced.xml";
+//			configFile = "scenarios/berlin-v5.0-0.1pct-2018-06-18/input/berlin-5.0_config_full.xml";
+=======
+		String configFileName;
+		if ( args.length == 0 || args[0].equals( "" ) ) {
 //			configFileName = "scenarios/berlin-v5.0-10pct-2018-06-18/input/berlin-5.0_config.xml";
+			configFileName = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config.xml";
+//			configFileName = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config_reduced.xml";
+>>>>>>> make berlin scenario more flexible to allow for multi-user work with it
 		} else {
 			configFileName = args[0];
 		}
@@ -138,13 +151,26 @@ public class RunBerlinScenario {
 		log.info("Done.");
 	}
 	
+<<<<<<< HEAD
 	final ScoreStats getScoreStats() {
 		return controler.getScoreStats() ;
+||||||| merged common ancestors
+	 final ScoreStats getScoreStats() {
+		return controler.getScoreStats() ;
+=======
+	ScoreStats getScoreStats() {
+		return this.controler.getScoreStats() ;
+>>>>>>> make berlin scenario more flexible to allow for multi-user work with it
 	}
+<<<<<<< HEAD
 	
 	final Population getPopulation() {
 		return controler.getScenario().getPopulation();
 	}
 
+||||||| merged common ancestors
+
+=======
+>>>>>>> make berlin scenario more flexible to allow for multi-user work with it
 }
 

@@ -52,15 +52,12 @@ public class RunBerlinScenarioTest {
 	@Test
 	public final void test1() {
 		try {
-			Config config;
-
-			String configFile = "scenarios/berlin-v5.0-10pct-2018-06-18/input/berlin-5.0_config.xml";
-			config = ConfigUtils.loadConfig(configFile);
+			String configFilename = "scenarios/berlin-v5.0-10pct-2018-06-18/input/berlin-5.0_config.xml";
+			RunBerlinScenario berlin = new RunBerlinScenario( configFilename ) ;
+			Config config =  berlin.prepareConfig() ;
 			config.controler().setLastIteration(0);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
-			
-			RunBerlinScenario berlin = new RunBerlinScenario( config ) ;
 			berlin.run() ;
 			
 			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 115.26173800545439, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
@@ -77,15 +74,15 @@ public class RunBerlinScenarioTest {
 	@Test
 	public final void test2a() {
 		try {
-			Config config;
-
-			String configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config_reduced.xml";
-			config = ConfigUtils.loadConfig(configFile);
-			config.controler().setLastIteration(100);
+			String configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config.xml";
+			RunBerlinScenario berlin = new RunBerlinScenario( configFile ) ;
+			final Config config = berlin.prepareConfig();;
+			config.controler().setLastIteration(1);
+			config.qsim().setNumberOfThreads(1); // to have it fully deterministic
+			config.strategy().setFractionOfIterationsToDisableInnovation(1.);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
 			
-			RunBerlinScenario berlin = new RunBerlinScenario( config ) ;
 			berlin.run() ;
 
 			testScores(berlin.getScoreStats().getScoreHistory());
@@ -103,15 +100,15 @@ public class RunBerlinScenarioTest {
 	@Test
 	public final void test2b() {
 		try {
-			Config config;
-
-			String configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.1_config_reduced.xml";
-			config = ConfigUtils.loadConfig(configFile);
-			config.controler().setLastIteration(100);
+			String configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config_reduced.xml";
+			RunBerlinScenario berlin = new RunBerlinScenario( configFile) ;
+			Config config = berlin.prepareConfig() ;
+			config.controler().setLastIteration(1);
+			config.qsim().setEndTime(30 * 3600.); // TODO: adjust in the config file!
+			config.qsim().setNumberOfThreads(1); // to have it fully deterministic
+			config.strategy().setFractionOfIterationsToDisableInnovation(1.);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
-			
-			RunBerlinScenario berlin = new RunBerlinScenario( config ) ;
 			berlin.run() ;
 
 			testScores(berlin.getScoreStats().getScoreHistory());
