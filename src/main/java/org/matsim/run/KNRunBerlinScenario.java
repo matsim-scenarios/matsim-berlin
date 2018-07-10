@@ -28,19 +28,19 @@ class KNRunBerlinScenario {
 		
 		final Controler controler = berlin.prepareControler() ;
 		
-		controler.addOverridingModule( new AbstractModule() {
-			@Override public void install() {
-				DiversityGeneratingPlansRemover.Builder builder = new DiversityGeneratingPlansRemover.Builder() ;
-				final double ccc = 5. ;
-				builder.setSameLocationPenalty( ccc ) ;
-				builder.setSameActivityTypePenalty( ccc ) ;
-				builder.setSameActivityEndTimePenalty( ccc ) ;
-				builder.setSameModePenalty( ccc ) ;
-				builder.setSameRoutePenalty( ccc ) ;
-//				builder.setStageActivityTypes( tripRouter.getStageActivityTypes() ) ;
-				this.bindPlanSelectorForRemoval().toProvider( builder ) ;
-			}
-		} );
+//		controler.addOverridingModule( new AbstractModule() {
+//			@Override public void install() {
+//				DiversityGeneratingPlansRemover.Builder builder = new DiversityGeneratingPlansRemover.Builder() ;
+//				final double ccc = 5. ;
+//				builder.setSameLocationPenalty( ccc ) ;
+//				builder.setSameActivityTypePenalty( ccc ) ;
+//				builder.setSameActivityEndTimePenalty( ccc ) ;
+//				builder.setSameModePenalty( ccc ) ;
+//				builder.setSameRoutePenalty( ccc ) ;
+////				builder.setStageActivityTypes( tripRouter.getStageActivityTypes() ) ;
+//				this.bindPlanSelectorForRemoval().toProvider( builder ) ;
+//			}
+//		} );
 		
 		berlin.run() ;
 	}
