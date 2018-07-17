@@ -53,7 +53,7 @@ public class RunBerlinScenarioTest {
 	public final void test1() {
 		try {
 			String configFilename = "scenarios/berlin-v5.0-10pct-2018-06-18/input/berlin-5.0_config.xml";
-			RunBerlinScenario berlin = new RunBerlinScenario( configFilename ) ;
+			RunBerlinScenario berlin = new RunBerlinScenario( configFilename, "overridingConfig.xml" ) ;
 			Config config =  berlin.prepareConfig() ;
 			config.controler().setLastIteration(0);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
@@ -75,7 +75,7 @@ public class RunBerlinScenarioTest {
 	public final void test2a() {
 		try {
 			String configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config.xml";
-			RunBerlinScenario berlin = new RunBerlinScenario( configFile ) ;
+			RunBerlinScenario berlin = new RunBerlinScenario( configFile, "overridingConfig.xml" ) ;
 			final Config config = berlin.prepareConfig();;
 			config.controler().setLastIteration(1);
 			config.qsim().setNumberOfThreads(1); // to have it fully deterministic
@@ -101,7 +101,7 @@ public class RunBerlinScenarioTest {
 	public final void test2b() {
 		try {
 			String configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config_reduced.xml";
-			RunBerlinScenario berlin = new RunBerlinScenario( configFile) ;
+			RunBerlinScenario berlin = new RunBerlinScenario( configFile, "overridingConfig.xml") ;
 			Config config = berlin.prepareConfig() ;
 			config.controler().setLastIteration(1);
 			config.qsim().setEndTime(30 * 3600.); // TODO: adjust in the config file!

@@ -12,7 +12,9 @@ class KNRunBerlinScenario {
 		String configFileName = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config.xml";
 //		String configFileName = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config_reduced.xml";
 		
-		final RunBerlinScenario berlin = new RunBerlinScenario( configFileName );
+		// "overridingConfig.xml" is taken as an argument now which was hard-coded in there. Amit July'18
+//		final RunBerlinScenario berlin = new RunBerlinScenario( configFileName);
+		final RunBerlinScenario berlin = new RunBerlinScenario( configFileName, "overridingConfig.xml" );
 		
 		final Config config = berlin.prepareConfig() ;
 		

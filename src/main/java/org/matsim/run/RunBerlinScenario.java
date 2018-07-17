@@ -43,6 +43,7 @@ public class RunBerlinScenario {
 	private static final Logger log = Logger.getLogger(RunBerlinScenario.class);
 
 	private final String configFileName;
+	private final String overridingConfigFileName;
 	private Config config;
 	private Scenario scenario;
 	private Controler controler;
@@ -53,20 +54,24 @@ public class RunBerlinScenario {
 	
 	public static void main(String[] args) {
 		String configFileName ;
+		String overridingConfigFileName = null;
 		if ( args.length==0 || args[0].equals("")) {
 //			configFileName = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config.xml";
 //			configFileName = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config_reduced.xml";
 			configFileName = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.1_config_reduced.xml";
 //			configFileName = "scenarios/berlin-v5.0-10pct-2018-06-18/input/berlin-5.0_config.xml";
+			overridingConfigFileName = "overridingConfig.xml";
 		} else {
 			configFileName = args[0];
+			if ( args.length>1 ) overridingConfigFileName = args[1];
 		}
 		log.info( "config file: " + configFileName );
-		new RunBerlinScenario( configFileName ).run() ;
+		new RunBerlinScenario( configFileName, overridingConfigFileName ).run() ;
 	}
 	
-	RunBerlinScenario( String configFileName ) {
+	RunBerlinScenario( String configFileName, String overridingConfigFileName) {
 		this.configFileName = configFileName;
+		this.overridingConfigFileName = overridingConfigFileName;
 	}
 	
 	Controler prepareControler() {
@@ -104,7 +109,9 @@ public class RunBerlinScenario {
 		
 		// so that config settings in code, which come after the settings from the initial config file, can
 		// be overridden without having to change the jar file.  Normally empty.
-		ConfigUtils.loadConfig( config, "overridingConfig.xml" );
+		if (this.overridingConfigFileName!=null) {
+			ConfigUtils.loadConfig( config, this.overridingConfigFileName );	
+		}
 		// note that the path for this is different when run from GUI (path of original config) vs.
 		// when run from command line/IDE (java root).  :-(    See comment in method.  kai, jul'18
 		
