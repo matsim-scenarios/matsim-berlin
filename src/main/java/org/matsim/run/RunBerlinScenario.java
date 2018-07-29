@@ -75,7 +75,7 @@ public class RunBerlinScenario {
 		this.overridingConfigFileName = overridingConfigFileName;
 	}
 	
-	Controler prepareControler() {
+	void prepareControler( AbstractModule... overridingModules ) {
 		if ( !hasPreparedScenario ) {
 			prepareScenario() ;
 		}
@@ -99,8 +99,11 @@ public class RunBerlinScenario {
 			}
 		} );
 		
+		for ( AbstractModule overridingModule : overridingModules ) {
+			controler.addOverridingModule( overridingModule );
+		}
+		
 		hasPreparedControler = true ;
-		return controler ;
 	}
 	
 	Scenario prepareScenario() {

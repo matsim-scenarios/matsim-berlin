@@ -17,7 +17,9 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.gbl.Gbl;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.matsim.core.config.groups.PlanCalcScoreConfigGroup.*;
@@ -146,9 +148,9 @@ class KNRunBerlinScenario {
 				break;
 		}
 		
-		final Controler controler = berlin.prepareControler() ;
+		List<AbstractModule> overridingModules = new ArrayList<>() ;
 		
-		controler.addOverridingModule( new AbstractModule() {
+		overridingModules.add( new AbstractModule() {
 			@Override public void install() {
 				DiversityGeneratingPlansRemover.Builder builder = new DiversityGeneratingPlansRemover.Builder() ;
 				final double ccc = 0.03 ;
@@ -162,7 +164,9 @@ class KNRunBerlinScenario {
 			}
 		} );
 		
-		controler.addOverridingModule( new KaiAnalysisListener.Module() );
+		overridingModules.add( new KaiAnalysisListener.Module() );
+		
+		berlin.prepareControler( overridingModules.toArray( new AbstractModule[0] ) );
 		
 		berlin.run() ;
 	}
