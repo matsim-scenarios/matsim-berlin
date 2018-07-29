@@ -83,6 +83,7 @@
 
 	<build>
 		<plugins>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -103,6 +104,7 @@
 					</compilerArguments>
 				</configuration>
 			</plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-eclipse-plugin</artifactId>
@@ -111,6 +113,24 @@
 					<downloadJavadocs>true</downloadJavadocs>
 				</configuration>
 			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.19</version>
+				<configuration>
+					<excludes>
+						<exclude>**/*$*</exclude> <!-- exclude all inner classes -->
+						<exclude>org/matsim/testcases/TestDepth.java</exclude>
+						<exclude>org/matsim/testcases/MatsimTestCase.java</exclude>
+					</excludes>
+					<forkMode>once</forkMode>
+					<!-- avoid out of memory errors: -->
+					<argLine>-Xmx700m -Djava.awt.headless=true
+						-Dmatsim.preferLocalDtds=true</argLine>
+				</configuration>
+			</plugin>
+
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<configuration>
@@ -133,6 +153,7 @@
 					</execution>
 				</executions>
 			</plugin>
+
 		</plugins>
 	</build>
 	
