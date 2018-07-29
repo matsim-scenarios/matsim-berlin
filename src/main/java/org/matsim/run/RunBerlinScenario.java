@@ -30,6 +30,7 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.scenario.ScenarioUtils;
 
 import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType.FastAStarLandmarks;
@@ -122,6 +123,8 @@ public class RunBerlinScenario {
 	}
 	
 	Config prepareConfig() {
+		OutputDirectoryLogging.catchLogEntries();
+		
 		config = ConfigUtils.loadConfig( configFileName ) ;
 		
 		config.controler().setRoutingAlgorithmType( FastAStarLandmarks );
