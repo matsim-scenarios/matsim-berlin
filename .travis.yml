@@ -1,3 +1,3 @@
 language: java
 sudo: required 
-dist: precise
+dist: trusty
