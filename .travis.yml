@@ -33,8 +33,8 @@ script: mvn -Dtest=${TEST} test --batch-mode -Dmaven.test.redirectTestOutputToFi
 # this defines all other stages.
 jobs:
   include:
-    stage: package
-    script: mvn package -DskipTests --batch-mode -Dmaven.test.redirectTestOutputToFile -Dmatsim.preferLocalDtds=true --fail-at-end -Dmaven.javadoc.skip
+    - stage: package
+      script: mvn package -DskipTests --batch-mode -Dmaven.test.redirectTestOutputToFile -Dmatsim.preferLocalDtds=true --fail-at-end -Dmaven.javadoc.skip
 
 # (would be nice to run this also in parallel with the others.  But it
 # is either the matrix thing and then exactly the same command for
