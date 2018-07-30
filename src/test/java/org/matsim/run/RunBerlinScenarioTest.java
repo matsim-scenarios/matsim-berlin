@@ -26,6 +26,7 @@ import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.matsim.analysis.ScoreStatsControlerListener.ScoreItem;
@@ -79,6 +80,7 @@ public class RunBerlinScenarioTest {
 	// 1pct (version 5.1)
 	// testing the score in the 0th and 100th iteration
 	// testing the modal split in the 100th iteration
+	@Ignore
 	@Test
 	public final void test2b() {
 		try {
