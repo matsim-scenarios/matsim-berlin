@@ -18,27 +18,21 @@
  * *********************************************************************** */
 package org.matsim.run;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
-import java.util.function.Predicate;
 
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.matsim.analysis.ScoreStatsControlerListener.ScoreItem;
-import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.gbl.Gbl;
 import org.matsim.core.gbl.MatsimRandom;
@@ -77,39 +71,9 @@ public class RunBerlinScenarioTest {
 			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 115.26173800545439, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
 			
 		} catch ( Exception ee ) {
-//			Logger.getLogger(this.getClass()).fatal("there was an exception: \n" + ee ) ;
-//			Assert.fail("Wasn't able to run the berlin scenario.");
-			// with the above, we don't get a traceback. kai, jul'18
 			throw new RuntimeException(ee) ;
 		}
 	}
-	
-//	// 1pct (version 5.0)
-//	// testing the score in the 0th and 100th iteration
-//	// testing the modal split in the 100th iteration
-//	@Test
-//	public final void test2a() {
-//		try {
-//			String configFile = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config.xml";
-//			RunBerlinScenario berlin = new RunBerlinScenario( configFile, "overridingConfig.xml" ) ;
-//
-//			final Config config = berlin.prepareConfig();;
-//			config.controler().setLastIteration(1);
-//			config.qsim().setNumberOfThreads(1); // to have it fully deterministic
-//			config.strategy().setFractionOfIterationsToDisableInnovation(1.);
-//			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
-//			config.controler().setOutputDirectory( utils.getOutputDirectory() );
-//
-//			berlin.run() ;
-//
-//			testScores(berlin.getScoreStats().getScoreHistory());
-//			testModalSplit(analyzeModeStats(berlin.getPopulation()));
-//
-//		} catch ( Exception ee ) {
-//			Logger.getLogger(this.getClass()).fatal("there was an exception: \n" + ee ) ;
-//			Assert.fail("Wasn't able to run the berlin scenario.");
-//		}
-//	}
 
 	// 1pct (version 5.1)
 	// testing the score in the 0th and 100th iteration
@@ -122,15 +86,12 @@ public class RunBerlinScenarioTest {
 			
 			Config config = berlin.prepareConfig() ;
 			config.controler().setLastIteration(100);
-			config.qsim().setEndTime(30 * 3600.); // TODO: adjust in the config file!
+			config.qsim().setEndTime(30 * 3600.);
 
 //			config.qsim().setNumberOfThreads(1); // to have it fully deterministic
 			// yy should be fully deterministic also with larger number of threads as long as it is always the same number.  kai, jul'18
 			config.qsim().setNumberOfThreads( 6 );
 			config.global().setNumberOfThreads( 6 );
-			
-//			config.strategy().setFractionOfIterationsToDisableInnovation(1.);
-			// yyyy this is not a good setting since the mode shares will depend on the innovation rates. kai, jul'18
 			config.strategy().setFractionOfIterationsToDisableInnovation( 0.8 );
 			
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
