@@ -108,9 +108,6 @@ public class RunBerlinScenarioTest {
 			testModalSplit(analyzeModeStats(berlin.getPopulation()));
 			
 		} catch ( Exception ee ) {
-//			Logger.getLogger(this.getClass()).fatal("there was an exception: \n" + ee ) ;
-//			Assert.fail("Wasn't able to run the berlin scenario.");
-			// with the above, we don't get a traceback. kai, jul'18
 			throw new RuntimeException(ee) ;
 		}
 	}
