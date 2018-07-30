@@ -53,6 +53,7 @@ public class RunBerlinScenarioTest {
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 	
 	// 10pct, testing the scores in iteration 0
+	@Ignore
 	@Test
 	public final void test1() {
 		try {
@@ -80,7 +81,6 @@ public class RunBerlinScenarioTest {
 	// 1pct (version 5.1)
 	// testing the score in the 0th and 100th iteration
 	// testing the modal split in the 100th iteration
-	@Ignore
 	@Test
 	public final void test2b() {
 		try {
