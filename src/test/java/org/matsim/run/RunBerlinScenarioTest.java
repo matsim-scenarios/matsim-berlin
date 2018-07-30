@@ -55,7 +55,7 @@ public class RunBerlinScenarioTest {
 	@Test
 	public final void test1() {
 		try {
-			String configFilename = "scenarios/berlin-v5.0-10pct-2018-06-18/input/berlin-5.0_config.xml";
+			String configFilename = "scenarios/berlin-v5.0-10pct-2018-06-18/input/berlin-5.1_config.xml";
 			RunBerlinScenario berlin = new RunBerlinScenario( configFilename, "overridingConfig.xml" ) ;
 
 			Config config =  berlin.prepareConfig() ;
@@ -68,8 +68,9 @@ public class RunBerlinScenarioTest {
 			
 			berlin.run() ;
 			
-			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 115.26173800545439, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
-			
+//			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 115.26173800545439, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 114.73387586329103, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
+
 		} catch ( Exception ee ) {
 			throw new RuntimeException(ee) ;
 		}
