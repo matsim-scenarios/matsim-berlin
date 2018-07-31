@@ -52,6 +52,13 @@ public class RunBerlinScenarioTest {
 	
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 	
+	@Test
+	public final void testTest() {
+		// a dummy test to satisfy the matrix build by travis.
+		log.info( "Hello world." );
+		Assert.assertTrue( true );
+	}
+	
 	// 10pct, testing the scores in iteration 0
 	@Test
 	public final void test1() {
