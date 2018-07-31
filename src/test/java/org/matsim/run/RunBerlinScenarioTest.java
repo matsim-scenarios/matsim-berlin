@@ -99,8 +99,12 @@ public class RunBerlinScenarioTest {
 
 //			config.qsim().setNumberOfThreads(1); // to have it fully deterministic
 			// yy should be fully deterministic also with larger number of threads as long as it is always the same number.  kai, jul'18
-			config.qsim().setNumberOfThreads( 6 );
-			config.global().setNumberOfThreads( 6 );
+//			config.qsim().setNumberOfThreads( 6 );
+//			config.global().setNumberOfThreads( 6 );
+			config.qsim().setNumberOfThreads( 1 );
+			config.global().setNumberOfThreads( 1 );
+			// small number of threads in hope to consume less memory.  kai, jul'18
+			
 			config.strategy().setFractionOfIterationsToDisableInnovation( 0.8 );
 			
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
