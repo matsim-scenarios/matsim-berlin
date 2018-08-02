@@ -30,6 +30,7 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.matsim.analysis.ScoreStatsControlerListener.ScoreItem;
+import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
@@ -110,8 +111,15 @@ public class RunBerlinScenarioTest {
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
 			
-//			Scenario scenario = berlin.prepareScenario() ;
-//			downsample( scenario.getPopulation().getPersons(), 0.01 ) ;
+			config.controler().setWriteEventsInterval( config.controler().getLastIteration() );
+			config.controler().setWritePlansUntilIteration( 0 );
+			config.controler().setWritePlansInterval( 0 );
+			
+			Scenario scenario = berlin.prepareScenario() ;
+			final double sample = 0.1;
+			downsample( scenario.getPopulation().getPersons(), sample ) ;
+			config.qsim().setFlowCapFactor( config.qsim().getFlowCapFactor()*sample );
+			config.qsim().setStorageCapFactor( config.qsim().getStorageCapFactor()*sample );
 			
 			berlin.run() ;
 			
