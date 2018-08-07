@@ -28,7 +28,7 @@ import static org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule.
 
 class KNRunBerlinScenario {
 	private enum MyScenario { bln1pct, bln10pct, equil } ;
-	private static MyScenario myScenario = MyScenario.equil ;
+	private static MyScenario myScenario = MyScenario.bln1pct ;
 	
 	public static void main(String[] args) {
 //		String configFileName = "scenarios/berlin-v5.0-10pct-2018-06-18/input/berlin-5.0_config.xml";
@@ -45,7 +45,7 @@ class KNRunBerlinScenario {
 		config.qsim().setNumberOfThreads( 6 );
 		config.parallelEventHandling().setNumberOfThreads( 1 );
 		
-		config.controler().setLastIteration( 500 );
+		config.controler().setLastIteration( 100 );
 
 		config.strategy().setFractionOfIterationsToDisableInnovation( 0.7 );
 		// 50 w/ 500
@@ -57,25 +57,24 @@ class KNRunBerlinScenario {
 		config.controler().setOutputDirectory( "./output" );
 		config.controler().setRunId( null );
 		config.planCalcScore().setWriteExperiencedPlans( true );
-		{
-			final StrategySettings stratSets = new StrategySettings() ;
-			stratSets.setStrategyName( DefaultStrategy.ChangeSingleTripMode );
-			stratSets.setWeight( 0.2 );
-			stratSets.setSubpopulation( "person" );
-			config.strategy().addStrategySettings( stratSets );
-			
-			config.changeMode().setModes( config.subtourModeChoice().getModes() );
-		}
-		for ( StrategySettings settings : config.strategy().getStrategySettings() ) {
-			if ( settings.getStrategyName().equals( DefaultStrategy.SubtourModeChoice ) ) {
-				settings.setWeight( 0.0 );
-			}
-		}
+//		{
+//			final StrategySettings stratSets = new StrategySettings() ;
+//			stratSets.setStrategyName( DefaultStrategy.ChangeSingleTripMode );
+//			stratSets.setWeight( 0.2 );
+//			stratSets.setSubpopulation( "person" );
+//			config.strategy().addStrategySettings( stratSets );
+//
+//			config.changeMode().setModes( config.subtourModeChoice().getModes() );
+//		}
+//		for ( StrategySettings settings : config.strategy().getStrategySettings() ) {
+//			if ( settings.getStrategyName().equals( DefaultStrategy.SubtourModeChoice ) ) {
+//				settings.setWeight( 0.0 );
+//			}
+//		}
 		//		config.transit().setUsingTransitInMobsim( false );
 		
 		switch( myScenario ) {
 			case bln1pct:
-				break;
 			case bln10pct:
 				break;
 			case equil:
@@ -128,7 +127,6 @@ class KNRunBerlinScenario {
 		
 		switch ( myScenario ) {
 			case bln1pct:
-				break;
 			case bln10pct:
 				break;
 			case equil:
@@ -150,19 +148,19 @@ class KNRunBerlinScenario {
 		
 		List<AbstractModule> overridingModules = new ArrayList<>() ;
 		
-		overridingModules.add( new AbstractModule() {
-			@Override public void install() {
-				DiversityGeneratingPlansRemover.Builder builder = new DiversityGeneratingPlansRemover.Builder() ;
-				final double ccc = 0.03 ;
-				builder.setSameLocationPenalty( ccc ) ;
-				builder.setSameActivityTypePenalty( ccc ) ;
-				builder.setSameActivityEndTimePenalty( ccc ) ;
-				builder.setSameModePenalty( ccc ) ;
-				builder.setSameRoutePenalty( ccc ) ;
-//				builder.setStageActivityTypes( tripRouter.getStageActivityTypes() ) ;
-				this.bindPlanSelectorForRemoval().toProvider( builder ) ;
-			}
-		} );
+//		overridingModules.add( new AbstractModule() {
+//			@Override public void install() {
+//				DiversityGeneratingPlansRemover.Builder builder = new DiversityGeneratingPlansRemover.Builder() ;
+//				final double ccc = 0.03 ;
+//				builder.setSameLocationPenalty( ccc ) ;
+//				builder.setSameActivityTypePenalty( ccc ) ;
+//				builder.setSameActivityEndTimePenalty( ccc ) ;
+//				builder.setSameModePenalty( ccc ) ;
+//				builder.setSameRoutePenalty( ccc ) ;
+////				builder.setStageActivityTypes( tripRouter.getStageActivityTypes() ) ;
+//				this.bindPlanSelectorForRemoval().toProvider( builder ) ;
+//			}
+//		} );
 		
 		overridingModules.add( new KaiAnalysisListener.Module() );
 		
