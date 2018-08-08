@@ -54,7 +54,6 @@ env:
   matrix:
     - TEST=RunBerlinScenarioTest#testTest
     - TEST=RunBerlinScenarioTest#test1pctUntilIteration1
-    - TEST=RunBerlinScenarioTest#test10pctUntilIteration1
 
-    # - TEST=RunBerlinScenarioTest#test1
+    #    - TEST=RunBerlinScenarioTest#test10pctUntilIteration1 # does not fit into travis.  kai, aug'18
 
