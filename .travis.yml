@@ -53,7 +53,8 @@ env:
     - MAVEN_OPTS="-Xmx8g"
   matrix:
     - TEST=RunBerlinScenarioTest#testTest
-    - TEST=RunBerlinScenarioTest#test2b
+    - TEST=RunBerlinScenarioTest#test1pctUntilIteration1
+    - TEST=RunBerlinScenarioTest#test10pctUntilIteration1
 
     # - TEST=RunBerlinScenarioTest#test1
 

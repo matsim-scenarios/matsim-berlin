@@ -27,6 +27,7 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
@@ -34,6 +35,7 @@ import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.scenario.ScenarioUtils;
 
 import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType.FastAStarLandmarks;
+import static org.matsim.core.config.groups.PlanCalcScoreConfigGroup.*;
 
 /**
 * @author ikaddoura
@@ -128,7 +130,7 @@ public class RunBerlinScenario {
 	Config prepareConfig() {
 		OutputDirectoryLogging.catchLogEntries();
 		
-		config = ConfigUtils.loadConfig( configFileName ) ;
+		config = ConfigUtils.loadConfig( configFileName ) ; // I need this to set the context
 		
 		config.controler().setRoutingAlgorithmType( FastAStarLandmarks );
 		
@@ -138,6 +140,37 @@ public class RunBerlinScenario {
 		config.plansCalcRoute().setInsertingAccessEgressWalk( true );
 		config.qsim().setUsingTravelTimeCheckInTeleportation( true );
 		config.qsim().setTrafficDynamics( TrafficDynamics.kinematicWaves );
+		
+		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
+			final ActivityParams params = new ActivityParams( "home_" + ii + ".0" ) ;
+			params.setTypicalDuration( ii );
+			config.planCalcScore().addActivityParams( params );
+		}
+		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
+			final ActivityParams params = new ActivityParams( "work_" + ii + ".0" ) ;
+			params.setTypicalDuration( ii );
+			config.planCalcScore().addActivityParams( params );
+		}
+		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
+			final ActivityParams params = new ActivityParams( "leisure_" + ii + ".0" ) ;
+			params.setTypicalDuration( ii );
+			config.planCalcScore().addActivityParams( params );
+		}
+		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
+			final ActivityParams params = new ActivityParams( "shopping_" + ii + ".0" ) ;
+			params.setTypicalDuration( ii );
+			config.planCalcScore().addActivityParams( params );
+		}
+		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
+			final ActivityParams params = new ActivityParams( "other_" + ii + ".0" ) ;
+			params.setTypicalDuration( ii );
+			config.planCalcScore().addActivityParams( params );
+		}
+		{
+			final ActivityParams params = new ActivityParams( "freight" ) ;
+			params.setTypicalDuration( 12.*3600. );
+			config.planCalcScore().addActivityParams( params );
+		}
 		
 		hasPreparedConfig = true ;
 		return config ;

@@ -60,31 +60,59 @@ public class RunBerlinScenarioTest {
 		Assert.assertTrue( true );
 	}
 	
-	// 10pct, testing the scores in iteration 0
+	// 1pct, testing the scores in iteration 0
+	// yy could also add it.1. kai, aug'18
 	@Test
-	public final void test1() {
+	public final void test1pctUntilIteration1() {
 		try {
-			String configFilename = "scenarios/berlin-v5.0-10pct-2018-06-18/input/berlin-5.1_config.xml";
+			String configFilename = "scenarios/berlin-v5.1-1pct/input/berlin-v5.1-1pct.config.xml";
 			RunBerlinScenario berlin = new RunBerlinScenario( configFilename, "overridingConfig.xml" ) ;
-
+			
 			Config config =  berlin.prepareConfig() ;
-			config.controler().setLastIteration(0);
+			config.controler().setLastIteration(1);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
 			
-//			Scenario scenario = berlin.prepareScenario() ;
-//			downsample( scenario.getPopulation().getPersons(), 0.001 );
+			//			Scenario scenario = berlin.prepareScenario() ;
+			//			downsample( scenario.getPopulation().getPersons(), 0.001 );
 			
 			berlin.run() ;
 			
-//			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 115.26173800545439, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 114.73387586329103, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
-
+			//			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 115.26173800545439, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
+//			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 114.73387586329103, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
+			// (above number was for 10pct)
+			
 		} catch ( Exception ee ) {
 			throw new RuntimeException(ee) ;
 		}
 	}
-
+	
+	// 10pct, testing the scores in iteration 0
+	// yy could also add it.1. kai, aug'18
+	@Test
+	public final void test10pctUntilIteration1() {
+		try {
+			String configFilename = "scenarios/berlin-v5.1-10pct/input/berlin-v5.1-10pct.config.xml";
+			RunBerlinScenario berlin = new RunBerlinScenario( configFilename, "overridingConfig.xml" ) ;
+			
+			Config config =  berlin.prepareConfig() ;
+			config.controler().setLastIteration(1);
+			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
+			config.controler().setOutputDirectory( utils.getOutputDirectory() );
+			
+			//			Scenario scenario = berlin.prepareScenario() ;
+			//			downsample( scenario.getPopulation().getPersons(), 0.001 );
+			
+			berlin.run() ;
+			
+			//			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 115.26173800545439, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 114.73387586329103, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
+			
+		} catch ( Exception ee ) {
+			throw new RuntimeException(ee) ;
+		}
+	}
+	
 	// 1pct (version 5.1)
 	// testing the score in the 0th and 100th iteration
 	// testing the modal split in the 100th iteration
