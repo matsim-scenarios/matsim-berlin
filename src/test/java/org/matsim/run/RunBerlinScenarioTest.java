@@ -117,13 +117,16 @@ public class RunBerlinScenarioTest {
 	// testing the score in the 0th and 100th iteration
 	// testing the modal split in the 100th iteration
 	@Test
-	public final void test1pctUntilIteration100() {
+	public final void test1pctManyIterations() {
+		// (right now cannot run even up to 50 iterations because logfile becomes to long.  I can tell maven to send the output
+		// to file, but then we don't see anything.  So we will have to play around with the number of iterations.  Thus the
+		// imprecise name of the test.   kai, aug'18)
 		try {
 			String configFilename = "scenarios/berlin-v5.1-1pct/input/berlin-v5.1-1pct.config.xml";
 			RunBerlinScenario berlin = new RunBerlinScenario( configFilename, "overridingConfig.xml") ;
 			
 			Config config = berlin.prepareConfig() ;
-			config.controler().setLastIteration(100);
+			config.controler().setLastIteration(40);
 			config.qsim().setEndTime(30 * 3600.);
 
 //			config.qsim().setNumberOfThreads(1); // to have it fully deterministic
