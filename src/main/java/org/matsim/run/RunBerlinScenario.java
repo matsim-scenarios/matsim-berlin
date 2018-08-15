@@ -19,7 +19,8 @@
 
 package org.matsim.run;
 
-import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
+import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType.FastAStarLandmarks;
+
 import org.apache.log4j.Logger;
 import org.matsim.analysis.ScoreStats;
 import org.matsim.api.core.v01.Scenario;
@@ -27,15 +28,14 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
+import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.scenario.ScenarioUtils;
 
-import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType.FastAStarLandmarks;
-import static org.matsim.core.config.groups.PlanCalcScoreConfigGroup.*;
+import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 
 /**
 * @author ikaddoura
@@ -59,10 +59,7 @@ public class RunBerlinScenario {
 		String configFileName ;
 		String overridingConfigFileName = null;
 		if ( args.length==0 || args[0].equals("")) {
-//			configFileName = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config.xml";
-//			configFileName = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.0_config_reduced.xml";
-			configFileName = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.1_config_reduced.xml";
-//			configFileName = "scenarios/berlin-v5.0-10pct-2018-06-18/input/berlin-5.0_config.xml";
+			configFileName = "scenarios/berlin-v5.1-1pct/input/berlin-v5.1-1pct.config.xml";
 			overridingConfigFileName = "overridingConfig.xml";
 		} else {
 			configFileName = args[0];
