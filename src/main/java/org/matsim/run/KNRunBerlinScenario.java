@@ -31,9 +31,9 @@ class KNRunBerlinScenario {
 	private static MyScenario myScenario = MyScenario.bln1pct ;
 	
 	public static void main(String[] args) {
-//		String configFileName = "scenarios/berlin-v5.0-10pct-2018-06-18/input/berlin-5.0_config.xml";
+		String configFileName = "scenarios/berlin-v5.1-10pct/input/berlin-v5.1-10pct.config.xml" ;
 //		String configFileName = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.1_config.xml";
-		String configFileName = "scenarios/berlin-v5.0-1pct-2018-06-18/input/berlin-5.1_config_reduced.xml";
+//		String configFileName = "scenarios/berlin-v5.0-1pct/input/berlin-5.1_config_reduced.xml";
 		
 		// "overridingConfig.xml" is taken as an argument now which was hard-coded in there. Amit July'18
 //		final RunBerlinScenario berlin = new RunBerlinScenario( configFileName);
@@ -47,7 +47,7 @@ class KNRunBerlinScenario {
 		
 		config.controler().setLastIteration( 100 );
 
-		config.strategy().setFractionOfIterationsToDisableInnovation( 0.7 );
+		config.strategy().setFractionOfIterationsToDisableInnovation( 0.8 );
 		// 50 w/ 500
 		// 20 w/ 100
 		

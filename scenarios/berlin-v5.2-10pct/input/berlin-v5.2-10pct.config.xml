@@ -72,6 +72,7 @@
 		<param name="removeStuckVehicles" value="false" />
 		<param name="insertingWaitingVehiclesBeforeDrivingVehicles" value="true" />
 	</module>
+	
 	<module name="strategy">
 		<param name="maxAgentPlanMemorySize" value="5" />
 		<parameterset type="strategysettings" >
