@@ -27,6 +27,7 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
@@ -69,12 +70,12 @@ public class RunBerlinScenario {
 		new RunBerlinScenario( configFileName, overridingConfigFileName ).run() ;
 	}
 	
-	RunBerlinScenario( String configFileName, String overridingConfigFileName) {
+	public RunBerlinScenario( String configFileName, String overridingConfigFileName) {
 		this.configFileName = configFileName;
 		this.overridingConfigFileName = overridingConfigFileName;
 	}
-	
-	void prepareControler( AbstractModule... overridingModules ) {
+
+	public Controler prepareControler( AbstractModule... overridingModules ) {
 		if ( !hasPreparedScenario ) {
 			prepareScenario() ;
 		}
@@ -103,9 +104,10 @@ public class RunBerlinScenario {
 		}
 		
 		hasPreparedControler = true ;
+		return controler;
 	}
 	
-	Scenario prepareScenario() {
+	public Scenario prepareScenario() {
 		if ( !hasPreparedConfig ) {
 			prepareConfig( ) ;
 		}
@@ -124,10 +126,10 @@ public class RunBerlinScenario {
 		return scenario;
 	}
 	
-	Config prepareConfig() {
+	public Config prepareConfig(ConfigGroup... customModules) {
 		OutputDirectoryLogging.catchLogEntries();
 		
-		config = ConfigUtils.loadConfig( configFileName ) ; // I need this to set the context
+		config = ConfigUtils.loadConfig( configFileName, customModules ) ; // I need this to set the context
 		
 		config.controler().setRoutingAlgorithmType( FastAStarLandmarks );
 		
@@ -173,7 +175,7 @@ public class RunBerlinScenario {
 		return config ;
 	}
 	
-	 void run() {
+	 public void run() {
 		if ( !hasPreparedControler ) {
 			prepareControler() ;
 		}
