@@ -8,7 +8,7 @@
 		<param name="lastIteration" value="200" />
 		<param name="overwriteFiles" value="deleteDirectoryIfExists" />
 		<param name="runId" value="berlin-v5.2-1pct" />
-		<param name="outputDirectory" value="./scenarios/berlin-v5.1-1pct/output-berlin-v5.2-1pct" />
+		<param name="outputDirectory" value="./scenarios/berlin-v5.2-1pct/output-berlin-v5.2-1pct" />
 		<param name="writeEventsInterval" value="50" />
 		<param name="writePlansInterval" value="50" />
 	</module>
@@ -18,20 +18,20 @@
 		<param name="numberOfThreads" value="6" />
 	</module>
 	<module name="network" >
-		<param name="inputNetworkFile" value="../../berlin-v5.1-10pct/input/berlin-v5.0.network.xml.gz" />
+		<param name="inputNetworkFile" value="../../berlin-v5.2-10pct/input/berlin-v5.0.network.xml.gz" />
 	</module>
 	<module name="plans" >
-		<param name="inputPersonAttributesFile" value="../../berlin-v5.1-10pct/input/berlin-v5.0.person-attributes.xml.gz" />
+		<param name="inputPersonAttributesFile" value="../../berlin-v5.2-10pct/input/berlin-v5.0.person-attributes.xml.gz" />
 		<param name="inputPlansFile" value="berlin-v5.2-1pct.plans.xml.gz" />
 		<param name="removingUnnecessaryPlanAttributes" value="true" />
 	</module>
 	<module name="vehicles" >
-		<param name="vehiclesFile" value="../../berlin-v5.1-10pct/input/berlin-v5.0.mode-vehicle-types.xml" />
+		<param name="vehiclesFile" value="../../berlin-v5.2-10pct/input/berlin-v5.0.mode-vehicle-types.xml" />
 	</module>
 	<module name="transit" >
-		<param name="transitScheduleFile" value="../../berlin-v5.1-10pct/input/berlin-v5.0.transit-schedule.xml.gz" />
+		<param name="transitScheduleFile" value="../../berlin-v5.2-10pct/input/berlin-v5.0.transit-schedule.xml.gz" />
 		<param name="useTransit" value="true" />
-		<param name="vehiclesFile" value="../../berlin-v5.1-10pct/input/berlin-v5.0.transit-vehicles.xml.gz" />
+		<param name="vehiclesFile" value="../../berlin-v5.2-10pct/input/berlin-v5.0.transit-vehicles.xml.gz" />
 	</module>
 	<module name="planscalcroute" >
 		<param name="networkModes" value="car,freight,ride" />
