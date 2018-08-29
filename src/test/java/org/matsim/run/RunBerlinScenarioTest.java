@@ -65,7 +65,7 @@ public class RunBerlinScenarioTest {
 	@Test
 	public final void test1pctUntilIteration1() {
 		try {
-			String configFilename = "scenarios/berlin-v5.1-1pct/input/berlin-v5.1-1pct.config.xml";
+			String configFilename = "scenarios/berlin-v5.2-1pct/input/berlin-v5.2-1pct.config.xml";
 			RunBerlinScenario berlin = new RunBerlinScenario( configFilename, "overridingConfig.xml" ) ;
 			
 			Config config =  berlin.prepareConfig() ;
@@ -92,7 +92,7 @@ public class RunBerlinScenarioTest {
 	@Test
 	public final void test10pctUntilIteration1() {
 		try {
-			String configFilename = "scenarios/berlin-v5.1-10pct/input/berlin-v5.1-10pct.config.xml";
+			String configFilename = "scenarios/berlin-v5.2-10pct/input/berlin-v5.2-10pct.config.xml";
 			RunBerlinScenario berlin = new RunBerlinScenario( configFilename, "overridingConfig.xml" ) ;
 			
 			Config config =  berlin.prepareConfig() ;
@@ -122,7 +122,7 @@ public class RunBerlinScenarioTest {
 		// to file, but then we don't see anything.  So we will have to play around with the number of iterations.  Thus the
 		// imprecise name of the test.   kai, aug'18)
 		try {
-			String configFilename = "scenarios/berlin-v5.1-1pct/input/berlin-v5.1-1pct.config.xml";
+			String configFilename = "scenarios/berlin-v5.2-1pct/input/berlin-v5.2-1pct.config.xml";
 			RunBerlinScenario berlin = new RunBerlinScenario( configFilename, "overridingConfig.xml") ;
 			
 			Config config = berlin.prepareConfig() ;
