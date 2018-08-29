@@ -1,0 +1,1 @@
+Link Id	Count Station Id	Hour	MATSIM volumes	Count volumes	Relative Error	Normalized Relative Error	GEH

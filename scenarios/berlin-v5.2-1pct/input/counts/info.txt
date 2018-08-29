@@ -1,0 +1,4 @@
+
+see here: shared-svn/studies/countries/de/open_berlin_scenario/be_5/counts
+
+(Unfortunately, we can't make the counts data public.)
