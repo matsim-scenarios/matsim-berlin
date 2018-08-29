@@ -60,7 +60,7 @@ public class RunBerlinScenario {
 		String configFileName ;
 		String overridingConfigFileName = null;
 		if ( args.length==0 || args[0].equals("")) {
-			configFileName = "scenarios/berlin-v5.1-1pct/input/berlin-v5.1-1pct.config.xml";
+			configFileName = "scenarios/berlin-v5.1-10pct/input/berlin-v5.2-10pct.config.xml";
 			overridingConfigFileName = "overridingConfig.xml";
 		} else {
 			configFileName = args[0];
