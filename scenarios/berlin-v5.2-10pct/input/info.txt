@@ -19,5 +19,5 @@ File renaming:
 2018-07-04:
 berlin-5.1_10pct_plans.xml.gz: bug fix: population is the same as version 5.0 except that the route information is deleted for main-mode-trips without access and egress walk trips
 
-2018-08-25:
-berlin-5.2_10pct_plans.xml.gz: bug fix: more realistic routes in initial plans file; selected output plans from run output-berlin-v5.1-10pct_j (berlin-5.1_10pct_plans.xml.gz as input; 200 iterations; mode and time choice switch off in iteration 100, re-route switched off in iteration 150; insertWaitingVehiclesBeforeFlowQueue = true)
+2018-09-03:
+berlin-5.2_10pct_plans.xml.gz: bug fix: more realistic routes in initial plans file; selected output plans from run output-berlin-v5.1-10pct_i (berlin-5.1_10pct_plans.xml.gz as input; innovative strategy weight: 0.05; 500 it, fraction of iterations to disable innovative strategies: 0.8
