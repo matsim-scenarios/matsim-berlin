@@ -41,7 +41,7 @@ This will update your repository to the newest version.
 
 ##### Run MATSim
 
-1. There should be a file directly in the `fem` directory with name approximately as `matsim-berlin-0.11.0-SNAPSHOT-jar-with-dependencies.jar`.
+1. There should be a file directly in the `fem` directory with name approximately as `matsim-berlin-0.5.0-SNAPSHOT-jar-with-dependencies.jar`.
 1. Double-click on that file (in a file system browser).  A simple GUI should open.
 1. In the GUI, click on the "Choose" button for configuration file.  Navigate to one of the `scenario` directories and load one of the configuration files.
 1. Increase memory in the GUI.
