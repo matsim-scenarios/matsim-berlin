@@ -82,13 +82,19 @@ public class RunBerlinScenario {
 		
 		controler = new Controler( scenario );
 		
-		// use the sbb pt raptor router
-		controler.addOverridingModule( new AbstractModule() {
-			@Override
-			public void install() {
-				install( new SwissRailRaptorModule() );
-			}
-		} );
+		if (controler.getConfig().transit().isUsingTransitInMobsim()) {
+			// use the sbb pt raptor router
+			controler.addOverridingModule( new AbstractModule() {
+				@Override
+				public void install() {
+					install( new SwissRailRaptorModule() );
+				}
+			} );
+		} else {
+			log.warn("Public transit will be teleported and not simulated in the mobsim! "
+					+ "This will have a significant effect on pt-related parameters (travel times, modal split, and so on). "
+					+ "Should only be used for testing or car-focused studies with fixed modal split.  ");
+		}
 		
 		// use the (congested) car travel time for the teleported ride mode
 		controler.addOverridingModule( new AbstractModule() {
@@ -114,7 +120,9 @@ public class RunBerlinScenario {
 		
 		// so that config settings in code, which come after the settings from the initial config file, can
 		// be overridden without having to change the jar file.  Normally empty.
-		if (this.overridingConfigFileName!=null) {
+		if (this.overridingConfigFileName==null || this.overridingConfigFileName=="null" || this.overridingConfigFileName=="") {
+			// do not load overriding config
+		} else {
 			ConfigUtils.loadConfig( config, this.overridingConfigFileName );	
 		}
 		// note that the path for this is different when run from GUI (path of original config) vs.
@@ -135,11 +143,10 @@ public class RunBerlinScenario {
 		
 		config.subtourModeChoice().setProbaForRandomSingleTripMode( 0.5 );
 		
-//		config.qsim().setInsertingWaitingVehiclesBeforeDrivingVehicles( true );
-		// FIXME yyyyyy for next version.  ihab/kai, aug'18
-		
 //		config.plansCalcRoute().setRoutingRandomness( 3. );
 		// FIXME yyyyyy for next version.  ihab/kai, aug'18
+		
+		config.qsim().setInsertingWaitingVehiclesBeforeDrivingVehicles( true );
 		
 		// vsp defaults
 		config.plansCalcRoute().setInsertingAccessEgressWalk( true );
@@ -155,16 +162,22 @@ public class RunBerlinScenario {
 		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
 			final ActivityParams params = new ActivityParams( "work_" + ii + ".0" ) ;
 			params.setTypicalDuration( ii );
+			params.setOpeningTime(6. * 3600.);
+			params.setClosingTime(20. * 3600.);
 			config.planCalcScore().addActivityParams( params );
 		}
 		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
 			final ActivityParams params = new ActivityParams( "leisure_" + ii + ".0" ) ;
 			params.setTypicalDuration( ii );
+			params.setOpeningTime(9. * 3600.);
+			params.setClosingTime(27. * 3600.);
 			config.planCalcScore().addActivityParams( params );
 		}
 		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
 			final ActivityParams params = new ActivityParams( "shopping_" + ii + ".0" ) ;
 			params.setTypicalDuration( ii );
+			params.setOpeningTime(8. * 3600.);
+			params.setClosingTime(20. * 3600.);
 			config.planCalcScore().addActivityParams( params );
 		}
 		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {

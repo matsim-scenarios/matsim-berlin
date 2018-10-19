@@ -18,20 +18,20 @@
 		<param name="numberOfThreads" value="6" />
 	</module>
 	<module name="network" >
-		<param name="inputNetworkFile" value="../../berlin-v5.2-10pct/input/berlin-v5.0.network.xml.gz" />
+		<param name="inputNetworkFile" value="../../berlin-v5.2-10pct/input/berlin-v5-network.xml.gz" />
 	</module>
 	<module name="plans" >
-		<param name="inputPersonAttributesFile" value="../../berlin-v5.2-10pct/input/berlin-v5.0.person-attributes.xml.gz" />
+		<param name="inputPersonAttributesFile" value="../../berlin-v5.2-10pct/input/berlin-v5-person-attributes.xml.gz" />
 		<param name="inputPlansFile" value="berlin-v5.2-1pct.plans.xml.gz" />
 		<param name="removingUnnecessaryPlanAttributes" value="true" />
 	</module>
 	<module name="vehicles" >
-		<param name="vehiclesFile" value="../../berlin-v5.2-10pct/input/berlin-v5.0.mode-vehicle-types.xml" />
+		<param name="vehiclesFile" value="../../berlin-v5.2-10pct/input/berlin-v5-mode-vehicle-types.xml" />
 	</module>
 	<module name="transit" >
-		<param name="transitScheduleFile" value="../../berlin-v5.2-10pct/input/berlin-v5.0.transit-schedule.xml.gz" />
+		<param name="transitScheduleFile" value="../../berlin-v5.2-10pct/input/berlin-v5-transit-schedule.xml.gz" />
 		<param name="useTransit" value="true" />
-		<param name="vehiclesFile" value="../../berlin-v5.2-10pct/input/berlin-v5.0.transit-vehicles.xml.gz" />
+		<param name="vehiclesFile" value="../../berlin-v5.2-10pct/input/berlin-v5-transit-vehicles.xml.gz" />
 	</module>
 	<module name="planscalcroute" >
 		<param name="networkModes" value="car,freight,ride" />
@@ -108,22 +108,21 @@
 	<module name="planCalcScore" >
 		<param name="fractionOfIterationsToStartScoreMSA" value="1.0" />
 		<parameterset type="scoringParameters" >
-			<param name="waitingPt" value="0.0" />
 			<parameterset type="modeParams" >
 				<param name="constant" value="-1.5" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="car" />
-				<param name="monetaryDistanceRate" value="-2.0E-4" />
+				<param name="monetaryDistanceRate" value="-0.0002" />
 			</parameterset>
 			<parameterset type="modeParams" >
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="ride" />
-				<param name="monetaryDistanceRate" value="-2.0E-4" />
+				<param name="monetaryDistanceRate" value="-0.0002" />
 			</parameterset>
 			<parameterset type="modeParams" >
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="freight" />
-				<param name="monetaryDistanceRate" value="-4.0E-4" />
+				<param name="monetaryDistanceRate" value="-0.0004" />
 			</parameterset>
 			<parameterset type="modeParams" >
 				<param name="constant" value="-0.6" />
@@ -153,5 +152,4 @@
 			</parameterset>
 		</parameterset>
 	</module>
-
 </config>
