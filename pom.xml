@@ -126,8 +126,8 @@
 					</excludes>
 					<forkMode>once</forkMode>
 					<!-- avoid out of memory errors: -->
-					<argLine>-Xmx8000m -Djava.awt.headless=true
-						-Dmatsim.preferLocalDtds=true</argLine>
+					<argLine>-Xmx8000m -Djava.awt.headless=true -Dmatsim.preferLocalDtds=true</argLine>
+					<useSystemClassLoader>false</useSystemClassLoader>
 				</configuration>
 			</plugin>
 
