@@ -8,7 +8,7 @@
 		<param name="lastIteration" value="500" />
 		<param name="overwriteFiles" value="deleteDirectoryIfExists" />
 		<param name="runId" value="berlin-v5.2-10pct" />
-		<param name="outputDirectory" value="./scenarios/berlin-v5.2-10pct/output-berlin-v5.2-10pct" />
+		<param name="outputDirectory" value="./output-berlin-v5.2-10pct" />
 		<param name="writeEventsInterval" value="50" />
 		<param name="writePlansInterval" value="50" />
 	</module>
