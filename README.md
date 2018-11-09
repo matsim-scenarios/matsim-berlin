@@ -30,7 +30,7 @@ This repository provides an open MATSim transport model for Berlin, provided by 
 
 (We strongly advise using git from the command line, since in our experience the git lfs extension, which we really need, works by far best from the command line.)
 
-This will result in a new `fem` directory.  Memorize where you have put it.  You can move it, as a whole, to some other place.
+This will result in a new `matsim-berlin` directory.  Memorize where you have put it.  You can move it, as a whole, to some other place.
 
 ##### Update your local clone of the repository.
 
@@ -47,5 +47,4 @@ This will update your repository to the newest version.
 1. Increase memory in the GUI.
 1. Press the "Start MATSim" button.  This should run MATSim.
 1. "Open" the output directory.  You can drag files into VIA as was already done above.
-
 1. "Edit..." (in the GUI) the config file.  Re-run MATSim.
