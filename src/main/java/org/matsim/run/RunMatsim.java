@@ -18,7 +18,13 @@
  * *********************************************************************** */
 package org.matsim.run;
 
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.contrib.freight.carrier.Carrier;
+import org.matsim.contrib.freight.carrier.CarrierImpl;
+import org.matsim.contrib.freight.carrier.CarrierPlanXmlWriterV2;
+import org.matsim.contrib.freight.carrier.CarrierService;
+import org.matsim.contrib.freight.carrier.Carriers;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
@@ -34,7 +40,7 @@ public class RunMatsim {
 
 	public static void main(String[] args) {
 		Gbl.assertIf(args.length >=1 && args[0]!="" );
-		run(ConfigUtils.loadConfig(args[0]));
+		run(ConfigUtils.loadConfig("scenarios/equil/config.xml"));
 		// makes some sense to not modify the config here but in the run method to help  with regression testing.
 	}
 	
@@ -55,6 +61,12 @@ public class RunMatsim {
 		// possibly modify controler here
 		
 		// ---
+		Carriers carriers = new Carriers();
+		Id<Carrier> carrierID = Id.create("myCarrier", Carrier.class);
+		Carrier myCarrier = CarrierImpl.newInstance(carrierID);
+		CarrierService service = new CarrierService.Builder
+		myCarrier.getServices().add(service );
+		
 		
 		controler.run();
 	}
