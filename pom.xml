@@ -6,8 +6,8 @@
 	<artifactId>matsim-example-project</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
-	<name>MATSim example project</name>
-	<description>MATSim example project</description>
+	<name>MasterarbeitEW</name>
+	<description>Meine Masterarbeit</description>
 
 	<repositories>
 		<repository>
@@ -22,7 +22,15 @@
 			<!-- This is the matsim "core": -->
 			<groupId>org.matsim</groupId>
 			<artifactId>matsim</artifactId>
-			<version>0.10.0</version>
+			<version>0.11.0-2018w44</version>
+		</dependency>
+		
+		
+		<dependency>
+		<!-- This is the matsim "freight" contrib: -->
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>freight</artifactId>
+			<version>0.11.0-2018w44</version>
 		</dependency>
 
 		<dependency>
@@ -38,7 +46,7 @@
 			<groupId>org.matsim</groupId>
 			<artifactId>matsim</artifactId>
 			<type>test-jar</type>
-			<version>0.10.0</version>
+			<version>0.11.0-2018w44</version>
 			<scope>test</scope>
 		</dependency>
 
