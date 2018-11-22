@@ -27,3 +27,8 @@ pieces of the failed attempt in the directory and start over.
 ### Import into IntelliJ
 
 ... todo ...
+
+
+---
+Link zum den Daten aus dem OpenBerlinSzenario: Kannst das Output Network nehmen:
+https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.2-1pct/output-berlin-v5.2-1pct/
