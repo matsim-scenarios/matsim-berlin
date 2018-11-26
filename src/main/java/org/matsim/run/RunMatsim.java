@@ -32,6 +32,10 @@ import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.gbl.Gbl;
 import org.matsim.core.scenario.ScenarioUtils;
 
+import com.graphhopper.jsprit.core.problem.vehicle.VehicleType;
+import com.graphhopper.jsprit.core.problem.vehicle.VehicleTypeImpl;
+
+
 /**
  * @author nagel
  *
@@ -60,13 +64,13 @@ public class RunMatsim {
 		
 		// possibly modify controler here
 		
-		// ---
+		/*---
 		Carriers carriers = new Carriers();
 		Id<Carrier> carrierID = Id.create("myCarrier", Carrier.class);
 		Carrier myCarrier = CarrierImpl.newInstance(carrierID);
-		CarrierService service = new CarrierService.Builder
+		CarrierService service = new CarrierService.Builder();
 		myCarrier.getServices().add(service );
-		
+		*/
 		
 		controler.run();
 	}
