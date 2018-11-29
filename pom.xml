@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.matsim</groupId>
 	<artifactId>matsim-berlin</artifactId>
-	<version>0.5.0-SNAPSHOT</version>
+	<version>5.2-SNAPSHOT</version>
 
 	<name>MATSim Open Berlin scenario project</name>
 	<description>MATSim Open Berlin scenario project</description>
@@ -45,6 +45,13 @@
 			<artifactId>matsim</artifactId>
 			<version>0.11.0-SNAPSHOT</version>
 		</dependency>
+		
+		<dependency>
+        	<groupId>org.matsim.contrib</groupId>
+        	<artifactId>emissions</artifactId>
+        	<version>0.11.0-SNAPSHOT</version>
+        	<scope>compile</scope>
+      	</dependency>
 
 		<!-- Include the JUnit testing library.  Not transitive. -->
 		<dependency>

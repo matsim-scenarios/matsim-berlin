@@ -1,7 +1,0 @@
-
-This directory contains the input files for a 1pct scenario.
-* The 1pct scenario was not calibrated and should only be used for testing purposes or pre-studies!
-* Final simulation experiments should be run using the 10pct scenario!
-
-All input files correspond to the files in the 10pct scenario, except for the plans file, the person attributes file and the config file.
-For more information, have a look into the info.txt file in the directory of the 10pct scenario.

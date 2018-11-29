@@ -8,7 +8,7 @@
 		<param name="lastIteration" value="500" />
 		<param name="overwriteFiles" value="deleteDirectoryIfExists" />
 		<param name="runId" value="berlin-v5.2-10pct" />
-		<param name="outputDirectory" value="./scenarios/berlin-v5.2-10pct/output-berlin-v5.2-10pct" />
+		<param name="outputDirectory" value="./output-berlin-v5.2-10pct" />
 		<param name="writeEventsInterval" value="50" />
 		<param name="writePlansInterval" value="50" />
 	</module>
@@ -18,20 +18,20 @@
 		<param name="numberOfThreads" value="8" />
 	</module>
 	<module name="network" >
-		<param name="inputNetworkFile" value="berlin-v5-network.xml.gz" />
+		<param name="inputNetworkFile" value="http://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.2-10pct/input/berlin-v5-network.xml.gz" />
 	</module>
 	<module name="plans" >
-		<param name="inputPersonAttributesFile" value="berlin-v5-person-attributes.xml.gz" />
-		<param name="inputPlansFile" value="berlin-v5.2-10pct.plans.xml.gz" />
+		<param name="inputPersonAttributesFile" value="http://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.2-10pct/input/berlin-v5-person-attributes.xml.gz" />
+		<param name="inputPlansFile" value="http://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.2-10pct/input/berlin-v5.2-10pct.plans.xml.gz" />
 		<param name="removingUnnecessaryPlanAttributes" value="true" />
 	</module>
 	<module name="vehicles" >
-		<param name="vehiclesFile" value="berlin-v5-mode-vehicle-types.xml" />
+		<param name="vehiclesFile" value="http://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.2-10pct/input/berlin-v5-mode-vehicle-types.xml" />
 	</module>
 	<module name="transit" >
-		<param name="transitScheduleFile" value="berlin-v5-transit-schedule.xml.gz" />
+		<param name="transitScheduleFile" value="http://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.2-10pct/input/berlin-v5-transit-schedule.xml.gz" />
 		<param name="useTransit" value="true" />
-		<param name="vehiclesFile" value="berlin-v5-transit-vehicles.xml.gz" />
+		<param name="vehiclesFile" value="http://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.2-10pct/input/berlin-v5-transit-vehicles.xml.gz" />
 	</module>
 	<module name="planscalcroute" >
 		<param name="networkModes" value="car,freight,ride" />
