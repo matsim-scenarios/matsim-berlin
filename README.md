@@ -6,11 +6,11 @@ This repository provides an open MATSim transport model for Berlin, provided by 
 
 Currently, there are two versions of the Berlin model:
 
-##### 10pct scenario (scenarios/berlin-v5.2-10pct)
+#### 10pct scenario (scenarios/berlin-v5.2-10pct)
 
 This scenario contains a 10pct sample of the Greater Berlin population; road capacities are accordingly reduced. The scenario is calibrated taking into consideration the traffic counts, modal split and mode-specific trip distance distributions.
 
-##### 1pct scenario (scenarios/berlin-v5.2-1pct)
+#### 1pct scenario (scenarios/berlin-v5.2-1pct)
 
 This scenario contains a 1pct sample of the Greater Berlin population; road capacities are accordingly reduced. This scenario was not (!) calibrated and should only be used for testing purposes or pre-studies!
 
@@ -41,7 +41,7 @@ Go to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/d
 
 ##### Initial stuff (needs to be done once)
 
-1. Type `git clone https://github.com/matsim-vsp/matsim-berlin.git` using the command line
+Type `git clone https://github.com/matsim-vsp/matsim-berlin.git` using the command line.
 
 This will result in a new `matsim-berlin` directory.  Memorize where you have put it.  You can move it, as a whole, to some other place.
 
@@ -69,4 +69,6 @@ This will update your repository to the newest version.
 1. Set up the project in your IDE
 1. Make sure the project is configured as maven project
 1. Run the JAVA class src/main/java/org/matsim/run/RunBerlinScenario.java
+1. "Open" the output directory.  You can drag files into VIA as was already done above.
+1. Edit the config file or adjust the run class. Re-run MATSim.
 
