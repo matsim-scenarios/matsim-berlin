@@ -66,9 +66,9 @@ This will update your repository to the newest version.
 
 #### ... using an IDE (Eclipse, IntelliJ, ...)
 
-1. Set up the project in your IDE
-1. Make sure the project is configured as maven project
-1. Run the JAVA class src/main/java/org/matsim/run/RunBerlinScenario.java
+1. Set up the project in your IDE.
+1. Make sure the project is configured as maven project.
+1. Run the JAVA class src/main/java/org/matsim/run/RunBerlinScenario.java.
 1. "Open" the output directory.  You can drag files into VIA as was already done above.
 1. Edit the config file or adjust the run class. Re-run MATSim.
 
