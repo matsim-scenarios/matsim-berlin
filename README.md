@@ -41,7 +41,9 @@ Go to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/d
 
 ##### Initial stuff (needs to be done once)
 
-Type `git clone https://github.com/matsim-vsp/matsim-berlin.git` using the command line.
+1. Install git for the command line.
+1. Type `git clone https://github.com/matsim-vsp/matsim-berlin.git` in the command line.
+(Or use your IDE, e.g. Eclipse, IntelliJ, to clone the repository.)
 
 This will result in a new `matsim-berlin` directory.  Memorize where you have put it.  You can move it, as a whole, to some other place.
 
@@ -49,6 +51,7 @@ This will result in a new `matsim-berlin` directory.  Memorize where you have pu
 
 1. Go into the `matsim-berlin` directory.
 1. Type `git pull`
+(Or use your IDE, e.g. Eclipse, IntelliJ, to update the repository.)
 
 This will update your repository to the newest version.
 
@@ -65,7 +68,6 @@ This will update your repository to the newest version.
 1. "Edit..." (in the GUI) the config file.  Re-run MATSim.
 
 #### ... using an IDE (Eclipse, IntelliJ, ...)
-
 1. Set up the project in your IDE.
 1. Make sure the project is configured as maven project.
 1. Run the JAVA class src/main/java/org/matsim/run/RunBerlinScenario.java.
