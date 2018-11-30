@@ -1,13 +1,17 @@
 language: java
-jdk: oraclejdk8
-addons:
-  apt:
-    packages:
-      - oracle-java8-installer  # https://github.com/travis-ci/travis-ci/issues/3259
+
+jdk:
+# - oraclejdk8
+  - openjdk8
+
+#addons:
+#  apt:
+#    packages:
+#      - oracle-java8-installer  # https://github.com/travis-ci/travis-ci/issues/3259
 
 # I don't know what this is doing. kai, jul'18
 sudo:
-- false # https://travis-ci.org/cotsog/travis_ci_prod_regular/jobs/442812681/config
+- # false # https://travis-ci.org/cotsog/travis_ci_prod_regular/jobs/442812681/config
 - required
 
 # I don't know what this is doing. kai, jul'18
@@ -30,7 +34,7 @@ stages:
 # this is the script run in the "test" stage:
 # 'failsafe:verify' triggers travis failures for errors/failures of integration tests. 
 script:
-  - true # https://travis-ci.org/cotsog/travis_ci_prod_regular/jobs/442812681/config
+#  - true # https://travis-ci.org/cotsog/travis_ci_prod_regular/jobs/442812681/config
   - mvn -Dtest=${TEST} test --batch-mode -Dmatsim.preferLocalDtds=true -Dmaven.javadoc.skip -e
 
 # -Dmaven.test.redirectTestOutputToFile 
