@@ -4,7 +4,7 @@
 
 This repository provides an open MATSim transport model for Berlin, provided by the [Transport Systems Planning and Transport Telematics group](https://www.vsp.tu-berlin.de) of [Technische Universität Berlin](http://www.tu-berlin.de).
 
-Currently, there are two versions of the Berlin model:
+Currently, there are two versions of the MATSim Open Berlin model:
 
 #### 10pct scenario (scenarios/berlin-v5.2-10pct)
 
@@ -76,4 +76,11 @@ This will update your repository to the newest version.
 1. Run the JAVA class src/main/java/org/matsim/run/RunBerlinScenario.java.
 1. "Open" the output directory.  You can drag files into VIA as was already done above.
 1. Edit the config file or adjust the run class. Re-run MATSim.
+
+### More information
+
+For more information about MATSim, see here: https://www.matsim.org/. 
+
+
+
 
