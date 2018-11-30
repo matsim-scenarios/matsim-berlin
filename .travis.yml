@@ -6,7 +6,10 @@ addons:
       - oracle-java8-installer  # https://github.com/travis-ci/travis-ci/issues/3259
 
 # I don't know what this is doing. kai, jul'18
-sudo: required
+# https://travis-ci.org/cotsog/travis_ci_prod_regular/jobs/442812681/config
+sudo:
+- false
+- required
 
 # I don't know what this is doing. kai, jul'18
 dist: trusty
@@ -27,7 +30,9 @@ stages:
 
 # this is the script run in the "test" stage:
 # 'failsafe:verify' triggers travis failures for errors/failures of integration tests. 
-script: mvn -Dtest=${TEST} test --batch-mode -Dmatsim.preferLocalDtds=true -Dmaven.javadoc.skip -e
+script:
+  - true
+  - mvn -Dtest=${TEST} test --batch-mode -Dmatsim.preferLocalDtds=true -Dmaven.javadoc.skip -e
 
 # -Dmaven.test.redirectTestOutputToFile 
 
