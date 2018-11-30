@@ -27,6 +27,7 @@ Go to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/d
 
 ##### Run VIA on output files
 
+1. Get VIA from https://www.simunto.com/via/.
 1. For the 10pct scenario, go to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.2-10pct/output-berlin-v5.2-10pct/. For the 1pct scenario, go to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.2-1pct/output-berlin-v5.2-1pct/.
 1. Download `output_network.xml.gz` and `output_events.xml.gz`.  Best make sure that they do not uncompress, e.g. by "Download linked file as ...".
 1. Get these files into VIA.  This can be achieved in various ways; one is to open VIA and then drag the files from a file browser into VIA.
@@ -69,7 +70,7 @@ This will update your repository to the newest version.
 1. "Open" the output directory.  You can drag files into VIA as was already done above.
 1. "Edit..." (in the GUI) the config file.  Re-run MATSim.
 
-#### ... using an IDE (Eclipse, IntelliJ, ...)
+#### ... using an IDE, e.g. Eclipse, IntelliJ
 1. Set up the project in your IDE.
 1. Make sure the project is configured as maven project.
 1. Run the JAVA class src/main/java/org/matsim/run/RunBerlinScenario.java.
