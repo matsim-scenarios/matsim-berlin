@@ -1,13 +1,13 @@
 language: java
 
 jdk:
-# - oraclejdk8
-  - openjdk8
+  - oraclejdk8
+  # - openjdk8
 
-#addons:
-#  apt:
-#    packages:
-#      - oracle-java8-installer  # https://github.com/travis-ci/travis-ci/issues/3259
+addons:
+  apt:
+    packages:
+      - oracle-java8-installer  # https://github.com/travis-ci/travis-ci/issues/3259
 
 # I don't know what this is doing. kai, jul'18
 sudo:
