@@ -6,9 +6,8 @@ addons:
       - oracle-java8-installer  # https://github.com/travis-ci/travis-ci/issues/3259
 
 # I don't know what this is doing. kai, jul'18
-# https://travis-ci.org/cotsog/travis_ci_prod_regular/jobs/442812681/config
 sudo:
-- false
+# - false # https://travis-ci.org/cotsog/travis_ci_prod_regular/jobs/442812681/config
 - required
 
 # I don't know what this is doing. kai, jul'18
