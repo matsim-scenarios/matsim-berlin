@@ -1,57 +1,13 @@
 language: java
-#jdk:
-#  - oraclejdk8
 
-#addons:
-#  apt:
-#    packages:
-#      - oracle-java8-installer  # https://github.com/travis-ci/travis-ci/issues/3259
-
-# I don't know what this is doing. kai, jul'18
-# sudo:
-# - required
-
-# I don't know what this is doing. kai, jul'18
+# The trusty build environment allows for more memory, see https://docs.travis-ci.com/user/reference/overview/
 dist: trusty
-
-# This skips the mvn install that is otherwise run (implausibly, the setting has to be "true")
-# https://docs.travis-ci.com/user/customizing-the-build/#Skipping-the-Installation-Step
-# install: true
-
-# For the following, see
-# https://blog.travis-ci.com/2017-09-12-build-stages-order-and-conditions.
-# Note that you cannot get rid of the "test" stage, and it is the only
-# stage that does get matrix-expanded.  kai, dec'17
-
-# define the order of the stages:
-# stages:
-#  - package
-#  - test
-
-# this is the script run in the "test" stage:
-# 'failsafe:verify' triggers travis failures for errors/failures of integration tests. 
-script:
-#  - true # https://travis-ci.org/cotsog/travis_ci_prod_regular/jobs/442812681/config
-  - mvn -Dtest=${TEST} test --batch-mode -Dmatsim.preferLocalDtds=true -Dmaven.javadoc.skip -e
-
-# -Dmaven.test.redirectTestOutputToFile 
-
-# this defines all other stages.
-# jobs:
-#  include:
-#   - stage: package
-#      script: mvn package -DskipTests --batch-mode -Dmaven.test.redirectTestOutputToFile -Dmatsim.preferLocalDtds=true --fail-at-end -Dmaven.javadoc.skip
-# (I think that the "-" is significant; it implies that "state" and "script" belong together. kai, jul'18)
 
 # (would be nice to run this also in parallel with the others.  But it
 # is either the matrix thing and then exactly the same command for
 # each module.  Or hand-written entries (see .travis.yml.nomatrix),
 # which in particular has the disadvantage that one cannot see the
 # failing module at the travis toplevel.)
-
-# cache:
-#  directories:
-#  - $HOME/.m2
 
 env:
   global:
@@ -61,3 +17,5 @@ env:
     - TEST=RunBerlinScenarioTest#test1pctUntilIteration1
 #   - TEST=RunBerlinScenarioTest#test10pctUntilIteration1 # does not fit into travis.  kai, aug'18
 
+script:
+  - mvn -Dtest=${TEST} test --batch-mode -Dmatsim.preferLocalDtds=true -Dmaven.javadoc.skip -e
