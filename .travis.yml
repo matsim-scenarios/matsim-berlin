@@ -58,7 +58,7 @@ cache:
 
 env:
   global:
-    - MAVEN_OPTS="-Xmx2g"
+    - MAVEN_OPTS="-Xmx8g"
   matrix:
     - TEST=RunBerlinScenarioTest#testTest
     - TEST=RunBerlinScenarioTest#test1pctUntilIteration1
