@@ -47,11 +47,11 @@
 		</dependency>
 		
 		<dependency>
-        	<groupId>org.matsim.contrib</groupId>
-        	<artifactId>emissions</artifactId>
-        	<version>0.11.0-SNAPSHOT</version>
-        	<scope>compile</scope>
-      	</dependency>
+        		<groupId>org.matsim.contrib</groupId>
+        		<artifactId>emissions</artifactId>
+        		<version>0.11.0-SNAPSHOT</version>
+        		<scope>compile</scope>
+      		</dependency>
 
 		<!-- Include the JUnit testing library.  Not transitive. -->
 		<dependency>
@@ -69,18 +69,20 @@
 			<version>0.11.0-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
-
+		
 		<dependency>
-	    		<groupId>com.github.SchweizerischeBundesbahnen</groupId>
-	    		<artifactId>matsim-sbb-extensions</artifactId>
-	    		<version>0.10.0</version>
-		</dependency>
-            <dependency>
+            		<groupId>com.github.simunto</groupId>
+            		<artifactId>matsim-sbb-extensions</artifactId>
+            		<version>0.11.0-2018w44</version>
+        	</dependency>
+            
+		<dependency>
                   <groupId>org.matsim.contrib</groupId>
                   <artifactId>common</artifactId>
                   <version>0.11.0-SNAPSHOT</version>
-            </dependency>
-              <dependency>
+            	</dependency>
+              	
+		<dependency>
                     <groupId>org.matsim.contrib</groupId>
                     <artifactId>analysis</artifactId>
                     <version>0.11.0-SNAPSHOT</version>
