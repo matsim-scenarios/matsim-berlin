@@ -80,9 +80,3 @@ This will update your repository to the newest version.
 ### More information
 
 For more information about MATSim, see here: https://www.matsim.org/.
-
-
-
-
-
-
