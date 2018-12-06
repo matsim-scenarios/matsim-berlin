@@ -11,7 +11,7 @@ dist: trusty
 
 env:
   global:
-    - MAVEN_OPTS="-Xmx8g"
+    - MAVEN_OPTS="-Xmx6g"
   matrix:
     - TEST=RunBerlinScenarioTest#testTest
     - TEST=RunBerlinScenarioTest#test1pctUntilIteration1
