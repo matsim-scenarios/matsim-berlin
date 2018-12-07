@@ -14,7 +14,7 @@ hs_err_pid*
 /.project
 /.classpath
 /target/
-/output/
+output*
 /bin/
 
 /.idea/
