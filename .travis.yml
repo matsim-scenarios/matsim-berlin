@@ -3,12 +3,6 @@ language: java
 # The trusty build environment allows for more memory, see https://docs.travis-ci.com/user/reference/overview/
 dist: trusty
 
-# (would be nice to run this also in parallel with the others.  But it
-# is either the matrix thing and then exactly the same command for
-# each module.  Or hand-written entries (see .travis.yml.nomatrix),
-# which in particular has the disadvantage that one cannot see the
-# failing module at the travis toplevel.)
-
 env:
   global:
     - MAVEN_OPTS="-Xmx6g"

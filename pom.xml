@@ -4,10 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.matsim</groupId>
 	<artifactId>matsim-berlin</artifactId>
-	<version>5.2-SNAPSHOT</version>
+	<version>5.2</version>
 
 	<name>MATSim Open Berlin scenario project</name>
 	<description>MATSim Open Berlin scenario project</description>
+	
+	<properties>
+	  <matsim.version>0.11.0-2018w49</matsim.version>
+	</properties>
 
 	<repositories>
 		
@@ -43,13 +47,13 @@
 		<dependency>
 			<groupId>org.matsim</groupId>
 			<artifactId>matsim</artifactId>
-			<version>0.11.0-SNAPSHOT</version>
+			<version>${matsim.version}</version>
 		</dependency>
 		
 		<dependency>
         		<groupId>org.matsim.contrib</groupId>
         		<artifactId>emissions</artifactId>
-        		<version>0.11.0-SNAPSHOT</version>
+        		<version>${matsim.version}</version>
         		<scope>compile</scope>
       		</dependency>
 
@@ -66,7 +70,7 @@
 			<groupId>org.matsim</groupId>
 			<artifactId>matsim</artifactId>
 			<type>test-jar</type>
-			<version>0.11.0-SNAPSHOT</version>
+			<version>${matsim.version}</version>
 			<scope>test</scope>
 		</dependency>
 		
@@ -74,19 +78,33 @@
             		<groupId>com.github.simunto</groupId>
             		<artifactId>matsim-sbb-extensions</artifactId>
             		<version>0.11.0-2018w44</version>
+			<!--(careful, this is not matsim, thus not ${matsim.version})-->
         	</dependency>
             
 		<dependency>
                   <groupId>org.matsim.contrib</groupId>
                   <artifactId>common</artifactId>
-                  <version>0.11.0-SNAPSHOT</version>
+                  <version>${matsim.version}</version>
             	</dependency>
               	
 		<dependency>
                     <groupId>org.matsim.contrib</groupId>
                     <artifactId>analysis</artifactId>
-                    <version>0.11.0-SNAPSHOT</version>
+                    <version>${matsim.version}</version>
               </dependency>
+
+	      <!--The following is here since there was an upstream-->
+	      <!--problem, and we did not want to wait until that was resolved.  The-->
+	      <!--comments below are related to that problem.  kai/ihab, dec'18-->
+	      <dependency>
+		  <!--MATSim examples.  Not inherited from matsim since it-->
+		  <!--is in test scope there.  Leave in test scope since-->
+		  <!--it is not in weekly releases and then causes problems.  -->
+			<groupId>org.matsim</groupId>
+			<artifactId>matsim-examples</artifactId>
+			<!--<scope>test</scope>-->
+			<version>0.10.0</version>
+	      </dependency>
 
         </dependencies>
 
