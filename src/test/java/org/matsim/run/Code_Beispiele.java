@@ -4,6 +4,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.contrib.freight.carrier.Carrier;
 import org.matsim.contrib.freight.carrier.CarrierImpl;
 import org.matsim.contrib.freight.carrier.Carriers;
+import org.matsim.core.events.algorithms.EventWriterXML;
 import org.matsim.contrib.freight.carrier.CarrierService;
 
 import com.graphhopper.jsprit.core.problem.vehicle.VehicleType;
@@ -25,6 +26,16 @@ public class Code_Beispiele {
 		Carriers carriers = new Carriers();
 		Id<Carrier> carrierID = Id.create("Fahrer1", Carrier.class);
 		Carrier myCarrier = CarrierImpl.newInstance(carrierID);
+		
+		myCarrier.getServices().add(createMatsimService("Service1", "i(3,9)", 2));
+		myCarrier.getServices().add(createMatsimService("Service2", "i(4,9)", 2));	
+		
+private static CarrierService createMatsimService(String id, String to, int size) {
+		return CarrierService.Builder.newInstance(Id.create(id, CarrierService.class), Id.create(to, Link.class))
+				.setCapacityDemand(size)
+				.setServiceDuration(31.0)
+				.setServiceStartTimeWindow(TimeWindow.newInstance(3601.0, 36001.0))
+				.build();
 */
 	
 // Nachfrage erzeugen	
@@ -33,5 +44,6 @@ public class Code_Beispiele {
 		myCarrier.getServices().add(service);
 	*/ 
 	
-	
+// Ausgabe
+	// new EventWriterXML("output/Uebung/events_Test01.xml");
 }

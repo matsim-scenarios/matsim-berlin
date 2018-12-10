@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Network;
+import org.matsim.api.core.v01.population.PopulationWriter;
 import org.matsim.contrib.freight.carrier.Carrier;
 import org.matsim.contrib.freight.carrier.CarrierCapabilities;
 import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
@@ -22,6 +23,7 @@ import org.matsim.contrib.freight.jsprit.MatsimJspritFactory;
 import org.matsim.contrib.freight.jsprit.NetworkBasedTransportCosts;
 import org.matsim.contrib.freight.jsprit.NetworkRouter;
 import org.matsim.contrib.freight.jsprit.NetworkBasedTransportCosts.Builder;
+import org.matsim.core.controler.MatsimServices;
 import org.matsim.core.events.algorithms.EventWriterXML;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.io.MatsimNetworkReader;
@@ -77,13 +79,11 @@ public class Ablauf_einfach01 {
 			myCarrier.getServices().add(service2);
 			myCarrier.getServices().add(service3);
 			myCarrier.getServices().add(service4);
-			//	myCarrier.getServices().add(createMatsimService("Service1", "i(3,9)", 2));
-			//	myCarrier.getServices().add(createMatsimService("Service2", "i(4,9)", 2));		
-			
+	
 	//FahrzeugTyp erstellen
 			CarrierVehicleType carrierVehType = CarrierVehicleType.Builder.newInstance(Id.create("MüllwagenTyp1", org.matsim.vehicles.VehicleType.class))
 
-					.setCapacity(100)
+					.setCapacity(25)
 					.setMaxVelocity(10)
 					.setCostPerDistanceUnit(0.0001)
 					.setCostPerTimeUnit(0.001)
@@ -96,9 +96,9 @@ public class Ablauf_einfach01 {
 			
 	// Fahrzeug erstellen		
 			CarrierVehicle carrierVehicle1 = CarrierVehicle.Builder.newInstance(Id.create("Müllwagen1", org.matsim.vehicles.Vehicle.class), Id.createLinkId(13))
-					.setEarliestStart(21600.0).setLatestEnd(36000.0).setTypeId(carrierVehType.getId()).build();
+					.setEarliestStart(21600.0).setLatestEnd(30000.0).setTypeId(carrierVehType.getId()).build();
 			CarrierVehicle carrierVehicle2 = CarrierVehicle.Builder.newInstance(Id.create("Müllwagen2", org.matsim.vehicles.Vehicle.class), Id.createLinkId(13))
-					.setEarliestStart(28800.0).setLatestEnd(36000.0).setTypeId(carrierVehType.getId()).build();
+					.setEarliestStart(21600.0).setLatestEnd(36000.0).setTypeId(carrierVehType.getId()).build();
 			
 	// Dienstleister erstellen		
 			CarrierCapabilities.Builder ccBuilder = CarrierCapabilities.Builder.newInstance()
@@ -141,11 +141,9 @@ public class Ablauf_einfach01 {
 			
 			CarrierPlanWriter planWriter = new CarrierPlanWriter(anbieter.getCarriers().values());
 			planWriter.write("output/Uebung/plans_Test01.xml");
-			new EventWriterXML("output/Uebung/events_Test01.xml");
+		//	PopulationWriter poWriter = new PopulationWriter(population);
+			
 		
-			
-			
-
 					
 			
 

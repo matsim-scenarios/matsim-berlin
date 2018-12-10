@@ -37,6 +37,7 @@ public class RunMatsim {
 		Gbl.assertIf(args.length >=1 && args[0]!="" );
 		run(ConfigUtils.loadConfig(args[0]));
 		// makes some sense to not modify the config here but in the run method to help  with regression testing.
+		// config über run Configurations laden
 	}
 	
 	static void run(Config config) {

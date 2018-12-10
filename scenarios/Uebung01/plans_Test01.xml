@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<carriers>
+		<carrier id="BSR">
+			<vehicles>
+				<vehicle id="Müllwagen1" linkId="13"" typeId="MüllwagenTyp1" earliestStart="06:00:00" latestEnd="10:00:00"/>
+				<vehicle id="Müllwagen2" linkId="13"" typeId="MüllwagenTyp1" earliestStart="08:00:00" latestEnd="10:00:00"/>
+			</vehicles>
+
+			<shipments>
+			</shipments>
+
+			<plan score="-154.8" selected="true">
+				<tour vehicleId="Müllwagen1">
+					<act type="start" end_time="06:00:00"/>
+					<leg dep_time="06:00:00" transp_time="00:31:40">
+						<route>100</route>
+					</leg>
+					<leg dep_time="06:36:40" transp_time="00:48:20">
+						<route>700 1</route>
+					</leg>
+					<leg dep_time="07:30:00" transp_time="00:30:00">
+						<route>11</route>
+					</leg>
+					<leg dep_time="08:02:30" transp_time="00:26:40">
+						<route>120</route>
+					</leg>
+					<leg dep_time="08:34:10" transp_time="01:10:00">
+						<route>120 900 200 130</route>
+					</leg>
+					<act type="end"/>
+				</tour>
+			</plan>
+
+		</carrier>
+
+	</carriers>
