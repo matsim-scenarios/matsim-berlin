@@ -84,4 +84,6 @@ This will update your repository to the newest version.
 
 ### More information
 
+For more information about the scenario generation, see here: https://svn.vsp.tu-berlin.de/repos/public-svn/publications/vspwp/2019/19-01/ZiemkeEtAl2019OpenBerlinScenarioVSPWP.pdf
+
 For more information about MATSim, see here: https://www.matsim.org/.
