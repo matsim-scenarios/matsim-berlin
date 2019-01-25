@@ -1,4 +1,4 @@
-package org.matsim.run;
+package RunAbfall;
 
 import java.util.Collection;
 
@@ -49,7 +49,7 @@ import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolutio
 import com.graphhopper.jsprit.core.util.Solutions;
 
 
-public class Ablauf_einfach01 {
+public class Run_Abfall {
 
 	/*	Übung mit dem Ziel die Erstellung von services, VehicleTypes, Carriers etc.
 	 * zu üben
@@ -61,49 +61,10 @@ public class Ablauf_einfach01 {
 
 		//Create carrier with services and shipments
 		Carriers anbieter = new Carriers() ;
-		Carrier myCarrier = CarrierImpl.newInstance(Id.create("BSR", Carrier.class));
-
-		//Service erstellen
-		CarrierShipment shipment1 = CarrierShipment.Builder.newInstance(Id.create("Ship1",CarrierShipment.class),Id.createLinkId(7), Id.createLinkId(14), 10)
-				.setPickupServiceTime(300)
-				.setPickupTimeWindow(TimeWindow.newInstance(21600,54000))
-				.setDeliveryTimeWindow(TimeWindow.newInstance(21600,54000))
-				.setDeliveryServiceTime(3600)
-				.build();
-		CarrierShipment shipment2 = CarrierShipment.Builder.newInstance(Id.create("Ship2",CarrierShipment.class),Id.createLinkId(12), Id.createLinkId(14), 15)
-				.setPickupServiceTime(300)
-				.setPickupTimeWindow(TimeWindow.newInstance(21600,54000))
-				.setDeliveryTimeWindow(TimeWindow.newInstance(21600,54000))
-				.setDeliveryServiceTime(3600)
-				.build();
-		CarrierShipment shipment3 = CarrierShipment.Builder.newInstance(Id.create("Ship3",CarrierShipment.class),Id.createLinkId(6), Id.createLinkId(14), 8)
-				.setPickupServiceTime(300)
-				.setPickupTimeWindow(TimeWindow.newInstance(21600,54000))
-				.setDeliveryTimeWindow(TimeWindow.newInstance(21600,54000))
-				.setDeliveryServiceTime(3600)
-				.build();
-		CarrierShipment shipment4 = CarrierShipment.Builder.newInstance(Id.create("Ship4",CarrierShipment.class),Id.createLinkId(8), Id.createLinkId(14), 12)
-				.setPickupServiceTime(300)
-				.setPickupTimeWindow(TimeWindow.newInstance(21600,54000))
-				.setDeliveryTimeWindow(TimeWindow.newInstance(21600,54000))
-				.setDeliveryServiceTime(3600)
-				.build();
-	
-		myCarrier.getShipments().add(shipment1);
-		myCarrier.getShipments().add(shipment2);
-		myCarrier.getShipments().add(shipment3);
-		myCarrier.getShipments().add(shipment4);
+		Carrier myCarrier = createShipments();
 
 		//FahrzeugTyp erstellen
-		CarrierVehicleType carrierVehType = CarrierVehicleType.Builder.newInstance(Id.create("MüllwagenTyp1", org.matsim.vehicles.VehicleType.class))
-
-				.setCapacity(100)
-				.setMaxVelocity(10)
-				.setCostPerDistanceUnit(0.0001)
-				.setCostPerTimeUnit(0.001)
-				.setFixCost(130)
-				.setEngineInformation(new EngineInformationImpl(FuelType.diesel, 0.015))
-				.build();
+		CarrierVehicleType carrierVehType = createVehicleType();
 		// FahrzeugTyp zu FahrzeugTypen hinzufügen
 		CarrierVehicleTypes vehicleTypes = new CarrierVehicleTypes() ;
 		vehicleTypes.getVehicleTypes().put(carrierVehType.getId(), carrierVehType);
@@ -180,6 +141,60 @@ public class Ablauf_einfach01 {
 		
 	//	new CarrierPlanXmlWriterV2(anbieter).write("output/Uebung/output_MatSimCarrier.xml");
 
+	}
+
+	/**
+	 * @return
+	 */
+	private static CarrierVehicleType createVehicleType() {
+		return CarrierVehicleType.Builder.newInstance(Id.create("MüllwagenTyp1", org.matsim.vehicles.VehicleType.class))
+
+				.setCapacity(100)
+				.setMaxVelocity(10)
+				.setCostPerDistanceUnit(0.0001)
+				.setCostPerTimeUnit(0.001)
+				.setFixCost(130)
+				.setEngineInformation(new EngineInformationImpl(FuelType.diesel, 0.015))
+				.build();
+	}
+
+	/**
+	 * @return
+	 */
+	private static Carrier createShipments() {
+		Carrier myCarrier = CarrierImpl.newInstance(Id.create("BSR", Carrier.class));
+
+		//Service erstellen
+		CarrierShipment shipment1 = CarrierShipment.Builder.newInstance(Id.create("Ship1",CarrierShipment.class),Id.createLinkId(7), Id.createLinkId(14), 10)
+				.setPickupServiceTime(300)
+				.setPickupTimeWindow(TimeWindow.newInstance(21600,54000))
+				.setDeliveryTimeWindow(TimeWindow.newInstance(21600,54000))
+				.setDeliveryServiceTime(3600)
+				.build();
+		CarrierShipment shipment2 = CarrierShipment.Builder.newInstance(Id.create("Ship2",CarrierShipment.class),Id.createLinkId(12), Id.createLinkId(14), 15)
+				.setPickupServiceTime(300)
+				.setPickupTimeWindow(TimeWindow.newInstance(21600,54000))
+				.setDeliveryTimeWindow(TimeWindow.newInstance(21600,54000))
+				.setDeliveryServiceTime(3600)
+				.build();
+		CarrierShipment shipment3 = CarrierShipment.Builder.newInstance(Id.create("Ship3",CarrierShipment.class),Id.createLinkId(6), Id.createLinkId(14), 8)
+				.setPickupServiceTime(300)
+				.setPickupTimeWindow(TimeWindow.newInstance(21600,54000))
+				.setDeliveryTimeWindow(TimeWindow.newInstance(21600,54000))
+				.setDeliveryServiceTime(3600)
+				.build();
+		CarrierShipment shipment4 = CarrierShipment.Builder.newInstance(Id.create("Ship4",CarrierShipment.class),Id.createLinkId(8), Id.createLinkId(14), 12)
+				.setPickupServiceTime(300)
+				.setPickupTimeWindow(TimeWindow.newInstance(21600,54000))
+				.setDeliveryTimeWindow(TimeWindow.newInstance(21600,54000))
+				.setDeliveryServiceTime(3600)
+				.build();
+	
+		myCarrier.getShipments().add(shipment1);
+		myCarrier.getShipments().add(shipment2);
+		myCarrier.getShipments().add(shipment3);
+		myCarrier.getShipments().add(shipment4);
+		return myCarrier;
 	}
 
 	private static CarrierPlanStrategyManagerFactory createMyStrategymanager(){
