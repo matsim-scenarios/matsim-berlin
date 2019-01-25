@@ -49,7 +49,6 @@ import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
 import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolution;
 import com.graphhopper.jsprit.core.util.Solutions;
 
-
 public class Run_Abfall {
 
 	/*	Übung mit dem Ziel die Erstellung von services, VehicleTypes, Carriers etc.
@@ -57,8 +56,11 @@ public class Run_Abfall {
 	 */
 
 	private static final String SCENARIOS_EQUIL_NETWORK_BEISPIEL_XML = "scenarios/equil/networkBeispiel.xml";
+	enum scenarioAuswahl {chessboard, Wilmersdorf};
 
 	public static void main(String[] args) {
+		
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.chessboard;
 		
 		//MATSim config
 		Config config = ConfigUtils.createConfig();
@@ -76,6 +78,17 @@ public class Run_Abfall {
 		
 		Scenario scenario = ScenarioUtils.loadScenario(config);	
 
+		
+		switch (scenarioWahl)  {
+		case chessboard:
+			//TODO Hier alles zusammenbauen.
+			break;
+		case Wilmersdorf:
+			//TODO
+			break;
+		default:
+			new RuntimeException("no scenario selected.");
+		}
 		//Create carrier with services and shipments
 		Carriers anbieter = new Carriers() ;
 		Carrier myCarrier = createShipments();
