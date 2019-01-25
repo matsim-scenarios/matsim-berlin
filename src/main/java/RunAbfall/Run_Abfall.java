@@ -66,7 +66,7 @@ public class Run_Abfall {
 		Config config = ConfigUtils.createConfig();
 		
 		// (the directory structure is needed for jsprit output, which is before the controler starts.  Maybe there is a better alternative ...)
-		config.controler().setOutputDirectory("output/Uebung/MATsim1");
+		config.controler().setOutputDirectory("output/Uebung/MATSim1");
 		config.controler().setOverwriteFileSetting( OverwriteFileSetting.deleteDirectoryIfExists );
 		new OutputDirectoryHierarchy( config.controler().getOutputDirectory(), config.controler().getRunId(), config.controler().getOverwriteFileSetting() ) ;
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.overwriteExistingFiles);
