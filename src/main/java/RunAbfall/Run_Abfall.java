@@ -30,6 +30,7 @@ import org.matsim.contrib.freight.scoring.CarrierScoringFunctionFactory;
 import org.matsim.contrib.freight.usecases.chessboard.CarrierScoringFunctionFactoryImpl;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.io.MatsimNetworkReader;
@@ -58,6 +59,22 @@ public class Run_Abfall {
 	private static final String SCENARIOS_EQUIL_NETWORK_BEISPIEL_XML = "scenarios/equil/networkBeispiel.xml";
 
 	public static void main(String[] args) {
+		
+		//MATSim config
+		Config config = ConfigUtils.createConfig();
+		
+		// (the directory structure is needed for jsprit output, which is before the controler starts.  Maybe there is a better alternative ...)
+		config.controler().setOutputDirectory("output/Uebung/MATsim1");
+		config.controler().setOverwriteFileSetting( OverwriteFileSetting.deleteDirectoryIfExists );
+		new OutputDirectoryHierarchy( config.controler().getOutputDirectory(), config.controler().getRunId(), config.controler().getOverwriteFileSetting() ) ;
+		config.controler().setOverwriteFileSetting(OverwriteFileSetting.overwriteExistingFiles);
+		
+		config.network().setInputFile(SCENARIOS_EQUIL_NETWORK_BEISPIEL_XML);
+		config.controler().setLastIteration(0);
+		config.global().setRandomSeed(4177);
+		config.controler().setOverwriteFileSetting(OverwriteFileSetting.overwriteExistingFiles);
+		
+		Scenario scenario = ScenarioUtils.loadScenario(config);	
 
 		//Create carrier with services and shipments
 		Carriers anbieter = new Carriers() ;
@@ -115,18 +132,7 @@ public class Run_Abfall {
 		//new Plotter(problem,bestSolution.getRoutes()).plot("output/Uebung/plott_Test01", "carrier1");
 
 		CarrierPlanWriter planWriter = new CarrierPlanWriter(anbieter.getCarriers().values());
-		planWriter.write("output/Uebung/plans_Test01.xml");
-
-
-		Config config = ConfigUtils.createConfig();
-		config.controler().setOutputDirectory("output/Uebung/MATsim1");
-		config.network().setInputFile(SCENARIOS_EQUIL_NETWORK_BEISPIEL_XML);
-		config.controler().setLastIteration(0);
-		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
-		
-		Scenario scenario = ScenarioUtils.loadScenario(config);	
-
-
+		planWriter.write(scenario.getConfig().controler().getOutputDirectory() + "/plans_Test01.xml");
 
 		final org.matsim.core.controler.Controler controler = new org.matsim.core.controler.Controler(scenario); //Warum auch immer so umständlich
 
