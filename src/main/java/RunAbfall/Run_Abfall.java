@@ -144,8 +144,7 @@ public class Run_Abfall {
 		//als Diagramm plotten
 		//new Plotter(problem,bestSolution.getRoutes()).plot("output/Uebung/plott_Test01", "carrier1");
 
-		CarrierPlanWriter planWriter = new CarrierPlanWriter(anbieter.getCarriers().values());
-		planWriter.write(scenario.getConfig().controler().getOutputDirectory() + "/plans_Test01.xml");
+		new CarrierPlanXmlWriterV2(anbieter).write(scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.xml");
 
 		final org.matsim.core.controler.Controler controler = new org.matsim.core.controler.Controler(scenario); //Warum auch immer so umständlich
 
@@ -158,7 +157,7 @@ public class Run_Abfall {
 
 		controler.run();
 		
-	//	new CarrierPlanXmlWriterV2(anbieter).write("output/Uebung/output_MatSimCarrier.xml");
+		new CarrierPlanXmlWriterV2(anbieter).write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans_Test01.xml");
 
 	}
 
