@@ -28,6 +28,7 @@ import org.matsim.contrib.freight.scoring.CarrierScoringFunctionFactory;
 import org.matsim.contrib.freight.usecases.chessboard.CarrierScoringFunctionFactoryImpl;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.network.NetworkUtils;
@@ -44,11 +45,6 @@ import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolutio
 import com.graphhopper.jsprit.core.util.Solutions;
 
 public class Run_Abfall {
-
-	/*
-	 * Übung mit dem Ziel die Erstellung von services, VehicleTypes, Carriers etc.
-	 * zu üben
-	 */
 
 	private static final String SCENARIOS_EQUIL_NETWORK_BEISPIEL_XML = "scenarios/equil/networkBeispiel.xml";
 
@@ -110,14 +106,8 @@ public class Run_Abfall {
 
 		// Dienstleister erstellen
 		CarrierCapabilities.Builder ccBuilder = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
-				.addVehicle(carrierVehicle1).addVehicle(carrierVehicle2).setFleetSize(FleetSize.FINITE); // Flottengröße;
-																											// Anzahl
-																											// der
-																											// Fahrzeug,
-																											// die
-																											// CarrierVehicle
-																											// erzeugt
-																											// wurden
+				.addVehicle(carrierVehicle1).addVehicle(carrierVehicle2).setFleetSize(FleetSize.FINITE);
+
 		myCarrier.setCarrierCapabilities(ccBuilder.build());
 		// Carriers hinzufügen
 		anbieter.addCarrier(myCarrier);
@@ -152,11 +142,7 @@ public class Run_Abfall {
 		new CarrierPlanXmlWriterV2(anbieter)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.xml");
 
-		final org.matsim.core.controler.Controler controler = new org.matsim.core.controler.Controler(scenario); // Warum
-																													// auch
-																													// immer
-																													// so
-																													// umständlich
+		final Controler controler = new Controler(scenario);
 
 		CarrierScoringFunctionFactory scoringFunctionFactory = createMyScoringFunction2(scenario);
 		CarrierPlanStrategyManagerFactory planStrategyManagerFactory = createMyStrategymanager();
