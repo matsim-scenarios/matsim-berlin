@@ -62,7 +62,7 @@ public class Run_Abfall {
 
 		// (the directory structure is needed for jsprit output, which is before the
 		// controler starts. Maybe there is a better alternative ...)
-		config.controler().setOutputDirectory("output/Uebung/MATSim1");
+		config.controler().setOutputDirectory("output/Chessboard/02_InfiniteSize");
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 		new OutputDirectoryHierarchy(config.controler().getOutputDirectory(), config.controler().getRunId(),
 				config.controler().getOverwriteFileSetting());
@@ -122,7 +122,7 @@ public class Run_Abfall {
 
 		// Dienstleister erstellen
 		CarrierCapabilities.Builder ccBuilder = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
-				.addVehicle(carrierVehicle1).addVehicle(carrierVehicle2).setFleetSize(FleetSize.FINITE);
+				.addVehicle(carrierVehicle1).addVehicle(carrierVehicle2).setFleetSize(FleetSize.INFINITE);
 
 		myCarrier.setCarrierCapabilities(ccBuilder.build());
 		// Carriers hinzufügen
