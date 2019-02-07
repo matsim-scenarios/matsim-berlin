@@ -46,7 +46,7 @@ import com.graphhopper.jsprit.core.util.Solutions;
 
 public class Run_Abfall {
 
-	private static final String SCENARIOS_EQUIL_NETWORK_BEISPIEL_XML = "scenarios/equil/networkBeispiel.xml";
+	private static final String SCENARIOS_UEBUNG01_GRID9X9_XML = "scenarios/Uebung01/grid9x9.xml";
 
 	enum scenarioAuswahl {
 		chessboard, Wilmersdorf, Charlottenburg
@@ -67,7 +67,7 @@ public class Run_Abfall {
 				config.controler().getOverwriteFileSetting());
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.overwriteExistingFiles);
 
-		config.network().setInputFile(SCENARIOS_EQUIL_NETWORK_BEISPIEL_XML);
+		config.network().setInputFile(SCENARIOS_UEBUNG01_GRID9X9_XML);
 		config.controler().setLastIteration(0);
 		config.global().setRandomSeed(4177);
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.overwriteExistingFiles);
@@ -76,7 +76,7 @@ public class Run_Abfall {
 
 		switch (scenarioWahl) {
 		case chessboard:
-			// TODO Hier alles zusammenbauen.
+			// TODO
 			break;
 		case Wilmersdorf:
 			// TODO
@@ -98,10 +98,10 @@ public class Run_Abfall {
 
 		// Fahrzeug erstellen
 		CarrierVehicle carrierVehicle1 = CarrierVehicle.Builder
-				.newInstance(Id.create("GargabeTruck1", org.matsim.vehicles.Vehicle.class), Id.createLinkId(130))
+				.newInstance(Id.create("GargabeTruck1", org.matsim.vehicles.Vehicle.class), Id.createLinkId("i(1,0)"))
 				.setEarliestStart(21600.0).setLatestEnd(54000.0).setTypeId(carrierVehType.getId()).build();
 		CarrierVehicle carrierVehicle2 = CarrierVehicle.Builder
-				.newInstance(Id.create("GargabeTruck2", org.matsim.vehicles.Vehicle.class), Id.createLinkId(130))
+				.newInstance(Id.create("GargabeTruck2", org.matsim.vehicles.Vehicle.class), Id.createLinkId("i(1,0)"))
 				.setEarliestStart(21600.0).setLatestEnd(54000.0).setTypeId(carrierVehType.getId()).build();
 
 		// Dienstleister erstellen
@@ -117,7 +117,7 @@ public class Run_Abfall {
 
 		// Netzwerk integrieren und Kosten für jsprit
 		Network network = NetworkUtils.createNetwork();
-		new MatsimNetworkReader(network).readFile(SCENARIOS_EQUIL_NETWORK_BEISPIEL_XML);
+		new MatsimNetworkReader(network).readFile(SCENARIOS_UEBUNG01_GRID9X9_XML);
 		Builder netBuilder = NetworkBasedTransportCosts.Builder.newInstance(network,
 				vehicleTypes.getVehicleTypes().values());
 		final NetworkBasedTransportCosts netBasedCosts = netBuilder.build();
@@ -177,19 +177,19 @@ public class Run_Abfall {
 
 		// Shipments erstellen
 		CarrierShipment shipment1 = CarrierShipment.Builder
-				.newInstance(Id.create("Ship1", CarrierShipment.class), Id.createLinkId(7), Id.createLinkId(14), 10)
+				.newInstance(Id.create("Ship1", CarrierShipment.class), Id.createLinkId("i(1,8)"), Id.createLinkId("j(9,9)"), 10)
 				.setPickupServiceTime(300).setPickupTimeWindow(TimeWindow.newInstance(21600, 54000))
 				.setDeliveryTimeWindow(TimeWindow.newInstance(21600, 54000)).setDeliveryServiceTime(3600).build();
 		CarrierShipment shipment2 = CarrierShipment.Builder
-				.newInstance(Id.create("Ship2", CarrierShipment.class), Id.createLinkId(12), Id.createLinkId(14), 15)
+				.newInstance(Id.create("Ship2", CarrierShipment.class), Id.createLinkId("j(5,3)"), Id.createLinkId("j(9,9)"), 15)
 				.setPickupServiceTime(300).setPickupTimeWindow(TimeWindow.newInstance(21600, 54000))
 				.setDeliveryTimeWindow(TimeWindow.newInstance(21600, 54000)).setDeliveryServiceTime(3600).build();
 		CarrierShipment shipment3 = CarrierShipment.Builder
-				.newInstance(Id.create("Ship3", CarrierShipment.class), Id.createLinkId(6), Id.createLinkId(14), 8)
+				.newInstance(Id.create("Ship3", CarrierShipment.class), Id.createLinkId("j(1,5)"), Id.createLinkId("j(9,9)"), 8)
 				.setPickupServiceTime(300).setPickupTimeWindow(TimeWindow.newInstance(21600, 54000))
 				.setDeliveryTimeWindow(TimeWindow.newInstance(21600, 54000)).setDeliveryServiceTime(3600).build();
 		CarrierShipment shipment4 = CarrierShipment.Builder
-				.newInstance(Id.create("Ship4", CarrierShipment.class), Id.createLinkId(8), Id.createLinkId(14), 12)
+				.newInstance(Id.create("Ship4", CarrierShipment.class), Id.createLinkId("j(4,3)R"), Id.createLinkId("j(9,9)"), 12)
 				.setPickupServiceTime(300).setPickupTimeWindow(TimeWindow.newInstance(21600, 54000))
 				.setDeliveryTimeWindow(TimeWindow.newInstance(21600, 54000)).setDeliveryServiceTime(3600).build();
 
