@@ -77,10 +77,10 @@ public class Run_Abfall {
 
 		Carriers anbieter = new Carriers();
 		Carrier myCarrier = CarrierImpl.newInstance(Id.create("BSR", Carrier.class));
-		
+
 		switch (scenarioWahl) {
 		case chessboard:
-			//TODO
+			// TODO
 		case Wilmersdorf:
 			// TODO
 			break;
@@ -97,17 +97,18 @@ public class Run_Abfall {
 			Link value = entry.getValue();
 
 			CarrierShipment shipment = CarrierShipment.Builder
-					.newInstance(Id.create("Shipment "+value.getId(), CarrierShipment.class), value.getId(), Id.createLinkId("j(9,9)"),10)
-					.setPickupServiceTime(5*60).setPickupTimeWindow(TimeWindow.newInstance(6*3600, 15*3600))
-					.setDeliveryTimeWindow(TimeWindow.newInstance(6*3600, 15*3600)).setDeliveryServiceTime(15*60).build();
+					.newInstance(Id.create("Shipment " + value.getId(), CarrierShipment.class), value.getId(),
+							Id.createLinkId("j(9,9)"), 10)
+					.setPickupServiceTime(5 * 60).setPickupTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))
+					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600)).setDeliveryServiceTime(15 * 60)
+					.build();
 			myCarrier.getShipments().add(shipment);
-		
 		}
-		
-		//Carrier myCarrier = StaticShipmentForCarrierBuilder.createShipments();
+		anbieter.addCarrier(myCarrier);
 
 		// FahrzeugTyp erstellen
 		CarrierVehicleType carrierVehType = VehicleTypeBuilder.createVehicleType();
+		
 		// FahrzeugTyp zu FahrzeugTypen hinzufügen
 		CarrierVehicleTypes vehicleTypes = new CarrierVehicleTypes();
 		vehicleTypes.getVehicleTypes().put(carrierVehType.getId(), carrierVehType);
@@ -125,8 +126,6 @@ public class Run_Abfall {
 				.addVehicle(carrierVehicle1).addVehicle(carrierVehicle2).setFleetSize(FleetSize.INFINITE);
 
 		myCarrier.setCarrierCapabilities(ccBuilder.build());
-		// Carriers hinzufügen
-		anbieter.addCarrier(myCarrier);
 
 		// Fahrzeugtypen den Anbietern zuordenen
 		new CarrierVehicleTypeLoader(anbieter).loadVehicleTypes(vehicleTypes);
@@ -173,10 +172,6 @@ public class Run_Abfall {
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans_Test01.xml");
 
 	}
-
-
-	
-	
 
 	private static CarrierPlanStrategyManagerFactory createMyStrategymanager() {
 		return new CarrierPlanStrategyManagerFactory() {
