@@ -93,11 +93,9 @@ public class Run_Abfall {
 		// jedem Link ein Shipment zuordnen
 		Map<Id<Link>, ? extends Link> links = scenario.getNetwork().getLinks();
 
-		for (Entry<Id<Link>, ? extends Link> entry : links.entrySet()) {
-			Link value = entry.getValue();
-
+		for (Link link : links.values()) {
 			CarrierShipment shipment = CarrierShipment.Builder
-					.newInstance(Id.create("Shipment " + value.getId(), CarrierShipment.class), value.getId(),
+					.newInstance(Id.create("Shipment " + link.getId(), CarrierShipment.class), link.getId(),
 							Id.createLinkId("j(9,9)"), 10)
 					.setPickupServiceTime(5 * 60).setPickupTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))
 					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600)).setDeliveryServiceTime(15 * 60)
