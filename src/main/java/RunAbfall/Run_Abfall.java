@@ -59,25 +59,30 @@ public class Run_Abfall {
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
-		config = prepareConfig(config);
-
-		Scenario scenario = ScenarioUtils.loadScenario(config);
-
-		Carriers anbieter = new Carriers();
-		Carrier myCarrier = CarrierImpl.newInstance(Id.create("BSR", Carrier.class));
-
+	
 		switch (scenarioWahl) {
 		case chessboard:
-			// TODO
+			config.controler().setOutputDirectory("output/Chessboard/02_InfiniteSize");
+			config.network().setInputFile(SCENARIOS_UEBUNG01_GRID9X9_XML);
+			break;
 		case Wilmersdorf:
 			// TODO
+			new RuntimeException("scenario not specified");
 			break;
 		case Charlottenburg:
 			// TODO
+			new RuntimeException("scenario not specified");
 			break;
 		default:
 			new RuntimeException("no scenario selected.");
 		}
+		
+		config = prepareConfig(config);
+		Scenario scenario = ScenarioUtils.loadScenario(config);
+
+		Carriers anbieter = new Carriers();
+		Carrier myCarrier = CarrierImpl.newInstance(Id.create("BSR", Carrier.class));
+		
 		// jedem Link ein Shipment zuordnen
 		Map<Id<Link>, ? extends Link> links = scenario.getNetwork().getLinks();
 
@@ -169,13 +174,11 @@ public class Run_Abfall {
 	private static Config prepareConfig(Config config) {
 		// (the directory structure is needed for jsprit output, which is before the
 		// controler starts. Maybe there is a better alternative ...)
-		config.controler().setOutputDirectory("output/Chessboard/02_InfiniteSize");
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 		new OutputDirectoryHierarchy(config.controler().getOutputDirectory(), config.controler().getRunId(),
 				config.controler().getOverwriteFileSetting());
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.overwriteExistingFiles);
 
-		config.network().setInputFile(SCENARIOS_UEBUNG01_GRID9X9_XML);
 		config.controler().setLastIteration(0);
 		config.global().setRandomSeed(4177);
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.overwriteExistingFiles);
