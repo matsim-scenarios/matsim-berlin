@@ -108,11 +108,11 @@ public class Run_Abfall {
 
 		// Fahrzeug erstellen
 		
-		//TODO: Bei Infinite so nicht sinnvoll.
+		//TODO: Bei Infinite so nicht sinnvoll, mehrere gleiche Fzge zu haben.
 		CarrierVehicle carrierVehicle1 = createCarrierVehicle(carrierVehType);
 		CarrierVehicle carrierVehicle2 = CarrierVehicle.Builder
 				.newInstance(Id.create("GargabeTruck2", Vehicle.class), Id.createLinkId("i(1,0)"))
-				.setEarliestStart(21600.0).setLatestEnd(54000.0).setTypeId(carrierVehType.getId()).build();
+				.setEarliestStart(21600.0).setLatestEnd(54000.0).setTypeId(carrierVehType.getId()).build(); //auch auf Methode umstellen, Methodenaufruf configurierbar machen.-> createCarrierVehicle(...)
 
 		// Dienstleister erstellen
 		CarrierCapabilities.Builder ccBuilder = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
