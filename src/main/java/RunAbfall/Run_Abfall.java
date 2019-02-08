@@ -67,7 +67,7 @@ public class Run_Abfall {
 	
 		switch (scenarioWahl) {
 		case chessboard:
-			config.controler().setOutputDirectory("output/Chessboard/02_InfiniteSize");
+			config.controler().setOutputDirectory("output/original_Chessboard/03_FiniteSize");
 			config.network().setInputFile(SCENARIOS_UEBUNG01_GRID9X9_XML);
 			break;
 		case Wilmersdorf:
@@ -95,7 +95,7 @@ public class Run_Abfall {
 			int capycityDemand = 10;																							//zzz TODO: Mange abhängig von Linklänge o.ä.
 			Id<Link> dropOffLinkId = Id.createLinkId("j(9,9)");
 			CarrierShipment shipment = CarrierShipment.Builder
-					.newInstance(Id.create("Shipment " + link.getId(), CarrierShipment.class), link.getId(),
+					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
 							dropOffLinkId, capycityDemand)
 					.setPickupServiceTime(5 * 60).setPickupTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))				//zzz TODO: PickupTime anhängig von Menge
 					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600)).setDeliveryServiceTime(15 * 60)			//zzz TODO: DeliveryTime anhängig von Menge
@@ -106,7 +106,7 @@ public class Run_Abfall {
 		carriers.addCarrier(myCarrier);
 
 		// FahrzeugTyp erstellen
-		CarrierVehicleType carrierVehType = VehicleTypeBuilder.createVehicleType();
+		CarrierVehicleType carrierVehType = UtilityRun_Abfall.createVehicleType();
 		
 		// FahrzeugTyp zu FahrzeugTypen hinzufügen
 		CarrierVehicleTypes vehicleTypes = new CarrierVehicleTypes();
@@ -115,17 +115,14 @@ public class Run_Abfall {
 		// Fahrzeug erstellen
 		
 		//TODO: Bei Infinite so nicht sinnvoll, mehrere gleiche Fzge zu haben.
-		CarrierVehicle carrierVehicle1 = createCarrierVehicle(carrierVehType);
-		CarrierVehicle carrierVehicle2 = CarrierVehicle.Builder
-				.newInstance(Id.create("GargabeTruck2", Vehicle.class), Id.createLinkId("i(1,0)"))
-				.setEarliestStart(21600.0).setLatestEnd(54000.0).setTypeId(carrierVehType.getId()).build(); //auch auf Methode umstellen, Methodenaufruf configurierbar machen.-> createCarrierVehicle(...)
+		CarrierVehicle carrierVehicle1 = UtilityRun_Abfall.createCarrierVehicle("GarbageTruck8", "i(1,0)", 6*3600, 15*3600, carrierVehType);
+		 //auch auf Methode umstellen, Methodenaufruf configurierbar machen.-> createCarrierVehicle(...)
 
 		// Dienstleister erstellen
 		CarrierCapabilities carrierCapabilities = CarrierCapabilities.Builder.newInstance()
 				.addType(carrierVehType)
 				.addVehicle(carrierVehicle1)
-				.addVehicle(carrierVehicle2)
-				.setFleetSize(FleetSize.INFINITE)
+				.setFleetSize(FleetSize.FINITE)
 				.build();
 
 		myCarrier.setCarrierCapabilities(carrierCapabilities);
@@ -235,15 +232,5 @@ public class Run_Abfall {
 //		};
 	}
 	
-	/**
-	 * TODO: Werte mit übergeben (Name, depot, TW, vehType)
-	 * 
-	 * @param carrierVehType
-	 * @return
-	 */
-	private static CarrierVehicle createCarrierVehicle(CarrierVehicleType carrierVehType) {
-		return CarrierVehicle.Builder
-				.newInstance(Id.create("GargabeTruck1", Vehicle.class), Id.createLinkId("i(1,0)"))
-				.setEarliestStart(21600.0).setLatestEnd(54000.0).setTypeId(carrierVehType.getId()).build();
-	}
+	
 }
