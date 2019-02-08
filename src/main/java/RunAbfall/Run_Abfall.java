@@ -80,7 +80,7 @@ public class Run_Abfall {
 		config = prepareConfig(config);
 		Scenario scenario = ScenarioUtils.loadScenario(config);
 
-		Carriers anbieter = new Carriers();
+		Carriers carriers = new Carriers();
 		Carrier myCarrier = CarrierImpl.newInstance(Id.create("BSR", Carrier.class));
 		
 		// jedem Link ein Shipment zuordnen
@@ -97,7 +97,7 @@ public class Run_Abfall {
 					.build();
 			myCarrier.getShipments().add(shipment);
 		}
-		anbieter.addCarrier(myCarrier);
+		carriers.addCarrier(myCarrier);
 
 		// FahrzeugTyp erstellen
 		CarrierVehicleType carrierVehType = VehicleTypeBuilder.createVehicleType();
@@ -125,7 +125,7 @@ public class Run_Abfall {
 		myCarrier.setCarrierCapabilities(carrierCapabilities);
 
 		// Fahrzeugtypen den Anbietern zuordenen
-		new CarrierVehicleTypeLoader(anbieter).loadVehicleTypes(vehicleTypes);
+		new CarrierVehicleTypeLoader(carriers).loadVehicleTypes(vehicleTypes);
 
 		// Netzwerk integrieren und Kosten für jsprit
 		Network network = NetworkUtils.createNetwork();
@@ -151,7 +151,7 @@ public class Run_Abfall {
 		NetworkRouter.routePlan(carrierPlanServices, netBasedCosts);
 		myCarrier.setSelectedPlan(carrierPlanServices);
 
-		new CarrierPlanXmlWriterV2(anbieter)
+		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.xml");
 
 		final Controler controler = new Controler(scenario);
@@ -159,13 +159,13 @@ public class Run_Abfall {
 		CarrierScoringFunctionFactory scoringFunctionFactory = createMyScoringFunction2(scenario);
 		CarrierPlanStrategyManagerFactory planStrategyManagerFactory = createMyStrategymanager();
 
-		CarrierModule listener = new CarrierModule(anbieter, planStrategyManagerFactory, scoringFunctionFactory);
+		CarrierModule listener = new CarrierModule(carriers, planStrategyManagerFactory, scoringFunctionFactory);
 		listener.setPhysicallyEnforceTimeWindowBeginnings(true);
 		controler.addOverridingModule(listener);
 
 		controler.run();
 
-		new CarrierPlanXmlWriterV2(anbieter)
+		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans_Test01.xml");
 
 	}
