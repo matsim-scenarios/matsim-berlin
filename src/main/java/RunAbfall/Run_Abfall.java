@@ -128,8 +128,8 @@ public class Run_Abfall {
 		new CarrierVehicleTypeLoader(carriers).loadVehicleTypes(vehicleTypes);
 
 		// Netzwerk integrieren und Kosten für jsprit
-		Network network = NetworkUtils.createNetwork();
-		new MatsimNetworkReader(network).readFile(SCENARIOS_UEBUNG01_GRID9X9_XML);
+		Network network = NetworkUtils.createNetwork(); //TODO: Da du nicht neu erstellst gleich .read ;)
+		new MatsimNetworkReader(network).readFile(SCENARIOS_UEBUNG01_GRID9X9_XML); /// TODO: Why? read from scenario!
 		Builder netBuilder = NetworkBasedTransportCosts.Builder.newInstance(network,
 				vehicleTypes.getVehicleTypes().values());
 		final NetworkBasedTransportCosts netBasedCosts = netBuilder.build();
@@ -169,8 +169,6 @@ public class Run_Abfall {
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans_Test01.xml");
 
 	}
-
-
 
 	/**
 	 * @param config
