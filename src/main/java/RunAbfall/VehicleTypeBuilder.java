@@ -18,11 +18,4 @@ class VehicleTypeBuilder {
 				.setFixCost(130).setEngineInformation(new EngineInformationImpl(FuelType.diesel, 0.015)).build();
 	}
 
-	/**
-	 * De
-	 */
-	createVT(){
-		double perD = 0.001;
-		createVehicleType(perD ..getClass().)
-	}
 }
