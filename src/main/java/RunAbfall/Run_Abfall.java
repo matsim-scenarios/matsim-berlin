@@ -49,7 +49,7 @@ public class Run_Abfall {
 
 	private static final String SCENARIOS_UEBUNG01_GRID9X9_XML = "scenarios/Uebung01/grid9x9.xml";
 
-	enum scenarioAuswahl {
+	private enum scenarioAuswahl {
 		chessboard, Wilmersdorf, Charlottenburg
 	};
 
@@ -59,19 +59,7 @@ public class Run_Abfall {
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
-
-		// (the directory structure is needed for jsprit output, which is before the
-		// controler starts. Maybe there is a better alternative ...)
-		config.controler().setOutputDirectory("output/Chessboard/02_InfiniteSize");
-		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
-		new OutputDirectoryHierarchy(config.controler().getOutputDirectory(), config.controler().getRunId(),
-				config.controler().getOverwriteFileSetting());
-		config.controler().setOverwriteFileSetting(OverwriteFileSetting.overwriteExistingFiles);
-
-		config.network().setInputFile(SCENARIOS_UEBUNG01_GRID9X9_XML);
-		config.controler().setLastIteration(0);
-		config.global().setRandomSeed(4177);
-		config.controler().setOverwriteFileSetting(OverwriteFileSetting.overwriteExistingFiles);
+		config = prepareConfig(config);
 
 		Scenario scenario = ScenarioUtils.loadScenario(config);
 
@@ -94,11 +82,13 @@ public class Run_Abfall {
 		Map<Id<Link>, ? extends Link> links = scenario.getNetwork().getLinks();
 
 		for (Link link : links.values()) {
+			int capycityDemand = 10;																							//zzz TODO: Mange abhängig von Linklänge o.ä.
+			Id<Link> dropOffLinkId = Id.createLinkId("j(9,9)");
 			CarrierShipment shipment = CarrierShipment.Builder
 					.newInstance(Id.create("Shipment " + link.getId(), CarrierShipment.class), link.getId(),
-							Id.createLinkId("j(9,9)"), 10)
-					.setPickupServiceTime(5 * 60).setPickupTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))
-					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600)).setDeliveryServiceTime(15 * 60)
+							dropOffLinkId, capycityDemand)
+					.setPickupServiceTime(5 * 60).setPickupTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))				//zzz TODO: PickupTime anhängig von Menge
+					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600)).setDeliveryServiceTime(15 * 60)			//zzz TODO: DeliveryTime anhängig von Menge
 					.build();
 			myCarrier.getShipments().add(shipment);
 		}
@@ -112,9 +102,9 @@ public class Run_Abfall {
 		vehicleTypes.getVehicleTypes().put(carrierVehType.getId(), carrierVehType);
 
 		// Fahrzeug erstellen
-		CarrierVehicle carrierVehicle1 = CarrierVehicle.Builder
-				.newInstance(Id.create("GargabeTruck1", Vehicle.class), Id.createLinkId("i(1,0)"))
-				.setEarliestStart(21600.0).setLatestEnd(54000.0).setTypeId(carrierVehType.getId()).build();
+		
+		//TODO: Bei Infinite so nicht sinnvoll.
+		CarrierVehicle carrierVehicle1 = createCarrierVehicle(carrierVehType);
 		CarrierVehicle carrierVehicle2 = CarrierVehicle.Builder
 				.newInstance(Id.create("GargabeTruck2", Vehicle.class), Id.createLinkId("i(1,0)"))
 				.setEarliestStart(21600.0).setLatestEnd(54000.0).setTypeId(carrierVehType.getId()).build();
@@ -171,6 +161,30 @@ public class Run_Abfall {
 
 	}
 
+
+
+	/**
+	 * @param config
+	 */
+	private static Config prepareConfig(Config config) {
+		// (the directory structure is needed for jsprit output, which is before the
+		// controler starts. Maybe there is a better alternative ...)
+		config.controler().setOutputDirectory("output/Chessboard/02_InfiniteSize");
+		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
+		new OutputDirectoryHierarchy(config.controler().getOutputDirectory(), config.controler().getRunId(),
+				config.controler().getOverwriteFileSetting());
+		config.controler().setOverwriteFileSetting(OverwriteFileSetting.overwriteExistingFiles);
+
+		config.network().setInputFile(SCENARIOS_UEBUNG01_GRID9X9_XML);
+		config.controler().setLastIteration(0);
+		config.global().setRandomSeed(4177);
+		config.controler().setOverwriteFileSetting(OverwriteFileSetting.overwriteExistingFiles);
+		
+		return config;
+	}
+
+
+
 	private static CarrierPlanStrategyManagerFactory createMyStrategymanager() {
 		return new CarrierPlanStrategyManagerFactory() {
 			@Override
@@ -207,5 +221,17 @@ public class Run_Abfall {
 //				return sumSf;
 //			}
 //		};
+	}
+	
+	/**
+	 * TODO: Werte mit übergeben (Name, depot, TW, vehType)
+	 * 
+	 * @param carrierVehType
+	 * @return
+	 */
+	private static CarrierVehicle createCarrierVehicle(CarrierVehicleType carrierVehType) {
+		return CarrierVehicle.Builder
+				.newInstance(Id.create("GargabeTruck1", Vehicle.class), Id.createLinkId("i(1,0)"))
+				.setEarliestStart(21600.0).setLatestEnd(54000.0).setTypeId(carrierVehType.getId()).build();
 	}
 }
