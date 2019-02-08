@@ -5,11 +5,12 @@ import org.matsim.contrib.freight.carrier.CarrierVehicleType;
 import org.matsim.vehicles.EngineInformationImpl;
 import org.matsim.vehicles.EngineInformation.FuelType;
 
-public class VehicleTypeBuilder {
+//TODO: Ist kein Builder im eigentlichen Sinne. Vielleicht einfach Utils-Klasse wo du diese Methoden rein packst
+class VehicleTypeBuilder {
 	/**
 	 * @return
 	 */
-	public static CarrierVehicleType createVehicleType() {
+	static CarrierVehicleType createVehicleType() {
 		return CarrierVehicleType.Builder
 				.newInstance(Id.create("GargabeTruckTyp1", org.matsim.vehicles.VehicleType.class))
 
