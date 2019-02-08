@@ -115,10 +115,14 @@ public class Run_Abfall {
 				.setEarliestStart(21600.0).setLatestEnd(54000.0).setTypeId(carrierVehType.getId()).build(); //auch auf Methode umstellen, Methodenaufruf configurierbar machen.-> createCarrierVehicle(...)
 
 		// Dienstleister erstellen
-		CarrierCapabilities.Builder ccBuilder = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
-				.addVehicle(carrierVehicle1).addVehicle(carrierVehicle2).setFleetSize(FleetSize.INFINITE);
+		CarrierCapabilities carrierCapabilities = CarrierCapabilities.Builder.newInstance()
+				.addType(carrierVehType)
+				.addVehicle(carrierVehicle1)
+				.addVehicle(carrierVehicle2)
+				.setFleetSize(FleetSize.INFINITE)
+				.build();
 
-		myCarrier.setCarrierCapabilities(ccBuilder.build());
+		myCarrier.setCarrierCapabilities(carrierCapabilities);
 
 		// Fahrzeugtypen den Anbietern zuordenen
 		new CarrierVehicleTypeLoader(anbieter).loadVehicleTypes(vehicleTypes);
