@@ -40,6 +40,7 @@ import org.matsim.core.replanning.GenericStrategyManager;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.vehicles.Vehicle;
 
+import com.graphhopper.jsprit.analysis.toolbox.Plotter;
 import com.graphhopper.jsprit.core.algorithm.VehicleRoutingAlgorithm;
 import com.graphhopper.jsprit.core.algorithm.box.SchrimpfFactory;
 import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
@@ -158,6 +159,7 @@ public class Run_Abfall {
 
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.xml");
+		new Plotter(problem, bestSolution).plot(scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.png", "bestSolution");;
 
 		final Controler controler = new Controler(scenario);
 
