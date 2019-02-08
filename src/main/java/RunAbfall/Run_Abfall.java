@@ -2,7 +2,8 @@ package RunAbfall;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Map.Entry;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
@@ -46,6 +47,8 @@ import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolutio
 import com.graphhopper.jsprit.core.util.Solutions;
 
 public class Run_Abfall {
+	
+	private static final Logger log = Logger.getLogger(Run_Abfall.class);
 
 	private static final String SCENARIOS_UEBUNG01_GRID9X9_XML = "scenarios/Uebung01/grid9x9.xml";
 
@@ -54,6 +57,7 @@ public class Run_Abfall {
 	};
 
 	public static void main(String[] args) {
+		log.setLevel(Level.INFO);
 
 		scenarioAuswahl scenarioWahl = scenarioAuswahl.chessboard;
 
@@ -96,6 +100,7 @@ public class Run_Abfall {
 					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600)).setDeliveryServiceTime(15 * 60)			//zzz TODO: DeliveryTime anhängig von Menge
 					.build();
 			myCarrier.getShipments().add(shipment);
+			log.debug("Nachfrage erstellt mit Werten:....");
 		}
 		carriers.addCarrier(myCarrier);
 
