@@ -113,11 +113,12 @@ public class Run_Abfall {
 		vehicleTypes.getVehicleTypes().put(carrierVehType.getId(), carrierVehType);
 
 		// Fahrzeug erstellen
+		String vehicleID = "GargabeTruck";
+		String linkDepot = "i(1,0)";
+		double earliestStartingTime = 6*3600;
+		double latestFinishingTime = 15*3600;
+		CarrierVehicle carrierVehicle1 = UtilityRun_Abfall.createCarrierVehicle(vehicleID, linkDepot, earliestStartingTime, latestFinishingTime, carrierVehType);
 		
-		//TODO: Bei Infinite so nicht sinnvoll, mehrere gleiche Fzge zu haben.
-		CarrierVehicle carrierVehicle1 = UtilityRun_Abfall.createCarrierVehicle("GarbageTruck8", "i(1,0)", 6*3600, 15*3600, carrierVehType);
-		 //auch auf Methode umstellen, Methodenaufruf configurierbar machen.-> createCarrierVehicle(...)
-
 		// Dienstleister erstellen
 		CarrierCapabilities carrierCapabilities = CarrierCapabilities.Builder.newInstance()
 				.addType(carrierVehType)
