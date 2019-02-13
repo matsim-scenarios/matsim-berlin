@@ -49,6 +49,9 @@ import com.graphhopper.jsprit.core.util.Solutions;
 
 public class Run_Abfall {
 	
+	static int stunden = 3600;
+	static int minuten = 60;
+	
 	private static final Logger log = Logger.getLogger(Run_Abfall.class);
 
 	private static final String SCENARIOS_UEBUNG01_GRID9X9_XML = "scenarios/Uebung01/grid9x9.xml";
@@ -97,8 +100,8 @@ public class Run_Abfall {
 			CarrierShipment shipment = CarrierShipment.Builder
 					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
 							dropOffLinkId, capycityDemand)
-					.setPickupServiceTime(5 * 60).setPickupTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))				//zzz TODO: PickupTime anhängig von Menge
-					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600)).setDeliveryServiceTime(15 * 60)			//zzz TODO: DeliveryTime anhängig von Menge
+					.setPickupServiceTime(5 * 60).setPickupTimeWindow(TimeWindow.newInstance(6*stunden, 15 * stunden))				//zzz TODO: PickupTime anhängig von Menge
+					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden)).setDeliveryServiceTime(15 * minuten)			//zzz TODO: DeliveryTime anhängig von Menge
 					.build();
 			myCarrier.getShipments().add(shipment);
 			log.debug("Nachfrage erstellt mit Werten:....");
@@ -115,8 +118,9 @@ public class Run_Abfall {
 		// Fahrzeug erstellen
 		String vehicleID = "GargabeTruck";
 		String linkDepot = "i(1,0)";
-		double earliestStartingTime = 6*3600;
-		double latestFinishingTime = 15*3600;
+		double earliestStartingTime = 6*stunden;
+		double latestFinishingTime = 15*stunden;
+		
 		CarrierVehicle carrierVehicle1 = UtilityRun_Abfall.createCarrierVehicle(vehicleID, linkDepot, earliestStartingTime, latestFinishingTime, carrierVehType);
 		
 		// Dienstleister erstellen
