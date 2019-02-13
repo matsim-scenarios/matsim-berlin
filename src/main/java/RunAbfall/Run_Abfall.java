@@ -38,6 +38,8 @@ import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.io.MatsimNetworkReader;
 import org.matsim.core.replanning.GenericStrategyManager;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.vehicles.EngineInformation;
+import org.matsim.vehicles.EngineInformation.FuelType;
 import org.matsim.vehicles.Vehicle;
 
 import com.graphhopper.jsprit.analysis.toolbox.Plotter;
@@ -109,7 +111,15 @@ public class Run_Abfall {
 		carriers.addCarrier(myCarrier);
 
 		// FahrzeugTyp erstellen
-		CarrierVehicleType carrierVehType = UtilityRun_Abfall.createVehicleType();
+		String vehicleTypeId = "TruckType1";
+		int capacity = 100;
+		double maxVelocity = 50/3.6;		//Angaben in m/s
+		double costPerDistanceUnit = 0.001;
+		double costPerTimeUnit = 0.01;
+		double fixCosts = 100;
+		FuelType engineInformation = FuelType.diesel;
+		double literPerMeter = 0.01;
+		CarrierVehicleType carrierVehType = UtilityRun_Abfall.createVehicleType(vehicleTypeId,capacity,maxVelocity,costPerDistanceUnit,costPerTimeUnit,fixCosts,engineInformation,literPerMeter);
 		
 		// FahrzeugTyp zu FahrzeugTypen hinzufügen
 		CarrierVehicleTypes vehicleTypes = new CarrierVehicleTypes();

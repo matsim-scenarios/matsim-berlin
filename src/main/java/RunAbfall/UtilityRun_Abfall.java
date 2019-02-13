@@ -5,16 +5,23 @@ import org.matsim.contrib.freight.carrier.CarrierVehicle;
 import org.matsim.contrib.freight.carrier.CarrierVehicleType;
 import org.matsim.vehicles.EngineInformationImpl;
 import org.matsim.vehicles.Vehicle;
+import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.EngineInformation.FuelType;
 
 public class UtilityRun_Abfall {
 
-	public static CarrierVehicleType createVehicleType() {
+	/**
+	 * @param 
+	 * 
+	 * @return
+	 */
+	public static CarrierVehicleType createVehicleType(String vehicleTypeId, int capacity, double maxVelocity,
+										double costPerDistanceUnit, double costPerTimeUnit, double fixCosts, FuelType engineInformation, double literPerMeter) {
 		return CarrierVehicleType.Builder
-				.newInstance(Id.create("GargabeTruckTyp1", org.matsim.vehicles.VehicleType.class))
-
-				.setCapacity(100).setMaxVelocity(10).setCostPerDistanceUnit(0.0001).setCostPerTimeUnit(0.001)
-				.setFixCost(130).setEngineInformation(new EngineInformationImpl(FuelType.diesel, 0.015)).build();
+				.newInstance(Id.create(vehicleTypeId, VehicleType.class))
+				.setCapacity(capacity).setMaxVelocity(maxVelocity).setCostPerDistanceUnit(costPerDistanceUnit).setCostPerTimeUnit(costPerTimeUnit)
+				.setFixCost(fixCosts).setEngineInformation(new EngineInformationImpl(engineInformation, literPerMeter)).build();
+	
 	}
 
 	/**
