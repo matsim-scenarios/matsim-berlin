@@ -100,8 +100,8 @@ public class Run_Abfall {
 			CarrierShipment shipment = CarrierShipment.Builder
 					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
 							dropOffLinkId, capycityDemand)
-					.setPickupServiceTime(5 * 60).setPickupTimeWindow(TimeWindow.newInstance(6*stunden, 15 * stunden))				//zzz TODO: PickupTime anhängig von Menge
-					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden)).setDeliveryServiceTime(15 * minuten)			//zzz TODO: DeliveryTime anhängig von Menge
+					.setPickupServiceTime(5 * 60).setPickupTimeWindow(TimeWindow.newInstance(6*stunden, 15*stunden))				//zzz TODO: PickupTime anhängig von Menge
+					.setDeliveryTimeWindow(TimeWindow.newInstance(6*stunden, 15*stunden)).setDeliveryServiceTime(15*minuten)			//zzz TODO: DeliveryTime anhängig von Menge
 					.build();
 			myCarrier.getShipments().add(shipment);
 			log.debug("Nachfrage erstellt mit Werten:....");
@@ -136,10 +136,8 @@ public class Run_Abfall {
 		new CarrierVehicleTypeLoader(carriers).loadVehicleTypes(vehicleTypes);
 
 		// Netzwerk integrieren und Kosten für jsprit
-		Network network = NetworkUtils.createNetwork(); //TODO: Da du nicht neu erstellst gleich .read ;)
-		new MatsimNetworkReader(network).readFile(SCENARIOS_UEBUNG01_GRID9X9_XML); /// TODO: Why? read from scenario!
-		Builder netBuilder = NetworkBasedTransportCosts.Builder.newInstance(network,
-				vehicleTypes.getVehicleTypes().values());
+		Network network = NetworkUtils.readNetwork(SCENARIOS_UEBUNG01_GRID9X9_XML);	
+		Builder netBuilder = NetworkBasedTransportCosts.Builder.newInstance(network, vehicleTypes.getVehicleTypes().values());
 		final NetworkBasedTransportCosts netBasedCosts = netBuilder.build();
 		netBuilder.setTimeSliceWidth(1800);
 
