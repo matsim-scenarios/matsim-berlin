@@ -1,7 +1,6 @@
 package RunAbfall;
 
 import java.util.Collection;
-import java.util.Map;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -14,13 +13,11 @@ import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
 import org.matsim.contrib.freight.carrier.CarrierImpl;
 import org.matsim.contrib.freight.carrier.CarrierPlan;
 import org.matsim.contrib.freight.carrier.CarrierPlanXmlWriterV2;
-import org.matsim.contrib.freight.carrier.CarrierShipment;
 import org.matsim.contrib.freight.carrier.CarrierVehicle;
 import org.matsim.contrib.freight.carrier.CarrierVehicleType;
 import org.matsim.contrib.freight.carrier.CarrierVehicleTypeLoader;
 import org.matsim.contrib.freight.carrier.CarrierVehicleTypes;
 import org.matsim.contrib.freight.carrier.Carriers;
-import org.matsim.contrib.freight.carrier.TimeWindow;
 import org.matsim.contrib.freight.controler.CarrierModule;
 import org.matsim.contrib.freight.jsprit.MatsimJspritFactory;
 import org.matsim.contrib.freight.jsprit.NetworkBasedTransportCosts;
@@ -64,7 +61,7 @@ public class Run_Abfall {
 
 		switch (scenarioWahl) {
 		case chessboard:
-			config.controler().setOutputDirectory("output/original_Chessboard/03_FiniteSize");
+			config.controler().setOutputDirectory("output/original_Chessboard/04_InfiniteSize");
 			config.network().setInputFile(SCENARIOS_UEBUNG01_GRID9X9_XML);
 			break;
 		case Wilmersdorf:
@@ -82,29 +79,15 @@ public class Run_Abfall {
 		Carriers carriers = new Carriers();
 		Carrier myCarrier = CarrierImpl.newInstance(Id.create("BSR", Carrier.class));
 
-		// jedem Link ein Shipment zuordnen
-		Map<Id<Link>, ? extends Link> links = scenario.getNetwork().getLinks();
-
-		for (Link link : links.values()) {
-			int capycityDemand = 10; // zzz TODO: Mange abhängig von Linklänge o.ä.
-			Id<Link> dropOffLinkId = Id.createLinkId("j(9,9)");
-			CarrierShipment shipment = CarrierShipment.Builder
-					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
-							dropOffLinkId, capycityDemand)
-					.setPickupServiceTime(5 * 60).setPickupTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden)) // TODO
-					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
-					.setDeliveryServiceTime(15 * minuten) // zzz TODO: DeliveryTime anhängig von Menge
-					.build();
-			myCarrier.getShipments().add(shipment);
-			log.debug("Nachfrage erstellt mit Werten:....");
-		}
-		carriers.addCarrier(myCarrier);
+		// Nachfrage am Link erzeugen
+		Id<Link> dropOffLinkId = Id.createLinkId("j(3,3)");
+		UtilityRun_Abfall.createShipmentsForCarrier(scenario, myCarrier, dropOffLinkId, carriers);
 
 		// FahrzeugTyp erstellen und Typ hinzufügen
 		String vehicleTypeId = "TruckType1";
 		int capacity = 100;
 		double maxVelocity = 50 / 3.6;
-		double costPerDistanceUnit = 0.001;
+		double costPerDistanceUnit = 0.1;
 		double costPerTimeUnit = 0.01;
 		double fixCosts = 100;
 		FuelType engineInformation = FuelType.diesel;
@@ -124,7 +107,7 @@ public class Run_Abfall {
 
 		// Dienstleister erstellen
 		CarrierCapabilities carrierCapabilities = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
-				.addVehicle(garbageTruck1).setFleetSize(FleetSize.FINITE).build();
+				.addVehicle(garbageTruck1).setFleetSize(FleetSize.INFINITE).build();
 
 		myCarrier.setCarrierCapabilities(carrierCapabilities);
 
@@ -159,8 +142,7 @@ public class Run_Abfall {
 		new Plotter(problem, bestSolution).plot(
 				scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.png",
 				"bestSolution");
-		;
-
+		
 		final Controler controler = new Controler(scenario);
 
 		CarrierScoringFunctionFactory scoringFunctionFactory = UtilityRun_Abfall.createMyScoringFunction2(scenario);

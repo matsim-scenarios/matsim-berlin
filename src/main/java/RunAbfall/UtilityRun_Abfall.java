@@ -1,12 +1,18 @@
 package RunAbfall;
 
+import java.util.Map;
+
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.freight.carrier.Carrier;
 import org.matsim.contrib.freight.carrier.CarrierPlan;
+import org.matsim.contrib.freight.carrier.CarrierShipment;
 import org.matsim.contrib.freight.carrier.CarrierVehicle;
 import org.matsim.contrib.freight.carrier.CarrierVehicleType;
 import org.matsim.contrib.freight.carrier.CarrierVehicleTypes;
+import org.matsim.contrib.freight.carrier.Carriers;
+import org.matsim.contrib.freight.carrier.TimeWindow;
 import org.matsim.contrib.freight.replanning.CarrierPlanStrategyManagerFactory;
 import org.matsim.contrib.freight.usecases.chessboard.CarrierScoringFunctionFactoryImpl;
 import org.matsim.core.config.Config;
@@ -19,6 +25,10 @@ import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.EngineInformation.FuelType;
 
 public class UtilityRun_Abfall {
+
+	static int stunden = 3600;
+	static int minuten = 60;
+
 	/**
 	 * @param config
 	 */
@@ -36,10 +46,35 @@ public class UtilityRun_Abfall {
 
 		return config;
 	}
+
+	/**
+	 * Creates a Shipment for every link, ads all shipments to myCarrier and ads
+	 * myCarrier to carriers
+	 * 
+	 * @param
+	 */
+	public static void createShipmentsForCarrier(Scenario scenario, Carrier myCarrier, Id<Link> dropOffLinkId,
+			Carriers carriers) {
+		Map<Id<Link>, ? extends Link> links = scenario.getNetwork().getLinks();
+
+		for (Link link : links.values()) {
+			int capycityDemand = 10; // zzz TODO: Mange abhängig von Linklänge o.ä.
+			CarrierShipment shipment = CarrierShipment.Builder
+					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
+							dropOffLinkId, capycityDemand)
+					.setPickupServiceTime(5 * 60).setPickupTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden)) // TODO
+					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
+					.setDeliveryServiceTime(15 * minuten) // zzz TODO: DeliveryTime anhängig von Menge
+					.build();
+			myCarrier.getShipments().add(shipment);
+		}
+		carriers.addCarrier(myCarrier);
+	}
+
 	/**
 	 * Method creates a new garbage truck type
 	 * 
-	 * @param maxVelocity        in m/s
+	 * @param maxVelocity in m/s
 	 * @return
 	 */
 	public static CarrierVehicleType createGarbageTruckType(String vehicleTypeId, int capacity, double maxVelocity,
