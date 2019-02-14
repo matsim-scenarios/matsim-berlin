@@ -28,14 +28,10 @@ import org.matsim.contrib.freight.jsprit.NetworkBasedTransportCosts.Builder;
 import org.matsim.contrib.freight.jsprit.NetworkRouter;
 import org.matsim.contrib.freight.replanning.CarrierPlanStrategyManagerFactory;
 import org.matsim.contrib.freight.scoring.CarrierScoringFunctionFactory;
-import org.matsim.contrib.freight.usecases.chessboard.CarrierScoringFunctionFactoryImpl;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
-import org.matsim.core.controler.OutputDirectoryHierarchy;
-import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.network.NetworkUtils;
-import org.matsim.core.replanning.GenericStrategyManager;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.vehicles.EngineInformation.FuelType;
 import com.graphhopper.jsprit.analysis.toolbox.Plotter;
@@ -80,7 +76,7 @@ public class Run_Abfall {
 			new RuntimeException("no scenario selected.");
 		}
 
-		config = prepareConfig(config);
+		config = UtilityRun_Abfall.prepareConfig(config);
 		Scenario scenario = ScenarioUtils.loadScenario(config);
 
 		Carriers carriers = new Carriers();
@@ -107,7 +103,7 @@ public class Run_Abfall {
 		// FahrzeugTyp erstellen und Typ hinzufügen
 		String vehicleTypeId = "TruckType1";
 		int capacity = 100;
-		double maxVelocity = 50 / 3.6; // Angaben in m/s
+		double maxVelocity = 50 / 3.6;
 		double costPerDistanceUnit = 0.001;
 		double costPerTimeUnit = 0.01;
 		double fixCosts = 100;
@@ -167,8 +163,8 @@ public class Run_Abfall {
 
 		final Controler controler = new Controler(scenario);
 
-		CarrierScoringFunctionFactory scoringFunctionFactory = createMyScoringFunction2(scenario);
-		CarrierPlanStrategyManagerFactory planStrategyManagerFactory = createMyStrategymanager();
+		CarrierScoringFunctionFactory scoringFunctionFactory = UtilityRun_Abfall.createMyScoringFunction2(scenario);
+		CarrierPlanStrategyManagerFactory planStrategyManagerFactory = UtilityRun_Abfall.createMyStrategymanager();
 
 		CarrierModule listener = new CarrierModule(carriers, planStrategyManagerFactory, scoringFunctionFactory);
 		listener.setPhysicallyEnforceTimeWindowBeginnings(true);
@@ -179,62 +175,6 @@ public class Run_Abfall {
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans_Test01.xml");
 
-	}
-
-	/**
-	 * @param config
-	 */
-	private static Config prepareConfig(Config config) {
-		// (the directory structure is needed for jsprit output, which is before the
-		// controler starts. Maybe there is a better alternative ...)
-		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
-		new OutputDirectoryHierarchy(config.controler().getOutputDirectory(), config.controler().getRunId(),
-				config.controler().getOverwriteFileSetting());
-		config.controler().setOverwriteFileSetting(OverwriteFileSetting.overwriteExistingFiles);
-
-		config.controler().setLastIteration(0);
-		config.global().setRandomSeed(4177);
-		config.controler().setOverwriteFileSetting(OverwriteFileSetting.overwriteExistingFiles);
-
-		return config;
-	}
-
-	private static CarrierPlanStrategyManagerFactory createMyStrategymanager() {
-		return new CarrierPlanStrategyManagerFactory() {
-			@Override
-			public GenericStrategyManager<CarrierPlan, Carrier> createStrategyManager() {
-				return null;
-			}
-		};
-
-	}
-
-	private static CarrierScoringFunctionFactoryImpl createMyScoringFunction2(final Scenario scenario) {
-
-		return new CarrierScoringFunctionFactoryImpl(scenario.getNetwork());
-//		return new CarrierScoringFunctionFactoryImpl (scenario, scenario.getConfig().controler().getOutputDirectory()) {
-//
-//			public ScoringFunction createScoringFunction(final Carrier carrier){
-//				SumScoringFunction sumSf = new SumScoringFunction() ;
-//
-//				VehicleFixCostScoring fixCost = new VehicleFixCostScoring(carrier);
-//				sumSf.addScoringFunction(fixCost);
-//
-//				LegScoring legScoring = new LegScoring(carrier);
-//				sumSf.addScoringFunction(legScoring);
-//
-//				//Score Activity w/o correction of waitingTime @ 1st Service.
-//				//			ActivityScoring actScoring = new ActivityScoring(carrier);
-//				//			sumSf.addScoringFunction(actScoring);
-//
-//				//Alternativ:
-//				//Score Activity with correction of waitingTime @ 1st Service.
-//				ActivityScoringWithCorrection actScoring = new ActivityScoringWithCorrection(carrier);
-//				sumSf.addScoringFunction(actScoring);
-//
-//				return sumSf;
-//			}
-//		};
 	}
 
 }
