@@ -8,14 +8,12 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.freight.carrier.Carrier;
-import org.matsim.contrib.freight.carrier.CarrierCapabilities;
 import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
 import org.matsim.contrib.freight.carrier.CarrierImpl;
 import org.matsim.contrib.freight.carrier.CarrierPlan;
 import org.matsim.contrib.freight.carrier.CarrierPlanXmlWriterV2;
 import org.matsim.contrib.freight.carrier.CarrierVehicle;
 import org.matsim.contrib.freight.carrier.CarrierVehicleType;
-import org.matsim.contrib.freight.carrier.CarrierVehicleTypeLoader;
 import org.matsim.contrib.freight.carrier.CarrierVehicleTypes;
 import org.matsim.contrib.freight.carrier.Carriers;
 import org.matsim.contrib.freight.controler.CarrierModule;
@@ -45,7 +43,7 @@ public class Run_Abfall {
 
 	private static final Logger log = Logger.getLogger(Run_Abfall.class);
 
-	private static final String SCENARIOS_UEBUNG01_GRID9X9_XML = "scenarios/Uebung01/grid9x9.xml";
+	private static final String original_Chessboard = "scenarios/Uebung01/grid9x9.xml";
 
 	private enum scenarioAuswahl {
 		chessboard, Wilmersdorf
@@ -62,7 +60,7 @@ public class Run_Abfall {
 		switch (scenarioWahl) {
 		case chessboard:
 			config.controler().setOutputDirectory("output/original_Chessboard/04_InfiniteSize");
-			config.network().setInputFile(SCENARIOS_UEBUNG01_GRID9X9_XML);
+			config.network().setInputFile(original_Chessboard);
 			break;
 		case Wilmersdorf:
 			// TODO
@@ -106,16 +104,11 @@ public class Run_Abfall {
 				latestFinishingTime, carrierVehType);
 
 		// Dienstleister erstellen
-		CarrierCapabilities carrierCapabilities = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
-				.addVehicle(garbageTruck1).setFleetSize(FleetSize.INFINITE).build();
-
-		myCarrier.setCarrierCapabilities(carrierCapabilities);
-
-		// Fahrzeugtypen den Anbietern zuordenen
-		new CarrierVehicleTypeLoader(carriers).loadVehicleTypes(vehicleTypes);
+		FleetSize fleetSize = FleetSize.INFINITE;
+		UtilityRun_Abfall.defineCarriers(carriers, myCarrier, carrierVehType, vehicleTypes, garbageTruck1,fleetSize);
 
 		// Netzwerk integrieren und Kosten für jsprit
-		Network network = NetworkUtils.readNetwork(SCENARIOS_UEBUNG01_GRID9X9_XML);
+		Network network = NetworkUtils.readNetwork(original_Chessboard);
 		Builder netBuilder = NetworkBasedTransportCosts.Builder.newInstance(network,
 				vehicleTypes.getVehicleTypes().values());
 		final NetworkBasedTransportCosts netBasedCosts = netBuilder.build();
@@ -158,5 +151,7 @@ public class Run_Abfall {
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans_Test01.xml");
 
 	}
+
+
 
 }

@@ -6,13 +6,16 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.freight.carrier.Carrier;
+import org.matsim.contrib.freight.carrier.CarrierCapabilities;
 import org.matsim.contrib.freight.carrier.CarrierPlan;
 import org.matsim.contrib.freight.carrier.CarrierShipment;
 import org.matsim.contrib.freight.carrier.CarrierVehicle;
 import org.matsim.contrib.freight.carrier.CarrierVehicleType;
+import org.matsim.contrib.freight.carrier.CarrierVehicleTypeLoader;
 import org.matsim.contrib.freight.carrier.CarrierVehicleTypes;
 import org.matsim.contrib.freight.carrier.Carriers;
 import org.matsim.contrib.freight.carrier.TimeWindow;
+import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
 import org.matsim.contrib.freight.replanning.CarrierPlanStrategyManagerFactory;
 import org.matsim.contrib.freight.usecases.chessboard.CarrierScoringFunctionFactoryImpl;
 import org.matsim.core.config.Config;
@@ -112,6 +115,23 @@ public class UtilityRun_Abfall {
 		return CarrierVehicle.Builder.newInstance(Id.create(VehicleId, Vehicle.class), Id.createLinkId(linkDepot))
 				.setEarliestStart(earliestStartingTime).setLatestEnd(latestFinishingTime)
 				.setTypeId(carrierVehType.getId()).build();
+	}
+
+	/**
+	 * Defines and sets the Capabilities of the Carrier, including the vehicleTypes for the carriers
+	 * 
+	 * @param
+	 * 
+	 */
+	public static void defineCarriers(Carriers carriers, Carrier myCarrier, CarrierVehicleType carrierVehType,
+			CarrierVehicleTypes vehicleTypes, CarrierVehicle garbageTruck1, FleetSize fleetSize) {
+		CarrierCapabilities carrierCapabilities = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
+				.addVehicle(garbageTruck1).setFleetSize(fleetSize).build();
+
+		myCarrier.setCarrierCapabilities(carrierCapabilities);
+
+		// Fahrzeugtypen den Anbietern zuordenen
+		new CarrierVehicleTypeLoader(carriers).loadVehicleTypes(vehicleTypes);
 	}
 
 	/**
