@@ -53,8 +53,8 @@ public class Run_Abfall {
 		default:
 			new RuntimeException("no scenario selected.");
 		}
-
-		config = Run_AbfallUtils.prepareConfig(config);
+		int lastIteration = 0;
+		config = Run_AbfallUtils.prepareConfig(config, lastIteration);
 		Scenario scenario = ScenarioUtils.loadScenario(config);
 
 		Carriers carriers = new Carriers();

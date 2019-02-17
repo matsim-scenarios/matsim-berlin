@@ -49,10 +49,10 @@ public class Run_AbfallUtils {
 	static int stunden = 3600;
 	static int minuten = 60;
 
-	/**
+	/**Delets the existing output file and sets the number of the last iteration
 	 * @param config
 	 */
-	public static Config prepareConfig(Config config) {
+	public static Config prepareConfig(Config config, int lastIteration) {
 		// (the directory structure is needed for jsprit output, which is before the
 		// controler starts. Maybe there is a better alternative ...)
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
@@ -60,7 +60,7 @@ public class Run_AbfallUtils {
 				config.controler().getOverwriteFileSetting());
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.overwriteExistingFiles);
 
-		config.controler().setLastIteration(0);
+		config.controler().setLastIteration(lastIteration);
 		config.global().setRandomSeed(4177);
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.overwriteExistingFiles);
 
@@ -191,9 +191,7 @@ public class Run_AbfallUtils {
 				"bestSolution");
 	}
 	/**
-	 * @param scenario
-	 * @param carriers
-	 * @param controler
+	 * @param 
 	 */
 	public static void platzhalter(Scenario scenario, Carriers carriers, final Controler controler) {
 		CarrierScoringFunctionFactory scoringFunctionFactory = createMyScoringFunction2(scenario);
