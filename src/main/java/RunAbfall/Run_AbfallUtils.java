@@ -1,13 +1,16 @@
 package RunAbfall;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.freight.carrier.Carrier;
 import org.matsim.contrib.freight.carrier.CarrierCapabilities;
 import org.matsim.contrib.freight.carrier.CarrierPlan;
+import org.matsim.contrib.freight.carrier.CarrierPlanXmlWriterV2;
 import org.matsim.contrib.freight.carrier.CarrierShipment;
 import org.matsim.contrib.freight.carrier.CarrierVehicle;
 import org.matsim.contrib.freight.carrier.CarrierVehicleType;
@@ -16,6 +19,10 @@ import org.matsim.contrib.freight.carrier.CarrierVehicleTypes;
 import org.matsim.contrib.freight.carrier.Carriers;
 import org.matsim.contrib.freight.carrier.TimeWindow;
 import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
+import org.matsim.contrib.freight.jsprit.MatsimJspritFactory;
+import org.matsim.contrib.freight.jsprit.NetworkBasedTransportCosts;
+import org.matsim.contrib.freight.jsprit.NetworkRouter;
+import org.matsim.contrib.freight.jsprit.NetworkBasedTransportCosts.Builder;
 import org.matsim.contrib.freight.replanning.CarrierPlanStrategyManagerFactory;
 import org.matsim.contrib.freight.usecases.chessboard.CarrierScoringFunctionFactoryImpl;
 import org.matsim.core.config.Config;
@@ -27,7 +34,14 @@ import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.EngineInformation.FuelType;
 
-public class UtilityRun_Abfall {
+import com.graphhopper.jsprit.analysis.toolbox.Plotter;
+import com.graphhopper.jsprit.core.algorithm.VehicleRoutingAlgorithm;
+import com.graphhopper.jsprit.core.algorithm.box.SchrimpfFactory;
+import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
+import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolution;
+import com.graphhopper.jsprit.core.util.Solutions;
+
+public class Run_AbfallUtils {
 
 	static int stunden = 3600;
 	static int minuten = 60;
@@ -56,7 +70,7 @@ public class UtilityRun_Abfall {
 	 * 
 	 * @param
 	 */
-	public static void createShipmentsForCarrier(Scenario scenario, Carrier myCarrier, Id<Link> dropOffLinkId,
+	public static void createShipmentsForCarrier(Scenario scenario, Carrier myCarrier, Id<Link> garbageDumpId,
 			Carriers carriers) {
 		Map<Id<Link>, ? extends Link> links = scenario.getNetwork().getLinks();
 
@@ -64,7 +78,7 @@ public class UtilityRun_Abfall {
 			int capycityDemand = 10; // zzz TODO: Mange abhängig von Linklänge o.ä.
 			CarrierShipment shipment = CarrierShipment.Builder
 					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
-							dropOffLinkId, capycityDemand)
+							garbageDumpId, capycityDemand)
 					.setPickupServiceTime(5 * 60).setPickupTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden)) // TODO
 					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
 					.setDeliveryServiceTime(15 * minuten) // zzz TODO: DeliveryTime anhängig von Menge
@@ -118,7 +132,8 @@ public class UtilityRun_Abfall {
 	}
 
 	/**
-	 * Defines and sets the Capabilities of the Carrier, including the vehicleTypes for the carriers
+	 * Defines and sets the Capabilities of the Carrier, including the vehicleTypes
+	 * for the carriers
 	 * 
 	 * @param
 	 * 
@@ -132,6 +147,45 @@ public class UtilityRun_Abfall {
 
 		// Fahrzeugtypen den Anbietern zuordenen
 		new CarrierVehicleTypeLoader(carriers).loadVehicleTypes(vehicleTypes);
+	}
+
+	/**
+	 * Solves with jsprit and gives a xml output of the plans and a plot of the
+	 * solution
+	 * 
+	 * @param
+	 */
+	public static void solveWithJsprit(Scenario scenario, Carriers carriers, Carrier myCarrier,
+			CarrierVehicleTypes vehicleTypes) {
+		// Netzwerk integrieren und Kosten für jsprit
+		Network network = scenario.getNetwork();
+		// Network network = NetworkUtils.readNetwork(original_Chessboard);
+		Builder netBuilder = NetworkBasedTransportCosts.Builder.newInstance(network,
+				vehicleTypes.getVehicleTypes().values());
+		final NetworkBasedTransportCosts netBasedCosts = netBuilder.build();
+		netBuilder.setTimeSliceWidth(1800);
+
+		// Build jsprit, solve and route VRP for carrierService only -> need solution to
+		// convert Services to Shipments
+		VehicleRoutingProblem.Builder vrpBuilder = MatsimJspritFactory.createRoutingProblemBuilder(myCarrier, network);
+		vrpBuilder.setRoutingCost(netBasedCosts);
+		VehicleRoutingProblem problem = vrpBuilder.build();
+
+		// get the algorithm out-of-the-box, search solution and get the best one.
+		VehicleRoutingAlgorithm algorithm = new SchrimpfFactory().createAlgorithm(problem);
+		Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
+		VehicleRoutingProblemSolution bestSolution = Solutions.bestOf(solutions);
+
+		// Routing bestPlan to Network
+		CarrierPlan carrierPlanServices = MatsimJspritFactory.createPlan(myCarrier, bestSolution);
+		NetworkRouter.routePlan(carrierPlanServices, netBasedCosts);
+		myCarrier.setSelectedPlan(carrierPlanServices);
+
+		new CarrierPlanXmlWriterV2(carriers)
+				.write(scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.xml");
+		new Plotter(problem, bestSolution).plot(
+				scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.png",
+				"bestSolution");
 	}
 
 	/**
