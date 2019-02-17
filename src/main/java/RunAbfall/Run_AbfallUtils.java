@@ -19,13 +19,16 @@ import org.matsim.contrib.freight.carrier.CarrierVehicleTypes;
 import org.matsim.contrib.freight.carrier.Carriers;
 import org.matsim.contrib.freight.carrier.TimeWindow;
 import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
+import org.matsim.contrib.freight.controler.CarrierModule;
 import org.matsim.contrib.freight.jsprit.MatsimJspritFactory;
 import org.matsim.contrib.freight.jsprit.NetworkBasedTransportCosts;
 import org.matsim.contrib.freight.jsprit.NetworkRouter;
 import org.matsim.contrib.freight.jsprit.NetworkBasedTransportCosts.Builder;
 import org.matsim.contrib.freight.replanning.CarrierPlanStrategyManagerFactory;
+import org.matsim.contrib.freight.scoring.CarrierScoringFunctionFactory;
 import org.matsim.contrib.freight.usecases.chessboard.CarrierScoringFunctionFactoryImpl;
 import org.matsim.core.config.Config;
+import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.replanning.GenericStrategyManager;
@@ -187,18 +190,20 @@ public class Run_AbfallUtils {
 				scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.png",
 				"bestSolution");
 	}
-
 	/**
-	 * @return
+	 * @param scenario
+	 * @param carriers
+	 * @param controler
 	 */
-	public static CarrierPlanStrategyManagerFactory createMyStrategymanager() {
-		return new CarrierPlanStrategyManagerFactory() {
-			@Override
-			public GenericStrategyManager<CarrierPlan, Carrier> createStrategyManager() {
-				return null;
-			}
-		};
+	public static void platzhalter(Scenario scenario, Carriers carriers, final Controler controler) {
+		CarrierScoringFunctionFactory scoringFunctionFactory = createMyScoringFunction2(scenario);
+		CarrierPlanStrategyManagerFactory planStrategyManagerFactory = createMyStrategymanager();
+
+		CarrierModule listener = new CarrierModule(carriers, planStrategyManagerFactory, scoringFunctionFactory);
+		listener.setPhysicallyEnforceTimeWindowBeginnings(true);
+		controler.addOverridingModule(listener);
 	}
+
 
 	/**
 	 * @param scenario
@@ -230,5 +235,16 @@ public class Run_AbfallUtils {
 //				return sumSf;
 //			}
 //		};
+	}
+	/**
+	 * @return
+	 */
+	public static CarrierPlanStrategyManagerFactory createMyStrategymanager() {
+		return new CarrierPlanStrategyManagerFactory() {
+			@Override
+			public GenericStrategyManager<CarrierPlan, Carrier> createStrategyManager() {
+				return null;
+			}
+		};
 	}
 }

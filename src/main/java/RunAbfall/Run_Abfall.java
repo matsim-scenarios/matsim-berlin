@@ -13,9 +13,6 @@ import org.matsim.contrib.freight.carrier.CarrierVehicle;
 import org.matsim.contrib.freight.carrier.CarrierVehicleType;
 import org.matsim.contrib.freight.carrier.CarrierVehicleTypes;
 import org.matsim.contrib.freight.carrier.Carriers;
-import org.matsim.contrib.freight.controler.CarrierModule;
-import org.matsim.contrib.freight.replanning.CarrierPlanStrategyManagerFactory;
-import org.matsim.contrib.freight.scoring.CarrierScoringFunctionFactory;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
@@ -76,8 +73,8 @@ public class Run_Abfall {
 		double fixCosts = 200;
 		FuelType engineInformation = FuelType.diesel;
 		double literPerMeter = 0.01;
-		CarrierVehicleType carrierVehType = Run_AbfallUtils.createGarbageTruckType(vehicleTypeId, capacity,
-				maxVelocity, costPerDistanceUnit, costPerTimeUnit, fixCosts, engineInformation, literPerMeter);
+		CarrierVehicleType carrierVehType = Run_AbfallUtils.createGarbageTruckType(vehicleTypeId, capacity, maxVelocity,
+				costPerDistanceUnit, costPerTimeUnit, fixCosts, engineInformation, literPerMeter);
 		CarrierVehicleTypes vehicleTypes = Run_AbfallUtils.adVehicleType(carrierVehType);
 
 		// create vehicle at depot
@@ -93,17 +90,12 @@ public class Run_Abfall {
 		FleetSize fleetSize = FleetSize.FINITE;
 		Run_AbfallUtils.defineCarriers(carriers, myCarrier, carrierVehType, vehicleTypes, garbageTruck1, fleetSize);
 
-		//jsprit
+		// jsprit
 		Run_AbfallUtils.solveWithJsprit(scenario, carriers, myCarrier, vehicleTypes);
 
 		final Controler controler = new Controler(scenario);
 
-		CarrierScoringFunctionFactory scoringFunctionFactory = Run_AbfallUtils.createMyScoringFunction2(scenario);
-		CarrierPlanStrategyManagerFactory planStrategyManagerFactory = Run_AbfallUtils.createMyStrategymanager();
-
-		CarrierModule listener = new CarrierModule(carriers, planStrategyManagerFactory, scoringFunctionFactory);
-		listener.setPhysicallyEnforceTimeWindowBeginnings(true);
-		controler.addOverridingModule(listener);
+		Run_AbfallUtils.platzhalter(scenario, carriers, controler);
 
 		controler.run();
 
