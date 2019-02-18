@@ -26,26 +26,26 @@ public class Run_Abfall {
 
 	private static final Logger log = Logger.getLogger(Run_Abfall.class);
 
-	private static final String original_Chessboard = "scenarios/Uebung01/grid9x9.xml";
+	private static final String original_Chessboard = "scenarios/networks/originalChessboard9x9.xml";
 
 	private enum scenarioAuswahl {
-		chessboard, Wilmersdorf
+		originalChessboard, modifiedChessboard
 	};
 
 	public static void main(String[] args) {
 		log.setLevel(Level.INFO);
 
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.chessboard;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.originalChessboard;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
 
 		switch (scenarioWahl) {
-		case chessboard:
+		case originalChessboard:
 			config.controler().setOutputDirectory("output/original_Chessboard/05_FiniteSize");
 			config.network().setInputFile(original_Chessboard);
 			break;
-		case Wilmersdorf:
+		case modifiedChessboard:
 			// TODO
 			new RuntimeException("scenario not specified");
 			break;
