@@ -27,6 +27,7 @@ public class Run_Abfall {
 	private static final Logger log = Logger.getLogger(Run_Abfall.class);
 
 	private static final String original_Chessboard = "scenarios/networks/originalChessboard9x9.xml";
+	private static final String modified_Chessboard = "scenarios/networks/modifiedChessboard9x9.xml";
 
 	private enum scenarioAuswahl {
 		originalChessboard, modifiedChessboard
@@ -35,7 +36,7 @@ public class Run_Abfall {
 	public static void main(String[] args) {
 		log.setLevel(Level.INFO);
 
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.originalChessboard;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.modifiedChessboard;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
@@ -46,8 +47,8 @@ public class Run_Abfall {
 			config.network().setInputFile(original_Chessboard);
 			break;
 		case modifiedChessboard:
-			// TODO
-			new RuntimeException("scenario not specified");
+			config.controler().setOutputDirectory("output/modified_Chessboard/01_InfiniteSize");
+			config.network().setInputFile(modified_Chessboard);
 			break;
 
 		default:
@@ -61,14 +62,14 @@ public class Run_Abfall {
 		Carrier myCarrier = CarrierImpl.newInstance(Id.create("BSR", Carrier.class));
 
 		// create shipmets from every link to the garbage dump
-		Id<Link> garbageDumpId = Id.createLinkId("j(3,3)");
+		Id<Link> garbageDumpId = Id.createLinkId("j(0,9)R");
 		Run_AbfallUtils.createShipmentsForCarrier(scenario, myCarrier, garbageDumpId, carriers);
 
 		// create a garbage truck type
 		String vehicleTypeId = "TruckType1";
-		int capacity = 100;
+		int capacity = 300;
 		double maxVelocity = 50 / 3.6;
-		double costPerDistanceUnit = 0.1;
+		double costPerDistanceUnit = 1;
 		double costPerTimeUnit = 0.01;
 		double fixCosts = 200;
 		FuelType engineInformation = FuelType.diesel;
@@ -79,7 +80,7 @@ public class Run_Abfall {
 
 		// create vehicle at depot
 		String vehicleID = "GargabeTruck";
-		String linkDepot = "i(1,0)";
+		String linkDepot = "j(9,9)";
 		double earliestStartingTime = 6 * stunden;
 		double latestFinishingTime = 15 * stunden;
 
@@ -87,7 +88,7 @@ public class Run_Abfall {
 				latestFinishingTime, carrierVehType);
 
 		// define Carriers
-		FleetSize fleetSize = FleetSize.FINITE;
+		FleetSize fleetSize = FleetSize.INFINITE;
 		Run_AbfallUtils.defineCarriers(carriers, myCarrier, carrierVehType, vehicleTypes, garbageTruck1, fleetSize);
 
 		// jsprit

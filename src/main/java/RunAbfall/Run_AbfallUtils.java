@@ -49,7 +49,9 @@ public class Run_AbfallUtils {
 	static int stunden = 3600;
 	static int minuten = 60;
 
-	/**Delets the existing output file and sets the number of the last iteration
+	/**
+	 * Delets the existing output file and sets the number of the last iteration
+	 * 
 	 * @param config
 	 */
 	public static Config prepareConfig(Config config, int lastIteration) {
@@ -78,15 +80,20 @@ public class Run_AbfallUtils {
 		Map<Id<Link>, ? extends Link> links = scenario.getNetwork().getLinks();
 
 		for (Link link : links.values()) {
-			int capycityDemand = 10; // zzz TODO: Mange abhängig von Linklänge o.ä.
-			CarrierShipment shipment = CarrierShipment.Builder
-					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
-							garbageDumpId, capycityDemand)
-					.setPickupServiceTime(5 * 60).setPickupTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden)) // TODO
-					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
-					.setDeliveryServiceTime(15 * minuten) // zzz TODO: DeliveryTime anhängig von Menge
-					.build();
-			myCarrier.getShipments().add(shipment);
+			if (link.getFreespeed() < 10 & link.getCoord().getY()<7000) {
+				int capacityDemand = (int) (link.getLength() * 0.01); //TODO rundet ab?
+				double serviceTime = ((double)capacityDemand / 2) * minuten;
+				double deliveryTime = ((double)capacityDemand / 4) * minuten;
+				CarrierShipment shipment = CarrierShipment.Builder
+						.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
+								garbageDumpId, capacityDemand)
+						.setPickupServiceTime(serviceTime)
+						.setPickupTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
+						.setDeliveryTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
+						.setDeliveryServiceTime(deliveryTime).build();
+				myCarrier.getShipments().add(shipment);
+			}
+
 		}
 		carriers.addCarrier(myCarrier);
 	}
@@ -190,8 +197,9 @@ public class Run_AbfallUtils {
 				scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.png",
 				"bestSolution");
 	}
+
 	/**
-	 * @param 
+	 * @param
 	 */
 	public static void platzhalter(Scenario scenario, Carriers carriers, final Controler controler) {
 		CarrierScoringFunctionFactory scoringFunctionFactory = createMyScoringFunction2(scenario);
@@ -201,7 +209,6 @@ public class Run_AbfallUtils {
 		listener.setPhysicallyEnforceTimeWindowBeginnings(true);
 		controler.addOverridingModule(listener);
 	}
-
 
 	/**
 	 * @param scenario
@@ -234,6 +241,7 @@ public class Run_AbfallUtils {
 //			}
 //		};
 	}
+
 	/**
 	 * @return
 	 */
