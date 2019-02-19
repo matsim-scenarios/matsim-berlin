@@ -45,10 +45,13 @@ import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolutio
 import com.graphhopper.jsprit.core.util.Solutions;
 
 public class Run_AbfallUtils {
+	
 
 	static int stunden = 3600;
 	static int minuten = 60;
 
+	
+	
 	/**
 	 * Delets the existing output file and sets the number of the last iteration
 	 * 
@@ -75,12 +78,10 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	public static void createShipmentsForCarrier(Scenario scenario, Carrier myCarrier, Id<Link> garbageDumpId,
+	public static void createShipmentsForCarrier(Map<Id<Link>,Link> garbageLinks, Scenario scenario, Carrier myCarrier, Id<Link> garbageDumpId,
 			Carriers carriers) {
-		Map<Id<Link>, ? extends Link> links = scenario.getNetwork().getLinks();
 
-		for (Link link : links.values()) {
-			if (link.getFreespeed() < 10 & link.getCoord().getY()<7000) {
+		for (Link link : garbageLinks.values()) {
 				int capacityDemand = (int) (link.getLength() * 0.01); //TODO rundet ab?
 				double serviceTime = ((double)capacityDemand / 2) * minuten;
 				double deliveryTime = ((double)capacityDemand / 4) * minuten;
@@ -92,8 +93,6 @@ public class Run_AbfallUtils {
 						.setDeliveryTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
 						.setDeliveryServiceTime(deliveryTime).build();
 				myCarrier.getShipments().add(shipment);
-			}
-
 		}
 		carriers.addCarrier(myCarrier);
 	}
@@ -201,7 +200,7 @@ public class Run_AbfallUtils {
 	/**
 	 * @param
 	 */
-	public static void platzhalter(Scenario scenario, Carriers carriers, final Controler controler) {
+	public static void scoringAndManagerFactory(Scenario scenario, Carriers carriers, final Controler controler) {
 		CarrierScoringFunctionFactory scoringFunctionFactory = createMyScoringFunction2(scenario);
 		CarrierPlanStrategyManagerFactory planStrategyManagerFactory = createMyStrategymanager();
 

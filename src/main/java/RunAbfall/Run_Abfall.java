@@ -1,5 +1,8 @@
 package RunAbfall;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -28,31 +31,39 @@ public class Run_Abfall {
 
 	private static final String original_Chessboard = "scenarios/networks/originalChessboard9x9.xml";
 	private static final String modified_Chessboard = "scenarios/networks/modifiedChessboard9x9.xml";
+	private static final String berlin = "original-input-data/berlin-v5.2-1pct.output_network.xml";
 
-	private enum scenarioAuswahl {
-		originalChessboard, modifiedChessboard
+	private enum netzwerkAuswahl {
+		originalChessboard, modifiedChessboard,berlin
+	};
+	private enum scenarioAuswahl{
+		chessboard, berlin
 	};
 
 	public static void main(String[] args) {
 		log.setLevel(Level.INFO);
 
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.modifiedChessboard;
+		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.modifiedChessboard;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.chessboard;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
 
-		switch (scenarioWahl) {
+		switch (netzwerkWahl) {
 		case originalChessboard:
-			config.controler().setOutputDirectory("output/original_Chessboard/05_FiniteSize");
+			config.controler().setOutputDirectory("output/original_Chessboard/02_InfiniteSize");
 			config.network().setInputFile(original_Chessboard);
 			break;
 		case modifiedChessboard:
-			config.controler().setOutputDirectory("output/modified_Chessboard/01_InfiniteSize");
+			config.controler().setOutputDirectory("output/modified_Chessboard/03_FiniteSize_Tests");
 			config.network().setInputFile(modified_Chessboard);
 			break;
-
+		case berlin:
+			config.controler().setOutputDirectory("output/Berlin/01_FiniteSize_Tests");
+			config.network().setInputFile(berlin);
+			break;
 		default:
-			new RuntimeException("no scenario selected.");
+			new RuntimeException("no network selected.");
 		}
 		int lastIteration = 0;
 		config = Run_AbfallUtils.prepareConfig(config, lastIteration);
@@ -60,11 +71,30 @@ public class Run_Abfall {
 
 		Carriers carriers = new Carriers();
 		Carrier myCarrier = CarrierImpl.newInstance(Id.create("BSR", Carrier.class));
-
-		// create shipmets from every link to the garbage dump
+		
+		Map<Id<Link>, ? extends Link> allLinks = scenario.getNetwork().getLinks();
+		Map<Id<Link>,Link> garbageLinks = new HashMap<Id<Link>, Link>();
+		
+		switch (scenarioWahl) {	
+		case chessboard:
+			for (Link link : allLinks.values()) {
+				if (link.getCoord().getX() < 8000 && link.getFreespeed()>12) {
+					garbageLinks.put(link.getId(), link);
+				}
+			}	
+			break;
+		case berlin:	
+			for (Link link : allLinks.values()) {
+				if (link.getCoord().getX() < 8000) {
+					garbageLinks.put(link.getId(), link);
+				}
+			}	
+			break;
+		default:
+			new RuntimeException("no scenario selected.");
+		}
 		Id<Link> garbageDumpId = Id.createLinkId("j(0,9)R");
-		Run_AbfallUtils.createShipmentsForCarrier(scenario, myCarrier, garbageDumpId, carriers);
-
+		Run_AbfallUtils.createShipmentsForCarrier(garbageLinks, scenario, myCarrier, garbageDumpId, carriers);
 		// create a garbage truck type
 		String vehicleTypeId = "TruckType1";
 		int capacity = 300;
@@ -88,7 +118,7 @@ public class Run_Abfall {
 				latestFinishingTime, carrierVehType);
 
 		// define Carriers
-		FleetSize fleetSize = FleetSize.INFINITE;
+		FleetSize fleetSize = FleetSize.FINITE;
 		Run_AbfallUtils.defineCarriers(carriers, myCarrier, carrierVehType, vehicleTypes, garbageTruck1, fleetSize);
 
 		// jsprit
@@ -96,7 +126,7 @@ public class Run_Abfall {
 
 		final Controler controler = new Controler(scenario);
 
-		Run_AbfallUtils.platzhalter(scenario, carriers, controler);
+		Run_AbfallUtils.scoringAndManagerFactory(scenario, carriers, controler);
 
 		controler.run();
 
