@@ -78,7 +78,7 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	public static void createShipmentsForCarrier(Map<Id<Link>,Link> garbageLinks, Scenario scenario, Carrier myCarrier, Id<Link> garbageDumpId,
+	public static void createShipmentsForCarrier(Map<Id<Link>,Link> garbageLinks, Scenario scenario, Carrier myCarrier, String garbageDumpId,
 			Carriers carriers) {
 
 		for (Link link : garbageLinks.values()) {
@@ -87,7 +87,7 @@ public class Run_AbfallUtils {
 				double deliveryTime = ((double)capacityDemand / 4) * minuten;
 				CarrierShipment shipment = CarrierShipment.Builder
 						.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
-								garbageDumpId, capacityDemand)
+								Id.createLinkId(garbageDumpId), capacityDemand)
 						.setPickupServiceTime(serviceTime)
 						.setPickupTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
 						.setDeliveryTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))

@@ -26,6 +26,7 @@ public class Run_Abfall {
 
 	static int stunden = 3600;
 	static int minuten = 60;
+	Id<Link> garbageDumpId;
 
 	private static final Logger log = Logger.getLogger(Run_Abfall.class);
 
@@ -34,13 +35,16 @@ public class Run_Abfall {
 	private static final String berlin = "original-input-data/berlin-v5.2-1pct.output_network.xml";
 
 	private enum netzwerkAuswahl {
-		originalChessboard, modifiedChessboard,berlin
+		originalChessboard, modifiedChessboard, berlin
 	};
-	private enum scenarioAuswahl{
+
+	private enum scenarioAuswahl {
 		chessboard, berlin
 	};
 
 	public static void main(String[] args) {
+		String garbageDumpId = null;
+		String depotId = null;
 		log.setLevel(Level.INFO);
 
 		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.modifiedChessboard;
@@ -71,29 +75,31 @@ public class Run_Abfall {
 
 		Carriers carriers = new Carriers();
 		Carrier myCarrier = CarrierImpl.newInstance(Id.create("BSR", Carrier.class));
-		
+
 		Map<Id<Link>, ? extends Link> allLinks = scenario.getNetwork().getLinks();
-		Map<Id<Link>,Link> garbageLinks = new HashMap<Id<Link>, Link>();
-		
-		switch (scenarioWahl) {	
+		Map<Id<Link>, Link> garbageLinks = new HashMap<Id<Link>, Link>();
+
+		switch (scenarioWahl) {
 		case chessboard:
+			garbageDumpId = ("j(0,9)R");
+			depotId = "j(9,9)";
 			for (Link link : allLinks.values()) {
-				if (link.getCoord().getX() < 8000 && link.getFreespeed()>12) {
+				if (link.getCoord().getX() < 8000 && link.getFreespeed() > 12) {
 					garbageLinks.put(link.getId(), link);
 				}
-			}	
+			}
 			break;
-		case berlin:	
+		case berlin:
 			for (Link link : allLinks.values()) {
 				if (link.getCoord().getX() < 8000) {
 					garbageLinks.put(link.getId(), link);
 				}
-			}	
+			}
 			break;
 		default:
 			new RuntimeException("no scenario selected.");
 		}
-		Id<Link> garbageDumpId = Id.createLinkId("j(0,9)R");
+
 		Run_AbfallUtils.createShipmentsForCarrier(garbageLinks, scenario, myCarrier, garbageDumpId, carriers);
 		// create a garbage truck type
 		String vehicleTypeId = "TruckType1";
@@ -109,12 +115,11 @@ public class Run_Abfall {
 		CarrierVehicleTypes vehicleTypes = Run_AbfallUtils.adVehicleType(carrierVehType);
 
 		// create vehicle at depot
-		String vehicleID = "GargabeTruck";
-		String linkDepot = "j(9,9)";
+		String vehicleId = "GargabeTruck";
 		double earliestStartingTime = 6 * stunden;
 		double latestFinishingTime = 15 * stunden;
 
-		CarrierVehicle garbageTruck1 = Run_AbfallUtils.createGarbageTruck(vehicleID, linkDepot, earliestStartingTime,
+		CarrierVehicle garbageTruck1 = Run_AbfallUtils.createGarbageTruck(vehicleId, depotId, earliestStartingTime,
 				latestFinishingTime, carrierVehType);
 
 		// define Carriers
