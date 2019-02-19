@@ -32,14 +32,14 @@ public class Run_Abfall {
 
 	private static final String original_Chessboard = "scenarios/networks/originalChessboard9x9.xml";
 	private static final String modified_Chessboard = "scenarios/networks/modifiedChessboard9x9.xml";
-	private static final String berlin = "original-input-data/berlin-v5.2-1pct.output_network.xml";
+	private static final String berlin = "original-input-data/berlin-v5.2-1pct.output_network.xml.gz";
 
 	private enum netzwerkAuswahl {
-		originalChessboard, modifiedChessboard, berlin
+		originalChessboard, modifiedChessboard, berlinNetwork
 	};
 
 	private enum scenarioAuswahl {
-		chessboard, berlin
+		chessboard, berlinScenario
 	};
 
 	public static void main(String[] args) {
@@ -62,7 +62,7 @@ public class Run_Abfall {
 			config.controler().setOutputDirectory("output/modified_Chessboard/03_FiniteSize_Tests");
 			config.network().setInputFile(modified_Chessboard);
 			break;
-		case berlin:
+		case berlinNetwork:
 			config.controler().setOutputDirectory("output/Berlin/01_FiniteSize_Tests");
 			config.network().setInputFile(berlin);
 			break;
@@ -84,14 +84,19 @@ public class Run_Abfall {
 			garbageDumpId = ("j(0,9)R");
 			depotId = "j(9,9)";
 			for (Link link : allLinks.values()) {
-				if (link.getCoord().getX() < 8000 && link.getFreespeed() > 12) {
+				if (link.getCoord().getX() < 8000 && link.getFreespeed() < 12) {
 					garbageLinks.put(link.getId(), link);
 				}
 			}
 			break;
-		case berlin:
+		case berlinScenario:
+			garbageDumpId = ("142010");	//Muellheizkraftwerk Ruhleben
+			depotId = "28457";	//zufall
 			for (Link link : allLinks.values()) {
-				if (link.getCoord().getX() < 8000) {
+				if (link.getCoord().getX() > 4587375.819194021 &&
+					link.getCoord().getX() < 4589012.681349432 && 
+					link.getCoord().getY() < 5833272.254176694 &&
+					link.getCoord().getY() > 5832969.565900505 ){
 					garbageLinks.put(link.getId(), link);
 				}
 			}
