@@ -39,7 +39,7 @@ public class Run_Abfall {
 	};
 
 	private enum scenarioAuswahl {
-		chessboard, berlinScenario
+		chessboard, berlinScenarioTest
 	};
 
 	public static void main(String[] args) {
@@ -48,7 +48,7 @@ public class Run_Abfall {
 		log.setLevel(Level.INFO);
 
 		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinScenario;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinScenarioTest;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
@@ -76,6 +76,20 @@ public class Run_Abfall {
 		Carriers carriers = new Carriers();
 		Carrier myCarrier = CarrierImpl.newInstance(Id.create("BSR", Carrier.class));
 
+		// create a garbage truck type
+		String vehicleTypeId = "TruckType1";
+		int capacity = 1000;
+		double maxVelocity = 50 / 3.6;
+		double costPerDistanceUnit = 1;
+		double costPerTimeUnit = 0.01;
+		double fixCosts = 200;
+		FuelType engineInformation = FuelType.diesel;
+		double literPerMeter = 0.01;
+		CarrierVehicleType carrierVehType = Run_AbfallUtils.createGarbageTruckType(vehicleTypeId, capacity, maxVelocity,
+				costPerDistanceUnit, costPerTimeUnit, fixCosts, engineInformation, literPerMeter);
+		CarrierVehicleTypes vehicleTypes = Run_AbfallUtils.adVehicleType(carrierVehType);
+
+		// create shipments
 		Map<Id<Link>, ? extends Link> allLinks = scenario.getNetwork().getLinks();
 		Map<Id<Link>, Link> garbageLinks = new HashMap<Id<Link>, Link>();
 
@@ -89,14 +103,13 @@ public class Run_Abfall {
 				}
 			}
 			break;
-		case berlinScenario:
-			garbageDumpId = ("142010");	//Muellheizkraftwerk Ruhleben
-			depotId = "28457";	//zufall
+		case berlinScenarioTest:
+			garbageDumpId = ("142010"); // Muellheizkraftwerk Ruhleben
+			depotId = "28457"; // zufall
 			for (Link link : allLinks.values()) {
-				if (link.getCoord().getX() > 4587375.819194021 &&
-					link.getCoord().getX() < 4589012.681349432 && 
-					link.getCoord().getY() < 5833272.254176694 &&
-					link.getCoord().getY() > 5832969.565900505 ){
+				if (link.getAllowedModes().contains("car") && link.getCoord().getX() > 4587375.819194021
+						&& link.getCoord().getX() < 4589012.681349432 && link.getCoord().getY() < 5833272.254176694
+						&& link.getCoord().getY() > 5832969.565900505) {
 					garbageLinks.put(link.getId(), link);
 				}
 			}
@@ -105,20 +118,7 @@ public class Run_Abfall {
 			new RuntimeException("no scenario selected.");
 		}
 
-		Run_AbfallUtils.createShipmentsForCarrier(garbageLinks, scenario, myCarrier, garbageDumpId, carriers);
-		// create a garbage truck type
-		String vehicleTypeId = "TruckType1";
-		int capacity = 300;
-		double maxVelocity = 50 / 3.6;
-		double costPerDistanceUnit = 1;
-		double costPerTimeUnit = 0.01;
-		double fixCosts = 200;
-		FuelType engineInformation = FuelType.diesel;
-		double literPerMeter = 0.01;
-		CarrierVehicleType carrierVehType = Run_AbfallUtils.createGarbageTruckType(vehicleTypeId, capacity, maxVelocity,
-				costPerDistanceUnit, costPerTimeUnit, fixCosts, engineInformation, literPerMeter);
-		CarrierVehicleTypes vehicleTypes = Run_AbfallUtils.adVehicleType(carrierVehType);
-
+		Run_AbfallUtils.createShipmentsForCarrier(capacity,garbageLinks, scenario, myCarrier, garbageDumpId, carriers);
 		// create vehicle at depot
 		String vehicleId = "GargabeTruck";
 		double earliestStartingTime = 6 * stunden;
@@ -130,7 +130,6 @@ public class Run_Abfall {
 		// define Carriers
 		FleetSize fleetSize = FleetSize.FINITE;
 		Run_AbfallUtils.defineCarriers(carriers, myCarrier, carrierVehType, vehicleTypes, garbageTruck1, fleetSize);
-
 		// jsprit
 		Run_AbfallUtils.solveWithJsprit(scenario, carriers, myCarrier, vehicleTypes);
 
