@@ -32,6 +32,7 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.replanning.GenericStrategyManager;
+import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.vehicles.EngineInformationImpl;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
@@ -68,6 +69,7 @@ public class Run_AbfallUtils {
 		config.controler().setLastIteration(lastIteration);
 		config.global().setRandomSeed(4177);
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.overwriteExistingFiles);
+		config.global().setCoordinateSystem(TransformationFactory.GK4);
 
 		return config;
 	}

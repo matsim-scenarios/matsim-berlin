@@ -47,8 +47,8 @@ public class Run_Abfall {
 		String depotId = null;
 		log.setLevel(Level.INFO);
 
-		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.modifiedChessboard;
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.chessboard;
+		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinScenario;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
