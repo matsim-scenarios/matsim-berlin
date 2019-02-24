@@ -46,13 +46,10 @@ import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolutio
 import com.graphhopper.jsprit.core.util.Solutions;
 
 public class Run_AbfallUtils {
-	
 
 	static int stunden = 3600;
 	static int minuten = 60;
 
-	
-	
 	/**
 	 * Delets the existing output file and sets the number of the last iteration
 	 * 
@@ -76,25 +73,56 @@ public class Run_AbfallUtils {
 
 	/**
 	 * Creates a Shipment for every link, ads all shipments to myCarrier and ads
-	 * myCarrier to carriers
+	 * myCarrier to carriers. The volumeGarbage is in garbage per meter and week. So
+	 * the volumeGarbage of every shipment depends of the input
+	 * garbagePerMeterAndWeek.
 	 * 
 	 * @param
 	 */
-	public static void createShipmentsForCarrier(int capacityTruck, Map<Id<Link>,Link> garbageLinks, Scenario scenario, Carrier myCarrier, String garbageDumpId,
+	public static void createShipmentsForCarrierI(double garbagePerMeterAndWeek, int capacityTruck,
+			Map<Id<Link>, Link> garbageLinks, Scenario scenario, Carrier myCarrier, String garbageDumpId,
 			Carriers carriers) {
 
 		for (Link link : garbageLinks.values()) {
-				int volumeGarbage = (int) (link.getLength() * 2); //TODO rundet ab?
-				double serviceTime = ((double)volumeGarbage / 200) * minuten;
-				double deliveryTime = ((double)volumeGarbage / capacityTruck) *45* minuten;
-				CarrierShipment shipment = CarrierShipment.Builder
-						.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
-								Id.createLinkId(garbageDumpId), volumeGarbage)
-						.setPickupServiceTime(serviceTime)
-						.setPickupTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
-						.setDeliveryTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
-						.setDeliveryServiceTime(deliveryTime).build();
-				myCarrier.getShipments().add(shipment);
+			int volumeGarbage = (int) (link.getLength() * garbagePerMeterAndWeek); // TODO rundet ab?
+			double serviceTime = ((double) volumeGarbage / 200) * minuten;
+			double deliveryTime = ((double) volumeGarbage / capacityTruck) * 45 * minuten;
+			CarrierShipment shipment = CarrierShipment.Builder
+					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
+							Id.createLinkId(garbageDumpId), volumeGarbage)
+					.setPickupServiceTime(serviceTime)
+					.setPickupTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
+					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
+					.setDeliveryServiceTime(deliveryTime).build();
+			myCarrier.getShipments().add(shipment);
+		}
+		carriers.addCarrier(myCarrier);
+	}
+
+	/**
+	 * Creates a Shipment for every link, ads all shipments to myCarrier and ads
+	 * myCarrier to carriers. The volumeGarbage is in garbage per week. So the
+	 * volumeGarbage of every shipment depends of the sum of all lengths from links
+	 * with shipments.
+	 * 
+	 * @param
+	 */
+	public static void createShipmentsForCarrierII(double garbagePerWeek, double distanceWithShipments,
+			int capacityTruck, Map<Id<Link>, Link> garbageLinks, Scenario scenario, Carrier myCarrier,
+			String garbageDumpId, Carriers carriers) {
+
+		for (Link link : garbageLinks.values()) {
+			int volumeGarbage = (int) (link.getLength() * (garbagePerWeek / distanceWithShipments)); // TODO rundet ab?
+			double serviceTime = ((double) volumeGarbage / 200) * minuten;
+			double deliveryTime = ((double) volumeGarbage / capacityTruck) * 45 * minuten;
+			CarrierShipment shipment = CarrierShipment.Builder
+					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
+							Id.createLinkId(garbageDumpId), volumeGarbage)
+					.setPickupServiceTime(serviceTime)
+					.setPickupTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
+					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
+					.setDeliveryServiceTime(deliveryTime).build();
+			myCarrier.getShipments().add(shipment);
 		}
 		carriers.addCarrier(myCarrier);
 	}
@@ -184,7 +212,7 @@ public class Run_AbfallUtils {
 
 		// get the algorithm out-of-the-box, search solution and get the best one.
 		VehicleRoutingAlgorithm algorithm = new SchrimpfFactory().createAlgorithm(problem);
-		algorithm.setMaxIterations(1000);
+		algorithm.setMaxIterations(500);
 		Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
 		VehicleRoutingProblemSolution bestSolution = Solutions.bestOf(solutions);
 
