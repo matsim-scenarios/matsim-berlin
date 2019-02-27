@@ -62,7 +62,7 @@ public class RunBerlinScenarioTest {
 	@Test
 	public final void test1pctUntilIteration1() {
 		try {
-			String configFilename = "scenarios/berlin-v5.2-1pct/input/berlin-v5.2-1pct.config.xml";
+			String configFilename = "scenarios/berlin-v5.3-1pct/input/berlin-v5.3-1pct.config.xml";
 			RunBerlinScenario berlin = new RunBerlinScenario( configFilename, "overridingConfig.xml" ) ;
 			
 			Config config =  berlin.prepareConfig() ;
@@ -73,13 +73,13 @@ public class RunBerlinScenarioTest {
 			
 			berlin.run() ;
 			
-			// Compare with: https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.2-1pct/
+			// Compare with: https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/
 			
-			Assert.assertEquals("The scores in iteration 0 differ from https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.2-1pct/.", 114.65161732321907, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
-			Assert.assertEquals("The scores in iteration 0 differ from https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.2-1pct/.", 114.65161732321907, berlin.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(0), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("The scores in iteration 0 differ from https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 114.65161732321907, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("The scores in iteration 0 differ from https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 114.65161732321907, berlin.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(0), MatsimTestUtils.EPSILON);
 
-			Assert.assertEquals("The scores in iteration 1 differ from https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.2-1pct/.", 113.75743205180812, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), 0.001);
-			Assert.assertEquals("The scores in iteration 1 differ from https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.2-1pct/.", 112.82205604436822, berlin.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(1), 0.001);
+			Assert.assertEquals("The scores in iteration 1 differ from https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 113.75743205180812, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), 0.001);
+			Assert.assertEquals("The scores in iteration 1 differ from https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 112.82205604436822, berlin.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(1), 0.001);
 
 			// The differences in the scores compared to the run in the public-svn are probably related to the pt raptor router
 			// which seems to produce slightly different results (e.g. in case two routes are identical).
@@ -94,7 +94,7 @@ public class RunBerlinScenarioTest {
 	@Test
 	public final void test10pctUntilIteration1() {
 		try {
-			String configFilename = "scenarios/berlin-v5.2-10pct/input/berlin-v5.2-10pct.config.xml";
+			String configFilename = "scenarios/berlin-v5.3-10pct/input/berlin-v5.3-10pct.config.xml";
 			RunBerlinScenario berlin = new RunBerlinScenario( configFilename, "overridingConfig.xml" ) ;
 			
 			Config config =  berlin.prepareConfig() ;
@@ -126,7 +126,7 @@ public class RunBerlinScenarioTest {
 		
 		final int iteration = 40;
 		try {
-			String configFilename = "scenarios/berlin-v5.2-1pct/input/berlin-v5.2-1pct.config.xml";
+			String configFilename = "scenarios/berlin-v5.3-1pct/input/berlin-v5.3-1pct.config.xml";
 			RunBerlinScenario berlin = new RunBerlinScenario( configFilename, "overridingConfig.xml") ;
 			
 			Config config = berlin.prepareConfig() ;
@@ -158,10 +158,10 @@ public class RunBerlinScenarioTest {
 			Gbl.assertNotNull( berlin.getScoreStats().getScoreHistory() );			
 			Gbl.assertNotNull( berlin.getScoreStats().getScoreHistory().get( ScoreItem.average) );
 			Gbl.assertNotNull( berlin.getScoreStats().getScoreHistory().get( ScoreItem.average).get(0) );
-			Assert.assertEquals("The scores in iteration 0 differ from https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.2-1pct/.", 114.65161732321907, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("The scores in iteration 0 differ from https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 114.65161732321907, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
 			
 			Gbl.assertNotNull( berlin.getScoreStats().getScoreHistory().get( ScoreItem.average).get(iteration) );
-			Assert.assertEquals("Major change in the avg. AVG score in iteration " + iteration + " compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.2-1pct/.", 107.01557515903745, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(iteration), 1.0);
+			Assert.assertEquals("Major change in the avg. AVG score in iteration " + iteration + " compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 107.01557515903745, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(iteration), 1.0);
 				
 			Map<String,Double> modeCnt = analyzeModeStats(berlin.getPopulation());
 			
