@@ -105,8 +105,8 @@ public class RunBerlinScenarioTest {
 			
 			berlin.run() ;
 			
-			Assert.assertEquals("Wrong avg. AVG score in iteration 0.", 115.866073407524, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Wrong avg. AVG score in iteration 1.", 115.02251116746, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), 0.001);
+			Assert.assertEquals("The scores in iteration 0 differ from https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-10pct/.", 115.866073407524, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("The scores in iteration 1 differ from https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-10pct/.", 115.02251116746, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), 0.001);
 			
 			// The differences in the scores compared to the run in the public-svn are probably related to the pt raptor router
 			// which seems to produce slightly different results (e.g. in case two routes are identical).
@@ -170,12 +170,12 @@ public class RunBerlinScenarioTest {
 				sum += val ;
 			}
 			
-			Assert.assertEquals("Major change in the car trip share.", 0.401536056175768, modeCnt.get("car") / sum, 0.01);
-			Assert.assertEquals("Major change in the pt trip share.", 0.201184957621307, modeCnt.get("pt") / sum, 0.01);
-			Assert.assertEquals("Major change in the bicycle trip share.", 0.153896371067284, modeCnt.get("bicycle") / sum, 0.01);
-			Assert.assertEquals("Major change in the walk trip share.", 0.150736484077131, modeCnt.get("walk") / sum, 0.01);
-			Assert.assertEquals("Change in the freight trip share.", 0.00146473928189373, modeCnt.get("freight") / sum, MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Change in the ride trip share.", 0.0911813917766135, modeCnt.get("ride") / sum, MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Major change in the car trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 0.401536056175768, modeCnt.get("car") / sum, 0.01);
+			Assert.assertEquals("Major change in the pt trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 0.201184957621307, modeCnt.get("pt") / sum, 0.01);
+			Assert.assertEquals("Major change in the bicycle trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 0.153896371067284, modeCnt.get("bicycle") / sum, 0.01);
+			Assert.assertEquals("Major change in the walk trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 0.150736484077131, modeCnt.get("walk") / sum, 0.01);
+			Assert.assertEquals("Change in the freight trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 0.00146473928189373, modeCnt.get("freight") / sum, MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Change in the ride trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 0.0911813917766135, modeCnt.get("ride") / sum, MatsimTestUtils.EPSILON);
 			
 			
 		} catch ( Exception ee ) {
