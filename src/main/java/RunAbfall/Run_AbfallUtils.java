@@ -84,8 +84,8 @@ public class Run_AbfallUtils {
 			Carriers carriers) {
 
 		for (Link link : garbageLinks.values()) {
-			int volumeGarbage = (int) (link.getLength() * garbagePerMeterAndWeek); // TODO rundet ab?
-			double serviceTime = ((double) volumeGarbage / 200) * minuten;
+			int volumeGarbage = (int) Math.ceil(link.getLength() * garbagePerMeterAndWeek); // TODO rundet ab?
+			double serviceTime = createServiceTime(volumeGarbage);
 			double deliveryTime = ((double) volumeGarbage / capacityTruck) * 45 * minuten;
 			CarrierShipment shipment = CarrierShipment.Builder
 					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
@@ -97,6 +97,13 @@ public class Run_AbfallUtils {
 			myCarrier.getShipments().add(shipment);
 		}
 		carriers.addCarrier(myCarrier);
+	}
+
+	private static double createServiceTime(int volumeGarbage) {
+
+		double volumeBigTrashcan = 1100*0.1;		//Umrechnung von Volumen [l] in Masse[kg]
+		double serviceTimePerBigTrashcan = 36;
+		return Math.ceil(((double) volumeGarbage)/volumeBigTrashcan)*serviceTimePerBigTrashcan;
 	}
 
 	/**
@@ -113,7 +120,7 @@ public class Run_AbfallUtils {
 
 		for (Link link : garbageLinks.values()) {
 			int volumeGarbage = (int) (link.getLength() * (garbagePerWeek / distanceWithShipments)); // TODO rundet ab?
-			double serviceTime = ((double) volumeGarbage / 200) * minuten;
+			double serviceTime = createServiceTime(volumeGarbage);
 			double deliveryTime = ((double) volumeGarbage / capacityTruck) * 45 * minuten;
 			CarrierShipment shipment = CarrierShipment.Builder
 					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),

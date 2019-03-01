@@ -26,6 +26,7 @@ public class Run_Abfall {
 
 	static int stunden = 3600;
 	static int minuten = 60;
+	static int tonnen = 1000;
 
 	private static final Logger log = Logger.getLogger(Run_Abfall.class);
 
@@ -53,9 +54,9 @@ public class Run_Abfall {
 		double garbagePerWeek = 0;
 		log.setLevel(Level.INFO);
 
-		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.modifiedChessboard;
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.chessboard;
-		garbageVolume garbageVolumeChoice = garbageVolume.perWeek;
+		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinTestGebiet;
+		garbageVolume garbageVolumeChoice = garbageVolume.perMeterAndWeek;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
@@ -70,7 +71,7 @@ public class Run_Abfall {
 			config.network().setInputFile(modified_Chessboard);
 			break;
 		case berlinNetwork:
-			config.controler().setOutputDirectory("output/Berlin/05_FiniteSize_Tests");
+			config.controler().setOutputDirectory("output/Berlin/06_InfiniteSize_Tests_newTruckType");
 			config.network().setInputFile(berlin);
 			break;
 		default:
@@ -85,13 +86,13 @@ public class Run_Abfall {
 
 		// create a garbage truck type
 		String vehicleTypeId = "TruckType1";
-		int capacityTruck = 11000;						//Berliner Zeitung
+		int capacityTruck = 11*tonnen;						//Berliner Zeitung
 		double maxVelocity = 80 / 3.6;
-		double costPerDistanceUnit = 0.000246;			//Berechnung aus Excel
+		double costPerDistanceUnit = 0.000369;			//Berechnung aus Excel
 		double costPerTimeUnit = 0.0;					//Lohnkosten bei Fixkosten integriert
-		double fixCosts = 385.82;						//Berechnung aus Excel
+		double fixCosts = 957.17;						//Berechnung aus Excel
 		FuelType engineInformation = FuelType.diesel;
-		double literPerMeter = 0.002;					//Berechnung aus Ecxel
+		double literPerMeter = 0.003;					//Berechnung aus Ecxel
 		CarrierVehicleType carrierVehType = Run_AbfallUtils.createGarbageTruckType(vehicleTypeId, capacityTruck,
 				maxVelocity, costPerDistanceUnit, costPerTimeUnit, fixCosts, engineInformation, literPerMeter);
 		CarrierVehicleTypes vehicleTypes = Run_AbfallUtils.adVehicleType(carrierVehType);
@@ -105,7 +106,7 @@ public class Run_Abfall {
 			garbageDumpId = ("j(0,9)R");
 			depotId = "j(9,9)";
 			garbagePerMeterAndWeek = 0.2;
-			garbagePerWeek = 2000;
+			garbagePerWeek = 2*tonnen;
 			for (Link link : allLinks.values()) {
 				if (link.getCoord().getX() < 8000 && link.getFreespeed() < 12) {
 					garbageLinks.put(link.getId(), link);
@@ -114,10 +115,10 @@ public class Run_Abfall {
 			}
 			break;
 		case berlinTestGebiet:
-			garbageDumpId = ("142010"); // Muellheizkraftwerk Ruhleben
-			depotId = "28457"; // zufall
-			garbagePerMeterAndWeek = 3.04;
-			garbagePerWeek = 3000;
+			garbageDumpId = ("142010");					// Muellheizkraftwerk Ruhleben
+			depotId = "28457"; 							// zufall
+			garbagePerMeterAndWeek = 3.04;				// Berechnung aus Excel 
+			garbagePerWeek = 50*tonnen;					// noch Zufallseingabe, da Gebiet unbestimmt
 			for (Link link : allLinks.values()) {
 				if (link.getAllowedModes().contains("car") && link.getCoord().getX() > 4587375.819194021
 						&& link.getCoord().getX() < 4589012.681349432 && link.getCoord().getY() < 5833272.254176694
