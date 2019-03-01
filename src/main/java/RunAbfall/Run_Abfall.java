@@ -53,9 +53,9 @@ public class Run_Abfall {
 		double garbagePerWeek = 0;
 		log.setLevel(Level.INFO);
 
-		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinTestGebiet;
-		garbageVolume garbageVolumeChoice = garbageVolume.perMeterAndWeek;
+		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.modifiedChessboard;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.chessboard;
+		garbageVolume garbageVolumeChoice = garbageVolume.perWeek;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
@@ -66,11 +66,11 @@ public class Run_Abfall {
 			config.network().setInputFile(original_Chessboard);
 			break;
 		case modifiedChessboard:
-			config.controler().setOutputDirectory("output/modified_Chessboard/04_FiniteSize_Tests");
+			config.controler().setOutputDirectory("output/modified_Chessboard/05_InfiniteSize_newTruckType");
 			config.network().setInputFile(modified_Chessboard);
 			break;
 		case berlinNetwork:
-			config.controler().setOutputDirectory("output/Berlin/04_FiniteSize_Tests");
+			config.controler().setOutputDirectory("output/Berlin/05_FiniteSize_Tests");
 			config.network().setInputFile(berlin);
 			break;
 		default:
@@ -85,13 +85,13 @@ public class Run_Abfall {
 
 		// create a garbage truck type
 		String vehicleTypeId = "TruckType1";
-		int capacityTruck = 10000;
-		double maxVelocity = 50 / 3.6;
-		double costPerDistanceUnit = 0.01;
-		double costPerTimeUnit = 0.02;
-		double fixCosts = 200;
+		int capacityTruck = 11000;						//Berliner Zeitung
+		double maxVelocity = 80 / 3.6;
+		double costPerDistanceUnit = 0.000246;			//Berechnung aus Excel
+		double costPerTimeUnit = 0.0;					//Lohnkosten bei Fixkosten integriert
+		double fixCosts = 385.82;						//Berechnung aus Excel
 		FuelType engineInformation = FuelType.diesel;
-		double literPerMeter = 0.01;
+		double literPerMeter = 0.002;					//Berechnung aus Ecxel
 		CarrierVehicleType carrierVehType = Run_AbfallUtils.createGarbageTruckType(vehicleTypeId, capacityTruck,
 				maxVelocity, costPerDistanceUnit, costPerTimeUnit, fixCosts, engineInformation, literPerMeter);
 		CarrierVehicleTypes vehicleTypes = Run_AbfallUtils.adVehicleType(carrierVehType);
@@ -152,7 +152,7 @@ public class Run_Abfall {
 				latestFinishingTime, carrierVehType);
 
 		// define Carriers
-		FleetSize fleetSize = FleetSize.FINITE;
+		FleetSize fleetSize = FleetSize.INFINITE;
 		Run_AbfallUtils.defineCarriers(carriers, myCarrier, carrierVehType, vehicleTypes, garbageTruck1, fleetSize);
 		// jsprit
 		Run_AbfallUtils.solveWithJsprit(scenario, carriers, myCarrier, vehicleTypes);
@@ -165,7 +165,7 @@ public class Run_Abfall {
 
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans_Test01.xml");
-
+		
 	}
 
 }
