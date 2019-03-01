@@ -86,13 +86,13 @@ public class Run_Abfall {
 
 		// create a garbage truck type
 		String vehicleTypeId = "TruckType1";
-		int capacityTruck = 11*tonnen;						//Berliner Zeitung
+		int capacityTruck = 11 * tonnen; // Berliner Zeitung
 		double maxVelocity = 80 / 3.6;
-		double costPerDistanceUnit = 0.000369;			//Berechnung aus Excel
-		double costPerTimeUnit = 0.0;					//Lohnkosten bei Fixkosten integriert
-		double fixCosts = 957.17;						//Berechnung aus Excel
+		double costPerDistanceUnit = 0.000369; // Berechnung aus Excel
+		double costPerTimeUnit = 0.0; // Lohnkosten bei Fixkosten integriert
+		double fixCosts = 957.17; // Berechnung aus Excel
 		FuelType engineInformation = FuelType.diesel;
-		double literPerMeter = 0.003;					//Berechnung aus Ecxel
+		double literPerMeter = 0.003; // Berechnung aus Ecxel
 		CarrierVehicleType carrierVehType = Run_AbfallUtils.createGarbageTruckType(vehicleTypeId, capacityTruck,
 				maxVelocity, costPerDistanceUnit, costPerTimeUnit, fixCosts, engineInformation, literPerMeter);
 		CarrierVehicleTypes vehicleTypes = Run_AbfallUtils.adVehicleType(carrierVehType);
@@ -106,7 +106,7 @@ public class Run_Abfall {
 			garbageDumpId = ("j(0,9)R");
 			depotId = "j(9,9)";
 			garbagePerMeterAndWeek = 0.2;
-			garbagePerWeek = 2*tonnen;
+			garbagePerWeek = 2 * tonnen;
 			for (Link link : allLinks.values()) {
 				if (link.getCoord().getX() < 8000 && link.getFreespeed() < 12) {
 					garbageLinks.put(link.getId(), link);
@@ -115,10 +115,10 @@ public class Run_Abfall {
 			}
 			break;
 		case berlinTestGebiet:
-			garbageDumpId = ("142010");					// Muellheizkraftwerk Ruhleben
-			depotId = "28457"; 							// zufall
-			garbagePerMeterAndWeek = 3.04;				// Berechnung aus Excel 
-			garbagePerWeek = 50*tonnen;					// noch Zufallseingabe, da Gebiet unbestimmt
+			garbageDumpId = ("142010"); // Muellheizkraftwerk Ruhleben
+			depotId = "28457"; // zufall
+			garbagePerMeterAndWeek = 3.04; // Berechnung aus Excel
+			garbagePerWeek = 50 * tonnen; // noch Zufallseingabe, da Gebiet unbestimmt
 			for (Link link : allLinks.values()) {
 				if (link.getAllowedModes().contains("car") && link.getCoord().getX() > 4587375.819194021
 						&& link.getCoord().getX() < 4589012.681349432 && link.getCoord().getY() < 5833272.254176694
@@ -131,14 +131,15 @@ public class Run_Abfall {
 		default:
 			new RuntimeException("no scenario selected.");
 		}
-
+		double volumeBigTrashcan = 1100; // Umrechnung von Volumen [l] in Masse[kg]
+		double serviceTimePerBigTrashcan = 36;
 		switch (garbageVolumeChoice) {
 		case perMeterAndWeek:
-			Run_AbfallUtils.createShipmentsForCarrierI(garbagePerMeterAndWeek, capacityTruck, garbageLinks, scenario,
-					myCarrier, garbageDumpId, carriers);
+			Run_AbfallUtils.createShipmentsForCarrierI(garbagePerMeterAndWeek, volumeBigTrashcan, serviceTimePerBigTrashcan, capacityTruck,
+					garbageLinks, scenario, myCarrier, garbageDumpId, carriers);
 			break;
 		case perWeek:
-			Run_AbfallUtils.createShipmentsForCarrierII(garbagePerWeek, distanceWithShipments, capacityTruck,
+			Run_AbfallUtils.createShipmentsForCarrierII(garbagePerWeek, volumeBigTrashcan, serviceTimePerBigTrashcan, distanceWithShipments, capacityTruck,
 					garbageLinks, scenario, myCarrier, garbageDumpId, carriers);
 			break;
 		default:
@@ -166,7 +167,7 @@ public class Run_Abfall {
 
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans_Test01.xml");
-		
+
 	}
 
 }

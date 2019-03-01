@@ -79,13 +79,14 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	public static void createShipmentsForCarrierI(double garbagePerMeterAndWeek, int capacityTruck,
+	public static void createShipmentsForCarrierI(double garbagePerMeterAndWeek, double volumeBigTrashcan, double serviceTimePerBigTrashcan, int capacityTruck,
 			Map<Id<Link>, Link> garbageLinks, Scenario scenario, Carrier myCarrier, String garbageDumpId,
 			Carriers carriers) {
 
 		for (Link link : garbageLinks.values()) {
+			double maxWeightBigTrashcan = volumeBigTrashcan * 0.1; // Umrechnung von Volumen [l] in Masse[kg]
 			int volumeGarbage = (int) Math.ceil(link.getLength() * garbagePerMeterAndWeek); // TODO rundet ab?
-			double serviceTime = createServiceTime(volumeGarbage);
+			double serviceTime = Math.ceil(((double) volumeGarbage) / maxWeightBigTrashcan) * serviceTimePerBigTrashcan;
 			double deliveryTime = ((double) volumeGarbage / capacityTruck) * 45 * minuten;
 			CarrierShipment shipment = CarrierShipment.Builder
 					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
@@ -99,13 +100,6 @@ public class Run_AbfallUtils {
 		carriers.addCarrier(myCarrier);
 	}
 
-	private static double createServiceTime(int volumeGarbage) {
-
-		double volumeBigTrashcan = 1100*0.1;		//Umrechnung von Volumen [l] in Masse[kg]
-		double serviceTimePerBigTrashcan = 36;
-		return Math.ceil(((double) volumeGarbage)/volumeBigTrashcan)*serviceTimePerBigTrashcan;
-	}
-
 	/**
 	 * Creates a Shipment for every link, ads all shipments to myCarrier and ads
 	 * myCarrier to carriers. The volumeGarbage is in garbage per week. So the
@@ -114,13 +108,14 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	public static void createShipmentsForCarrierII(double garbagePerWeek, double distanceWithShipments,
+	public static void createShipmentsForCarrierII(double garbagePerWeek, double volumeBigTrashcan, double serviceTimePerBigTrashcan, double distanceWithShipments,
 			int capacityTruck, Map<Id<Link>, Link> garbageLinks, Scenario scenario, Carrier myCarrier,
 			String garbageDumpId, Carriers carriers) {
 
 		for (Link link : garbageLinks.values()) {
+			double maxWeightBigTrashcan = volumeBigTrashcan * 0.1; // Umrechnung von Volumen [l] in Masse[kg]
 			int volumeGarbage = (int) (link.getLength() * (garbagePerWeek / distanceWithShipments)); // TODO rundet ab?
-			double serviceTime = createServiceTime(volumeGarbage);
+			double serviceTime = Math.ceil(((double) volumeGarbage) / maxWeightBigTrashcan) * serviceTimePerBigTrashcan;
 			double deliveryTime = ((double) volumeGarbage / capacityTruck) * 45 * minuten;
 			CarrierShipment shipment = CarrierShipment.Builder
 					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
