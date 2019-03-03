@@ -124,7 +124,7 @@ public class Run_Abfall {
 				if (link.getAllowedModes().contains("car") && link.getCoord().getX() > 4587375.819194021
 						&& link.getCoord().getX() < 4589012.681349432 && link.getCoord().getY() < 5833272.254176694
 						&& link.getCoord().getY() > 5832969.565900505
-						/*&& link.getAttributes().getAttribute("type") == "secondary"*/) {
+				/* && link.getAttributes().getAttribute("type") == "secondary" */) {
 					garbageLinks.put(link.getId(), link);
 					distanceWithShipments = distanceWithShipments + link.getLength();
 				}
@@ -144,8 +144,9 @@ public class Run_Abfall {
 					carriers);
 			break;
 		case perWeek:
-			allGarbage = Run_AbfallUtils.createShipmentsForCarrierII(garbagePerWeek, volumeBigTrashcan, serviceTimePerBigTrashcan,
-					distanceWithShipments, capacityTruck, garbageLinks, scenario, myCarrier, garbageDumpId, carriers);
+			allGarbage = Run_AbfallUtils.createShipmentsForCarrierII(garbagePerWeek, volumeBigTrashcan,
+					serviceTimePerBigTrashcan, distanceWithShipments, capacityTruck, garbageLinks, scenario, myCarrier,
+					garbageDumpId, carriers);
 			break;
 		default:
 			new RuntimeException("no garbageVolume selected.");
@@ -159,25 +160,20 @@ public class Run_Abfall {
 				latestFinishingTime, carrierVehType);
 
 		// define Carriers
-		FleetSize fleetSize = FleetSize.FINITE;
+		FleetSize fleetSize = FleetSize.INFINITE;
 		Run_AbfallUtils.defineCarriers(carriers, myCarrier, carrierVehType, vehicleTypes, garbageTruck1, fleetSize);
 		// jsprit
-		int keineAbholung = Run_AbfallUtils.solveWithJsprit(scenario, carriers, myCarrier, vehicleTypes);
+		int noPickup = Run_AbfallUtils.solveWithJsprit(scenario, carriers, myCarrier, vehicleTypes);
 
 		final Controler controler = new Controler(scenario);
 
 		Run_AbfallUtils.scoringAndManagerFactory(scenario, carriers, controler);
 
 		controler.run();
+
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans_Test01.xml");
-		
-		System.out.println("Die Summe des abzuholenden Mülls beträgt: "+allGarbage + " kg" + " an "+garbageLinks.size()+ " Abholstellen.");
-		System.out.println("An "+keineAbholung + " Orten wurde der Müll nicht abgeholt.");
-			
-		}
-			
-		
+
+		Run_AbfallUtils.outputSummary(allGarbage, scenario, myCarrier, garbageLinks, noPickup);
 	}
-
-
+}

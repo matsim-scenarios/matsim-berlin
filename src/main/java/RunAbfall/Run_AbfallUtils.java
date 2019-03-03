@@ -1,5 +1,8 @@
 package RunAbfall;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 
@@ -86,7 +89,7 @@ public class Run_AbfallUtils {
 		int allGarbage = 0;
 		for (Link link : garbageLinks.values()) {
 			double maxWeightBigTrashcan = volumeBigTrashcan * 0.1; // Umrechnung von Volumen [l] in Masse[kg]
-			int volumeGarbage = (int) Math.ceil(link.getLength() * garbagePerMeterAndWeek); // TODO rundet ab?
+			int volumeGarbage = (int) Math.ceil(link.getLength() * garbagePerMeterAndWeek);
 			double serviceTime = Math.ceil(((double) volumeGarbage) / maxWeightBigTrashcan) * serviceTimePerBigTrashcan;
 			double deliveryTime = ((double) volumeGarbage / capacityTruck) * 45 * minuten;
 			CarrierShipment shipment = CarrierShipment.Builder
@@ -117,7 +120,7 @@ public class Run_AbfallUtils {
 		int allGarbage = 0;
 		for (Link link : garbageLinks.values()) {
 			double maxWeightBigTrashcan = volumeBigTrashcan * 0.1; // Umrechnung von Volumen [l] in Masse[kg]
-			int volumeGarbage = (int) (link.getLength() * (garbagePerWeek / distanceWithShipments)); // TODO rundet ab?
+			int volumeGarbage = (int) Math.ceil(link.getLength() * (garbagePerWeek / distanceWithShipments));
 			double serviceTime = Math.ceil(((double) volumeGarbage) / maxWeightBigTrashcan) * serviceTimePerBigTrashcan;
 			double deliveryTime = ((double) volumeGarbage / capacityTruck) * 45 * minuten;
 			CarrierShipment shipment = CarrierShipment.Builder
@@ -228,14 +231,13 @@ public class Run_AbfallUtils {
 		CarrierPlan carrierPlanServices = MatsimJspritFactory.createPlan(myCarrier, bestSolution);
 		NetworkRouter.routePlan(carrierPlanServices, netBasedCosts);
 		myCarrier.setSelectedPlan(carrierPlanServices);
-		int keineAbholung = bestSolution.getUnassignedJobs().size();
-		
+		int noPickup = bestSolution.getUnassignedJobs().size();
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.xml");
 		new Plotter(problem, bestSolution).plot(
 				scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.png",
 				"bestSolution");
-		return keineAbholung;
+		return noPickup;
 	}
 
 	/**
@@ -292,5 +294,32 @@ public class Run_AbfallUtils {
 				return null;
 			}
 		};
+	}
+	/** Gives an output of a .txt file with some important information 
+	 * @param 
+	 */
+	public static void outputSummary(int allGarbage, Scenario scenario, Carrier myCarrier,
+			Map<Id<Link>, Link> garbageLinks, int noPickup) {
+		FileWriter writer;
+		File file;
+		file = new File(scenario.getConfig().controler().getOutputDirectory() + "/01_Zusammenfassung.txt");
+		try {
+			writer = new FileWriter(file ,true);
+			writer.write("Die Summe des abzuholenden Mülls beträgt: \t"+ allGarbage + " kg\n");
+			writer.write("Anzahl der Abholstellen: \t\t\t\t\t"+ garbageLinks.size()+"\n");
+			writer.write("Anzahl der Abholstellen ohne Abholung: \t\t" + noPickup + "\n");
+			writer.write("Anzahl der Muellfahrzeuge im Einsatz: \t\t" + myCarrier.getSelectedPlan().getScheduledTours().size()+"\n");
+			writer.write("Kosten: \t\t\t\t\t\t\t\t\t"+((-1)*Math.round(myCarrier.getSelectedPlan().getScore()))+" €\n");
+			writer.flush();
+			writer.close();	
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		if (noPickup == 0) {
+			System.out.println("Abfaelle wurden von "+myCarrier.getSelectedPlan().getScheduledTours().size()+" Fahrzeugen komplett eingesammelt!");
+		}
+		else {
+			System.out.println("Abfall nicht komplett eingesammelt!");
+		}
 	}
 }
