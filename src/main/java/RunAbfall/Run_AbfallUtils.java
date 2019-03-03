@@ -78,11 +78,12 @@ public class Run_AbfallUtils {
 	 * garbagePerMeterAndWeek.
 	 * 
 	 * @param
+	 * @return 
 	 */
-	public static void createShipmentsForCarrierI(double garbagePerMeterAndWeek, double volumeBigTrashcan, double serviceTimePerBigTrashcan, int capacityTruck,
+	public static int createShipmentsForCarrierI(double garbagePerMeterAndWeek, double volumeBigTrashcan, double serviceTimePerBigTrashcan, int capacityTruck,
 			Map<Id<Link>, Link> garbageLinks, Scenario scenario, Carrier myCarrier, String garbageDumpId,
 			Carriers carriers) {
-
+		int allGarbage = 0;
 		for (Link link : garbageLinks.values()) {
 			double maxWeightBigTrashcan = volumeBigTrashcan * 0.1; // Umrechnung von Volumen [l] in Masse[kg]
 			int volumeGarbage = (int) Math.ceil(link.getLength() * garbagePerMeterAndWeek); // TODO rundet ab?
@@ -96,8 +97,10 @@ public class Run_AbfallUtils {
 					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
 					.setDeliveryServiceTime(deliveryTime).build();
 			myCarrier.getShipments().add(shipment);
+			allGarbage = allGarbage + volumeGarbage;
 		}
 		carriers.addCarrier(myCarrier);
+		return allGarbage;
 	}
 
 	/**
@@ -108,10 +111,10 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	public static void createShipmentsForCarrierII(double garbagePerWeek, double volumeBigTrashcan, double serviceTimePerBigTrashcan, double distanceWithShipments,
+	public static int createShipmentsForCarrierII(double garbagePerWeek, double volumeBigTrashcan, double serviceTimePerBigTrashcan, double distanceWithShipments,
 			int capacityTruck, Map<Id<Link>, Link> garbageLinks, Scenario scenario, Carrier myCarrier,
 			String garbageDumpId, Carriers carriers) {
-
+		int allGarbage = 0;
 		for (Link link : garbageLinks.values()) {
 			double maxWeightBigTrashcan = volumeBigTrashcan * 0.1; // Umrechnung von Volumen [l] in Masse[kg]
 			int volumeGarbage = (int) (link.getLength() * (garbagePerWeek / distanceWithShipments)); // TODO rundet ab?
@@ -125,8 +128,10 @@ public class Run_AbfallUtils {
 					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
 					.setDeliveryServiceTime(deliveryTime).build();
 			myCarrier.getShipments().add(shipment);
+			allGarbage = allGarbage + volumeGarbage;
 		}
 		carriers.addCarrier(myCarrier);
+		return allGarbage;
 	}
 
 	/**
@@ -195,8 +200,9 @@ public class Run_AbfallUtils {
 	 * solution
 	 * 
 	 * @param
+	 * @return 
 	 */
-	public static void solveWithJsprit(Scenario scenario, Carriers carriers, Carrier myCarrier,
+	public static int solveWithJsprit(Scenario scenario, Carriers carriers, Carrier myCarrier,
 			CarrierVehicleTypes vehicleTypes) {
 		// Netzwerk integrieren und Kosten für jsprit
 		Network network = scenario.getNetwork();
@@ -222,12 +228,14 @@ public class Run_AbfallUtils {
 		CarrierPlan carrierPlanServices = MatsimJspritFactory.createPlan(myCarrier, bestSolution);
 		NetworkRouter.routePlan(carrierPlanServices, netBasedCosts);
 		myCarrier.setSelectedPlan(carrierPlanServices);
-
+		int keineAbholung = bestSolution.getUnassignedJobs().size();
+		
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.xml");
 		new Plotter(problem, bestSolution).plot(
 				scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.png",
 				"bestSolution");
+		return keineAbholung;
 	}
 
 	/**

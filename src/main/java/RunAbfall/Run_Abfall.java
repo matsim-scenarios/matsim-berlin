@@ -52,6 +52,7 @@ public class Run_Abfall {
 		double garbagePerMeterAndWeek = 0;
 		double distanceWithShipments = 0;
 		double garbagePerWeek = 0;
+		int allGarbage = 0;
 		log.setLevel(Level.INFO);
 
 		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
@@ -71,7 +72,7 @@ public class Run_Abfall {
 			config.network().setInputFile(modified_Chessboard);
 			break;
 		case berlinNetwork:
-			config.controler().setOutputDirectory("output/Berlin/06_InfiniteSize_Tests_newTruckType");
+			config.controler().setOutputDirectory("output/Berlin/07_InfiniteSize_Tests_newTruckType");
 			config.network().setInputFile(berlin);
 			break;
 		default:
@@ -122,7 +123,8 @@ public class Run_Abfall {
 			for (Link link : allLinks.values()) {
 				if (link.getAllowedModes().contains("car") && link.getCoord().getX() > 4587375.819194021
 						&& link.getCoord().getX() < 4589012.681349432 && link.getCoord().getY() < 5833272.254176694
-						&& link.getCoord().getY() > 5832969.565900505) {
+						&& link.getCoord().getY() > 5832969.565900505
+						/*&& link.getAttributes().getAttribute("type") == "secondary"*/) {
 					garbageLinks.put(link.getId(), link);
 					distanceWithShipments = distanceWithShipments + link.getLength();
 				}
@@ -133,14 +135,17 @@ public class Run_Abfall {
 		}
 		double volumeBigTrashcan = 1100; // Umrechnung von Volumen [l] in Masse[kg]
 		double serviceTimePerBigTrashcan = 36;
+		// Auswahl, ob die für das Netzwerk eine Abfallmenge definiert wird oder die
+		// Menge aus der länge der Straßen ermittelt wird
 		switch (garbageVolumeChoice) {
 		case perMeterAndWeek:
-			Run_AbfallUtils.createShipmentsForCarrierI(garbagePerMeterAndWeek, volumeBigTrashcan, serviceTimePerBigTrashcan, capacityTruck,
-					garbageLinks, scenario, myCarrier, garbageDumpId, carriers);
+			allGarbage = Run_AbfallUtils.createShipmentsForCarrierI(garbagePerMeterAndWeek, volumeBigTrashcan,
+					serviceTimePerBigTrashcan, capacityTruck, garbageLinks, scenario, myCarrier, garbageDumpId,
+					carriers);
 			break;
 		case perWeek:
-			Run_AbfallUtils.createShipmentsForCarrierII(garbagePerWeek, volumeBigTrashcan, serviceTimePerBigTrashcan, distanceWithShipments, capacityTruck,
-					garbageLinks, scenario, myCarrier, garbageDumpId, carriers);
+			allGarbage = Run_AbfallUtils.createShipmentsForCarrierII(garbagePerWeek, volumeBigTrashcan, serviceTimePerBigTrashcan,
+					distanceWithShipments, capacityTruck, garbageLinks, scenario, myCarrier, garbageDumpId, carriers);
 			break;
 		default:
 			new RuntimeException("no garbageVolume selected.");
@@ -154,20 +159,25 @@ public class Run_Abfall {
 				latestFinishingTime, carrierVehType);
 
 		// define Carriers
-		FleetSize fleetSize = FleetSize.INFINITE;
+		FleetSize fleetSize = FleetSize.FINITE;
 		Run_AbfallUtils.defineCarriers(carriers, myCarrier, carrierVehType, vehicleTypes, garbageTruck1, fleetSize);
 		// jsprit
-		Run_AbfallUtils.solveWithJsprit(scenario, carriers, myCarrier, vehicleTypes);
+		int keineAbholung = Run_AbfallUtils.solveWithJsprit(scenario, carriers, myCarrier, vehicleTypes);
 
 		final Controler controler = new Controler(scenario);
 
 		Run_AbfallUtils.scoringAndManagerFactory(scenario, carriers, controler);
 
 		controler.run();
-
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans_Test01.xml");
-
+		
+		System.out.println("Die Summe des abzuholenden Mülls beträgt: "+allGarbage + " kg" + " an "+garbageLinks.size()+ " Abholstellen.");
+		System.out.println("An "+keineAbholung + " Orten wurde der Müll nicht abgeholt.");
+			
+		}
+			
+		
 	}
 
-}
+
