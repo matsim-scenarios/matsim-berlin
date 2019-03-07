@@ -20,6 +20,7 @@ import org.matsim.contrib.freight.carrier.CarrierVehicleType;
 import org.matsim.contrib.freight.carrier.CarrierVehicleTypeLoader;
 import org.matsim.contrib.freight.carrier.CarrierVehicleTypes;
 import org.matsim.contrib.freight.carrier.Carriers;
+import org.matsim.contrib.freight.carrier.ScheduledTour;
 import org.matsim.contrib.freight.carrier.TimeWindow;
 import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
 import org.matsim.contrib.freight.controler.CarrierModule;
@@ -53,7 +54,7 @@ public class Run_AbfallUtils {
 	static int stunden = 3600;
 	static int minuten = 60;
 	static double costsJsprit = 0;
-
+	static int noPickup = 0;
 
 	/**
 	 * Delets the existing output file and sets the number of the last iteration
@@ -208,9 +209,8 @@ public class Run_AbfallUtils {
 	 * solution
 	 * 
 	 * @param
-	 * @return
 	 */
-	public static int solveWithJsprit(Scenario scenario, Carriers carriers, Carrier myCarrier,
+	public static void solveWithJsprit(Scenario scenario, Carriers carriers, Carrier myCarrier,
 			CarrierVehicleTypes vehicleTypes) {
 		// Netzwerk integrieren und Kosten für jsprit
 		Network network = scenario.getNetwork();
@@ -237,13 +237,13 @@ public class Run_AbfallUtils {
 		CarrierPlan carrierPlanServices = MatsimJspritFactory.createPlan(myCarrier, bestSolution);
 		NetworkRouter.routePlan(carrierPlanServices, netBasedCosts);
 		myCarrier.setSelectedPlan(carrierPlanServices);
-		int noPickup = bestSolution.getUnassignedJobs().size();
+		noPickup = bestSolution.getUnassignedJobs().size();
+
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.xml");
 		new Plotter(problem, bestSolution).plot(
 				scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.png",
 				"bestSolution");
-		return noPickup;
 	}
 
 	/**
@@ -308,27 +308,53 @@ public class Run_AbfallUtils {
 	 * @param
 	 */
 	public static void outputSummary(int allGarbage, Scenario scenario, Carrier myCarrier,
-			Map<Id<Link>, Link> garbageLinks, int noPickup) {
+			Map<Id<Link>, Link> garbageLinks) {
+		int vehiclesForckenbeck = 0;
+		int vehiclesMalmoeer = 0;
+		int vehiclesNordring = 0;
+		int vehiclesGradestrasse = 0;
+		Collection<ScheduledTour> tours = myCarrier.getSelectedPlan().getScheduledTours();
+		for (ScheduledTour scheduledTour : tours) {
+			if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckForckenbeck")) {
+				vehiclesForckenbeck++;
+			}
+			if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckMalmoeer")) {
+				vehiclesMalmoeer++;
+			}
+			if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckNordring")) {
+				vehiclesNordring++;
+			}
+			if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckGradestrasse")) {
+				vehiclesGradestrasse++;
+			}
+
+		}
 		FileWriter writer;
 		File file;
 		file = new File(scenario.getConfig().controler().getOutputDirectory() + "/01_Zusammenfassung.txt");
 		try {
 			writer = new FileWriter(file, true);
-			writer.write("Die Summe des abzuholenden Mülls beträgt: \t" + Math.round(allGarbage/1000) + " t\n");
-			writer.write("Anzahl der Abholstellen: \t\t\t\t\t" + garbageLinks.size() + "\n");
-			writer.write("Anzahl der Abholstellen ohne Abholung: \t\t" + noPickup + "\n");
-			writer.write("Anzahl der Muellfahrzeuge im Einsatz: \t\t"
+			writer.write(
+					"Die Summe des abzuholenden Mülls beträgt: \t\t\t\t" + Math.round(allGarbage / 1000) + " t\n\n");
+			writer.write("Anzahl der Abholstellen: \t\t\t\t\t\t\t\t" + garbageLinks.size() + "\n");
+			writer.write("Anzahl der Abholstellen ohne Abholung: \t\t\t\t\t" + noPickup + "\n\n");
+			writer.write("Anzahl der Muellfahrzeuge im Einsatz: \t\t\t\t\t"
 					+ myCarrier.getSelectedPlan().getScheduledTours().size() + "\n");
-			writer.write("Kosten (Jsprit): \t\t\t\t\t\t\t" + (Math.round(costsJsprit))
-					+ " €\n");
-			writer.write("Kosten (MatSim): \t\t\t\t\t\t\t" + ((-1) * Math.round(myCarrier.getSelectedPlan().getScore()))
-					+ " €\n");
+			writer.write("\t Anzahl aus dem Betriebshof Forckenbeckstrasse: \t\t" + vehiclesForckenbeck + "\n");
+			writer.write("\t Anzahl aus dem Betriebshof Malmoeer Strasse: \t\t\t" + vehiclesMalmoeer + "\n");
+			writer.write("\t Anzahl aus dem Betriebshof Nordring: \t\t\t\t\t" + vehiclesNordring + "\n");
+			writer.write("\t Anzahl aus dem Betriebshof Gradestraße: \t\t\t\t" + vehiclesGradestrasse + "\n\n");
+			writer.write("Kosten (Jsprit): \t\t\t\t\t\t\t\t\t\t" + (Math.round(costsJsprit)) + " €\n\n");
+			writer.write("Kosten (MatSim): \t\t\t\t\t\t\t\t\t\t"
+					+ ((-1) * Math.round(myCarrier.getSelectedPlan().getScore())) + " €\n");
+
 			writer.flush();
 			writer.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		if (noPickup == 0) {
+			System.out.println("");
 			System.out.println("Abfaelle wurden komplett von " + myCarrier.getSelectedPlan().getScheduledTours().size()
 					+ " Fahrzeugen eingesammelt!");
 		} else {

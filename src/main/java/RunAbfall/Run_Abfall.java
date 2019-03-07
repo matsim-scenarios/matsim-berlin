@@ -49,7 +49,7 @@ public class Run_Abfall {
 	public static void main(String[] args) {
 		String garbageDumpId = null;
 		String depotForckenbeck = null;
-		String depotNordring =null;
+		String depotNordring = null;
 		String depotGradestrasse = null;
 		String depotMalmoeerStr = null;
 		double garbagePerMeterAndWeek = 0;
@@ -122,8 +122,8 @@ public class Run_Abfall {
 			garbageDumpId = ("142010"); // Muellheizkraftwerk Ruhleben
 			depotForckenbeck = "28457"; // TODO Kontrolle in qgis, wenn Netzwerk da
 			depotMalmoeerStr = "27766";
-			depotNordring ="42882";
-			depotGradestrasse="71781";
+			depotNordring = "42882";
+			depotGradestrasse = "71781";
 			garbagePerMeterAndWeek = 3.04; // Berechnung aus Excel
 			garbagePerWeek = 50 * tonnen; // noch Zufallseingabe, da Gebiet unbestimmt
 			for (Link link : allLinks.values()) {
@@ -165,20 +165,21 @@ public class Run_Abfall {
 		double earliestStartingTime = 6 * stunden;
 		double latestFinishingTime = 15 * stunden;
 
-		CarrierVehicle vehicleForckenbeck = Run_AbfallUtils.createGarbageTruck(vehicleIdForckenbeck, depotForckenbeck, earliestStartingTime,
-				latestFinishingTime, carrierVehType);
-		CarrierVehicle vehicleMalmoeerStr = Run_AbfallUtils.createGarbageTruck(vehicleIdMalmoeer, depotMalmoeerStr, earliestStartingTime,
-				latestFinishingTime, carrierVehType);
-		CarrierVehicle vehicleNordring = Run_AbfallUtils.createGarbageTruck(vehicleIdNordring, depotNordring, earliestStartingTime,
-				latestFinishingTime, carrierVehType);
-		CarrierVehicle vehicleGradestrasse = Run_AbfallUtils.createGarbageTruck(vehicleIdGradestrasse, depotGradestrasse, earliestStartingTime,
-				latestFinishingTime, carrierVehType);
+		CarrierVehicle vehicleForckenbeck = Run_AbfallUtils.createGarbageTruck(vehicleIdForckenbeck, depotForckenbeck,
+				earliestStartingTime, latestFinishingTime, carrierVehType);
+		CarrierVehicle vehicleMalmoeerStr = Run_AbfallUtils.createGarbageTruck(vehicleIdMalmoeer, depotMalmoeerStr,
+				earliestStartingTime, latestFinishingTime, carrierVehType);
+		CarrierVehicle vehicleNordring = Run_AbfallUtils.createGarbageTruck(vehicleIdNordring, depotNordring,
+				earliestStartingTime, latestFinishingTime, carrierVehType);
+		CarrierVehicle vehicleGradestrasse = Run_AbfallUtils.createGarbageTruck(vehicleIdGradestrasse,
+				depotGradestrasse, earliestStartingTime, latestFinishingTime, carrierVehType);
 
 		// define Carriers
 		FleetSize fleetSize = FleetSize.FINITE;
-		Run_AbfallUtils.defineCarriers(carriers, myCarrier, carrierVehType, vehicleTypes, vehicleForckenbeck,vehicleMalmoeerStr,vehicleNordring,vehicleGradestrasse, fleetSize);
+		Run_AbfallUtils.defineCarriers(carriers, myCarrier, carrierVehType, vehicleTypes, vehicleForckenbeck,
+				vehicleMalmoeerStr, vehicleNordring, vehicleGradestrasse, fleetSize);
 		// jsprit
-		int noPickup = Run_AbfallUtils.solveWithJsprit(scenario, carriers, myCarrier, vehicleTypes);
+		Run_AbfallUtils.solveWithJsprit(scenario, carriers, myCarrier, vehicleTypes);
 
 		final Controler controler = new Controler(scenario);
 
@@ -189,6 +190,6 @@ public class Run_Abfall {
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans_Test01.xml");
 
-		Run_AbfallUtils.outputSummary(allGarbage, scenario, myCarrier, garbageLinks, noPickup);
+		Run_AbfallUtils.outputSummary(allGarbage, scenario, myCarrier, garbageLinks);
 	}
 }
