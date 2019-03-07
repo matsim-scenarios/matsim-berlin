@@ -52,6 +52,8 @@ public class Run_AbfallUtils {
 
 	static int stunden = 3600;
 	static int minuten = 60;
+	static double costsJsprit = 0;
+
 
 	/**
 	 * Delets the existing output file and sets the number of the last iteration
@@ -229,6 +231,7 @@ public class Run_AbfallUtils {
 		algorithm.setMaxIterations(500);
 		Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
 		VehicleRoutingProblemSolution bestSolution = Solutions.bestOf(solutions);
+		costsJsprit = bestSolution.getCost();
 
 		// Routing bestPlan to Network
 		CarrierPlan carrierPlanServices = MatsimJspritFactory.createPlan(myCarrier, bestSolution);
@@ -311,12 +314,14 @@ public class Run_AbfallUtils {
 		file = new File(scenario.getConfig().controler().getOutputDirectory() + "/01_Zusammenfassung.txt");
 		try {
 			writer = new FileWriter(file, true);
-			writer.write("Die Summe des abzuholenden Mülls beträgt: \t" + allGarbage + " kg\n");
+			writer.write("Die Summe des abzuholenden Mülls beträgt: \t" + Math.round(allGarbage/1000) + " t\n");
 			writer.write("Anzahl der Abholstellen: \t\t\t\t\t" + garbageLinks.size() + "\n");
 			writer.write("Anzahl der Abholstellen ohne Abholung: \t\t" + noPickup + "\n");
 			writer.write("Anzahl der Muellfahrzeuge im Einsatz: \t\t"
 					+ myCarrier.getSelectedPlan().getScheduledTours().size() + "\n");
-			writer.write("Kosten: \t\t\t\t\t\t\t\t\t" + ((-1) * Math.round(myCarrier.getSelectedPlan().getScore()))
+			writer.write("Kosten (Jsprit): \t\t\t\t\t\t\t" + (Math.round(costsJsprit))
+					+ " €\n");
+			writer.write("Kosten (MatSim): \t\t\t\t\t\t\t" + ((-1) * Math.round(myCarrier.getSelectedPlan().getScore()))
 					+ " €\n");
 			writer.flush();
 			writer.close();
@@ -325,8 +330,9 @@ public class Run_AbfallUtils {
 		}
 		if (noPickup == 0) {
 			System.out.println("Abfaelle wurden komplett von " + myCarrier.getSelectedPlan().getScheduledTours().size()
-					+ " Fahrzeugen komplett eingesammelt!");
+					+ " Fahrzeugen eingesammelt!");
 		} else {
+			System.out.println("");
 			System.out.println("Abfall nicht komplett eingesammelt!");
 		}
 	}

@@ -159,7 +159,7 @@ public class Run_Abfall {
 		}
 		// create vehicle at depot
 		String vehicleIdForckenbeck = "TruckForckenbeck";
-		String vehicleIdMalmoeer = "TruckMalmoeeer";
+		String vehicleIdMalmoeer = "TruckMalmoeer";
 		String vehicleIdNordring = "TruckNordring";
 		String vehicleIdGradestrasse = "TruckGradestraße";
 		double earliestStartingTime = 6 * stunden;
