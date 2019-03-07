@@ -188,9 +188,9 @@ public class Run_AbfallUtils {
 	 * 
 	 */
 	public static void defineCarriers(Carriers carriers, Carrier myCarrier, CarrierVehicleType carrierVehType,
-			CarrierVehicleTypes vehicleTypes, CarrierVehicle garbageTruck1, FleetSize fleetSize) {
+			CarrierVehicleTypes vehicleTypes, CarrierVehicle vehicleForckenbeck, CarrierVehicle vehicleMalmoeerStr, FleetSize fleetSize) {
 		CarrierCapabilities carrierCapabilities = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
-				.addVehicle(garbageTruck1).setFleetSize(fleetSize).build();
+				.addVehicle(vehicleForckenbeck).addVehicle(vehicleMalmoeerStr).setFleetSize(fleetSize).build();
 
 		myCarrier.setCarrierCapabilities(carrierCapabilities);
 

@@ -48,7 +48,8 @@ public class Run_Abfall {
 
 	public static void main(String[] args) {
 		String garbageDumpId = null;
-		String depotId = null;
+		String depotForckenbeck = null;
+		String depotMalmoeerStr = null;
 		double garbagePerMeterAndWeek = 0;
 		double distanceWithShipments = 0;
 		double garbagePerWeek = 0;
@@ -72,7 +73,7 @@ public class Run_Abfall {
 			config.network().setInputFile(modified_Chessboard);
 			break;
 		case berlinNetwork:
-			config.controler().setOutputDirectory("output/Berlin/07_InfiniteSize_Tests_newTruckType");
+			config.controler().setOutputDirectory("output/Berlin/05_FiniteSize_Tests_twoDepot");
 			config.network().setInputFile(berlin);
 			break;
 		default:
@@ -105,7 +106,7 @@ public class Run_Abfall {
 		switch (scenarioWahl) {
 		case chessboard:
 			garbageDumpId = ("j(0,9)R");
-			depotId = "j(9,9)";
+			depotForckenbeck = "j(9,9)";
 			garbagePerMeterAndWeek = 0.2;
 			garbagePerWeek = 2 * tonnen;
 			for (Link link : allLinks.values()) {
@@ -117,7 +118,8 @@ public class Run_Abfall {
 			break;
 		case berlinTestGebiet:
 			garbageDumpId = ("142010"); // Muellheizkraftwerk Ruhleben
-			depotId = "28457"; // zufall
+			depotForckenbeck = "28457"; // zufall
+			depotMalmoeerStr = "27766";
 			garbagePerMeterAndWeek = 3.04; // Berechnung aus Excel
 			garbagePerWeek = 50 * tonnen; // noch Zufallseingabe, da Gebiet unbestimmt
 			for (Link link : allLinks.values()) {
@@ -152,16 +154,19 @@ public class Run_Abfall {
 			new RuntimeException("no garbageVolume selected.");
 		}
 		// create vehicle at depot
-		String vehicleId = "GargabeTruck";
+		String vehicleIdForckenbeck = "TruckForckenbeck";
+		String vehicleIdMalmoeer = "TruckMalmoeeer";
 		double earliestStartingTime = 6 * stunden;
 		double latestFinishingTime = 15 * stunden;
 
-		CarrierVehicle garbageTruck1 = Run_AbfallUtils.createGarbageTruck(vehicleId, depotId, earliestStartingTime,
+		CarrierVehicle vehicleForckenbeck = Run_AbfallUtils.createGarbageTruck(vehicleIdForckenbeck, depotForckenbeck, earliestStartingTime,
+				latestFinishingTime, carrierVehType);
+		CarrierVehicle vehicleMalmoeerStr = Run_AbfallUtils.createGarbageTruck(vehicleIdMalmoeer, depotMalmoeerStr, earliestStartingTime,
 				latestFinishingTime, carrierVehType);
 
 		// define Carriers
-		FleetSize fleetSize = FleetSize.INFINITE;
-		Run_AbfallUtils.defineCarriers(carriers, myCarrier, carrierVehType, vehicleTypes, garbageTruck1, fleetSize);
+		FleetSize fleetSize = FleetSize.FINITE;
+		Run_AbfallUtils.defineCarriers(carriers, myCarrier, carrierVehType, vehicleTypes, vehicleForckenbeck,vehicleMalmoeerStr, fleetSize);
 		// jsprit
 		int noPickup = Run_AbfallUtils.solveWithJsprit(scenario, carriers, myCarrier, vehicleTypes);
 
