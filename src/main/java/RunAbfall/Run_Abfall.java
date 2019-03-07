@@ -49,6 +49,8 @@ public class Run_Abfall {
 	public static void main(String[] args) {
 		String garbageDumpId = null;
 		String depotForckenbeck = null;
+		String depotNordring =null;
+		String depotGradestrasse = null;
 		String depotMalmoeerStr = null;
 		double garbagePerMeterAndWeek = 0;
 		double distanceWithShipments = 0;
@@ -118,8 +120,10 @@ public class Run_Abfall {
 			break;
 		case berlinTestGebiet:
 			garbageDumpId = ("142010"); // Muellheizkraftwerk Ruhleben
-			depotForckenbeck = "28457"; // zufall
+			depotForckenbeck = "28457"; // TODO Kontrolle in qgis, wenn Netzwerk da
 			depotMalmoeerStr = "27766";
+			depotNordring ="42882";
+			depotGradestrasse="71781";
 			garbagePerMeterAndWeek = 3.04; // Berechnung aus Excel
 			garbagePerWeek = 50 * tonnen; // noch Zufallseingabe, da Gebiet unbestimmt
 			for (Link link : allLinks.values()) {
@@ -156,6 +160,8 @@ public class Run_Abfall {
 		// create vehicle at depot
 		String vehicleIdForckenbeck = "TruckForckenbeck";
 		String vehicleIdMalmoeer = "TruckMalmoeeer";
+		String vehicleIdNordring = "TruckNordring";
+		String vehicleIdGradestrasse = "TruckGradestraße";
 		double earliestStartingTime = 6 * stunden;
 		double latestFinishingTime = 15 * stunden;
 
@@ -163,10 +169,14 @@ public class Run_Abfall {
 				latestFinishingTime, carrierVehType);
 		CarrierVehicle vehicleMalmoeerStr = Run_AbfallUtils.createGarbageTruck(vehicleIdMalmoeer, depotMalmoeerStr, earliestStartingTime,
 				latestFinishingTime, carrierVehType);
+		CarrierVehicle vehicleNordring = Run_AbfallUtils.createGarbageTruck(vehicleIdNordring, depotNordring, earliestStartingTime,
+				latestFinishingTime, carrierVehType);
+		CarrierVehicle vehicleGradestrasse = Run_AbfallUtils.createGarbageTruck(vehicleIdGradestrasse, depotGradestrasse, earliestStartingTime,
+				latestFinishingTime, carrierVehType);
 
 		// define Carriers
 		FleetSize fleetSize = FleetSize.FINITE;
-		Run_AbfallUtils.defineCarriers(carriers, myCarrier, carrierVehType, vehicleTypes, vehicleForckenbeck,vehicleMalmoeerStr, fleetSize);
+		Run_AbfallUtils.defineCarriers(carriers, myCarrier, carrierVehType, vehicleTypes, vehicleForckenbeck,vehicleMalmoeerStr,vehicleNordring,vehicleGradestrasse, fleetSize);
 		// jsprit
 		int noPickup = Run_AbfallUtils.solveWithJsprit(scenario, carriers, myCarrier, vehicleTypes);
 

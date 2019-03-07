@@ -81,11 +81,11 @@ public class Run_AbfallUtils {
 	 * garbagePerMeterAndWeek.
 	 * 
 	 * @param
-	 * @return 
+	 * @return
 	 */
-	public static int createShipmentsForCarrierI(double garbagePerMeterAndWeek, double volumeBigTrashcan, double serviceTimePerBigTrashcan, int capacityTruck,
-			Map<Id<Link>, Link> garbageLinks, Scenario scenario, Carrier myCarrier, String garbageDumpId,
-			Carriers carriers) {
+	public static int createShipmentsForCarrierI(double garbagePerMeterAndWeek, double volumeBigTrashcan,
+			double serviceTimePerBigTrashcan, int capacityTruck, Map<Id<Link>, Link> garbageLinks, Scenario scenario,
+			Carrier myCarrier, String garbageDumpId, Carriers carriers) {
 		int allGarbage = 0;
 		for (Link link : garbageLinks.values()) {
 			double maxWeightBigTrashcan = volumeBigTrashcan * 0.1; // Umrechnung von Volumen [l] in Masse[kg]
@@ -114,9 +114,10 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	public static int createShipmentsForCarrierII(double garbagePerWeek, double volumeBigTrashcan, double serviceTimePerBigTrashcan, double distanceWithShipments,
-			int capacityTruck, Map<Id<Link>, Link> garbageLinks, Scenario scenario, Carrier myCarrier,
-			String garbageDumpId, Carriers carriers) {
+	public static int createShipmentsForCarrierII(double garbagePerWeek, double volumeBigTrashcan,
+			double serviceTimePerBigTrashcan, double distanceWithShipments, int capacityTruck,
+			Map<Id<Link>, Link> garbageLinks, Scenario scenario, Carrier myCarrier, String garbageDumpId,
+			Carriers carriers) {
 		int allGarbage = 0;
 		for (Link link : garbageLinks.values()) {
 			double maxWeightBigTrashcan = volumeBigTrashcan * 0.1; // Umrechnung von Volumen [l] in Masse[kg]
@@ -188,9 +189,11 @@ public class Run_AbfallUtils {
 	 * 
 	 */
 	public static void defineCarriers(Carriers carriers, Carrier myCarrier, CarrierVehicleType carrierVehType,
-			CarrierVehicleTypes vehicleTypes, CarrierVehicle vehicleForckenbeck, CarrierVehicle vehicleMalmoeerStr, FleetSize fleetSize) {
+			CarrierVehicleTypes vehicleTypes, CarrierVehicle vehicleForckenbeck, CarrierVehicle vehicleMalmoeerStr,
+			CarrierVehicle vehicleNordring, CarrierVehicle vehicleGradestrasse, FleetSize fleetSize) {
 		CarrierCapabilities carrierCapabilities = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
-				.addVehicle(vehicleForckenbeck).addVehicle(vehicleMalmoeerStr).setFleetSize(fleetSize).build();
+				.addVehicle(vehicleForckenbeck).addVehicle(vehicleMalmoeerStr).addVehicle(vehicleNordring)
+				.addVehicle(vehicleGradestrasse).setFleetSize(fleetSize).build();
 
 		myCarrier.setCarrierCapabilities(carrierCapabilities);
 
@@ -203,7 +206,7 @@ public class Run_AbfallUtils {
 	 * solution
 	 * 
 	 * @param
-	 * @return 
+	 * @return
 	 */
 	public static int solveWithJsprit(Scenario scenario, Carriers carriers, Carrier myCarrier,
 			CarrierVehicleTypes vehicleTypes) {
@@ -295,8 +298,11 @@ public class Run_AbfallUtils {
 			}
 		};
 	}
-	/** Gives an output of a .txt file with some important information 
-	 * @param 
+
+	/**
+	 * Gives an output of a .txt file with some important information
+	 * 
+	 * @param
 	 */
 	public static void outputSummary(int allGarbage, Scenario scenario, Carrier myCarrier,
 			Map<Id<Link>, Link> garbageLinks, int noPickup) {
@@ -304,21 +310,23 @@ public class Run_AbfallUtils {
 		File file;
 		file = new File(scenario.getConfig().controler().getOutputDirectory() + "/01_Zusammenfassung.txt");
 		try {
-			writer = new FileWriter(file ,true);
-			writer.write("Die Summe des abzuholenden Mülls beträgt: \t"+ allGarbage + " kg\n");
-			writer.write("Anzahl der Abholstellen: \t\t\t\t\t"+ garbageLinks.size()+"\n");
+			writer = new FileWriter(file, true);
+			writer.write("Die Summe des abzuholenden Mülls beträgt: \t" + allGarbage + " kg\n");
+			writer.write("Anzahl der Abholstellen: \t\t\t\t\t" + garbageLinks.size() + "\n");
 			writer.write("Anzahl der Abholstellen ohne Abholung: \t\t" + noPickup + "\n");
-			writer.write("Anzahl der Muellfahrzeuge im Einsatz: \t\t" + myCarrier.getSelectedPlan().getScheduledTours().size()+"\n");
-			writer.write("Kosten: \t\t\t\t\t\t\t\t\t"+((-1)*Math.round(myCarrier.getSelectedPlan().getScore()))+" €\n");
+			writer.write("Anzahl der Muellfahrzeuge im Einsatz: \t\t"
+					+ myCarrier.getSelectedPlan().getScheduledTours().size() + "\n");
+			writer.write("Kosten: \t\t\t\t\t\t\t\t\t" + ((-1) * Math.round(myCarrier.getSelectedPlan().getScore()))
+					+ " €\n");
 			writer.flush();
-			writer.close();	
+			writer.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		if (noPickup == 0) {
-			System.out.println("Abfaelle wurden von "+myCarrier.getSelectedPlan().getScheduledTours().size()+" Fahrzeugen komplett eingesammelt!");
-		}
-		else {
+			System.out.println("Abfaelle wurden komplett von " + myCarrier.getSelectedPlan().getScheduledTours().size()
+					+ " Fahrzeugen komplett eingesammelt!");
+		} else {
 			System.out.println("Abfall nicht komplett eingesammelt!");
 		}
 	}
