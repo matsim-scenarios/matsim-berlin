@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.matsim.api.core.v01.Id;
@@ -22,6 +24,8 @@ import org.matsim.contrib.freight.carrier.CarrierVehicleTypes;
 import org.matsim.contrib.freight.carrier.Carriers;
 import org.matsim.contrib.freight.carrier.ScheduledTour;
 import org.matsim.contrib.freight.carrier.TimeWindow;
+import org.matsim.contrib.freight.carrier.Tour.Pickup;
+import org.matsim.contrib.freight.carrier.Tour.TourElement;
 import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
 import org.matsim.contrib.freight.controler.CarrierModule;
 import org.matsim.contrib.freight.jsprit.MatsimJspritFactory;
@@ -228,7 +232,7 @@ public class Run_AbfallUtils {
 
 		// get the algorithm out-of-the-box, search solution and get the best one.
 		VehicleRoutingAlgorithm algorithm = new SchrimpfFactory().createAlgorithm(problem);
-		algorithm.setMaxIterations(500);
+		algorithm.setMaxIterations(50);
 		Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
 		VehicleRoutingProblemSolution bestSolution = Solutions.bestOf(solutions);
 		costsJsprit = bestSolution.getCost();
@@ -262,7 +266,7 @@ public class Run_AbfallUtils {
 	 * @param scenario
 	 * @return
 	 */
-	public static CarrierScoringFunctionFactoryImpl createMyScoringFunction2(final Scenario scenario) {
+	private static CarrierScoringFunctionFactoryImpl createMyScoringFunction2(final Scenario scenario) {
 
 		return new CarrierScoringFunctionFactoryImpl(scenario.getNetwork());
 //		return new CarrierScoringFunctionFactoryImpl (scenario, scenario.getConfig().controler().getOutputDirectory()) {
@@ -293,7 +297,7 @@ public class Run_AbfallUtils {
 	/**
 	 * @return
 	 */
-	public static CarrierPlanStrategyManagerFactory createMyStrategymanager() {
+	private static CarrierPlanStrategyManagerFactory createMyStrategymanager() {
 		return new CarrierPlanStrategyManagerFactory() {
 			@Override
 			public GenericStrategyManager<CarrierPlan, Carrier> createStrategyManager() {
@@ -313,8 +317,38 @@ public class Run_AbfallUtils {
 		int vehiclesMalmoeer = 0;
 		int vehiclesNordring = 0;
 		int vehiclesGradestrasse = 0;
+		double sizeForckenbeck = 0;
+		double sizeMalmooer = 0;
+		double sizeNordring = 0;
+		double sizeGradestrasse = 0;
 		Collection<ScheduledTour> tours = myCarrier.getSelectedPlan().getScheduledTours();
+		Collection<CarrierShipment> shipments = myCarrier.getShipments();
+		HashMap<String, Integer> shipmentSizes = new HashMap<String, Integer>();
+		for (CarrierShipment carrierShipment : shipments) {
+			String shipmentId = carrierShipment.getId().toString();
+			int shipmentSize = carrierShipment.getSize();
+			shipmentSizes.put(shipmentId, shipmentSize);
+		}
 		for (ScheduledTour scheduledTour : tours) {
+			List<TourElement> elements = scheduledTour.getTour().getTourElements();
+			for (TourElement element : elements) {
+				if (element instanceof Pickup) {
+					Pickup pickupElement = (Pickup) element;
+					String pickupShipmentId = pickupElement.getShipment().getId().toString();
+					if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckForckenbeck")) {
+						sizeForckenbeck = sizeForckenbeck + ((double)shipmentSizes.get(pickupShipmentId))/1000;
+					}
+					if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckMalmoeer")) {
+						sizeMalmooer = sizeMalmooer +((double)shipmentSizes.get(pickupShipmentId))/1000;
+					}
+					if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckNordring")) {
+						sizeNordring = sizeNordring +((double)shipmentSizes.get(pickupShipmentId))/1000;
+					}
+					if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckGradestrasse")) {
+						sizeGradestrasse = sizeGradestrasse +((double)shipmentSizes.get(pickupShipmentId))/1000;
+					}
+				}
+			}
 			if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckForckenbeck")) {
 				vehiclesForckenbeck++;
 			}
@@ -327,7 +361,6 @@ public class Run_AbfallUtils {
 			if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckGradestrasse")) {
 				vehiclesGradestrasse++;
 			}
-
 		}
 		FileWriter writer;
 		File file;
@@ -340,10 +373,10 @@ public class Run_AbfallUtils {
 			writer.write("Anzahl der Abholstellen ohne Abholung: \t\t\t\t\t" + noPickup + "\n\n");
 			writer.write("Anzahl der Muellfahrzeuge im Einsatz: \t\t\t\t\t"
 					+ myCarrier.getSelectedPlan().getScheduledTours().size() + "\n");
-			writer.write("\t Anzahl aus dem Betriebshof Forckenbeckstrasse: \t\t" + vehiclesForckenbeck + "\n");
-			writer.write("\t Anzahl aus dem Betriebshof Malmoeer Strasse: \t\t\t" + vehiclesMalmoeer + "\n");
-			writer.write("\t Anzahl aus dem Betriebshof Nordring: \t\t\t\t\t" + vehiclesNordring + "\n");
-			writer.write("\t Anzahl aus dem Betriebshof Gradestraße: \t\t\t\t" + vehiclesGradestrasse + "\n\n");
+			writer.write("\t Anzahl aus dem Betriebshof Forckenbeckstrasse: \t\t" + vehiclesForckenbeck + "\t\tMenge:\t"+sizeForckenbeck+" t\n");
+			writer.write("\t Anzahl aus dem Betriebshof Malmoeer Strasse: \t\t\t" + vehiclesMalmoeer + "\t\tMenge:\t"+sizeMalmooer+" t\n");
+			writer.write("\t Anzahl aus dem Betriebshof Nordring: \t\t\t\t\t" + vehiclesNordring + "\t\tMenge:\t"+sizeNordring+" t\n");
+			writer.write("\t Anzahl aus dem Betriebshof Gradestraße: \t\t\t\t" + vehiclesGradestrasse + "\t\tMenge:\t"+sizeGradestrasse+" t\n\n");
 			writer.write("Kosten (Jsprit): \t\t\t\t\t\t\t\t\t\t" + (Math.round(costsJsprit)) + " €\n\n");
 			writer.write("Kosten (MatSim): \t\t\t\t\t\t\t\t\t\t"
 					+ ((-1) * Math.round(myCarrier.getSelectedPlan().getScore())) + " €\n");

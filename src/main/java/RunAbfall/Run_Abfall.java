@@ -126,6 +126,7 @@ public class Run_Abfall {
 			depotGradestrasse = "71781";
 			garbagePerMeterAndWeek = 3.04; // Berechnung aus Excel
 			garbagePerWeek = 50 * tonnen; // noch Zufallseingabe, da Gebiet unbestimmt
+
 			for (Link link : allLinks.values()) {
 				if (link.getAllowedModes().contains("car") && link.getCoord().getX() > 4587375.819194021
 						&& link.getCoord().getX() < 4589012.681349432 && link.getCoord().getY() < 5833272.254176694
