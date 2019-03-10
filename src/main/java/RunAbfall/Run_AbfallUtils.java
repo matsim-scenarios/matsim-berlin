@@ -59,6 +59,7 @@ public class Run_AbfallUtils {
 	static int minuten = 60;
 	static double costsJsprit = 0;
 	static int noPickup = 0;
+	static int allGarbage = 0;
 
 	/**
 	 * Delets the existing output file and sets the number of the last iteration
@@ -92,8 +93,7 @@ public class Run_AbfallUtils {
 	 */
 	public static int createShipmentsForCarrierI(double garbagePerMeterAndWeek, double volumeBigTrashcan,
 			double serviceTimePerBigTrashcan, int capacityTruck, Map<Id<Link>, Link> garbageLinks, Scenario scenario,
-			Carrier myCarrier, String garbageDumpId, Carriers carriers) {
-		int allGarbage = 0;
+			Carrier myCarrier, String garbageDumpId, Carriers carriers) {;
 		for (Link link : garbageLinks.values()) {
 			double maxWeightBigTrashcan = volumeBigTrashcan * 0.1; // Umrechnung von Volumen [l] in Masse[kg]
 			int volumeGarbage = (int) Math.ceil(link.getLength() * garbagePerMeterAndWeek);
@@ -125,7 +125,6 @@ public class Run_AbfallUtils {
 			double serviceTimePerBigTrashcan, double distanceWithShipments, int capacityTruck,
 			Map<Id<Link>, Link> garbageLinks, Scenario scenario, Carrier myCarrier, String garbageDumpId,
 			Carriers carriers) {
-		int allGarbage = 0;
 		for (Link link : garbageLinks.values()) {
 			double maxWeightBigTrashcan = volumeBigTrashcan * 0.1; // Umrechnung von Volumen [l] in Masse[kg]
 			int volumeGarbage = (int) Math.ceil(link.getLength() * (garbagePerWeek / distanceWithShipments));
@@ -308,10 +307,11 @@ public class Run_AbfallUtils {
 
 	/**
 	 * Gives an output of a .txt file with some important information
+	 * @param allGarbage 
 	 * 
 	 * @param
 	 */
-	public static void outputSummary(int allGarbage, Scenario scenario, Carrier myCarrier,
+	public static void outputSummary(Scenario scenario, Carrier myCarrier,
 			Map<Id<Link>, Link> garbageLinks) {
 		int vehiclesForckenbeck = 0;
 		int vehiclesMalmoeer = 0;
@@ -321,12 +321,13 @@ public class Run_AbfallUtils {
 		double sizeMalmooer = 0;
 		double sizeNordring = 0;
 		double sizeGradestrasse = 0;
+		double allCollectedGarbage = 0;
 		Collection<ScheduledTour> tours = myCarrier.getSelectedPlan().getScheduledTours();
 		Collection<CarrierShipment> shipments = myCarrier.getShipments();
-		HashMap<String, Integer> shipmentSizes = new HashMap<String, Integer>();
+		HashMap<String, Double> shipmentSizes = new HashMap<String, Double>();
 		for (CarrierShipment carrierShipment : shipments) {
 			String shipmentId = carrierShipment.getId().toString();
-			int shipmentSize = carrierShipment.getSize();
+			double shipmentSize = ((double)carrierShipment.getSize())/1000;
 			shipmentSizes.put(shipmentId, shipmentSize);
 		}
 		for (ScheduledTour scheduledTour : tours) {
@@ -336,19 +337,21 @@ public class Run_AbfallUtils {
 					Pickup pickupElement = (Pickup) element;
 					String pickupShipmentId = pickupElement.getShipment().getId().toString();
 					if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckForckenbeck")) {
-						sizeForckenbeck = sizeForckenbeck + ((double)shipmentSizes.get(pickupShipmentId))/1000;
+						sizeForckenbeck = sizeForckenbeck +(shipmentSizes.get(pickupShipmentId));
 					}
 					if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckMalmoeer")) {
-						sizeMalmooer = sizeMalmooer +((double)shipmentSizes.get(pickupShipmentId))/1000;
+						sizeMalmooer = sizeMalmooer +(shipmentSizes.get(pickupShipmentId));
 					}
 					if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckNordring")) {
-						sizeNordring = sizeNordring +((double)shipmentSizes.get(pickupShipmentId))/1000;
+						sizeNordring = sizeNordring +(shipmentSizes.get(pickupShipmentId));
 					}
 					if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckGradestrasse")) {
-						sizeGradestrasse = sizeGradestrasse +((double)shipmentSizes.get(pickupShipmentId))/1000;
+						sizeGradestrasse = sizeGradestrasse +(shipmentSizes.get(pickupShipmentId));
 					}
 				}
 			}
+			allCollectedGarbage = sizeForckenbeck+sizeMalmooer+sizeNordring+sizeGradestrasse;
+			
 			if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckForckenbeck")) {
 				vehiclesForckenbeck++;
 			}
@@ -368,15 +371,15 @@ public class Run_AbfallUtils {
 		try {
 			writer = new FileWriter(file, true);
 			writer.write(
-					"Die Summe des abzuholenden Mülls beträgt: \t\t\t\t" + Math.round(allGarbage / 1000) + " t\n\n");
+					"Die Summe des abzuholenden Mülls beträgt: \t\t\t\t" + (allGarbage / 1000) + " t\n\n");
 			writer.write("Anzahl der Abholstellen: \t\t\t\t\t\t\t\t" + garbageLinks.size() + "\n");
 			writer.write("Anzahl der Abholstellen ohne Abholung: \t\t\t\t\t" + noPickup + "\n\n");
 			writer.write("Anzahl der Muellfahrzeuge im Einsatz: \t\t\t\t\t"
-					+ myCarrier.getSelectedPlan().getScheduledTours().size() + "\n");
-			writer.write("\t Anzahl aus dem Betriebshof Forckenbeckstrasse: \t\t" + vehiclesForckenbeck + "\t\tMenge:\t"+sizeForckenbeck+" t\n");
-			writer.write("\t Anzahl aus dem Betriebshof Malmoeer Strasse: \t\t\t" + vehiclesMalmoeer + "\t\tMenge:\t"+sizeMalmooer+" t\n");
-			writer.write("\t Anzahl aus dem Betriebshof Nordring: \t\t\t\t\t" + vehiclesNordring + "\t\tMenge:\t"+sizeNordring+" t\n");
-			writer.write("\t Anzahl aus dem Betriebshof Gradestraße: \t\t\t\t" + vehiclesGradestrasse + "\t\tMenge:\t"+sizeGradestrasse+" t\n\n");
+					+ myCarrier.getSelectedPlan().getScheduledTours().size() + "\t\t\tMenge:\t"+Math.round(allCollectedGarbage)+" t\n");
+			writer.write("\t Anzahl aus dem Betriebshof Forckenbeckstrasse: \t\t" + vehiclesForckenbeck + "\t\tMenge:\t"+Math.round(sizeForckenbeck)+" t\n");
+			writer.write("\t Anzahl aus dem Betriebshof Malmoeer Strasse: \t\t\t" + vehiclesMalmoeer + "\t\tMenge:\t"+Math.round(sizeMalmooer)+" t\n");
+			writer.write("\t Anzahl aus dem Betriebshof Nordring: \t\t\t\t\t" + vehiclesNordring + "\t\tMenge:\t"+Math.round(sizeNordring)+" t\n");
+			writer.write("\t Anzahl aus dem Betriebshof Gradestraße: \t\t\t\t" + vehiclesGradestrasse + "\t\tMenge:\t"+Math.round(sizeGradestrasse)+" t\n\n");
 			writer.write("Kosten (Jsprit): \t\t\t\t\t\t\t\t\t\t" + (Math.round(costsJsprit)) + " €\n\n");
 			writer.write("Kosten (MatSim): \t\t\t\t\t\t\t\t\t\t"
 					+ ((-1) * Math.round(myCarrier.getSelectedPlan().getScore())) + " €\n");
