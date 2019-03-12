@@ -231,7 +231,7 @@ public class Run_AbfallUtils {
 
 		// get the algorithm out-of-the-box, search solution and get the best one.
 		VehicleRoutingAlgorithm algorithm = new SchrimpfFactory().createAlgorithm(problem);
-		algorithm.setMaxIterations(50);
+		algorithm.setMaxIterations(20);
 		Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
 		VehicleRoutingProblemSolution bestSolution = Solutions.bestOf(solutions);
 		costsJsprit = bestSolution.getCost();
