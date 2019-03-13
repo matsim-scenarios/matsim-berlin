@@ -124,8 +124,8 @@ public class Run_Abfall {
 			break;
 		case berlinTestGebiet:
 			garbageDumpId = "142010"; // Muellheizkraftwerk Ruhleben
-			depotForckenbeck = "28457"; // TODO Kontrolle in qgis, wenn Netzwerk da
-			depotMalmoeerStr = "27766";
+			depotForckenbeck = "27766"; // TODO Kontrolle in qgis, wenn Netzwerk da
+			depotMalmoeerStr = "116212";
 			depotNordring = "42882";
 			depotGradestrasse = "71781";
 			garbagePerMeterAndWeek = 3.04; // Berechnung aus Excel
