@@ -53,17 +53,29 @@ public class Run_Abfall {
 	};
 
 	public static void main(String[] args) {
-		String garbageDumpId = null;
-		String depotForckenbeck = null;
-		String depotNordring = null;
-		String depotGradestrasse = null;
-		String depotMalmoeerStr = null;
+		
+		String linkIdMhkwRuhleben = "142010";
+		String linkIdMpsPankow = "145812";
+		String linkIdMpsReinickendorf = "59055";
+		String linkIdUmladestationGradestrasse = "71781";
+		String linkIdGruenauerStr = "97944";
+		String depotForckenbeck = "27766";
+		String depotMalmoeerStr = "116212";
+		String depotNordring = "42882";
+		String depotGradestrasse = "71781";
 		double garbagePerMeterAndWeek = 0;
 		double distanceWithShipments = 0;
-		double garbagePerWeek = 0;
+		int garbagePerWeek = 0;
 		List<String> areaForShipments = null;
 		String day = null;
+		Id<Link> dumpId = null;
 		log.setLevel(Level.INFO);
+		HashMap<String, Id<Link>> garbageDumps = new HashMap<String, Id<Link>>();
+		garbageDumps.put("Ruhleben", Id.createLinkId(linkIdMhkwRuhleben));
+		garbageDumps.put("Pankow", Id.createLinkId(linkIdMpsPankow));
+		garbageDumps.put("Gradestr", Id.createLinkId(linkIdUmladestationGradestrasse));
+		garbageDumps.put("ReinickenD", Id.createLinkId(linkIdMpsReinickendorf));
+		garbageDumps.put("GruenauerStr", Id.createLinkId(linkIdGruenauerStr));
 
 		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
 		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinSelectedAreas;
@@ -120,7 +132,7 @@ public class Run_Abfall {
 
 		switch (scenarioWahl) {
 		case chessboard:
-			garbageDumpId = ("j(0,9)R");
+			linkIdMhkwRuhleben = ("j(0,9)R");
 			depotForckenbeck = "j(9,9)";
 			garbagePerMeterAndWeek = 0.2;
 			garbagePerWeek = 2 * tonnen;
@@ -133,11 +145,7 @@ public class Run_Abfall {
 			}
 			break;
 		case berlinSelectedAreas:
-			garbageDumpId = "142010"; // Muellheizkraftwerk Ruhleben
-			depotForckenbeck = "27766";
-			depotMalmoeerStr = "116212";
-			depotNordring = "42882";
-			depotGradestrasse = "71781";
+			
 			double volumeBigTrashcan = 1100;
 			double serviceTimePerBigTrashcan = 41;
 			garbagePerMeterAndWeek = 3.04; // Berechnung aus Excel
@@ -147,7 +155,8 @@ public class Run_Abfall {
 			for (String area : areaForShipments) {
 				for (SimpleFeature simpleFeature : features) {
 					if (simpleFeature.getAttribute("Ortsteilna").equals(area)) {
-						garbagePerWeek = (double) simpleFeature.getAttribute(day) * tonnen;
+						garbagePerWeek = (int) ((double)simpleFeature.getAttribute(day) * tonnen);
+						dumpId = garbageDumps.get(simpleFeature.getAttribute("Mi-Ent"));
 						for (Link link : allLinks.values()) {
 							if (Id.createLinkId(simpleFeature.getAttribute("ID").toString()) == link.getId()) {
 								if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
@@ -164,7 +173,7 @@ public class Run_Abfall {
 				}
 				Run_AbfallUtils.createShipmentsForCarrierII(garbagePerWeek, volumeBigTrashcan,
 						serviceTimePerBigTrashcan, distanceWithShipments, capacityTruck, garbageLinks, scenario,
-						myCarrier, garbageDumpId, carriers);
+						myCarrier, dumpId, carriers);
 				distanceWithShipments = 0;
 				garbageLinks.clear();
 			}
@@ -180,7 +189,7 @@ public class Run_Abfall {
 		switch (garbageVolumeChoice) {
 		case perMeterAndWeek:
 			Run_AbfallUtils.createShipmentsForCarrierI(garbagePerMeterAndWeek, volumeBigTrashcan,
-					serviceTimePerBigTrashcan, capacityTruck, garbageLinks, scenario, myCarrier, garbageDumpId,
+					serviceTimePerBigTrashcan, capacityTruck, garbageLinks, scenario, myCarrier, linkIdMhkwRuhleben,
 					carriers);
 			break;
 		case perWeek:
