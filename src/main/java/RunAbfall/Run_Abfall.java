@@ -1,7 +1,9 @@
 package RunAbfall;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Level;
@@ -36,7 +38,6 @@ public class Run_Abfall {
 	private static final String original_Chessboard = "scenarios/networks/originalChessboard9x9.xml";
 	private static final String modified_Chessboard = "scenarios/networks/modifiedChessboard9x9.xml";
 	private static final String berlin = "original-input-data/berlin-v5.2-1pct.output_network.xml.gz";
-	private static final String adlershof = "C:\\Users\\erica\\OneDrive\\Dokumente\\Studium\\0 Masterarbeit\\Shape-Files\\Adlershof_test.shp";
 	private static final String Berlin_garbage = "C:\\Users\\erica\\OneDrive\\Dokumente\\Studium\\0 Masterarbeit\\Shape-Files\\Netzwerk_Abfall\\BerlinOnly\\berlinOnly_garbageNetwork.shp";
 
 	private enum netzwerkAuswahl {
@@ -44,7 +45,7 @@ public class Run_Abfall {
 	};
 
 	private enum scenarioAuswahl {
-		chessboard, berlinTestGebiet
+		chessboard, berlinSelectedAreas
 	};
 
 	private enum garbageVolume {
@@ -60,10 +61,12 @@ public class Run_Abfall {
 		double garbagePerMeterAndWeek = 0;
 		double distanceWithShipments = 0;
 		double garbagePerWeek = 0;
+		List<String> areaForShipments = null;
+		String day = null;
 		log.setLevel(Level.INFO);
 
 		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinTestGebiet;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinSelectedAreas;
 		garbageVolume garbageVolumeChoice = garbageVolume.perWeek;
 
 		// MATSim config
@@ -108,12 +111,12 @@ public class Run_Abfall {
 		// create shipments
 		Map<Id<Link>, ? extends Link> allLinks = scenario.getNetwork().getLinks();
 		Map<Id<Link>, Link> garbageLinks = new HashMap<Id<Link>, Link>();
-		// Collection<SimpleFeature> garbageNetwork =
-		// ShapeFileReader.getAllFeatures(Berlin_garbage);
-		ShapeFileReader shapeFileReader = new ShapeFileReader();
-		shapeFileReader.readFileAndInitialize(Berlin_garbage);
-		Collection<SimpleFeature> features = shapeFileReader.getFeatureSet();
-		// features.iterator();
+		Collection<SimpleFeature> features = ShapeFileReader.getAllFeatures(Berlin_garbage);
+		/*
+		 * ShapeFileReader shapeFileReader = new ShapeFileReader();
+		 * shapeFileReader.readFileAndInitialize(Berlin_garbage);
+		 * Collection<SimpleFeature> features = shapeFileReader.getFeatureSet();
+		 */
 
 		switch (scenarioWahl) {
 		case chessboard:
@@ -121,6 +124,7 @@ public class Run_Abfall {
 			depotForckenbeck = "j(9,9)";
 			garbagePerMeterAndWeek = 0.2;
 			garbagePerWeek = 2 * tonnen;
+			areaForShipments = Arrays.asList("Chessboard");
 			for (Link link : allLinks.values()) {
 				if (link.getCoord().getX() < 8000 && link.getFreespeed() < 12) {
 					garbageLinks.put(link.getId(), link);
@@ -128,38 +132,43 @@ public class Run_Abfall {
 				}
 			}
 			break;
-		case berlinTestGebiet:
+		case berlinSelectedAreas:
 			garbageDumpId = "142010"; // Muellheizkraftwerk Ruhleben
-			depotForckenbeck = "27766"; // TODO Kontrolle in qgis, wenn Netzwerk da
+			depotForckenbeck = "27766";
 			depotMalmoeerStr = "116212";
 			depotNordring = "42882";
 			depotGradestrasse = "71781";
+			double volumeBigTrashcan = 1100;
+			double serviceTimePerBigTrashcan = 41;
 			garbagePerMeterAndWeek = 3.04; // Berechnung aus Excel
-			garbagePerWeek = 500 * tonnen; // noch Zufallseingabe, da Gebiet unbestimmt
-			String bezirk = new String("Karlshorst");
+			// garbagePerWeek = 500 * tonnen; // noch Zufallseingabe, da Gebiet unbestimmt
+			areaForShipments = Arrays.asList("Malchow", "Hansaviertel");
+			day = "MI";
+			for (String area : areaForShipments) {
+				for (SimpleFeature simpleFeature : features) {
+					if (simpleFeature.getAttribute("Ortsteilna").equals(area)) {
+						garbagePerWeek = (double) simpleFeature.getAttribute(day) * tonnen;
+						for (Link link : allLinks.values()) {
+							if (Id.createLinkId(simpleFeature.getAttribute("ID").toString()) == link.getId()) {
+								if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
 
-			for (SimpleFeature simpleFeature : features) {
-				if (simpleFeature.getAttribute("Ortsteilna").equals(bezirk)) {
-					for (Link link : allLinks.values()) {
-						if (Id.createLinkId(simpleFeature.getAttribute("ID").toString()) == link.getId()) {
-							if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
-								garbageLinks.put(link.getId(), link);
-								distanceWithShipments = distanceWithShipments + link.getLength();
-								// garbagePerWeek = (double) simpleFeature.getAttribute("MO");
+									garbageLinks.put(link.getId(), link);
+									distanceWithShipments = distanceWithShipments + link.getLength();
+
+								}
 							}
 						}
 
 					}
+
 				}
+				Run_AbfallUtils.createShipmentsForCarrierII(garbagePerWeek, volumeBigTrashcan,
+						serviceTimePerBigTrashcan, distanceWithShipments, capacityTruck, garbageLinks, scenario,
+						myCarrier, garbageDumpId, carriers);
+				distanceWithShipments = 0;
+				garbageLinks.clear();
 			}
-			/*
-			 * for (Link link : allLinks.values()) { if
-			 * (link.getAllowedModes().contains("car") && link.getCoord().getX() >
-			 * 4593042.6510658255 && link.getCoord().getX() < 4596780.751802738 &&
-			 * link.getCoord().getY() < 5823467.417744631 && link.getCoord().getY() >
-			 * 5820984.6487085465) { garbageLinks.put(link.getId(), link);
-			 * distanceWithShipments = distanceWithShipments + link.getLength(); } }
-			 */
+			carriers.addCarrier(myCarrier);
 			break;
 		default:
 			new RuntimeException("no scenario selected.");
@@ -175,8 +184,11 @@ public class Run_Abfall {
 					carriers);
 			break;
 		case perWeek:
-			Run_AbfallUtils.createShipmentsForCarrierII(garbagePerWeek, volumeBigTrashcan, serviceTimePerBigTrashcan,
-					distanceWithShipments, capacityTruck, garbageLinks, scenario, myCarrier, garbageDumpId, carriers);
+			/*
+			 * Run_AbfallUtils.createShipmentsForCarrierII(garbagePerWeek,
+			 * volumeBigTrashcan, serviceTimePerBigTrashcan, distanceWithShipments,
+			 * capacityTruck, garbageLinks, scenario, myCarrier, garbageDumpId, carriers);
+			 */
 			break;
 		default:
 			new RuntimeException("no garbageVolume selected.");
@@ -214,6 +226,6 @@ public class Run_Abfall {
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans_Test01.xml");
 
-		Run_AbfallUtils.outputSummary(scenario, myCarrier, garbageLinks);
+		Run_AbfallUtils.outputSummary(scenario, myCarrier,areaForShipments,day);
 	}
 }
