@@ -45,41 +45,23 @@ public class Run_Abfall {
 	};
 
 	private enum scenarioAuswahl {
-		chessboard, berlinSelectedAreas
-	};
-
-	private enum garbageVolume {
-		perWeek, perMeterAndWeek
+		chessboard, berlinSelectedAreas, perWeek, perMeterAndWeek
 	};
 
 	public static void main(String[] args) {
-		
-		String linkIdMhkwRuhleben = "142010";
-		String linkIdMpsPankow = "145812";
-		String linkIdMpsReinickendorf = "59055";
-		String linkIdUmladestationGradestrasse = "71781";
-		String linkIdGruenauerStr = "97944";
-		String depotForckenbeck = "27766";
-		String depotMalmoeerStr = "116212";
-		String depotNordring = "42882";
-		String depotGradestrasse = "71781";
-		double garbagePerMeterAndWeek = 0;
-		double distanceWithShipments = 0;
-		int garbagePerWeek = 0;
+
+		FleetSize fleetSize;
+		String linkIdDump;
+		String linkIdDepot;
+		double garbagePerMeterToCollect = 0;
+		int garbageToCollect = 0;
 		List<String> areaForShipments = null;
 		String day = null;
-		Id<Link> dumpId = null;
-		log.setLevel(Level.INFO);
-		HashMap<String, Id<Link>> garbageDumps = new HashMap<String, Id<Link>>();
-		garbageDumps.put("Ruhleben", Id.createLinkId(linkIdMhkwRuhleben));
-		garbageDumps.put("Pankow", Id.createLinkId(linkIdMpsPankow));
-		garbageDumps.put("Gradestr", Id.createLinkId(linkIdUmladestationGradestrasse));
-		garbageDumps.put("ReinickenD", Id.createLinkId(linkIdMpsReinickendorf));
-		garbageDumps.put("GruenauerStr", Id.createLinkId(linkIdGruenauerStr));
 
-		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinSelectedAreas;
-		garbageVolume garbageVolumeChoice = garbageVolume.perWeek;
+		log.setLevel(Level.INFO);
+
+		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.modifiedChessboard;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.chessboard;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
@@ -90,7 +72,7 @@ public class Run_Abfall {
 			config.network().setInputFile(original_Chessboard);
 			break;
 		case modifiedChessboard:
-			config.controler().setOutputDirectory("output/modified_Chessboard/05_InfiniteSize_newTruckType");
+			config.controler().setOutputDirectory("output/modified_Chessboard/06_InfiniteSize_newClassStyle");
 			config.network().setInputFile(modified_Chessboard);
 			break;
 		case berlinNetwork:
@@ -124,105 +106,51 @@ public class Run_Abfall {
 		Map<Id<Link>, ? extends Link> allLinks = scenario.getNetwork().getLinks();
 		Map<Id<Link>, Link> garbageLinks = new HashMap<Id<Link>, Link>();
 		Collection<SimpleFeature> features = ShapeFileReader.getAllFeatures(Berlin_garbage);
-		/*
-		 * ShapeFileReader shapeFileReader = new ShapeFileReader();
-		 * shapeFileReader.readFileAndInitialize(Berlin_garbage);
-		 * Collection<SimpleFeature> features = shapeFileReader.getFeatureSet();
-		 */
+		HashMap<String, Id<Link>> garbageDumps = Run_AbfallUtils.createDumpMap();
 
+		double volumeBigTrashcan = 1100;
+		double serviceTimePerBigTrashcan = 41;
 		switch (scenarioWahl) {
 		case chessboard:
-			linkIdMhkwRuhleben = ("j(0,9)R");
-			depotForckenbeck = "j(9,9)";
-			garbagePerMeterAndWeek = 0.2;
-			garbagePerWeek = 2 * tonnen;
-			areaForShipments = Arrays.asList("Chessboard");
-			for (Link link : allLinks.values()) {
-				if (link.getCoord().getX() < 8000 && link.getFreespeed() < 12) {
-					garbageLinks.put(link.getId(), link);
-					distanceWithShipments = distanceWithShipments + link.getLength();
-				}
-			}
+			linkIdDump = "j(0,9)R";
+			linkIdDepot = "j(9,9)";
+			String vehicleIdDepot = "TruckChessboard";
+			garbagePerMeterToCollect = 0.2;
+			garbageToCollect = 2 * tonnen;
+			Run_AbfallUtils.createShipmentsForChessboardI(garbageToCollect, allLinks, garbageLinks, volumeBigTrashcan,
+					serviceTimePerBigTrashcan, capacityTruck, scenario, carriers, myCarrier, linkIdDump);
+			fleetSize = FleetSize.INFINITE;
+			Run_AbfallUtils.createCarriersForChessboard(linkIdDepot,vehicleIdDepot, carriers, myCarrier, carrierVehType, vehicleTypes, fleetSize);
 			break;
 		case berlinSelectedAreas:
-			
-			double volumeBigTrashcan = 1100;
-			double serviceTimePerBigTrashcan = 41;
-			garbagePerMeterAndWeek = 3.04; // Berechnung aus Excel
-			// garbagePerWeek = 500 * tonnen; // noch Zufallseingabe, da Gebiet unbestimmt
 			areaForShipments = Arrays.asList("Malchow", "Hansaviertel");
 			day = "MI";
-			for (String area : areaForShipments) {
-				for (SimpleFeature simpleFeature : features) {
-					if (simpleFeature.getAttribute("Ortsteilna").equals(area)) {
-						garbagePerWeek = (int) ((double)simpleFeature.getAttribute(day) * tonnen);
-						dumpId = garbageDumps.get(simpleFeature.getAttribute("Mi-Ent"));
-						for (Link link : allLinks.values()) {
-							if (Id.createLinkId(simpleFeature.getAttribute("ID").toString()) == link.getId()) {
-								if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
-
-									garbageLinks.put(link.getId(), link);
-									distanceWithShipments = distanceWithShipments + link.getLength();
-
-								}
-							}
-						}
-
-					}
-
-				}
-				Run_AbfallUtils.createShipmentsForCarrierII(garbagePerWeek, volumeBigTrashcan,
-						serviceTimePerBigTrashcan, distanceWithShipments, capacityTruck, garbageLinks, scenario,
-						myCarrier, dumpId, carriers);
-				distanceWithShipments = 0;
-				garbageLinks.clear();
-			}
-			carriers.addCarrier(myCarrier);
+			Run_AbfallUtils.createShipmentsForSelectedArea(areaForShipments, day, garbageDumps, scenario, carriers,
+					myCarrier, capacityTruck, allLinks, garbageLinks, features, volumeBigTrashcan,
+					serviceTimePerBigTrashcan);
+			fleetSize = FleetSize.INFINITE;
+			Run_AbfallUtils.createCarriersBerlin(carriers, myCarrier, carrierVehType, vehicleTypes, fleetSize);
+			break;
+		case perMeterAndWeek:
+		//	garbagePerMeterToCollect = 3.04;
+		//	Run_AbfallUtils.createShipmentsForCarrierI(garbagePerMeterToCollect, volumeBigTrashcan,
+		//			serviceTimePerBigTrashcan, capacityTruck, garbageLinks, scenario, myCarrier, linkIdMhkwRuhleben,
+		//			carriers);
+			break;
+		case perWeek:
+			garbageToCollect = 500 * tonnen;
+			// garbageDumpId = "142010";
+			// Run_AbfallUtils.createShipmentsForCarrierII(garbageToCollect,
+			// volumeBigTrashcan, serviceTimePerBigTrashcan,
+			// distanceWithShipments, capacityTruck, garbageLinks, scenario, myCarrier,
+			// garbageDumpId, carriers);
 			break;
 		default:
 			new RuntimeException("no scenario selected.");
 		}
-		double volumeBigTrashcan = 1100;
-		double serviceTimePerBigTrashcan = 41;
-		// Auswahl, ob die für das Netzwerk eine Abfallmenge definiert wird oder die
-		// Menge aus der länge der Straßen ermittelt wird
-		switch (garbageVolumeChoice) {
-		case perMeterAndWeek:
-			Run_AbfallUtils.createShipmentsForCarrierI(garbagePerMeterAndWeek, volumeBigTrashcan,
-					serviceTimePerBigTrashcan, capacityTruck, garbageLinks, scenario, myCarrier, linkIdMhkwRuhleben,
-					carriers);
-			break;
-		case perWeek:
-			/*
-			 * Run_AbfallUtils.createShipmentsForCarrierII(garbagePerWeek,
-			 * volumeBigTrashcan, serviceTimePerBigTrashcan, distanceWithShipments,
-			 * capacityTruck, garbageLinks, scenario, myCarrier, garbageDumpId, carriers);
-			 */
-			break;
-		default:
-			new RuntimeException("no garbageVolume selected.");
-		}
+
 		// create vehicle at depot
-		String vehicleIdForckenbeck = "TruckForckenbeck";
-		String vehicleIdMalmoeer = "TruckMalmoeer";
-		String vehicleIdNordring = "TruckNordring";
-		String vehicleIdGradestrasse = "TruckGradestrasse";
-		double earliestStartingTime = 6 * stunden;
-		double latestFinishingTime = 15 * stunden;
 
-		CarrierVehicle vehicleForckenbeck = Run_AbfallUtils.createGarbageTruck(vehicleIdForckenbeck, depotForckenbeck,
-				earliestStartingTime, latestFinishingTime, carrierVehType);
-		CarrierVehicle vehicleMalmoeerStr = Run_AbfallUtils.createGarbageTruck(vehicleIdMalmoeer, depotMalmoeerStr,
-				earliestStartingTime, latestFinishingTime, carrierVehType);
-		CarrierVehicle vehicleNordring = Run_AbfallUtils.createGarbageTruck(vehicleIdNordring, depotNordring,
-				earliestStartingTime, latestFinishingTime, carrierVehType);
-		CarrierVehicle vehicleGradestrasse = Run_AbfallUtils.createGarbageTruck(vehicleIdGradestrasse,
-				depotGradestrasse, earliestStartingTime, latestFinishingTime, carrierVehType);
-
-		// define Carriers
-		FleetSize fleetSize = FleetSize.INFINITE;
-		Run_AbfallUtils.defineCarriers(carriers, myCarrier, carrierVehType, vehicleTypes, vehicleForckenbeck,
-				vehicleMalmoeerStr, vehicleNordring, vehicleGradestrasse, fleetSize);
 		// jsprit
 		Run_AbfallUtils.solveWithJsprit(scenario, carriers, myCarrier, vehicleTypes);
 
@@ -234,7 +162,18 @@ public class Run_Abfall {
 
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans_Test01.xml");
-
-		Run_AbfallUtils.outputSummary(scenario, myCarrier,areaForShipments,day);
+		switch (scenarioWahl) {
+		case chessboard:
+			break;
+		case berlinSelectedAreas:
+			Run_AbfallUtils.outputSummary(scenario, myCarrier, areaForShipments, day);
+		case perMeterAndWeek:
+			Run_AbfallUtils.outputSummary(scenario, myCarrier, areaForShipments, day);
+		case perWeek:
+			Run_AbfallUtils.outputSummary(scenario, myCarrier, areaForShipments, day);
+		default:
+			new RuntimeException("no scenario selected.");
+		}
 	}
+
 }
