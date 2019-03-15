@@ -59,13 +59,13 @@ public class Run_AbfallUtils {
 	static int minuten = 60;
 	static double costsJsprit = 0;
 	static int noPickup = 0;
-	static double allGarbage = 0;
+	static int allGarbage = 0;
 	static int numberOfShipments = 0;
-	static double garbageRuhleben = 0;
-	static double garbagePankow = 0;
-	static double garbageReinickenD = 0;
-	static double garbageGradestr = 0;
-	static double garbageGruenauerStr = 0;
+	static int garbageRuhleben = 0;
+	static int garbagePankow = 0;
+	static int garbageReinickenD = 0;
+	static int garbageGradestr = 0;
+	static int garbageGruenauerStr = 0;
 	static String linkIdMhkwRuhleben = "142010";
 	static String linkIdMpsPankow = "145812";
 	static String linkIdMpsReinickendorf = "59055";
@@ -142,9 +142,11 @@ public class Run_AbfallUtils {
 			int volumeGarbage;
 			if (count == garbageLinks.size()) {
 				volumeGarbage = garbagePerWeek - garbageCount;
-				garbageCount = 0;
+				if (volumeGarbage < 0)
+					volumeGarbage = 0;
+
 			} else {
-				volumeGarbage = (int) Math.ceil(link.getLength() * garbagePerWeek / distanceWithShipments);
+				volumeGarbage = (int) Math.ceil(link.getLength() / distanceWithShipments * garbagePerWeek);
 				count++;
 			}
 			double serviceTime = Math.ceil(((double) volumeGarbage) / maxWeightBigTrashcan) * serviceTimePerBigTrashcan;
@@ -158,17 +160,17 @@ public class Run_AbfallUtils {
 					.setDeliveryServiceTime(deliveryTime).build();
 			myCarrier.getShipments().add(shipment);
 			garbageCount = garbageCount + volumeGarbage;
-			allGarbage = allGarbage + (double) volumeGarbage / 1000;
+			allGarbage = allGarbage + volumeGarbage;
 			if (garbageDumpId.equals(Id.createLinkId(linkIdGruenauerStr)))
-				garbageGruenauerStr = garbageGruenauerStr + (double) volumeGarbage / 1000;
+				garbageGruenauerStr = garbageGruenauerStr + volumeGarbage;
 			if (garbageDumpId.equals(Id.createLinkId(linkIdMhkwRuhleben)))
-				garbageRuhleben = garbageRuhleben + (double) volumeGarbage / 1000;
+				garbageRuhleben = garbageRuhleben + volumeGarbage;
 			if (garbageDumpId.equals(Id.createLinkId(linkIdMpsPankow)))
-				garbagePankow = garbagePankow + (double) volumeGarbage / 1000;
+				garbagePankow = garbagePankow + volumeGarbage;
 			if (garbageDumpId.equals(Id.createLinkId(linkIdMpsReinickendorf)))
-				garbageReinickenD = garbageReinickenD + (double) volumeGarbage / 1000;
+				garbageReinickenD = garbageReinickenD + volumeGarbage;
 			if (garbageDumpId.equals(Id.createLinkId(linkIdUmladestationGradestrasse)))
-				garbageGradestr = garbageGradestr + (double) volumeGarbage / 1000;
+				garbageGradestr = garbageGradestr + volumeGarbage;
 		}
 		numberOfShipments = numberOfShipments + garbageLinks.size();
 
@@ -347,17 +349,17 @@ public class Run_AbfallUtils {
 		int vehiclesMalmoeer = 0;
 		int vehiclesNordring = 0;
 		int vehiclesGradestrasse = 0;
-		double sizeForckenbeck = 0;
-		double sizeMalmooer = 0;
-		double sizeNordring = 0;
-		double sizeGradestrasse = 0;
-		double allCollectedGarbage = 0;
+		int sizeForckenbeck = 0;
+		int sizeMalmooer = 0;
+		int sizeNordring = 0;
+		int sizeGradestrasse = 0;
+		int allCollectedGarbage = 0;
 		Collection<ScheduledTour> tours = myCarrier.getSelectedPlan().getScheduledTours();
 		Collection<CarrierShipment> shipments = myCarrier.getShipments();
-		HashMap<String, Double> shipmentSizes = new HashMap<String, Double>();
+		HashMap<String, Integer> shipmentSizes = new HashMap<String, Integer>();
 		for (CarrierShipment carrierShipment : shipments) {
 			String shipmentId = carrierShipment.getId().toString();
-			double shipmentSize = ((double) carrierShipment.getSize()) / 1000;
+			int shipmentSize = carrierShipment.getSize();
 			shipmentSizes.put(shipmentId, shipmentSize);
 		}
 		for (ScheduledTour scheduledTour : tours) {
@@ -402,25 +404,27 @@ public class Run_AbfallUtils {
 			writer = new FileWriter(file, true);
 			writer.write("Abholgebiete:\t\t\t\t\t\t\t\t\t\t\t\t" + areaForShipments.toString() + "\n");
 			writer.write("Wochentag:\t\t\t\t\t\t\t\t\t\t\t\t\t" + day + "\n\n");
-			writer.write("Die Summe des abzuholenden Mülls beträgt: \t\t\t\t\t" + Math.round(allGarbage) + " t\n\n");
+			writer.write("Die Summe des abzuholenden Mülls beträgt: \t\t\t\t\t"
+					+ /* Math.round */((double) allGarbage) / 1000 + " t\n\n");
 			writer.write("Anzahl der Abholstellen: \t\t\t\t\t\t\t\t\t" + numberOfShipments + "\n");
 			writer.write("Anzahl der Abholstellen ohne Abholung: \t\t\t\t\t\t" + noPickup + "\n\n");
 			writer.write("Anzahl der Muellfahrzeuge im Einsatz: \t\t\t\t\t\t"
 					+ myCarrier.getSelectedPlan().getScheduledTours().size() + "\t\tMenge gesamt:\t"
-					+ Math.round(allCollectedGarbage) + " t\n");
+					+ /* Math.round */((double)allCollectedGarbage)/1000 + " t\n");
 			writer.write("\t Anzahl aus dem Betriebshof Forckenbeckstrasse: \t\t\t" + vehiclesForckenbeck
-					+ "\t\t\tMenge:\t\t" + Math.round(sizeForckenbeck) + " t\n");
+					+ "\t\t\tMenge:\t\t" + /* Math.round */((double)sizeForckenbeck) / 1000 + " t\n");
 			writer.write("\t Anzahl aus dem Betriebshof Malmoeer Strasse: \t\t\t\t" + vehiclesMalmoeer
-					+ "\t\t\tMenge:\t\t" + Math.round(sizeMalmooer) + " t\n");
+					+ "\t\t\tMenge:\t\t" + /* Math.round */((double)sizeMalmooer) / 1000 + " t\n");
 			writer.write("\t Anzahl aus dem Betriebshof Nordring: \t\t\t\t\t\t" + vehiclesNordring + "\t\t\tMenge:\t\t"
-					+ Math.round(sizeNordring) + " t\n");
+					+ /* Math.round */((double)sizeNordring) / 1000 + " t\n");
 			writer.write("\t Anzahl aus dem Betriebshof Gradestraße: \t\t\t\t\t" + vehiclesGradestrasse
-					+ "\t\t\tMenge:\t\t" + Math.round(sizeGradestrasse) + " t\n\n");
-			writer.write("Anzuliefernde Menge (Soll):\tMHKW Ruhleben:\t\t\t\t\t" + garbageRuhleben + " t\n");
-			writer.write("\t\t\t\t\t\t\tMPS Pankow:\t\t\t\t\t\t" + garbagePankow + " t\n");
-			writer.write("\t\t\t\t\t\t\tMPS Reinickendorf:\t\t\t\t" + garbageReinickenD + " t\n");
-			writer.write("\t\t\t\t\t\t\tUmladestation Gradestrasse:\t\t" + garbageGradestr + " t\n");
-			writer.write("\t\t\t\t\t\t\tMA Gruenauer Str.:\t\t\t\t" + garbageGruenauerStr + " t\n\n");
+					+ "\t\t\tMenge:\t\t" + /* Math.round */((double)sizeGradestrasse) / 1000 + " t\n\n");
+			writer.write("Anzuliefernde Menge (Soll):\tMHKW Ruhleben:\t\t\t\t\t" + ((double) garbageRuhleben) / 1000
+					+ " t\n");
+			writer.write("\t\t\t\t\t\t\tMPS Pankow:\t\t\t\t\t\t" + ((double) garbagePankow) / 1000 + " t\n");
+			writer.write("\t\t\t\t\t\t\tMPS Reinickendorf:\t\t\t\t" + ((double) garbageReinickenD) / 1000 + " t\n");
+			writer.write("\t\t\t\t\t\t\tUmladestation Gradestrasse:\t\t" + ((double) garbageGradestr) / 1000 + " t\n");
+			writer.write("\t\t\t\t\t\t\tMA Gruenauer Str.:\t\t\t\t" + ((double) garbageGruenauerStr) / 1000 + " t\n\n");
 			writer.write("Kosten (Jsprit): \t\t\t\t\t\t\t\t\t\t\t" + (Math.round(costsJsprit)) + " €\n\n");
 			writer.write("Kosten (MatSim): \t\t\t\t\t\t\t\t\t\t\t"
 					+ ((-1) * Math.round(myCarrier.getSelectedPlan().getScore())) + " €\n");
