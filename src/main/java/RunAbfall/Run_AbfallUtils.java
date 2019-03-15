@@ -3,6 +3,8 @@ package RunAbfall;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -73,6 +75,8 @@ public class Run_AbfallUtils {
 	static String linkIdMpsReinickendorf = "59055";
 	static String linkIdUmladestationGradestrasse = "71781";
 	static String linkIdGruenauerStr = "97944";
+	static List<String> areaForShipments = new ArrayList<String>();
+
 
 	/**
 	 * Deletes the existing output file and sets the number of the last iteration
@@ -112,6 +116,7 @@ public class Run_AbfallUtils {
 		createShipmentsForCarrierII(garbageToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
 				distanceWithShipments, capacityTruck, garbageLinks, scenario, myCarrier, linkDumpId, carriers);
 		carriers.addCarrier(myCarrier);
+
 	}
 
 	/**
@@ -124,6 +129,7 @@ public class Run_AbfallUtils {
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		int garbageToCollect = 0;
+		Run_AbfallUtils.areaForShipments.addAll(areaForShipments);//TODO  testen
 		for (String area : areaForShipments) {
 			for (SimpleFeature simpleFeature : features) {
 				if (simpleFeature.getAttribute("Ortsteilna").equals(area)) {
@@ -139,12 +145,49 @@ public class Run_AbfallUtils {
 							}
 						}
 					}
-
 				}
 
 			}
 			createShipmentsForCarrierII(garbageToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
 					distanceWithShipments, capacityTruck, garbageLinks, scenario, myCarrier, dumpId, carriers);
+			distanceWithShipments = 0;
+			garbageLinks.clear();
+		}
+		carriers.addCarrier(myCarrier);
+	}
+
+	/**
+	 * @param
+	 */
+	public static void createShipmentsGarbagePerMeter(Collection<SimpleFeature> features, HashMap<String, Double> areaTest,
+			String day, HashMap<String, Id<Link>> garbageDumps, Scenario scenario,
+			Carriers carriers, Carrier myCarrier, int capacityTruck, Map<Id<Link>, ? extends Link> allLinks,
+			Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan, double serviceTimePerBigTrashcan) {
+		//areaForShipments = Arrays.asList();
+		Id<Link> dumpId = null;
+		double distanceWithShipments = 0;
+		for (String area : areaTest.keySet()) {
+			areaForShipments.add(area);
+			for (SimpleFeature simpleFeature : features) {
+				if (simpleFeature.getAttribute("Ortsteilna").equals(area)) {
+					dumpId = garbageDumps.get(simpleFeature.getAttribute("Mi-Ent"));
+					for (Link link : allLinks.values()) {
+						if (Id.createLinkId(simpleFeature.getAttribute("ID").toString()) == link.getId()) {
+							if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
+
+								garbageLinks.put(link.getId(), link);
+								distanceWithShipments = distanceWithShipments + link.getLength();
+
+							}
+						}
+					}
+
+				}
+
+			}
+			double garbagePerMeterToCollect = areaTest.get(area);
+			createShipmentsForCarrierI(garbagePerMeterToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
+					capacityTruck, garbageLinks, scenario, myCarrier, dumpId, carriers);
 			distanceWithShipments = 0;
 			garbageLinks.clear();
 		}
@@ -159,26 +202,26 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	public static void createShipmentsForCarrierI(double garbagePerMeterAndWeek, double volumeBigTrashcan,
+	private static void createShipmentsForCarrierI(double garbagePerMeterToCollect, double volumeBigTrashcan,
 			double serviceTimePerBigTrashcan, int capacityTruck, Map<Id<Link>, Link> garbageLinks, Scenario scenario,
-			Carrier myCarrier, String garbageDumpId, Carriers carriers) {
+			Carrier myCarrier, Id<Link> dumpId, Carriers carriers) {
 
 		for (Link link : garbageLinks.values()) {
 			double maxWeightBigTrashcan = volumeBigTrashcan * 0.1; // Umrechnung von Volumen [l] in Masse[kg]
-			int volumeGarbage = (int) Math.ceil(link.getLength() * garbagePerMeterAndWeek);
+			int volumeGarbage = (int) Math.ceil(link.getLength() * garbagePerMeterToCollect);
 			double serviceTime = Math.ceil(((double) volumeGarbage) / maxWeightBigTrashcan) * serviceTimePerBigTrashcan;
 			double deliveryTime = ((double) volumeGarbage / capacityTruck) * 45 * minuten;
 			CarrierShipment shipment = CarrierShipment.Builder
-					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
-							Id.createLinkId(garbageDumpId), volumeGarbage)
+					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(), (dumpId),
+							volumeGarbage)
 					.setPickupServiceTime(serviceTime)
 					.setPickupTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
 					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
 					.setDeliveryServiceTime(deliveryTime).build();
 			myCarrier.getShipments().add(shipment);
-			allGarbage = allGarbage + volumeGarbage;
+			countingGarbage(dumpId, volumeGarbage);
 		}
-		carriers.addCarrier(myCarrier);
+		numberOfShipments = numberOfShipments + garbageLinks.size();
 	}
 
 	/**
@@ -189,7 +232,7 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	private static void createShipmentsForCarrierII(int garbagePerWeek, double volumeBigTrashcan,
+	private static void createShipmentsForCarrierII(int garbageToCollect, double volumeBigTrashcan,
 			double serviceTimePerBigTrashcan, double distanceWithShipments, int capacityTruck,
 			Map<Id<Link>, Link> garbageLinks, Scenario scenario, Carrier myCarrier, Id<Link> garbageDumpId,
 			Carriers carriers) {
@@ -199,12 +242,12 @@ public class Run_AbfallUtils {
 			double maxWeightBigTrashcan = volumeBigTrashcan * 0.1; // Umrechnung von Volumen [l] in Masse[kg]
 			int volumeGarbage;
 			if (count == garbageLinks.size()) {
-				volumeGarbage = garbagePerWeek - garbageCount;
+				volumeGarbage = garbageToCollect - garbageCount;
 				if (volumeGarbage < 0)
 					volumeGarbage = 0;
 
 			} else {
-				volumeGarbage = (int) Math.ceil(link.getLength() / distanceWithShipments * garbagePerWeek);
+				volumeGarbage = (int) Math.ceil(link.getLength() / distanceWithShipments * garbageToCollect);
 				count++;
 			}
 			double serviceTime = Math.ceil(((double) volumeGarbage) / maxWeightBigTrashcan) * serviceTimePerBigTrashcan;
@@ -218,20 +261,27 @@ public class Run_AbfallUtils {
 					.setDeliveryServiceTime(deliveryTime).build();
 			myCarrier.getShipments().add(shipment);
 			garbageCount = garbageCount + volumeGarbage;
-			allGarbage = allGarbage + volumeGarbage;
-			if (garbageDumpId.equals(Id.createLinkId(linkIdGruenauerStr)))
-				garbageGruenauerStr = garbageGruenauerStr + volumeGarbage;
-			if (garbageDumpId.equals(Id.createLinkId(linkIdMhkwRuhleben)))
-				garbageRuhleben = garbageRuhleben + volumeGarbage;
-			if (garbageDumpId.equals(Id.createLinkId(linkIdMpsPankow)))
-				garbagePankow = garbagePankow + volumeGarbage;
-			if (garbageDumpId.equals(Id.createLinkId(linkIdMpsReinickendorf)))
-				garbageReinickenD = garbageReinickenD + volumeGarbage;
-			if (garbageDumpId.equals(Id.createLinkId(linkIdUmladestationGradestrasse)))
-				garbageGradestr = garbageGradestr + volumeGarbage;
+			countingGarbage(garbageDumpId, volumeGarbage);
 		}
 		numberOfShipments = numberOfShipments + garbageLinks.size();
 
+	}
+
+	/**
+	 * @param
+	 */
+	private static void countingGarbage(Id<Link> garbageDumpId, int volumeGarbage) {
+		allGarbage = allGarbage + volumeGarbage;
+		if (garbageDumpId.equals(Id.createLinkId(linkIdGruenauerStr)))
+			garbageGruenauerStr = garbageGruenauerStr + volumeGarbage;
+		if (garbageDumpId.equals(Id.createLinkId(linkIdMhkwRuhleben)))
+			garbageRuhleben = garbageRuhleben + volumeGarbage;
+		if (garbageDumpId.equals(Id.createLinkId(linkIdMpsPankow)))
+			garbagePankow = garbagePankow + volumeGarbage;
+		if (garbageDumpId.equals(Id.createLinkId(linkIdMpsReinickendorf)))
+			garbageReinickenD = garbageReinickenD + volumeGarbage;
+		if (garbageDumpId.equals(Id.createLinkId(linkIdUmladestationGradestrasse)))
+			garbageGradestr = garbageGradestr + volumeGarbage;
 	}
 
 	/**
@@ -543,7 +593,7 @@ public class Run_AbfallUtils {
 		file = new File(scenario.getConfig().controler().getOutputDirectory() + "/01_Zusammenfassung.txt");
 		try {
 			writer = new FileWriter(file, true);
-			writer.write("Abholgebiete:\t\t\t\t\t\t\t\t\t\t\t\t" + areaForShipments.toString() + "\n");
+			writer.write("Abholgebiete:\t\t\t\t\t\t\t\t\t\t\t\t" + Run_AbfallUtils.areaForShipments.toString() + "\n");
 			writer.write("Wochentag:\t\t\t\t\t\t\t\t\t\t\t\t\t" + day + "\n\n");
 			writer.write("Die Summe des abzuholenden Mülls beträgt: \t\t\t\t\t"
 					+ /* Math.round */((double) allGarbage) / 1000 + " t\n\n");
