@@ -70,38 +70,41 @@ public class Run_AbfallUtils {
 	static int garbageReinickenD = 0;
 	static int garbageGradestr = 0;
 	static int garbageGruenauerStr = 0;
-	static String linkIdMhkwRuhleben = "142010";
-	static String linkIdMpsPankow = "145812";
-	static String linkIdMpsReinickendorf = "59055";
-	static String linkIdUmladestationGradestrasse = "71781";
-	static String linkIdGruenauerStr = "97944";
-	static List<String> areaForShipments = new ArrayList<String>();
+	static String linkMhkwRuhleben = "142010";
+	static String linkMpsPankow = "145812";
+	static String linkMpsReinickendorf = "59055";
+	static String linkUmladestationGradestrasse = "71781";
+	static String linkGruenauerStr = "97944";
+	static List<String> districtsWithShipments = new ArrayList<String>();
 	static List<String> allDistrictsBerlin = new ArrayList<String>();
 	static HashMap<String, String> dataEnt = new HashMap<String, String>();
 
+	/**Creates a map of all districts, which are listed in the shapefile.
+	 * 
+	 */
 	private static void createMapDistrictsBerlin() {
 		allDistrictsBerlin = Arrays.asList("Mitte", "Moabit", "Hansaviertel", "Tiergarten", "Wedding", "Gesundbrunnen",
-				"Friedrichshain", "Kreuzberg", "Prenzlauer Berg", "Weißensee", "Blankenburg", "Heinersdorf", "Karow",
-				"Stadtrandsiedlung Malchow", "Pankow", "Blankenfelde", "Buch", "Französisch Buchholz",
-				"Niederschönhausen", "Rosenthal", "Wilhelmsruh", "Charlottenburg", "Wilmersdorf", "Schmargendorf",
+				"Friedrichshain", "Kreuzberg", "Prenzlauer Berg", "Weissensee", "Blankenburg", "Heinersdorf", "Karow",
+				"Stadtrandsiedlung Malchow", "Pankow", "Blankenfelde", "Buch", "Franzoesisch Buchholz",
+				"Niederschoenhausen", "Rosenthal", "Wilhelmsruh", "Charlottenburg", "Wilmersdorf", "Schmargendorf",
 				"Grunewald", "Westend", "Charlottenburg-Nord", "Halensee", "Spandau", "Haselhorst", "Siemensstadt",
 				"Staaken", "Gatow", "Kladow", "Hakenfelde", "Falkenhagener Feld", "Wilhelmstadt", "Steglitz",
-				"Lichterfelde", "Lankwitz", "Zehlendorf", "Dahlem", "Nikolassee", "Wannsee", "Schöneberg", "Friedenau",
-				"Tempelhof", "Mariendorf", "Marienfelde", "Lichtenrade", "Neukölln", "Britz", "Buckow", "Rudow",
-				"Gropiusstadt", "Alt-Treptow", "Plänterwald", "Baumschulenweg", "Johannisthal", "Niederschöneweide",
-				"Altglienicke", "Adlershof", "Bohnsdorf", "Oberschöneweide", "Köpenick", "Friedrichshagen", "Rahnsdorf",
-				"Grünau", "Müggelheim", "Schmöckwitz", "Marzahn", "Biesdorf", "Kaulsdorf", "Mahlsdorf", "Hellersdorf",
-				"Friedrichsfelde", "Karlshorst", "Lichtenberg", "Falkenberg", "Malchow", "Wartenberg",
-				"Neu-Hohenschönhausen", "Alt-Hohenschönhausen", "Fennpfuhl", "Rummelsburg", "Reinickendorf", "Tegel",
-				"Konradshöhe", "Heiligensee", "Frohnau", "Hermsdorf", "Waidmannslust", "Lübars", "Wittenau",
-				"Märkisches Viertel", "Borsigwalde");
+				"Lichterfelde", "Lankwitz", "Zehlendorf", "Dahlem", "Nikolassee", "Wannsee", "Schoeneberg", "Friedenau",
+				"Tempelhof", "Mariendorf", "Marienfelde", "Lichtenrade", "Neukoelln", "Britz", "Buckow", "Rudow",
+				"Gropiusstadt", "Alt-Treptow", "Plaenterwald", "Baumschulenweg", "Johannisthal", "Niederschoeneweide",
+				"Altglienicke", "Adlershof", "Bohnsdorf", "Oberschoeneweide", "Koepenick", "Friedrichshagen",
+				"Rahnsdorf", "Gruenau", "Mueggelheim", "Schmoeckwitz", "Marzahn", "Biesdorf", "Kaulsdorf", "Mahlsdorf",
+				"Hellersdorf", "Friedrichsfelde", "Karlshorst", "Lichtenberg", "Falkenberg", "Malchow", "Wartenberg",
+				"Neu-Hohenschoenhausen", "Alt-Hohenschoenhausen", "Fennpfuhl", "Rummelsburg", "Reinickendorf", "Tegel",
+				"Konradshoehe", "Heiligensee", "Frohnau", "Hermsdorf", "Waidmannslust", "Luebars", "Wittenau",
+				"Maerkisches Viertel", "Borsigwalde");
 	}
 
 	/**
 	 * Creates a map for getting the name of the attribute, where you can find the
 	 * dump for the selected day of pickup.
 	 */
-	public static void craeteMapEnt() {
+	public static void createMapEnt() {
 		dataEnt.put("MO", "Mo-Ent");
 		dataEnt.put("DI", "Di-Ent");
 		dataEnt.put("MI", "Mi-Ent");
@@ -117,11 +120,11 @@ public class Run_AbfallUtils {
 	public static HashMap<String, Id<Link>> createDumpMap() {
 		HashMap<String, Id<Link>> garbageDumps = new HashMap<String, Id<Link>>();
 
-		garbageDumps.put("Ruhleben", Id.createLinkId(linkIdMhkwRuhleben));
-		garbageDumps.put("Pankow", Id.createLinkId(linkIdMpsPankow));
-		garbageDumps.put("Gradestr", Id.createLinkId(linkIdUmladestationGradestrasse));
-		garbageDumps.put("ReinickenD", Id.createLinkId(linkIdMpsReinickendorf));
-		garbageDumps.put("GruenauerStr", Id.createLinkId(linkIdGruenauerStr));
+		garbageDumps.put("Ruhleben", Id.createLinkId(linkMhkwRuhleben));
+		garbageDumps.put("Pankow", Id.createLinkId(linkMpsPankow));
+		garbageDumps.put("Gradestr", Id.createLinkId(linkUmladestationGradestrasse));
+		garbageDumps.put("ReinickenD", Id.createLinkId(linkMpsReinickendorf));
+		garbageDumps.put("GruenauerStr", Id.createLinkId(linkGruenauerStr));
 		return garbageDumps;
 	}
 
@@ -202,7 +205,7 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	public static void createShipmentsForSelectedArea(List<String> areaForShipments, String day,
+	public static void createShipmentsForSelectedArea(List<String> districtsForShipments, String day,
 			HashMap<String, Id<Link>> garbageDumps, Scenario scenario, Carriers carriers, Carrier myCarrier,
 			int capacityTruck, Map<Id<Link>, ? extends Link> allLinks, Map<Id<Link>, Link> garbageLinks,
 			Collection<SimpleFeature> features, double volumeBigTrashcan, double serviceTimePerBigTrashcan) {
@@ -210,12 +213,12 @@ public class Run_AbfallUtils {
 		double distanceWithShipments = 0;
 		int garbageToCollect = 0;
 		int error = 0;
-		Run_AbfallUtils.areaForShipments.addAll(areaForShipments);
-		for (String area : areaForShipments) {
+		createMapEnt();
+		for (String district : districtsForShipments) {
 			for (SimpleFeature simpleFeature : features) {
-				if (simpleFeature.getAttribute(day) != null) {
-					error = 1;
-					if (simpleFeature.getAttribute("Ortsteilna").equals(area)) {
+				if (simpleFeature.getAttribute("Ortsteilna").equals(district)) {
+					if ((double) simpleFeature.getAttribute(day) > 0) {
+						error = 1;
 						garbageToCollect = (int) ((double) simpleFeature.getAttribute(day) * tonnen);
 						dumpId = garbageDumps.get(simpleFeature.getAttribute(dataEnt.get(day)));
 						for (Link link : allLinks.values()) {
@@ -232,9 +235,11 @@ public class Run_AbfallUtils {
 				}
 
 			}
-			if (error == 1)
+			if (error == 1) {
+				districtsWithShipments.add(district);
 				createShipmentsForCarrierII(garbageToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
 						distanceWithShipments, capacityTruck, garbageLinks, scenario, myCarrier, dumpId, carriers);
+			}
 			distanceWithShipments = 0;
 			garbageLinks.clear();
 			error = 0;
@@ -250,25 +255,26 @@ public class Run_AbfallUtils {
 	 * @param
 	 */
 	public static void createShipmentsGarbagePerMeter(Collection<SimpleFeature> features,
-			HashMap<String, Double> areaTest, String day, HashMap<String, Id<Link>> garbageDumps, Scenario scenario,
-			Carriers carriers, Carrier myCarrier, int capacityTruck, Map<Id<Link>, ? extends Link> allLinks,
-			Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan, double serviceTimePerBigTrashcan) {
+			HashMap<String, Double> areasForShipmentPerMeterMap, String day, HashMap<String, Id<Link>> garbageDumps,
+			Scenario scenario, Carriers carriers, Carrier myCarrier, int capacityTruck,
+			Map<Id<Link>, ? extends Link> allLinks, Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan,
+			double serviceTimePerBigTrashcan) {
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
-		for (String area : areaTest.keySet()) {
-			areaForShipments.add(area); // TODO nur wenn area Abholung hat?
+		createMapEnt();
+		for (String area : areasForShipmentPerMeterMap.keySet()) {
+			districtsWithShipments.add(area); // TODO nur wenn area Abholung hat?
 			for (SimpleFeature simpleFeature : features) {
 				if (simpleFeature.getAttribute("Ortsteilna").equals(area)) {
-					if (simpleFeature.getAttribute(dataEnt.get(day)) != null) {
+					if ((double) simpleFeature.getAttribute(dataEnt.get(day)) > 0) {
 						dumpId = garbageDumps.get(simpleFeature.getAttribute(dataEnt.get(day)));
 						for (Link link : allLinks.values()) {
 							if (Id.createLinkId(simpleFeature.getAttribute("ID").toString()) == link.getId()) {
 								if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
-
 									garbageLinks.put(link.getId(), link);
 									distanceWithShipments = distanceWithShipments + link.getLength();
-
 								}
+
 							}
 						}
 					}
@@ -276,7 +282,7 @@ public class Run_AbfallUtils {
 				}
 
 			}
-			double garbagePerMeterToCollect = areaTest.get(area);
+			double garbagePerMeterToCollect = areasForShipmentPerMeterMap.get(area);
 			createShipmentsForCarrierI(garbagePerMeterToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
 					capacityTruck, garbageLinks, scenario, myCarrier, dumpId, carriers);
 			distanceWithShipments = 0;
@@ -299,11 +305,12 @@ public class Run_AbfallUtils {
 			double serviceTimePerBigTrashcan) {
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
+		createMapEnt();
 		for (String area : areasForShipmentPerVolumeMap.keySet()) {
-			areaForShipments.add(area); // TODO nur wenn area Abholung hat?
+			districtsWithShipments.add(area); // TODO nur wenn area Abholung hat?
 			for (SimpleFeature simpleFeature : features) {
 				if (simpleFeature.getAttribute("Ortsteilna").equals(area)) {
-					if (simpleFeature.getAttribute(dataEnt.get(day)) != null) {
+					if ((double) simpleFeature.getAttribute(dataEnt.get(day)) > 0) {
 						dumpId = garbageDumps.get(simpleFeature.getAttribute(dataEnt.get(day)));
 						for (Link link : allLinks.values()) {
 							if (Id.createLinkId(simpleFeature.getAttribute("ID").toString()) == link.getId()) {
@@ -344,11 +351,12 @@ public class Run_AbfallUtils {
 		int garbageToCollect = 0;
 		int error = 0;
 		createMapDistrictsBerlin();
+		createMapEnt();
 		for (String district : allDistrictsBerlin) {
 			for (SimpleFeature simpleFeature : features) {
-				if (simpleFeature.getAttribute(day) != null) {
-					error = 1;
-					if (simpleFeature.getAttribute("Ortsteilna").equals(district)) {
+				if (simpleFeature.getAttribute("Ortsteilna").equals(district)) {
+					if ((double) simpleFeature.getAttribute(day) > 0) {
+						error = 1;
 						garbageToCollect = (int) ((double) simpleFeature.getAttribute(day) * tonnen);
 						dumpId = garbageDumps.get(simpleFeature.getAttribute(dataEnt.get(day)));
 						for (Link link : allLinks.values()) {
@@ -366,7 +374,7 @@ public class Run_AbfallUtils {
 
 			}
 			if (error == 1) {
-				areaForShipments.add(district);
+				districtsWithShipments.add(district);
 				createShipmentsForCarrierII(garbageToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
 						distanceWithShipments, capacityTruck, garbageLinks, scenario, myCarrier, dumpId, carriers);
 			}
@@ -420,16 +428,21 @@ public class Run_AbfallUtils {
 			Carriers carriers) {
 		int count = 1;
 		int garbageCount = 0;
+		double roundingError = 0;
 		for (Link link : garbageLinks.values()) {
 			double maxWeightBigTrashcan = volumeBigTrashcan * 0.1; // Umrechnung von Volumen [l] in Masse[kg]
 			int volumeGarbage;
 			if (count == garbageLinks.size()) {
 				volumeGarbage = garbageToCollect - garbageCount;
-				if (volumeGarbage < 0)
-					volumeGarbage = 0;
 
 			} else {
 				volumeGarbage = (int) Math.ceil(link.getLength() / distanceWithShipments * garbageToCollect);
+				roundingError = roundingError
+						+ (volumeGarbage - (link.getLength() / distanceWithShipments * garbageToCollect));
+				if (roundingError > 1) {
+					volumeGarbage = volumeGarbage - 1;
+					roundingError = roundingError - 1;
+				}
 				count++;
 			}
 			double serviceTime = Math.ceil(((double) volumeGarbage) / maxWeightBigTrashcan) * serviceTimePerBigTrashcan;
@@ -457,15 +470,15 @@ public class Run_AbfallUtils {
 	 */
 	private static void countingGarbage(Id<Link> garbageDumpId, int volumeGarbage) {
 		allGarbage = allGarbage + volumeGarbage;
-		if (garbageDumpId.equals(Id.createLinkId(linkIdGruenauerStr)))
+		if (garbageDumpId.equals(Id.createLinkId(linkGruenauerStr)))
 			garbageGruenauerStr = garbageGruenauerStr + volumeGarbage;
-		if (garbageDumpId.equals(Id.createLinkId(linkIdMhkwRuhleben)))
+		if (garbageDumpId.equals(Id.createLinkId(linkMhkwRuhleben)))
 			garbageRuhleben = garbageRuhleben + volumeGarbage;
-		if (garbageDumpId.equals(Id.createLinkId(linkIdMpsPankow)))
+		if (garbageDumpId.equals(Id.createLinkId(linkMpsPankow)))
 			garbagePankow = garbagePankow + volumeGarbage;
-		if (garbageDumpId.equals(Id.createLinkId(linkIdMpsReinickendorf)))
+		if (garbageDumpId.equals(Id.createLinkId(linkMpsReinickendorf)))
 			garbageReinickenD = garbageReinickenD + volumeGarbage;
-		if (garbageDumpId.equals(Id.createLinkId(linkIdUmladestationGradestrasse)))
+		if (garbageDumpId.equals(Id.createLinkId(linkUmladestationGradestrasse)))
 			garbageGradestr = garbageGradestr + volumeGarbage;
 	}
 
@@ -771,7 +784,8 @@ public class Run_AbfallUtils {
 		file = new File(scenario.getConfig().controler().getOutputDirectory() + "/01_Zusammenfassung.txt");
 		try {
 			writer = new FileWriter(file, true);
-			writer.write("Abholgebiete:\t\t\t\t\t\t\t\t\t\t\t\t" + Run_AbfallUtils.areaForShipments.toString() + "\n");
+			writer.write("Anzahl der Abholgebiete:\t\t\t\t\t\t\t\t\t" + districtsWithShipments.size() + "\n");
+			writer.write("Abholgebiete:\t\t\t\t\t\t\t\t\t\t\t\t" + districtsWithShipments.toString() + "\n");
 			writer.write("Wochentag:\t\t\t\t\t\t\t\t\t\t\t\t\t" + day + "\n\n");
 			writer.write("Die Summe des abzuholenden Mülls beträgt: \t\t\t\t\t"
 					+ /* Math.round */((double) allGarbage) / 1000 + " t\n\n");
@@ -811,5 +825,38 @@ public class Run_AbfallUtils {
 			System.out.println("");
 			System.out.println("Abfall nicht komplett eingesammelt!");
 		}
+	}
+
+	/**
+	 * Creates an output of a summary of important information of the created
+	 * shipments
+	 * 
+	 */
+	public static void outputSummaryShipments(Scenario scenario, String day) {
+
+		FileWriter writer;
+		File file;
+		file = new File(scenario.getConfig().controler().getOutputDirectory() + "/01_ZusammenfassungShipments.txt");
+		try {
+			writer = new FileWriter(file, true);
+			writer.write("Anzahl der Abholgebiete:\t\t\t\t\t\t\t\t\t" + districtsWithShipments.size() + "\n");
+			writer.write("Abholgebiete:\t\t\t\t\t\t\t\t\t\t\t\t" + districtsWithShipments.toString() + "\n");
+			writer.write("Wochentag:\t\t\t\t\t\t\t\t\t\t\t\t\t" + day + "\n\n");
+			writer.write(
+					"Die Summe des abzuholenden Mülls beträgt: \t\t\t\t\t" + ((double) allGarbage) / 1000 + " t\n\n");
+			writer.write("Anzahl der Abholstellen: \t\t\t\t\t\t\t\t\t" + numberOfShipments + "\n\n");
+			writer.write("Anzuliefernde Menge (Soll):\tMHKW Ruhleben:\t\t\t\t\t" + ((double) garbageRuhleben) / 1000
+					+ " t\n");
+			writer.write("\t\t\t\t\t\t\tMPS Pankow:\t\t\t\t\t\t" + ((double) garbagePankow) / 1000 + " t\n");
+			writer.write("\t\t\t\t\t\t\tMPS Reinickendorf:\t\t\t\t" + ((double) garbageReinickenD) / 1000 + " t\n");
+			writer.write("\t\t\t\t\t\t\tUmladestation Gradestrasse:\t\t" + ((double) garbageGradestr) / 1000 + " t\n");
+			writer.write("\t\t\t\t\t\t\tMA Gruenauer Str.:\t\t\t\t" + ((double) garbageGruenauerStr) / 1000 + " t\n\n");
+
+			writer.flush();
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 }
