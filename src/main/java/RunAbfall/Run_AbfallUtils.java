@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -75,6 +76,54 @@ public class Run_AbfallUtils {
 	static String linkIdUmladestationGradestrasse = "71781";
 	static String linkIdGruenauerStr = "97944";
 	static List<String> areaForShipments = new ArrayList<String>();
+	static List<String> allDistrictsBerlin = new ArrayList<String>();
+	static HashMap<String, String> dataEnt = new HashMap<String, String>();
+
+	private static void createMapDistrictsBerlin() {
+		allDistrictsBerlin = Arrays.asList("Mitte", "Moabit", "Hansaviertel", "Tiergarten", "Wedding", "Gesundbrunnen",
+				"Friedrichshain", "Kreuzberg", "Prenzlauer Berg", "Weißensee", "Blankenburg", "Heinersdorf", "Karow",
+				"Stadtrandsiedlung Malchow", "Pankow", "Blankenfelde", "Buch", "Französisch Buchholz",
+				"Niederschönhausen", "Rosenthal", "Wilhelmsruh", "Charlottenburg", "Wilmersdorf", "Schmargendorf",
+				"Grunewald", "Westend", "Charlottenburg-Nord", "Halensee", "Spandau", "Haselhorst", "Siemensstadt",
+				"Staaken", "Gatow", "Kladow", "Hakenfelde", "Falkenhagener Feld", "Wilhelmstadt", "Steglitz",
+				"Lichterfelde", "Lankwitz", "Zehlendorf", "Dahlem", "Nikolassee", "Wannsee", "Schöneberg", "Friedenau",
+				"Tempelhof", "Mariendorf", "Marienfelde", "Lichtenrade", "Neukölln", "Britz", "Buckow", "Rudow",
+				"Gropiusstadt", "Alt-Treptow", "Plänterwald", "Baumschulenweg", "Johannisthal", "Niederschöneweide",
+				"Altglienicke", "Adlershof", "Bohnsdorf", "Oberschöneweide", "Köpenick", "Friedrichshagen", "Rahnsdorf",
+				"Grünau", "Müggelheim", "Schmöckwitz", "Marzahn", "Biesdorf", "Kaulsdorf", "Mahlsdorf", "Hellersdorf",
+				"Friedrichsfelde", "Karlshorst", "Lichtenberg", "Falkenberg", "Malchow", "Wartenberg",
+				"Neu-Hohenschönhausen", "Alt-Hohenschönhausen", "Fennpfuhl", "Rummelsburg", "Reinickendorf", "Tegel",
+				"Konradshöhe", "Heiligensee", "Frohnau", "Hermsdorf", "Waidmannslust", "Lübars", "Wittenau",
+				"Märkisches Viertel", "Borsigwalde");
+	}
+
+	/**
+	 * Creates a map for getting the name of the attribute, where you can find the
+	 * dump for the selected day of pickup.
+	 */
+	public static void craeteMapEnt() {
+		dataEnt.put("MO", "Mo-Ent");
+		dataEnt.put("DI", "Di-Ent");
+		dataEnt.put("MI", "Mi-Ent");
+		dataEnt.put("DO", "Do-Ent");
+		dataEnt.put("FR", "Fr-Ent");
+	}
+
+	/**
+	 * Creates a Map with the 5 dumps in Berlin.
+	 * 
+	 * @return
+	 */
+	public static HashMap<String, Id<Link>> createDumpMap() {
+		HashMap<String, Id<Link>> garbageDumps = new HashMap<String, Id<Link>>();
+
+		garbageDumps.put("Ruhleben", Id.createLinkId(linkIdMhkwRuhleben));
+		garbageDumps.put("Pankow", Id.createLinkId(linkIdMpsPankow));
+		garbageDumps.put("Gradestr", Id.createLinkId(linkIdUmladestationGradestrasse));
+		garbageDumps.put("ReinickenD", Id.createLinkId(linkIdMpsReinickendorf));
+		garbageDumps.put("GruenauerStr", Id.createLinkId(linkIdGruenauerStr));
+		return garbageDumps;
+	}
 
 	/**
 	 * Deletes the existing output file and sets the number of the last iteration
@@ -98,6 +147,9 @@ public class Run_AbfallUtils {
 	}
 
 	/**
+	 * Creates shipments for the chessboard network with the input of the volume
+	 * [kg] garbageToCollect
+	 * 
 	 * @param
 	 */
 	public static void createShipmentsForChessboardI(int garbageToCollect, Map<Id<Link>, ? extends Link> allLinks,
@@ -118,6 +170,10 @@ public class Run_AbfallUtils {
 	}
 
 	/**
+	 * Creates shipments for the chessboard network with the input of the volume
+	 * [kg] garbagePerMeterToCollect. So every meter of the network gets this volume
+	 * of the garbage.
+	 * 
 	 * @param
 	 */
 	public static void createShipmentsForChessboardII(double garbagePerMeterToCollect,
@@ -139,6 +195,11 @@ public class Run_AbfallUtils {
 	}
 
 	/**
+	 * Creates Shipments for the selected areas for the selected weekday. The needed
+	 * data is part of the read shapefile. There are informations about the volume
+	 * of garbageToCollect for every day and the dump where the garbage have to
+	 * bring to.
+	 * 
 	 * @param
 	 */
 	public static void createShipmentsForSelectedArea(List<String> areaForShipments, String day,
@@ -148,55 +209,66 @@ public class Run_AbfallUtils {
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		int garbageToCollect = 0;
+		int error = 0;
 		Run_AbfallUtils.areaForShipments.addAll(areaForShipments);
 		for (String area : areaForShipments) {
 			for (SimpleFeature simpleFeature : features) {
-				if (simpleFeature.getAttribute("Ortsteilna").equals(area)) {
-					garbageToCollect = (int) ((double) simpleFeature.getAttribute(day) * tonnen);
-					dumpId = garbageDumps.get(simpleFeature.getAttribute("Mi-Ent"));
-					for (Link link : allLinks.values()) {
-						if (Id.createLinkId(simpleFeature.getAttribute("ID").toString()) == link.getId()) {
-							if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
+				if (simpleFeature.getAttribute(day) != null) {
+					error = 1;
+					if (simpleFeature.getAttribute("Ortsteilna").equals(area)) {
+						garbageToCollect = (int) ((double) simpleFeature.getAttribute(day) * tonnen);
+						dumpId = garbageDumps.get(simpleFeature.getAttribute(dataEnt.get(day)));
+						for (Link link : allLinks.values()) {
+							if (Id.createLinkId(simpleFeature.getAttribute("ID").toString()) == link.getId()) {
+								if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
 
-								garbageLinks.put(link.getId(), link);
-								distanceWithShipments = distanceWithShipments + link.getLength();
+									garbageLinks.put(link.getId(), link);
+									distanceWithShipments = distanceWithShipments + link.getLength();
 
+								}
 							}
 						}
 					}
 				}
 
 			}
-			createShipmentsForCarrierII(garbageToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
-					distanceWithShipments, capacityTruck, garbageLinks, scenario, myCarrier, dumpId, carriers);
+			if (error == 1)
+				createShipmentsForCarrierII(garbageToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
+						distanceWithShipments, capacityTruck, garbageLinks, scenario, myCarrier, dumpId, carriers);
 			distanceWithShipments = 0;
 			garbageLinks.clear();
+			error = 0;
 		}
 		carriers.addCarrier(myCarrier);
 	}
 
 	/**
+	 * Creates Shipments for the selected areas for the selected weekday. You have
+	 * to select the areas and for every area the garbage volume per meter street.
+	 * The information about the dump is given in the shapefile.
+	 * 
 	 * @param
 	 */
 	public static void createShipmentsGarbagePerMeter(Collection<SimpleFeature> features,
 			HashMap<String, Double> areaTest, String day, HashMap<String, Id<Link>> garbageDumps, Scenario scenario,
 			Carriers carriers, Carrier myCarrier, int capacityTruck, Map<Id<Link>, ? extends Link> allLinks,
 			Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan, double serviceTimePerBigTrashcan) {
-		// areaForShipments = Arrays.asList();
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		for (String area : areaTest.keySet()) {
-			areaForShipments.add(area);
+			areaForShipments.add(area); // TODO nur wenn area Abholung hat?
 			for (SimpleFeature simpleFeature : features) {
 				if (simpleFeature.getAttribute("Ortsteilna").equals(area)) {
-					dumpId = garbageDumps.get(simpleFeature.getAttribute("Mi-Ent"));
-					for (Link link : allLinks.values()) {
-						if (Id.createLinkId(simpleFeature.getAttribute("ID").toString()) == link.getId()) {
-							if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
+					if (simpleFeature.getAttribute(dataEnt.get(day)) != null) {
+						dumpId = garbageDumps.get(simpleFeature.getAttribute(dataEnt.get(day)));
+						for (Link link : allLinks.values()) {
+							if (Id.createLinkId(simpleFeature.getAttribute("ID").toString()) == link.getId()) {
+								if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
 
-								garbageLinks.put(link.getId(), link);
-								distanceWithShipments = distanceWithShipments + link.getLength();
+									garbageLinks.put(link.getId(), link);
+									distanceWithShipments = distanceWithShipments + link.getLength();
 
+								}
 							}
 						}
 					}
@@ -214,10 +286,101 @@ public class Run_AbfallUtils {
 	}
 
 	/**
-	 * Creates a Shipment for every link, ads all shipments to myCarrier and ads
-	 * myCarrier to carriers. The volumeGarbage is in garbage per meter and week. So
-	 * the volumeGarbage of every shipment depends of the input
-	 * garbagePerMeterAndWeek.
+	 * Creates Shipments for Berlin for the selected weekday. You have to select the
+	 * areas and for every area the garbage volume which should be select in this
+	 * area. The information about the dump is given in the shapefile.
+	 * 
+	 * @param
+	 */
+	public static void createShipmentsGarbagePerVolume(Collection<SimpleFeature> features,
+			HashMap<String, Integer> areasForShipmentPerVolumeMap, String day, HashMap<String, Id<Link>> garbageDumps,
+			Scenario scenario, Carriers carriers, Carrier myCarrier, int capacityTruck,
+			Map<Id<Link>, ? extends Link> allLinks, Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan,
+			double serviceTimePerBigTrashcan) {
+		Id<Link> dumpId = null;
+		double distanceWithShipments = 0;
+		for (String area : areasForShipmentPerVolumeMap.keySet()) {
+			areaForShipments.add(area); // TODO nur wenn area Abholung hat?
+			for (SimpleFeature simpleFeature : features) {
+				if (simpleFeature.getAttribute("Ortsteilna").equals(area)) {
+					if (simpleFeature.getAttribute(dataEnt.get(day)) != null) {
+						dumpId = garbageDumps.get(simpleFeature.getAttribute(dataEnt.get(day)));
+						for (Link link : allLinks.values()) {
+							if (Id.createLinkId(simpleFeature.getAttribute("ID").toString()) == link.getId()) {
+								if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
+
+									garbageLinks.put(link.getId(), link);
+									distanceWithShipments = distanceWithShipments + link.getLength();
+
+								}
+							}
+						}
+					}
+
+				}
+
+			}
+			int garbageVolumeToCollect = areasForShipmentPerVolumeMap.get(area);
+			createShipmentsForCarrierII(garbageVolumeToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
+					distanceWithShipments, capacityTruck, garbageLinks, scenario, myCarrier, dumpId, carriers);
+			distanceWithShipments = 0;
+			garbageLinks.clear();
+		}
+		carriers.addCarrier(myCarrier);
+	}
+
+	/**
+	 * Creates the shipments for all districts where the garbage will be picked up
+	 * at the selected day.
+	 * 
+	 * @param
+	 */
+	public static void createShipmentsForSelectedDay(String day, HashMap<String, Id<Link>> garbageDumps,
+			Scenario scenario, Carriers carriers, Carrier myCarrier, int capacityTruck,
+			Map<Id<Link>, ? extends Link> allLinks, Map<Id<Link>, Link> garbageLinks,
+			Collection<SimpleFeature> features, double volumeBigTrashcan, double serviceTimePerBigTrashcan) {
+		Id<Link> dumpId = null;
+		double distanceWithShipments = 0;
+		int garbageToCollect = 0;
+		int error = 0;
+		createMapDistrictsBerlin();
+		for (String district : allDistrictsBerlin) {
+			for (SimpleFeature simpleFeature : features) {
+				if (simpleFeature.getAttribute(day) != null) {
+					error = 1;
+					if (simpleFeature.getAttribute("Ortsteilna").equals(district)) {
+						garbageToCollect = (int) ((double) simpleFeature.getAttribute(day) * tonnen);
+						dumpId = garbageDumps.get(simpleFeature.getAttribute(dataEnt.get(day)));
+						for (Link link : allLinks.values()) {
+							if (Id.createLinkId(simpleFeature.getAttribute("ID").toString()) == link.getId()) {
+								if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
+
+									garbageLinks.put(link.getId(), link);
+									distanceWithShipments = distanceWithShipments + link.getLength();
+
+								}
+							}
+						}
+					}
+				}
+
+			}
+			if (error == 1) {
+				areaForShipments.add(district);
+				createShipmentsForCarrierII(garbageToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
+						distanceWithShipments, capacityTruck, garbageLinks, scenario, myCarrier, dumpId, carriers);
+			}
+			distanceWithShipments = 0;
+			garbageLinks.clear();
+			error = 0;
+		}
+		carriers.addCarrier(myCarrier);
+	}
+
+	/**
+	 * Creates a Shipment for every garbagelink and ads all shipments to myCarrier.
+	 * The volumeGarbage is in garbage per meter. So the volumeGarbage of every
+	 * shipment depends of the input garbagePerMeterToCollect.
 	 * 
 	 * @param
 	 */
@@ -245,7 +408,7 @@ public class Run_AbfallUtils {
 
 	/**
 	 * Creates a Shipment for every link, ads all shipments to myCarrier and ads
-	 * myCarrier to carriers. The volumeGarbage is in garbage per week. So the
+	 * myCarrier to carriers. The volumeGarbage is in garbageToCollect [kg]. So the
 	 * volumeGarbage of every shipment depends of the sum of all lengths from links
 	 * with shipments.
 	 * 
@@ -287,6 +450,9 @@ public class Run_AbfallUtils {
 	}
 
 	/**
+	 * This method is counting the garbage for every different dump and the total
+	 * volume of garbage, which has to be collected.
+	 * 
 	 * @param
 	 */
 	private static void countingGarbage(Id<Link> garbageDumpId, int volumeGarbage) {
@@ -347,20 +513,9 @@ public class Run_AbfallUtils {
 	}
 
 	/**
-	 * @return
-	 */
-	public static HashMap<String, Id<Link>> createDumpMap() {
-		HashMap<String, Id<Link>> garbageDumps = new HashMap<String, Id<Link>>();
-
-		garbageDumps.put("Ruhleben", Id.createLinkId(linkIdMhkwRuhleben));
-		garbageDumps.put("Pankow", Id.createLinkId(linkIdMpsPankow));
-		garbageDumps.put("Gradestr", Id.createLinkId(linkIdUmladestationGradestrasse));
-		garbageDumps.put("ReinickenD", Id.createLinkId(linkIdMpsReinickendorf));
-		garbageDumps.put("GruenauerStr", Id.createLinkId(linkIdGruenauerStr));
-		return garbageDumps;
-	}
-
-	/**
+	 * Creates the vehicle at the depot, ads this vehicle to the carriers and sets
+	 * the capabilities. This method is for the Chessboard network with one depot.
+	 * 
 	 * @param
 	 */
 	public static void createCarriersForChessboard(String linkDepot, String vehicleNameDepot, Carriers carriers,
@@ -379,6 +534,10 @@ public class Run_AbfallUtils {
 	}
 
 	/**
+	 * Creates the vehicles at the depots, ads this vehicles to the carriers and
+	 * sets the capabilities. This method is for the Berlin network and creates the
+	 * vehicles for the 4 different depots.
+	 * 
 	 * @param
 	 */
 	public static void createCarriersBerlin(Carriers carriers, Carrier myCarrier, CarrierVehicleType carrierVehType,
