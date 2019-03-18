@@ -66,15 +66,15 @@ public class Run_Abfall {
 
 		switch (netzwerkWahl) {
 		case originalChessboard:
-			config.controler().setOutputDirectory("output/original_Chessboard/02_InfiniteSize");
+			config.controler().setOutputDirectory("output/original_Chessboard/01_FiniteSize");
 			config.network().setInputFile(original_Chessboard);
 			break;
 		case modifiedChessboard:
-			config.controler().setOutputDirectory("output/modified_Chessboard/07_InfiniteSize_newClassStyle");
+			config.controler().setOutputDirectory("output/modified_Chessboard/02_InfiniteSize");
 			config.network().setInputFile(modified_Chessboard);
 			break;
 		case berlinNetwork:
-			config.controler().setOutputDirectory("output/Berlin/11_InfiniteSize_4Carrier");
+			config.controler().setOutputDirectory("output/Berlin/05_InfiniteSize_4Carrier");
 			config.network().setInputFile(berlin);
 			break;
 		default:
@@ -92,11 +92,9 @@ public class Run_Abfall {
 		Carrier bsrGradestrasse = CarrierImpl.newInstance(Id.create("BSR_Gradestrasse", Carrier.class));
 		Carrier carrierChessboard = CarrierImpl.newInstance(Id.create("Carrier_Chessboard", Carrier.class));
 		carrierMap.put("Nordring", bsrNordring);
-		carrierMap.put("MalmoeerStr",bsrMalmoeer);
+		carrierMap.put("MalmoeerStr", bsrMalmoeer);
 		carrierMap.put("Forckenbeck", bsrForckenbeck);
 		carrierMap.put("Gradestrasse", bsrGradestrasse);
-		
-		
 
 		// create a garbage truck type
 		String vehicleTypeId = "TruckType1";
@@ -143,40 +141,41 @@ public class Run_Abfall {
 			fleetSize = FleetSize.INFINITE;
 			Run_AbfallUtils.createCarriersForChessboard(linkDepot, vehicleIdDepot, carriers, carrierMap, carrierVehType,
 					vehicleTypes, fleetSize);
+			Run_AbfallUtils.outputSummaryShipments(scenario, day);
 			break;
 		case berlinSelectedDistricts:
-			List<String>districtsForShipments = Arrays.asList("Malchow","Hansaviertel");
+			List<String> districtsForShipments = Arrays.asList("Malchow", "Wilhelmsruh");
 			day = "MI";
 			Run_AbfallUtils.createShipmentsForSelectedArea(districtsForShipments, day, garbageDumps, scenario, carriers,
 					carrierMap, capacityTruck, allLinks, garbageLinks, features, volumeBigTrashcan,
 					serviceTimePerBigTrashcan);
 			fleetSize = FleetSize.INFINITE;
 			Run_AbfallUtils.createCarriersBerlin(carriers, carrierMap, carrierVehType, vehicleTypes, fleetSize);
-	//		Run_AbfallUtils.outputSummaryShipments(scenario, day);
+			Run_AbfallUtils.outputSummaryShipments(scenario, day);
 			break;
 		case perMeter:
 			HashMap<String, Double> areasForShipmentPerMeterMap = new HashMap<String, Double>();
 			areasForShipmentPerMeterMap.put("Malchow", 1.04);
-		//	areasForShipmentPerMeterMap.put("Hansaviertel", 3.04);
+			// areasForShipmentPerMeterMap.put("Hansaviertel", 3.04);
 			day = "MI";
 			Run_AbfallUtils.createShipmentsGarbagePerMeter(features, areasForShipmentPerMeterMap, day, garbageDumps,
 					scenario, carriers, carrierMap, capacityTruck, allLinks, garbageLinks, volumeBigTrashcan,
 					serviceTimePerBigTrashcan);
 			fleetSize = FleetSize.INFINITE;
 			Run_AbfallUtils.createCarriersBerlin(carriers, carrierMap, carrierVehType, vehicleTypes, fleetSize);
-	//		Run_AbfallUtils.outputSummaryShipments(scenario, day);
+			Run_AbfallUtils.outputSummaryShipments(scenario, day);
 			break;
 		case perVolume:
 			HashMap<String, Integer> areasForShipmentPerVolumeMap = new HashMap<String, Integer>();
 			areasForShipmentPerVolumeMap.put("Malchow", 5 * tonnen);
-		//	areasForShipmentPerVolumeMap.put("Hansaviertel", 20 * tonnen);
+			areasForShipmentPerVolumeMap.put("Hansaviertel", 20 * tonnen);
 			day = "MI";
 			Run_AbfallUtils.createShipmentsGarbagePerVolume(features, areasForShipmentPerVolumeMap, day, garbageDumps,
 					scenario, carriers, carrierMap, capacityTruck, allLinks, garbageLinks, volumeBigTrashcan,
 					serviceTimePerBigTrashcan);
 			fleetSize = FleetSize.INFINITE;
 			Run_AbfallUtils.createCarriersBerlin(carriers, carrierMap, carrierVehType, vehicleTypes, fleetSize);
-	//		Run_AbfallUtils.outputSummaryShipments(scenario, day);
+			Run_AbfallUtils.outputSummaryShipments(scenario, day);
 			break;
 		case day:
 			// MO or DI or MI or DO or FR
@@ -185,7 +184,7 @@ public class Run_Abfall {
 					capacityTruck, allLinks, garbageLinks, features, volumeBigTrashcan, serviceTimePerBigTrashcan);
 			fleetSize = FleetSize.INFINITE;
 			Run_AbfallUtils.createCarriersBerlin(carriers, carrierMap, carrierVehType, vehicleTypes, fleetSize);
-	//		Run_AbfallUtils.outputSummaryShipments(scenario, day);
+			Run_AbfallUtils.outputSummaryShipments(scenario, day);
 			break;
 		default:
 			new RuntimeException("no scenario selected.");
@@ -202,24 +201,9 @@ public class Run_Abfall {
 
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans_Test01.xml");
-/*		switch (scenarioWahl) {
-		case chessboard:
-			break;
-		case berlinSelectedDistricts:
-			Run_AbfallUtils.outputSummary(scenario, carrierMap, day);
-			break;
-		case perMeter:
-			Run_AbfallUtils.outputSummary(scenario, carrierMap, day);
-			break;
-		case perVolume:
-			Run_AbfallUtils.outputSummary(scenario, carrierMap, day);
-			break;
-		case day:
-			Run_AbfallUtils.outputSummary(scenario, carrierMap, day);
-			break;
-		default:
-			new RuntimeException("no scenario selected.");
-		}*/
+
+		Run_AbfallUtils.outputSummary(scenario, carrierMap, day);
+
 	}
 
 }

@@ -49,7 +49,6 @@ import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.EngineInformation.FuelType;
 import org.opengis.feature.simple.SimpleFeature;
 
-import com.graphhopper.jsprit.analysis.toolbox.Plotter;
 import com.graphhopper.jsprit.core.algorithm.VehicleRoutingAlgorithm;
 import com.graphhopper.jsprit.core.algorithm.box.SchrimpfFactory;
 import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
@@ -172,6 +171,7 @@ public class Run_AbfallUtils {
 		createShipmentsForCarrierII(garbageToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
 				distanceWithShipments, capacityTruck, garbageLinks, scenario, carrierMap.get(depot), linkDumpId,
 				carriers);
+		districtsWithShipments.add("Chessboard");
 		carriers.addCarrier(carrierMap.get(depot));
 
 	}
@@ -198,6 +198,7 @@ public class Run_AbfallUtils {
 		Id<Link> linkDumpId = Id.createLinkId(linkDump);
 		createShipmentsForCarrierI(garbagePerMeterToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
 				capacityTruck, garbageLinks, scenario, carrierMap.get(depot), linkDumpId, carriers);
+		districtsWithShipments.add("Chessboard");
 		carriers.addCarrier(carrierMap.get(depot));
 
 	}
@@ -219,13 +220,11 @@ public class Run_AbfallUtils {
 		double distanceWithShipments = 0;
 		int garbageToCollect = 0;
 		String depot = null;
-		int error = 0;
 		createMapEnt();
 		for (String district : districtsForShipments) {
 			for (SimpleFeature simpleFeature : features) {
 				if (simpleFeature.getAttribute("Ortsteilna").equals(district)) {
 					if ((double) simpleFeature.getAttribute(day) > 0) {
-						error = 1;
 						garbageToCollect = (int) ((double) simpleFeature.getAttribute(day) * tonnen);
 						dumpId = garbageDumps.get(simpleFeature.getAttribute(dataEnt.get(day)));
 						depot = simpleFeature.getAttribute("Depot").toString();
@@ -243,7 +242,7 @@ public class Run_AbfallUtils {
 				}
 
 			}
-			if (error == 1) {
+			if (garbageLinks.size() != 0) {
 				districtsWithShipments.add(district);
 				createShipmentsForCarrierII(garbageToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
 						distanceWithShipments, capacityTruck, garbageLinks, scenario, carrierMap.get(depot), dumpId,
@@ -251,7 +250,6 @@ public class Run_AbfallUtils {
 			}
 			distanceWithShipments = 0;
 			garbageLinks.clear();
-			error = 0;
 		}
 		for (Carrier carrier : carrierMap.values())
 			carriers.addCarrier(carrier);
@@ -274,10 +272,9 @@ public class Run_AbfallUtils {
 		double distanceWithShipments = 0;
 		String depot = null;
 		createMapEnt();
-		for (String area : areasForShipmentPerMeterMap.keySet()) {
-			districtsWithShipments.add(area); // TODO nur wenn area Abholung hat?
+		for (String district : areasForShipmentPerMeterMap.keySet()) {
 			for (SimpleFeature simpleFeature : features) {
-				if (simpleFeature.getAttribute("Ortsteilna").equals(area)) {
+				if (simpleFeature.getAttribute("Ortsteilna").equals(district)) {
 					if ((double) simpleFeature.getAttribute(day) > 0) {
 						dumpId = garbageDumps.get(simpleFeature.getAttribute(dataEnt.get(day)));
 						depot = simpleFeature.getAttribute("Depot").toString();
@@ -295,7 +292,9 @@ public class Run_AbfallUtils {
 				}
 
 			}
-			double garbagePerMeterToCollect = areasForShipmentPerMeterMap.get(area);
+			if (garbageLinks.size() != 0)
+				districtsWithShipments.add(district);
+			double garbagePerMeterToCollect = areasForShipmentPerMeterMap.get(district);
 			createShipmentsForCarrierI(garbagePerMeterToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
 					capacityTruck, garbageLinks, scenario, carrierMap.get(depot), dumpId, carriers);
 			distanceWithShipments = 0;
@@ -321,10 +320,9 @@ public class Run_AbfallUtils {
 		double distanceWithShipments = 0;
 		String depot = null;
 		createMapEnt();
-		for (String area : areasForShipmentPerVolumeMap.keySet()) {
-			districtsWithShipments.add(area); // TODO nur wenn area Abholung hat?
+		for (String district : areasForShipmentPerVolumeMap.keySet()) {
 			for (SimpleFeature simpleFeature : features) {
-				if (simpleFeature.getAttribute("Ortsteilna").equals(area)) {
+				if (simpleFeature.getAttribute("Ortsteilna").equals(district)) {
 					if ((double) simpleFeature.getAttribute(dataEnt.get(day)) > 0) {
 						dumpId = garbageDumps.get(simpleFeature.getAttribute(dataEnt.get(day)));
 						depot = simpleFeature.getAttribute("Depot").toString();
@@ -343,7 +341,9 @@ public class Run_AbfallUtils {
 				}
 
 			}
-			int garbageVolumeToCollect = areasForShipmentPerVolumeMap.get(area);
+			if (garbageLinks.size() != 0)
+				districtsWithShipments.add(district);
+			int garbageVolumeToCollect = areasForShipmentPerVolumeMap.get(district);
 			createShipmentsForCarrierII(garbageVolumeToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
 					distanceWithShipments, capacityTruck, garbageLinks, scenario, carrierMap.get(depot), dumpId,
 					carriers);
@@ -367,7 +367,6 @@ public class Run_AbfallUtils {
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		int garbageToCollect = 0;
-		int error = 0;
 		String depot = null;
 		createMapDistrictsBerlin();
 		createMapEnt();
@@ -375,7 +374,6 @@ public class Run_AbfallUtils {
 			for (SimpleFeature simpleFeature : features) {
 				if (simpleFeature.getAttribute("Ortsteilna").equals(district)) {
 					if ((double) simpleFeature.getAttribute(day) > 0) {
-						error = 1;
 						garbageToCollect = (int) ((double) simpleFeature.getAttribute(day) * tonnen);
 						dumpId = garbageDumps.get(simpleFeature.getAttribute(dataEnt.get(day)));
 						depot = simpleFeature.getAttribute("Depot").toString();
@@ -393,7 +391,7 @@ public class Run_AbfallUtils {
 				}
 
 			}
-			if (error == 1) {
+			if (garbageLinks.size() != 0) {
 				districtsWithShipments.add(district);
 
 				createShipmentsForCarrierII(garbageToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
@@ -402,7 +400,6 @@ public class Run_AbfallUtils {
 			}
 			distanceWithShipments = 0;
 			garbageLinks.clear();
-			error = 0;
 		}
 		for (Carrier carrier : carrierMap.values())
 			carriers.addCarrier(carrier);
@@ -635,7 +632,7 @@ public class Run_AbfallUtils {
 			CarrierVehicleType carrierVehType, CarrierVehicleTypes vehicleTypes, CarrierVehicle vehicleForckenbeck,
 			CarrierVehicle vehicleMalmoeerStr, CarrierVehicle vehicleNordring, CarrierVehicle vehicleGradestrasse,
 			FleetSize fleetSize) {
-		
+
 		CarrierCapabilities carrierCapabilities = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
 				.addVehicle(vehicleForckenbeck).setFleetSize(fleetSize).build();
 		carrierMap.get("Forckenbeck").setCarrierCapabilities(carrierCapabilities);
@@ -648,7 +645,7 @@ public class Run_AbfallUtils {
 		carrierCapabilities = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
 				.addVehicle(vehicleGradestrasse).setFleetSize(fleetSize).build();
 		carrierMap.get("Gradestrasse").setCarrierCapabilities(carrierCapabilities);
-		
+
 		// Fahrzeugtypen den Anbietern zuordenen
 		new CarrierVehicleTypeLoader(carriers).loadVehicleTypes(vehicleTypes);
 	}
@@ -661,7 +658,7 @@ public class Run_AbfallUtils {
 	 */
 	public static void solveWithJsprit(Scenario scenario, Carriers carriers, HashMap<String, Carrier> carrierMap,
 			CarrierVehicleTypes vehicleTypes) {
-		
+
 		// Netzwerk integrieren und Kosten für jsprit
 		Network network = scenario.getNetwork();
 		// Network network = NetworkUtils.readNetwork(original_Chessboard);
@@ -669,7 +666,7 @@ public class Run_AbfallUtils {
 				vehicleTypes.getVehicleTypes().values());
 		final NetworkBasedTransportCosts netBasedCosts = netBuilder.build();
 		netBuilder.setTimeSliceWidth(1800);
-		
+
 		for (Carrier singleCarrier : carrierMap.values()) {
 			// Build jsprit, solve and route VRP for carrierService only -> need solution to
 			// convert Services to Shipments
@@ -683,13 +680,13 @@ public class Run_AbfallUtils {
 			algorithm.setMaxIterations(20);
 			Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
 			VehicleRoutingProblemSolution bestSolution = Solutions.bestOf(solutions);
-			costsJsprit = bestSolution.getCost();
+			costsJsprit = costsJsprit + bestSolution.getCost();
 
 			// Routing bestPlan to Network
 			CarrierPlan carrierPlanServices = MatsimJspritFactory.createPlan(singleCarrier, bestSolution);
 			NetworkRouter.routePlan(carrierPlanServices, netBasedCosts);
 			singleCarrier.setSelectedPlan(carrierPlanServices);
-			noPickup = bestSolution.getUnassignedJobs().size();
+			noPickup = noPickup + bestSolution.getUnassignedJobs().size();
 		}
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.xml");
@@ -762,57 +759,73 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-/*	public static void outputSummary(Scenario scenario, HashMap<String, Carrier> carrierMap, String day) {
+	public static void outputSummary(Scenario scenario, HashMap<String, Carrier> carrierMap, String day) {
 		int vehiclesForckenbeck = 0;
 		int vehiclesMalmoeer = 0;
 		int vehiclesNordring = 0;
 		int vehiclesGradestrasse = 0;
+		int vehiclesChessboard = 0;
+		int numberVehicles = 0;
 		int sizeForckenbeck = 0;
 		int sizeMalmooer = 0;
 		int sizeNordring = 0;
 		int sizeGradestrasse = 0;
+		int sizeChessboard = 0;
 		int allCollectedGarbage = 0;
-		Collection<ScheduledTour> tours = myCarrier.getSelectedPlan().getScheduledTours();
-		Collection<CarrierShipment> shipments = myCarrier.getShipments();
-		HashMap<String, Integer> shipmentSizes = new HashMap<String, Integer>();
-		for (CarrierShipment carrierShipment : shipments) {
-			String shipmentId = carrierShipment.getId().toString();
-			int shipmentSize = carrierShipment.getSize();
-			shipmentSizes.put(shipmentId, shipmentSize);
-		}
-		for (ScheduledTour scheduledTour : tours) {
-			List<TourElement> elements = scheduledTour.getTour().getTourElements();
-			for (TourElement element : elements) {
-				if (element instanceof Pickup) {
-					Pickup pickupElement = (Pickup) element;
-					String pickupShipmentId = pickupElement.getShipment().getId().toString();
-					if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckForckenbeck")) {
-						sizeForckenbeck = sizeForckenbeck + (shipmentSizes.get(pickupShipmentId));
-					}
-					if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckMalmoeer")) {
-						sizeMalmooer = sizeMalmooer + (shipmentSizes.get(pickupShipmentId));
-					}
-					if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckNordring")) {
-						sizeNordring = sizeNordring + (shipmentSizes.get(pickupShipmentId));
-					}
-					if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckGradestrasse")) {
-						sizeGradestrasse = sizeGradestrasse + (shipmentSizes.get(pickupShipmentId));
+		double matsimCosts = 0;
+		for (Carrier thisCarrier : carrierMap.values()) {
+
+			Collection<ScheduledTour> tours = thisCarrier.getSelectedPlan().getScheduledTours();
+			Collection<CarrierShipment> shipments = thisCarrier.getShipments();
+			HashMap<String, Integer> shipmentSizes = new HashMap<String, Integer>();
+			matsimCosts = matsimCosts + thisCarrier.getSelectedPlan().getScore();
+			for (CarrierShipment carrierShipment : shipments) {
+				String shipmentId = carrierShipment.getId().toString();
+				int shipmentSize = carrierShipment.getSize();
+				shipmentSizes.put(shipmentId, shipmentSize);
+			}
+			for (ScheduledTour scheduledTour : tours) {
+				List<TourElement> elements = scheduledTour.getTour().getTourElements();
+				for (TourElement element : elements) {
+					if (element instanceof Pickup) {
+						Pickup pickupElement = (Pickup) element;
+						String pickupShipmentId = pickupElement.getShipment().getId().toString();
+						if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckForckenbeck")) {
+							sizeForckenbeck = sizeForckenbeck + (shipmentSizes.get(pickupShipmentId));
+						}
+						if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckMalmoeer")) {
+							sizeMalmooer = sizeMalmooer + (shipmentSizes.get(pickupShipmentId));
+						}
+						if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckNordring")) {
+							sizeNordring = sizeNordring + (shipmentSizes.get(pickupShipmentId));
+						}
+						if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckGradestrasse")) {
+							sizeGradestrasse = sizeGradestrasse + (shipmentSizes.get(pickupShipmentId));
+						}
+						if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckChessboard")) {
+							sizeChessboard = sizeChessboard + (shipmentSizes.get(pickupShipmentId));
+						}
 					}
 				}
-			}
-			allCollectedGarbage = sizeForckenbeck + sizeMalmooer + sizeNordring + sizeGradestrasse;
+				allCollectedGarbage = sizeForckenbeck + sizeMalmooer + sizeNordring + sizeGradestrasse + sizeChessboard;
 
-			if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckForckenbeck")) {
-				vehiclesForckenbeck++;
-			}
-			if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckMalmoeer")) {
-				vehiclesMalmoeer++;
-			}
-			if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckNordring")) {
-				vehiclesNordring++;
-			}
-			if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckGradestrasse")) {
-				vehiclesGradestrasse++;
+				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckForckenbeck")) {
+					vehiclesForckenbeck++;
+				}
+				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckMalmoeer")) {
+					vehiclesMalmoeer++;
+				}
+				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckNordring")) {
+					vehiclesNordring++;
+				}
+				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckGradestrasse")) {
+					vehiclesGradestrasse++;
+				}
+				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckChessboard")) {
+					vehiclesChessboard++;
+				}
+				numberVehicles = vehiclesForckenbeck + vehiclesMalmoeer + vehiclesNordring + vehiclesGradestrasse
+						+ vehiclesChessboard;
 			}
 		}
 		FileWriter writer;
@@ -822,31 +835,34 @@ public class Run_AbfallUtils {
 			writer = new FileWriter(file, true);
 			writer.write("Anzahl der Abholgebiete:\t\t\t\t\t\t\t\t\t" + districtsWithShipments.size() + "\n");
 			writer.write("Abholgebiete:\t\t\t\t\t\t\t\t\t\t\t\t" + districtsWithShipments.toString() + "\n");
-			writer.write("Wochentag:\t\t\t\t\t\t\t\t\t\t\t\t\t" + day + "\n\n");
-			writer.write("Die Summe des abzuholenden Mülls beträgt: \t\t\t\t\t"
-					+ ((double) allGarbage) / 1000 + " t\n\n");
+			if (day != null)
+				writer.write("Wochentag:\t\t\t\t\t\t\t\t\t\t\t\t\t" + day + "\n");
+			writer.write(
+					"\n"+"Die Summe des abzuholenden Mülls beträgt: \t\t\t\t\t" + ((double) allGarbage) / 1000 + " t\n\n");
 			writer.write("Anzahl der Abholstellen: \t\t\t\t\t\t\t\t\t" + numberOfShipments + "\n");
 			writer.write("Anzahl der Abholstellen ohne Abholung: \t\t\t\t\t\t" + noPickup + "\n\n");
-			writer.write("Anzahl der Muellfahrzeuge im Einsatz: \t\t\t\t\t\t"
-					+ myCarrier.getSelectedPlan().getScheduledTours().size() + "\t\tMenge gesamt:\t"
+			writer.write("Anzahl der Muellfahrzeuge im Einsatz: \t\t\t\t\t\t" + (numberVehicles) + "\t\tMenge gesamt:\t"
 					+ ((double) allCollectedGarbage) / 1000 + " t\n");
-			writer.write("\t Anzahl aus dem Betriebshof Forckenbeckstrasse: \t\t\t" + vehiclesForckenbeck
-					+ "\t\t\tMenge:\t\t" + ((double) sizeForckenbeck) / 1000 + " t\n");
-			writer.write("\t Anzahl aus dem Betriebshof Malmoeer Strasse: \t\t\t\t" + vehiclesMalmoeer
-					+ "\t\t\tMenge:\t\t" + ((double) sizeMalmooer) / 1000 + " t\n");
-			writer.write("\t Anzahl aus dem Betriebshof Nordring: \t\t\t\t\t\t" + vehiclesNordring + "\t\t\tMenge:\t\t"
-					+ ((double) sizeNordring) / 1000 + " t\n");
-			writer.write("\t Anzahl aus dem Betriebshof Gradestraße: \t\t\t\t\t" + vehiclesGradestrasse
-					+ "\t\t\tMenge:\t\t" + ((double) sizeGradestrasse) / 1000 + " t\n\n");
-			writer.write("Anzuliefernde Menge (Soll):\tMHKW Ruhleben:\t\t\t\t\t" + ((double) garbageRuhleben) / 1000
-					+ " t\n");
-			writer.write("\t\t\t\t\t\t\tMPS Pankow:\t\t\t\t\t\t" + ((double) garbagePankow) / 1000 + " t\n");
-			writer.write("\t\t\t\t\t\t\tMPS Reinickendorf:\t\t\t\t" + ((double) garbageReinickenD) / 1000 + " t\n");
-			writer.write("\t\t\t\t\t\t\tUmladestation Gradestrasse:\t\t" + ((double) garbageGradestr) / 1000 + " t\n");
-			writer.write("\t\t\t\t\t\t\tMA Gruenauer Str.:\t\t\t\t" + ((double) garbageGruenauerStr) / 1000 + " t\n\n");
-			writer.write("Kosten (Jsprit): \t\t\t\t\t\t\t\t\t\t\t" + (Math.round(costsJsprit)) + " €\n\n");
-			writer.write("Kosten (MatSim): \t\t\t\t\t\t\t\t\t\t\t"
-					+ ((-1) * Math.round(myCarrier.getSelectedPlan().getScore())) + " €\n");
+			if (day != null) {
+				writer.write("\t Anzahl aus dem Betriebshof Forckenbeckstrasse: \t\t\t" + vehiclesForckenbeck
+						+ "\t\t\tMenge:\t\t" + ((double) sizeForckenbeck) / 1000 + " t\n");
+				writer.write("\t Anzahl aus dem Betriebshof Malmoeer Strasse: \t\t\t\t" + vehiclesMalmoeer
+						+ "\t\t\tMenge:\t\t" + ((double) sizeMalmooer) / 1000 + " t\n");
+				writer.write("\t Anzahl aus dem Betriebshof Nordring: \t\t\t\t\t\t" + vehiclesNordring
+						+ "\t\t\tMenge:\t\t" + ((double) sizeNordring) / 1000 + " t\n");
+				writer.write("\t Anzahl aus dem Betriebshof Gradestraße: \t\t\t\t\t" + vehiclesGradestrasse
+						+ "\t\t\tMenge:\t\t" + ((double) sizeGradestrasse) / 1000 + " t\n\n");
+				writer.write("Anzuliefernde Menge (Soll):\tMHKW Ruhleben:\t\t\t\t\t" + ((double) garbageRuhleben) / 1000
+						+ " t\n");
+				writer.write("\t\t\t\t\t\t\tMPS Pankow:\t\t\t\t\t\t" + ((double) garbagePankow) / 1000 + " t\n");
+				writer.write("\t\t\t\t\t\t\tMPS Reinickendorf:\t\t\t\t" + ((double) garbageReinickenD) / 1000 + " t\n");
+				writer.write(
+						"\t\t\t\t\t\t\tUmladestation Gradestrasse:\t\t" + ((double) garbageGradestr) / 1000 + " t\n");
+				writer.write(
+						"\t\t\t\t\t\t\tMA Gruenauer Str.:\t\t\t\t" + ((double) garbageGruenauerStr) / 1000 + " t\n");
+			}
+			writer.write("\n"+"Kosten (Jsprit): \t\t\t\t\t\t\t\t\t\t\t" + (Math.round(costsJsprit)) + " €\n\n");
+			writer.write("Kosten (MatSim): \t\t\t\t\t\t\t\t\t\t\t" + ((-1) * Math.round(matsimCosts)) + " €\n");
 
 			writer.flush();
 			writer.close();
@@ -855,8 +871,7 @@ public class Run_AbfallUtils {
 		}
 		if (noPickup == 0) {
 			System.out.println("");
-			System.out.println("Abfaelle wurden komplett von " + myCarrier.getSelectedPlan().getScheduledTours().size()
-					+ " Fahrzeugen eingesammelt!");
+			System.out.println("Abfaelle wurden komplett von " + numberVehicles + " Fahrzeugen eingesammelt!");
 		} else {
 			System.out.println("");
 			System.out.println("Abfall nicht komplett eingesammelt!");
@@ -868,7 +883,7 @@ public class Run_AbfallUtils {
 	 * shipments
 	 * 
 	 */
-/*	public static void outputSummaryShipments(Scenario scenario, String day) {
+	public static void outputSummaryShipments(Scenario scenario, String day) {
 
 		FileWriter writer;
 		File file;
@@ -877,22 +892,26 @@ public class Run_AbfallUtils {
 			writer = new FileWriter(file, true);
 			writer.write("Anzahl der Abholgebiete:\t\t\t\t\t\t\t\t\t" + districtsWithShipments.size() + "\n");
 			writer.write("Abholgebiete:\t\t\t\t\t\t\t\t\t\t\t\t" + districtsWithShipments.toString() + "\n");
-			writer.write("Wochentag:\t\t\t\t\t\t\t\t\t\t\t\t\t" + day + "\n\n");
+			if (day != null)
+				writer.write("Wochentag:\t\t\t\t\t\t\t\t\t\t\t\t\t" + day + "\n");
 			writer.write(
-					"Die Summe des abzuholenden Mülls beträgt: \t\t\t\t\t" + ((double) allGarbage) / 1000 + " t\n\n");
+					"\n"+"Die Summe des abzuholenden Mülls beträgt: \t\t\t\t\t" + ((double) allGarbage) / 1000 + " t\n\n");
 			writer.write("Anzahl der Abholstellen: \t\t\t\t\t\t\t\t\t" + numberOfShipments + "\n\n");
-			writer.write("Anzuliefernde Menge (Soll):\tMHKW Ruhleben:\t\t\t\t\t" + ((double) garbageRuhleben) / 1000
-					+ " t\n");
-			writer.write("\t\t\t\t\t\t\tMPS Pankow:\t\t\t\t\t\t" + ((double) garbagePankow) / 1000 + " t\n");
-			writer.write("\t\t\t\t\t\t\tMPS Reinickendorf:\t\t\t\t" + ((double) garbageReinickenD) / 1000 + " t\n");
-			writer.write("\t\t\t\t\t\t\tUmladestation Gradestrasse:\t\t" + ((double) garbageGradestr) / 1000 + " t\n");
-			writer.write("\t\t\t\t\t\t\tMA Gruenauer Str.:\t\t\t\t" + ((double) garbageGruenauerStr) / 1000 + " t\n\n");
-
+			if (day != null) {
+				writer.write("Anzuliefernde Menge (Soll):\tMHKW Ruhleben:\t\t\t\t\t" + ((double) garbageRuhleben) / 1000
+						+ " t\n");
+				writer.write("\t\t\t\t\t\t\tMPS Pankow:\t\t\t\t\t\t" + ((double) garbagePankow) / 1000 + " t\n");
+				writer.write("\t\t\t\t\t\t\tMPS Reinickendorf:\t\t\t\t" + ((double) garbageReinickenD) / 1000 + " t\n");
+				writer.write(
+						"\t\t\t\t\t\t\tUmladestation Gradestrasse:\t\t" + ((double) garbageGradestr) / 1000 + " t\n");
+				writer.write(
+						"\t\t\t\t\t\t\tMA Gruenauer Str.:\t\t\t\t" + ((double) garbageGruenauerStr) / 1000 + " t");
+			}
 			writer.flush();
 			writer.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
-	}*/
+	}
 }
