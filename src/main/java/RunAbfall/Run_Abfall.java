@@ -44,7 +44,8 @@ public class Run_Abfall {
 	};
 
 	private enum scenarioAuswahl {
-		chessboard, berlinSelectedDistricts, perVolume, perMeter, day
+		chessboard, berlinSelectedDistricts, berlinDistrictsWithInputTotalGarbagePerDistrict,
+		berlinDistrictsWithInputGarbagePerMeter, berlinCollectedGarbageForOneDay
 	};
 
 	public static void main(String[] args) {
@@ -57,7 +58,7 @@ public class Run_Abfall {
 		log.setLevel(Level.INFO);
 
 		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.day;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinCollectedGarbageForOneDay;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
@@ -142,7 +143,7 @@ public class Run_Abfall {
 			Run_AbfallUtils.outputSummaryShipments(scenario, day);
 			break;
 		case berlinSelectedDistricts:
-			List<String> districtsForShipments = Arrays.asList("Malchow", "Wilhelmsruh","Hansaviertel");
+			List<String> districtsForShipments = Arrays.asList("Malchow", "Wilhelmsruh", "Hansaviertel");
 			day = "MI";
 			Run_AbfallUtils.createShipmentsForSelectedArea(districtsForShipments, day, garbageDumps, scenario, carriers,
 					carrierMap, capacityTruck, allLinks, garbageLinks, features, volumeBigTrashcan,
@@ -151,7 +152,7 @@ public class Run_Abfall {
 			Run_AbfallUtils.createCarriersBerlin(carriers, carrierMap, carrierVehType, vehicleTypes, fleetSize);
 			Run_AbfallUtils.outputSummaryShipments(scenario, day);
 			break;
-		case perMeter:
+		case berlinDistrictsWithInputGarbagePerMeter:
 			HashMap<String, Double> areasForShipmentPerMeterMap = new HashMap<String, Double>();
 			areasForShipmentPerMeterMap.put("Malchow", 1.04);
 			// areasForShipmentPerMeterMap.put("Hansaviertel", 3.04);
@@ -163,7 +164,7 @@ public class Run_Abfall {
 			Run_AbfallUtils.createCarriersBerlin(carriers, carrierMap, carrierVehType, vehicleTypes, fleetSize);
 			Run_AbfallUtils.outputSummaryShipments(scenario, day);
 			break;
-		case perVolume:
+		case berlinDistrictsWithInputTotalGarbagePerDistrict:
 			HashMap<String, Integer> areasForShipmentPerVolumeMap = new HashMap<String, Integer>();
 			areasForShipmentPerVolumeMap.put("Malchow", 5 * tonnen);
 			areasForShipmentPerVolumeMap.put("Hansaviertel", 20 * tonnen);
@@ -175,7 +176,7 @@ public class Run_Abfall {
 			Run_AbfallUtils.createCarriersBerlin(carriers, carrierMap, carrierVehType, vehicleTypes, fleetSize);
 			Run_AbfallUtils.outputSummaryShipments(scenario, day);
 			break;
-		case day:
+		case berlinCollectedGarbageForOneDay:
 			// MO or DI or MI or DO or FR
 			day = "MO";
 			Run_AbfallUtils.createShipmentsForSelectedDay(day, garbageDumps, scenario, carriers, carrierMap,
