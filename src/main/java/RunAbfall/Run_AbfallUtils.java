@@ -55,7 +55,7 @@ import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
 import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolution;
 import com.graphhopper.jsprit.core.util.Solutions;
 
-public class Run_AbfallUtils {
+class Run_AbfallUtils {
 
 	static int stunden = 3600;
 	static int minuten = 60;
@@ -117,7 +117,7 @@ public class Run_AbfallUtils {
 	 * 
 	 * @return
 	 */
-	public static HashMap<String, Id<Link>> createDumpMap() {
+	static HashMap<String, Id<Link>> createDumpMap() {
 		HashMap<String, Id<Link>> garbageDumps = new HashMap<String, Id<Link>>();
 
 		garbageDumps.put("Ruhleben", Id.createLinkId(linkMhkwRuhleben));
@@ -133,7 +133,7 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param config
 	 */
-	public static Config prepareConfig(Config config, int lastIteration) {
+	static Config prepareConfig(Config config, int lastIteration) {
 		// (the directory structure is needed for jsprit output, which is before the
 		// controler starts. Maybe there is a better alternative ...)
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
@@ -155,7 +155,7 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	public static void createShipmentsForChessboardI(int garbageToCollect, Map<Id<Link>, ? extends Link> allLinks,
+	static void createShipmentsForChessboardI(int garbageToCollect, Map<Id<Link>, ? extends Link> allLinks,
 			Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan, double serviceTimePerBigTrashcan,
 			int capacityTruck, Scenario scenario, Carriers carriers, HashMap<String, Carrier> carrierMap,
 			String linkDump) {
@@ -183,7 +183,7 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	public static void createShipmentsForChessboardII(double garbagePerMeterToCollect,
+	static void createShipmentsForChessboardII(double garbagePerMeterToCollect,
 			Map<Id<Link>, ? extends Link> allLinks, Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan,
 			double serviceTimePerBigTrashcan, int capacityTruck, Scenario scenario, Carriers carriers,
 			HashMap<String, Carrier> carrierMap, String linkDump) {
@@ -211,7 +211,7 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	public static void createShipmentsForSelectedArea(List<String> districtsForShipments, String day,
+	static void createShipmentsForSelectedArea(List<String> districtsForShipments, String day,
 			HashMap<String, Id<Link>> garbageDumps, Scenario scenario, Carriers carriers,
 			HashMap<String, Carrier> carrierMap, int capacityTruck, Map<Id<Link>, ? extends Link> allLinks,
 			Map<Id<Link>, Link> garbageLinks, Collection<SimpleFeature> features, double volumeBigTrashcan,
@@ -263,7 +263,7 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	public static void createShipmentsGarbagePerMeter(Collection<SimpleFeature> features,
+	static void createShipmentsGarbagePerMeter(Collection<SimpleFeature> features,
 			HashMap<String, Double> areasForShipmentPerMeterMap, String day, HashMap<String, Id<Link>> garbageDumps,
 			Scenario scenario, Carriers carriers, HashMap<String, Carrier> carrierMap, int capacityTruck,
 			Map<Id<Link>, ? extends Link> allLinks, Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan,
@@ -311,7 +311,7 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	public static void createShipmentsGarbagePerVolume(Collection<SimpleFeature> features,
+	static void createShipmentsGarbagePerVolume(Collection<SimpleFeature> features,
 			HashMap<String, Integer> areasForShipmentPerVolumeMap, String day, HashMap<String, Id<Link>> garbageDumps,
 			Scenario scenario, Carriers carriers, HashMap<String, Carrier> carrierMap, int capacityTruck,
 			Map<Id<Link>, ? extends Link> allLinks, Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan,
@@ -360,7 +360,7 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	public static void createShipmentsForSelectedDay(String day, HashMap<String, Id<Link>> garbageDumps,
+	static void createShipmentsForSelectedDay(String day, HashMap<String, Id<Link>> garbageDumps,
 			Scenario scenario, Carriers carriers, HashMap<String, Carrier> carrierMap, int capacityTruck,
 			Map<Id<Link>, ? extends Link> allLinks, Map<Id<Link>, Link> garbageLinks,
 			Collection<SimpleFeature> features, double volumeBigTrashcan, double serviceTimePerBigTrashcan) {
@@ -508,7 +508,7 @@ public class Run_AbfallUtils {
 	 * @param maxVelocity in m/s
 	 * @return
 	 */
-	public static CarrierVehicleType createGarbageTruckType(String vehicleTypeId, int capacity, double maxVelocity,
+	static CarrierVehicleType createGarbageTruckType(String vehicleTypeId, int capacity, double maxVelocity,
 			double costPerDistanceUnit, double costPerTimeUnit, double fixCosts, FuelType engineInformation,
 			double literPerMeter) {
 		return CarrierVehicleType.Builder.newInstance(Id.create(vehicleTypeId, VehicleType.class)).setCapacity(capacity)
@@ -524,7 +524,7 @@ public class Run_AbfallUtils {
 	 * @param
 	 * @return
 	 */
-	public static CarrierVehicleTypes adVehicleType(CarrierVehicleType carrierVehType) {
+	static CarrierVehicleTypes adVehicleType(CarrierVehicleType carrierVehType) {
 		CarrierVehicleTypes vehicleTypes = new CarrierVehicleTypes();
 		vehicleTypes.getVehicleTypes().put(carrierVehType.getId(), carrierVehType);
 		return vehicleTypes;
@@ -537,7 +537,7 @@ public class Run_AbfallUtils {
 	 * 
 	 * @return
 	 */
-	public static CarrierVehicle createGarbageTruck(String vehicleName, String linkDepot, double earliestStartingTime,
+	static CarrierVehicle createGarbageTruck(String vehicleName, String linkDepot, double earliestStartingTime,
 			double latestFinishingTime, CarrierVehicleType carrierVehType) {
 
 		return CarrierVehicle.Builder.newInstance(Id.create(vehicleName, Vehicle.class), Id.createLinkId(linkDepot))
@@ -551,7 +551,7 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	public static void createCarriersForChessboard(String linkDepot, String vehicleNameDepot, Carriers carriers,
+	static void createCarriersForChessboard(String linkDepot, String vehicleNameDepot, Carriers carriers,
 			HashMap<String, Carrier> carrierMap, CarrierVehicleType carrierVehType, CarrierVehicleTypes vehicleTypes,
 			FleetSize fleetSize) {
 
@@ -573,7 +573,7 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	public static void createCarriersBerlin(Carriers carriers, HashMap<String, Carrier> carrierMap,
+	static void createCarriersBerlin(Carriers carriers, HashMap<String, Carrier> carrierMap,
 			CarrierVehicleType carrierVehType, CarrierVehicleTypes vehicleTypes, FleetSize fleetSize) {
 		String depotForckenbeck = "27766";
 		String depotMalmoeerStr = "116212";
@@ -656,7 +656,7 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	public static void solveWithJsprit(Scenario scenario, Carriers carriers, HashMap<String, Carrier> carrierMap,
+	static void solveWithJsprit(Scenario scenario, Carriers carriers, HashMap<String, Carrier> carrierMap,
 			CarrierVehicleTypes vehicleTypes) {
 
 		// Netzwerk integrieren und Kosten für jsprit
@@ -699,7 +699,7 @@ public class Run_AbfallUtils {
 	/**
 	 * @param
 	 */
-	public static void scoringAndManagerFactory(Scenario scenario, Carriers carriers, final Controler controler) {
+	static void scoringAndManagerFactory(Scenario scenario, Carriers carriers, final Controler controler) {
 		CarrierScoringFunctionFactory scoringFunctionFactory = createMyScoringFunction2(scenario);
 		CarrierPlanStrategyManagerFactory planStrategyManagerFactory = createMyStrategymanager();
 
@@ -759,7 +759,7 @@ public class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	public static void outputSummary(Scenario scenario, HashMap<String, Carrier> carrierMap, String day) {
+	static void outputSummary(Scenario scenario, HashMap<String, Carrier> carrierMap, String day) {
 		int vehiclesForckenbeck = 0;
 		int vehiclesMalmoeer = 0;
 		int vehiclesNordring = 0;
@@ -883,7 +883,7 @@ public class Run_AbfallUtils {
 	 * shipments
 	 * 
 	 */
-	public static void outputSummaryShipments(Scenario scenario, String day) {
+	static void outputSummaryShipments(Scenario scenario, String day) {
 
 		FileWriter writer;
 		File file;

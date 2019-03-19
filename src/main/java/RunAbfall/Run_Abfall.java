@@ -37,7 +37,7 @@ public class Run_Abfall {
 	private static final String original_Chessboard = "scenarios/networks/originalChessboard9x9.xml";
 	private static final String modified_Chessboard = "scenarios/networks/modifiedChessboard9x9.xml";
 	private static final String berlin = "original-input-data/berlin-v5.2-1pct.output_network.xml.gz";
-	private static final String Berlin_garbage = "C:\\Users\\erica\\OneDrive\\Dokumente\\Studium\\0 Masterarbeit\\Shape-Files\\Netzwerk_Abfall\\BerlinOnly\\berlinOnly_garbageNetwork.shp";
+	private static final String Berlin_garbage = "original-input-data/berlinOnly_garbageNetwork.shp";
 
 	private enum netzwerkAuswahl {
 		originalChessboard, modifiedChessboard, berlinNetwork
@@ -50,8 +50,6 @@ public class Run_Abfall {
 	public static void main(String[] args) {
 
 		FleetSize fleetSize = null;
-		String linkDump;
-		String linkDepot;
 		double garbagePerMeterToCollect = 0;
 		int garbageToCollect = 0;
 		String day = null;
@@ -59,7 +57,7 @@ public class Run_Abfall {
 		log.setLevel(Level.INFO);
 
 		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinSelectedDistricts;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.day;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
@@ -74,7 +72,7 @@ public class Run_Abfall {
 			config.network().setInputFile(modified_Chessboard);
 			break;
 		case berlinNetwork:
-			config.controler().setOutputDirectory("output/Berlin/05_InfiniteSize_4Carrier");
+			config.controler().setOutputDirectory("output/Berlin/07_InfiniteSize_MO-komplett");
 			config.network().setInputFile(berlin);
 			break;
 		default:
@@ -121,8 +119,8 @@ public class Run_Abfall {
 		switch (scenarioWahl) {
 		case chessboard:
 			// select garbageToCollect OR garbagePerMeterToCollect; the not used should be 0
-			linkDump = "j(0,9)R";
-			linkDepot = "j(9,9)";
+			String linkDump = "j(0,9)R";
+			String linkDepot = "j(9,9)";
 			String vehicleIdDepot = "TruckChessboard";
 			garbagePerMeterToCollect = 0.2;
 			garbageToCollect = 0 * tonnen;
@@ -144,7 +142,7 @@ public class Run_Abfall {
 			Run_AbfallUtils.outputSummaryShipments(scenario, day);
 			break;
 		case berlinSelectedDistricts:
-			List<String> districtsForShipments = Arrays.asList("Malchow", "Wilhelmsruh");
+			List<String> districtsForShipments = Arrays.asList("Malchow", "Wilhelmsruh","Hansaviertel");
 			day = "MI";
 			Run_AbfallUtils.createShipmentsForSelectedArea(districtsForShipments, day, garbageDumps, scenario, carriers,
 					carrierMap, capacityTruck, allLinks, garbageLinks, features, volumeBigTrashcan,
@@ -179,7 +177,7 @@ public class Run_Abfall {
 			break;
 		case day:
 			// MO or DI or MI or DO or FR
-			day = "FR";
+			day = "MO";
 			Run_AbfallUtils.createShipmentsForSelectedDay(day, garbageDumps, scenario, carriers, carrierMap,
 					capacityTruck, allLinks, garbageLinks, features, volumeBigTrashcan, serviceTimePerBigTrashcan);
 			fleetSize = FleetSize.INFINITE;
