@@ -6,9 +6,9 @@ import org.matsim.contrib.freight.carrier.CarrierImpl;
 import org.matsim.contrib.freight.carrier.CarrierShipment;
 import org.matsim.contrib.freight.carrier.TimeWindow;
 
-public class StaticShipmentForCarrierBuilder {
+class StaticShipmentForCarrierBuilder {
 	
-	public static Carrier createShipments() {
+	static Carrier createShipments() {
 		Carrier myCarrier = CarrierImpl.newInstance(Id.create("BSR", Carrier.class));
 
 		// Shipments erstellen
