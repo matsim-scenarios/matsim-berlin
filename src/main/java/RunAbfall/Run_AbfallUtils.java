@@ -43,6 +43,7 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.replanning.GenericStrategyManager;
+import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.vehicles.EngineInformationImpl;
 import org.matsim.vehicles.Vehicle;
@@ -50,11 +51,15 @@ import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.EngineInformation.FuelType;
 import org.opengis.feature.simple.SimpleFeature;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.graphhopper.jsprit.core.algorithm.VehicleRoutingAlgorithm;
 import com.graphhopper.jsprit.core.algorithm.box.SchrimpfFactory;
 import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
 import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolution;
 import com.graphhopper.jsprit.core.util.Solutions;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Point;
 
 /**
  * @author Ricardo Ewert
@@ -83,6 +88,7 @@ class Run_AbfallUtils {
 	static CarrierVehicleType carrierVehType = null;
 	static int capacityTruck = 0;
 	static CarrierVehicle vehicleAtDepot = null;
+	static Multimap<String, String> linksInDistricts;
 
 	/**
 	 * Creates a map of all districts, which are listed in the shapefile.
@@ -138,6 +144,40 @@ class Run_AbfallUtils {
 	}
 
 	/**
+	 * Creates a multimap where you can find behind every district every link
+	 * containing this district.
+	 * 
+	 * @param
+	 * @return
+	 */
+	static void createMapWithLinksInDistricts(Collection<SimpleFeature> districts,
+			Map<Id<Link>, ? extends Link> allLinks) {
+		linksInDistricts = ArrayListMultimap.create();
+		double x, y, xCoordFrom, xCoordTo, yCoordFrom, yCoordTo;
+		Point p;
+		for (Link link : allLinks.values()) {
+			xCoordFrom = link.getFromNode().getCoord().getX();
+			xCoordTo = link.getToNode().getCoord().getX();
+			yCoordFrom = link.getFromNode().getCoord().getY();
+			yCoordTo = link.getToNode().getCoord().getY();
+			if (xCoordFrom > xCoordTo)
+				x = xCoordFrom - ((xCoordFrom - xCoordTo) / 2);
+			else
+				x = xCoordTo - ((xCoordTo - xCoordFrom) / 2);
+			if (yCoordFrom > yCoordTo)
+				y = yCoordFrom - ((yCoordFrom - yCoordTo) / 2);
+			else
+				y = yCoordTo - ((yCoordTo - yCoordFrom) / 2);
+			p = MGC.xy2Point(x, y);
+			for (SimpleFeature district : districts) {
+				if (((Geometry) district.getDefaultGeometry()).contains(p)) {
+					linksInDistricts.put(district.getAttribute("Ortsteilna").toString(), link.getId().toString());
+				}
+			}
+		}
+	}
+
+	/**
 	 * Creates a Map with the 5 dumps in Berlin.
 	 * 
 	 * @return
@@ -174,7 +214,6 @@ class Run_AbfallUtils {
 		return config;
 	}
 
-	
 	/**
 	 * Creates Shipments for the selected areas for the selected weekday. The needed
 	 * data is part of the read shapefile. There are informations about the volume
@@ -393,8 +432,7 @@ class Run_AbfallUtils {
 			CarrierShipment shipment = CarrierShipment.Builder
 					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(), (dumpId),
 							volumeGarbage)
-					.setPickupServiceTime(serviceTime)
-					.setPickupTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))
+					.setPickupServiceTime(serviceTime).setPickupTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))
 					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))
 					.setDeliveryServiceTime(deliveryTime).build();
 			thisCarrier.getShipments().add(shipment);
@@ -438,8 +476,7 @@ class Run_AbfallUtils {
 			CarrierShipment shipment = CarrierShipment.Builder
 					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
 							garbageDumpId, volumeGarbage)
-					.setPickupServiceTime(serviceTime)
-					.setPickupTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))
+					.setPickupServiceTime(serviceTime).setPickupTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))
 					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))
 					.setDeliveryServiceTime(deliveryTime).build();
 			thisCarrier.getShipments().add(shipment);
@@ -475,7 +512,7 @@ class Run_AbfallUtils {
 	 */
 	static void createAndAddVehicles() {
 		String vehicleTypeId = "TruckType1";
-		capacityTruck = 11 * 1000; // Berliner Zeitung
+		capacityTruck = 11 * 1000; // in kg
 		double maxVelocity = 80 / 3.6;
 		double costPerDistanceUnit = 0.000369; // Berechnung aus Excel
 		double costPerTimeUnit = 0.0; // Lohnkosten bei Fixkosten integriert
@@ -483,8 +520,8 @@ class Run_AbfallUtils {
 		FuelType engineInformation = FuelType.diesel;
 		double literPerMeter = 0.003; // Berechnung aus Ecxel
 
-		createGarbageTruckType(vehicleTypeId, maxVelocity, costPerDistanceUnit, costPerTimeUnit,
-				fixCosts, engineInformation, literPerMeter);
+		createGarbageTruckType(vehicleTypeId, maxVelocity, costPerDistanceUnit, costPerTimeUnit, fixCosts,
+				engineInformation, literPerMeter);
 		adVehicleType();
 	}
 
@@ -494,9 +531,8 @@ class Run_AbfallUtils {
 	 * @param maxVelocity in m/s
 	 * @return
 	 */
-	private static void createGarbageTruckType(String vehicleTypeId, double maxVelocity,
-			double costPerDistanceUnit, double costPerTimeUnit, double fixCosts, FuelType engineInformation,
-			double literPerMeter) {
+	private static void createGarbageTruckType(String vehicleTypeId, double maxVelocity, double costPerDistanceUnit,
+			double costPerTimeUnit, double fixCosts, FuelType engineInformation, double literPerMeter) {
 		carrierVehType = CarrierVehicleType.Builder.newInstance(Id.create(vehicleTypeId, VehicleType.class))
 				.setCapacity(capacityTruck).setMaxVelocity(maxVelocity).setCostPerDistanceUnit(costPerDistanceUnit)
 				.setCostPerTimeUnit(costPerTimeUnit).setFixCost(fixCosts)
@@ -532,8 +568,6 @@ class Run_AbfallUtils {
 				.setTypeId(carrierVehType.getId()).build();
 	}
 
-	
-
 	/**
 	 * Creates the vehicles at the depots, ads this vehicles to the carriers and
 	 * sets the capabilities. This method is for the Berlin network and creates the
@@ -558,18 +592,16 @@ class Run_AbfallUtils {
 				earliestStartingTime, latestFinishingTime);
 		CarrierVehicle vehicleMalmoeerStr = createGarbageTruck(vehicleIdMalmoeer, depotMalmoeerStr,
 				earliestStartingTime, latestFinishingTime);
-		CarrierVehicle vehicleNordring = createGarbageTruck(vehicleIdNordring, depotNordring,
+		CarrierVehicle vehicleNordring = createGarbageTruck(vehicleIdNordring, depotNordring, earliestStartingTime,
+				latestFinishingTime);
+		CarrierVehicle vehicleGradestrasse = createGarbageTruck(vehicleIdGradestrasse, depotGradestrasse,
 				earliestStartingTime, latestFinishingTime);
-		CarrierVehicle vehicleGradestrasse = createGarbageTruck(vehicleIdGradestrasse,
-				depotGradestrasse, earliestStartingTime, latestFinishingTime);
 
 		// define Carriers
 
 		defineCarriersBerlin(carriers, carrierMap, vehicleForckenbeck, vehicleMalmoeerStr, vehicleNordring,
 				vehicleGradestrasse, fleetSize);
 	}
-
-	
 
 	/**
 	 * Defines and sets the Capabilities of the Carrier, including the vehicleTypes
