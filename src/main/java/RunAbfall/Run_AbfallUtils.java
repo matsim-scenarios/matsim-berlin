@@ -62,9 +62,6 @@ import com.graphhopper.jsprit.core.util.Solutions;
  */
 class Run_AbfallUtils {
 
-	static int stunden = 3600;
-	static int minuten = 60;
-	static int tonnen = 1000;
 	static double costsJsprit = 0;
 	static int noPickup = 0;
 	static int allGarbage = 0;
@@ -133,12 +130,10 @@ class Run_AbfallUtils {
 		Carrier bsrMalmoeer = CarrierImpl.newInstance(Id.create("BSR_MalmoeereStr", Carrier.class));
 		Carrier bsrNordring = CarrierImpl.newInstance(Id.create("BSR_Nordring", Carrier.class));
 		Carrier bsrGradestrasse = CarrierImpl.newInstance(Id.create("BSR_Gradestrasse", Carrier.class));
-		Carrier carrierChessboard = CarrierImpl.newInstance(Id.create("Carrier_Chessboard", Carrier.class));
 		carrierMap.put("Nordring", bsrNordring);
 		carrierMap.put("MalmoeerStr", bsrMalmoeer);
 		carrierMap.put("Forckenbeck", bsrForckenbeck);
 		carrierMap.put("Gradestrasse", bsrGradestrasse);
-		carrierMap.put("Chessboard", carrierChessboard);
 		return carrierMap;
 	}
 
@@ -179,55 +174,7 @@ class Run_AbfallUtils {
 		return config;
 	}
 
-	/**
-	 * Creates shipments for the chessboard network with the input of the volume
-	 * [kg] garbageToCollect
-	 * 
-	 * @param
-	 */
-	static void createShipmentsForChessboardI(int garbageToCollect, Map<Id<Link>, ? extends Link> allLinks,
-			Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan, double serviceTimePerBigTrashcan,
-			Scenario scenario, Carriers carriers, Carrier carrierChessboard, String linkDump) {
-		double distanceWithShipments = 0;
-		for (Link link : allLinks.values()) {
-			if (link.getFreespeed() < 12) {
-				garbageLinks.put(link.getId(), link);
-				distanceWithShipments = distanceWithShipments + link.getLength();
-			}
-		}
-		Id<Link> linkDumpId = Id.createLinkId(linkDump);
-		createShipmentsForCarrierII(garbageToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
-				distanceWithShipments, garbageLinks, scenario, carrierChessboard, linkDumpId, carriers);
-		districtsWithShipments.add("Chessboard");
-		carriers.addCarrier(carrierChessboard);
-
-	}
-
-	/**
-	 * Creates shipments for the chessboard network with the input of the volume
-	 * [kg] garbagePerMeterToCollect. So every meter of the network gets this volume
-	 * of the garbage.
-	 * 
-	 * @param
-	 */
-	static void createShipmentsForChessboardII(double garbagePerMeterToCollect, Map<Id<Link>, ? extends Link> allLinks,
-			Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan, double serviceTimePerBigTrashcan,
-			Scenario scenario, Carriers carriers, Carrier carrierChessboard, String linkDump) {
-		double distanceWithShipments = 0;
-		for (Link link : allLinks.values()) {
-			if (link.getFreespeed() < 12) {
-				garbageLinks.put(link.getId(), link);
-				distanceWithShipments = distanceWithShipments + link.getLength();
-			}
-		}
-		Id<Link> linkDumpId = Id.createLinkId(linkDump);
-		createShipmentsForCarrierI(garbagePerMeterToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan, garbageLinks,
-				scenario, carrierChessboard, linkDumpId, carriers);
-		districtsWithShipments.add("Chessboard");
-		carriers.addCarrier(carrierChessboard);
-
-	}
-
+	
 	/**
 	 * Creates Shipments for the selected areas for the selected weekday. The needed
 	 * data is part of the read shapefile. There are informations about the volume
@@ -241,7 +188,6 @@ class Run_AbfallUtils {
 			HashMap<String, Carrier> carrierMap, Map<Id<Link>, ? extends Link> allLinks,
 			Map<Id<Link>, Link> garbageLinks, Collection<SimpleFeature> features, double volumeBigTrashcan,
 			double serviceTimePerBigTrashcan) {
-		carrierMap.remove("Chessboard");
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		int garbageToCollect = 0;
@@ -251,7 +197,7 @@ class Run_AbfallUtils {
 			for (SimpleFeature simpleFeature : features) {
 				if (simpleFeature.getAttribute("Ortsteilna").equals(district)) {
 					if ((double) simpleFeature.getAttribute(day) > 0) {
-						garbageToCollect = (int) ((double) simpleFeature.getAttribute(day) * tonnen);
+						garbageToCollect = (int) ((double) simpleFeature.getAttribute(day) * 1000);
 						dumpId = garbageDumps.get(simpleFeature.getAttribute(dataEnt.get(day)));
 						depot = simpleFeature.getAttribute("Depot").toString();
 						for (Link link : allLinks.values()) {
@@ -293,7 +239,6 @@ class Run_AbfallUtils {
 			Scenario scenario, Carriers carriers, HashMap<String, Carrier> carrierMap,
 			Map<Id<Link>, ? extends Link> allLinks, Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan,
 			double serviceTimePerBigTrashcan) {
-		carrierMap.remove("Chessboard");
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		String depot = null;
@@ -342,7 +287,6 @@ class Run_AbfallUtils {
 			Scenario scenario, Carriers carriers, HashMap<String, Carrier> carrierMap,
 			Map<Id<Link>, ? extends Link> allLinks, Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan,
 			double serviceTimePerBigTrashcan) {
-		carrierMap.remove("Chessboard");
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		String depot = null;
@@ -390,7 +334,6 @@ class Run_AbfallUtils {
 			Carriers carriers, HashMap<String, Carrier> carrierMap, Map<Id<Link>, ? extends Link> allLinks,
 			Map<Id<Link>, Link> garbageLinks, Collection<SimpleFeature> features, double volumeBigTrashcan,
 			double serviceTimePerBigTrashcan) {
-		carrierMap.remove("Chessboard");
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		int garbageToCollect = 0;
@@ -401,7 +344,7 @@ class Run_AbfallUtils {
 			for (SimpleFeature simpleFeature : features) {
 				if (simpleFeature.getAttribute("Ortsteilna").equals(district)) {
 					if ((double) simpleFeature.getAttribute(day) > 0) {
-						garbageToCollect = (int) ((double) simpleFeature.getAttribute(day) * tonnen);
+						garbageToCollect = (int) ((double) simpleFeature.getAttribute(day) * 1000);
 						dumpId = garbageDumps.get(simpleFeature.getAttribute(dataEnt.get(day)));
 						depot = simpleFeature.getAttribute("Depot").toString();
 						for (Link link : allLinks.values()) {
@@ -438,7 +381,7 @@ class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	private static void createShipmentsForCarrierI(double garbagePerMeterToCollect, double volumeBigTrashcan,
+	static void createShipmentsForCarrierI(double garbagePerMeterToCollect, double volumeBigTrashcan,
 			double serviceTimePerBigTrashcan, Map<Id<Link>, Link> garbageLinks, Scenario scenario, Carrier thisCarrier,
 			Id<Link> dumpId, Carriers carriers) {
 
@@ -446,13 +389,13 @@ class Run_AbfallUtils {
 			double maxWeightBigTrashcan = volumeBigTrashcan * 0.1; // Umrechnung von Volumen [l] in Masse[kg]
 			int volumeGarbage = (int) Math.ceil(link.getLength() * garbagePerMeterToCollect);
 			double serviceTime = Math.ceil(((double) volumeGarbage) / maxWeightBigTrashcan) * serviceTimePerBigTrashcan;
-			double deliveryTime = ((double) volumeGarbage / capacityTruck) * 45 * minuten;
+			double deliveryTime = ((double) volumeGarbage / capacityTruck) * 45 * 60;
 			CarrierShipment shipment = CarrierShipment.Builder
 					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(), (dumpId),
 							volumeGarbage)
 					.setPickupServiceTime(serviceTime)
-					.setPickupTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
-					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
+					.setPickupTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))
+					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))
 					.setDeliveryServiceTime(deliveryTime).build();
 			thisCarrier.getShipments().add(shipment);
 			countingGarbage(dumpId, volumeGarbage);
@@ -468,7 +411,7 @@ class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	private static void createShipmentsForCarrierII(int garbageToCollect, double volumeBigTrashcan,
+	static void createShipmentsForCarrierII(int garbageToCollect, double volumeBigTrashcan,
 			double serviceTimePerBigTrashcan, double distanceWithShipments, Map<Id<Link>, Link> garbageLinks,
 			Scenario scenario, Carrier thisCarrier, Id<Link> garbageDumpId, Carriers carriers) {
 		int count = 1;
@@ -491,13 +434,13 @@ class Run_AbfallUtils {
 				count++;
 			}
 			double serviceTime = Math.ceil(((double) volumeGarbage) / maxWeightBigTrashcan) * serviceTimePerBigTrashcan;
-			double deliveryTime = ((double) volumeGarbage / capacityTruck) * 45 * minuten;
+			double deliveryTime = ((double) volumeGarbage / capacityTruck) * 45 * 60;
 			CarrierShipment shipment = CarrierShipment.Builder
 					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
 							garbageDumpId, volumeGarbage)
 					.setPickupServiceTime(serviceTime)
-					.setPickupTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
-					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * stunden, 15 * stunden))
+					.setPickupTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))
+					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))
 					.setDeliveryServiceTime(deliveryTime).build();
 			thisCarrier.getShipments().add(shipment);
 			garbageCount = garbageCount + volumeGarbage;
@@ -589,24 +532,7 @@ class Run_AbfallUtils {
 				.setTypeId(carrierVehType.getId()).build();
 	}
 
-	/**
-	 * Creates the vehicle at the depot, ads this vehicle to the carriers and sets
-	 * the capabilities. This method is for the Chessboard network with one depot.
-	 * 
-	 * @param
-	 */
-	static void createCarriersForChessboard(String linkDepot, String vehicleNameDepot, Carriers carriers,
-			Carrier carrierChessboard, FleetSize fleetSize) {
-
-		double earliestStartingTime = 6 * stunden;
-		double latestFinishingTime = 15 * stunden;
-
-		createGarbageTruck(vehicleNameDepot, linkDepot, earliestStartingTime, latestFinishingTime);
-
-		// define Carriers
-
-		defineCarriersChessboard(carriers, carrierChessboard, vehicleAtDepot, fleetSize);
-	}
+	
 
 	/**
 	 * Creates the vehicles at the depots, ads this vehicles to the carriers and
@@ -625,8 +551,8 @@ class Run_AbfallUtils {
 		String vehicleIdMalmoeer = "TruckMalmoeer";
 		String vehicleIdNordring = "TruckNordring";
 		String vehicleIdGradestrasse = "TruckGradestrasse";
-		double earliestStartingTime = 6 * stunden;
-		double latestFinishingTime = 15 * stunden;
+		double earliestStartingTime = 6 * 3600;
+		double latestFinishingTime = 15 * 3600;
 
 		CarrierVehicle vehicleForckenbeck = createGarbageTruck(vehicleIdForckenbeck, depotForckenbeck,
 				earliestStartingTime, latestFinishingTime);
@@ -643,23 +569,7 @@ class Run_AbfallUtils {
 				vehicleGradestrasse, fleetSize);
 	}
 
-	/**
-	 * Defines and sets the Capabilities of the Carrier, including the vehicleTypes
-	 * for the carriers for the Chessboard network
-	 * 
-	 * @param
-	 * 
-	 */
-	private static void defineCarriersChessboard(Carriers carriers, Carrier carrierChessboard,
-			CarrierVehicle vehicleDepot, FleetSize fleetSize) {
-		CarrierCapabilities carrierCapabilities = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
-				.addVehicle(vehicleDepot).setFleetSize(fleetSize).build();
-
-		carrierChessboard.setCarrierCapabilities(carrierCapabilities);
-
-		// Fahrzeugtypen den Anbietern zuordenen
-		new CarrierVehicleTypeLoader(carriers).loadVehicleTypes(vehicleTypes);
-	}
+	
 
 	/**
 	 * Defines and sets the Capabilities of the Carrier, including the vehicleTypes
