@@ -54,8 +54,14 @@ public class Run_Abfall {
 
 		log.setLevel(Level.INFO);
 
-		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.modifiedChessboard;
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.chessboardGarbagePerMeterToCollect;
+		/*
+		 * You have to decide the network. If you choose one of the chessboard networks,
+		 * you have to select a chessboard scenario and if you select the Berlin
+		 * network, you have to select one of the Berlin cases. The beginning of the
+		 * name of the scenario shows you the needed network.
+		 */
+		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinSelectedDistricts;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();

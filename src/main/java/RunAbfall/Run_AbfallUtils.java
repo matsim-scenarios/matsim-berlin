@@ -88,6 +88,7 @@ class Run_AbfallUtils {
 	static int capacityTruck = 0;
 	static CarrierVehicle vehicleAtDepot = null;
 	static Multimap<String, String> linksInDistricts;
+	static boolean streetAlreadyInGarbageLinks = false;
 
 	/**
 	 * Creates a map for getting the name of the attribute, where you can find the
@@ -220,9 +221,17 @@ class Run_AbfallUtils {
 							for (String linkInDistrict : linksInDistricts.get(districtToCollect)) {
 								if (Id.createLinkId(linkInDistrict) == link.getId()) {
 									if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
-										garbageLinks.put(link.getId(), link);
-										distanceWithShipments = distanceWithShipments + link.getLength();
+										for (Link garbageLink : garbageLinks.values()) {
+											if (link.getFromNode() == garbageLink.getToNode()
+													&& link.getToNode() == garbageLink.getFromNode())
+												streetAlreadyInGarbageLinks = true;
 
+										}
+										if (streetAlreadyInGarbageLinks != true) {
+											garbageLinks.put(link.getId(), link);
+											distanceWithShipments = distanceWithShipments + link.getLength();
+										}
+										streetAlreadyInGarbageLinks = false;
 									}
 								}
 							}
@@ -274,9 +283,17 @@ class Run_AbfallUtils {
 							for (String linkInDistrict : linksInDistricts.get(districtToCollect)) {
 								if (Id.createLinkId(linkInDistrict) == link.getId()) {
 									if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
-										garbageLinks.put(link.getId(), link);
-										distanceWithShipments = distanceWithShipments + link.getLength();
+										for (Link garbageLink : garbageLinks.values()) {
+											if (link.getFromNode() == garbageLink.getToNode()
+													&& link.getToNode() == garbageLink.getFromNode())
+												streetAlreadyInGarbageLinks = true;
 
+										}
+										if (streetAlreadyInGarbageLinks != true) {
+											garbageLinks.put(link.getId(), link);
+											distanceWithShipments = distanceWithShipments + link.getLength();
+										}
+										streetAlreadyInGarbageLinks = false;
 									}
 								}
 							}
@@ -328,8 +345,17 @@ class Run_AbfallUtils {
 							for (String linkInDistrict : linksInDistricts.get(districtToCollect)) {
 								if (Id.createLinkId(linkInDistrict) == link.getId()) {
 									if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
-										garbageLinks.put(link.getId(), link);
-										distanceWithShipments = distanceWithShipments + link.getLength();
+										for (Link garbageLink : garbageLinks.values()) {
+											if (link.getFromNode() == garbageLink.getToNode()
+													&& link.getToNode() == garbageLink.getFromNode())
+												streetAlreadyInGarbageLinks = true;
+
+										}
+										if (streetAlreadyInGarbageLinks != true) {
+											garbageLinks.put(link.getId(), link);
+											distanceWithShipments = distanceWithShipments + link.getLength();
+										}
+										streetAlreadyInGarbageLinks = false;
 
 									}
 								}
@@ -381,8 +407,17 @@ class Run_AbfallUtils {
 							.get(districtInformation.getAttribute("Ortsteilna").toString())) {
 						if (Id.createLinkId(linkInDistrict) == link.getId()) {
 							if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
-								garbageLinks.put(link.getId(), link);
-								distanceWithShipments = distanceWithShipments + link.getLength();
+								for (Link garbageLink : garbageLinks.values()) {
+									if (link.getFromNode() == garbageLink.getToNode()
+											&& link.getToNode() == garbageLink.getFromNode())
+										streetAlreadyInGarbageLinks = true;
+
+								}
+								if (streetAlreadyInGarbageLinks != true) {
+									garbageLinks.put(link.getId(), link);
+									distanceWithShipments = distanceWithShipments + link.getLength();
+								}
+								streetAlreadyInGarbageLinks = false;
 
 							}
 						}
