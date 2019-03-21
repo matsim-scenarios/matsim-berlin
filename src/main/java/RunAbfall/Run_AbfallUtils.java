@@ -81,6 +81,7 @@ class Run_AbfallUtils {
 	static String linkUmladestationGradestrasse = "71781";
 	static String linkGruenauerStr = "97944";
 	static List<String> districtsWithShipments = new ArrayList<String>();
+	static List<String> districtsWithNoShipments = new ArrayList<String>();
 	static HashMap<String, String> dataEnt = new HashMap<String, String>();
 	static CarrierVehicleTypes vehicleTypes = null;
 	static CarrierVehicleType carrierVehType = null;
@@ -151,7 +152,7 @@ class Run_AbfallUtils {
 				}
 			}
 		}
-		Run_Abfall.log.info("Finished creating Multimap with all links of each district");
+		Run_Abfall.log.info("Finished creating Multimap with all links of each district!");
 	}
 
 	/**
@@ -229,6 +230,7 @@ class Run_AbfallUtils {
 					} else {
 						Run_Abfall.log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
 								+ " no garbage will be cottected at " + day);
+						districtsWithNoShipments.add(districtToCollect);
 					}
 				}
 
@@ -279,9 +281,10 @@ class Run_AbfallUtils {
 								}
 							}
 						}
-					}else {
+					} else {
 						Run_Abfall.log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
 								+ " no garbage will be cottected at " + day);
+						districtsWithNoShipments.add(districtToCollect);
 					}
 
 				}
@@ -332,9 +335,10 @@ class Run_AbfallUtils {
 								}
 							}
 						}
-					}else {
+					} else {
 						Run_Abfall.log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
 								+ " no garbage will be cottected at " + day);
+						districtsWithNoShipments.add(districtToCollect);
 					}
 
 				}
@@ -384,7 +388,7 @@ class Run_AbfallUtils {
 						}
 					}
 				}
-			}else {
+			} else {
 				Run_Abfall.log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
 						+ " no garbage will be cottected at " + day);
 			}
@@ -728,7 +732,8 @@ class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	static void outputSummary(Scenario scenario, HashMap<String, Carrier> carrierMap, String day) {
+	static void outputSummary(Collection<SimpleFeature> districtsWithGarbage, Scenario scenario,
+			HashMap<String, Carrier> carrierMap, String day) {
 		int vehiclesForckenbeck = 0;
 		int vehiclesMalmoeer = 0;
 		int vehiclesNordring = 0;
@@ -802,10 +807,20 @@ class Run_AbfallUtils {
 		file = new File(scenario.getConfig().controler().getOutputDirectory() + "/01_Zusammenfassung.txt");
 		try {
 			writer = new FileWriter(file, true);
-			writer.write("Anzahl der Abholgebiete:\t\t\t\t\t\t\t\t\t" + districtsWithShipments.size() + "\n");
-			writer.write("Abholgebiete:\t\t\t\t\t\t\t\t\t\t\t\t" + districtsWithShipments.toString() + "\n");
-			if (day != null)
+			if (day != null) {
+				writer.write("Anzahl der Gebiete im gesamten Netzwerk:\t\t\t\t\t" + districtsWithGarbage.size() + "\n");
 				writer.write("Wochentag:\t\t\t\t\t\t\t\t\t\t\t\t\t" + day + "\n");
+			}
+			writer.write("\n" + "Anzahl der untersuchten Gebiete mit Abholung:\t\t\t\t" + districtsWithShipments.size()
+					+ "\n");
+			writer.write("Untersuchte Gebiete mit Abholung:\t\t\t\t\t\t\t" + districtsWithShipments.toString() + "\n");
+			if (day != null) {
+				writer.write("\n" + "Anzahl der untersuchten Gebiete ohne Abholung:\t\t\t\t"
+						+ districtsWithNoShipments.size() + "\n");
+				writer.write("Untersuchte Gebiete ohne Abholung:\t\t\t\t\t\t\t" + districtsWithNoShipments.toString()
+						+ "\n");
+			}
+
 			writer.write("\n" + "Die Summe des abzuholenden Mülls beträgt: \t\t\t\t\t" + ((double) allGarbage) / 1000
 					+ " t\n\n");
 			writer.write("Anzahl der Abholstellen: \t\t\t\t\t\t\t\t\t" + numberOfShipments + "\n");

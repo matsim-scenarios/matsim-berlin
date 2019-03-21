@@ -22,6 +22,11 @@ import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.gis.ShapeFileReader;
 import org.opengis.feature.simple.SimpleFeature;
 
+/**
+ * @author Ricardo Ewert MA: Modellierung und Simulation der städtischen
+ *         Abfallwirtschaft am Beispiel Berlins
+ *
+ */
 public class Run_Abfall {
 
 	static final Logger log = Logger.getLogger(Run_Abfall.class);
@@ -49,8 +54,8 @@ public class Run_Abfall {
 
 		log.setLevel(Level.INFO);
 
-		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinSelectedDistricts;
+		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.modifiedChessboard;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.chessboardGarbagePerMeterToCollect;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
@@ -113,7 +118,7 @@ public class Run_Abfall {
 			break;
 		case berlinSelectedDistricts:
 			// day input: MO or DI or MI or DO or FR
-			List<String> districtsForShipments = Arrays.asList("Malchow","Mitte");
+			List<String> districtsForShipments = Arrays.asList("Malchow", "Mitte");
 			day = "MI";
 			Run_AbfallUtils.createShipmentsForSelectedArea(districtsWithGarbage, districtsForShipments, day,
 					garbageDumps, scenario, carriers, carrierMap, allLinks, garbageLinks, volumeBigTrashcan,
@@ -175,7 +180,7 @@ public class Run_Abfall {
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans_Test01.xml");
 
-		Run_AbfallUtils.outputSummary(scenario, carrierMap, day);
+		Run_AbfallUtils.outputSummary(districtsWithGarbage, scenario, carrierMap, day);
 
 	}
 
