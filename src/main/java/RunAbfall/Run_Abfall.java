@@ -29,7 +29,6 @@ public class Run_Abfall {
 	private static final String original_Chessboard = "scenarios/networks/originalChessboard9x9.xml";
 	private static final String modified_Chessboard = "scenarios/networks/modifiedChessboard9x9.xml";
 	private static final String berlin = "original-input-data/berlin-v5.2-1pct.output_network.xml.gz";
-	private static final String Berlin_garbage = "C:\\\\Users\\\\erica\\\\OneDrive\\\\Dokumente\\\\Studium\\\\0 Masterarbeit\\\\Shape-Files\\\\Netzwerk_Abfall\\\\BerlinOnly\\\\berlinOnly_garbageNetwork.shp";
 	private static final String berlinDistrictsWithGarbageInformations = "scenarios/garbageInput/districtsWithGarbageInformations.shp";
 
 	private enum netzwerkAuswahl {
@@ -51,7 +50,7 @@ public class Run_Abfall {
 		log.setLevel(Level.INFO);
 
 		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinSelectedDistricts;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinCollectedGarbageForOneDay;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
@@ -90,10 +89,9 @@ public class Run_Abfall {
 		Map<Id<Link>, Link> garbageLinks = new HashMap<Id<Link>, Link>();
 		HashMap<String, Id<Link>> garbageDumps = Run_AbfallUtils.createDumpMap();
 
-		// imports the shapefile with the garbage informations
-		Collection<SimpleFeature> features = ShapeFileReader.getAllFeatures(Berlin_garbage);
-		Collection<SimpleFeature> districts = ShapeFileReader.getAllFeatures(berlinDistrictsWithGarbageInformations);
-		Run_AbfallUtils.createMapWithLinksInDistricts(districts, allLinks);
+		Collection<SimpleFeature> districtsWithGarbage = ShapeFileReader
+				.getAllFeatures(berlinDistrictsWithGarbageInformations);
+		Run_AbfallUtils.createMapWithLinksInDistricts(districtsWithGarbage, allLinks);
 
 		double volumeBigTrashcan = 1100; // in liter
 		double secondsServiceTimePerBigTrashcan = 41;
@@ -117,8 +115,9 @@ public class Run_Abfall {
 			// day input: MO or DI or MI or DO or FR
 			List<String> districtsForShipments = Arrays.asList("Malchow");
 			day = "MI";
-			Run_AbfallUtils.createShipmentsForSelectedArea(districtsForShipments, day, garbageDumps, scenario, carriers,
-					carrierMap, allLinks, garbageLinks, features, volumeBigTrashcan, secondsServiceTimePerBigTrashcan);
+			Run_AbfallUtils.createShipmentsForSelectedArea(districtsWithGarbage, districtsForShipments, day,
+					garbageDumps, scenario, carriers, carrierMap, allLinks, garbageLinks, volumeBigTrashcan,
+					secondsServiceTimePerBigTrashcan);
 			fleetSize = FleetSize.INFINITE;
 			Run_AbfallUtils.createCarriersBerlin(carriers, carrierMap, fleetSize);
 			break;
@@ -128,8 +127,8 @@ public class Run_Abfall {
 			HashMap<String, Double> areasForShipmentPerMeterMap = new HashMap<String, Double>();
 			areasForShipmentPerMeterMap.put("Malchow", 1.04);
 			day = "MI";
-			Run_AbfallUtils.createShipmentsGarbagePerMeter(features, areasForShipmentPerMeterMap, day, garbageDumps,
-					scenario, carriers, carrierMap, allLinks, garbageLinks, volumeBigTrashcan,
+			Run_AbfallUtils.createShipmentsWithGarbagePerMeter(districtsWithGarbage, areasForShipmentPerMeterMap, day,
+					garbageDumps, scenario, carriers, carrierMap, allLinks, garbageLinks, volumeBigTrashcan,
 					secondsServiceTimePerBigTrashcan);
 			fleetSize = FleetSize.INFINITE;
 			Run_AbfallUtils.createCarriersBerlin(carriers, carrierMap, fleetSize);
@@ -139,10 +138,10 @@ public class Run_Abfall {
 			// input for Map .put("district", int kgGarbageToCollect)
 			HashMap<String, Integer> areasForShipmentPerVolumeMap = new HashMap<String, Integer>();
 			areasForShipmentPerVolumeMap.put("Malchow", 5 * 1000);
-			areasForShipmentPerVolumeMap.put("Hansaviertel", 20 * 1000);
+			// areasForShipmentPerVolumeMap.put("Hansaviertel", 20 * 1000);
 			day = "MI";
-			Run_AbfallUtils.createShipmentsGarbagePerVolume(features, areasForShipmentPerVolumeMap, day, garbageDumps,
-					scenario, carriers, carrierMap, allLinks, garbageLinks, volumeBigTrashcan,
+			Run_AbfallUtils.createShipmentsGarbagePerVolume(districtsWithGarbage, areasForShipmentPerVolumeMap, day,
+					garbageDumps, scenario, carriers, carrierMap, allLinks, garbageLinks, volumeBigTrashcan,
 					secondsServiceTimePerBigTrashcan);
 			fleetSize = FleetSize.INFINITE;
 			Run_AbfallUtils.createCarriersBerlin(carriers, carrierMap, fleetSize);
@@ -150,14 +149,19 @@ public class Run_Abfall {
 		case berlinCollectedGarbageForOneDay:
 			// MO or DI or MI or DO or FR
 			day = "MO";
-			Run_AbfallUtils.createShipmentsForSelectedDay(day, garbageDumps, scenario, carriers, carrierMap, allLinks,
-					garbageLinks, features, volumeBigTrashcan, secondsServiceTimePerBigTrashcan);
+			Run_AbfallUtils.createShipmentsForSelectedDay(districtsWithGarbage, day, garbageDumps, scenario, carriers,
+					carrierMap, allLinks, garbageLinks, volumeBigTrashcan, secondsServiceTimePerBigTrashcan);
 			fleetSize = FleetSize.INFINITE;
 			Run_AbfallUtils.createCarriersBerlin(carriers, carrierMap, fleetSize);
 			break;
 		default:
 			new RuntimeException("no scenario selected.");
 		}
+		/*
+		 * This xml output gives a summary with information about the created shipments,
+		 * so that you can already have this information, while jsprit and matsim are
+		 * still running.
+		 */
 		Run_AbfallUtils.outputSummaryShipments(scenario, day);
 		// jsprit
 		Run_AbfallUtils.solveWithJsprit(scenario, carriers, carrierMap);

@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -89,28 +88,6 @@ class Run_AbfallUtils {
 	static int capacityTruck = 0;
 	static CarrierVehicle vehicleAtDepot = null;
 	static Multimap<String, String> linksInDistricts;
-
-	/**
-	 * Creates a map of all districts, which are listed in the shapefile.
-	 * 
-	 */
-	private static void createMapDistrictsBerlin() {
-		allDistrictsBerlin = Arrays.asList("Mitte", "Moabit", "Hansaviertel", "Tiergarten", "Wedding", "Gesundbrunnen",
-				"Friedrichshain", "Kreuzberg", "Prenzlauer Berg", "Weissensee", "Blankenburg", "Heinersdorf", "Karow",
-				"Stadtrandsiedlung Malchow", "Pankow", "Blankenfelde", "Buch", "Franzoesisch Buchholz",
-				"Niederschoenhausen", "Rosenthal", "Wilhelmsruh", "Charlottenburg", "Wilmersdorf", "Schmargendorf",
-				"Grunewald", "Westend", "Charlottenburg-Nord", "Halensee", "Spandau", "Haselhorst", "Siemensstadt",
-				"Staaken", "Gatow", "Kladow", "Hakenfelde", "Falkenhagener Feld", "Wilhelmstadt", "Steglitz",
-				"Lichterfelde", "Lankwitz", "Zehlendorf", "Dahlem", "Nikolassee", "Wannsee", "Schoeneberg", "Friedenau",
-				"Tempelhof", "Mariendorf", "Marienfelde", "Lichtenrade", "Neukoelln", "Britz", "Buckow", "Rudow",
-				"Gropiusstadt", "Alt-Treptow", "Plaenterwald", "Baumschulenweg", "Johannisthal", "Niederschoeneweide",
-				"Altglienicke", "Adlershof", "Bohnsdorf", "Oberschoeneweide", "Koepenick", "Friedrichshagen",
-				"Rahnsdorf", "Gruenau", "Mueggelheim", "Schmoeckwitz", "Marzahn", "Biesdorf", "Kaulsdorf", "Mahlsdorf",
-				"Hellersdorf", "Friedrichsfelde", "Karlshorst", "Lichtenberg", "Falkenberg", "Malchow", "Wartenberg",
-				"Neu-Hohenschoenhausen", "Alt-Hohenschoenhausen", "Fennpfuhl", "Rummelsburg", "Reinickendorf", "Tegel",
-				"Konradshoehe", "Heiligensee", "Frohnau", "Hermsdorf", "Waidmannslust", "Luebars", "Wittenau",
-				"Maerkisches Viertel", "Borsigwalde");
-	}
 
 	/**
 	 * Creates a map for getting the name of the attribute, where you can find the
@@ -222,30 +199,30 @@ class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	static void createShipmentsForSelectedArea(List<String> districtsForShipments, String day,
-			HashMap<String, Id<Link>> garbageDumps, Scenario scenario, Carriers carriers,
-			HashMap<String, Carrier> carrierMap, Map<Id<Link>, ? extends Link> allLinks,
-			Map<Id<Link>, Link> garbageLinks, Collection<SimpleFeature> features, double volumeBigTrashcan,
-			double serviceTimePerBigTrashcan) {
+	static void createShipmentsForSelectedArea(Collection<SimpleFeature> districtsWithGarbage,
+			List<String> districtsForShipments, String day, HashMap<String, Id<Link>> garbageDumps, Scenario scenario,
+			Carriers carriers, HashMap<String, Carrier> carrierMap, Map<Id<Link>, ? extends Link> allLinks,
+			Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan, double serviceTimePerBigTrashcan) {
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		int garbageToCollect = 0;
 		String depot = null;
 		createMapEnt();
-		for (String district : districtsForShipments) {
-			for (SimpleFeature simpleFeature : features) {
-				if (simpleFeature.getAttribute("Ortsteilna").equals(district)) {
-					if ((double) simpleFeature.getAttribute(day) > 0) {
-						garbageToCollect = (int) ((double) simpleFeature.getAttribute(day) * 1000);
-						dumpId = garbageDumps.get(simpleFeature.getAttribute(dataEnt.get(day)));
-						depot = simpleFeature.getAttribute("Depot").toString();
+		for (String districtToCollect : districtsForShipments) {
+			for (SimpleFeature districtInformation : districtsWithGarbage) {
+				if (districtInformation.getAttribute("Ortsteilna").equals(districtToCollect)) {
+					if ((double) districtInformation.getAttribute(day) > 0) {
+						garbageToCollect = (int) ((double) districtInformation.getAttribute(day) * 1000);
+						dumpId = garbageDumps.get(districtInformation.getAttribute(dataEnt.get(day)));
+						depot = districtInformation.getAttribute("Depot").toString();
 						for (Link link : allLinks.values()) {
-							if (Id.createLinkId(simpleFeature.getAttribute("ID").toString()) == link.getId()) {
-								if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
+							for (String linkInDistrict : linksInDistricts.get(districtToCollect)) {
+								if (Id.createLinkId(linkInDistrict) == link.getId()) {
+									if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
+										garbageLinks.put(link.getId(), link);
+										distanceWithShipments = distanceWithShipments + link.getLength();
 
-									garbageLinks.put(link.getId(), link);
-									distanceWithShipments = distanceWithShipments + link.getLength();
-
+									}
 								}
 							}
 						}
@@ -254,7 +231,7 @@ class Run_AbfallUtils {
 
 			}
 			if (garbageLinks.size() != 0) {
-				districtsWithShipments.add(district);
+				districtsWithShipments.add(districtToCollect);
 				createShipmentsForCarrierII(garbageToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
 						distanceWithShipments, garbageLinks, scenario, carrierMap.get(depot), dumpId, carriers);
 			}
@@ -273,7 +250,7 @@ class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	static void createShipmentsGarbagePerMeter(Collection<SimpleFeature> features,
+	static void createShipmentsWithGarbagePerMeter(Collection<SimpleFeature> districtsWithGarbage,
 			HashMap<String, Double> areasForShipmentPerMeterMap, String day, HashMap<String, Id<Link>> garbageDumps,
 			Scenario scenario, Carriers carriers, HashMap<String, Carrier> carrierMap,
 			Map<Id<Link>, ? extends Link> allLinks, Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan,
@@ -282,19 +259,21 @@ class Run_AbfallUtils {
 		double distanceWithShipments = 0;
 		String depot = null;
 		createMapEnt();
-		for (String district : areasForShipmentPerMeterMap.keySet()) {
-			for (SimpleFeature simpleFeature : features) {
-				if (simpleFeature.getAttribute("Ortsteilna").equals(district)) {
-					if ((double) simpleFeature.getAttribute(day) > 0) {
-						dumpId = garbageDumps.get(simpleFeature.getAttribute(dataEnt.get(day)));
-						depot = simpleFeature.getAttribute("Depot").toString();
+		for (String districtToCollect : areasForShipmentPerMeterMap.keySet()) {
+			for (SimpleFeature districtInformation : districtsWithGarbage) {
+				if (districtInformation.getAttribute("Ortsteilna").equals(districtToCollect)) {
+					if ((double) districtInformation.getAttribute(day) > 0) {
+						dumpId = garbageDumps.get(districtInformation.getAttribute(dataEnt.get(day)));
+						depot = districtInformation.getAttribute("Depot").toString();
 						for (Link link : allLinks.values()) {
-							if (Id.createLinkId(simpleFeature.getAttribute("ID").toString()) == link.getId()) {
-								if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
-									garbageLinks.put(link.getId(), link);
-									distanceWithShipments = distanceWithShipments + link.getLength();
-								}
+							for (String linkInDistrict : linksInDistricts.get(districtToCollect)) {
+								if (Id.createLinkId(linkInDistrict) == link.getId()) {
+									if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
+										garbageLinks.put(link.getId(), link);
+										distanceWithShipments = distanceWithShipments + link.getLength();
 
+									}
+								}
 							}
 						}
 					}
@@ -303,8 +282,8 @@ class Run_AbfallUtils {
 
 			}
 			if (garbageLinks.size() != 0)
-				districtsWithShipments.add(district);
-			double garbagePerMeterToCollect = areasForShipmentPerMeterMap.get(district);
+				districtsWithShipments.add(districtToCollect);
+			double garbagePerMeterToCollect = areasForShipmentPerMeterMap.get(districtToCollect);
 			createShipmentsForCarrierI(garbagePerMeterToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
 					garbageLinks, scenario, carrierMap.get(depot), dumpId, carriers);
 			distanceWithShipments = 0;
@@ -321,28 +300,28 @@ class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	static void createShipmentsGarbagePerVolume(Collection<SimpleFeature> features,
-			HashMap<String, Integer> areasForShipmentPerVolumeMap, String day, HashMap<String, Id<Link>> garbageDumps,
-			Scenario scenario, Carriers carriers, HashMap<String, Carrier> carrierMap,
-			Map<Id<Link>, ? extends Link> allLinks, Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan,
-			double serviceTimePerBigTrashcan) {
+	static void createShipmentsGarbagePerVolume(Collection<SimpleFeature> districtsWithGarbage, HashMap<String, Integer> areasForShipmentPerVolumeMap, String day,
+			HashMap<String, Id<Link>> garbageDumps, Scenario scenario, Carriers carriers,
+			HashMap<String, Carrier> carrierMap, Map<Id<Link>, ? extends Link> allLinks,
+			Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan, double serviceTimePerBigTrashcan) {
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		String depot = null;
 		createMapEnt();
-		for (String district : areasForShipmentPerVolumeMap.keySet()) {
-			for (SimpleFeature simpleFeature : features) {
-				if (simpleFeature.getAttribute("Ortsteilna").equals(district)) {
-					if ((double) simpleFeature.getAttribute(dataEnt.get(day)) > 0) {
-						dumpId = garbageDumps.get(simpleFeature.getAttribute(dataEnt.get(day)));
-						depot = simpleFeature.getAttribute("Depot").toString();
+		for (String districtToCollect : areasForShipmentPerVolumeMap.keySet()) {
+			for (SimpleFeature districtInformation : districtsWithGarbage) {
+				if (districtInformation.getAttribute("Ortsteilna").equals(districtToCollect)) {
+					if ((double) districtInformation.getAttribute(day) > 0) {
+						dumpId = garbageDumps.get(districtInformation.getAttribute(dataEnt.get(day)));
+						depot = districtInformation.getAttribute("Depot").toString();
 						for (Link link : allLinks.values()) {
-							if (Id.createLinkId(simpleFeature.getAttribute("ID").toString()) == link.getId()) {
-								if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
+							for (String linkInDistrict : linksInDistricts.get(districtToCollect)) {
+								if (Id.createLinkId(linkInDistrict) == link.getId()) {
+									if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
+										garbageLinks.put(link.getId(), link);
+										distanceWithShipments = distanceWithShipments + link.getLength();
 
-									garbageLinks.put(link.getId(), link);
-									distanceWithShipments = distanceWithShipments + link.getLength();
-
+									}
 								}
 							}
 						}
@@ -352,8 +331,8 @@ class Run_AbfallUtils {
 
 			}
 			if (garbageLinks.size() != 0)
-				districtsWithShipments.add(district);
-			int garbageVolumeToCollect = areasForShipmentPerVolumeMap.get(district);
+				districtsWithShipments.add(districtToCollect);
+			int garbageVolumeToCollect = areasForShipmentPerVolumeMap.get(districtToCollect);
 			createShipmentsForCarrierII(garbageVolumeToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
 					distanceWithShipments, garbageLinks, scenario, carrierMap.get(depot), dumpId, carriers);
 			distanceWithShipments = 0;
@@ -369,39 +348,37 @@ class Run_AbfallUtils {
 	 * 
 	 * @param
 	 */
-	static void createShipmentsForSelectedDay(String day, HashMap<String, Id<Link>> garbageDumps, Scenario scenario,
+	static void createShipmentsForSelectedDay(Collection<SimpleFeature> districtsWithGarbage, String day, HashMap<String, Id<Link>> garbageDumps, Scenario scenario,
 			Carriers carriers, HashMap<String, Carrier> carrierMap, Map<Id<Link>, ? extends Link> allLinks,
-			Map<Id<Link>, Link> garbageLinks, Collection<SimpleFeature> features, double volumeBigTrashcan,
-			double serviceTimePerBigTrashcan) {
+			Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan, double serviceTimePerBigTrashcan) {
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		int garbageToCollect = 0;
 		String depot = null;
-		createMapDistrictsBerlin();
 		createMapEnt();
-		for (String district : allDistrictsBerlin) {
-			for (SimpleFeature simpleFeature : features) {
-				if (simpleFeature.getAttribute("Ortsteilna").equals(district)) {
-					if ((double) simpleFeature.getAttribute(day) > 0) {
-						garbageToCollect = (int) ((double) simpleFeature.getAttribute(day) * 1000);
-						dumpId = garbageDumps.get(simpleFeature.getAttribute(dataEnt.get(day)));
-						depot = simpleFeature.getAttribute("Depot").toString();
+		//for (String district : allDistrictsBerlin) {
+			for (SimpleFeature districtInformation : districtsWithGarbage) {			
+					if ((double) districtInformation.getAttribute(day) > 0) {
+						garbageToCollect = (int) ((double) districtInformation.getAttribute(day) * 1000);
+						dumpId = garbageDumps.get(districtInformation.getAttribute(dataEnt.get(day)));
+						depot = districtInformation.getAttribute("Depot").toString();
 						for (Link link : allLinks.values()) {
-							if (Id.createLinkId(simpleFeature.getAttribute("ID").toString()) == link.getId()) {
-								if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
+							for (String linkInDistrict : linksInDistricts.get(districtInformation.getAttribute("Ortsteilna").toString())) {
+								if (Id.createLinkId(linkInDistrict) == link.getId()) {
+									if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
+										garbageLinks.put(link.getId(), link);
+										distanceWithShipments = distanceWithShipments + link.getLength();
 
-									garbageLinks.put(link.getId(), link);
-									distanceWithShipments = distanceWithShipments + link.getLength();
-
+									}
 								}
 							}
 						}
 					}
-				}
+				
 
-			}
+			//}
 			if (garbageLinks.size() != 0) {
-				districtsWithShipments.add(district);
+				districtsWithShipments.add(districtInformation.getAttribute("Ortsteilna").toString());
 
 				createShipmentsForCarrierII(garbageToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
 						distanceWithShipments, garbageLinks, scenario, carrierMap.get(depot), dumpId, carriers);
