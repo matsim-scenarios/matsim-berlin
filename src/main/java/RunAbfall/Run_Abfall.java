@@ -24,7 +24,7 @@ import org.opengis.feature.simple.SimpleFeature;
 
 public class Run_Abfall {
 
-	private static final Logger log = Logger.getLogger(Run_Abfall.class);
+	static final Logger log = Logger.getLogger(Run_Abfall.class);
 
 	private static final String original_Chessboard = "scenarios/networks/originalChessboard9x9.xml";
 	private static final String modified_Chessboard = "scenarios/networks/modifiedChessboard9x9.xml";
@@ -50,7 +50,7 @@ public class Run_Abfall {
 		log.setLevel(Level.INFO);
 
 		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinCollectedGarbageForOneDay;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinSelectedDistricts;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
@@ -113,7 +113,7 @@ public class Run_Abfall {
 			break;
 		case berlinSelectedDistricts:
 			// day input: MO or DI or MI or DO or FR
-			List<String> districtsForShipments = Arrays.asList("Malchow");
+			List<String> districtsForShipments = Arrays.asList("Malchow","Mitte");
 			day = "MI";
 			Run_AbfallUtils.createShipmentsForSelectedArea(districtsWithGarbage, districtsForShipments, day,
 					garbageDumps, scenario, carriers, carrierMap, allLinks, garbageLinks, volumeBigTrashcan,
