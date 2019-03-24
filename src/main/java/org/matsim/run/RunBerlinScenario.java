@@ -34,6 +34,7 @@ import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryLogging;
+import org.matsim.core.mobsim.qsim.AbstractQSimModule;
 import org.matsim.core.scenario.ScenarioUtils;
 
 import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
@@ -42,7 +43,7 @@ import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 * @author ikaddoura
 */
 
-public class RunBerlinScenario {
+public final class RunBerlinScenario {
 
 	private static final Logger log = Logger.getLogger(RunBerlinScenario.class);
 
@@ -74,8 +75,10 @@ public class RunBerlinScenario {
 		this.configFileName = configFileName;
 		this.overridingConfigFileName = overridingConfigFileName;
 	}
-
-	public Controler prepareControler( AbstractModule... overridingModules ) {
+	
+	public final Controler prepareControler( AbstractModule... overridingModules ) {
+		// note that for something like Signals, and presumably drt, one needs the controler object
+		
 		if ( !hasPreparedScenario ) {
 			prepareScenario() ;
 		}
@@ -113,7 +116,20 @@ public class RunBerlinScenario {
 		return controler;
 	}
 	
-	public Scenario prepareScenario() {
+	public final void addOverridingModule( AbstractModule controlerModule ) {
+		if ( controler==null ) {
+			prepareControler(  ) ;
+		}
+		controler.addOverridingModule( controlerModule ) ;
+	}
+	
+	public final void addOverridingQSimModule( AbstractQSimModule qSimModule ) {
+		if ( controler==null ) {
+			prepareControler(  ) ;
+		}
+	}
+	
+	public final Scenario prepareScenario() {
 		if ( !hasPreparedConfig ) {
 			prepareConfig( ) ;
 		}
