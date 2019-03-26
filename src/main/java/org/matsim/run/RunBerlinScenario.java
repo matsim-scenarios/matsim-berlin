@@ -27,6 +27,7 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.CommandLine;
+import org.matsim.core.config.CommandLine.ConfigurationException;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
@@ -47,12 +48,11 @@ import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 public final class RunBerlinScenario {
 
 	public static final String CONFIG_PATH = "config-path";
-	public static final String OVERRIDING_CONFIG_PATH = "overriding-config-path";
 	private static final Logger log = Logger.getLogger(RunBerlinScenario.class );
 
+	private final CommandLine cmd;
+
 	private final String configFileName;
-	private final String overridingConfigFileName;
-	private final String[] args;
 	private Config config;
 	private Scenario scenario;
 	private Controler controler;
@@ -62,36 +62,39 @@ public final class RunBerlinScenario {
 	private boolean hasPreparedControler = false ;
 	
 	public static void main(String[] args) {
-		String configFileName ;
-		String overridingConfigFileName = null;
-		if ( args.length==0 || args[0].equals("")) {
-			configFileName = "scenarios/berlin-v5.3-10pct/input/berlin-v5.3-10pct.config.xml";
-			overridingConfigFileName = "overridingConfig.xml";
-		} else {
-			configFileName = args[0];
-			if ( args.length>1 ) overridingConfigFileName = args[1];
+		
+		for (String arg : args) {
+			log.info( arg );
 		}
-		log.info( "config file: " + configFileName );
-		new RunBerlinScenario( configFileName, overridingConfigFileName ).run() ;
+		
+		if ( args.length==0 ) {
+			String configFileName = "scenarios/berlin-v5.3-10pct/input/berlin-v5.3-10pct.config.xml";
+			new RunBerlinScenario( new String[]{ "--" + CONFIG_PATH, configFileName } ).run() ;
+			
+		} else {
+			new RunBerlinScenario( args ).run() ;
+		}
 	}
 
 	@Deprecated // use version with String [] args
-	public RunBerlinScenario( String configFileName, String overridingConfigFileName) {
+	public RunBerlinScenario( String configFileName) {
 		this.configFileName = configFileName;
-		this.overridingConfigFileName = overridingConfigFileName;
-		this.args = null ;
+		this.cmd = null ;
 	}
 
 	public RunBerlinScenario( String [] args ) {
+		
 		try{
-			CommandLine cmd = new CommandLine.Builder( args ).build() ;
+			cmd = new CommandLine.Builder( args )
+					.allowPositionalArguments(false)
+					.requireOptions(CONFIG_PATH)
+					.allowAnyOption(true)
+					.build() ;
 			this.configFileName = cmd.getOptionStrict( CONFIG_PATH ) ;
-			this.overridingConfigFileName = cmd.getOptionStrict( OVERRIDING_CONFIG_PATH ) ;
+
 		} catch( CommandLine.ConfigurationException e ){
-			e.printStackTrace();
 			throw new RuntimeException( e ) ;
 		}
-		this.args = args ;
 	}
 	
 	public final Controler prepareControler( AbstractModule... overridingModules ) {
@@ -152,13 +155,6 @@ public final class RunBerlinScenario {
 			prepareConfig( ) ;
 		}
 		
-		// so that config settings in code, which come after the settings from the initial config file, can
-		// be overridden without having to change the jar file.  Normally empty.
-		if (this.overridingConfigFileName==null || this.overridingConfigFileName=="null" || this.overridingConfigFileName=="") {
-			// do not load overriding config
-		} else {
-			ConfigUtils.loadConfig( config, this.overridingConfigFileName );	
-		}
 		// note that the path for this is different when run from GUI (path of original config) vs.
 		// when run from command line/IDE (java root).  :-(    See comment in method.  kai, jul'18
 		
@@ -224,12 +220,11 @@ public final class RunBerlinScenario {
 			config.planCalcScore().addActivityParams( params );
 		}
 
-		if ( args!=null ){
-			try{
-				CommandLine cmd = new CommandLine.Builder( args ).build();
+		if (cmd != null) {
+			try {
 				cmd.applyConfiguration( config );
-			} catch( CommandLine.ConfigurationException e ){
-				e.printStackTrace();
+			} catch (ConfigurationException e) {
+				throw new RuntimeException(e);			
 			}
 		}
 

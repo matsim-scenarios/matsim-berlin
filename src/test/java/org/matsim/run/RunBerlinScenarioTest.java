@@ -63,7 +63,7 @@ public class RunBerlinScenarioTest {
 	public final void test1pctUntilIteration1() {
 		try {
 			String configFilename = "scenarios/berlin-v5.3-1pct/input/berlin-v5.3-1pct.config.xml";
-			RunBerlinScenario berlin = new RunBerlinScenario( configFilename, "overridingConfig.xml" ) ;
+			RunBerlinScenario berlin = new RunBerlinScenario( new String[] { "--" + RunBerlinScenario.CONFIG_PATH , configFilename } ) ;
 			
 			Config config =  berlin.prepareConfig() ;
 			config.controler().setLastIteration(1);
@@ -95,7 +95,7 @@ public class RunBerlinScenarioTest {
 	public final void test10pctUntilIteration1() {
 		try {
 			String configFilename = "scenarios/berlin-v5.3-10pct/input/berlin-v5.3-10pct.config.xml";
-			RunBerlinScenario berlin = new RunBerlinScenario( configFilename, "overridingConfig.xml" ) ;
+			RunBerlinScenario berlin = new RunBerlinScenario( new String[] { "--" + RunBerlinScenario.CONFIG_PATH , configFilename } ) ;
 			
 			Config config =  berlin.prepareConfig() ;
 			config.controler().setLastIteration(1);
@@ -127,7 +127,7 @@ public class RunBerlinScenarioTest {
 		final int iteration = 40;
 		try {
 			String configFilename = "scenarios/berlin-v5.3-1pct/input/berlin-v5.3-1pct.config.xml";
-			RunBerlinScenario berlin = new RunBerlinScenario( configFilename, "overridingConfig.xml") ;
+			RunBerlinScenario berlin = new RunBerlinScenario( new String[] { "--" + RunBerlinScenario.CONFIG_PATH , configFilename } ) ;
 			
 			Config config = berlin.prepareConfig() ;
 			config.controler().setLastIteration(iteration);
