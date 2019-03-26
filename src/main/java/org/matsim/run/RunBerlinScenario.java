@@ -26,6 +26,7 @@ import org.matsim.analysis.ScoreStats;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Population;
+import org.matsim.core.config.CommandLine;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
@@ -45,10 +46,13 @@ import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 
 public final class RunBerlinScenario {
 
-	private static final Logger log = Logger.getLogger(RunBerlinScenario.class);
+	public static final String CONFIG_PATH = "config-path";
+	public static final String OVERRIDING_CONFIG_PATH = "overriding-config-path";
+	private static final Logger log = Logger.getLogger(RunBerlinScenario.class );
 
 	private final String configFileName;
 	private final String overridingConfigFileName;
+	private final String[] args;
 	private Config config;
 	private Scenario scenario;
 	private Controler controler;
@@ -70,10 +74,24 @@ public final class RunBerlinScenario {
 		log.info( "config file: " + configFileName );
 		new RunBerlinScenario( configFileName, overridingConfigFileName ).run() ;
 	}
-	
+
+	@Deprecated // use version with String [] args
 	public RunBerlinScenario( String configFileName, String overridingConfigFileName) {
 		this.configFileName = configFileName;
 		this.overridingConfigFileName = overridingConfigFileName;
+		this.args = null ;
+	}
+
+	public RunBerlinScenario( String [] args ) {
+		try{
+			CommandLine cmd = new CommandLine.Builder( args ).build() ;
+			this.configFileName = cmd.getOptionStrict( CONFIG_PATH ) ;
+			this.overridingConfigFileName = cmd.getOptionStrict( OVERRIDING_CONFIG_PATH ) ;
+		} catch( CommandLine.ConfigurationException e ){
+			e.printStackTrace();
+			throw new RuntimeException( e ) ;
+		}
+		this.args = args ;
 	}
 	
 	public final Controler prepareControler( AbstractModule... overridingModules ) {
@@ -205,7 +223,16 @@ public final class RunBerlinScenario {
 			params.setTypicalDuration( 12.*3600. );
 			config.planCalcScore().addActivityParams( params );
 		}
-		
+
+		if ( args!=null ){
+			try{
+				CommandLine cmd = new CommandLine.Builder( args ).build();
+				cmd.applyConfiguration( config );
+			} catch( CommandLine.ConfigurationException e ){
+				e.printStackTrace();
+			}
+		}
+
 		hasPreparedConfig = true ;
 		return config ;
 	}
