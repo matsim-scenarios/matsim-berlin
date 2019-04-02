@@ -148,6 +148,7 @@ public final class RunBerlinScenario {
 		if ( controler==null ) {
 			prepareControler(  ) ;
 		}
+		controler.addOverridingQSimModule( qSimModule );
 	}
 	
 	public final Scenario prepareScenario() {
