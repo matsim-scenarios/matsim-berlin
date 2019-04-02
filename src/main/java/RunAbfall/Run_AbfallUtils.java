@@ -111,7 +111,7 @@ class Run_AbfallUtils {
 	static HashMap<String, Carrier> createCarrier() {
 		HashMap<String, Carrier> carrierMap = new HashMap<String, Carrier>();
 		Carrier bsrForckenbeck = CarrierImpl.newInstance(Id.create("BSR_Forckenbeck", Carrier.class));
-		Carrier bsrMalmoeer = CarrierImpl.newInstance(Id.create("BSR_MalmoeereStr", Carrier.class));
+		Carrier bsrMalmoeer = CarrierImpl.newInstance(Id.create("BSR_MalmoeerStr", Carrier.class));
 		Carrier bsrNordring = CarrierImpl.newInstance(Id.create("BSR_Nordring", Carrier.class));
 		Carrier bsrGradestrasse = CarrierImpl.newInstance(Id.create("BSR_Gradestrasse", Carrier.class));
 		carrierMap.put("Nordring", bsrNordring);
@@ -238,7 +238,7 @@ class Run_AbfallUtils {
 						}
 					} else {
 						Run_Abfall.log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
-								+ " no garbage will be cottected at " + day);
+								+ " no garbage will be collected at " + day);
 						districtsWithNoShipments.add(districtToCollect);
 					}
 				}
@@ -300,7 +300,7 @@ class Run_AbfallUtils {
 						}
 					} else {
 						Run_Abfall.log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
-								+ " no garbage will be cottected at " + day);
+								+ " no garbage will be collected at " + day);
 						districtsWithNoShipments.add(districtToCollect);
 					}
 
@@ -363,7 +363,7 @@ class Run_AbfallUtils {
 						}
 					} else {
 						Run_Abfall.log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
-								+ " no garbage will be cottected at " + day);
+								+ " no garbage will be collected at " + day);
 						districtsWithNoShipments.add(districtToCollect);
 					}
 
@@ -425,7 +425,7 @@ class Run_AbfallUtils {
 				}
 			} else {
 				Run_Abfall.log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
-						+ " no garbage will be cottected at " + day);
+						+ " no garbage will be collected at " + day);
 			}
 
 			if (garbageLinks.size() != 0) {
@@ -539,14 +539,14 @@ class Run_AbfallUtils {
 	 * 
 	 */
 	static void createAndAddVehicles() {
-		String vehicleTypeId = "TruckType1";
-		capacityTruck = 11 * 1000; // in kg
+		String vehicleTypeId = "MB_Econic_Diesel";
+		capacityTruck = 11500; // in kg
 		double maxVelocity = 80 / 3.6;
-		double costPerDistanceUnit = 0.000369; // Berechnung aus Excel
+		double costPerDistanceUnit = 0.000824; // Berechnung aus Excel
 		double costPerTimeUnit = 0.0; // Lohnkosten bei Fixkosten integriert
-		double fixCosts = 957.17; // Berechnung aus Excel
+		double fixCosts = 999.93; // Berechnung aus Excel
 		FuelType engineInformation = FuelType.diesel;
-		double literPerMeter = 0.003; // Berechnung aus Ecxel
+		double literPerMeter = 0.00067; // Berechnung aus Ecxel
 
 		createGarbageTruckType(vehicleTypeId, maxVelocity, costPerDistanceUnit, costPerTimeUnit, fixCosts,
 				engineInformation, literPerMeter);
@@ -614,7 +614,7 @@ class Run_AbfallUtils {
 		String vehicleIdNordring = "TruckNordring";
 		String vehicleIdGradestrasse = "TruckGradestrasse";
 		double earliestStartingTime = 6 * 3600;
-		double latestFinishingTime = 15 * 3600;
+		double latestFinishingTime = 14 * 3600;
 
 		CarrierVehicle vehicleForckenbeck = createGarbageTruck(vehicleIdForckenbeck, depotForckenbeck,
 				earliestStartingTime, latestFinishingTime);
@@ -902,7 +902,7 @@ class Run_AbfallUtils {
 	 * shipments
 	 * 
 	 */
-	static void outputSummaryShipments(Scenario scenario, String day) {
+	static void outputSummaryShipments(Scenario scenario, String day, HashMap<String, Carrier> carrierMap) {
 
 		FileWriter writer;
 		File file;
@@ -915,9 +915,12 @@ class Run_AbfallUtils {
 				writer.write("Wochentag:\t\t\t\t\t\t\t\t\t\t\t\t\t" + day + "\n");
 			writer.write("\n" + "Die Summe des abzuholenden Mülls beträgt: \t\t\t\t\t" + ((double) allGarbage) / 1000
 					+ " t\n\n");
-			writer.write("Anzahl der Abholstellen: \t\t\t\t\t\t\t\t\t" + numberOfShipments + "\n\n");
+			writer.write("Anzahl der Abholstellen: \t\t\t\t\t\t\t\t\t" + numberOfShipments + "\n");
 			if (day != null) {
-				writer.write("Anzuliefernde Menge (Soll):\tMHKW Ruhleben:\t\t\t\t\t" + ((double) garbageRuhleben) / 1000
+				for (Carrier carrier : carrierMap.values()) {
+					writer.write("\t\t\t\t\t\t\t"+carrier.getId().toString()+":\t\t\t\t\t\t"+carrier.getShipments().size()+"\n");
+				}
+				writer.write("\n"+"Anzuliefernde Menge (Soll):\tMHKW Ruhleben:\t\t\t\t\t" + ((double) garbageRuhleben) / 1000
 						+ " t\n");
 				writer.write("\t\t\t\t\t\t\tMPS Pankow:\t\t\t\t\t\t" + ((double) garbagePankow) / 1000 + " t\n");
 				writer.write("\t\t\t\t\t\t\tMPS Reinickendorf:\t\t\t\t" + ((double) garbageReinickenD) / 1000 + " t\n");

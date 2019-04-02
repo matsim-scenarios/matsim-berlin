@@ -23,7 +23,7 @@ import org.matsim.core.utils.gis.ShapeFileReader;
 import org.opengis.feature.simple.SimpleFeature;
 
 /**
- * @author Ricardo Ewert MA: Modellierung und Simulation der städtischen
+ * @author Ricardo Ewert MA: Modellierung und Simulation der staedtischen
  *         Abfallwirtschaft am Beispiel Berlins
  *
  */
@@ -61,7 +61,7 @@ public class Run_Abfall {
 		 * name of the scenario shows you the needed network.
 		 */
 		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinSelectedDistricts;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinCollectedGarbageForOneDay;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
@@ -78,7 +78,7 @@ public class Run_Abfall {
 			break;
 		case berlinNetwork:
 			// Berlin scenario network
-			config.controler().setOutputDirectory("output/Berlin/07_InfiniteSize_Test_newStructure");
+			config.controler().setOutputDirectory("output/Berlin/08_InfiniteSize_MO");
 			config.network().setInputFile(berlin);
 			break;
 		default:
@@ -159,7 +159,7 @@ public class Run_Abfall {
 			break;
 		case berlinCollectedGarbageForOneDay:
 			// MO or DI or MI or DO or FR
-			day = "MO";
+			day = "FR";
 			Run_AbfallUtils.createShipmentsForSelectedDay(districtsWithGarbage, day, garbageDumps, scenario, carriers,
 					carrierMap, allLinks, garbageLinks, volumeBigTrashcan, secondsServiceTimePerBigTrashcan);
 			fleetSize = FleetSize.INFINITE;
@@ -173,7 +173,7 @@ public class Run_Abfall {
 		 * so that you can already have this information, while jsprit and matsim are
 		 * still running.
 		 */
-		Run_AbfallUtils.outputSummaryShipments(scenario, day);
+		Run_AbfallUtils.outputSummaryShipments(scenario, day, carrierMap);
 		// jsprit
 		Run_AbfallUtils.solveWithJsprit(scenario, carriers, carrierMap);
 
