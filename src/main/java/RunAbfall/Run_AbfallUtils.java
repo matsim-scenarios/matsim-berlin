@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
@@ -65,6 +66,8 @@ import com.vividsolutions.jts.geom.Point;
  *
  */
 class Run_AbfallUtils {
+	
+	static final Logger log = Logger.getLogger(Run_AbfallUtils.class);
 
 	static double costsJsprit = 0;
 	static int noPickup = 0;
@@ -132,7 +135,7 @@ class Run_AbfallUtils {
 		linksInDistricts = ArrayListMultimap.create();
 		double x, y, xCoordFrom, xCoordTo, yCoordFrom, yCoordTo;
 		Point p;
-		Run_Abfall.log.info("Started creating Multimap with all links of each district...");
+		log.info("Started creating Multimap with all links of each district...");
 		for (Link link : allLinks.values()) {
 			xCoordFrom = link.getFromNode().getCoord().getX();
 			xCoordTo = link.getToNode().getCoord().getX();
@@ -153,7 +156,7 @@ class Run_AbfallUtils {
 				}
 			}
 		}
-		Run_Abfall.log.info("Finished creating Multimap with all links of each district!");
+		log.info("Finished creating Multimap with all links of each district!");
 	}
 
 	/**
@@ -237,7 +240,7 @@ class Run_AbfallUtils {
 							}
 						}
 					} else {
-						Run_Abfall.log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
+						log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
 								+ " no garbage will be collected at " + day);
 						districtsWithNoShipments.add(districtToCollect);
 					}
@@ -299,7 +302,7 @@ class Run_AbfallUtils {
 							}
 						}
 					} else {
-						Run_Abfall.log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
+						log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
 								+ " no garbage will be collected at " + day);
 						districtsWithNoShipments.add(districtToCollect);
 					}
@@ -362,7 +365,7 @@ class Run_AbfallUtils {
 							}
 						}
 					} else {
-						Run_Abfall.log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
+						log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
 								+ " no garbage will be collected at " + day);
 						districtsWithNoShipments.add(districtToCollect);
 					}
@@ -424,7 +427,7 @@ class Run_AbfallUtils {
 					}
 				}
 			} else {
-				Run_Abfall.log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
+				log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
 						+ " no garbage will be collected at " + day);
 			}
 
