@@ -65,9 +65,9 @@ import com.vividsolutions.jts.geom.Point;
  * @author Ricardo Ewert
  *
  */
-class Run_AbfallUtils {
+class AbfallUtils {
 	
-	static final Logger log = Logger.getLogger(Run_AbfallUtils.class);
+	static final Logger log = Logger.getLogger(AbfallUtils.class);
 
 	static double costsJsprit = 0;
 	static int noPickup = 0;

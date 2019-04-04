@@ -14,7 +14,7 @@ import org.matsim.contrib.freight.carrier.Carriers;
 import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
 import org.matsim.contrib.freight.carrier.CarrierImpl;
 
-public class Run_AbfallChessboardUtils {
+public class AbfallChessboardUtils {
 
 	static String linkChessboardDump = "j(0,9)R";
 	static String linkChessboardDepot = "j(9,9)";
@@ -39,9 +39,9 @@ public class Run_AbfallChessboardUtils {
 			}
 		}
 		Id<Link> linkDumpId = Id.createLinkId(linkChessboardDump);
-		Run_AbfallUtils.createShipmentsForCarrierII(garbageToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
+		AbfallUtils.createShipmentsForCarrierII(garbageToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
 				distanceWithShipments, garbageLinks, scenario, carrierChessboard, linkDumpId, carriers);
-		Run_AbfallUtils.districtsWithShipments.add("Chessboard");
+		AbfallUtils.districtsWithShipments.add("Chessboard");
 		carriers.addCarrier(carrierChessboard);
 
 	}
@@ -66,9 +66,9 @@ public class Run_AbfallChessboardUtils {
 			}
 		}
 		Id<Link> linkDumpId = Id.createLinkId(linkChessboardDump);
-		Run_AbfallUtils.createShipmentsForCarrierI(garbagePerMeterToCollect, volumeBigTrashcan,
+		AbfallUtils.createShipmentsForCarrierI(garbagePerMeterToCollect, volumeBigTrashcan,
 				serviceTimePerBigTrashcan, garbageLinks, scenario, carrierChessboard, linkDumpId, carriers);
-		Run_AbfallUtils.districtsWithShipments.add("Chessboard");
+		AbfallUtils.districtsWithShipments.add("Chessboard");
 		carriers.addCarrier(carrierChessboard);
 
 	}
@@ -84,11 +84,11 @@ public class Run_AbfallChessboardUtils {
 		double earliestStartingTime = 6 * 3600;
 		double latestFinishingTime = 15 * 3600;
 
-		Run_AbfallUtils.createGarbageTruck(vehicleName, linkChessboardDepot, earliestStartingTime, latestFinishingTime);
+		AbfallUtils.createGarbageTruck(vehicleName, linkChessboardDepot, earliestStartingTime, latestFinishingTime);
 
 		// define Carriers
 
-		defineCarriersChessboard(carriers, Run_AbfallUtils.vehicleAtDepot, fleetSize);
+		defineCarriersChessboard(carriers, AbfallUtils.vehicleAtDepot, fleetSize);
 	}
 
 	/**
@@ -100,11 +100,11 @@ public class Run_AbfallChessboardUtils {
 	 */
 	private static void defineCarriersChessboard(Carriers carriers, CarrierVehicle vehicleDepot, FleetSize fleetSize) {
 		CarrierCapabilities carrierCapabilities = CarrierCapabilities.Builder.newInstance()
-				.addType(Run_AbfallUtils.carrierVehType).addVehicle(vehicleDepot).setFleetSize(fleetSize).build();
+				.addType(AbfallUtils.carrierVehType).addVehicle(vehicleDepot).setFleetSize(fleetSize).build();
 
 		carrierChessboard.setCarrierCapabilities(carrierCapabilities);
 
 		// Fahrzeugtypen den Anbietern zuordenen
-		new CarrierVehicleTypeLoader(carriers).loadVehicleTypes(Run_AbfallUtils.vehicleTypes);
+		new CarrierVehicleTypeLoader(carriers).loadVehicleTypes(AbfallUtils.vehicleTypes);
 	}
 }
