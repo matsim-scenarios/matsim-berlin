@@ -31,9 +31,9 @@ public class Run_Abfall {
 
 	static final Logger log = Logger.getLogger(Run_Abfall.class);
 
-	private static final String original_Chessboard = "scenarios/networks/originalChessboard9x9.xml";
+	private static final String original_Chessboard = "https://raw.githubusercontent.com/matsim-org/matsim/master/examples/scenarios/freight-chessboard-9x9/grid9x9.xml";
 	private static final String modified_Chessboard = "scenarios/networks/modifiedChessboard9x9.xml";
-	private static final String berlin = "original-input-data/berlin-v5.2-1pct.output_network.xml.gz";
+	private static final String berlin = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.2-1pct/output-berlin-v5.2-1pct/berlin-v5.2-1pct.output_network.xml.gz";
 	private static final String berlinDistrictsWithGarbageInformations = "scenarios/garbageInput/districtsWithGarbageInformations.shp";
 
 	private enum netzwerkAuswahl {
@@ -60,8 +60,8 @@ public class Run_Abfall {
 		 * network, you have to select one of the Berlin cases. The beginning of the
 		 * name of the scenario shows you the needed network.
 		 */
-		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinCollectedGarbageForOneDay;
+		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.originalChessboard;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.chessboardGarbagePerMeterToCollect;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
