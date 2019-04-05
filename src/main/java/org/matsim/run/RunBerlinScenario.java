@@ -21,6 +21,8 @@ package org.matsim.run;
 
 import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType.FastAStarLandmarks;
 
+import java.util.Arrays;
+
 import org.apache.log4j.Logger;
 import org.matsim.analysis.ScoreStats;
 import org.matsim.api.core.v01.Scenario;
@@ -85,12 +87,23 @@ public final class RunBerlinScenario {
 	public RunBerlinScenario( String [] args ) {
 		
 		try{
-			cmd = new CommandLine.Builder( args )
-					.allowPositionalArguments(false)
-					.requireOptions(CONFIG_PATH)
-					.allowAnyOption(true)
-					.build() ;
-			this.configFileName = cmd.getOptionStrict( CONFIG_PATH ) ;
+			
+			if (Arrays.toString(args).contains("--" + CONFIG_PATH)) {
+				cmd = new CommandLine.Builder( args )
+						.allowPositionalArguments(false)
+						.requireOptions(CONFIG_PATH)
+						.allowAnyOption(true)
+						.build() ;
+				this.configFileName = cmd.getOptionStrict( CONFIG_PATH ) ;
+			
+			} else {
+				// required by the GUI
+				cmd = new CommandLine.Builder( args )
+						.allowPositionalArguments(true)
+						.allowAnyOption(true)
+						.build() ;
+				this.configFileName = cmd.getPositionalArgumentStrict(0);
+			}
 
 		} catch( CommandLine.ConfigurationException e ){
 			throw new RuntimeException( e ) ;
@@ -98,7 +111,7 @@ public final class RunBerlinScenario {
 	}
 	
 	public final Controler prepareControler( AbstractModule... overridingModules ) {
-		// note that for something like Signals, and presumably drt, one needs the controler object
+		// note that for something like signals, and presumably drt, one needs the controler object
 		
 		if ( !hasPreparedScenario ) {
 			prepareScenario() ;
