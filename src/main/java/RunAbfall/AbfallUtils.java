@@ -66,7 +66,7 @@ import com.vividsolutions.jts.geom.Point;
  *
  */
 class AbfallUtils {
-	
+
 	static final Logger log = Logger.getLogger(AbfallUtils.class);
 
 	static double costsJsprit = 0;
@@ -92,6 +92,7 @@ class AbfallUtils {
 	static CarrierVehicle vehicleAtDepot = null;
 	static Multimap<String, String> linksInDistricts;
 	static boolean streetAlreadyInGarbageLinks = false;
+	static boolean oneCarrierForEachDistrict = false;
 
 	/**
 	 * Creates a map for getting the name of the attribute, where you can find the
@@ -106,13 +107,13 @@ class AbfallUtils {
 	}
 
 	/**
-	 * Creates a map with the 4 depots in Berlin as 4 different carrier and a
-	 * chessboard carrier.
+	 * Creates a map with the 4 depots in Berlin as 4 different carrier.
 	 * 
 	 * @return
 	 */
 	static HashMap<String, Carrier> createCarrier() {
 		HashMap<String, Carrier> carrierMap = new HashMap<String, Carrier>();
+
 		Carrier bsrForckenbeck = CarrierImpl.newInstance(Id.create("BSR_Forckenbeck", Carrier.class));
 		Carrier bsrMalmoeer = CarrierImpl.newInstance(Id.create("BSR_MalmoeerStr", Carrier.class));
 		Carrier bsrNordring = CarrierImpl.newInstance(Id.create("BSR_Nordring", Carrier.class));
@@ -121,6 +122,7 @@ class AbfallUtils {
 		carrierMap.put("MalmoeerStr", bsrMalmoeer);
 		carrierMap.put("Forckenbeck", bsrForckenbeck);
 		carrierMap.put("Gradestrasse", bsrGradestrasse);
+
 		return carrierMap;
 	}
 
@@ -398,13 +400,16 @@ class AbfallUtils {
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		int garbageToCollect = 0;
-		String depot = null;
+		// String depot = null;
 		createMapEnt();
+		carrierMap.clear();
 		for (SimpleFeature districtInformation : districtsWithGarbage) {
 			if ((double) districtInformation.getAttribute(day) > 0) {
 				garbageToCollect = (int) ((double) districtInformation.getAttribute(day) * 1000);
 				dumpId = garbageDumps.get(districtInformation.getAttribute(dataEnt.get(day)));
-				depot = districtInformation.getAttribute("Depot").toString();
+				// depot = districtInformation.getAttribute("Depot").toString();
+				carrierMap.put(districtInformation.getAttribute("Ortsteilna").toString(), CarrierImpl.newInstance(
+						Id.create("Carrier "+districtInformation.getAttribute("Ortsteilna").toString(), Carrier.class)));
 				for (Link link : allLinks.values()) {
 					for (String linkInDistrict : linksInDistricts
 							.get(districtInformation.getAttribute("Ortsteilna").toString())) {
@@ -435,11 +440,13 @@ class AbfallUtils {
 				districtsWithShipments.add(districtInformation.getAttribute("Ortsteilna").toString());
 
 				createShipmentsForCarrierII(garbageToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
-						distanceWithShipments, garbageLinks, scenario, carrierMap.get(depot), dumpId, carriers);
+						distanceWithShipments, garbageLinks, scenario,
+						carrierMap.get(districtInformation.getAttribute("Ortsteilna").toString()), dumpId, carriers);
 			}
 			distanceWithShipments = 0;
 			garbageLinks.clear();
 		}
+		oneCarrierForEachDistrict = true;
 		for (Carrier carrier : carrierMap.values())
 			carriers.addCarrier(carrier);
 	}
@@ -546,8 +553,8 @@ class AbfallUtils {
 		capacityTruck = 11500; // in kg
 		double maxVelocity = 80 / 3.6;
 		double costPerDistanceUnit = 0.000824; // Berechnung aus Excel
-		double costPerTimeUnit = 0.0; // Lohnkosten bei Fixkosten integriert
-		double fixCosts = 999.93; // Berechnung aus Excel
+		double costPerTimeUnit = 0.02685; // Lohnkosten bei Fixkosten integriert
+		double fixCosts = 265.31; // Berechnung aus Excel
 		FuelType engineInformation = FuelType.diesel;
 		double literPerMeter = 0.00067; // Berechnung aus Ecxel
 
@@ -606,7 +613,8 @@ class AbfallUtils {
 	 * 
 	 * @param
 	 */
-	static void createCarriersBerlin(Carriers carriers, HashMap<String, Carrier> carrierMap, FleetSize fleetSize) {
+	static void createCarriersBerlin(Collection<SimpleFeature> districtsWithGarbage, Carriers carriers,
+			HashMap<String, Carrier> carrierMap, FleetSize fleetSize) {
 		String depotForckenbeck = "27766";
 		String depotMalmoeerStr = "116212";
 		String depotNordring = "42882";
@@ -619,6 +627,8 @@ class AbfallUtils {
 		double earliestStartingTime = 6 * 3600;
 		double latestFinishingTime = 14 * 3600;
 
+		HashMap<String, CarrierVehicle> depotMap = new HashMap<String, CarrierVehicle>();
+
 		CarrierVehicle vehicleForckenbeck = createGarbageTruck(vehicleIdForckenbeck, depotForckenbeck,
 				earliestStartingTime, latestFinishingTime);
 		CarrierVehicle vehicleMalmoeerStr = createGarbageTruck(vehicleIdMalmoeer, depotMalmoeerStr,
@@ -627,11 +637,15 @@ class AbfallUtils {
 				latestFinishingTime);
 		CarrierVehicle vehicleGradestrasse = createGarbageTruck(vehicleIdGradestrasse, depotGradestrasse,
 				earliestStartingTime, latestFinishingTime);
+		depotMap.put("Forckenbeck", vehicleForckenbeck);
+		depotMap.put("MalmoeerStr", vehicleMalmoeerStr);
+		depotMap.put("Nordring", vehicleNordring);
+		depotMap.put("Gradestrasse", vehicleGradestrasse);
 
 		// define Carriers
 
-		defineCarriersBerlin(carriers, carrierMap, vehicleForckenbeck, vehicleMalmoeerStr, vehicleNordring,
-				vehicleGradestrasse, fleetSize);
+		defineCarriersBerlin(depotMap, districtsWithGarbage, carriers, carrierMap, vehicleForckenbeck,
+				vehicleMalmoeerStr, vehicleNordring, vehicleGradestrasse, fleetSize);
 	}
 
 	/**
@@ -641,23 +655,33 @@ class AbfallUtils {
 	 * @param
 	 * 
 	 */
-	private static void defineCarriersBerlin(Carriers carriers, HashMap<String, Carrier> carrierMap,
+	private static void defineCarriersBerlin(HashMap<String, CarrierVehicle> depotMap,
+			Collection<SimpleFeature> districtsWithGarbage, Carriers carriers, HashMap<String, Carrier> carrierMap,
 			CarrierVehicle vehicleForckenbeck, CarrierVehicle vehicleMalmoeerStr, CarrierVehicle vehicleNordring,
 			CarrierVehicle vehicleGradestrasse, FleetSize fleetSize) {
 
-		CarrierCapabilities carrierCapabilities = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
-				.addVehicle(vehicleForckenbeck).setFleetSize(fleetSize).build();
-		carrierMap.get("Forckenbeck").setCarrierCapabilities(carrierCapabilities);
-		carrierCapabilities = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
-				.addVehicle(vehicleMalmoeerStr).setFleetSize(fleetSize).build();
-		carrierMap.get("MalmoeerStr").setCarrierCapabilities(carrierCapabilities);
-		carrierCapabilities = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
-				.addVehicle(vehicleNordring).setFleetSize(fleetSize).build();
-		carrierMap.get("Nordring").setCarrierCapabilities(carrierCapabilities);
-		carrierCapabilities = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
-				.addVehicle(vehicleGradestrasse).setFleetSize(fleetSize).build();
-		carrierMap.get("Gradestrasse").setCarrierCapabilities(carrierCapabilities);
-
+		if (oneCarrierForEachDistrict == false) {
+			CarrierCapabilities carrierCapabilities = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
+					.addVehicle(vehicleForckenbeck).setFleetSize(fleetSize).build();
+			carrierMap.get("Forckenbeck").setCarrierCapabilities(carrierCapabilities);
+			carrierCapabilities = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
+					.addVehicle(vehicleMalmoeerStr).setFleetSize(fleetSize).build();
+			carrierMap.get("MalmoeerStr").setCarrierCapabilities(carrierCapabilities);
+			carrierCapabilities = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
+					.addVehicle(vehicleNordring).setFleetSize(fleetSize).build();
+			carrierMap.get("Nordring").setCarrierCapabilities(carrierCapabilities);
+			carrierCapabilities = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
+					.addVehicle(vehicleGradestrasse).setFleetSize(fleetSize).build();
+			carrierMap.get("Gradestrasse").setCarrierCapabilities(carrierCapabilities);
+		} else {
+			for (Carrier carrier : carrierMap.values()) {
+				for (SimpleFeature simpleFeature : districtsWithGarbage) {
+					if (carrier.getId().toString().equals(simpleFeature.getAttribute("Ortsteilna"))){
+					carrier.setCarrierCapabilities(CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
+							.addVehicle(depotMap.get(simpleFeature.getAttribute("Depot"))).setFleetSize(fleetSize).build());}
+				}
+			}
+		}
 		// Fahrzeugtypen den Anbietern zuordenen
 		new CarrierVehicleTypeLoader(carriers).loadVehicleTypes(vehicleTypes);
 	}
@@ -688,7 +712,7 @@ class AbfallUtils {
 
 			// get the algorithm out-of-the-box, search solution and get the best one.
 			VehicleRoutingAlgorithm algorithm = new SchrimpfFactory().createAlgorithm(problem);
-			algorithm.setMaxIterations(20);
+			algorithm.setMaxIterations(1);
 			Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
 			VehicleRoutingProblemSolution bestSolution = Solutions.bestOf(solutions);
 			costsJsprit = costsJsprit + bestSolution.getCost();
@@ -921,10 +945,11 @@ class AbfallUtils {
 			writer.write("Anzahl der Abholstellen: \t\t\t\t\t\t\t\t\t" + numberOfShipments + "\n");
 			if (day != null) {
 				for (Carrier carrier : carrierMap.values()) {
-					writer.write("\t\t\t\t\t\t\t"+carrier.getId().toString()+":\t\t\t\t\t\t"+carrier.getShipments().size()+"\n");
+					writer.write("\t\t\t\t\t\t\t" + carrier.getId().toString() + ":\t\t\t\t\t\t"
+							+ carrier.getShipments().size() + "\n");
 				}
-				writer.write("\n"+"Anzuliefernde Menge (Soll):\tMHKW Ruhleben:\t\t\t\t\t" + ((double) garbageRuhleben) / 1000
-						+ " t\n");
+				writer.write("\n" + "Anzuliefernde Menge (Soll):\tMHKW Ruhleben:\t\t\t\t\t"
+						+ ((double) garbageRuhleben) / 1000 + " t\n");
 				writer.write("\t\t\t\t\t\t\tMPS Pankow:\t\t\t\t\t\t" + ((double) garbagePankow) / 1000 + " t\n");
 				writer.write("\t\t\t\t\t\t\tMPS Reinickendorf:\t\t\t\t" + ((double) garbageReinickenD) / 1000 + " t\n");
 				writer.write(
