@@ -187,7 +187,6 @@ public final class RunBerlinScenario {
 		
 		config.subtourModeChoice().setProbaForRandomSingleTripMode( 0.5 );
 		
-		config.plansCalcRoute().removeModeRoutingParams(TransportMode.ride);
 		config.plansCalcRoute().setRoutingRandomness( 3. );
 		
 		config.qsim().setInsertingWaitingVehiclesBeforeDrivingVehicles( true );
