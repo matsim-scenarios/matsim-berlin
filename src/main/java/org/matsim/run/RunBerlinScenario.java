@@ -187,15 +187,16 @@ public final class RunBerlinScenario {
 		
 		config.subtourModeChoice().setProbaForRandomSingleTripMode( 0.5 );
 		
+		config.plansCalcRoute().removeModeRoutingParams(TransportMode.ride);
 		config.plansCalcRoute().setRoutingRandomness( 3. );
 		
 		config.qsim().setInsertingWaitingVehiclesBeforeDrivingVehicles( true );
-		
+				
 		// vsp defaults
 		config.plansCalcRoute().setInsertingAccessEgressWalk( true );
 		config.qsim().setUsingTravelTimeCheckInTeleportation( true );
 		config.qsim().setTrafficDynamics( TrafficDynamics.kinematicWaves );
-		
+				
 		// activities:
 		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
 			final ActivityParams params = new ActivityParams( "home_" + ii + ".0" ) ;
