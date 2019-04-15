@@ -61,7 +61,7 @@ public class Run_Abfall {
 		 * name of the scenario shows you the needed network.
 		 */
 		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinSelectedDistricts;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinCollectedGarbageForOneDay;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
@@ -78,7 +78,7 @@ public class Run_Abfall {
 			break;
 		case berlinNetwork:
 			// Berlin scenario network
-			config.controler().setOutputDirectory("output/Berlin/Montag/Haselhorst_50kmh_Kosten_getrennt");
+			config.controler().setOutputDirectory("output/Berlin/Montag/Komplett_50kmh_Kosten_getrennt");
 			config.network().setInputFile(berlin);
 			break;
 		default:
@@ -159,7 +159,7 @@ public class Run_Abfall {
 			break;
 		case berlinCollectedGarbageForOneDay:
 			// MO or DI or MI or DO or FR
-			day = "MI";
+			day = "MO";
 			AbfallUtils.createShipmentsForSelectedDay(districtsWithGarbage, day, garbageDumps, scenario, carriers,
 					carrierMap, allLinks, garbageLinks, volumeBigTrashcan, secondsServiceTimePerBigTrashcan);
 			fleetSize = FleetSize.INFINITE;
@@ -184,7 +184,7 @@ public class Run_Abfall {
 		controler.run();
 
 		new CarrierPlanXmlWriterV2(carriers)
-				.write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans_Test01.xml");
+				.write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans.xml");
 
 		AbfallUtils.outputSummary(districtsWithGarbage, scenario, carrierMap, day);
 

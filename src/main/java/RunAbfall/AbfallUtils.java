@@ -674,7 +674,7 @@ class AbfallUtils {
 		} else {
 			for (Carrier carrier : carrierMap.values()) {
 				for (SimpleFeature simpleFeature : districtsWithGarbage) {
-					if (carrier.getId().toString().equals(simpleFeature.getAttribute("Ortsteilna"))){
+					if (carrier.getId().toString().equals("Carrier "+simpleFeature.getAttribute("Ortsteilna"))){
 					carrier.setCarrierCapabilities(CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
 							.addVehicle(depotMap.get(simpleFeature.getAttribute("Depot"))).setFleetSize(fleetSize).build());}
 				}
@@ -722,7 +722,7 @@ class AbfallUtils {
 			noPickup = noPickup + bestSolution.getUnassignedJobs().size();
 		}
 		new CarrierPlanXmlWriterV2(carriers)
-				.write(scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.xml");
+				.write(scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans.xml");
 		// new Plotter(problem, bestSolution).plot(
 		// scenario.getConfig().controler().getOutputDirectory() +
 		// "/jsprit_CarrierPlans_Test01.png",
