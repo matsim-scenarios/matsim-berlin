@@ -183,8 +183,6 @@ class AbfallUtils {
 	 * @param config
 	 */
 	static Config prepareConfig(Config config, int lastIteration) {
-		// (the directory structure is needed for jsprit output, which is before the
-		// controler starts. Maybe there is a better alternative ...)
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 		new OutputDirectoryHierarchy(config.controler().getOutputDirectory(), config.controler().getRunId(),
 				config.controler().getOverwriteFileSetting());
@@ -225,7 +223,7 @@ class AbfallUtils {
 						for (Link link : allLinks.values()) {
 							for (String linkInDistrict : linksInDistricts.get(districtToCollect)) {
 								if (Id.createLinkId(linkInDistrict) == link.getId()) {
-									if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
+									if (link.getFreespeed() < 14 && link.getAllowedModes().contains("car")) {
 										for (Link garbageLink : garbageLinks.values()) {
 											if (link.getFromNode() == garbageLink.getToNode()
 													&& link.getToNode() == garbageLink.getFromNode())
@@ -287,7 +285,7 @@ class AbfallUtils {
 						for (Link link : allLinks.values()) {
 							for (String linkInDistrict : linksInDistricts.get(districtToCollect)) {
 								if (Id.createLinkId(linkInDistrict) == link.getId()) {
-									if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
+									if (link.getFreespeed() < 14 && link.getAllowedModes().contains("car")) {
 										for (Link garbageLink : garbageLinks.values()) {
 											if (link.getFromNode() == garbageLink.getToNode()
 													&& link.getToNode() == garbageLink.getFromNode())
@@ -349,7 +347,7 @@ class AbfallUtils {
 						for (Link link : allLinks.values()) {
 							for (String linkInDistrict : linksInDistricts.get(districtToCollect)) {
 								if (Id.createLinkId(linkInDistrict) == link.getId()) {
-									if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
+									if (link.getFreespeed() < 14 && link.getAllowedModes().contains("car")) {
 										for (Link garbageLink : garbageLinks.values()) {
 											if (link.getFromNode() == garbageLink.getToNode()
 													&& link.getToNode() == garbageLink.getFromNode())
@@ -414,7 +412,7 @@ class AbfallUtils {
 					for (String linkInDistrict : linksInDistricts
 							.get(districtInformation.getAttribute("Ortsteilna").toString())) {
 						if (Id.createLinkId(linkInDistrict) == link.getId()) {
-							if (link.getFreespeed() < 12 && link.getAllowedModes().contains("car")) {
+							if (link.getFreespeed() < 14 && link.getAllowedModes().contains("car")) {
 								for (Link garbageLink : garbageLinks.values()) {
 									if (link.getFromNode() == garbageLink.getToNode()
 											&& link.getToNode() == garbageLink.getFromNode())

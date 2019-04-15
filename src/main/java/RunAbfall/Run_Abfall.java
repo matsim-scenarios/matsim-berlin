@@ -78,7 +78,7 @@ public class Run_Abfall {
 			break;
 		case berlinNetwork:
 			// Berlin scenario network
-			config.controler().setOutputDirectory("output/Berlin/Montag/Friedrichshain_Kosten_getrennt");
+			config.controler().setOutputDirectory("output/Berlin/Montag/Haselhorst_50kmh_Kosten_getrennt");
 			config.network().setInputFile(berlin);
 			break;
 		default:
@@ -124,7 +124,7 @@ public class Run_Abfall {
 			break;
 		case berlinSelectedDistricts:
 			// day input: MO or DI or MI or DO or FR
-			List<String> districtsForShipments = Arrays.asList("Friedrichshain");
+			List<String> districtsForShipments = Arrays.asList("Haselhorst");
 			day = "MO";
 			AbfallUtils.createShipmentsForSelectedArea(districtsWithGarbage, districtsForShipments, day, garbageDumps,
 					scenario, carriers, carrierMap, allLinks, garbageLinks, volumeBigTrashcan,
