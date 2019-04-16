@@ -544,7 +544,7 @@ class AbfallUtils {
 	}
 
 	/**
-	 * 
+	 * Creates a new vehicleType and ads this type to the CarrierVehicleTypes
 	 */
 	static void createAndAddVehicles() {
 		String vehicleTypeId = "MB_Econic_Diesel";
