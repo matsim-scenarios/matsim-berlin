@@ -27,6 +27,7 @@ import org.matsim.contrib.freight.carrier.CarrierVehicleTypes;
 import org.matsim.contrib.freight.carrier.Carriers;
 import org.matsim.contrib.freight.carrier.ScheduledTour;
 import org.matsim.contrib.freight.carrier.TimeWindow;
+import org.matsim.contrib.freight.carrier.Tour.Delivery;
 import org.matsim.contrib.freight.carrier.Tour.Pickup;
 import org.matsim.contrib.freight.carrier.Tour.TourElement;
 import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
@@ -551,8 +552,8 @@ class AbfallUtils {
 		capacityTruck = 11500; // in kg
 		double maxVelocity = 80 / 3.6;
 		double costPerDistanceUnit = 0.000824; // Berechnung aus Excel
-		double costPerTimeUnit = 0.02685; // Lohnkosten bei Fixkosten integriert
-		double fixCosts = 265.31; // Berechnung aus Excel
+		double costPerTimeUnit = 0.0; // Lohnkosten bei Fixkosten integriert
+		double fixCosts = 999.93; // Berechnung aus Excel
 		FuelType engineInformation = FuelType.diesel;
 		double literPerMeter = 0.00067; // Berechnung aus Ecxel
 
@@ -806,6 +807,12 @@ class AbfallUtils {
 		int sizeGradestrasse = 0;
 		int sizeChessboard = 0;
 		int allCollectedGarbage = 0;
+		int sizeRuhleben = 0;
+		int sizePankow = 0;
+		int sizeReinickendorf = 0;
+		int sizeUmladestationGradestrasse = 0;
+		int sizeGruenauerStr = 0;
+		int sizeChessboardDelivery = 0;
 		double matsimCosts = 0;
 		for (Carrier thisCarrier : carrierMap.values()) {
 
@@ -838,6 +845,28 @@ class AbfallUtils {
 						}
 						if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckChessboard")) {
 							sizeChessboard = sizeChessboard + (shipmentSizes.get(pickupShipmentId));
+						}
+					}
+					if (element instanceof Delivery) {
+						Delivery deliveryElement = (Delivery) element;
+						String deliveryShipmentId = deliveryElement.getShipment().getId().toString();
+						if (deliveryElement.getLocation() == Id.createLinkId(linkMhkwRuhleben)) {
+							sizeRuhleben = sizeRuhleben + (shipmentSizes.get(deliveryShipmentId));
+						}
+						if (deliveryElement.getLocation() == Id.createLinkId(linkMpsPankow)) {
+							sizePankow = sizePankow + (shipmentSizes.get(deliveryShipmentId));
+						}
+						if (deliveryElement.getLocation() == Id.createLinkId(linkMpsReinickendorf)) {
+							sizeReinickendorf = sizeReinickendorf + (shipmentSizes.get(deliveryShipmentId));
+						}
+						if (deliveryElement.getLocation() == Id.createLinkId(linkUmladestationGradestrasse)) {
+							sizeUmladestationGradestrasse = sizeUmladestationGradestrasse + (shipmentSizes.get(deliveryShipmentId));
+						}
+						if (deliveryElement.getLocation() == Id.createLinkId(linkGruenauerStr)) {
+							sizeGruenauerStr = sizeGruenauerStr + (shipmentSizes.get(deliveryShipmentId));
+						}
+						if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckChessboard")) {
+							sizeChessboardDelivery = sizeChessboardDelivery + (shipmentSizes.get(deliveryShipmentId));
 						}
 					}
 				}
@@ -896,14 +925,14 @@ class AbfallUtils {
 						+ "\t\t\tMenge:\t\t" + ((double) sizeNordring) / 1000 + " t\n");
 				writer.write("\t Anzahl aus dem Betriebshof Gradestraße: \t\t\t\t\t" + vehiclesGradestrasse
 						+ "\t\t\tMenge:\t\t" + ((double) sizeGradestrasse) / 1000 + " t\n\n");
-				writer.write("Anzuliefernde Menge (Soll):\tMHKW Ruhleben:\t\t\t\t\t" + ((double) garbageRuhleben) / 1000
+				writer.write("Anzuliefernde Menge (IST):\tMHKW Ruhleben:\t\t\t\t\t" + ((double) sizeRuhleben) / 1000
 						+ " t\n");
-				writer.write("\t\t\t\t\t\t\tMPS Pankow:\t\t\t\t\t\t" + ((double) garbagePankow) / 1000 + " t\n");
-				writer.write("\t\t\t\t\t\t\tMPS Reinickendorf:\t\t\t\t" + ((double) garbageReinickenD) / 1000 + " t\n");
+				writer.write("\t\t\t\t\t\t\tMPS Pankow:\t\t\t\t\t\t" + ((double) sizePankow) / 1000 + " t\n");
+				writer.write("\t\t\t\t\t\t\tMPS Reinickendorf:\t\t\t\t" + ((double) sizeReinickendorf) / 1000 + " t\n");
 				writer.write(
-						"\t\t\t\t\t\t\tUmladestation Gradestrasse:\t\t" + ((double) garbageGradestr) / 1000 + " t\n");
+						"\t\t\t\t\t\t\tUmladestation Gradestrasse:\t\t" + ((double) sizeUmladestationGradestrasse) / 1000 + " t\n");
 				writer.write(
-						"\t\t\t\t\t\t\tMA Gruenauer Str.:\t\t\t\t" + ((double) garbageGruenauerStr) / 1000 + " t\n");
+						"\t\t\t\t\t\t\tMA Gruenauer Str.:\t\t\t\t" + ((double) sizeGruenauerStr) / 1000 + " t\n");
 			}
 			writer.write("\n" + "Kosten (Jsprit): \t\t\t\t\t\t\t\t\t\t\t" + (Math.round(costsJsprit)) + " €\n\n");
 			writer.write("Kosten (MatSim): \t\t\t\t\t\t\t\t\t\t\t" + ((-1) * Math.round(matsimCosts)) + " €\n");
