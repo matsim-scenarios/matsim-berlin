@@ -29,6 +29,8 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.matsim.analysis.ScoreStatsControlerListener.ScoreItem;
+import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
@@ -56,6 +58,35 @@ public class RunBerlinScenarioTest {
 		// a dummy test to satisfy the matrix build by travis.
 		log.info( "Hello world." );
 		Assert.assertTrue( true );
+	}
+	
+	// 1pct, testing the scores in iteration 0 and 1
+	@Test
+	public final void test1person1iteration() {
+		try {
+			String configFilename = "scenarios/berlin-v5.3-1pct/input/berlin-v5.3-1pct.config.xml";
+			RunBerlinScenario berlin = new RunBerlinScenario( new String[] { "--" + RunBerlinScenario.CONFIG_PATH , configFilename } ) ;
+			
+			Config config =  berlin.prepareConfig();
+			config.controler().setLastIteration(0);
+			config.strategy().setFractionOfIterationsToDisableInnovation(0);
+			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
+			config.controler().setOutputDirectory( utils.getOutputDirectory() );
+			config.plans().setInputFile("../../../test/input/test-agents.xml");
+			
+			Scenario scenario = berlin.prepareScenario();
+			
+			berlin.run();
+
+			Assert.assertEquals("Change in score (car agent)", 114.88050431935696, scenario.getPopulation().getPersons().get(Id.createPersonId("100274201")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Change in score (pt agent)", 134.91804284998503, scenario.getPopulation().getPersons().get(Id.createPersonId("100024301")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Change in score (ride + walk agent)", 128.2797261151769, scenario.getPopulation().getPersons().get(Id.createPersonId("100087501")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Change in score (bicycle agent)", 129.80394930541985, scenario.getPopulation().getPersons().get(Id.createPersonId("100200201")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Change in score (ride agent)", 131.71443152316658, scenario.getPopulation().getPersons().get(Id.createPersonId("10099501")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
+			
+		} catch ( Exception ee ) {
+			throw new RuntimeException(ee) ;
+		}
 	}
 	
 	// 1pct, testing the scores in iteration 0 and 1
