@@ -70,7 +70,7 @@ public final class RunBerlinScenario {
 		}
 		
 		if ( args.length==0 ) {
-			String configFileName = "scenarios/berlin-v5.3-10pct/input/berlin-v5.3-10pct.config.xml";
+			String configFileName = "scenarios/berlin-v5.3-1pct/input/berlin-v5.3-1pct.config.xml";
 			new RunBerlinScenario( new String[]{ "--" + CONFIG_PATH, configFileName } ).run() ;
 			
 		} else {
@@ -188,7 +188,14 @@ public final class RunBerlinScenario {
 		config.subtourModeChoice().setProbaForRandomSingleTripMode( 0.5 );
 		
 		config.plansCalcRoute().setRoutingRandomness( 3. );
-		
+		config.plansCalcRoute().removeModeRoutingParams(TransportMode.ride);
+		config.plansCalcRoute().removeModeRoutingParams(TransportMode.pt);
+		config.plansCalcRoute().removeModeRoutingParams(TransportMode.bike);
+		config.plansCalcRoute().removeModeRoutingParams("undefined");
+//		config.plansCalcRoute().removeModeRoutingParams(TransportMode.transit_walk);
+//		config.plansCalcRoute().removeModeRoutingParams(TransportMode.access_walk);
+//		config.plansCalcRoute().removeModeRoutingParams(TransportMode.egress_walk);
+	
 		config.qsim().setInsertingWaitingVehiclesBeforeDrivingVehicles( true );
 				
 		// vsp defaults

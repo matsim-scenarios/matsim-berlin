@@ -35,6 +35,8 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.Config;
+import org.matsim.core.controler.AbstractModule;
+import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.gbl.Gbl;
 import org.matsim.core.gbl.MatsimRandom;
@@ -75,15 +77,42 @@ public class RunBerlinScenarioTest {
 			config.plans().setInputFile("../../../test/input/test-agents.xml");
 			
 			Scenario scenario = berlin.prepareScenario();
+			Controler controler = berlin.prepareControler();
+
+			TeleportationSpeedEventHandler handler = new TeleportationSpeedEventHandler();
+
+			controler.addOverridingModule(new AbstractModule() {
+				
+				@Override
+				public void install() {
+					this.addEventHandlerBinding().toInstance(handler);
+				}
+			});
 			
 			berlin.run();
-
-			Assert.assertEquals("Change in score (car agent)", 114.88050431935696, scenario.getPopulation().getPersons().get(Id.createPersonId("100274201")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Change in score (pt agent)", 134.91804284998503, scenario.getPopulation().getPersons().get(Id.createPersonId("100024301")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
+			
 			Assert.assertEquals("Change in score (ride + walk agent)", 128.2797261151769, scenario.getPopulation().getPersons().get(Id.createPersonId("100087501")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
 			Assert.assertEquals("Change in score (bicycle agent)", 129.80394930541985, scenario.getPopulation().getPersons().get(Id.createPersonId("100200201")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
 			Assert.assertEquals("Change in score (ride agent)", 131.71443152316658, scenario.getPopulation().getPersons().get(Id.createPersonId("10099501")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Change in score (pt agent)", 134.91804284998503, scenario.getPopulation().getPersons().get(Id.createPersonId("100024301")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
 			
+			// look at a single car access_walk trip
+			
+			final double distance = handler.getPersonId2teleportationDistances().get(Id.createPersonId("100274201")).get(0);
+			final double accesswalkSpeedFromConfig = config.plansCalcRoute().getModeRoutingParams().get("access_walk").getTeleportedModeSpeed();
+			final double accesswalkSpeedFromEvent = (distance / config.plansCalcRoute().getModeRoutingParams().get("access_walk").getBeelineDistanceFactor()) / handler.getPersonId2teleportationTT().get(Id.createPersonId("100274201")).get(0);
+			
+			log.warn("distance: " + distance);
+			log.warn("access walk teleported mode speed from config: " + accesswalkSpeedFromConfig);
+			log.warn("access walk teleported mode speed from event: " + accesswalkSpeedFromEvent);
+			
+			// previous version (12.0-2019w14-SNAPSHOT):
+//			Assert.assertEquals("Change in teleportation speed (car agent: 100274201)", 2.00983175, accesswalkSpeedFromEvent, MatsimTestUtils.EPSILON);			
+//			Assert.assertEquals("Change in score (car agent)", 114.88050431935696, scenario.getPopulation().getPersons().get(Id.createPersonId("100274201")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
+			
+			// new version: 
+			Assert.assertEquals("Change in teleportation speed (car agent: 100274201)", accesswalkSpeedFromConfig, accesswalkSpeedFromEvent, 0.01);
+
 		} catch ( Exception ee ) {
 			throw new RuntimeException(ee) ;
 		}

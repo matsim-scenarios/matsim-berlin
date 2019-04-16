@@ -45,6 +45,21 @@
 			<param name="mode" value="walk" />
 			<param name="teleportedModeSpeed" value="1.0555556" />
 		</parameterset>
+		<parameterset type="teleportedModeParameters" >
+			<param name="beelineDistanceFactor" value="1.3" />
+			<param name="mode" value="transit_walk" />
+			<param name="teleportedModeSpeed" value="1.0555556" />
+		</parameterset>
+		<parameterset type="teleportedModeParameters" >
+			<param name="beelineDistanceFactor" value="1.3" />
+			<param name="mode" value="access_walk" />
+			<param name="teleportedModeSpeed" value="1.0555556" />
+		</parameterset>
+		<parameterset type="teleportedModeParameters" >
+			<param name="beelineDistanceFactor" value="1.3" />
+			<param name="mode" value="egress_walk" />
+			<param name="teleportedModeSpeed" value="1.0555556" />
+		</parameterset>
 	</module>
 	<module name="qsim" >
 		<param name="endTime" value="36:00:00" />
