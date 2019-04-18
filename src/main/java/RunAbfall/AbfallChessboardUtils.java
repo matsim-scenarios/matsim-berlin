@@ -27,8 +27,9 @@ public class AbfallChessboardUtils {
 	 * @param
 	 */
 	static void createShipmentsForChessboardI(HashMap<String, Carrier> carrierMap, int garbageToCollect, Map<Id<Link>, ? extends Link> allLinks,
-			Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan, double serviceTimePerBigTrashcan,
+			double volumeBigTrashcan, double serviceTimePerBigTrashcan,
 			Scenario scenario, Carriers carriers) {
+		Map<Id<Link>, Link> garbageLinks = new HashMap<Id<Link>, Link>();
 		carrierMap.clear();
 		carrierMap.put("carrierChessboard", carrierChessboard);
 		double distanceWithShipments = 0;
@@ -54,8 +55,9 @@ public class AbfallChessboardUtils {
 	 * @param
 	 */
 	static void createShipmentsForChessboardII(HashMap<String, Carrier> carrierMap, double garbagePerMeterToCollect, Map<Id<Link>, ? extends Link> allLinks,
-			Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan, double serviceTimePerBigTrashcan,
+			double volumeBigTrashcan, double serviceTimePerBigTrashcan,
 			Scenario scenario, Carriers carriers) {
+		Map<Id<Link>, Link> garbageLinks = new HashMap<Id<Link>, Link>();
 		carrierMap.clear();
 		carrierMap.put("carrierChessboard", carrierChessboard);
 		double distanceWithShipments = 0;

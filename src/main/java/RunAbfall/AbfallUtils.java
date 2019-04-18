@@ -208,11 +208,12 @@ class AbfallUtils {
 	static void createShipmentsForSelectedArea(Collection<SimpleFeature> districtsWithGarbage,
 			List<String> districtsForShipments, String day, HashMap<String, Id<Link>> garbageDumps, Scenario scenario,
 			Carriers carriers, HashMap<String, Carrier> carrierMap, Map<Id<Link>, ? extends Link> allLinks,
-			Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan, double serviceTimePerBigTrashcan) {
+			double volumeBigTrashcan, double serviceTimePerBigTrashcan) {
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		int garbageToCollect = 0;
 		String depot = null;
+		Map<Id<Link>, Link> garbageLinks = new HashMap<Id<Link>, Link>();
 		createMapEnt();
 		for (String districtToCollect : districtsForShipments) {
 			for (SimpleFeature districtInformation : districtsWithGarbage) {
@@ -271,11 +272,12 @@ class AbfallUtils {
 	static void createShipmentsWithGarbagePerMeter(Collection<SimpleFeature> districtsWithGarbage,
 			HashMap<String, Double> areasForShipmentPerMeterMap, String day, HashMap<String, Id<Link>> garbageDumps,
 			Scenario scenario, Carriers carriers, HashMap<String, Carrier> carrierMap,
-			Map<Id<Link>, ? extends Link> allLinks, Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan,
+			Map<Id<Link>, ? extends Link> allLinks, double volumeBigTrashcan,
 			double serviceTimePerBigTrashcan) {
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		String depot = null;
+		Map<Id<Link>, Link> garbageLinks = new HashMap<Id<Link>, Link>();
 		createMapEnt();
 		for (String districtToCollect : areasForShipmentPerMeterMap.keySet()) {
 			for (SimpleFeature districtInformation : districtsWithGarbage) {
@@ -333,11 +335,12 @@ class AbfallUtils {
 	static void createShipmentsGarbagePerVolume(Collection<SimpleFeature> districtsWithGarbage,
 			HashMap<String, Integer> areasForShipmentPerVolumeMap, String day, HashMap<String, Id<Link>> garbageDumps,
 			Scenario scenario, Carriers carriers, HashMap<String, Carrier> carrierMap,
-			Map<Id<Link>, ? extends Link> allLinks, Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan,
+			Map<Id<Link>, ? extends Link> allLinks, double volumeBigTrashcan,
 			double serviceTimePerBigTrashcan) {
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		String depot = null;
+		Map<Id<Link>, Link> garbageLinks = new HashMap<Id<Link>, Link>();
 		createMapEnt();
 		for (String districtToCollect : areasForShipmentPerVolumeMap.keySet()) {
 			for (SimpleFeature districtInformation : districtsWithGarbage) {
@@ -395,11 +398,12 @@ class AbfallUtils {
 	static void createShipmentsForSelectedDay(Collection<SimpleFeature> districtsWithGarbage, String day,
 			HashMap<String, Id<Link>> garbageDumps, Scenario scenario, Carriers carriers,
 			HashMap<String, Carrier> carrierMap, Map<Id<Link>, ? extends Link> allLinks,
-			Map<Id<Link>, Link> garbageLinks, double volumeBigTrashcan, double serviceTimePerBigTrashcan) {
+			double volumeBigTrashcan, double serviceTimePerBigTrashcan) {
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		int garbageToCollect = 0;
 		// String depot = null;
+		Map<Id<Link>, Link> garbageLinks = new HashMap<Id<Link>, Link>();
 		createMapEnt();
 		carrierMap.clear();
 		for (SimpleFeature districtInformation : districtsWithGarbage) {
