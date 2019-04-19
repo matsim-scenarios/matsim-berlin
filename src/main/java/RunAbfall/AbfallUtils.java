@@ -28,6 +28,7 @@ import org.matsim.contrib.freight.carrier.Carriers;
 import org.matsim.contrib.freight.carrier.ScheduledTour;
 import org.matsim.contrib.freight.carrier.TimeWindow;
 import org.matsim.contrib.freight.carrier.Tour.Delivery;
+import org.matsim.contrib.freight.carrier.Tour.Leg;
 import org.matsim.contrib.freight.carrier.Tour.Pickup;
 import org.matsim.contrib.freight.carrier.Tour.TourElement;
 import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
@@ -43,6 +44,8 @@ import org.matsim.core.config.Config;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
+import org.matsim.core.population.routes.NetworkRoute;
+import org.matsim.core.population.routes.RouteUtils;
 import org.matsim.core.replanning.GenericStrategyManager;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
@@ -272,8 +275,7 @@ class AbfallUtils {
 	static void createShipmentsWithGarbagePerMeter(Collection<SimpleFeature> districtsWithGarbage,
 			HashMap<String, Double> areasForShipmentPerMeterMap, String day, HashMap<String, Id<Link>> garbageDumps,
 			Scenario scenario, Carriers carriers, HashMap<String, Carrier> carrierMap,
-			Map<Id<Link>, ? extends Link> allLinks, double volumeBigTrashcan,
-			double serviceTimePerBigTrashcan) {
+			Map<Id<Link>, ? extends Link> allLinks, double volumeBigTrashcan, double serviceTimePerBigTrashcan) {
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		String depot = null;
@@ -335,8 +337,7 @@ class AbfallUtils {
 	static void createShipmentsGarbagePerVolume(Collection<SimpleFeature> districtsWithGarbage,
 			HashMap<String, Integer> areasForShipmentPerVolumeMap, String day, HashMap<String, Id<Link>> garbageDumps,
 			Scenario scenario, Carriers carriers, HashMap<String, Carrier> carrierMap,
-			Map<Id<Link>, ? extends Link> allLinks, double volumeBigTrashcan,
-			double serviceTimePerBigTrashcan) {
+			Map<Id<Link>, ? extends Link> allLinks, double volumeBigTrashcan, double serviceTimePerBigTrashcan) {
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		String depot = null;
@@ -397,8 +398,8 @@ class AbfallUtils {
 	 */
 	static void createShipmentsForSelectedDay(Collection<SimpleFeature> districtsWithGarbage, String day,
 			HashMap<String, Id<Link>> garbageDumps, Scenario scenario, Carriers carriers,
-			HashMap<String, Carrier> carrierMap, Map<Id<Link>, ? extends Link> allLinks,
-			double volumeBigTrashcan, double serviceTimePerBigTrashcan) {
+			HashMap<String, Carrier> carrierMap, Map<Id<Link>, ? extends Link> allLinks, double volumeBigTrashcan,
+			double serviceTimePerBigTrashcan) {
 		Id<Link> dumpId = null;
 		double distanceWithShipments = 0;
 		int garbageToCollect = 0;
@@ -411,8 +412,10 @@ class AbfallUtils {
 				garbageToCollect = (int) ((double) districtInformation.getAttribute(day) * 1000);
 				dumpId = garbageDumps.get(districtInformation.getAttribute(dataEnt.get(day)));
 				// depot = districtInformation.getAttribute("Depot").toString();
-				carrierMap.put(districtInformation.getAttribute("Ortsteilna").toString(), CarrierImpl.newInstance(
-						Id.create("Carrier "+districtInformation.getAttribute("Ortsteilna").toString(), Carrier.class)));
+				carrierMap.put(districtInformation.getAttribute("Ortsteilna").toString(),
+						CarrierImpl.newInstance(
+								Id.create("Carrier " + districtInformation.getAttribute("Ortsteilna").toString(),
+										Carrier.class)));
 				for (Link link : allLinks.values()) {
 					for (String linkInDistrict : linksInDistricts
 							.get(districtInformation.getAttribute("Ortsteilna").toString())) {
@@ -679,9 +682,11 @@ class AbfallUtils {
 		} else {
 			for (Carrier carrier : carrierMap.values()) {
 				for (SimpleFeature simpleFeature : districtsWithGarbage) {
-					if (carrier.getId().toString().equals("Carrier "+simpleFeature.getAttribute("Ortsteilna"))){
-					carrier.setCarrierCapabilities(CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
-							.addVehicle(depotMap.get(simpleFeature.getAttribute("Depot"))).setFleetSize(fleetSize).build());}
+					if (carrier.getId().toString().equals("Carrier " + simpleFeature.getAttribute("Ortsteilna"))) {
+						carrier.setCarrierCapabilities(CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
+								.addVehicle(depotMap.get(simpleFeature.getAttribute("Depot"))).setFleetSize(fleetSize)
+								.build());
+					}
 				}
 			}
 		}
@@ -817,7 +822,30 @@ class AbfallUtils {
 		int sizeUmladestationGradestrasse = 0;
 		int sizeGruenauerStr = 0;
 		int sizeChessboardDelivery = 0;
+		double distanceTour = 0;
 		double matsimCosts = 0;
+		List<Double> tourDistancesNordring = new ArrayList<Double>();
+		List<Double> tourDistancesForckenbeck = new ArrayList<Double>();
+		List<Double> tourDistancesMalmoeerStr = new ArrayList<Double>();
+		List<Double> tourDistancesGradestrasse = new ArrayList<Double>();
+		List<Double> tourDistancesChessboard = new ArrayList<Double>();
+		double maxTourForckenbeck = 0;
+		double minTourForckenbeck = 0;
+		double distanceToursForckenbeck = 0;
+		double averageTourDistanceForckenbeck = 0;
+		double maxTourNordring = 0;
+		double minTourNordring = 0;
+		double distanceToursNordring = 0;
+		double averageTourDistanceNordring = 0;
+		double maxTourMalmoeerStr = 0;
+		double minTourMalmoeerStr = 0;
+		double distanceToursMalmoeerStr = 0;
+		double averageTourDistanceMalmoeerStr = 0;
+		double maxTourGradestrasse = 0;
+		double minTourGradestrasse = 0;
+		double distanceToursGradestrasse = 0;
+		double averageTourDistanceGradestrasse = 0;
+
 		for (Carrier thisCarrier : carrierMap.values()) {
 
 			Collection<ScheduledTour> tours = thisCarrier.getSelectedPlan().getScheduledTours();
@@ -830,6 +858,7 @@ class AbfallUtils {
 				shipmentSizes.put(shipmentId, shipmentSize);
 			}
 			for (ScheduledTour scheduledTour : tours) {
+				distanceTour = 0;
 				List<TourElement> elements = scheduledTour.getTour().getTourElements();
 				for (TourElement element : elements) {
 					if (element instanceof Pickup) {
@@ -864,7 +893,8 @@ class AbfallUtils {
 							sizeReinickendorf = sizeReinickendorf + (shipmentSizes.get(deliveryShipmentId));
 						}
 						if (deliveryElement.getLocation() == Id.createLinkId(linkUmladestationGradestrasse)) {
-							sizeUmladestationGradestrasse = sizeUmladestationGradestrasse + (shipmentSizes.get(deliveryShipmentId));
+							sizeUmladestationGradestrasse = sizeUmladestationGradestrasse
+									+ (shipmentSizes.get(deliveryShipmentId));
 						}
 						if (deliveryElement.getLocation() == Id.createLinkId(linkGruenauerStr)) {
 							sizeGruenauerStr = sizeGruenauerStr + (shipmentSizes.get(deliveryShipmentId));
@@ -873,27 +903,90 @@ class AbfallUtils {
 							sizeChessboardDelivery = sizeChessboardDelivery + (shipmentSizes.get(deliveryShipmentId));
 						}
 					}
+					if (element instanceof Leg) {
+						Leg legElement = (Leg) element;
+						if (legElement.getRoute().getDistance() != 0)
+						distanceTour = distanceTour + RouteUtils.calcDistance((NetworkRoute)legElement.getRoute(), 0, 0, scenario.getNetwork());
+
+					}
 				}
 				allCollectedGarbage = sizeForckenbeck + sizeMalmooer + sizeNordring + sizeGradestrasse + sizeChessboard;
 
 				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckForckenbeck")) {
+					tourDistancesForckenbeck.add(vehiclesForckenbeck, (double)Math.round(distanceTour/1000));
 					vehiclesForckenbeck++;
 				}
 				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckMalmoeer")) {
+					tourDistancesMalmoeerStr.add(vehiclesMalmoeer, (double)Math.round(distanceTour/1000));
 					vehiclesMalmoeer++;
 				}
 				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckNordring")) {
+					tourDistancesNordring.add(vehiclesNordring, (double)Math.round(distanceTour/1000));
 					vehiclesNordring++;
 				}
 				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckGradestrasse")) {
+					tourDistancesGradestrasse.add(vehiclesGradestrasse, (double)Math.round(distanceTour/1000));
 					vehiclesGradestrasse++;
 				}
 				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckChessboard")) {
+					tourDistancesChessboard.add(vehiclesChessboard, (double)Math.round(distanceTour/1000));
 					vehiclesChessboard++;
 				}
 				numberVehicles = vehiclesForckenbeck + vehiclesMalmoeer + vehiclesNordring + vehiclesGradestrasse
 						+ vehiclesChessboard;
 			}
+		}
+		if (vehiclesForckenbeck >0) {
+			maxTourForckenbeck = tourDistancesForckenbeck.get(0);
+			minTourForckenbeck = tourDistancesForckenbeck.get(0);
+			distanceToursForckenbeck = tourDistancesForckenbeck.get(0);
+			for (int index = 1; index < tourDistancesForckenbeck.size(); index++) {
+				if (tourDistancesForckenbeck.get(index) > maxTourForckenbeck)
+					maxTourForckenbeck = tourDistancesForckenbeck.get(index);
+				if (tourDistancesForckenbeck.get(index) < minTourForckenbeck)
+					minTourForckenbeck = tourDistancesForckenbeck.get(index);
+				distanceToursForckenbeck = distanceToursForckenbeck + tourDistancesForckenbeck.get(index);
+			}
+			averageTourDistanceForckenbeck = distanceToursForckenbeck / vehiclesForckenbeck;
+		}
+		if (vehiclesMalmoeer >0) {
+			maxTourMalmoeerStr = tourDistancesMalmoeerStr.get(0);
+			minTourMalmoeerStr = tourDistancesMalmoeerStr.get(0);
+			distanceToursMalmoeerStr = tourDistancesMalmoeerStr.get(0);
+			for (int index = 1; index < tourDistancesMalmoeerStr.size(); index++) {
+				if (tourDistancesMalmoeerStr.get(index) > maxTourMalmoeerStr)
+					maxTourMalmoeerStr = tourDistancesMalmoeerStr.get(index);
+				if (tourDistancesMalmoeerStr.get(index) < minTourMalmoeerStr)
+					minTourMalmoeerStr = tourDistancesMalmoeerStr.get(index);
+				distanceToursMalmoeerStr = distanceToursMalmoeerStr + tourDistancesMalmoeerStr.get(index);
+			}
+			averageTourDistanceMalmoeerStr = distanceToursMalmoeerStr / vehiclesMalmoeer;
+		}
+		if (vehiclesNordring >0) {
+			maxTourNordring = tourDistancesNordring.get(0);
+			minTourNordring = tourDistancesNordring.get(0);
+			distanceToursNordring = tourDistancesNordring.get(0);
+			for (int index = 1; index < tourDistancesNordring.size(); index++) {
+				if (tourDistancesNordring.get(index) > maxTourNordring)
+					maxTourNordring = tourDistancesNordring.get(index);
+				if (tourDistancesNordring.get(index) < minTourNordring)
+					minTourNordring = tourDistancesNordring.get(index);
+				distanceToursNordring = distanceToursNordring + tourDistancesNordring.get(index);
+			}
+			averageTourDistanceNordring = distanceToursNordring / vehiclesNordring;
+		}
+		if (vehiclesGradestrasse >0) {
+			maxTourGradestrasse = tourDistancesGradestrasse.get(0);
+			minTourGradestrasse = tourDistancesForckenbeck.get(0);
+			distanceToursGradestrasse = tourDistancesGradestrasse.get(0);
+			for (int index = 1; index < tourDistancesGradestrasse.size(); index++) {
+				if (tourDistancesGradestrasse.get(index) > maxTourGradestrasse)
+					maxTourGradestrasse = tourDistancesGradestrasse.get(index);
+				if (tourDistancesGradestrasse.get(index) < minTourGradestrasse)
+					minTourGradestrasse = tourDistancesGradestrasse.get(index);
+				distanceToursGradestrasse = distanceToursGradestrasse + tourDistancesGradestrasse.get(index);
+			}
+			averageTourDistanceGradestrasse = distanceToursGradestrasse / vehiclesGradestrasse;
 		}
 		FileWriter writer;
 		File file;
@@ -919,25 +1012,44 @@ class AbfallUtils {
 			writer.write("Anzahl der Abholstellen: \t\t\t\t\t\t\t\t\t" + numberOfShipments + "\n");
 			writer.write("Anzahl der Abholstellen ohne Abholung: \t\t\t\t\t\t" + noPickup + "\n\n");
 			writer.write("Anzahl der Muellfahrzeuge im Einsatz: \t\t\t\t\t\t" + (numberVehicles) + "\t\tMenge gesamt:\t"
-					+ ((double) allCollectedGarbage) / 1000 + " t\n");
+					+ ((double) allCollectedGarbage) / 1000 + " t\n\n");
 			if (day != null) {
 				writer.write("\t Anzahl aus dem Betriebshof Forckenbeckstrasse: \t\t\t" + vehiclesForckenbeck
 						+ "\t\t\tMenge:\t\t" + ((double) sizeForckenbeck) / 1000 + " t\n");
+				writer.write("\t\t\tFahrstrecke Summe:\t\t\t" + distanceToursForckenbeck + " km\n");
+				writer.write("\t\t\tFahrstrecke Max:\t\t\t" + maxTourForckenbeck + " km\n");
+				writer.write("\t\t\tFahrstrecke Min:\t\t\t" + minTourForckenbeck + " km\n");
+				writer.write("\t\t\tFahrstrecke Durchschnitt:\t" + averageTourDistanceForckenbeck + " km\n\n");
 				writer.write("\t Anzahl aus dem Betriebshof Malmoeer Strasse: \t\t\t\t" + vehiclesMalmoeer
 						+ "\t\t\tMenge:\t\t" + ((double) sizeMalmooer) / 1000 + " t\n");
+				writer.write("\t\t\tFahrstrecke Summe:\t\t\t" + distanceToursMalmoeerStr + " km\n");
+				writer.write("\t\t\tFahrstrecke Max:\t\t\t" + maxTourMalmoeerStr + " km\n");
+				writer.write("\t\t\tFahrstrecke Min:\t\t\t" + minTourMalmoeerStr + " km\n");
+				writer.write("\t\t\tFahrstrecke Durchschnitt:\t" + averageTourDistanceMalmoeerStr + " km\n\n");
 				writer.write("\t Anzahl aus dem Betriebshof Nordring: \t\t\t\t\t\t" + vehiclesNordring
 						+ "\t\t\tMenge:\t\t" + ((double) sizeNordring) / 1000 + " t\n");
+				writer.write("\t\t\tFahrstrecke Summe:\t\t\t" + distanceToursNordring + " km\n");
+				writer.write("\t\t\tFahrstrecke Max:\t\t\t" + maxTourNordring + " km\n");
+				writer.write("\t\t\tFahrstrecke Min:\t\t\t" + minTourNordring + " km\n");
+				writer.write("\t\t\tFahrstrecke Durchschnitt:\t" + averageTourDistanceNordring + " km\n\n");
 				writer.write("\t Anzahl aus dem Betriebshof Gradestraße: \t\t\t\t\t" + vehiclesGradestrasse
-						+ "\t\t\tMenge:\t\t" + ((double) sizeGradestrasse) / 1000 + " t\n\n");
+						+ "\t\t\tMenge:\t\t" + ((double) sizeGradestrasse) / 1000 + " t\n");
+				writer.write("\t\t\tFahrstrecke Summe:\t\t\t" + distanceToursGradestrasse + " km\n");
+				writer.write("\t\t\tFahrstrecke Max:\t\t\t" + maxTourGradestrasse + " km\n");
+				writer.write("\t\t\tFahrstrecke Min:\t\t\t" + minTourGradestrasse + " km\n");
+				writer.write("\t\t\tFahrstrecke Durchschnitt:\t" + averageTourDistanceGradestrasse + " km\n\n");
 				writer.write("Anzuliefernde Menge (IST):\tMHKW Ruhleben:\t\t\t\t\t" + ((double) sizeRuhleben) / 1000
 						+ " t\n");
 				writer.write("\t\t\t\t\t\t\tMPS Pankow:\t\t\t\t\t\t" + ((double) sizePankow) / 1000 + " t\n");
 				writer.write("\t\t\t\t\t\t\tMPS Reinickendorf:\t\t\t\t" + ((double) sizeReinickendorf) / 1000 + " t\n");
-				writer.write(
-						"\t\t\t\t\t\t\tUmladestation Gradestrasse:\t\t" + ((double) sizeUmladestationGradestrasse) / 1000 + " t\n");
-				writer.write(
-						"\t\t\t\t\t\t\tMA Gruenauer Str.:\t\t\t\t" + ((double) sizeGruenauerStr) / 1000 + " t\n");
+				writer.write("\t\t\t\t\t\t\tUmladestation Gradestrasse:\t\t"
+						+ ((double) sizeUmladestationGradestrasse) / 1000 + " t\n");
+				writer.write("\t\t\t\t\t\t\tMA Gruenauer Str.:\t\t\t\t" + ((double) sizeGruenauerStr) / 1000 + " t\n");
 			}
+			if (vehiclesChessboard > 0) {
+				writer.write(" Distanzen : "+tourDistancesChessboard+" km\n");
+			}
+			writer.write("\n"+"Gefahrene Strecke gesamt: "+(distanceToursForckenbeck+distanceToursMalmoeerStr+distanceToursNordring+distanceToursGradestrasse)+" km\n");
 			writer.write("\n" + "Kosten (Jsprit): \t\t\t\t\t\t\t\t\t\t\t" + (Math.round(costsJsprit)) + " €\n\n");
 			writer.write("Kosten (MatSim): \t\t\t\t\t\t\t\t\t\t\t" + ((-1) * Math.round(matsimCosts)) + " €\n");
 

@@ -34,7 +34,7 @@ public class AbfallChessboardUtils {
 		carrierMap.put("carrierChessboard", carrierChessboard);
 		double distanceWithShipments = 0;
 		for (Link link : allLinks.values()) {
-			if (link.getFreespeed() < 12) {
+			if (link.getFreespeed() < 14) {
 				garbageLinks.put(link.getId(), link);
 				distanceWithShipments = distanceWithShipments + link.getLength();
 			}

@@ -68,7 +68,7 @@ public class Run_Abfall {
 
 		switch (netzwerkWahl) {
 		case originalChessboard:
-			config.controler().setOutputDirectory("output/original_Chessboard/03_InfiniteSize");
+			config.controler().setOutputDirectory("output/original_Chessboard/04_Distances");
 			config.network().setInputFile(original_Chessboard);
 			break;
 		case modifiedChessboard:
@@ -78,7 +78,7 @@ public class Run_Abfall {
 			break;
 		case berlinNetwork:
 			// Berlin scenario network
-			config.controler().setOutputDirectory("output/Berlin/04_4Districts_ForPresentation_Finite");
+			config.controler().setOutputDirectory("output/Berlin/09_Malchow_Distances");
 			config.network().setInputFile(berlin);
 			break;
 		default:
@@ -108,10 +108,10 @@ public class Run_Abfall {
 
 		switch (scenarioWahl) {
 		case chessboardTotalGarbageToCollect:
-			int kgGarbageToCollect = 40 * 1000;
+			int kgGarbageToCollect = 5 * 1000;
 			AbfallChessboardUtils.createShipmentsForChessboardI(carrierMap, kgGarbageToCollect, allLinks,
 					volumeBigTrashcan, secondsServiceTimePerBigTrashcan, scenario, carriers);
-			fleetSize = FleetSize.INFINITE;
+			fleetSize = FleetSize.FINITE;
 			AbfallChessboardUtils.createCarriersForChessboard(carriers, fleetSize);
 			break;
 		case chessboardGarbagePerMeterToCollect:
@@ -123,12 +123,12 @@ public class Run_Abfall {
 			break;
 		case berlinSelectedDistricts:
 			// day input: MO or DI or MI or DO or FR
-			List<String> districtsForShipments = Arrays.asList("Haselhorst","Karlshorst","Tegel","Gruenau");
-			day = "MO";
+			List<String> districtsForShipments = Arrays.asList("Malchow","Blankenfelde","Gruenau");
+			day = "MI";
 			AbfallUtils.createShipmentsForSelectedArea(districtsWithGarbage, districtsForShipments, day, garbageDumps,
 					scenario, carriers, carrierMap, allLinks, volumeBigTrashcan,
 					secondsServiceTimePerBigTrashcan);
-			fleetSize = FleetSize.FINITE;
+			fleetSize = FleetSize.INFINITE;
 			AbfallUtils.createCarriersBerlin(districtsWithGarbage, carriers, carrierMap, fleetSize);
 			break;
 		case berlinDistrictsWithInputGarbagePerMeter:
