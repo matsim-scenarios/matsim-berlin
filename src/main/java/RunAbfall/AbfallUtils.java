@@ -702,6 +702,7 @@ class AbfallUtils {
 	 */
 	static void solveWithJsprit(Scenario scenario, Carriers carriers, HashMap<String, Carrier> carrierMap) {
 
+		int carrierCount = 1;
 		// Netzwerk integrieren und Kosten für jsprit
 		Network network = scenario.getNetwork();
 		// Network network = NetworkUtils.readNetwork(original_Chessboard);
@@ -720,7 +721,8 @@ class AbfallUtils {
 
 			// get the algorithm out-of-the-box, search solution and get the best one.
 			VehicleRoutingAlgorithm algorithm = new SchrimpfFactory().createAlgorithm(problem);
-			algorithm.setMaxIterations(1);
+			log.info("Creating solution for carrier " + carrierCount + " of " + carrierMap.size() + " Carriers");
+			algorithm.setMaxIterations(20);
 			Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
 			VehicleRoutingProblemSolution bestSolution = Solutions.bestOf(solutions);
 			costsJsprit = costsJsprit + bestSolution.getCost();
@@ -730,6 +732,7 @@ class AbfallUtils {
 			NetworkRouter.routePlan(carrierPlanServices, netBasedCosts);
 			singleCarrier.setSelectedPlan(carrierPlanServices);
 			noPickup = noPickup + bestSolution.getUnassignedJobs().size();
+			carrierCount++;
 		}
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans.xml");
@@ -906,37 +909,38 @@ class AbfallUtils {
 					if (element instanceof Leg) {
 						Leg legElement = (Leg) element;
 						if (legElement.getRoute().getDistance() != 0)
-						distanceTour = distanceTour + RouteUtils.calcDistance((NetworkRoute)legElement.getRoute(), 0, 0, scenario.getNetwork());
+							distanceTour = distanceTour + RouteUtils.calcDistance((NetworkRoute) legElement.getRoute(),
+									0, 0, scenario.getNetwork());
 
 					}
 				}
 				allCollectedGarbage = sizeForckenbeck + sizeMalmooer + sizeNordring + sizeGradestrasse + sizeChessboard;
 
 				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckForckenbeck")) {
-					tourDistancesForckenbeck.add(vehiclesForckenbeck, (double)Math.round(distanceTour/1000));
+					tourDistancesForckenbeck.add(vehiclesForckenbeck, (double) Math.round(distanceTour / 1000));
 					vehiclesForckenbeck++;
 				}
 				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckMalmoeer")) {
-					tourDistancesMalmoeerStr.add(vehiclesMalmoeer, (double)Math.round(distanceTour/1000));
+					tourDistancesMalmoeerStr.add(vehiclesMalmoeer, (double) Math.round(distanceTour / 1000));
 					vehiclesMalmoeer++;
 				}
 				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckNordring")) {
-					tourDistancesNordring.add(vehiclesNordring, (double)Math.round(distanceTour/1000));
+					tourDistancesNordring.add(vehiclesNordring, (double) Math.round(distanceTour / 1000));
 					vehiclesNordring++;
 				}
 				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckGradestrasse")) {
-					tourDistancesGradestrasse.add(vehiclesGradestrasse, (double)Math.round(distanceTour/1000));
+					tourDistancesGradestrasse.add(vehiclesGradestrasse, (double) Math.round(distanceTour / 1000));
 					vehiclesGradestrasse++;
 				}
 				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckChessboard")) {
-					tourDistancesChessboard.add(vehiclesChessboard, (double)Math.round(distanceTour/1000));
+					tourDistancesChessboard.add(vehiclesChessboard, (double) Math.round(distanceTour / 1000));
 					vehiclesChessboard++;
 				}
 				numberVehicles = vehiclesForckenbeck + vehiclesMalmoeer + vehiclesNordring + vehiclesGradestrasse
 						+ vehiclesChessboard;
 			}
 		}
-		if (vehiclesForckenbeck >0) {
+		if (vehiclesForckenbeck > 0) {
 			maxTourForckenbeck = tourDistancesForckenbeck.get(0);
 			minTourForckenbeck = tourDistancesForckenbeck.get(0);
 			distanceToursForckenbeck = tourDistancesForckenbeck.get(0);
@@ -949,7 +953,7 @@ class AbfallUtils {
 			}
 			averageTourDistanceForckenbeck = distanceToursForckenbeck / vehiclesForckenbeck;
 		}
-		if (vehiclesMalmoeer >0) {
+		if (vehiclesMalmoeer > 0) {
 			maxTourMalmoeerStr = tourDistancesMalmoeerStr.get(0);
 			minTourMalmoeerStr = tourDistancesMalmoeerStr.get(0);
 			distanceToursMalmoeerStr = tourDistancesMalmoeerStr.get(0);
@@ -962,7 +966,7 @@ class AbfallUtils {
 			}
 			averageTourDistanceMalmoeerStr = distanceToursMalmoeerStr / vehiclesMalmoeer;
 		}
-		if (vehiclesNordring >0) {
+		if (vehiclesNordring > 0) {
 			maxTourNordring = tourDistancesNordring.get(0);
 			minTourNordring = tourDistancesNordring.get(0);
 			distanceToursNordring = tourDistancesNordring.get(0);
@@ -975,7 +979,7 @@ class AbfallUtils {
 			}
 			averageTourDistanceNordring = distanceToursNordring / vehiclesNordring;
 		}
-		if (vehiclesGradestrasse >0) {
+		if (vehiclesGradestrasse > 0) {
 			maxTourGradestrasse = tourDistancesGradestrasse.get(0);
 			minTourGradestrasse = tourDistancesForckenbeck.get(0);
 			distanceToursGradestrasse = tourDistancesGradestrasse.get(0);
@@ -1019,25 +1023,28 @@ class AbfallUtils {
 				writer.write("\t\t\tFahrstrecke Summe:\t\t\t" + distanceToursForckenbeck + " km\n");
 				writer.write("\t\t\tFahrstrecke Max:\t\t\t" + maxTourForckenbeck + " km\n");
 				writer.write("\t\t\tFahrstrecke Min:\t\t\t" + minTourForckenbeck + " km\n");
-				writer.write("\t\t\tFahrstrecke Durchschnitt:\t" + averageTourDistanceForckenbeck + " km\n\n");
+				writer.write(
+						"\t\t\tFahrstrecke Durchschnitt:\t" + Math.round(averageTourDistanceForckenbeck) + " km\n\n");
 				writer.write("\t Anzahl aus dem Betriebshof Malmoeer Strasse: \t\t\t\t" + vehiclesMalmoeer
 						+ "\t\t\tMenge:\t\t" + ((double) sizeMalmooer) / 1000 + " t\n");
 				writer.write("\t\t\tFahrstrecke Summe:\t\t\t" + distanceToursMalmoeerStr + " km\n");
 				writer.write("\t\t\tFahrstrecke Max:\t\t\t" + maxTourMalmoeerStr + " km\n");
 				writer.write("\t\t\tFahrstrecke Min:\t\t\t" + minTourMalmoeerStr + " km\n");
-				writer.write("\t\t\tFahrstrecke Durchschnitt:\t" + averageTourDistanceMalmoeerStr + " km\n\n");
+				writer.write(
+						"\t\t\tFahrstrecke Durchschnitt:\t" + Math.round(averageTourDistanceMalmoeerStr) + " km\n\n");
 				writer.write("\t Anzahl aus dem Betriebshof Nordring: \t\t\t\t\t\t" + vehiclesNordring
 						+ "\t\t\tMenge:\t\t" + ((double) sizeNordring) / 1000 + " t\n");
 				writer.write("\t\t\tFahrstrecke Summe:\t\t\t" + distanceToursNordring + " km\n");
 				writer.write("\t\t\tFahrstrecke Max:\t\t\t" + maxTourNordring + " km\n");
 				writer.write("\t\t\tFahrstrecke Min:\t\t\t" + minTourNordring + " km\n");
-				writer.write("\t\t\tFahrstrecke Durchschnitt:\t" + averageTourDistanceNordring + " km\n\n");
+				writer.write("\t\t\tFahrstrecke Durchschnitt:\t" + Math.round(averageTourDistanceNordring) + " km\n\n");
 				writer.write("\t Anzahl aus dem Betriebshof Gradestraße: \t\t\t\t\t" + vehiclesGradestrasse
 						+ "\t\t\tMenge:\t\t" + ((double) sizeGradestrasse) / 1000 + " t\n");
 				writer.write("\t\t\tFahrstrecke Summe:\t\t\t" + distanceToursGradestrasse + " km\n");
 				writer.write("\t\t\tFahrstrecke Max:\t\t\t" + maxTourGradestrasse + " km\n");
 				writer.write("\t\t\tFahrstrecke Min:\t\t\t" + minTourGradestrasse + " km\n");
-				writer.write("\t\t\tFahrstrecke Durchschnitt:\t" + averageTourDistanceGradestrasse + " km\n\n");
+				writer.write(
+						"\t\t\tFahrstrecke Durchschnitt:\t" + Math.round(averageTourDistanceGradestrasse) + " km\n\n");
 				writer.write("Anzuliefernde Menge (IST):\tMHKW Ruhleben:\t\t\t\t\t" + ((double) sizeRuhleben) / 1000
 						+ " t\n");
 				writer.write("\t\t\t\t\t\t\tMPS Pankow:\t\t\t\t\t\t" + ((double) sizePankow) / 1000 + " t\n");
@@ -1047,9 +1054,10 @@ class AbfallUtils {
 				writer.write("\t\t\t\t\t\t\tMA Gruenauer Str.:\t\t\t\t" + ((double) sizeGruenauerStr) / 1000 + " t\n");
 			}
 			if (vehiclesChessboard > 0) {
-				writer.write(" Distanzen : "+tourDistancesChessboard+" km\n");
+				writer.write(" Distanzen : " + tourDistancesChessboard + " km\n");
 			}
-			writer.write("\n"+"Gefahrene Strecke gesamt: "+(distanceToursForckenbeck+distanceToursMalmoeerStr+distanceToursNordring+distanceToursGradestrasse)+" km\n");
+			writer.write("\n" + "Gefahrene Strecke gesamt: " + (distanceToursForckenbeck + distanceToursMalmoeerStr
+					+ distanceToursNordring + distanceToursGradestrasse) + " km\n");
 			writer.write("\n" + "Kosten (Jsprit): \t\t\t\t\t\t\t\t\t\t\t" + (Math.round(costsJsprit)) + " €\n\n");
 			writer.write("Kosten (MatSim): \t\t\t\t\t\t\t\t\t\t\t" + ((-1) * Math.round(matsimCosts)) + " €\n");
 
