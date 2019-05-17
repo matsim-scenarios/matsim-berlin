@@ -160,7 +160,7 @@ class AbfallUtils {
 			p = MGC.xy2Point(x, y);
 			for (SimpleFeature district : districts) {
 				if (((Geometry) district.getDefaultGeometry()).contains(p)) {
-					linksInDistricts.put(district.getAttribute("Ortsteilna").toString(), link.getId().toString());
+					linksInDistricts.put(district.getAttribute("Ortsteil").toString(), link.getId().toString());
 				}
 			}
 		}
@@ -222,7 +222,7 @@ class AbfallUtils {
 		createMapEnt();
 		for (String districtToCollect : districtsForShipments) {
 			for (SimpleFeature districtInformation : districtsWithGarbage) {
-				if (districtInformation.getAttribute("Ortsteilna").equals(districtToCollect)) {
+				if (districtInformation.getAttribute("Ortsteil").equals(districtToCollect)) {
 					if ((double) districtInformation.getAttribute(day) > 0) {
 						garbageToCollect = (int) ((double) districtInformation.getAttribute(day) * 1000);
 						dumpId = garbageDumps.get(districtInformation.getAttribute(dataEnt.get(day)));
@@ -247,7 +247,7 @@ class AbfallUtils {
 							}
 						}
 					} else {
-						log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
+						log.warn("At District " + districtInformation.getAttribute("Ortsteil").toString()
 								+ " no garbage will be collected at " + day);
 						districtsWithNoShipments.add(districtToCollect);
 					}
@@ -285,7 +285,7 @@ class AbfallUtils {
 		createMapEnt();
 		for (String districtToCollect : areasForShipmentPerMeterMap.keySet()) {
 			for (SimpleFeature districtInformation : districtsWithGarbage) {
-				if (districtInformation.getAttribute("Ortsteilna").equals(districtToCollect)) {
+				if (districtInformation.getAttribute("Ortsteil").equals(districtToCollect)) {
 					if ((double) districtInformation.getAttribute(day) > 0) {
 						dumpId = garbageDumps.get(districtInformation.getAttribute(dataEnt.get(day)));
 						depot = districtInformation.getAttribute("Depot").toString();
@@ -309,7 +309,7 @@ class AbfallUtils {
 							}
 						}
 					} else {
-						log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
+						log.warn("At District " + districtInformation.getAttribute("Ortsteil").toString()
 								+ " no garbage will be collected at " + day);
 						districtsWithNoShipments.add(districtToCollect);
 					}
@@ -347,7 +347,7 @@ class AbfallUtils {
 		createMapEnt();
 		for (String districtToCollect : areasForShipmentPerVolumeMap.keySet()) {
 			for (SimpleFeature districtInformation : districtsWithGarbage) {
-				if (districtInformation.getAttribute("Ortsteilna").equals(districtToCollect)) {
+				if (districtInformation.getAttribute("Ortsteil").equals(districtToCollect)) {
 					if ((double) districtInformation.getAttribute(day) > 0) {
 						dumpId = garbageDumps.get(districtInformation.getAttribute(dataEnt.get(day)));
 						depot = districtInformation.getAttribute("Depot").toString();
@@ -372,7 +372,7 @@ class AbfallUtils {
 							}
 						}
 					} else {
-						log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
+						log.warn("At District " + districtInformation.getAttribute("Ortsteil").toString()
 								+ " no garbage will be collected at " + day);
 						districtsWithNoShipments.add(districtToCollect);
 					}
@@ -414,13 +414,13 @@ class AbfallUtils {
 				garbageToCollect = (int) ((double) districtInformation.getAttribute(day) * 1000);
 				dumpId = garbageDumps.get(districtInformation.getAttribute(dataEnt.get(day)));
 				// depot = districtInformation.getAttribute("Depot").toString();
-				carrierMap.put(districtInformation.getAttribute("Ortsteilna").toString(),
+				carrierMap.put(districtInformation.getAttribute("Ortsteil").toString(),
 						CarrierImpl.newInstance(
-								Id.create("Carrier " + districtInformation.getAttribute("Ortsteilna").toString(),
+								Id.create("Carrier " + districtInformation.getAttribute("Ortsteil").toString(),
 										Carrier.class)));
 				for (Link link : allLinks.values()) {
 					for (String linkInDistrict : linksInDistricts
-							.get(districtInformation.getAttribute("Ortsteilna").toString())) {
+							.get(districtInformation.getAttribute("Ortsteil").toString())) {
 						if (Id.createLinkId(linkInDistrict) == link.getId()) {
 							if (link.getFreespeed() < 14 && link.getAllowedModes().contains("car")) {
 								for (Link garbageLink : garbageLinks.values()) {
@@ -440,16 +440,16 @@ class AbfallUtils {
 					}
 				}
 			} else {
-				log.warn("At District " + districtInformation.getAttribute("Ortsteilna").toString()
+				log.warn("At District " + districtInformation.getAttribute("Ortsteil").toString()
 						+ " no garbage will be collected at " + day);
 			}
 
 			if (garbageLinks.size() != 0) {
-				districtsWithShipments.add(districtInformation.getAttribute("Ortsteilna").toString());
+				districtsWithShipments.add(districtInformation.getAttribute("Ortsteil").toString());
 
 				createShipmentsForCarrierII(garbageToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
 						distanceWithShipments, garbageLinks, scenario,
-						carrierMap.get(districtInformation.getAttribute("Ortsteilna").toString()), dumpId, carriers);
+						carrierMap.get(districtInformation.getAttribute("Ortsteil").toString()), dumpId, carriers);
 			}
 			distanceWithShipments = 0;
 			garbageLinks.clear();
@@ -686,7 +686,7 @@ class AbfallUtils {
 		} else {
 			for (Carrier carrier : carrierMap.values()) {
 				for (SimpleFeature simpleFeature : districtsWithGarbage) {
-					if (carrier.getId().toString().equals("Carrier " + simpleFeature.getAttribute("Ortsteilna"))) {
+					if (carrier.getId().toString().equals("Carrier " + simpleFeature.getAttribute("Ortsteil"))) {
 						carrier.setCarrierCapabilities(CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
 								.addVehicle(depotMap.get(simpleFeature.getAttribute("Depot"))).setFleetSize(fleetSize)
 								.build());
