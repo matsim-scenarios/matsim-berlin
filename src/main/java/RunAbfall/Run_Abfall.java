@@ -73,12 +73,12 @@ public class Run_Abfall {
 			break;
 		case modifiedChessboard:
 			// modified with some different freespeeds and lengths for some links
-			config.controler().setOutputDirectory("output/modified_Chessboard/02_InfiniteSize");
+			config.controler().setOutputDirectory("output/modified_Chessboard/03_Test_elektrisch");
 			config.network().setInputFile(modified_Chessboard);
 			break;
 		case berlinNetwork:
 			// Berlin scenario network
-			config.controler().setOutputDirectory("output/Berlin/Montag/Komplett_20It_withDistances");
+			config.controler().setOutputDirectory("output/Berlin/Montag/komplett_elektrisch");
 			config.network().setInputFile(berlin);
 			break;
 		default:
@@ -123,7 +123,7 @@ public class Run_Abfall {
 			break;
 		case berlinSelectedDistricts:
 			// day input: MO or DI or MI or DO or FR
-			List<String> districtsForShipments = Arrays.asList("Malchow","Blankenfelde","Gruenau");
+			List<String> districtsForShipments = Arrays.asList("Malchow");
 			day = "MI";
 			AbfallUtils.createShipmentsForSelectedArea(districtsWithGarbage, districtsForShipments, day, garbageDumps,
 					scenario, carriers, carrierMap, allLinks, volumeBigTrashcan,
@@ -135,7 +135,7 @@ public class Run_Abfall {
 			// day input: MO or DI or MI or DO or FR
 			// input for Map .put("district", double kgGarbagePerMeterToCollect)
 			HashMap<String, Double> areasForShipmentPerMeterMap = new HashMap<String, Double>();
-			areasForShipmentPerMeterMap.put("Malchow", 1.04);
+			areasForShipmentPerMeterMap.put("Malchow", 1.0);
 			day = "MI";
 			AbfallUtils.createShipmentsWithGarbagePerMeter(districtsWithGarbage, areasForShipmentPerMeterMap, day,
 					garbageDumps, scenario, carriers, carrierMap, allLinks, volumeBigTrashcan,

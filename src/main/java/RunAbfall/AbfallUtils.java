@@ -93,6 +93,8 @@ class AbfallUtils {
 	static CarrierVehicleTypes vehicleTypes = null;
 	static CarrierVehicleType carrierVehType = null;
 	static int capacityTruck = 0;
+	static double powerConsumptionPerWeight = 0;
+	static double powerConsumptionPerDistance = 0;
 	static CarrierVehicle vehicleAtDepot = null;
 	static Multimap<String, String> linksInDistricts;
 	static boolean streetAlreadyInGarbageLinks = false;
@@ -555,14 +557,16 @@ class AbfallUtils {
 	 * Creates a new vehicleType and ads this type to the CarrierVehicleTypes
 	 */
 	static void createAndAddVehicles() {
-		String vehicleTypeId = "MB_Econic_Diesel";
-		capacityTruck = 11500; // in kg
+		String vehicleTypeId = "E-Force KSF";
+		capacityTruck = 10500; // in kg
+		powerConsumptionPerDistance = 0.886; // in kwh/km
+		powerConsumptionPerWeight = 1.4; // in kwh/1000kg collected garbage
 		double maxVelocity = 80 / 3.6;
-		double costPerDistanceUnit = 0.000824; // Berechnung aus Excel
+		double costPerDistanceUnit = 0.00011518; // Berechnung aus Excel
 		double costPerTimeUnit = 0.0; // Lohnkosten bei Fixkosten integriert
-		double fixCosts = 999.93; // Berechnung aus Excel
-		FuelType engineInformation = FuelType.diesel;
-		double literPerMeter = 0.00067; // Berechnung aus Ecxel
+		double fixCosts = 1222.32 + 3.822; // Berechnung aus Excel
+		FuelType engineInformation = FuelType.electricity;
+		double literPerMeter = 0.0; // Berechnung aus Ecxel
 
 		createGarbageTruckType(vehicleTypeId, maxVelocity, costPerDistanceUnit, costPerTimeUnit, fixCosts,
 				engineInformation, literPerMeter);
@@ -705,7 +709,6 @@ class AbfallUtils {
 		int carrierCount = 1;
 		// Netzwerk integrieren und Kosten für jsprit
 		Network network = scenario.getNetwork();
-		// Network network = NetworkUtils.readNetwork(original_Chessboard);
 		Builder netBuilder = NetworkBasedTransportCosts.Builder.newInstance(network,
 				vehicleTypes.getVehicleTypes().values());
 		final NetworkBasedTransportCosts netBasedCosts = netBuilder.build();
@@ -826,12 +829,19 @@ class AbfallUtils {
 		int sizeGruenauerStr = 0;
 		int sizeChessboardDelivery = 0;
 		double distanceTour = 0;
+		double powerConsumptionTour = 0;
+		int sizeTour = 0;
 		double matsimCosts = 0;
 		List<Double> tourDistancesNordring = new ArrayList<Double>();
 		List<Double> tourDistancesForckenbeck = new ArrayList<Double>();
 		List<Double> tourDistancesMalmoeerStr = new ArrayList<Double>();
 		List<Double> tourDistancesGradestrasse = new ArrayList<Double>();
 		List<Double> tourDistancesChessboard = new ArrayList<Double>();
+		List<Double> powerConsumptionTourNordring = new ArrayList<Double>();
+		List<Double> powerConsumptionTourForckenbeck = new ArrayList<Double>();
+		List<Double> powerConsumptionTourMalmoeerStr = new ArrayList<Double>();
+		List<Double> powerConsumptionTourGradestrasse = new ArrayList<Double>();
+		List<Double> powerConsumptionTourChessboard = new ArrayList<Double>();
 		double maxTourForckenbeck = 0;
 		double minTourForckenbeck = 0;
 		double distanceToursForckenbeck = 0;
@@ -848,6 +858,22 @@ class AbfallUtils {
 		double minTourGradestrasse = 0;
 		double distanceToursGradestrasse = 0;
 		double averageTourDistanceGradestrasse = 0;
+		double maxPowerConsumptionForckenbeck = 0;
+		double minPowerConsumptionForckenbeck = 0;
+		double averagePowerConsumptionForckenbeck = 0;
+		double powerConsumptionForckenbeck = 0;
+		double maxPowerConsumptionNordring = 0;
+		double minPowerConsumptionNordring = 0;
+		double averagePowerConsumptionNordring = 0;
+		double powerConsumptionNordring = 0;
+		double maxPowerConsumptionMalmoeerStr = 0;
+		double minPowerConsumptionMalmoeerStr = 0;
+		double averagePowerConsumptionMalmoeerStr = 0;
+		double powerConsumptionMalmoeerStr = 0;
+		double maxPowerConsumptionGradestrasse = 0;
+		double minPowerConsumptionGradestrasse = 0;
+		double averagePowerConsumptionGradestrasse = 0;
+		double powerConsumptionGradestrasse = 0;
 
 		for (Carrier thisCarrier : carrierMap.values()) {
 
@@ -862,6 +888,8 @@ class AbfallUtils {
 			}
 			for (ScheduledTour scheduledTour : tours) {
 				distanceTour = 0;
+				powerConsumptionTour = 0;
+				sizeTour = 0;
 				List<TourElement> elements = scheduledTour.getTour().getTourElements();
 				for (TourElement element : elements) {
 					if (element instanceof Pickup) {
@@ -869,18 +897,23 @@ class AbfallUtils {
 						String pickupShipmentId = pickupElement.getShipment().getId().toString();
 						if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckForckenbeck")) {
 							sizeForckenbeck = sizeForckenbeck + (shipmentSizes.get(pickupShipmentId));
+							sizeTour = sizeTour + (shipmentSizes.get(pickupShipmentId));
 						}
 						if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckMalmoeer")) {
 							sizeMalmooer = sizeMalmooer + (shipmentSizes.get(pickupShipmentId));
+							sizeTour = sizeTour + (shipmentSizes.get(pickupShipmentId));
 						}
 						if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckNordring")) {
 							sizeNordring = sizeNordring + (shipmentSizes.get(pickupShipmentId));
+							sizeTour = sizeTour + (shipmentSizes.get(pickupShipmentId));
 						}
 						if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckGradestrasse")) {
 							sizeGradestrasse = sizeGradestrasse + (shipmentSizes.get(pickupShipmentId));
+							sizeTour = sizeTour + (shipmentSizes.get(pickupShipmentId));
 						}
 						if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckChessboard")) {
 							sizeChessboard = sizeChessboard + (shipmentSizes.get(pickupShipmentId));
+							sizeTour = sizeTour + (shipmentSizes.get(pickupShipmentId));
 						}
 					}
 					if (element instanceof Delivery) {
@@ -915,25 +948,33 @@ class AbfallUtils {
 					}
 				}
 				allCollectedGarbage = sizeForckenbeck + sizeMalmooer + sizeNordring + sizeGradestrasse + sizeChessboard;
+				powerConsumptionTour = (double) (distanceTour / 1000) * powerConsumptionPerDistance
+						+ (double) (sizeTour / 1000) * powerConsumptionPerWeight;
 
 				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckForckenbeck")) {
 					tourDistancesForckenbeck.add(vehiclesForckenbeck, (double) Math.round(distanceTour / 1000));
+					powerConsumptionTourForckenbeck.add(vehiclesForckenbeck, (double) Math.round(powerConsumptionTour));
 					vehiclesForckenbeck++;
 				}
 				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckMalmoeer")) {
 					tourDistancesMalmoeerStr.add(vehiclesMalmoeer, (double) Math.round(distanceTour / 1000));
+					powerConsumptionTourMalmoeerStr.add(vehiclesMalmoeer, (double) Math.round(powerConsumptionTour));
 					vehiclesMalmoeer++;
 				}
 				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckNordring")) {
 					tourDistancesNordring.add(vehiclesNordring, (double) Math.round(distanceTour / 1000));
+					powerConsumptionTourNordring.add(vehiclesNordring, (double) Math.round(powerConsumptionTour));
 					vehiclesNordring++;
 				}
 				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckGradestrasse")) {
 					tourDistancesGradestrasse.add(vehiclesGradestrasse, (double) Math.round(distanceTour / 1000));
+					powerConsumptionTourGradestrasse.add(vehiclesGradestrasse,
+							(double) Math.round(powerConsumptionTour));
 					vehiclesGradestrasse++;
 				}
 				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckChessboard")) {
 					tourDistancesChessboard.add(vehiclesChessboard, (double) Math.round(distanceTour / 1000));
+					powerConsumptionTourChessboard.add(vehiclesChessboard, (double) Math.round(powerConsumptionTour));
 					vehiclesChessboard++;
 				}
 				numberVehicles = vehiclesForckenbeck + vehiclesMalmoeer + vehiclesNordring + vehiclesGradestrasse
@@ -944,53 +985,89 @@ class AbfallUtils {
 			maxTourForckenbeck = tourDistancesForckenbeck.get(0);
 			minTourForckenbeck = tourDistancesForckenbeck.get(0);
 			distanceToursForckenbeck = tourDistancesForckenbeck.get(0);
+			maxPowerConsumptionForckenbeck = powerConsumptionTourForckenbeck.get(0);
+			minPowerConsumptionForckenbeck = powerConsumptionTourForckenbeck.get(0);
+			powerConsumptionForckenbeck = powerConsumptionTourForckenbeck.get(0);
 			for (int index = 1; index < tourDistancesForckenbeck.size(); index++) {
 				if (tourDistancesForckenbeck.get(index) > maxTourForckenbeck)
 					maxTourForckenbeck = tourDistancesForckenbeck.get(index);
 				if (tourDistancesForckenbeck.get(index) < minTourForckenbeck)
 					minTourForckenbeck = tourDistancesForckenbeck.get(index);
+				if (powerConsumptionTourForckenbeck.get(index) > maxPowerConsumptionForckenbeck)
+					maxPowerConsumptionForckenbeck = powerConsumptionTourForckenbeck.get(index);
+				if (powerConsumptionTourForckenbeck.get(index) < minPowerConsumptionForckenbeck)
+					minPowerConsumptionForckenbeck = powerConsumptionTourForckenbeck.get(index);
 				distanceToursForckenbeck = distanceToursForckenbeck + tourDistancesForckenbeck.get(index);
+				powerConsumptionForckenbeck = powerConsumptionForckenbeck + powerConsumptionTourForckenbeck.get(index);
 			}
 			averageTourDistanceForckenbeck = distanceToursForckenbeck / vehiclesForckenbeck;
+			averagePowerConsumptionForckenbeck = powerConsumptionForckenbeck / vehiclesForckenbeck;
 		}
 		if (vehiclesMalmoeer > 0) {
 			maxTourMalmoeerStr = tourDistancesMalmoeerStr.get(0);
 			minTourMalmoeerStr = tourDistancesMalmoeerStr.get(0);
 			distanceToursMalmoeerStr = tourDistancesMalmoeerStr.get(0);
+			maxPowerConsumptionMalmoeerStr = powerConsumptionTourMalmoeerStr.get(0);
+			minPowerConsumptionMalmoeerStr = powerConsumptionTourMalmoeerStr.get(0);
+			powerConsumptionMalmoeerStr = powerConsumptionTourMalmoeerStr.get(0);
 			for (int index = 1; index < tourDistancesMalmoeerStr.size(); index++) {
 				if (tourDistancesMalmoeerStr.get(index) > maxTourMalmoeerStr)
 					maxTourMalmoeerStr = tourDistancesMalmoeerStr.get(index);
 				if (tourDistancesMalmoeerStr.get(index) < minTourMalmoeerStr)
 					minTourMalmoeerStr = tourDistancesMalmoeerStr.get(index);
+				if (powerConsumptionTourMalmoeerStr.get(index) > maxPowerConsumptionMalmoeerStr)
+					maxPowerConsumptionMalmoeerStr = powerConsumptionTourMalmoeerStr.get(index);
+				if (powerConsumptionTourMalmoeerStr.get(index) < minPowerConsumptionMalmoeerStr)
+					minPowerConsumptionMalmoeerStr = powerConsumptionTourMalmoeerStr.get(index);
 				distanceToursMalmoeerStr = distanceToursMalmoeerStr + tourDistancesMalmoeerStr.get(index);
+				powerConsumptionMalmoeerStr = powerConsumptionMalmoeerStr + powerConsumptionTourMalmoeerStr.get(index);
 			}
 			averageTourDistanceMalmoeerStr = distanceToursMalmoeerStr / vehiclesMalmoeer;
+			averagePowerConsumptionMalmoeerStr = powerConsumptionMalmoeerStr / vehiclesMalmoeer;
 		}
 		if (vehiclesNordring > 0) {
 			maxTourNordring = tourDistancesNordring.get(0);
 			minTourNordring = tourDistancesNordring.get(0);
 			distanceToursNordring = tourDistancesNordring.get(0);
+			maxPowerConsumptionNordring = powerConsumptionTourNordring.get(0);
+			minPowerConsumptionNordring = powerConsumptionTourNordring.get(0);
+			powerConsumptionNordring = powerConsumptionTourNordring.get(0);
 			for (int index = 1; index < tourDistancesNordring.size(); index++) {
 				if (tourDistancesNordring.get(index) > maxTourNordring)
 					maxTourNordring = tourDistancesNordring.get(index);
 				if (tourDistancesNordring.get(index) < minTourNordring)
 					minTourNordring = tourDistancesNordring.get(index);
+				if (powerConsumptionTourNordring.get(index) > maxPowerConsumptionNordring)
+					maxPowerConsumptionNordring = powerConsumptionTourNordring.get(index);
+				if (powerConsumptionTourNordring.get(index) < minPowerConsumptionNordring)
+					minPowerConsumptionNordring = powerConsumptionTourNordring.get(index);
 				distanceToursNordring = distanceToursNordring + tourDistancesNordring.get(index);
+				powerConsumptionNordring = powerConsumptionNordring + powerConsumptionTourNordring.get(index);
 			}
 			averageTourDistanceNordring = distanceToursNordring / vehiclesNordring;
+			averagePowerConsumptionNordring = powerConsumptionNordring / vehiclesNordring;
 		}
 		if (vehiclesGradestrasse > 0) {
 			maxTourGradestrasse = tourDistancesGradestrasse.get(0);
 			minTourGradestrasse = tourDistancesForckenbeck.get(0);
 			distanceToursGradestrasse = tourDistancesGradestrasse.get(0);
+			maxPowerConsumptionGradestrasse = powerConsumptionTourGradestrasse.get(0);
+			minPowerConsumptionGradestrasse = powerConsumptionTourGradestrasse.get(0);
+			powerConsumptionGradestrasse = powerConsumptionTourGradestrasse.get(0);
 			for (int index = 1; index < tourDistancesGradestrasse.size(); index++) {
 				if (tourDistancesGradestrasse.get(index) > maxTourGradestrasse)
 					maxTourGradestrasse = tourDistancesGradestrasse.get(index);
 				if (tourDistancesGradestrasse.get(index) < minTourGradestrasse)
 					minTourGradestrasse = tourDistancesGradestrasse.get(index);
+				if (powerConsumptionTourGradestrasse.get(index) > maxPowerConsumptionGradestrasse)
+					maxPowerConsumptionGradestrasse = powerConsumptionTourGradestrasse.get(index);
+				if (powerConsumptionTourGradestrasse.get(index) < minPowerConsumptionGradestrasse)
+					minPowerConsumptionGradestrasse = powerConsumptionTourGradestrasse.get(index);
 				distanceToursGradestrasse = distanceToursGradestrasse + tourDistancesGradestrasse.get(index);
+				powerConsumptionGradestrasse = powerConsumptionGradestrasse + powerConsumptionTourGradestrasse.get(index);
 			}
 			averageTourDistanceGradestrasse = distanceToursGradestrasse / vehiclesGradestrasse;
+			averagePowerConsumptionGradestrasse = powerConsumptionGradestrasse / vehiclesGradestrasse;
 		}
 		FileWriter writer;
 		File file;
@@ -1020,31 +1097,47 @@ class AbfallUtils {
 			if (day != null) {
 				writer.write("\t Anzahl aus dem Betriebshof Forckenbeckstrasse: \t\t\t" + vehiclesForckenbeck
 						+ "\t\t\tMenge:\t\t" + ((double) sizeForckenbeck) / 1000 + " t\n");
-				writer.write("\t\t\tFahrstrecke Summe:\t\t\t" + distanceToursForckenbeck + " km\n");
-				writer.write("\t\t\tFahrstrecke Max:\t\t\t" + maxTourForckenbeck + " km\n");
-				writer.write("\t\t\tFahrstrecke Min:\t\t\t" + minTourForckenbeck + " km\n");
+				writer.write("\t\t\tFahrstrecke Summe:\t\t\t\t" + distanceToursForckenbeck + " km\n");
+				writer.write("\t\t\tFahrstrecke Max:\t\t\t\t" + maxTourForckenbeck + " km\n");
+				writer.write("\t\t\tFahrstrecke Min:\t\t\t\t" + minTourForckenbeck + " km\n");
 				writer.write(
-						"\t\t\tFahrstrecke Durchschnitt:\t" + Math.round(averageTourDistanceForckenbeck) + " km\n\n");
+						"\t\t\tFahrstrecke Durchschnitt:\t\t" + Math.round(averageTourDistanceForckenbeck) + " km\n");
+				writer.write("\t\t\tEnergieverbrauch Summe:\t\t\t"+powerConsumptionForckenbeck+" kwh\n");
+				writer.write("\t\t\tEnergieverbrauch Max:\t\t\t"+maxPowerConsumptionForckenbeck+" kwh\n");
+				writer.write("\t\t\tEnergieverbrauch Min:\t\t\t"+minPowerConsumptionForckenbeck+" kwh\n");
+				writer.write("\t\t\tEnergieverbrauch Durchschnitt:\t"+Math.round(averagePowerConsumptionForckenbeck)+" kwh\n\n");
 				writer.write("\t Anzahl aus dem Betriebshof Malmoeer Strasse: \t\t\t\t" + vehiclesMalmoeer
 						+ "\t\t\tMenge:\t\t" + ((double) sizeMalmooer) / 1000 + " t\n");
-				writer.write("\t\t\tFahrstrecke Summe:\t\t\t" + distanceToursMalmoeerStr + " km\n");
-				writer.write("\t\t\tFahrstrecke Max:\t\t\t" + maxTourMalmoeerStr + " km\n");
-				writer.write("\t\t\tFahrstrecke Min:\t\t\t" + minTourMalmoeerStr + " km\n");
+				writer.write("\t\t\tFahrstrecke Summe:\t\t\t\t" + distanceToursMalmoeerStr + " km\n");
+				writer.write("\t\t\tFahrstrecke Max:\t\t\t\t" + maxTourMalmoeerStr + " km\n");
+				writer.write("\t\t\tFahrstrecke Min:\t\t\t\t" + minTourMalmoeerStr + " km\n");
 				writer.write(
-						"\t\t\tFahrstrecke Durchschnitt:\t" + Math.round(averageTourDistanceMalmoeerStr) + " km\n\n");
+						"\t\t\tFahrstrecke Durchschnitt:\t\t" + Math.round(averageTourDistanceMalmoeerStr) + " km\n");
+				writer.write("\t\t\tEnergieverbrauch Summe:\t\t\t"+powerConsumptionMalmoeerStr+" kwhn");
+				writer.write("\t\t\tEnergieverbrauch Max:\t\t\t"+maxPowerConsumptionMalmoeerStr+" kwhn");
+				writer.write("\t\t\tEnergieverbrauch Min:\t\t\t"+minPowerConsumptionMalmoeerStr+" kwhn");
+				writer.write("\t\t\tEnergieverbrauch Durchschnitt:\t"+Math.round(averagePowerConsumptionMalmoeerStr)+" kw/h\n\n");
 				writer.write("\t Anzahl aus dem Betriebshof Nordring: \t\t\t\t\t\t" + vehiclesNordring
 						+ "\t\t\tMenge:\t\t" + ((double) sizeNordring) / 1000 + " t\n");
-				writer.write("\t\t\tFahrstrecke Summe:\t\t\t" + distanceToursNordring + " km\n");
-				writer.write("\t\t\tFahrstrecke Max:\t\t\t" + maxTourNordring + " km\n");
-				writer.write("\t\t\tFahrstrecke Min:\t\t\t" + minTourNordring + " km\n");
-				writer.write("\t\t\tFahrstrecke Durchschnitt:\t" + Math.round(averageTourDistanceNordring) + " km\n\n");
+				writer.write("\t\t\tFahrstrecke Summe:\t\t\t\t" + distanceToursNordring + " km\n");
+				writer.write("\t\t\tFahrstrecke Max:\t\t\t\t" + maxTourNordring + " km\n");
+				writer.write("\t\t\tFahrstrecke Min:\t\t\t\t" + minTourNordring + " km\n");
+				writer.write("\t\t\tFahrstrecke Durchschnitt:\t\t" + Math.round(averageTourDistanceNordring) + " km\n");
+				writer.write("\t\t\tEnergieverbrauch Summe:\t\t\t"+powerConsumptionNordring+" kwh\n");
+				writer.write("\t\t\tEnergieverbrauch Max:\t\t\t"+maxPowerConsumptionNordring+" kwh\n");
+				writer.write("\t\t\tEnergieverbrauch Min:\t\t\t"+minPowerConsumptionNordring+" kwh\n");
+				writer.write("\t\t\tEnergieverbrauch Durchschnitt:\t"+Math.round(averagePowerConsumptionNordring)+" kwh\n\n");
 				writer.write("\t Anzahl aus dem Betriebshof Gradestraße: \t\t\t\t\t" + vehiclesGradestrasse
 						+ "\t\t\tMenge:\t\t" + ((double) sizeGradestrasse) / 1000 + " t\n");
-				writer.write("\t\t\tFahrstrecke Summe:\t\t\t" + distanceToursGradestrasse + " km\n");
-				writer.write("\t\t\tFahrstrecke Max:\t\t\t" + maxTourGradestrasse + " km\n");
-				writer.write("\t\t\tFahrstrecke Min:\t\t\t" + minTourGradestrasse + " km\n");
+				writer.write("\t\t\tFahrstrecke Summe:\t\t\t\t" + distanceToursGradestrasse + " km\n");
+				writer.write("\t\t\tFahrstrecke Max:\t\t\t\t" + maxTourGradestrasse + " km\n");
+				writer.write("\t\t\tFahrstrecke Min:\t\t\t\t" + minTourGradestrasse + " km\n");
 				writer.write(
-						"\t\t\tFahrstrecke Durchschnitt:\t" + Math.round(averageTourDistanceGradestrasse) + " km\n\n");
+						"\t\t\tFahrstrecke Durchschnitt:\t\t" + Math.round(averageTourDistanceGradestrasse) + " km\n");
+				writer.write("\t\t\tEnergieverbrauch Summe:\t\t\t"+powerConsumptionGradestrasse+" kwh\n");
+				writer.write("\t\t\tEnergieverbrauch Max:\t\t\t"+maxPowerConsumptionGradestrasse+" kwh\n");
+				writer.write("\t\t\tEnergieverbrauch Min:\t\t\t"+minPowerConsumptionGradestrasse+" kwh\n");
+				writer.write("\t\t\tEnergieverbrauch Durchschnitt:\t"+Math.round(averagePowerConsumptionGradestrasse)+" kwh\n\n");
 				writer.write("Anzuliefernde Menge (IST):\tMHKW Ruhleben:\t\t\t\t\t" + ((double) sizeRuhleben) / 1000
 						+ " t\n");
 				writer.write("\t\t\t\t\t\t\tMPS Pankow:\t\t\t\t\t\t" + ((double) sizePankow) / 1000 + " t\n");
@@ -1055,6 +1148,7 @@ class AbfallUtils {
 			}
 			if (vehiclesChessboard > 0) {
 				writer.write(" Distanzen : " + tourDistancesChessboard + " km\n");
+				writer.write(" Energieverbrauch: " + powerConsumptionTourChessboard + " kwh");
 			}
 			writer.write("\n" + "Gefahrene Strecke gesamt: " + (distanceToursForckenbeck + distanceToursMalmoeerStr
 					+ distanceToursNordring + distanceToursGradestrasse) + " km\n");
@@ -1076,7 +1170,7 @@ class AbfallUtils {
 	}
 
 	/**
-	 * Creates an output of a summary of important information of the created
+	 * Creates an output of a summary of important informations of the created
 	 * shipments
 	 * 
 	 */
