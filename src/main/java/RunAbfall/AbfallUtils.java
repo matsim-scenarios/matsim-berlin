@@ -57,6 +57,7 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.graphhopper.jsprit.analysis.toolbox.Plotter;
 import com.graphhopper.jsprit.core.algorithm.VehicleRoutingAlgorithm;
 import com.graphhopper.jsprit.core.algorithm.box.SchrimpfFactory;
 import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
@@ -745,13 +746,14 @@ class AbfallUtils {
 			singleCarrier.setSelectedPlan(carrierPlanServices);
 			noPickup = noPickup + bestSolution.getUnassignedJobs().size();
 			carrierCount++;
+			if (singleCarrier.getId() == Id.create("Carrier_Chessboard", Carrier.class))
+				new Plotter(problem, bestSolution).plot(
+						scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans_Test01.png",
+						"bestSolution");
 		}
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans.xml");
-		// new Plotter(problem, bestSolution).plot(
-		// scenario.getConfig().controler().getOutputDirectory() +
-		// "/jsprit_CarrierPlans_Test01.png",
-		// "bestSolution");
+
 	}
 
 	/**
@@ -884,6 +886,8 @@ class AbfallUtils {
 		double minPowerConsumptionGradestrasse = 0;
 		double averagePowerConsumptionGradestrasse = 0;
 		double powerConsumptionGradestrasse = 0;
+		double tourDistanceChessboard = 0;
+		double powerConsumptionChessboard = 0;
 
 		for (Carrier thisCarrier : carrierMap.values()) {
 
@@ -984,7 +988,10 @@ class AbfallUtils {
 				}
 				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckChessboard")) {
 					tourDistancesChessboard.add(vehiclesChessboard, (double) Math.round(distanceTour / 1000));
+					tourDistanceChessboard = tourDistanceChessboard + tourDistancesChessboard.get(vehiclesChessboard);
 					powerConsumptionTourChessboard.add(vehiclesChessboard, (double) Math.round(powerConsumptionTour));
+					powerConsumptionChessboard = powerConsumptionChessboard
+							+ powerConsumptionTourChessboard.get(vehiclesChessboard);
 					vehiclesChessboard++;
 				}
 				numberVehicles = vehiclesForckenbeck + vehiclesMalmoeer + vehiclesNordring + vehiclesGradestrasse
@@ -1082,6 +1089,7 @@ class AbfallUtils {
 			averageTourDistanceGradestrasse = distanceToursGradestrasse / vehiclesGradestrasse;
 			averagePowerConsumptionGradestrasse = powerConsumptionGradestrasse / vehiclesGradestrasse;
 		}
+
 		FileWriter writer;
 		File file;
 		file = new File(scenario.getConfig().controler().getOutputDirectory() + "/01_Zusammenfassung.txt");
@@ -1089,10 +1097,10 @@ class AbfallUtils {
 			writer = new FileWriter(file, true);
 			if (day != null) {
 				writer.write("Anzahl der Gebiete im gesamten Netzwerk:\t\t\t\t\t" + districtsWithGarbage.size() + "\n");
-				writer.write("Wochentag:\t\t\t\t\t\t\t\t\t\t\t\t\t" + day + "\n");
+				writer.write("Wochentag:\t\t\t\t\t\t\t\t\t\t\t\t\t" + day + "\n\n");
 			}
-			writer.write("\n" + "Anzahl der untersuchten Gebiete mit Abholung:\t\t\t\t" + districtsWithShipments.size()
-					+ "\n");
+			writer.write(
+					"Anzahl der untersuchten Gebiete mit Abholung:\t\t\t\t" + districtsWithShipments.size() + "\n");
 			writer.write("Untersuchte Gebiete mit Abholung:\t\t\t\t\t\t\t" + districtsWithShipments.toString() + "\n");
 			if (day != null) {
 				writer.write("\n" + "Anzahl der untersuchten Gebiete ohne Abholung:\t\t\t\t"
@@ -1180,15 +1188,24 @@ class AbfallUtils {
 				writer.write("\t\t\t\t\t\t\tMPS Reinickendorf:\t\t\t\t" + ((double) sizeReinickendorf) / 1000 + " t\n");
 				writer.write("\t\t\t\t\t\t\tUmladestation Gradestrasse:\t\t"
 						+ ((double) sizeUmladestationGradestrasse) / 1000 + " t\n");
-				writer.write("\t\t\t\t\t\t\tMA Gruenauer Str.:\t\t\t\t" + ((double) sizeGruenauerStr) / 1000 + " t\n");
+				writer.write(
+						"\t\t\t\t\t\t\tMA Gruenauer Str.:\t\t\t\t" + ((double) sizeGruenauerStr) / 1000 + " t\n\n");
 			}
 			if (vehiclesChessboard > 0) {
-				writer.write(" Distanzen : " + tourDistancesChessboard + " km\n");
-				writer.write(" Energieverbrauch: " + powerConsumptionTourChessboard + " kwh");
+				writer.write("Gefahrene Kilometer je Fahrzeug:\t\t\t\t\t\t\t" + tourDistancesChessboard + " \n");
+				if (electricCar == true)
+					writer.write(
+							"Energieverbrauch in kwh je Fahrzeug:\t\t\t\t\t\t" + powerConsumptionTourChessboard + "\n");
 			}
-			writer.write("\n" + "Gefahrene Strecke gesamt:\t\t\t\t\t\t\t\t\t" + (distanceToursForckenbeck + distanceToursMalmoeerStr
-					+ distanceToursNordring + distanceToursGradestrasse) + " km\n");
-			writer.write("\n" + "Kosten (Jsprit): \t\t\t\t\t\t\t\t\t\t\t" + (Math.round(costsJsprit)) + " €\n\n");
+			writer.write(
+					"Gefahrene Strecke gesamt:\t\t\t\t\t\t\t\t\t" + (distanceToursForckenbeck + distanceToursMalmoeerStr
+							+ distanceToursNordring + distanceToursGradestrasse + tourDistanceChessboard) + " km\n\n");
+			if (electricCar == true)
+				writer.write("Verbrauche Energie gesamt:\t\t\t\t\t\t\t\t\t"
+						+ (powerConsumptionForckenbeck + powerConsumptionMalmoeerStr + powerConsumptionNordring
+								+ powerConsumptionGradestrasse + powerConsumptionChessboard)
+						+ " kwh\n\n");
+			writer.write("Kosten (Jsprit): \t\t\t\t\t\t\t\t\t\t\t" + (Math.round(costsJsprit)) + " €\n\n");
 			writer.write("Kosten (MatSim): \t\t\t\t\t\t\t\t\t\t\t" + ((-1) * Math.round(matsimCosts)) + " €\n");
 
 			writer.flush();

@@ -110,10 +110,10 @@ public class Run_Abfall {
 
 		switch (scenarioWahl) {
 		case chessboardTotalGarbageToCollect:
-			int kgGarbageToCollect = 5 * 1000;
+			int kgGarbageToCollect = 12 * 1000;
 			AbfallChessboardUtils.createShipmentsForChessboardI(carrierMap, kgGarbageToCollect, allLinks,
 					volumeBigTrashcan, secondsServiceTimePerBigTrashcan, scenario, carriers);
-			fleetSize = FleetSize.FINITE;
+			fleetSize = FleetSize.INFINITE;
 			AbfallChessboardUtils.createCarriersForChessboard(carriers, fleetSize);
 			break;
 		case chessboardGarbagePerMeterToCollect:
