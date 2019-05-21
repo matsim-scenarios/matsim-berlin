@@ -61,7 +61,7 @@ public class Run_Abfall {
 		 * name of the scenario shows you the needed network.
 		 */
 		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinCollectedGarbageForOneDay;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinDistrictsWithInputTotalGarbagePerDistrict;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
@@ -78,7 +78,8 @@ public class Run_Abfall {
 			break;
 		case berlinNetwork:
 			// Berlin scenario network
-			config.controler().setOutputDirectory("output/Berlin/Montag/komplett_elektrisch");
+			config.controler().setOutputDirectory("output/Berlin_Neu/Test_elektr");
+		//	config.controler().setOutputDirectory("output/Berlin_Neu/Montag/6_districts_diesel");
 			config.network().setInputFile(berlin);
 			break;
 		default:
@@ -93,7 +94,8 @@ public class Run_Abfall {
 		HashMap<String, Carrier> carrierMap = AbfallUtils.createCarrier();
 
 		// creates a garbage truck type and ads this type to the carrierVehicleTypes
-		AbfallUtils.createAndAddVehicles();
+		boolean electricCar = true;
+		AbfallUtils.createAndAddVehicles(electricCar);
 
 		// 
 		Map<Id<Link>, ? extends Link> allLinks = scenario.getNetwork().getLinks();
@@ -123,8 +125,8 @@ public class Run_Abfall {
 			break;
 		case berlinSelectedDistricts:
 			// day input: MO or DI or MI or DO or FR
-			List<String> districtsForShipments = Arrays.asList("Malchow");
-			day = "MI";
+			List<String> districtsForShipments = Arrays.asList("Steglitz","Wedding","Neukoelln","Hellersdorf","Staaken","Maerkisches Viertel");
+			day = "MO";
 			AbfallUtils.createShipmentsForSelectedArea(districtsWithGarbage, districtsForShipments, day, garbageDumps,
 					scenario, carriers, carrierMap, allLinks, volumeBigTrashcan,
 					secondsServiceTimePerBigTrashcan);
@@ -185,7 +187,7 @@ public class Run_Abfall {
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans.xml");
 
-		AbfallUtils.outputSummary(districtsWithGarbage, scenario, carrierMap, day);
+		AbfallUtils.outputSummary(districtsWithGarbage, scenario, carrierMap, day, electricCar);
 
 	}
 

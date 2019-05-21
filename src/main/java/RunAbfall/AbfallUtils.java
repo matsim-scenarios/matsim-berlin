@@ -99,6 +99,7 @@ class AbfallUtils {
 	static Multimap<String, String> linksInDistricts;
 	static boolean streetAlreadyInGarbageLinks = false;
 	static boolean oneCarrierForEachDistrict = false;
+	static String vehicleTypeId;
 
 	/**
 	 * Creates a map for getting the name of the attribute, where you can find the
@@ -414,10 +415,8 @@ class AbfallUtils {
 				garbageToCollect = (int) ((double) districtInformation.getAttribute(day) * 1000);
 				dumpId = garbageDumps.get(districtInformation.getAttribute(dataEnt.get(day)));
 				// depot = districtInformation.getAttribute("Depot").toString();
-				carrierMap.put(districtInformation.getAttribute("Ortsteil").toString(),
-						CarrierImpl.newInstance(
-								Id.create("Carrier " + districtInformation.getAttribute("Ortsteil").toString(),
-										Carrier.class)));
+				carrierMap.put(districtInformation.getAttribute("Ortsteil").toString(), CarrierImpl.newInstance(Id
+						.create("Carrier " + districtInformation.getAttribute("Ortsteil").toString(), Carrier.class)));
 				for (Link link : allLinks.values()) {
 					for (String linkInDistrict : linksInDistricts
 							.get(districtInformation.getAttribute("Ortsteil").toString())) {
@@ -478,8 +477,8 @@ class AbfallUtils {
 			CarrierShipment shipment = CarrierShipment.Builder
 					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(), (dumpId),
 							volumeGarbage)
-					.setPickupServiceTime(serviceTime).setPickupTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))
-					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))
+					.setPickupServiceTime(serviceTime).setPickupTimeWindow(TimeWindow.newInstance(6 * 3600, 14 * 3600))
+					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * 3600, 14 * 3600))
 					.setDeliveryServiceTime(deliveryTime).build();
 			thisCarrier.getShipments().add(shipment);
 			countingGarbage(dumpId, volumeGarbage);
@@ -522,8 +521,8 @@ class AbfallUtils {
 			CarrierShipment shipment = CarrierShipment.Builder
 					.newInstance(Id.create("Shipment_" + link.getId(), CarrierShipment.class), link.getId(),
 							garbageDumpId, volumeGarbage)
-					.setPickupServiceTime(serviceTime).setPickupTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))
-					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * 3600, 15 * 3600))
+					.setPickupServiceTime(serviceTime).setPickupTimeWindow(TimeWindow.newInstance(6 * 3600, 14 * 3600))
+					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * 3600, 14 * 3600))
 					.setDeliveryServiceTime(deliveryTime).build();
 			thisCarrier.getShipments().add(shipment);
 			garbageCount = garbageCount + volumeGarbage;
@@ -556,18 +555,28 @@ class AbfallUtils {
 	/**
 	 * Creates a new vehicleType and ads this type to the CarrierVehicleTypes
 	 */
-	static void createAndAddVehicles() {
-		String vehicleTypeId = "E-Force KSF";
-		capacityTruck = 10500; // in kg
-		powerConsumptionPerDistance = 0.886; // in kwh/km
-		powerConsumptionPerWeight = 1.4; // in kwh/1000kg collected garbage
+	static void createAndAddVehicles(boolean electricCar) {
+		vehicleTypeId = "MB_Econic_Diesel";
+		capacityTruck = 11500; // in kg
 		double maxVelocity = 80 / 3.6;
-		double costPerDistanceUnit = 0.00011518; // Berechnung aus Excel
+		double costPerDistanceUnit = 0.000824; // Berechnung aus Excel
 		double costPerTimeUnit = 0.0; // Lohnkosten bei Fixkosten integriert
-		double fixCosts = 1222.32 + 3.822; // Berechnung aus Excel
-		FuelType engineInformation = FuelType.electricity;
-		double literPerMeter = 0.0; // Berechnung aus Ecxel
+		double fixCosts = 999.93; // Berechnung aus Excel
+		FuelType engineInformation = FuelType.diesel;
+		double literPerMeter = 0.00067; // Berechnung aus Ecxel
 
+		if (electricCar == true) {
+			vehicleTypeId = "E-Force KSF";
+			capacityTruck = 10500; // in kg
+			powerConsumptionPerDistance = 0.886; // in kwh/km
+			powerConsumptionPerWeight = 1.4; // in kwh/1000kg collected garbage
+			maxVelocity = 80 / 3.6;
+			costPerDistanceUnit = 0.00011518; // Berechnung aus Excel
+			costPerTimeUnit = 0.0; // Lohnkosten bei Fixkosten integriert
+			fixCosts = 1222.32 + 3.822; // Berechnung aus Excel
+			engineInformation = FuelType.electricity;
+			literPerMeter = 0.0; // Berechnung aus Ecxel
+		}
 		createGarbageTruckType(vehicleTypeId, maxVelocity, costPerDistanceUnit, costPerTimeUnit, fixCosts,
 				engineInformation, literPerMeter);
 		adVehicleType();
@@ -809,7 +818,7 @@ class AbfallUtils {
 	 * @param
 	 */
 	static void outputSummary(Collection<SimpleFeature> districtsWithGarbage, Scenario scenario,
-			HashMap<String, Carrier> carrierMap, String day) {
+			HashMap<String, Carrier> carrierMap, String day, boolean electricCar) {
 		int vehiclesForckenbeck = 0;
 		int vehiclesMalmoeer = 0;
 		int vehiclesNordring = 0;
@@ -831,6 +840,7 @@ class AbfallUtils {
 		double distanceTour = 0;
 		double powerConsumptionTour = 0;
 		int sizeTour = 0;
+		int carrierWithShipments = 0;
 		double matsimCosts = 0;
 		List<Double> tourDistancesNordring = new ArrayList<Double>();
 		List<Double> tourDistancesForckenbeck = new ArrayList<Double>();
@@ -980,6 +990,8 @@ class AbfallUtils {
 				numberVehicles = vehiclesForckenbeck + vehiclesMalmoeer + vehiclesNordring + vehiclesGradestrasse
 						+ vehiclesChessboard;
 			}
+			if (thisCarrier.getShipments().size() > 0)
+				carrierWithShipments++;
 		}
 		if (vehiclesForckenbeck > 0) {
 			maxTourForckenbeck = tourDistancesForckenbeck.get(0);
@@ -1064,7 +1076,8 @@ class AbfallUtils {
 				if (powerConsumptionTourGradestrasse.get(index) < minPowerConsumptionGradestrasse)
 					minPowerConsumptionGradestrasse = powerConsumptionTourGradestrasse.get(index);
 				distanceToursGradestrasse = distanceToursGradestrasse + tourDistancesGradestrasse.get(index);
-				powerConsumptionGradestrasse = powerConsumptionGradestrasse + powerConsumptionTourGradestrasse.get(index);
+				powerConsumptionGradestrasse = powerConsumptionGradestrasse
+						+ powerConsumptionTourGradestrasse.get(index);
 			}
 			averageTourDistanceGradestrasse = distanceToursGradestrasse / vehiclesGradestrasse;
 			averagePowerConsumptionGradestrasse = powerConsumptionGradestrasse / vehiclesGradestrasse;
@@ -1087,59 +1100,82 @@ class AbfallUtils {
 				writer.write("Untersuchte Gebiete ohne Abholung:\t\t\t\t\t\t\t" + districtsWithNoShipments.toString()
 						+ "\n");
 			}
-
+			writer.write("\n" + "Fahrzeug: \t\t\t\t\t\t\t\t\t\t\t\t\t" + vehicleTypeId + "\n");
+			writer.write("Kapazität je Fahrzeug: \t\t\t\t\t\t\t\t\t\t" + ((double) capacityTruck / 1000) + " Tonnen\n");
 			writer.write("\n" + "Die Summe des abzuholenden Mülls beträgt: \t\t\t\t\t" + ((double) allGarbage) / 1000
 					+ " t\n\n");
 			writer.write("Anzahl der Abholstellen: \t\t\t\t\t\t\t\t\t" + numberOfShipments + "\n");
 			writer.write("Anzahl der Abholstellen ohne Abholung: \t\t\t\t\t\t" + noPickup + "\n\n");
+			writer.write("Anzahl der Carrier mit Shipments:\t\t\t\t\t\t\t" + carrierWithShipments + "\n\n");
 			writer.write("Anzahl der Muellfahrzeuge im Einsatz: \t\t\t\t\t\t" + (numberVehicles) + "\t\tMenge gesamt:\t"
 					+ ((double) allCollectedGarbage) / 1000 + " t\n\n");
 			if (day != null) {
 				writer.write("\t Anzahl aus dem Betriebshof Forckenbeckstrasse: \t\t\t" + vehiclesForckenbeck
 						+ "\t\t\tMenge:\t\t" + ((double) sizeForckenbeck) / 1000 + " t\n");
-				writer.write("\t\t\tFahrstrecke Summe:\t\t\t\t" + distanceToursForckenbeck + " km\n");
-				writer.write("\t\t\tFahrstrecke Max:\t\t\t\t" + maxTourForckenbeck + " km\n");
-				writer.write("\t\t\tFahrstrecke Min:\t\t\t\t" + minTourForckenbeck + " km\n");
-				writer.write(
-						"\t\t\tFahrstrecke Durchschnitt:\t\t" + Math.round(averageTourDistanceForckenbeck) + " km\n");
-				writer.write("\t\t\tEnergieverbrauch Summe:\t\t\t"+powerConsumptionForckenbeck+" kwh\n");
-				writer.write("\t\t\tEnergieverbrauch Max:\t\t\t"+maxPowerConsumptionForckenbeck+" kwh\n");
-				writer.write("\t\t\tEnergieverbrauch Min:\t\t\t"+minPowerConsumptionForckenbeck+" kwh\n");
-				writer.write("\t\t\tEnergieverbrauch Durchschnitt:\t"+Math.round(averagePowerConsumptionForckenbeck)+" kwh\n\n");
-				writer.write("\t Anzahl aus dem Betriebshof Malmoeer Strasse: \t\t\t\t" + vehiclesMalmoeer
+				if (vehiclesForckenbeck > 0) {
+					writer.write("\t\t\tFahrstrecke Summe:\t\t\t\t" + distanceToursForckenbeck + " km\n");
+					writer.write("\t\t\tFahrstrecke Max:\t\t\t\t" + maxTourForckenbeck + " km\n");
+					writer.write("\t\t\tFahrstrecke Min:\t\t\t\t" + minTourForckenbeck + " km\n");
+					writer.write("\t\t\tFahrstrecke Durchschnitt:\t\t" + Math.round(averageTourDistanceForckenbeck)
+							+ " km\n");
+					if (electricCar == true) {
+						writer.write("\t\t\tEnergieverbrauch Summe:\t\t\t" + powerConsumptionForckenbeck + " kwh\n");
+						writer.write("\t\t\tEnergieverbrauch Max:\t\t\t" + maxPowerConsumptionForckenbeck + " kwh\n");
+						writer.write("\t\t\tEnergieverbrauch Min:\t\t\t" + minPowerConsumptionForckenbeck + " kwh\n");
+						writer.write("\t\t\tEnergieverbrauch Durchschnitt:\t"
+								+ Math.round(averagePowerConsumptionForckenbeck) + " kwh\n");
+					}
+				}
+				writer.write("\n" + "\t Anzahl aus dem Betriebshof Malmoeer Strasse: \t\t\t\t" + vehiclesMalmoeer
 						+ "\t\t\tMenge:\t\t" + ((double) sizeMalmooer) / 1000 + " t\n");
-				writer.write("\t\t\tFahrstrecke Summe:\t\t\t\t" + distanceToursMalmoeerStr + " km\n");
-				writer.write("\t\t\tFahrstrecke Max:\t\t\t\t" + maxTourMalmoeerStr + " km\n");
-				writer.write("\t\t\tFahrstrecke Min:\t\t\t\t" + minTourMalmoeerStr + " km\n");
-				writer.write(
-						"\t\t\tFahrstrecke Durchschnitt:\t\t" + Math.round(averageTourDistanceMalmoeerStr) + " km\n");
-				writer.write("\t\t\tEnergieverbrauch Summe:\t\t\t"+powerConsumptionMalmoeerStr+" kwhn");
-				writer.write("\t\t\tEnergieverbrauch Max:\t\t\t"+maxPowerConsumptionMalmoeerStr+" kwhn");
-				writer.write("\t\t\tEnergieverbrauch Min:\t\t\t"+minPowerConsumptionMalmoeerStr+" kwhn");
-				writer.write("\t\t\tEnergieverbrauch Durchschnitt:\t"+Math.round(averagePowerConsumptionMalmoeerStr)+" kw/h\n\n");
-				writer.write("\t Anzahl aus dem Betriebshof Nordring: \t\t\t\t\t\t" + vehiclesNordring
+				if (vehiclesMalmoeer > 0) {
+					writer.write("\t\t\tFahrstrecke Summe:\t\t\t\t" + distanceToursMalmoeerStr + " km\n");
+					writer.write("\t\t\tFahrstrecke Max:\t\t\t\t" + maxTourMalmoeerStr + " km\n");
+					writer.write("\t\t\tFahrstrecke Min:\t\t\t\t" + minTourMalmoeerStr + " km\n");
+					writer.write("\t\t\tFahrstrecke Durchschnitt:\t\t" + Math.round(averageTourDistanceMalmoeerStr)
+							+ " km\n");
+					if (electricCar == true) {
+						writer.write("\t\t\tEnergieverbrauch Summe:\t\t\t" + powerConsumptionMalmoeerStr + " kwh\n");
+						writer.write("\t\t\tEnergieverbrauch Max:\t\t\t" + maxPowerConsumptionMalmoeerStr + " kwh\n");
+						writer.write("\t\t\tEnergieverbrauch Min:\t\t\t" + minPowerConsumptionMalmoeerStr + " kwh\n");
+						writer.write("\t\t\tEnergieverbrauch Durchschnitt:\t"
+								+ Math.round(averagePowerConsumptionMalmoeerStr) + " kw/h\n");
+					}
+				}
+				writer.write("\n" + "\t Anzahl aus dem Betriebshof Nordring: \t\t\t\t\t\t" + vehiclesNordring
 						+ "\t\t\tMenge:\t\t" + ((double) sizeNordring) / 1000 + " t\n");
-				writer.write("\t\t\tFahrstrecke Summe:\t\t\t\t" + distanceToursNordring + " km\n");
-				writer.write("\t\t\tFahrstrecke Max:\t\t\t\t" + maxTourNordring + " km\n");
-				writer.write("\t\t\tFahrstrecke Min:\t\t\t\t" + minTourNordring + " km\n");
-				writer.write("\t\t\tFahrstrecke Durchschnitt:\t\t" + Math.round(averageTourDistanceNordring) + " km\n");
-				writer.write("\t\t\tEnergieverbrauch Summe:\t\t\t"+powerConsumptionNordring+" kwh\n");
-				writer.write("\t\t\tEnergieverbrauch Max:\t\t\t"+maxPowerConsumptionNordring+" kwh\n");
-				writer.write("\t\t\tEnergieverbrauch Min:\t\t\t"+minPowerConsumptionNordring+" kwh\n");
-				writer.write("\t\t\tEnergieverbrauch Durchschnitt:\t"+Math.round(averagePowerConsumptionNordring)+" kwh\n\n");
-				writer.write("\t Anzahl aus dem Betriebshof Gradestraße: \t\t\t\t\t" + vehiclesGradestrasse
+				if (vehiclesNordring > 0) {
+					writer.write("\t\t\tFahrstrecke Summe:\t\t\t\t" + distanceToursNordring + " km\n");
+					writer.write("\t\t\tFahrstrecke Max:\t\t\t\t" + maxTourNordring + " km\n");
+					writer.write("\t\t\tFahrstrecke Min:\t\t\t\t" + minTourNordring + " km\n");
+					writer.write(
+							"\t\t\tFahrstrecke Durchschnitt:\t\t" + Math.round(averageTourDistanceNordring) + " km\n");
+					if (electricCar == true) {
+						writer.write("\t\t\tEnergieverbrauch Summe:\t\t\t" + powerConsumptionNordring + " kwh\n");
+						writer.write("\t\t\tEnergieverbrauch Max:\t\t\t" + maxPowerConsumptionNordring + " kwh\n");
+						writer.write("\t\t\tEnergieverbrauch Min:\t\t\t" + minPowerConsumptionNordring + " kwh\n");
+						writer.write("\t\t\tEnergieverbrauch Durchschnitt:\t"
+								+ Math.round(averagePowerConsumptionNordring) + " kwh\n");
+					}
+				}
+				writer.write("\n" + "\t Anzahl aus dem Betriebshof Gradestraße: \t\t\t\t\t" + vehiclesGradestrasse
 						+ "\t\t\tMenge:\t\t" + ((double) sizeGradestrasse) / 1000 + " t\n");
-				writer.write("\t\t\tFahrstrecke Summe:\t\t\t\t" + distanceToursGradestrasse + " km\n");
-				writer.write("\t\t\tFahrstrecke Max:\t\t\t\t" + maxTourGradestrasse + " km\n");
-				writer.write("\t\t\tFahrstrecke Min:\t\t\t\t" + minTourGradestrasse + " km\n");
-				writer.write(
-						"\t\t\tFahrstrecke Durchschnitt:\t\t" + Math.round(averageTourDistanceGradestrasse) + " km\n");
-				writer.write("\t\t\tEnergieverbrauch Summe:\t\t\t"+powerConsumptionGradestrasse+" kwh\n");
-				writer.write("\t\t\tEnergieverbrauch Max:\t\t\t"+maxPowerConsumptionGradestrasse+" kwh\n");
-				writer.write("\t\t\tEnergieverbrauch Min:\t\t\t"+minPowerConsumptionGradestrasse+" kwh\n");
-				writer.write("\t\t\tEnergieverbrauch Durchschnitt:\t"+Math.round(averagePowerConsumptionGradestrasse)+" kwh\n\n");
-				writer.write("Anzuliefernde Menge (IST):\tMHKW Ruhleben:\t\t\t\t\t" + ((double) sizeRuhleben) / 1000
-						+ " t\n");
+				if (vehiclesGradestrasse > 0) {
+					writer.write("\t\t\tFahrstrecke Summe:\t\t\t\t" + distanceToursGradestrasse + " km\n");
+					writer.write("\t\t\tFahrstrecke Max:\t\t\t\t" + maxTourGradestrasse + " km\n");
+					writer.write("\t\t\tFahrstrecke Min:\t\t\t\t" + minTourGradestrasse + " km\n");
+					writer.write("\t\t\tFahrstrecke Durchschnitt:\t\t" + Math.round(averageTourDistanceGradestrasse)
+							+ " km\n");
+					if (electricCar == true) {
+						writer.write("\t\t\tEnergieverbrauch Summe:\t\t\t" + powerConsumptionGradestrasse + " kwh\n");
+						writer.write("\t\t\tEnergieverbrauch Max:\t\t\t" + maxPowerConsumptionGradestrasse + " kwh\n");
+						writer.write("\t\t\tEnergieverbrauch Min:\t\t\t" + minPowerConsumptionGradestrasse + " kwh\n");
+						writer.write("\t\t\tEnergieverbrauch Durchschnitt:\t"
+								+ Math.round(averagePowerConsumptionGradestrasse) + " kwh\n");
+					}
+				}
+				writer.write("\n" + "Anzuliefernde Menge (IST):\tMHKW Ruhleben:\t\t\t\t\t"
+						+ ((double) sizeRuhleben) / 1000 + " t\n");
 				writer.write("\t\t\t\t\t\t\tMPS Pankow:\t\t\t\t\t\t" + ((double) sizePankow) / 1000 + " t\n");
 				writer.write("\t\t\t\t\t\t\tMPS Reinickendorf:\t\t\t\t" + ((double) sizeReinickendorf) / 1000 + " t\n");
 				writer.write("\t\t\t\t\t\t\tUmladestation Gradestrasse:\t\t"
@@ -1150,7 +1186,7 @@ class AbfallUtils {
 				writer.write(" Distanzen : " + tourDistancesChessboard + " km\n");
 				writer.write(" Energieverbrauch: " + powerConsumptionTourChessboard + " kwh");
 			}
-			writer.write("\n" + "Gefahrene Strecke gesamt: " + (distanceToursForckenbeck + distanceToursMalmoeerStr
+			writer.write("\n" + "Gefahrene Strecke gesamt:\t\t\t\t\t\t\t\t\t" + (distanceToursForckenbeck + distanceToursMalmoeerStr
 					+ distanceToursNordring + distanceToursGradestrasse) + " km\n");
 			writer.write("\n" + "Kosten (Jsprit): \t\t\t\t\t\t\t\t\t\t\t" + (Math.round(costsJsprit)) + " €\n\n");
 			writer.write("Kosten (MatSim): \t\t\t\t\t\t\t\t\t\t\t" + ((-1) * Math.round(matsimCosts)) + " €\n");
@@ -1187,6 +1223,9 @@ class AbfallUtils {
 				writer.write("Wochentag:\t\t\t\t\t\t\t\t\t\t\t\t\t" + day + "\n");
 			writer.write("\n" + "Die Summe des abzuholenden Mülls beträgt: \t\t\t\t\t" + ((double) allGarbage) / 1000
 					+ " t\n\n");
+			writer.write("Fahrzeug: \t\t\t\t\t\t\t\t\t\t\t\t\t" + vehicleTypeId + "\n");
+			writer.write(
+					"Kapazität je Fahrzeug: \t\t\t\t\t\t\t\t\t\t" + ((double) capacityTruck / 1000) + " Tonnen\n\n");
 			writer.write("Anzahl der Abholstellen: \t\t\t\t\t\t\t\t\t" + numberOfShipments + "\n");
 			if (day != null) {
 				for (Carrier carrier : carrierMap.values()) {
