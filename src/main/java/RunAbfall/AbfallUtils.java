@@ -560,7 +560,7 @@ class AbfallUtils {
 		vehicleTypeId = "MB_Econic_Diesel";
 		capacityTruck = 11500; // in kg
 		double maxVelocity = 80 / 3.6;
-		double costPerDistanceUnit = 0.000824; // Berechnung aus Excel
+		double costPerDistanceUnit = 0.000844; // Berechnung aus Excel
 		double costPerTimeUnit = 0.0; // Lohnkosten bei Fixkosten integriert
 		double fixCosts = 999.93; // Berechnung aus Excel
 		FuelType engineInformation = FuelType.diesel;
@@ -572,7 +572,7 @@ class AbfallUtils {
 			powerConsumptionPerDistance = 0.886; // in kwh/km
 			powerConsumptionPerWeight = 1.4; // in kwh/1000kg collected garbage
 			maxVelocity = 80 / 3.6;
-			costPerDistanceUnit = 0.00011518; // Berechnung aus Excel
+			costPerDistanceUnit = 0.0000011518; // Berechnung aus Excel
 			costPerTimeUnit = 0.0; // Lohnkosten bei Fixkosten integriert
 			fixCosts = 1222.32 + 3.822; // Berechnung aus Excel
 			engineInformation = FuelType.electricity;
