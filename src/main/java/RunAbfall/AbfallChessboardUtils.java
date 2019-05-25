@@ -27,7 +27,7 @@ public class AbfallChessboardUtils {
 	 * @param
 	 */
 	static void createShipmentsForChessboardI(HashMap<String, Carrier> carrierMap, int garbageToCollect, Map<Id<Link>, ? extends Link> allLinks,
-			double volumeBigTrashcan, double serviceTimePerBigTrashcan,
+			double volumeBigDustbin, double serviceTimePerBigTrashcan,
 			Scenario scenario, Carriers carriers) {
 		Map<Id<Link>, Link> garbageLinks = new HashMap<Id<Link>, Link>();
 		carrierMap.clear();
@@ -40,7 +40,7 @@ public class AbfallChessboardUtils {
 			}
 		}
 		Id<Link> linkDumpId = Id.createLinkId(linkChessboardDump);
-		AbfallUtils.createShipmentsForCarrierII(garbageToCollect, volumeBigTrashcan, serviceTimePerBigTrashcan,
+		AbfallUtils.createShipmentsForCarrierII(garbageToCollect, volumeBigDustbin, serviceTimePerBigTrashcan,
 				distanceWithShipments, garbageLinks, scenario, carrierChessboard, linkDumpId, carriers);
 		AbfallUtils.districtsWithShipments.add("Chessboard");
 		carriers.addCarrier(carrierChessboard);
@@ -55,7 +55,7 @@ public class AbfallChessboardUtils {
 	 * @param
 	 */
 	static void createShipmentsForChessboardII(HashMap<String, Carrier> carrierMap, double garbagePerMeterToCollect, Map<Id<Link>, ? extends Link> allLinks,
-			double volumeBigTrashcan, double serviceTimePerBigTrashcan,
+			double volumeBigDustbin, double serviceTimePerBigTrashcan,
 			Scenario scenario, Carriers carriers) {
 		Map<Id<Link>, Link> garbageLinks = new HashMap<Id<Link>, Link>();
 		carrierMap.clear();
@@ -68,7 +68,7 @@ public class AbfallChessboardUtils {
 			}
 		}
 		Id<Link> linkDumpId = Id.createLinkId(linkChessboardDump);
-		AbfallUtils.createShipmentsForCarrierI(garbagePerMeterToCollect, volumeBigTrashcan,
+		AbfallUtils.createShipmentsForCarrierI(garbagePerMeterToCollect, volumeBigDustbin,
 				serviceTimePerBigTrashcan, garbageLinks, scenario, carrierChessboard, linkDumpId, carriers);
 		AbfallUtils.districtsWithShipments.add("Chessboard");
 		carriers.addCarrier(carrierChessboard);
