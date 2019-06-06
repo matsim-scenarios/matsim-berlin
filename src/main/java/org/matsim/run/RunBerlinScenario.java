@@ -192,9 +192,6 @@ public final class RunBerlinScenario {
 		config.plansCalcRoute().removeModeRoutingParams(TransportMode.pt);
 		config.plansCalcRoute().removeModeRoutingParams(TransportMode.bike);
 		config.plansCalcRoute().removeModeRoutingParams("undefined");
-//		config.plansCalcRoute().removeModeRoutingParams(TransportMode.transit_walk);
-//		config.plansCalcRoute().removeModeRoutingParams(TransportMode.access_walk);
-//		config.plansCalcRoute().removeModeRoutingParams(TransportMode.egress_walk);
 	
 		config.qsim().setInsertingWaitingVehiclesBeforeDrivingVehicles( true );
 				
