@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE config SYSTEM "http://www.matsim.org/files/dtd/config_v2.dtd">
-        <!--Overriding config which is loaded at end.  Allows to override config settings at the very end.  Could, for example, switch off kinematic waves,-->
-        <!--or set the weight of re-routing to zero.  Not really recommended, but there may be cases where this is needed. kai, jan'18-->
-<config>
-</config>

@@ -66,7 +66,7 @@ public class RunBerlinScenarioTest {
 	@Test
 	public final void test1person1iteration() {
 		try {
-			String configFilename = "scenarios/berlin-v5.3-1pct/input/berlin-v5.3-1pct.config.xml";
+			String configFilename = "scenarios/berlin-v5.4-1pct/input/berlin-v5.4-1pct.config.xml";
 			RunBerlinScenario berlin = new RunBerlinScenario( new String[] { "--" + RunBerlinScenario.CONFIG_PATH , configFilename } ) ;
 			
 			Config config =  berlin.prepareConfig();
@@ -77,17 +77,6 @@ public class RunBerlinScenarioTest {
 			config.plans().setInputFile("../../../test/input/test-agents.xml");
 			
 			Scenario scenario = berlin.prepareScenario();
-			Controler controler = berlin.prepareControler();
-
-			TeleportationSpeedEventHandler handler = new TeleportationSpeedEventHandler();
-
-			controler.addOverridingModule(new AbstractModule() {
-				
-				@Override
-				public void install() {
-					this.addEventHandlerBinding().toInstance(handler);
-				}
-			});
 			
 			berlin.run();
 			
@@ -96,23 +85,6 @@ public class RunBerlinScenarioTest {
 			Assert.assertEquals("Change in score (ride agent)", 131.71443152316658, scenario.getPopulation().getPersons().get(Id.createPersonId("10099501")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
 			Assert.assertEquals("Change in score (pt agent)", 134.91804284998503, scenario.getPopulation().getPersons().get(Id.createPersonId("100024301")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
 			
-			// look at a single car access_walk trip
-			
-			final double distance = handler.getPersonId2teleportationDistances().get(Id.createPersonId("100274201")).get(0);
-			final double accesswalkSpeedFromConfig = config.plansCalcRoute().getModeRoutingParams().get("access_walk").getTeleportedModeSpeed();
-			final double accesswalkSpeedFromEvent = (distance / config.plansCalcRoute().getModeRoutingParams().get("access_walk").getBeelineDistanceFactor()) / handler.getPersonId2teleportationTT().get(Id.createPersonId("100274201")).get(0);
-			
-			log.warn("distance: " + distance);
-			log.warn("access walk teleported mode speed from config: " + accesswalkSpeedFromConfig);
-			log.warn("access walk teleported mode speed from event: " + accesswalkSpeedFromEvent);
-			
-			// previous version (12.0-2019w14-SNAPSHOT):
-//			Assert.assertEquals("Change in teleportation speed (car agent: 100274201)", 2.00983175, accesswalkSpeedFromEvent, MatsimTestUtils.EPSILON);			
-//			Assert.assertEquals("Change in score (car agent)", 114.88050431935696, scenario.getPopulation().getPersons().get(Id.createPersonId("100274201")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
-			
-			// new version: 
-			Assert.assertEquals("Change in teleportation speed (car agent: 100274201)", accesswalkSpeedFromConfig, accesswalkSpeedFromEvent, 0.01);
-
 		} catch ( Exception ee ) {
 			throw new RuntimeException(ee) ;
 		}
@@ -122,7 +94,7 @@ public class RunBerlinScenarioTest {
 	@Test
 	public final void test1pctUntilIteration1() {
 		try {
-			String configFilename = "scenarios/berlin-v5.3-1pct/input/berlin-v5.3-1pct.config.xml";
+			String configFilename = "scenarios/berlin-v5.4-1pct/input/berlin-v5.4-1pct.config.xml";
 			RunBerlinScenario berlin = new RunBerlinScenario( new String[] { "--" + RunBerlinScenario.CONFIG_PATH , configFilename } ) ;
 			
 			Config config =  berlin.prepareConfig() ;
@@ -158,7 +130,7 @@ public class RunBerlinScenarioTest {
 	@Test
 	public final void test10pctUntilIteration1() {
 		try {
-			String configFilename = "scenarios/berlin-v5.3-10pct/input/berlin-v5.3-10pct.config.xml";
+			String configFilename = "scenarios/berlin-v5.4-10pct/input/berlin-v5.4-10pct.config.xml";
 			RunBerlinScenario berlin = new RunBerlinScenario( new String[] { "--" + RunBerlinScenario.CONFIG_PATH , configFilename } ) ;
 			
 			Config config =  berlin.prepareConfig() ;
@@ -194,7 +166,7 @@ public class RunBerlinScenarioTest {
 		
 		final int iteration = 40;
 		try {
-			String configFilename = "scenarios/berlin-v5.3-1pct/input/berlin-v5.3-1pct.config.xml";
+			String configFilename = "scenarios/berlin-v5.4-1pct/input/berlin-v5.4-1pct.config.xml";
 			RunBerlinScenario berlin = new RunBerlinScenario( new String[] { "--" + RunBerlinScenario.CONFIG_PATH , configFilename } ) ;
 			
 			Config config = berlin.prepareConfig() ;
@@ -250,12 +222,12 @@ public class RunBerlinScenarioTest {
 				sum += val ;
 			}
 			
-			Assert.assertEquals("Major change in the car trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 0.339940203527443, modeCnt.get("car") / sum, 0.01);
-			Assert.assertEquals("Major change in the pt trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 0.218322955810955, modeCnt.get("pt") / sum, 0.01);
-			Assert.assertEquals("Major change in the bicycle trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 0.188655127958965, modeCnt.get("bicycle") / sum, 0.01);
-			Assert.assertEquals("Major change in the walk trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 0.160435581644128, modeCnt.get("walk") / sum, 0.01);
-			Assert.assertEquals("Change in the freight trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 0.00146473928189373, modeCnt.get("freight") / sum, MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Change in the ride trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 0.0911813917766135, modeCnt.get("ride") / sum, MatsimTestUtils.EPSILON);		
+			Assert.assertEquals("Major change in the car trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/.", 0.339940203527443, modeCnt.get("car") / sum, 0.01);
+			Assert.assertEquals("Major change in the pt trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/.", 0.218322955810955, modeCnt.get("pt") / sum, 0.01);
+			Assert.assertEquals("Major change in the bicycle trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/.", 0.188655127958965, modeCnt.get("bicycle") / sum, 0.01);
+			Assert.assertEquals("Major change in the walk trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/.", 0.160435581644128, modeCnt.get("walk") / sum, 0.01);
+			Assert.assertEquals("Change in the freight trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/.", 0.00146473928189373, modeCnt.get("freight") / sum, MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Change in the ride trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/.", 0.0911813917766135, modeCnt.get("ride") / sum, MatsimTestUtils.EPSILON);		
 			
 		} catch ( Exception ee ) {
 			throw new RuntimeException(ee) ;

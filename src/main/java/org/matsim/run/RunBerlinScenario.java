@@ -70,7 +70,7 @@ public final class RunBerlinScenario {
 		}
 		
 		if ( args.length==0 ) {
-			String configFileName = "scenarios/berlin-v5.3-1pct/input/berlin-v5.3-1pct.config.xml";
+			String configFileName = "scenarios/berlin-v5.4-1pct/input/berlin-v5.4-1pct.config.xml";
 			new RunBerlinScenario( new String[]{ "--" + CONFIG_PATH, configFileName } ).run() ;
 			
 		} else {
