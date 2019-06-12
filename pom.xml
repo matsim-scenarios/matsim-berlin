@@ -97,15 +97,15 @@
 	      <!--The following is here since there was an upstream-->
 	      <!--problem, and we did not want to wait until that was resolved.  The-->
 	      <!--comments below are related to that problem.  kai/ihab, dec'18-->
-	      <dependency>
-		  <!--MATSim examples.  Not inherited from matsim since it-->
-		  <!--is in test scope there.  Leave in test scope since-->
-		  <!--it is not in weekly releases and then causes problems.  -->
-			<groupId>org.matsim</groupId>
-			<artifactId>matsim-examples</artifactId>
-			<!--<scope>test</scope>-->
-			<version>0.10.0</version>
-	      </dependency>
+	      <!--<dependency>-->
+	      <!--	  <!-\-MATSim examples.  Not inherited from matsim since it-\->-->
+	      <!--	  <!-\-is in test scope there.  Leave in test scope since-\->-->
+	      <!--	  <!-\-it is not in weekly releases and then causes problems.  -\->-->
+	      <!--		<groupId>org.matsim</groupId>-->
+	      <!--		<artifactId>matsim-examples</artifactId>-->
+	      <!--		<!-\-<scope>test</scope>-\->-->
+	      <!--		<version>0.11.0</version>-->
+	      <!--</dependency>-->
 
         </dependencies>
 
