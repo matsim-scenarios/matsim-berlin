@@ -35,8 +35,6 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.Config;
-import org.matsim.core.controler.AbstractModule;
-import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.gbl.Gbl;
 import org.matsim.core.gbl.MatsimRandom;
@@ -60,6 +58,40 @@ public class RunBerlinScenarioTest {
 		// a dummy test to satisfy the matrix build by travis.
 		log.info( "Hello world." );
 		Assert.assertTrue( true );
+	}
+	
+	@Test
+	public final void testConfig1() {
+		try {
+			String configFilename = "scenarios/berlin-v5.4-1pct/input/berlin-v5.4-1pct.config.xml";
+			RunBerlinScenario berlin = new RunBerlinScenario( new String[] { "--" + RunBerlinScenario.CONFIG_PATH , configFilename,
+					"--config:controler.runId", "test-run-ID",
+					"--config:controler.outputDirectory" , utils.getOutputDirectory() } ) ;
+			
+			Config config =  berlin.prepareConfig();
+			Assert.assertEquals("Wrong parameter from command line", "test-run-ID", config.controler().getRunId());
+			
+		} catch ( Exception ee ) {
+			throw new RuntimeException(ee) ;
+		}
+	}
+	
+	@Test
+	public final void testConfig2() {
+		try {
+			String configFilename = "scenarios/berlin-v5.4-1pct/input/berlin-v5.4-1pct.config.xml";
+			RunBerlinScenario berlin = new RunBerlinScenario( new String[] { "--" + RunBerlinScenario.CONFIG_PATH , configFilename,
+					"--config:controler.runId", "test-run-ID",
+					"--config:controler.outputDirectory" , utils.getOutputDirectory(),
+					"--config:planCalcScore.scoringParameters[subpopulation=null].modeParams[mode=car].constant", "-0.12345" } ) ;
+			
+			Config config =  berlin.prepareConfig();
+			Assert.assertEquals("Wrong parameter from command line", -0.12345, config.planCalcScore().getModes().get("car").getConstant(), MatsimTestUtils.EPSILON);
+			
+		} catch ( Exception ee ) {
+			ee.printStackTrace();
+			throw new RuntimeException(ee) ;
+		}
 	}
 	
 	// 1pct, testing the scores in iteration 0 and 1
