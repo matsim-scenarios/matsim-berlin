@@ -25,6 +25,7 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 import org.matsim.analysis.ScoreStats;
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Population;
@@ -40,6 +41,8 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.mobsim.qsim.AbstractQSimModule;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.vehicles.VehicleType;
+import org.matsim.vehicles.VehiclesFactory;
 
 import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 
@@ -174,6 +177,12 @@ public final class RunBerlinScenario {
 		
 		scenario = ScenarioUtils.loadScenario( config );
 
+		VehiclesFactory vf = scenario.getVehicles().getFactory();
+		// seems not to work without; I don't really know why. gl'19
+		VehicleType vehType = vf.createVehicleType( Id.create( TransportMode.ride, VehicleType.class ) );
+		vehType.setMaximumVelocity( 25./3.6 );
+		scenario.getVehicles().addVehicleType( vehType );
+		
 		hasPreparedScenario = true ;
 		return scenario;
 	}
