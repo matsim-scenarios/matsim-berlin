@@ -49,6 +49,9 @@ public class Run_Abfall {
 
 	public static void main(String[] args) {
 
+		String shapeFileLocation = args[0];
+		String outputLocation = args[1];
+
 		FleetSize fleetSize = null;
 		String day = null;
 
@@ -78,7 +81,7 @@ public class Run_Abfall {
 			break;
 		case berlinNetwork:
 			// Berlin scenario network
-			config.controler().setOutputDirectory("output/Berlin_Neu/Test");
+			config.controler().setOutputDirectory(outputLocation);
 		//	config.controler().setOutputDirectory("output/Berlin_Neu/Montag/Hellersdorf_elektr5");
 			config.network().setInputFile(berlin);
 			break;
@@ -103,7 +106,9 @@ public class Run_Abfall {
 		HashMap<String, Id<Link>> garbageDumps = AbfallUtils.createDumpMap();
 
 		Collection<SimpleFeature> districtsWithGarbage = ShapeFileReader
-				.getAllFeatures(berlinDistrictsWithGarbageInformations);
+				.getAllFeatures(shapeFileLocation);
+//				Collection<SimpleFeature> districtsWithGarbage = ShapeFileReader
+//				.getAllFeatures(berlinDistrictsWithGarbageInformations);
 		AbfallUtils.createMapWithLinksInDistricts(districtsWithGarbage, allLinks);
 
 		double volumeDustbin = 1100; // in liter
