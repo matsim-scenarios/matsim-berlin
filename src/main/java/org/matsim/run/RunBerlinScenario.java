@@ -210,33 +210,33 @@ public final class RunBerlinScenario {
 		config.qsim().setTrafficDynamics( TrafficDynamics.kinematicWaves );
 				
 		// activities:
-		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
+		for ( double ii = 600 ; ii <= 97200; ii+=600 ) {
 			final ActivityParams params = new ActivityParams( "home_" + ii + ".0" ) ;
 			params.setTypicalDuration( ii );
 			config.planCalcScore().addActivityParams( params );
 		}
-		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
+		for ( double ii = 600 ; ii <= 97200; ii+=600 ) {
 			final ActivityParams params = new ActivityParams( "work_" + ii + ".0" ) ;
 			params.setTypicalDuration( ii );
 			params.setOpeningTime(6. * 3600.);
 			params.setClosingTime(20. * 3600.);
 			config.planCalcScore().addActivityParams( params );
 		}
-		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
+		for ( double ii = 600 ; ii <= 97200; ii+=600 ) {
 			final ActivityParams params = new ActivityParams( "leisure_" + ii + ".0" ) ;
 			params.setTypicalDuration( ii );
 			params.setOpeningTime(9. * 3600.);
 			params.setClosingTime(27. * 3600.);
 			config.planCalcScore().addActivityParams( params );
 		}
-		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
+		for ( double ii = 600 ; ii <= 97200; ii+=600 ) {
 			final ActivityParams params = new ActivityParams( "shopping_" + ii + ".0" ) ;
 			params.setTypicalDuration( ii );
 			params.setOpeningTime(8. * 3600.);
 			params.setClosingTime(20. * 3600.);
 			config.planCalcScore().addActivityParams( params );
 		}
-		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
+		for ( double ii = 600 ; ii <= 97200; ii+=600 ) {
 			final ActivityParams params = new ActivityParams( "other_" + ii + ".0" ) ;
 			params.setTypicalDuration( ii );
 			config.planCalcScore().addActivityParams( params );
