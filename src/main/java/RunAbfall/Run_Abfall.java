@@ -50,7 +50,11 @@ public class Run_Abfall {
 	public static void main(String[] args) {
 
 		String shapeFileLocation = args[0];
-		String outputLocation = args[1];
+		int jspritIterations = Integer.parseInt(args[1]);
+		double volumeDustbin = Double.parseDouble(args[2]); // in liter
+		double secondsServiceTimePerDustbin = Double.parseDouble(args[3]);
+		boolean electricCar = Boolean.parseBoolean(args[4]);
+		String outputLocation = args[5];
 
 		FleetSize fleetSize = null;
 		String day = null;
@@ -64,7 +68,7 @@ public class Run_Abfall {
 		 * name of the scenario shows you the needed network.
 		 */
 		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
-		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinSelectedDistricts;
+		scenarioAuswahl scenarioWahl = scenarioAuswahl.berlinCollectedGarbageForOneDay;
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();
@@ -89,7 +93,7 @@ public class Run_Abfall {
 			new RuntimeException("no network selected.");
 		}
 		int lastMATSimIteration = 0;
-		int jspritIterations = 20;
+//		int jspritIterations = 20;		//Moved to args[]
 		config = AbfallUtils.prepareConfig(config, lastMATSimIteration);
 		Scenario scenario = ScenarioUtils.loadScenario(config);
 
@@ -98,7 +102,7 @@ public class Run_Abfall {
 		HashMap<String, Carrier> carrierMap = AbfallUtils.createCarrier();
 
 		// creates a garbage truck type and ads this type to the carrierVehicleTypes
-		boolean electricCar = true;
+//		boolean electricCar = false;	//Moved to args[]
 		AbfallUtils.createAndAddVehicles(electricCar);
 
 		// 
@@ -111,8 +115,8 @@ public class Run_Abfall {
 //				.getAllFeatures(berlinDistrictsWithGarbageInformations);
 		AbfallUtils.createMapWithLinksInDistricts(districtsWithGarbage, allLinks);
 
-		double volumeDustbin = 1100; // in liter
-		double secondsServiceTimePerDustbin = 41;
+//		double volumeDustbin = 1100; // in liter ////Moved to args[]
+//		double secondsServiceTimePerDustbin = 41; //Moved to args[]
 
 		switch (scenarioWahl) {
 		case chessboardTotalGarbageToCollect:
