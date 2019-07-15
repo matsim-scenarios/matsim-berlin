@@ -55,7 +55,7 @@ import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 public final class RunBerlinScenario {
 
 	private static final Logger log = Logger.getLogger(RunBerlinScenario.class );
-	
+
 	public static void main(String[] args) {
 		
 		for (String arg : args) {
@@ -65,12 +65,12 @@ public final class RunBerlinScenario {
 		if ( args.length==0 ) {
 			args = new String[] {"scenarios/berlin-v5.4-1pct/input/berlin-v5.4-1pct.config.xml"}  ;
 		}
-		
+
 		Config config = prepareConfig( args ) ;
 		Scenario scenario = prepareScenario( config ) ;
 		Controler controler = prepareControler( scenario ) ;
 		controler.run() ;
-		
+
 	}
 
 	public static Controler prepareControler( Scenario scenario ) {
@@ -102,7 +102,7 @@ public final class RunBerlinScenario {
 				addTravelDisutilityFactoryBinding( TransportMode.ride ).to( carTravelDisutilityFactoryKey() );
 			}
 		} );
-		
+
 		return controler;
 	}
 	
@@ -112,7 +112,7 @@ public final class RunBerlinScenario {
 		// note that the path for this is different when run from GUI (path of original config) vs.
 		// when run from command line/IDE (java root).  :-(    See comment in method.  kai, jul'18
 		// yy Does this comment still apply?  kai, jul'19
-		
+
 		final Scenario scenario = ScenarioUtils.loadScenario( config );
 
 		VehiclesFactory vf = scenario.getVehicles().getFactory();
@@ -121,7 +121,7 @@ public final class RunBerlinScenario {
 		VehicleType vehType = vf.createVehicleType( Id.create( TransportMode.ride, VehicleType.class ) );
 		vehType.setMaximumVelocity( 25./3.6 );
 		scenario.getVehicles().addVehicleType( vehType );
-		
+
 		return scenario;
 	}
 	
@@ -129,7 +129,7 @@ public final class RunBerlinScenario {
 		OutputDirectoryLogging.catchLogEntries();
 		
 		String[] typedArgs = Arrays.copyOfRange( args, 1, args.length );
-		
+
 		final Config config = ConfigUtils.loadConfig( args[ 0 ] );; // I need this to set the context
 		
 		config.controler().setRoutingAlgorithmType( FastAStarLandmarks );
@@ -161,9 +161,9 @@ public final class RunBerlinScenario {
 		config.planCalcScore().addActivityParams( new ActivityParams( "freight" ).setTypicalDuration( 12.*3600. ) );
 
 		ConfigUtils.applyCommandline( config, typedArgs ) ;
-		
+
 		return config ;
 	}
-	
+
 }
 
