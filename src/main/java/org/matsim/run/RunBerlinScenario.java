@@ -180,7 +180,7 @@ public final class RunBerlinScenario {
 		VehiclesFactory vf = scenario.getVehicles().getFactory();
 		// seems not to work without; I don't really know why. gl'19
 		VehicleType vehType = vf.createVehicleType( Id.create( TransportMode.ride, VehicleType.class ) );
-		vehType.setMaximumVelocity( 25./3.6 );
+		vehType.setMaximumVelocity( 130./3.6 );
 		scenario.getVehicles().addVehicleType( vehType );
 		
 		hasPreparedScenario = true ;
