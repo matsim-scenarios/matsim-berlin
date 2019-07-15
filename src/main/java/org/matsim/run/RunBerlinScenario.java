@@ -36,9 +36,11 @@ import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
+import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryLogging;
+import org.matsim.core.gbl.Gbl;
 import org.matsim.core.mobsim.qsim.AbstractQSimModule;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.vehicles.VehicleType;
@@ -52,19 +54,7 @@ import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 
 public final class RunBerlinScenario {
 
-	public static final String CONFIG_PATH = "config-path";
 	private static final Logger log = Logger.getLogger(RunBerlinScenario.class );
-
-	private final CommandLine cmd;
-
-	private final String configFileName;
-	private Config config;
-	private Scenario scenario;
-	private Controler controler;
-	
-	private boolean hasPreparedConfig = false ;
-	private boolean hasPreparedScenario = false ;
-	private boolean hasPreparedControler = false ;
 	
 	public static void main(String[] args) {
 		
@@ -73,54 +63,22 @@ public final class RunBerlinScenario {
 		}
 		
 		if ( args.length==0 ) {
-			String configFileName = "scenarios/berlin-v5.4-1pct/input/berlin-v5.4-1pct.config.xml";
-			new RunBerlinScenario( new String[]{ "--" + CONFIG_PATH, configFileName } ).run() ;
-			
-		} else {
-			new RunBerlinScenario( args ).run() ;
+			args = new String[] {"scenarios/berlin-v5.4-1pct/input/berlin-v5.4-1pct.config.xml"}  ;
 		}
-	}
-
-	@Deprecated // use version with String [] args
-	public RunBerlinScenario( String configFileName) {
-		this.configFileName = configFileName;
-		this.cmd = null ;
-	}
-
-	public RunBerlinScenario( String [] args ) {
 		
-		try{
-			
-			if (Arrays.toString(args).contains("--" + CONFIG_PATH)) {
-				cmd = new CommandLine.Builder( args )
-						.allowPositionalArguments(false)
-						.requireOptions(CONFIG_PATH)
-						.allowAnyOption(true)
-						.build() ;
-				this.configFileName = cmd.getOptionStrict( CONFIG_PATH ) ;
-			
-			} else {
-				// required by the GUI
-				cmd = new CommandLine.Builder( args )
-						.allowPositionalArguments(true)
-						.allowAnyOption(true)
-						.build() ;
-				this.configFileName = cmd.getPositionalArgumentStrict(0);
-			}
-
-		} catch( CommandLine.ConfigurationException e ){
-			throw new RuntimeException( e ) ;
-		}
+		Config config = prepareConfig( args ) ;
+		Scenario scenario = prepareScenario( config ) ;
+		Controler controler = prepareControler( scenario ) ;
+		controler.run() ;
+		
 	}
-	
-	public final Controler prepareControler( AbstractModule... overridingModules ) {
+
+	public static Controler prepareControler( Scenario scenario ) {
 		// note that for something like signals, and presumably drt, one needs the controler object
 		
-		if ( !hasPreparedScenario ) {
-			prepareScenario() ;
-		}
+		Gbl.assertNotNull(scenario);
 		
-		controler = new Controler( scenario );
+		final Controler controler = new Controler( scenario );
 		
 		if (controler.getConfig().transit().isUsingTransitInMobsim()) {
 			// use the sbb pt raptor router
@@ -145,52 +103,34 @@ public final class RunBerlinScenario {
 			}
 		} );
 		
-		for ( AbstractModule overridingModule : overridingModules ) {
-			controler.addOverridingModule( overridingModule );
-		}
-		
-		hasPreparedControler = true ;
 		return controler;
 	}
 	
-	public final void addOverridingModule( AbstractModule controlerModule ) {
-		if ( controler==null ) {
-			prepareControler(  ) ;
-		}
-		controler.addOverridingModule( controlerModule ) ;
-	}
-	
-	public final void addOverridingQSimModule( AbstractQSimModule qSimModule ) {
-		if ( controler==null ) {
-			prepareControler(  ) ;
-		}
-		controler.addOverridingQSimModule( qSimModule );
-	}
-	
-	public final Scenario prepareScenario() {
-		if ( !hasPreparedConfig ) {
-			prepareConfig( ) ;
-		}
+	public static Scenario prepareScenario( Config config ) {
+		Gbl.assertNotNull( config );
 		
 		// note that the path for this is different when run from GUI (path of original config) vs.
 		// when run from command line/IDE (java root).  :-(    See comment in method.  kai, jul'18
+		// yy Does this comment still apply?  kai, jul'19
 		
-		scenario = ScenarioUtils.loadScenario( config );
+		final Scenario scenario = ScenarioUtils.loadScenario( config );
 
 		VehiclesFactory vf = scenario.getVehicles().getFactory();
 		// seems not to work without; I don't really know why. gl'19
+		// now needs "mode vehicle types" also for routing.  The other ones are in the vehicles file.  kai, jul'19
 		VehicleType vehType = vf.createVehicleType( Id.create( TransportMode.ride, VehicleType.class ) );
 		vehType.setMaximumVelocity( 25./3.6 );
 		scenario.getVehicles().addVehicleType( vehType );
 		
-		hasPreparedScenario = true ;
 		return scenario;
 	}
 	
-	public Config prepareConfig(ConfigGroup... customModules) {
+	public static Config prepareConfig( String [] args ) {
 		OutputDirectoryLogging.catchLogEntries();
 		
-		config = ConfigUtils.loadConfig( configFileName, customModules ) ; // I need this to set the context
+		String[] typedArgs = Arrays.copyOfRange( args, 1, args.length );
+		
+		final Config config = ConfigUtils.loadConfig( args[ 0 ] );; // I need this to set the context
 		
 		config.controler().setRoutingAlgorithmType( FastAStarLandmarks );
 		
@@ -205,75 +145,25 @@ public final class RunBerlinScenario {
 		config.qsim().setInsertingWaitingVehiclesBeforeDrivingVehicles( true );
 				
 		// vsp defaults
+		config.vspExperimental().setVspDefaultsCheckingLevel( VspExperimentalConfigGroup.VspDefaultsCheckingLevel.abort );
 		config.plansCalcRoute().setInsertingAccessEgressWalk( true );
 		config.qsim().setUsingTravelTimeCheckInTeleportation( true );
 		config.qsim().setTrafficDynamics( TrafficDynamics.kinematicWaves );
 				
 		// activities:
 		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
-			final ActivityParams params = new ActivityParams( "home_" + ii + ".0" ) ;
-			params.setTypicalDuration( ii );
-			config.planCalcScore().addActivityParams( params );
+			config.planCalcScore().addActivityParams( new ActivityParams( "home_" + ii + ".0" ).setTypicalDuration( ii ) );
+			config.planCalcScore().addActivityParams( new ActivityParams( "work_" + ii + ".0" ).setTypicalDuration( ii ).setOpeningTime(6. * 3600. ).setClosingTime(20. * 3600. ) );
+			config.planCalcScore().addActivityParams( new ActivityParams( "leisure_" + ii + ".0" ).setTypicalDuration( ii ).setOpeningTime(9. * 3600. ).setClosingTime(27. * 3600. ) );
+			config.planCalcScore().addActivityParams( new ActivityParams( "shopping_" + ii + ".0" ).setTypicalDuration( ii ).setOpeningTime(8. * 3600. ).setClosingTime(20. * 3600. ) );
+			config.planCalcScore().addActivityParams( new ActivityParams( "other_" + ii + ".0" ).setTypicalDuration( ii ) );
 		}
-		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
-			final ActivityParams params = new ActivityParams( "work_" + ii + ".0" ) ;
-			params.setTypicalDuration( ii );
-			params.setOpeningTime(6. * 3600.);
-			params.setClosingTime(20. * 3600.);
-			config.planCalcScore().addActivityParams( params );
-		}
-		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
-			final ActivityParams params = new ActivityParams( "leisure_" + ii + ".0" ) ;
-			params.setTypicalDuration( ii );
-			params.setOpeningTime(9. * 3600.);
-			params.setClosingTime(27. * 3600.);
-			config.planCalcScore().addActivityParams( params );
-		}
-		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
-			final ActivityParams params = new ActivityParams( "shopping_" + ii + ".0" ) ;
-			params.setTypicalDuration( ii );
-			params.setOpeningTime(8. * 3600.);
-			params.setClosingTime(20. * 3600.);
-			config.planCalcScore().addActivityParams( params );
-		}
-		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
-			final ActivityParams params = new ActivityParams( "other_" + ii + ".0" ) ;
-			params.setTypicalDuration( ii );
-			config.planCalcScore().addActivityParams( params );
-		}
-		{
-			final ActivityParams params = new ActivityParams( "freight" ) ;
-			params.setTypicalDuration( 12.*3600. );
-			config.planCalcScore().addActivityParams( params );
-		}
+		config.planCalcScore().addActivityParams( new ActivityParams( "freight" ).setTypicalDuration( 12.*3600. ) );
 
-		if (cmd != null) {
-			try {
-				cmd.applyConfiguration( config );
-			} catch (ConfigurationException e) {
-				throw new RuntimeException(e);			
-			}
-		}
-
-		hasPreparedConfig = true ;
+		ConfigUtils.applyCommandline( config, typedArgs ) ;
+		
 		return config ;
 	}
 	
-	 public void run() {
-		if ( !hasPreparedControler ) {
-			prepareControler() ;
-		}
-		controler.run();
-		log.info("Done.");
-	}
-	
-	final ScoreStats getScoreStats() {
-		return controler.getScoreStats() ;
-	}
-	
-	final Population getPopulation() {
-		return controler.getScenario().getPopulation();
-	}
-
 }
 
