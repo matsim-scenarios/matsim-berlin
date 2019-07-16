@@ -119,7 +119,7 @@ public final class RunBerlinScenario {
 		// seems not to work without; I don't really know why. gl'19
 		// now needs "mode vehicle types" also for routing.  The other ones are in the vehicles file.  kai, jul'19
 		VehicleType vehType = vf.createVehicleType( Id.create( TransportMode.ride, VehicleType.class ) );
-		vehType.setMaximumVelocity( 25./3.6 );
+		vehType.setMaximumVelocity( 130./3.6 );
 		scenario.getVehicles().addVehicleType( vehType );
 
 		return scenario;
