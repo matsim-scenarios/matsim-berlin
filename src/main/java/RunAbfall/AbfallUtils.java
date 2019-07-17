@@ -78,8 +78,6 @@ class AbfallUtils {
 	static int matsimIterations;
 	static int jspritIterations;
 	static double costsJsprit = 0;
-	static double costsPerKWH = 0;
-	static double fixCostsVehicle;
 	static int noPickup = 0;
 	static int allGarbage = 0;
 	static int numberOfShipments = 0;
@@ -477,10 +475,9 @@ class AbfallUtils {
 			Id<Link> dumpId, Carriers carriers) {
 
 		for (Link link : garbageLinks.values()) {
-			double maxWeightBigDustbin = volumeBigDustbin * 0.097; // Umrechnung von Volumen [l] in Masse[kg]
+			double maxWeightBigDustbin = volumeBigDustbin * 0.1; // Umrechnung von Volumen [l] in Masse[kg]
 			int volumeGarbage = (int) Math.ceil(link.getLength() * garbagePerMeterToCollect);
-			amountOfCollectedDustbins = amountOfCollectedDustbins
-					+ (int) Math.ceil(((double) volumeGarbage) / maxWeightBigDustbin);
+			amountOfCollectedDustbins = amountOfCollectedDustbins + (int) Math.ceil(((double) volumeGarbage) / maxWeightBigDustbin);
 			double serviceTime = Math.ceil(((double) volumeGarbage) / maxWeightBigDustbin) * serviceTimePerBigTrashcan;
 			double deliveryTime = ((double) volumeGarbage / capacityTruck) * 45 * 60;
 			CarrierShipment shipment = CarrierShipment.Builder
@@ -510,7 +507,7 @@ class AbfallUtils {
 		int garbageCount = 0;
 		double roundingError = 0;
 		for (Link link : garbageLinks.values()) {
-			double maxWeightBigDustbin = volumeBigDustbin * 0.097; // Umrechnung von Volumen [l] in Masse[kg]
+			double maxWeightBigDustbin = volumeBigDustbin * 0.1; // Umrechnung von Volumen [l] in Masse[kg]
 			int volumeGarbage;
 			if (count == garbageLinks.size()) {
 				volumeGarbage = garbageToCollect - garbageCount;
@@ -525,8 +522,7 @@ class AbfallUtils {
 				}
 				count++;
 			}
-			amountOfCollectedDustbins = amountOfCollectedDustbins
-					+ (int) Math.ceil(((double) volumeGarbage) / maxWeightBigDustbin);
+			amountOfCollectedDustbins = amountOfCollectedDustbins + (int) Math.ceil(((double) volumeGarbage) / maxWeightBigDustbin);
 			double serviceTime = Math.ceil(((double) volumeGarbage) / maxWeightBigDustbin) * serviceTimePerBigTrashcan;
 			double deliveryTime = ((double) volumeGarbage / capacityTruck) * 45 * 60;
 			CarrierShipment shipment = CarrierShipment.Builder
@@ -581,25 +577,23 @@ class AbfallUtils {
 			capacityTruck = 10500; // in kg
 			powerConsumptionPerDistance = 0.886; // in kwh/km
 			powerConsumptionPerWeight = 1.4; // in kwh/1000kg collected garbage
-			costsPerKWH = 0.153;
 			maxVelocity = 80 / 3.6;
 			costPerDistanceUnit = 0.0001356; // Berechnung aus Excel
 			costPerTimeUnit = 0.0; // Lohnkosten bei Fixkosten integriert
-			fixCostsVehicle = 1222.32; // Berechnung aus Excel
-			fixCosts = fixCostsVehicle + 4.4982;
+			fixCosts = 1222.32 + 4.4982; // Berechnung aus Excel
 			engineInformation = FuelType.electricity;
 			literPerMeter = 0.0; // Berechnung aus Ecxel
 		}
-
 		createGarbageTruckType(vehicleTypeId, maxVelocity, costPerDistanceUnit, costPerTimeUnit, fixCosts,
 				engineInformation, literPerMeter);
-		addVehicleType();
+		adVehicleType();
 	}
 
 	/**
 	 * Method creates a new garbage truck type
 	 * 
 	 * @param maxVelocity in m/s
+	 * @return
 	 */
 	private static void createGarbageTruckType(String vehicleTypeId, double maxVelocity, double costPerDistanceUnit,
 			double costPerTimeUnit, double fixCosts, FuelType engineInformation, double literPerMeter) {
@@ -614,8 +608,9 @@ class AbfallUtils {
 	 * Method adds a new vehicle Type to the list of vehicleTyps
 	 * 
 	 * @param
+	 * @return
 	 */
-	private static void addVehicleType() {
+	private static void adVehicleType() {
 		vehicleTypes = new CarrierVehicleTypes();
 		vehicleTypes.getVehicleTypes().put(carrierVehType.getId(), carrierVehType);
 
@@ -635,7 +630,6 @@ class AbfallUtils {
 				.newInstance(Id.create(vehicleName, Vehicle.class), Id.createLinkId(linkDepot))
 				.setEarliestStart(earliestStartingTime).setLatestEnd(latestFinishingTime)
 				.setTypeId(carrierVehType.getId()).build();
-
 	}
 
 	/**
@@ -647,7 +641,6 @@ class AbfallUtils {
 	 */
 	static void createCarriersBerlin(Collection<SimpleFeature> districtsWithGarbage, Carriers carriers,
 			HashMap<String, Carrier> carrierMap, FleetSize fleetSize) {
-
 		String depotForckenbeck = "27766";
 		String depotMalmoeerStr = "116212";
 		String depotNordring = "42882";
@@ -679,7 +672,6 @@ class AbfallUtils {
 
 		defineCarriersBerlin(depotMap, districtsWithGarbage, carriers, carrierMap, vehicleForckenbeck,
 				vehicleMalmoeerStr, vehicleNordring, vehicleGradestrasse, fleetSize);
-
 	}
 
 	/**
@@ -691,8 +683,8 @@ class AbfallUtils {
 	 */
 	private static void defineCarriersBerlin(HashMap<String, CarrierVehicle> depotMap,
 			Collection<SimpleFeature> districtsWithGarbage, Carriers carriers, HashMap<String, Carrier> carrierMap,
-			CarrierVehicle vehicleForckenbeck, CarrierVehicle vehicleMalmoeerStr,
-			CarrierVehicle vehicleNordring, CarrierVehicle vehicleGradestrasse, FleetSize fleetSize) {
+			CarrierVehicle vehicleForckenbeck, CarrierVehicle vehicleMalmoeerStr, CarrierVehicle vehicleNordring,
+			CarrierVehicle vehicleGradestrasse, FleetSize fleetSize) {
 
 		if (oneCarrierForEachDistrict == false) {
 			CarrierCapabilities carrierCapabilities = CarrierCapabilities.Builder.newInstance().addType(carrierVehType)
@@ -728,8 +720,7 @@ class AbfallUtils {
 	 * 
 	 * @param
 	 */
-	static void solveWithJsprit(Scenario scenario, Carriers carriers, HashMap<String, Carrier> carrierMap,
-			int jspritIteration) {
+	static void solveWithJsprit(Scenario scenario, Carriers carriers, HashMap<String, Carrier> carrierMap, int jspritIteration) {
 
 		int carrierCount = 1;
 		// Netzwerk integrieren und Kosten für jsprit
@@ -835,8 +826,7 @@ class AbfallUtils {
 	 * @param
 	 */
 	static void outputSummary(Collection<SimpleFeature> districtsWithGarbage, Scenario scenario,
-			HashMap<String, Carrier> carrierMap, String day, boolean electricCar, double volumeDustbin,
-			double secondsServiceTimePerDustbin) {
+			HashMap<String, Carrier> carrierMap, String day, boolean electricCar, double volumeDustbin, double secondsServiceTimePerDustbin) {
 		int vehiclesForckenbeck = 0;
 		int vehiclesMalmoeer = 0;
 		int vehiclesNordring = 0;
@@ -977,10 +967,9 @@ class AbfallUtils {
 
 					}
 				}
-				// tourDuration = endTime - startTime;
 				allCollectedGarbage = sizeForckenbeck + sizeMalmooer + sizeNordring + sizeGradestrasse + sizeChessboard;
 				powerConsumptionTour = (double) (distanceTour / 1000) * powerConsumptionPerDistance
-						+ ((double) sizeTour / 1000) * powerConsumptionPerWeight;
+						+ (double) (sizeTour / 1000) * powerConsumptionPerWeight;
 
 				if (scheduledTour.getVehicle().getVehicleId() == Id.createVehicleId("TruckForckenbeck")) {
 					tourDistancesForckenbeck.add(vehiclesForckenbeck, (double) Math.round(distanceTour / 1000));
@@ -1126,19 +1115,17 @@ class AbfallUtils {
 						+ "\n");
 			}
 			writer.write("\n" + "Fahrzeug: \t\t\t\t\t\t\t\t\t\t\t\t\t" + vehicleTypeId + "\n");
-			writer.write(
-					"Kapazität je Fahrzeug: \t\t\t\t\t\t\t\t\t\t" + ((double) capacityTruck / 1000) + " Tonnen\n\n");
-			writer.write("Volumen der Mülltonne: \t\t\t\t\t\t\t\t\t\t" + volumeDustbin + " Liter\n");
-			writer.write(
-					"ServiceTime pro Mülltonne:\t\t\t\t\t\t\t\t\t" + secondsServiceTimePerDustbin + " Sekunden\n\n");
-			writer.write("Iterationen jsprit:\t\t\t\t\t\t\t\t\t\t\t" + jspritIterations + "\n");
-			writer.write("Iterationen MATSim:\t\t\t\t\t\t\t\t\t\t\t" + matsimIterations + "\n");
+			writer.write("Kapazität je Fahrzeug: \t\t\t\t\t\t\t\t\t\t" + ((double) capacityTruck / 1000) + " Tonnen\n\n");
+			writer.write("Volumen der Mülltonne: \t\t\t\t\t\t\t\t\t\t"+ volumeDustbin+" Liter\n");
+			writer.write("ServiceTime pro Mülltonne:\t\t\t\t\t\t\t\t\t"+secondsServiceTimePerDustbin+" Sekunden\n\n");
+			writer.write("Iterationen jsprit:\t\t\t\t\t\t\t\t\t\t\t"+ jspritIterations +"\n");
+			writer.write("Iterationen MATSim:\t\t\t\t\t\t\t\t\t\t\t"+ matsimIterations+"\n");
 			writer.write("\n" + "Die Summe des abzuholenden Mülls beträgt: \t\t\t\t\t" + ((double) allGarbage) / 1000
 					+ " t\n\n");
 			writer.write("Anzahl der Abholstellen: \t\t\t\t\t\t\t\t\t" + numberOfShipments + "\n");
 			writer.write("Anzahl der Abholstellen ohne Abholung: \t\t\t\t\t\t" + noPickup + "\n\n");
 			writer.write("Anzahl der Carrier mit Shipments:\t\t\t\t\t\t\t" + carrierWithShipments + "\n\n");
-			writer.write("Anzahl der zu leerenden Mülltonnen:\t\t\t\t\t\t\t" + amountOfCollectedDustbins + "\n\n");
+			writer.write("Anzahl der entleerten Mülltonnen:\t\t\t\t\t\t\t"+amountOfCollectedDustbins+"\n\n");
 			writer.write("Anzahl der Muellfahrzeuge im Einsatz: \t\t\t\t\t\t" + (numberVehicles) + "\t\tMenge gesamt:\t"
 					+ ((double) allCollectedGarbage) / 1000 + " t\n\n");
 			if (day != null) {
@@ -1166,7 +1153,6 @@ class AbfallUtils {
 					writer.write("\t\t\tFahrstrecke Min:\t\t\t\t" + minTourMalmoeerStr + " km\n");
 					writer.write("\t\t\tFahrstrecke Durchschnitt:\t\t" + Math.round(averageTourDistanceMalmoeerStr)
 							+ " km\n");
-
 					if (electricCar == true) {
 						writer.write("\t\t\tEnergieverbrauch Summe:\t\t\t" + powerConsumptionMalmoeerStr + " kwh\n");
 						writer.write("\t\t\tEnergieverbrauch Max:\t\t\t" + maxPowerConsumptionMalmoeerStr + " kwh\n");
@@ -1217,27 +1203,19 @@ class AbfallUtils {
 						"\t\t\t\t\t\t\tMA Gruenauer Str.:\t\t\t\t" + ((double) sizeGruenauerStr) / 1000 + " t\n\n");
 			}
 			if (vehiclesChessboard > 0) {
-				writer.write(
-						"Abgeladenen Menge:\t\t\t\t\t\t\t\t\t\t\t" + (double) sizeChessboardDelivery / 1000 + " t\n\n");
 				writer.write("Gefahrene Kilometer je Fahrzeug:\t\t\t\t\t\t\t" + tourDistancesChessboard + " \n");
 				if (electricCar == true)
-					writer.write("Energieverbrauch in kwh je Fahrzeug:\t\t\t\t\t\t" + powerConsumptionTourChessboard
-							+ "\n\n");
+					writer.write(
+							"Energieverbrauch in kwh je Fahrzeug:\t\t\t\t\t\t" + powerConsumptionTourChessboard + "\n");
 			}
 			writer.write(
 					"Gefahrene Strecke gesamt:\t\t\t\t\t\t\t\t\t" + (distanceToursForckenbeck + distanceToursMalmoeerStr
 							+ distanceToursNordring + distanceToursGradestrasse + tourDistanceChessboard) + " km\n\n");
-			if (electricCar == true) {
+			if (electricCar == true)
 				writer.write("Verbrauche Energie gesamt:\t\t\t\t\t\t\t\t\t"
 						+ (powerConsumptionForckenbeck + powerConsumptionMalmoeerStr + powerConsumptionNordring
 								+ powerConsumptionGradestrasse + powerConsumptionChessboard)
 						+ " kwh\n\n");
-				writer.write("Kosten real:\t\t\t\t\t\t\t\t\t\t\t\t"
-						+ Math.round((numberVehicles * fixCostsVehicle)
-								+ (powerConsumptionForckenbeck + powerConsumptionMalmoeerStr + powerConsumptionNordring
-										+ powerConsumptionGradestrasse + powerConsumptionChessboard) * costsPerKWH)
-						+ " €\n\n");
-			}
 			writer.write("Kosten (Jsprit): \t\t\t\t\t\t\t\t\t\t\t" + (Math.round(costsJsprit)) + " €\n\n");
 			writer.write("Kosten (MatSim): \t\t\t\t\t\t\t\t\t\t\t" + ((-1) * Math.round(matsimCosts)) + " €\n");
 
