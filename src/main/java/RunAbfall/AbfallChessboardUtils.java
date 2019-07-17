@@ -17,7 +17,7 @@ import org.matsim.contrib.freight.carrier.CarrierImpl;
 public class AbfallChessboardUtils {
 
 	static String linkChessboardDump = "j(0,9)R";
-	static String linkChessboardDepot = "j(9,9)";
+	static String linkChessboardDepot = "j(0,7)R";
 	static Carrier carrierChessboard = CarrierImpl.newInstance(Id.create("Carrier_Chessboard", Carrier.class));
 
 	/**
@@ -26,15 +26,15 @@ public class AbfallChessboardUtils {
 	 * 
 	 * @param
 	 */
-	static void createShipmentsForChessboardI(HashMap<String, Carrier> carrierMap, int garbageToCollect, Map<Id<Link>, ? extends Link> allLinks,
-			double volumeBigDustbin, double serviceTimePerBigTrashcan,
+	static void createShipmentsForChessboardI(HashMap<String, Carrier> carrierMap, int garbageToCollect,
+			Map<Id<Link>, ? extends Link> allLinks, double volumeBigDustbin, double serviceTimePerBigTrashcan,
 			Scenario scenario, Carriers carriers) {
 		Map<Id<Link>, Link> garbageLinks = new HashMap<Id<Link>, Link>();
 		carrierMap.clear();
 		carrierMap.put("carrierChessboard", carrierChessboard);
 		double distanceWithShipments = 0;
 		for (Link link : allLinks.values()) {
-			if (link.getFreespeed() < 14) {
+			if (link.getFreespeed() < 13.9) {
 				garbageLinks.put(link.getId(), link);
 				distanceWithShipments = distanceWithShipments + link.getLength();
 			}
@@ -54,8 +54,8 @@ public class AbfallChessboardUtils {
 	 * 
 	 * @param
 	 */
-	static void createShipmentsForChessboardII(HashMap<String, Carrier> carrierMap, double garbagePerMeterToCollect, Map<Id<Link>, ? extends Link> allLinks,
-			double volumeBigDustbin, double serviceTimePerBigTrashcan,
+	static void createShipmentsForChessboardII(HashMap<String, Carrier> carrierMap, double garbagePerMeterToCollect,
+			Map<Id<Link>, ? extends Link> allLinks, double volumeBigDustbin, double serviceTimePerBigTrashcan,
 			Scenario scenario, Carriers carriers) {
 		Map<Id<Link>, Link> garbageLinks = new HashMap<Id<Link>, Link>();
 		carrierMap.clear();
@@ -68,8 +68,8 @@ public class AbfallChessboardUtils {
 			}
 		}
 		Id<Link> linkDumpId = Id.createLinkId(linkChessboardDump);
-		AbfallUtils.createShipmentsForCarrierI(garbagePerMeterToCollect, volumeBigDustbin,
-				serviceTimePerBigTrashcan, garbageLinks, scenario, carrierChessboard, linkDumpId, carriers);
+		AbfallUtils.createShipmentsForCarrierI(garbagePerMeterToCollect, volumeBigDustbin, serviceTimePerBigTrashcan,
+				garbageLinks, scenario, carrierChessboard, linkDumpId, carriers);
 		AbfallUtils.districtsWithShipments.add("Chessboard");
 		carriers.addCarrier(carrierChessboard);
 
@@ -84,7 +84,7 @@ public class AbfallChessboardUtils {
 	static void createCarriersForChessboard(Carriers carriers, FleetSize fleetSize) {
 		String vehicleName = "TruckChessboard";
 		double earliestStartingTime = 6 * 3600;
-		double latestFinishingTime = 15 * 3600;
+		double latestFinishingTime = 14 * 3600;
 
 		AbfallUtils.createGarbageTruck(vehicleName, linkChessboardDepot, earliestStartingTime, latestFinishingTime);
 
