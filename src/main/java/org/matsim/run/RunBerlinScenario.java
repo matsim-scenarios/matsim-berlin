@@ -151,8 +151,9 @@ public final class RunBerlinScenario {
 		config.qsim().setTrafficDynamics( TrafficDynamics.kinematicWaves );
 				
 		// activities:
-		for ( double ii = 600 ; ii <= 97200; ii+=600 ) {
+		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
 			// yy someone set this from long to double; why?  Having double loop variables is possible, but unusual, so could you please leave a comment?  kai, jul'19
+			// actually, this leads to an IllegalArgumentException: acttype "leisure_2400.0" is not known in utility parameters...  (as activity type is then "leisure_2400.0.0"... so i set it back to long. tschlenther 22 jul'19
 			config.planCalcScore().addActivityParams( new ActivityParams( "home_" + ii + ".0" ).setTypicalDuration( ii ) );
 			config.planCalcScore().addActivityParams( new ActivityParams( "work_" + ii + ".0" ).setTypicalDuration( ii ).setOpeningTime(6. * 3600. ).setClosingTime(20. * 3600. ) );
 			config.planCalcScore().addActivityParams( new ActivityParams( "leisure_" + ii + ".0" ).setTypicalDuration( ii ).setOpeningTime(9. * 3600. ).setClosingTime(27. * 3600. ) );
