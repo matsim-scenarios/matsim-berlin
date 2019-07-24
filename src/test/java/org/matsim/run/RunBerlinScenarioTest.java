@@ -60,7 +60,8 @@ public class RunBerlinScenarioTest {
 	@Test
 	public final void aTestTest() {
 		// a dummy test to satisfy the matrix build by travis.
-		log.info( "Hello world." );
+		log.info( "Done with aTestTest"  );
+		log.info("") ;
 		Assert.assertTrue( true );
 	}
 	
@@ -74,6 +75,9 @@ public class RunBerlinScenarioTest {
 			
 			Config config =  RunBerlinScenario.prepareConfig( args );
 			Assert.assertEquals("Wrong parameter from command line", "test-run-ID", config.controler().getRunId());
+
+			log.info( "Done with bTestConfig1"  );
+			log.info("") ;
 			
 		} catch ( Exception ee ) {
 			throw new RuntimeException(ee) ;
@@ -91,6 +95,9 @@ public class RunBerlinScenarioTest {
 			
 			Config config =  RunBerlinScenario.prepareConfig( args );
 			Assert.assertEquals("Wrong parameter from command line", -0.12345, config.planCalcScore().getModes().get("car").getConstant(), MatsimTestUtils.EPSILON);
+
+			log.info( "Done with cTestConfig2"  );
+			log.info("") ;
 			
 		} catch ( Exception ee ) {
 			ee.printStackTrace();
@@ -121,6 +128,10 @@ public class RunBerlinScenarioTest {
 			Assert.assertEquals("Change in score (bicycle agent)", 129.80394930541985, scenario.getPopulation().getPersons().get(Id.createPersonId("100200201")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
 			Assert.assertEquals("Change in score (ride agent)", 131.71443152316658, scenario.getPopulation().getPersons().get(Id.createPersonId("10099501")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
 			Assert.assertEquals("Change in score (pt agent)", 134.91804284998503, scenario.getPopulation().getPersons().get(Id.createPersonId("100024301")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
+			
+			log.info( "Done with dTest1person1iteration"  );
+			log.info("") ;
+			
 			
 		} catch ( Exception ee ) {
 			throw new RuntimeException(ee) ;
@@ -160,6 +171,10 @@ public class RunBerlinScenarioTest {
 			// The differences in the scores compared to the run in the public-svn are probably related to the pt raptor router
 			// which seems to produce slightly different results (e.g. in case two routes are identical).
 			// Thus the large epsilon. ihab, dec'18
+			
+			log.info( "Done with eTest1pctUntilIteration1"  );
+			log.info("") ;
+			
 			
 		} catch ( Exception ee ) {
 			throw new RuntimeException(ee) ;
