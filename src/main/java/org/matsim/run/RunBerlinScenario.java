@@ -164,6 +164,7 @@ public final class RunBerlinScenario {
 
 		ConfigUtils.applyCommandline( config, typedArgs ) ;
 
+		config.plans().setInsistingOnUsingDeprecatedPersonAttributeFile(true); //set this in order to make the simulation run. TODO: we should adopt the input plans file soonish.. tschlenther July '19
 		return config ;
 	}
 
