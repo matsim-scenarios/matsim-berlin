@@ -51,12 +51,7 @@
 		</parameterset>
 		<parameterset type="teleportedModeParameters" >
 			<param name="beelineDistanceFactor" value="1.3" />
-			<param name="mode" value="access_walk" />
-			<param name="teleportedModeSpeed" value="1.0555556" />
-		</parameterset>
-		<parameterset type="teleportedModeParameters" >
-			<param name="beelineDistanceFactor" value="1.3" />
-			<param name="mode" value="egress_walk" />
+			<param name="mode" value="non_network_walk" />
 			<param name="teleportedModeSpeed" value="1.0555556" />
 		</parameterset>
 	</module>
@@ -162,11 +157,7 @@
 			</parameterset>
 			<parameterset type="modeParams" >
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-				<param name="mode" value="access_walk" />
-			</parameterset>
-			<parameterset type="modeParams" >
-				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-				<param name="mode" value="egress_walk" />
+				<param name="mode" value="non_network_walk" />
 			</parameterset>
 		</parameterset>
 	</module>
