@@ -155,18 +155,9 @@ public class RunBerlinScenarioTest {
 			Controler controler = RunBerlinScenario.prepareControler( scenario ) ;
 			
 			controler.run() ;
-			
-			// Compare with: https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/
-			
-			// Changes in the MATSim core, in particular some fixes related to the teleportation speed of car access_walk and car egress_walk legs, the scores have changed
-			// As far as I can see, the car mode has become slightly less attractive which probably requires a re-calibration of the Berlin scenario.
-			// Once, we have the next version, the following score comparisons have to be re-activated and updated. ihab April'19
-			
-//			Assert.assertEquals("The scores in iteration 0 differ from https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 115.072273500216, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
-//			Assert.assertEquals("The scores in iteration 0 differ from https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 115.072273500216, berlin.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(0), MatsimTestUtils.EPSILON);
-//
-//			Assert.assertEquals("The scores in iteration 1 differ from https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 114.125389832973, berlin.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), 0.001);
-//			Assert.assertEquals("The scores in iteration 1 differ from https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.3-1pct/.", 113.181180406316, berlin.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(1), 0.001);
+						
+			Assert.assertEquals("Different scores in iteration 0 .", 114.75008468844915, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Different scores in iteration 1 .", 113.71425664761931, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
 
 			// The differences in the scores compared to the run in the public-svn are probably related to the pt raptor router
 			// which seems to produce slightly different results (e.g. in case two routes are identical).
