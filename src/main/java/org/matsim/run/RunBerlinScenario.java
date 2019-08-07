@@ -82,7 +82,7 @@ public final class RunBerlinScenario {
 		} else {
 			log.warn("Public transit will be teleported and not simulated in the mobsim! "
 					+ "This will have a significant effect on pt-related parameters (travel times, modal split, and so on). "
-					+ "Should only be used for testing or car-focused studies with fixed modal split.  ");
+					+ "Should only be used for testing or car-focused studies with a fixed modal split.  ");
 		}
 		
 		// use the (congested) car travel time for the teleported ride mode
@@ -114,7 +114,7 @@ public final class RunBerlinScenario {
 		
 		String[] typedArgs = Arrays.copyOfRange( args, 1, args.length );
 
-		final Config config = ConfigUtils.loadConfig( args[ 0 ] );; // I need this to set the context
+		final Config config = ConfigUtils.loadConfig( args[ 0 ] ); // I need this to set the context
 		
 		config.controler().setRoutingAlgorithmType( FastAStarLandmarks );
 		
