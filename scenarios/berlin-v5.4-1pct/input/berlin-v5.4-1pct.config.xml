@@ -65,6 +65,7 @@
 		<param name="stuckTime" value="30.0" />
 		<param name="trafficDynamics" value="kinematicWaves" />
 		<param name="vehiclesSource" value="modeVehicleTypesFromVehiclesData" />
+		<param name="usePersonIdForMissingVehicleId" value="false" />
 		<param name="insertingWaitingVehiclesBeforeDrivingVehicles" value="true" />
 	</module>
 	<module name="strategy" >

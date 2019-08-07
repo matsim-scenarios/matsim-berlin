@@ -54,10 +54,11 @@ public final class RunBerlinScenario {
 		}
 		
 		if ( args.length==0 ) {
-			args = new String[] {"scenarios/berlin-v5.4-1pct/input/berlin-v5.4-1pct.config.xml"}  ;
+			args = new String[] {"scenarios/berlin-v5.4-10pct/input/berlin-v5.4-10pct.config.xml"}  ;
 		}
 
 		Config config = prepareConfig( args ) ;
+		config.controler().setLastIteration(0);
 		Scenario scenario = prepareScenario( config ) ;
 		Controler controler = prepareControler( scenario ) ;
 		controler.run() ;
@@ -146,7 +147,6 @@ public final class RunBerlinScenario {
 
 		ConfigUtils.applyCommandline( config, typedArgs ) ;
 
-		config.plans().setInsistingOnUsingDeprecatedPersonAttributeFile(true); //set this in order to make the simulation run. TODO: we should adopt the input plans file soonish.. tschlenther July '19
 		return config ;
 	}
 
