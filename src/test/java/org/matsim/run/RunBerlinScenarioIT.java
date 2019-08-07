@@ -61,7 +61,6 @@ public class RunBerlinScenarioIT{
 
 			Config config = RunBerlinScenario.prepareConfig( args ) ;
 			config.controler().setLastIteration(iteration);
-			//			config.qsim().setEndTime(30 * 3600.);
 
 			config.qsim().setNumberOfThreads( 1 );
 			config.global().setNumberOfThreads( 1 );
