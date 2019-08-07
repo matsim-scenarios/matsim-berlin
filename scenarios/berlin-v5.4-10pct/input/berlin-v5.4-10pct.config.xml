@@ -14,6 +14,7 @@
 	</module>
 	<module name="global" >
 		<param name="coordinateSystem" value="GK4" />
+		<param name="insistingOnDeprecatedConfigVersion" value="false" />
 		<param name="numberOfThreads" value="8" />
 	</module>
 	<module name="network" >
