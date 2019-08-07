@@ -24,15 +24,9 @@ import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorith
 import java.util.Arrays;
 
 import org.apache.log4j.Logger;
-import org.matsim.analysis.ScoreStats;
-import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.population.Population;
-import org.matsim.core.config.CommandLine;
-import org.matsim.core.config.CommandLine.ConfigurationException;
 import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
@@ -41,10 +35,7 @@ import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.gbl.Gbl;
-import org.matsim.core.mobsim.qsim.AbstractQSimModule;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.vehicles.VehicleType;
-import org.matsim.vehicles.VehiclesFactory;
 
 import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 
