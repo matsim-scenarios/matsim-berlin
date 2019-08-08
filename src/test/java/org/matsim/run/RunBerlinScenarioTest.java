@@ -159,13 +159,13 @@ public class RunBerlinScenarioTest {
 			
 			controler.run() ;
 			
+			// Scores in iteration 0
 			Assert.assertEquals("Different avg. executed score in iteration 0 .", 114.75008227161196, controler.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(0), MatsimTestUtils.EPSILON);
-
 			Assert.assertEquals("Different avg. avg. score in iteration 0 .", 114.75008227161196, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
 			
-			Assert.assertEquals("Different avg. executed score in iteration 1 .", 112.75451540980355, controler.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(1), MatsimTestUtils.EPSILON);
-
-			Assert.assertEquals("Different avg. avg. score in iteration 1.", 113.75290308457286, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
+			// Scores in iteration 1
+			Assert.assertEquals("Different avg. executed score in iteration 1 .", 112.76204261716643, controler.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(1), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Different avg. avg. score in iteration 1.", 113.75644633346553, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
 
 			// The differences in the scores compared to the run in the public-svn are probably related to the pt raptor router
 			// which seems to produce slightly different results (e.g. in case two routes are identical).
