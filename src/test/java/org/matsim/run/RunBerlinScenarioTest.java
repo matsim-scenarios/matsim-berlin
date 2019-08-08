@@ -150,14 +150,22 @@ public class RunBerlinScenarioTest {
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
 			
+			config.global().setNumberOfThreads(1);
+			config.qsim().setNumberOfThreads(1);
+			
 			Scenario scenario = RunBerlinScenario.prepareScenario( config ) ;
 			
 			Controler controler = RunBerlinScenario.prepareControler( scenario ) ;
 			
 			controler.run() ;
-						
-			Assert.assertEquals("Different scores in iteration 0 .", 114.75008468844915, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Different scores in iteration 1 .", 113.71425664761931, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
+			
+			Assert.assertEquals("Different avg. executed score in iteration 0 .", 114.75008227161196, controler.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(0), MatsimTestUtils.EPSILON);
+
+			Assert.assertEquals("Different avg. avg. score in iteration 0 .", 114.75008227161196, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
+			
+			Assert.assertEquals("Different avg. executed score in iteration 1 .", 112.75451540980355, controler.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(1), MatsimTestUtils.EPSILON);
+
+			Assert.assertEquals("Different avg. avg. score in iteration 1.", 113.75290308457286, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(1), MatsimTestUtils.EPSILON);
 
 			// The differences in the scores compared to the run in the public-svn are probably related to the pt raptor router
 			// which seems to produce slightly different results (e.g. in case two routes are identical).
