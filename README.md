@@ -6,11 +6,11 @@ This repository provides an open MATSim transport model for Berlin, provided by 
 
 Currently, there are two versions of the MATSim Open Berlin model:
 
-##### 10pct scenario (`scenarios/berlin-v5.3-10pct`)
+##### 10pct scenario (`scenarios/berlin-v5.x-10pct`)
 
 This scenario contains a 10pct sample of the Greater Berlin population; road capacities are accordingly reduced. The scenario is calibrated taking into consideration the traffic counts, modal split and mode-specific trip distance distributions.
 
-##### 1pct scenario (`scenarios/berlin-v5.3-1pct`)
+##### 1pct scenario (`scenarios/berlin-v5.x-1pct`)
 
 This scenario contains a 1pct sample of the Greater Berlin population; road capacities are accordingly reduced. This scenario was not (!) calibrated and should only be used for testing purposes or pre-studies.
 
@@ -23,7 +23,7 @@ Handling of large files within git is not without problems (git lfs files are no
 ##### Movies
 
 1. Go to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/
-1. Decide for a scenario that you find interesting (e.g. `berlin-v5.3-10pct`) and go into that directory.
+1. Decide for a scenario that you find interesting (e.g. `berlin-v5.x-10pct`) and go into that directory.
 1. Inside there, look for an `output-*` directory that you find interesting and go into that directory.
 1. Inside there, look for `movie-*` files.  You can't view them directly, but you there are various ways to download them, and you can view them then.  Try that.
 
@@ -31,7 +31,7 @@ Handling of large files within git is not without problems (git lfs files are no
 
 1. Get VIA from https://www.simunto.com/via/.  (There is a free license for a small number of agents; that will probably work but only display a small number of vehicles/agents.)
 1. Go to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/ .
-1. Decide for a scenario that you find interesting (e.g. `berlin-v5.3-1pct`) and go into that directory.
+1. Decide for a scenario that you find interesting (e.g. `berlin-v5.x-1pct`) and go into that directory.
 1. Inside there, look for an `output-*` directory that you find interesting and go into that directory.
 1. Download `*.output_network.xml.gz` and `*.output_events.xml.gz`.  Best make sure that they do not uncompress, e.g. by "Download linked file as ...".
 1. Get these files into VIA.  This can be achieved in various ways; one is to open VIA and then drag the files from a file browser into VIA.
@@ -67,7 +67,7 @@ This will update your repository to the newest version.
 (Requires either cloning or downloading the repository.)
 
 ##### ... using a runnable jar file
-1. There should be a file directly in the `matsim-berlin` directory with name approximately as `matsim-berlin-5.2-jar-with-dependencies.jar`.
+1. There should be a file directly in the `matsim-berlin` directory with name approximately as `matsim-berlin-5.x-jar-with-dependencies.jar`.
 1. Double-click on that file (in a file system browser).  A simple GUI should open.
 1. In the GUI, click on the "Choose" button for configuration file.  Navigate to one of the `scenario` directories and load one of the configuration files.
 1. Increase memory in the GUI.
