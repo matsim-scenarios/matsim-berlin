@@ -10,8 +10,8 @@
 	<description>MATSim Open Berlin scenario project</description>
 	
 	<properties>
-	  <matsim.version>12.0-SNAPSHOT</matsim.version>
-	  <!--<matsim.version>12.0-2019w14-SNAPSHOT</matsim.version>-->
+	  <!--<matsim.version>12.0-SNAPSHOT</matsim.version>-->
+	  <matsim.version>12.0-2019w31-SNAPSHOT</matsim.version>
 	</properties>
 
 	<repositories>
@@ -76,22 +76,22 @@
 		</dependency>
 		
 		<dependency>
-            <!--		<groupId>com.github.simunto</groupId>
-            		<artifactId>matsim-sbb-extensions</artifactId>
-            		<version>0.11.0-2018w44</version>	-->
+            <!--<groupId>com.github.simunto</groupId>-->
+            <!--<artifactId>matsim-sbb-extensions</artifactId>-->
+            <!--<version>0.11.0-2018w44</version>-->
             
-            		<!-- Include SBB MATSim Extensions local version: -->		
-<!--					<groupId>ch.sbb</groupId>-->
-<!--					<artifactId>matsim-sbb-extensions</artifactId>-->
-<!--					<version>11.3-SNAPSHOT</version>-->
+            <!--Include SBB MATSim Extensions local version: -->		
+			<!--<groupId>ch.sbb</groupId>-->
+			<!--<artifactId>matsim-sbb-extensions</artifactId>-->
+			<!--<version>11.3-SNAPSHOT</version>-->
 			<!--(careful, this is not matsim, thus not ${matsim.version})-->
 
 			<!-- Include SBB MATSim Extensions from jitpack: -->
 			<!-- Note that this will also pick up the local version if that local version has com.github.XXX as groupId!-->
-				<groupId>com.github.vsp-gleich</groupId>
-				<artifactId>matsim-sbb-extensions</artifactId>
-				<version>11.3-vsp-2019-07-24</version>
-        	</dependency>
+			<groupId>com.github.vsp-gleich</groupId>
+			<artifactId>matsim-sbb-extensions</artifactId>
+			<version>11.3-vsp-2019-08-12</version>
+        </dependency>
             
 		<dependency>
                   <groupId>org.matsim.contrib</groupId>

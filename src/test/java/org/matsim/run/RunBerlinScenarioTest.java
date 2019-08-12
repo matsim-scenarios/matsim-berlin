@@ -21,7 +21,6 @@ package org.matsim.run;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
@@ -39,8 +38,6 @@ import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.Config;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
-import org.matsim.core.gbl.Gbl;
-import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.router.MainModeIdentifierImpl;
 import org.matsim.core.router.StageActivityTypesImpl;
 import org.matsim.core.router.TripStructureUtils;
@@ -205,12 +202,5 @@ public class RunBerlinScenarioTest {
 
 		Logger.getLogger(modeCnt.toString()) ;			
 		return modeCnt;	
-	}
-	
-	private static void downsample( final Map map, final double sample ) {
-		final Random rnd = MatsimRandom.getLocalInstance();
-		log.warn( "map size before=" + map.size() ) ;
-		map.values().removeIf( person -> rnd.nextDouble()>sample ) ;
-		log.warn( "map size after=" + map.size() ) ;
 	}
 }
