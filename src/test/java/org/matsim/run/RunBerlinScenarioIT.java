@@ -108,12 +108,12 @@ public class RunBerlinScenarioIT{
 				sum += val ;
 			}
 
-			Assert.assertEquals("Major change in the car trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/.", 0.339940203527443, modeCnt.get("car" ) / sum, 0.01 );
-			Assert.assertEquals("Major change in the pt trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/.", 0.218322955810955, modeCnt.get("pt") / sum, 0.01);
-			Assert.assertEquals("Major change in the bicycle trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/.", 0.188655127958965, modeCnt.get("bicycle") / sum, 0.01);
-			Assert.assertEquals("Major change in the walk trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/.", 0.160435581644128, modeCnt.get("walk") / sum, 0.01);
-			Assert.assertEquals("Change in the freight trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/.", 0.00146473928189373, modeCnt.get("freight") / sum, MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Change in the ride trip share compared to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/.", 0.0911813917766135, modeCnt.get("ride") / sum, MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Major change in the car trip share.", 0.22781865397100196, modeCnt.get("bicycle" ) / sum, 0.01 );
+			Assert.assertEquals("Major change in the car trip share.", 0.29084613719974034, modeCnt.get("car" ) / sum, 0.01 );
+			Assert.assertEquals("Major change in the car trip share.", 0.0012443194113828176, modeCnt.get("freight" ) / sum, 0.01 );
+			Assert.assertEquals("Major change in the car trip share.", 0.22273317463752434, modeCnt.get("pt" ) / sum, 0.01 );
+			Assert.assertEquals("Major change in the car trip share.", 0.08899588833585804, modeCnt.get("ride" ) / sum, 0.01 );
+			Assert.assertEquals("Major change in the car trip share.", 0.16836182644449255, modeCnt.get("walk" ) / sum, 0.01 );
 
 		} catch ( Exception ee ) {
 			ee.printStackTrace();
