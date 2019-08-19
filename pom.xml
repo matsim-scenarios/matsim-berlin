@@ -51,7 +51,28 @@
 			<version>${matsim.version}</version>
 		</dependency>
 		
-		<dependency>
+			<dependency>
+        		<groupId>org.matsim.contrib</groupId>
+        		<artifactId>dvrp</artifactId>
+        		<version>${matsim.version}</version>
+        		<scope>compile</scope>
+      		</dependency>
+      		
+      		<dependency>
+        		<groupId>org.matsim.contrib</groupId>
+        		<artifactId>drt</artifactId>
+        		<version>${matsim.version}</version>
+        		<scope>compile</scope>
+      		</dependency>
+      		
+      		<dependency>
+        		<groupId>org.matsim.contrib</groupId>
+        		<artifactId>av</artifactId>
+        		<version>${matsim.version}</version>
+        		<scope>compile</scope>
+      		</dependency>
+      		
+      		<dependency>
         		<groupId>org.matsim.contrib</groupId>
         		<artifactId>emissions</artifactId>
         		<version>${matsim.version}</version>
