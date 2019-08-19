@@ -23,7 +23,10 @@ import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup.IntermodalAccessEgressModeSelection;
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup.IntermodalAccessEgressParameterSet;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -31,6 +34,7 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
+import org.matsim.contrib.av.robotaxi.fares.drt.DrtFareConfigGroup;
 import org.matsim.contrib.av.robotaxi.fares.drt.DrtFareModule;
 import org.matsim.contrib.av.robotaxi.fares.drt.DrtFaresConfigGroup;
 import org.matsim.contrib.drt.routing.DrtRoute;
@@ -46,6 +50,8 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ModeParams;
 import org.matsim.core.config.groups.PlansCalcRouteConfigGroup.ModeRoutingParams;
+import org.matsim.core.config.groups.QSimConfigGroup.StarttimeInterpretation;
+import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup.VspDefaultsCheckingLevel;
 import org.matsim.core.controler.AbstractModule;
@@ -72,8 +78,10 @@ public final class RunDrtOpenBerlinScenario {
 
 	private static final Logger log = Logger.getLogger(RunDrtOpenBerlinScenario.class);
 
-	private static final String drtServiceAreaAttribute = "drtServiceArea";
 	private static final String drtNetworkMode = TransportMode.drt;
+
+	// TODO: also add the following to the avoev config group?
+	private static final String drtVehiclesFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlin-sav-v5.2-10pct/input/berlkoenig-vehicles/berlin-v5.2.berlkoenig100veh_6seats.xml.gz";
 
 
 	public static void main(String[] args) throws CommandLine.ConfigurationException {
@@ -114,7 +122,7 @@ public final class RunDrtOpenBerlinScenario {
 		RouteFactories routeFactories = scenario.getPopulation().getFactory().getRouteFactories();
 		routeFactories.setRouteFactory(DrtRoute.class, new DrtRouteFactory());
 
-		addDRTmode(scenario, drtNetworkMode, drtServiceAreaAttribute);
+		addDRTmode(scenario, drtNetworkMode);
 
 		return scenario;
 	}
@@ -149,7 +157,52 @@ public final class RunDrtOpenBerlinScenario {
 		
 		ConfigUtils.addOrGetModule( config, VspExperimentalConfigGroup.class ).setVspDefaultsCheckingLevel(VspDefaultsCheckingLevel.warn); ;
 
+		// add drt mode	
+    	List<String> modes = new ArrayList<String>(Arrays.asList(config.subtourModeChoice().getModes()));
+    	modes.add(TransportMode.drt);
+    	config.subtourModeChoice().setModes(modes.toArray(new String[modes.size()]));
+    	
+    	// required by drt module
+    	config.qsim().setNumberOfThreads(1);
+    	config.qsim().setSimStarttimeInterpretation(StarttimeInterpretation.onlyUseStarttime);
 		DrtConfigs.adjustDrtConfig(DrtConfigGroup.get(config), config.planCalcScore());
+		
+		// add drt stage activity (per default only added in case of stop-based drt operation mode)
+    	PlanCalcScoreConfigGroup.ActivityParams params = new PlanCalcScoreConfigGroup.ActivityParams(TransportMode.drt + " interaction");
+		params.setTypicalDuration(1);
+		params.setScoringThisActivityAtAll(false);
+		config.planCalcScore().getScoringParametersPerSubpopulation().values().forEach(k -> k.addActivityParams(params));
+		config.planCalcScore().addActivityParams(params);
+		
+		// add drt scoring parameters
+		PlanCalcScoreConfigGroup.ModeParams drtModeParams = new PlanCalcScoreConfigGroup.ModeParams(TransportMode.drt);
+		drtModeParams.setConstant(0.);
+		drtModeParams.setMarginalUtilityOfDistance(0.);
+		drtModeParams.setMarginalUtilityOfTraveling(0.);
+		drtModeParams.setMonetaryDistanceRate(0.);
+		config.planCalcScore().getScoringParametersPerSubpopulation().values().forEach(k -> k.addModeParams(drtModeParams));
+    	    	
+    	// set drt parameters
+    	DrtConfigGroup drtCfg = DrtConfigGroup.get(config);
+    	drtCfg.getVehiclesFile();
+    	drtCfg.setVehiclesFile(drtVehiclesFile);
+    	drtCfg.setMaxTravelTimeAlpha(1.7);
+    	drtCfg.setMaxTravelTimeBeta(120.0);
+    	drtCfg.setStopDuration(60.);
+    	drtCfg.setMaxWaitTime(300.);
+    	drtCfg.setChangeStartLinkToLastLinkInSchedule(true);
+    	drtCfg.setIdleVehiclesReturnToDepots(false);
+    	drtCfg.setRequestRejection(false);
+    	drtCfg.setPrintDetailedWarnings(false);
+    	    	
+    	// set drt fare
+    	for (DrtFareConfigGroup drtFareCfg : DrtFaresConfigGroup.get(config).getDrtFareConfigGroups()) {
+    		drtFareCfg.setBasefare(0.);
+        	drtFareCfg.setDailySubscriptionFee(0.);
+        	drtFareCfg.setDistanceFare_m(0.0015);
+        	drtFareCfg.setMinFarePerTrip(4.0);
+        	drtFareCfg.setTimeFare_h(0.);
+    	}
 		
 		config.plansCalcRoute().setInsertingAccessEgressWalk(true);
 		
@@ -189,7 +242,7 @@ public final class RunDrtOpenBerlinScenario {
 		return config ;
 	}
 	
-	private static void addDRTmode(Scenario scenario, String drtNetworkMode, String serviceAreaAttribute) {
+	private static void addDRTmode(Scenario scenario, String drtNetworkMode) {
 		
 		log.info("Adjusting network...");
 		
@@ -209,9 +262,6 @@ public final class RunDrtOpenBerlinScenario {
 					allowedModes.add(drtNetworkMode);
 
 					link.setAllowedModes(allowedModes);
-					link.getAttributes().putAttribute(serviceAreaAttribute, true);
-				} else {
-					link.getAttributes().putAttribute(serviceAreaAttribute, false);
 				}
 
 			} else if (link.getAllowedModes().contains(TransportMode.pt)) {
