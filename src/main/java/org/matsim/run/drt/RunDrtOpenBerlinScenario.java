@@ -221,7 +221,7 @@ public final class RunDrtOpenBerlinScenario {
 				// walk
 				IntermodalAccessEgressParameterSet paramSetWalk = new IntermodalAccessEgressParameterSet();
 				// paramSetXxx.setMode( TransportMode.walk ); // this does not work because sbb raptor treats it in a special way
-				paramSetWalk.setMode("walk2");
+				paramSetWalk.setMode(TransportMode.non_network_walk);
 				paramSetWalk.setRadius(100000);
 				paramSetWalk.setInitialSearchRadius(3000);
 				paramSetWalk.setSearchExtensionRadius(1000);

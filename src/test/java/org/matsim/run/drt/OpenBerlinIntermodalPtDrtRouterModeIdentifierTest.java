@@ -195,5 +195,20 @@ public class OpenBerlinIntermodalPtDrtRouterModeIdentifierTest {
 		mainModeIdentifier.identifyMainMode(planElements);
 		log.info("Running testRuntimeExceptionTripWithoutMainMode... Done.");
 	}
+	
+	@Test(expected = RuntimeException.class)
+	public void testRuntimeExceptionOnlyNonNetworkWalk() {
+		log.info("Running testRuntimeExceptionOnlyNonNetworkWalk...");
+		
+		OpenBerlinIntermodalPtDrtRouterModeIdentifier mainModeIdentifier = new OpenBerlinIntermodalPtDrtRouterModeIdentifier();
+		
+		Scenario scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
+		PopulationFactory factory = scenario.getPopulation().getFactory();
+		
+		List<PlanElement> planElements = new ArrayList<>();
+		planElements.add(factory.createLeg(TransportMode.non_network_walk));
+		// should throw an exception, because non_network_walk is not a main mode
+		mainModeIdentifier.identifyMainMode(planElements);
+	}
 
 }
