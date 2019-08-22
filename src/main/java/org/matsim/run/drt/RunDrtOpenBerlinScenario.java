@@ -231,8 +231,34 @@ public final class RunDrtOpenBerlinScenario {
 				// drt
 				IntermodalAccessEgressParameterSet paramSetDrt = new IntermodalAccessEgressParameterSet();
 				paramSetDrt.setMode(TransportMode.drt);
-				paramSetDrt.setRadius(10000); // Berlkoenig service area is significantly smaller than a 10km diameter, access trips over 10km don't make sense
-				paramSetDrt.setInitialSearchRadius(3000);
+				/* Berlkoenig service area has a maximum diameter of ca. 11km, access trips over 12km don't make sense.
+				 * Prohibit them to save computation time. 
+				 * (RandomAccessEgressModeRaptorStopFinder will try again with walk, the other available access/egress mode)
+				 * maybe we should restrict even further, see comment below for InitialSearchRadius.
+				 */
+				paramSetDrt.setRadius(12000); 
+				/* If more than 1 transit stop is found in the initial search radius, the raptor stop finder will stop to search
+				 * more distant transit stops.
+				 * Setting setInitialSearchRadius(12000) will allow for crossing the whole Berlkoenig area with drt as 
+				 * access/egress mode to pt. This way we are on the safe side and do not exclude any theoretically possible 
+				 * drt ride.
+				 * Unfortunately that means that for a route from Alexanderplatz to Friedrichstrasse the pt router basically has 
+				 * to route from all transit stops in the city center of Berlin to all transit stops in the city center of Berlin,
+				 * because it has to consider all transit stops in that 12 km radius from Alexanderplatz and Friedrichstrasse, 
+				 * respectively. This slows down pt routing enormously. 
+				 * To speed up there are two options:
+				 *  - restrict the set of transit stops accessible by drt using a stop filter attribute, e.g. only RE+S+U-Bahn
+				 *  - reduce the initial search radius (and thereby effectively prohibit drt rides longer than that initial
+				 *    search radius for access/egress to pt, because there is always more than 1 transit stop in that radius). 
+				 *    
+				 * For 2528 agents and no stop filter attribute PlanRouter in iteration 1 took 
+				 *  - ca. 1 min at InitialSearchRadius 3 km
+				 *  - but 53 min at InitialSearchRadius 12km
+				 * 
+				 * So we have to make use of the speed up options (and exclude theoretically possible but unlikely drt trips).
+				 *  - gleich aug'19
+				 */
+				paramSetDrt.setInitialSearchRadius(4000); 
 				paramSetDrt.setSearchExtensionRadius(1000);
 				configRaptor.addIntermodalAccessEgress(paramSetDrt);
 			}
