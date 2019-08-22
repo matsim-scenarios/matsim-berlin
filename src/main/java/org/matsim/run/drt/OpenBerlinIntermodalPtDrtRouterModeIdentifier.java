@@ -22,13 +22,17 @@
  package org.matsim.run.drt;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.matsim.analysis.TransportPlanningMainModeIdentifier;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.PlanElement;
+import org.matsim.core.config.Config;
 import org.matsim.core.router.MainModeIdentifier;
+
+import com.google.inject.Inject;
 
 /**
  * Based on {@link TransportPlanningMainModeIdentifier}
@@ -40,8 +44,9 @@ public final class OpenBerlinIntermodalPtDrtRouterModeIdentifier implements Main
 	private final List<String> modeHierarchy = new ArrayList<>() ;
 	private final List<String> drtModes;
 
-	public OpenBerlinIntermodalPtDrtRouterModeIdentifier(List<String> drtModes) {
-		this.drtModes = drtModes;
+	@Inject
+	public OpenBerlinIntermodalPtDrtRouterModeIdentifier() {
+		drtModes = Arrays.asList(TransportMode.drt, "Berlkoenig BC");
 		
 		modeHierarchy.add( TransportMode.walk ) ;
 		modeHierarchy.add( "bicycle" ); // TransportMode.bike is not registered as main mode, only "bicycle" ;

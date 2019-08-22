@@ -48,8 +48,7 @@ public class OpenBerlinIntermodalPtDrtRouterModeIdentifierTest {
 	public final void testSingleModeTrips() {
 		log.info("Running test0...");
 		
-		List<String> drtModes = Arrays.asList(TransportMode.drt, "Berlkoenig BC");
-		OpenBerlinIntermodalPtDrtRouterModeIdentifier mainModeIdentifier = new OpenBerlinIntermodalPtDrtRouterModeIdentifier(drtModes);
+		OpenBerlinIntermodalPtDrtRouterModeIdentifier mainModeIdentifier = new OpenBerlinIntermodalPtDrtRouterModeIdentifier();
 		
 		Scenario scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
 		PopulationFactory factory = scenario.getPopulation().getFactory();
@@ -89,8 +88,7 @@ public class OpenBerlinIntermodalPtDrtRouterModeIdentifierTest {
 	public final void testDrtPtFallbackModesRecognition() {
 		log.info("Running testDrtPtFallbackModesRecognition...");
 		
-		List<String> drtModes = Arrays.asList(TransportMode.drt, "Berlkoenig BC");
-		OpenBerlinIntermodalPtDrtRouterModeIdentifier mainModeIdentifier = new OpenBerlinIntermodalPtDrtRouterModeIdentifier(drtModes);
+		OpenBerlinIntermodalPtDrtRouterModeIdentifier mainModeIdentifier = new OpenBerlinIntermodalPtDrtRouterModeIdentifier();
 		
 		Scenario scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
 		PopulationFactory factory = scenario.getPopulation().getFactory();
@@ -120,8 +118,7 @@ public class OpenBerlinIntermodalPtDrtRouterModeIdentifierTest {
 	public final void testIntermodalPtDrtTrip() {
 		log.info("Running testIntermodalPtDrtTrip...");
 		
-		List<String> drtModes = Arrays.asList(TransportMode.drt, "Berlkoenig BC");
-		OpenBerlinIntermodalPtDrtRouterModeIdentifier mainModeIdentifier = new OpenBerlinIntermodalPtDrtRouterModeIdentifier(drtModes);
+		OpenBerlinIntermodalPtDrtRouterModeIdentifier mainModeIdentifier = new OpenBerlinIntermodalPtDrtRouterModeIdentifier();
 		
 		Scenario scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
 		PopulationFactory factory = scenario.getPopulation().getFactory();
@@ -185,8 +182,7 @@ public class OpenBerlinIntermodalPtDrtRouterModeIdentifierTest {
 	public void testRuntimeExceptionTripWithoutMainMode() {
 		log.info("Running testRuntimeExceptionTripWithoutMainMode...");
 		
-		List<String> drtModes = Arrays.asList(TransportMode.drt, "Berlkoenig BC");
-		OpenBerlinIntermodalPtDrtRouterModeIdentifier mainModeIdentifier = new OpenBerlinIntermodalPtDrtRouterModeIdentifier(drtModes);
+		OpenBerlinIntermodalPtDrtRouterModeIdentifier mainModeIdentifier = new OpenBerlinIntermodalPtDrtRouterModeIdentifier();
 		
 		Scenario scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
 		PopulationFactory factory = scenario.getPopulation().getFactory();
