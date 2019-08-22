@@ -1,7 +1,7 @@
 
 /* *********************************************************************** *
  * project: org.matsim.*
- * TransportPlanningMainModeIdentifier.java
+ * OpenBerlinIntermodalPtDrtRouterModeIdentifier.java
  *                                                                         *
  * *********************************************************************** *
  *                                                                         *
@@ -26,7 +26,6 @@ import java.util.List;
 
 import org.matsim.analysis.TransportPlanningMainModeIdentifier;
 import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.core.router.MainModeIdentifier;
@@ -37,21 +36,21 @@ import org.matsim.core.router.MainModeIdentifier;
  * @author nagel / gleich
  *
  */
-public final class AvoevInteractionActivityMainModeIdentifier implements MainModeIdentifier {
+public final class OpenBerlinIntermodalPtDrtRouterModeIdentifier implements MainModeIdentifier {
 	private final List<String> modeHierarchy = new ArrayList<>() ;
+	private final List<String> drtModes;
 
-	public AvoevInteractionActivityMainModeIdentifier() {
-		modeHierarchy.add( TransportMode.non_network_walk ) ;
-		modeHierarchy.add( TransportMode.non_network_walk ) ;
-		modeHierarchy.add( "undefined" ) ;
-		modeHierarchy.add( TransportMode.other ) ;
-		modeHierarchy.add( TransportMode.transit_walk ) ;
+	public OpenBerlinIntermodalPtDrtRouterModeIdentifier(List<String> drtModes) {
+		this.drtModes = drtModes;
+		
 		modeHierarchy.add( TransportMode.walk ) ;
 		modeHierarchy.add( "bicycle" ); // TransportMode.bike is not registered as main mode, only "bicycle" ;
-		modeHierarchy.add( TransportMode.drt ) ;
+		modeHierarchy.add( TransportMode.ride ) ;
+		modeHierarchy.add( TransportMode.car ) ;
+		for (String drtMode: drtModes) {
+			modeHierarchy.add( drtMode ) ;
+		}
 		modeHierarchy.add( TransportMode.pt ) ;
-		modeHierarchy.add( TransportMode.ride ) ; // ? really higher hierachy than pt?
-		modeHierarchy.add( TransportMode.car ) ; // ? really higher hierachy than pt?
 		modeHierarchy.add( "freight" );
 		
 		// NOTE: This hierarchical stuff is not so great: is park-n-ride a car trip or a pt trip?  Could weigh it by distance, or by time spent
@@ -68,20 +67,21 @@ public final class AvoevInteractionActivityMainModeIdentifier implements MainMod
 			if ( pe instanceof Leg ) {
 				Leg leg = (Leg) pe ;
 				mode = leg.getMode();
-
 			} else {
-				Activity act = (Activity) pe ;
-				mode = act.getType().replaceAll("interaction", "").replaceAll(" ", "");
+				continue;
 			}
-			if (!mode.equals(TransportMode.non_network_walk) && mode.contains("walk")) {
-				mode = TransportMode.walk;
+			if (mode.equals(TransportMode.non_network_walk)) {
+				// skip, this is only a helper mode for access, egress and pt transfers
+				continue;
 			}
-//			if (mode.equals("bicycle")) {
-//				mode = TransportMode.bike;
-//			}
-			if (mode.contains("drt")) {
-				// TODO: shall we really replace drt2? Will the "drt"-Router return "drt2" legs?
-				mode = TransportMode.drt;
+			if (mode.equals(TransportMode.transit_walk)) {
+				mode = TransportMode.pt;
+			} else {
+				for (String drtMode: drtModes) {
+					if (mode.equals(drtMode + "_walk")) {// transit_walk / drt_walk / ... to be replaced by _fallback soon
+						mode = drtMode;
+					}
+				}
 			}
 			index = modeHierarchy.indexOf( mode ) ;
 			if ( index < 0 ) {
@@ -91,8 +91,8 @@ public final class AvoevInteractionActivityMainModeIdentifier implements MainMod
 				mainModeIndex = index ;
 			}
 		}
-		if ( mainModeIndex <= modeHierarchy.indexOf( TransportMode.transit_walk ) ) {
-			mainModeIndex = modeHierarchy.indexOf( TransportMode.walk ) ;
+		if (mainModeIndex == -1) {
+			throw new RuntimeException("know main mode found for trip " + planElements.toString() ) ;
 		}
 		return modeHierarchy.get( mainModeIndex ) ;
 	}
