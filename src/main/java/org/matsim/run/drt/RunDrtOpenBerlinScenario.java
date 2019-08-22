@@ -22,7 +22,6 @@ package org.matsim.run.drt;
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup.IntermodalAccessEgressModeSelection;
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup.IntermodalAccessEgressParameterSet;
-import ch.sbb.matsim.routing.pt.raptor.IntermodalAwareRouterModeIdentifier;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,8 +48,6 @@ import org.matsim.contrib.dvrp.run.DvrpQSimComponents;
 import org.matsim.core.config.CommandLine;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ModeParams;
-import org.matsim.core.config.groups.PlansCalcRouteConfigGroup.ModeRoutingParams;
 import org.matsim.core.config.groups.QSimConfigGroup.StarttimeInterpretation;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
@@ -240,13 +237,6 @@ public final class RunDrtOpenBerlinScenario {
 				configRaptor.addIntermodalAccessEgress(paramSetDrt);
 			}
 		}
-		// set up walk2 so we don't need walk in raptor:
-		double margUtlTravPt = config.planCalcScore().getModes().get( TransportMode.pt ).getMarginalUtilityOfTraveling();
-		config.plansCalcRoute().addModeRoutingParams( new ModeRoutingParams(  ).setMode( "walk2" ).setTeleportedModeSpeed(config.plansCalcRoute().getModeRoutingParams().get(TransportMode.walk).getTeleportedModeSpeed()) );
-		config.planCalcScore().addModeParams( new ModeParams("walk2").setMarginalUtilityOfTraveling( margUtlTravPt ) ); // like transit_walk ?!
-		
-		// why is this necessary? PtAlongALine2Test works without it.gl 2019-07-11
-		config.planCalcScore().addModeParams( new ModeParams(TransportMode.non_network_walk).setMarginalUtilityOfTraveling( margUtlTravPt ) );
 
 		return config ;
 	}
