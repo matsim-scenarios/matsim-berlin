@@ -29,7 +29,6 @@ import org.matsim.analysis.TransportPlanningMainModeIdentifier;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.PlanElement;
-import org.matsim.core.config.Config;
 import org.matsim.core.router.MainModeIdentifier;
 
 import com.google.inject.Inject;
@@ -46,7 +45,7 @@ public final class OpenBerlinIntermodalPtDrtRouterModeIdentifier implements Main
 
 	@Inject
 	public OpenBerlinIntermodalPtDrtRouterModeIdentifier() {
-		drtModes = Arrays.asList(TransportMode.drt, "Berlkoenig BC");
+		drtModes = Arrays.asList(TransportMode.drt, "BerlkoenigBC");
 		
 		modeHierarchy.add( TransportMode.walk ) ;
 		modeHierarchy.add( "bicycle" ); // TransportMode.bike is not registered as main mode, only "bicycle" ;

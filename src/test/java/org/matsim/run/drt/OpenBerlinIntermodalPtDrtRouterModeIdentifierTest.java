@@ -107,8 +107,8 @@ public class OpenBerlinIntermodalPtDrtRouterModeIdentifierTest {
 		
 		{
 			List<PlanElement> planElements = new ArrayList<>();
-			planElements.add(factory.createLeg("Berlkoenig BC" + "_walk"));
-			Assert.assertEquals("Wrong mode!", "Berlkoenig BC", mainModeIdentifier.identifyMainMode(planElements));
+			planElements.add(factory.createLeg("BerlkoenigBC" + "_walk"));
+			Assert.assertEquals("Wrong mode!", "BerlkoenigBC", mainModeIdentifier.identifyMainMode(planElements));
 		}
 		
 		log.info("Running testDrtPtFallbackModesRecognition... Done.");
@@ -142,9 +142,9 @@ public class OpenBerlinIntermodalPtDrtRouterModeIdentifierTest {
 		{
 			List<PlanElement> planElements = new ArrayList<>();
 			planElements.add(factory.createLeg(TransportMode.non_network_walk));
-			planElements.add(factory.createActivityFromLinkId("Berlkoenig BC interaction", null));
-			planElements.add(factory.createLeg("Berlkoenig BC"));
-			planElements.add(factory.createActivityFromLinkId("Berlkoenig BC interaction", null));
+			planElements.add(factory.createActivityFromLinkId("BerlkoenigBC interaction", null));
+			planElements.add(factory.createLeg("BerlkoenigBC"));
+			planElements.add(factory.createActivityFromLinkId("BerlkoenigBC interaction", null));
 			planElements.add(factory.createLeg(TransportMode.non_network_walk));
 			planElements.add(factory.createActivityFromLinkId(PtConstants.TRANSIT_ACTIVITY_TYPE, null));
 			planElements.add(factory.createLeg(TransportMode.pt));
@@ -168,9 +168,9 @@ public class OpenBerlinIntermodalPtDrtRouterModeIdentifierTest {
 			planElements.add(factory.createLeg(TransportMode.pt));
 			planElements.add(factory.createActivityFromLinkId(PtConstants.TRANSIT_ACTIVITY_TYPE, null));
 			planElements.add(factory.createLeg(TransportMode.non_network_walk));
-			planElements.add(factory.createActivityFromLinkId("Berlkoenig BC interaction", null));
-			planElements.add(factory.createLeg("Berlkoenig BC"));
-			planElements.add(factory.createActivityFromLinkId("Berlkoenig BC interaction", null));
+			planElements.add(factory.createActivityFromLinkId("BerlkoenigBC interaction", null));
+			planElements.add(factory.createLeg("BerlkoenigBC"));
+			planElements.add(factory.createActivityFromLinkId("BerlkoenigBC interaction", null));
 			planElements.add(factory.createLeg(TransportMode.non_network_walk));
 			Assert.assertEquals("Wrong mode!", TransportMode.pt, mainModeIdentifier.identifyMainMode(planElements));
 		}
