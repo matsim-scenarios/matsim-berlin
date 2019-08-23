@@ -55,10 +55,12 @@ public class RunGTFS2MATSimOpenBerlin {
 		//input data, https paths don't work probably due to old GTFS library :(
 		String gtfsZipFile = "/home/gregor/git/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/original-data/GTFS-VBB-20190820/GTFS-VBB-20190820.zip"; 
 		CoordinateTransformation ct = TransformationFactory.getCoordinateTransformation(TransformationFactory.WGS84, "EPSG:25833");
-		// choose last Thursday before timetable change (=end of GTFS feed) 
-		// -> hopefully no construction sites in GTFS for that date (>3 months from last GTFS update)
+		// choose date not too far away (e.g. on 2019-12-12 S2 is almost completey missing!), 
+		// but not too close either (diversions and interruptions due to short term construction work included in GTFS)
+		// -> hopefully no construction sites in GTFS for that date
 		// -> Thursday is more "typical" than Friday
-		LocalDate date = LocalDate.parse("2019-12-12"); 
+		// check date for construction work
+		LocalDate date = LocalDate.parse("2019-10-10"); 
 
 		//output files 
 		String scheduleFile = "transitSchedule.xml.gz";
@@ -86,6 +88,5 @@ public class RunGTFS2MATSimOpenBerlin {
 		new TransitScheduleWriter(scenario.getTransitSchedule()).writeFile(scheduleFile);
 		new VehicleWriterV1(scenario.getTransitVehicles()).writeFile(transitVehiclesFile);
 		
-		// TODO: There is a problem: There is only 1 departure on S2! Possibly more problems...
 	}
 }
