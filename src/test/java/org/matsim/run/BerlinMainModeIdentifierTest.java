@@ -30,6 +30,7 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.api.core.v01.population.PopulationFactory;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.router.MainModeIdentifierImpl;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.testcases.MatsimTestUtils;
 
@@ -46,17 +47,9 @@ public class BerlinMainModeIdentifierTest {
 	public final void test0() {
 		log.info("Running test0...");
 		
-		BerlinMainModeIdentifier mainModeIdentifier = new BerlinMainModeIdentifier();
+		MainModeIdentifierImpl mainModeIdentifier = new MainModeIdentifierImpl();
 		Scenario scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
 		PopulationFactory factory = scenario.getPopulation().getFactory();
-		
-		{
-			List<PlanElement> planElements = new ArrayList<>();
-			planElements.add(factory.createLeg(TransportMode.non_network_walk));
-			planElements.add(factory.createActivityFromLinkId("pt interaction", null));
-			planElements.add(factory.createLeg(TransportMode.non_network_walk));		
-			Assert.assertEquals("Wrong mode!", TransportMode.pt, mainModeIdentifier.identifyMainMode(planElements));
-		}
 		
 		{
 			List<PlanElement> planElements = new ArrayList<>();
