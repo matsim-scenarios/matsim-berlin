@@ -130,7 +130,7 @@
         <dependency>
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>matsim-gtfs</artifactId>
-			<version>12.0-SNAPSHOT</version>
+			<version>11.0</version>
 		</dependency>
 
 	      <!--The following is here since there was an upstream-->
