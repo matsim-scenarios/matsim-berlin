@@ -43,6 +43,10 @@ public class RunDrtOpenBerlinScenarioTest {
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
 			
+			// jvm on build server has less cores than we set in the input config file and would complain about that
+			config.global().setNumberOfThreads(1);
+			config.qsim().setNumberOfThreads(1);
+			
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 			// Decrease population to 0.1% sample 
 			List<Id<Person>> agentsToRemove = new ArrayList<>();
