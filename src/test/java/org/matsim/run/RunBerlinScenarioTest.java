@@ -65,7 +65,7 @@ public class RunBerlinScenarioTest {
 	@Test
 	public final void bTestConfig1() {
 		try {
-			String configFilename = "scenarios/berlin-v5.4-1pct/input/berlin-v5.4-1pct.config.xml";
+			String configFilename = "scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml";
 			final String[] args = {configFilename,
 					"--config:controler.runId", "test-run-ID",
 					"--config:controler.outputDirectory", utils.getOutputDirectory()};
@@ -84,7 +84,7 @@ public class RunBerlinScenarioTest {
 	@Test
 	public final void cTestConfig2() {
 		try {
-			String configFilename = "scenarios/berlin-v5.4-1pct/input/berlin-v5.4-1pct.config.xml";
+			String configFilename = "scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml";
 			final String[] args = {configFilename,
 					"--config:controler.runId", "test-run-ID",
 					"--config:controler.outputDirectory", utils.getOutputDirectory(),
@@ -106,7 +106,7 @@ public class RunBerlinScenarioTest {
 	@Test
 	public final void dTest1person1iteration() {
 		try {
-			final String[] args = {"scenarios/berlin-v5.4-1pct/input/berlin-v5.4-1pct.config.xml"};
+			final String[] args = {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"};
 			
 			Config config =  RunBerlinScenario.prepareConfig( args );
 			config.controler().setLastIteration(0);
@@ -139,7 +139,7 @@ public class RunBerlinScenarioTest {
 	@Test
 	public final void eTest1pctUntilIteration1() {
 		try {
-			final String[] args = {"scenarios/berlin-v5.4-1pct/input/berlin-v5.4-1pct.config.xml"};
+			final String[] args = {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"};
 			
 			Config config =  RunBerlinScenario.prepareConfig( args ) ;
 			config.controler().setLastIteration(1);

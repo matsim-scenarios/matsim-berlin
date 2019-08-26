@@ -30,7 +30,7 @@ public class RunBerlinScenarioIT{
 	@Test
 	public final void test10pctUntilIteration1() {
 		try {
-			final String[] args = {"scenarios/berlin-v5.4-10pct/input/berlin-v5.4-10pct.config.xml"};
+			final String[] args = {"scenarios/berlin-v5.5-10pct/input/berlin-v5.5-10pct.config.xml"};
 
 			Config config =  RunBerlinScenario.prepareConfig( args ) ;
 			config.controler().setLastIteration(1);
@@ -65,7 +65,7 @@ public class RunBerlinScenarioIT{
 
 		final int iteration = 40;
 		try {
-			final String[] args = {"scenarios/berlin-v5.4-1pct/input/berlin-v5.4-1pct.config.xml"};
+			final String[] args = {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"};
 
 			Config config = RunBerlinScenario.prepareConfig( args ) ;
 			config.controler().setLastIteration(iteration);

@@ -35,7 +35,7 @@ public class RunDrtOpenBerlinScenarioTest {
 	@Test
 	public final void eTest0_1pctUntilIteration3() {
 		try {
-			final String[] args = new String[0];// = {"./scenarios/berlin-v5.4-1pct/input/berlin-v5.4-1pct-Berlkoenig.config.xml"};
+			final String[] args = new String[0];// = {"./scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct-Berlkoenig.config.xml"};
 			
 			Config config = RunDrtOpenBerlinScenario.prepareConfig( args ) ;
 			config.controler().setLastIteration(3);
