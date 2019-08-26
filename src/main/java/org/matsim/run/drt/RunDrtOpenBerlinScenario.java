@@ -146,7 +146,7 @@ public final class RunDrtOpenBerlinScenario {
 					  "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlin-sav-v5.2-10pct/input/shp-berlkoenig-area/berlkoenig-area.shp" );
 			
 		} else {
-			config = RunBerlinScenario.prepareConfig( new String [] {"scenarios/berlin-v5.4-1pct/input/drt/berlin-drtA-v5.4-1pct-Berlkoenig.config.xml"} ) ;
+			config = RunBerlinScenario.prepareConfig( new String [] {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drtA-v5.5-1pct-Berlkoenig.config.xml"} ) ;
 
 			AvoevConfigGroup avoevConfigGroup = ConfigUtils.addOrGetModule( config, AvoevConfigGroup.class ) ;
 			avoevConfigGroup.setDrtServiceAreaShapeFileName(

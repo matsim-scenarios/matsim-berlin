@@ -7,8 +7,8 @@
 	<module name="controler" >
 		<param name="lastIteration" value="10" />
 		<param name="overwriteFiles" value="failIfDirectoryExists" />
-		<param name="runId" value="berlin-drtA-v5.4-1pct-Berlkoenig" />
-		<param name="outputDirectory" value="./output/berlin-drtA-v5.4-1pct-Berlkoenig" />
+		<param name="runId" value="berlin-drtA-v5.5-1pct-Berlkoenig" />
+		<param name="outputDirectory" value="./output/berlin-drtA-v5.5-1pct-Berlkoenig" />
 		<param name="writeEventsInterval" value="1" />
 		<param name="writePlansInterval" value="1" />
 	</module>
