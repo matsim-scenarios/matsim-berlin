@@ -10,8 +10,8 @@
 	<description>MATSim Open Berlin scenario project</description>
 	
 	<properties>
-	  <matsim.version>12.0-SNAPSHOT</matsim.version>
-	  <!--<matsim.version>12.0-2019w33-SNAPSHOT</matsim.version>-->
+	  <!-- <matsim.version>12.0-SNAPSHOT</matsim.version> -->
+	  <matsim.version>12.0-2019w34-SNAPSHOT</matsim.version>
 	</properties>
 
 	<repositories>
@@ -111,7 +111,7 @@
 			<!-- Note that this will also pick up the local version if that local version has com.github.XXX as groupId!-->
 			<groupId>com.github.vsp-gleich</groupId>
 			<artifactId>matsim-sbb-extensions</artifactId>
-			<version>11.6-vsp-SNAPSHOT</version>
+			<version>11.6-vsp-2019-08-26</version>
         </dependency>
             
 		<dependency>
