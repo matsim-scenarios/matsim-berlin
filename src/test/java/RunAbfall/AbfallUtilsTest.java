@@ -55,7 +55,7 @@ public class AbfallUtilsTest {
 	@Test
 	public final void testcreateCarrierMao() {
 		HashMap<String, Carrier> carrierMap = AbfallUtils.createCarrier();
-		Assert.assertEquals(4, carrierMap.size());
+		Assert.assertEquals(3, carrierMap.size());
 		Assert.assertTrue(carrierMap.containsKey("Nordring"));
 		//...
 	}
