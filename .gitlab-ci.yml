@@ -11,8 +11,9 @@ cache:
   paths:
     - .m2/repository
 
-build:
-  script: "mvn install -B --fail-at-end -B -Dmaven.test.redirectTestOutputToFile -Dmatsim.preferLocalDtds=true"
+# Not sure if needed as seperate job. KMT sep'19
+#build:
+#  script: "mvn install -B --fail-at-end -B -Dmaven.test.redirectTestOutputToFile -Dmatsim.preferLocalDtds=true"
   
 test:
   script: "mvn test -B --fail-at-end -B -Dmaven.test.redirectTestOutputToFile -Dmatsim.preferLocalDtds=true"
