@@ -49,13 +49,13 @@ public class Run_Abfall {
 
 	public static void main(String[] args) {
 
-		String shapeFileLocation = args[0];
+/*		String shapeFileLocation = args[0];
 		int jspritIterations = Integer.parseInt(args[1]);
 		double volumeDustbin = Double.parseDouble(args[2]); // in liter
 		double secondsServiceTimePerDustbin = Double.parseDouble(args[3]);
 		boolean electricCar = Boolean.parseBoolean(args[4]);
 		String outputLocation = args[5];
-
+*/
 		FleetSize fleetSize = null;
 		String day = null;
 
@@ -85,15 +85,15 @@ public class Run_Abfall {
 			break;
 		case berlinNetwork:
 			// Berlin scenario network
-			config.controler().setOutputDirectory(outputLocation);
-		//	config.controler().setOutputDirectory("output/Berlin_Neu/Montag/Hellersdorf_elektr5");
+//			config.controler().setOutputDirectory(outputLocation);	//for cluster
+			config.controler().setOutputDirectory("output/Berlin_Neu/Montag/Hellersdorf_elektr5");
 			config.network().setInputFile(berlin);
 			break;
 		default:
 			new RuntimeException("no network selected.");
 		}
 		int lastMATSimIteration = 0;
-//		int jspritIterations = 20;		//Moved to args[]
+		int jspritIterations = 20;		//Moved to args[] for cluster
 		config = AbfallUtils.prepareConfig(config, lastMATSimIteration);
 		Scenario scenario = ScenarioUtils.loadScenario(config);
 
@@ -102,21 +102,21 @@ public class Run_Abfall {
 		HashMap<String, Carrier> carrierMap = AbfallUtils.createCarrier();
 
 		// creates a garbage truck type and ads this type to the carrierVehicleTypes
-//		boolean electricCar = false;	//Moved to args[]
+		boolean electricCar = false;	//Moved to args[] for cluster
 		AbfallUtils.createAndAddVehicles(electricCar);
 
 		// 
 		Map<Id<Link>, ? extends Link> allLinks = scenario.getNetwork().getLinks();
 		HashMap<String, Id<Link>> garbageDumps = AbfallUtils.createDumpMap();
 
-		Collection<SimpleFeature> districtsWithGarbage = ShapeFileReader
-				.getAllFeatures(shapeFileLocation);
-//				Collection<SimpleFeature> districtsWithGarbage = ShapeFileReader
-//				.getAllFeatures(berlinDistrictsWithGarbageInformations);
+//		Collection<SimpleFeature> districtsWithGarbage = ShapeFileReader
+//				.getAllFeatures(shapeFileLocation);
+				Collection<SimpleFeature> districtsWithGarbage = ShapeFileReader
+				.getAllFeatures(berlinDistrictsWithGarbageInformations);
 		AbfallUtils.createMapWithLinksInDistricts(districtsWithGarbage, allLinks);
 
-//		double volumeDustbin = 1100; // in liter ////Moved to args[]
-//		double secondsServiceTimePerDustbin = 41; //Moved to args[]
+		double volumeDustbin = 1100; // in liter ////Moved to args[] for cluster
+		double secondsServiceTimePerDustbin = 41; //Moved to args[]	for cluster
 
 		switch (scenarioWahl) {
 		case chessboardTotalGarbageToCollect:
