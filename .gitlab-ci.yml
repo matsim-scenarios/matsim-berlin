@@ -15,6 +15,6 @@ build:
   script: "mvn install -B --fail-at-end -B -Dmaven.test.redirectTestOutputToFile -Dmatsim.preferLocalDtds=true"
   
 test:
-  script: "mvn test"
+  script: "mvn test -B --fail-at-end -B -Dmaven.test.redirectTestOutputToFile -Dmatsim.preferLocalDtds=true"
 
 # see http://stackoverflow.com/questions/33430487/how-to-use-gitlab-ci-to-build-a-java-maven-project
