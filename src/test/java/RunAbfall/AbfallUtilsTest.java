@@ -42,19 +42,19 @@ import org.matsim.vehicles.VehicleType;
  * @author nagel
  *
  */
-public class firstTest {
+public class AbfallUtilsTest {
 	
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 	
-	HashMap<String, Carrier>	carrierMap;
 	
 	@Before
 	public final void setUp() {
+	
 	}
 
 	@Test
 	public final void testcreateCarrierMao() {
-		carrierMap = AbfallUtils.createCarrier();
+		HashMap<String, Carrier> carrierMap = AbfallUtils.createCarrier();
 		Assert.assertEquals(4, carrierMap.size());
 		Assert.assertTrue(carrierMap.containsKey("Nordring"));
 		//...
