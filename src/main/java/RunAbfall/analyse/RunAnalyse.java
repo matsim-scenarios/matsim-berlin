@@ -16,7 +16,6 @@
  *                                                                         *
  * *********************************************************************** */
 
-
 package RunAbfall.analyse;
 
 import org.apache.log4j.Logger;
@@ -48,10 +47,8 @@ public class RunAnalyse {
 	private static final String dir_weSmallBinsElektro100it = "../../tubCloud/Shared/vsp_zerocuts/scenarios/Muellentsorgung/Mittwoch/e2_Mo_Small_Elektro_100it/";
 
 	private enum scenarioAuswahl {
-		moLargeBinsDiesel100it, moLargeBinsElektro100it,
-		moSmallBinsDiesel100it, moSmallBinsElektro100it,
-		weLargeBinsDiesel100it, weLargeBinsElektro100it,
-		weSmallBinsDiesel100it, weSmallBinsElektro100it,
+		moLargeBinsDiesel100it, moLargeBinsElektro100it, moSmallBinsDiesel100it, moSmallBinsElektro100it,
+		weLargeBinsDiesel100it, weLargeBinsElektro100it, weSmallBinsDiesel100it, weSmallBinsElektro100it,
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -63,6 +60,7 @@ public class RunAnalyse {
 		Map<Id<Person>, Double> personId2tourDistanceKm = new HashMap<>();
 		Map<Id<Person>, Integer> personId2tourNumCollections = new HashMap<>();
 		Map<Id<Person>, Double> personId2tourWasteCollectedTons = new HashMap<>();
+		Map<Id<Person>, Integer> personId2tourDurations = new HashMap<>();
 
 		switch (scenarioWahl) {
 		case moLargeBinsDiesel100it:
@@ -96,12 +94,13 @@ public class RunAnalyse {
 		log.info("Running analysis for " + scenarioWahl + " : " + inputDir);
 
 		Carriers carriers = new Carriers();
-		new CarrierPlanXmlReaderV2(carriers).readFile(new File(inputDir + "output_CarrierPlans.xml").getCanonicalPath());
+		new CarrierPlanXmlReaderV2(carriers)
+				.readFile(new File(inputDir + "output_CarrierPlans.xml").getCanonicalPath());
 
 		Network network = NetworkUtils.readNetwork(inputDir + "output_network.xml.gz");
 
-		for (Carrier carrier : carriers.getCarriers().values()){
-			double distanceTourKM ;
+		for (Carrier carrier : carriers.getCarriers().values()) {
+			double distanceTourKM;
 			int numCollections;
 			double wasteCollectedTons;
 			int tourNumber = 0;
@@ -119,6 +118,8 @@ public class RunAnalyse {
 				distanceTourKM = 0.0;
 				numCollections = 0;
 				wasteCollectedTons = 0.0;
+				int startTime = 10000000;
+				int endTime = 0;
 
 				List<Tour.TourElement> elements = scheduledTour.getTour().getTourElements();
 				for (Tour.TourElement element : elements) {
@@ -126,51 +127,64 @@ public class RunAnalyse {
 						numCollections++;
 						Tour.Pickup pickupElement = (Tour.Pickup) element;
 						String pickupShipmentId = pickupElement.getShipment().getId().toString();
-						wasteCollectedTons = wasteCollectedTons + (shipmentSizes.get(pickupShipmentId)/1000);
+						wasteCollectedTons = wasteCollectedTons + (shipmentSizes.get(pickupShipmentId) / 1000);
 					}
 					if (element instanceof Tour.Leg) {
 						Tour.Leg legElement = (Tour.Leg) element;
 						if (legElement.getRoute().getDistance() != 0)
-							distanceTourKM = distanceTourKM + RouteUtils.calcDistance((NetworkRoute) legElement.getRoute(),
-									0, 0, network)/1000;
+							distanceTourKM = distanceTourKM
+									+ RouteUtils.calcDistance((NetworkRoute) legElement.getRoute(), 0, 0, network)
+											/ 1000;
+						if (startTime > legElement.getExpectedDepartureTime())
+							startTime = (int) legElement.getExpectedDepartureTime();
+						if (endTime < (legElement.getExpectedDepartureTime() + legElement.getExpectedTransportTime()))
+							endTime = (int) (legElement.getExpectedDepartureTime()
+									+ legElement.getExpectedTransportTime());
 					}
 				}
 
-				Id<Person> personId = Id.create(carrier.getId().toString() + scheduledTour.getVehicle().getVehicleId().toString()+ tourNumber, Person.class);
+				Id<Person> personId = Id.create(
+						carrier.getId().toString() + scheduledTour.getVehicle().getVehicleId().toString() + tourNumber,
+						Person.class);
 				personId2tourDistanceKm.put(personId, distanceTourKM);
 				personId2tourNumCollections.put(personId, numCollections);
 				personId2tourWasteCollectedTons.put(personId, wasteCollectedTons);
+				personId2tourDurations.put(personId, endTime - startTime);
 
 				tourNumber++;
 			}
 		}
 
-		writeOutput(inputDir, personId2tourDistanceKm, personId2tourNumCollections, personId2tourWasteCollectedTons);
+		writeOutput(inputDir, personId2tourDistanceKm, personId2tourNumCollections, personId2tourWasteCollectedTons,
+				personId2tourDurations);
 
 		log.info("### Done.");
 
 	}
 
-	static void writeOutput(String directory, Map<Id<Person>, Double> personId2tourDistanceKm, Map<Id<Person>, Integer> personId2tourNumCollections, Map<Id<Person>, Double> personId2tourWasteCollectedTons){
+	static void writeOutput(String directory, Map<Id<Person>, Double> personId2tourDistanceKm,
+			Map<Id<Person>, Integer> personId2tourNumCollections,
+			Map<Id<Person>, Double> personId2tourWasteCollectedTons, Map<Id<Person>, Integer> personId2tourDurations) {
 		BufferedWriter writer;
 		File file;
-		file = new File(directory + "02_TourStatistics.txt");
+		file = new File(directory + "/03_TourStatistics.txt");
 		try {
 			writer = new BufferedWriter(new FileWriter(file, true));
 			String now = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").format(new Date());
-			writer.write("Tourenstatisitik erstellt am: " + now);
-			writer.newLine();
+			writer.write("Tourenstatisitik erstellt am: " + now + "\n\n");
 
-			//Headline
-			writer.write("Tour;distance (km);#ofCollections;waste Collected (tons)");
-			writer.newLine();
+			// Headline
+			writer.write(
+					"TourID\t\t\t\t\t\t\t\t\t\tduration hh:mm:ss\t\tdistance (km)\t\t#ofDeliveries\t\tdelivered Volume (m3)\n\n");
 
-			for (Id<Person> id :personId2tourDistanceKm.keySet()) {
-				Double tourDistance = personId2tourDistanceKm.get(id);
+			for (Id<Person> id : personId2tourDistanceKm.keySet()) {
+				Double tourDistance = (double) Math.round(personId2tourDistanceKm.get(id) / 1000);
 				Integer tourNumCollections = personId2tourNumCollections.get(id);
 				Double tourWasteCollected = personId2tourWasteCollectedTons.get(id);
+				int duration = personId2tourDurations.get(id);
 
-				writer.write(id + ";" + tourDistance + ";" + tourNumCollections + ";" + tourWasteCollected);
+				writer.write(id + "\t\t" + timeTransmission(duration) + "\t\t\t\t\t" + tourDistance + "\t\t\t\t"
+						+ tourNumCollections + "\t\t\t\t\t" + tourWasteCollected);
 				writer.newLine();
 
 			}
@@ -182,5 +196,12 @@ public class RunAnalyse {
 		}
 
 		log.info("Output geschrieben");
+	}
+
+	public static String timeTransmission(int duration) {
+		int stunden = (int) duration / 3600;
+		int minuten = (int) (duration - stunden * 3600) / 60;
+		int sekunden = duration - stunden * 3600 - minuten * 60;
+		return stunden + ":" + minuten + ":" + sekunden;
 	}
 }
