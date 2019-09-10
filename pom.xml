@@ -130,13 +130,13 @@
         <!-- <dependency>
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>matsim-gtfs</artifactId>
-			<version>11.0</version>
+			<version>11.1-SNAPSHOT</version>
 		</dependency>-->
 		<!--  jitpack naming -->
 		<dependency>
 	    	<groupId>com.github.matsim-org</groupId>
 	    	<artifactId>GTFS2MATSim</artifactId>
-	    	<version>11.0</version>
+	    	<version>master-cc5a774c4d-1</version>
 		</dependency>
 
 	      <!--The following is here since there was an upstream-->
