@@ -300,7 +300,7 @@ public class RunGTFS2MATSimOpenBerlin {
 				
 				// create vehicles for Departures
 				for (Departure departure: route.getDepartures().values()) {
-					Vehicle veh = vb.createVehicle(Id.create("tr_" + route.getId().toString() + "_" + Long.toString(routeVehId++), Vehicle.class), lineVehicleType);
+					Vehicle veh = vb.createVehicle(Id.create("pt_" + route.getId().toString() + "_" + Long.toString(routeVehId++), Vehicle.class), lineVehicleType);
 					scenario.getTransitVehicles().addVehicle(veh);
 					departure.setVehicleId(veh.getId());
 				}
