@@ -94,24 +94,7 @@ public class RunGTFS2MATSimOpenBerlin {
 		new MatsimNetworkReader(scenario.getNetwork()).readFile("/home/gregor/git/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/input/berlin-v5-network.xml.gz");
 		
 		//remove existing pt network (nodes and links)
-		NetworkFilterManager nfmPT = new NetworkFilterManager(scenario.getNetwork());
-		nfmPT.addLinkFilter(new NetworkLinkFilter() {
-			
-			@Override
-			public boolean judgeLink(Link l) {
-				if (l.getId().toString().contains("pt_")) return false;
-				else return true;
-			}
-		});
-		nfmPT.addNodeFilter(new NetworkNodeFilter() {
-
-			@Override
-			public boolean judgeNode(Node n) {
-				if (n.getId().toString().contains("pt_")) return false;
-				else return true;
-			}
-		});
-		Network networkWoPt = nfmPT.applyFilters();
+		Network networkWoPt = removeExistingPtFromNetwork(scenario.getNetwork(), "pt_");
 		new NetworkWriter(networkWoPt).write(networkFile + "_network_filtered_woNewPt.xml.gz");
 		
 		//Create a network around the schedule
@@ -135,5 +118,27 @@ public class RunGTFS2MATSimOpenBerlin {
 		new TransitScheduleWriter(scenario.getTransitSchedule()).writeFile(scheduleFile);
 		new VehicleWriterV1(scenario.getTransitVehicles()).writeFile(transitVehiclesFile);
 		
+	}
+
+	private static Network removeExistingPtFromNetwork(Network network, String ptNetworkIdentifier) {
+		NetworkFilterManager nfmPT = new NetworkFilterManager(network);
+		nfmPT.addLinkFilter(new NetworkLinkFilter() {
+			
+			@Override
+			public boolean judgeLink(Link l) {
+				if (l.getId().toString().contains(ptNetworkIdentifier)) return false;
+				else return true;
+			}
+		});
+		nfmPT.addNodeFilter(new NetworkNodeFilter() {
+
+			@Override
+			public boolean judgeNode(Node n) {
+				if (n.getId().toString().contains(ptNetworkIdentifier)) return false;
+				else return true;
+			}
+		});
+		Network networkWoPt = nfmPT.applyFilters();
+		return networkWoPt;
 	}
 }
