@@ -268,7 +268,7 @@ public class RunGTFS2MATSimOpenBerlin {
 							"; gtfs agency was " + (String) line.getAttributes().getAttribute("gtfs_agency_id"));
 					throw new RuntimeException("invalid transit agency");
 				}
-				linkFreespeed = agencyId == 796 ? 30 * 3.6 : 50 * 3.6;
+				linkFreespeed = agencyId == 796 ? 30 / 3.6 : 50 / 3.6;
 				break;
 			case 900: 
 				lineVehicleType = tramVehicleType;
