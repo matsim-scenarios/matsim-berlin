@@ -31,7 +31,10 @@ import org.matsim.api.core.v01.population.PopulationWriter;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.gbl.Gbl;
+import org.matsim.core.population.algorithms.TripsToLegsAlgorithm;
 import org.matsim.core.population.routes.NetworkRoute;
+import org.matsim.core.router.MainModeIdentifierImpl;
+import org.matsim.core.router.StageActivityTypesImpl;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.pt.router.TransitActsRemover;
 
@@ -53,9 +56,10 @@ public class RemovePtRoutes {
 		
 		for (Person person: scenario.getPopulation().getPersons().values()) {
 			for (Plan plan: person.getPlans()) {
-				new TransitActsRemover().run(plan);
+				new TransitActsRemover().run(plan);			
 				
-				// TODO: Better TripsToLegsAlgorithm??
+				// TODO: Better TripsToLegsAlgorithm? Affects not only pt trips, but all trips, so not useable yet here,
+				// new TripsToLegsAlgorithm(new StageActivityTypesImpl(), new MainModeIdentifierImpl()).run(plan);
 				
 				// check if there are references to the old now replaced pseudo pt network
 				for (PlanElement pe : plan.getPlanElements()){
