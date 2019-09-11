@@ -239,17 +239,17 @@ public class RunGTFS2MATSimOpenBerlin {
 			// In GTFS-VBB-20181214.zip some RE lines are wrongly attributed as type 700 (bus)!
 			case 100: 
 				lineVehicleType = reRbVehicleType;
-				linkFreespeed = 100.0 * 3.6;
+				linkFreespeed = 100.0 / 3.6;
 				stopFilter = "station_S/U/RE/RB";
 				break;
 			case 109: 
 				lineVehicleType = sBahnVehicleType;
-				linkFreespeed = 60.0 * 3.6;
+				linkFreespeed = 60.0 / 3.6;
 				stopFilter = "station_S/U/RE/RB";
 				break;
 			case 400: 
 				lineVehicleType = uBahnVehicleType;
-				linkFreespeed = 50.0 * 3.6;
+				linkFreespeed = 50.0 / 3.6;
 				stopFilter = "station_S/U/RE/RB";
 				break;
 			case 3: // bus, same as 700
@@ -272,11 +272,11 @@ public class RunGTFS2MATSimOpenBerlin {
 				break;
 			case 900: 
 				lineVehicleType = tramVehicleType;
-				linkFreespeed = 30.0 * 3.6;
+				linkFreespeed = 30.0 / 3.6;
 				break;
 			case 1000: 
 				lineVehicleType = ferryVehicleType;
-				linkFreespeed = 30.0 * 3.6;
+				linkFreespeed = 30.0 / 3.6;
 				break;
 			default:
 				log.error("unknown transit mode! Line id was " + line.getId().toString() + 
