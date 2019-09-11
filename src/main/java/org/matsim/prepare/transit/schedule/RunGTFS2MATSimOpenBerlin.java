@@ -94,7 +94,7 @@ public class RunGTFS2MATSimOpenBerlin {
 		new MatsimNetworkReader(scenario.getNetwork()).readFile("/home/gregor/git/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/input/berlin-v5-network.xml.gz");
 		
 		//remove existing pt network (nodes and links)
-		Network networkWoPt = removeExistingPtFromNetwork(scenario.getNetwork(), "pt_");
+		Network networkWoPt = getNetworkWOExistingPtLinksAndNodes(scenario.getNetwork(), "pt_");
 		new NetworkWriter(networkWoPt).write(networkFile + "_network_filtered_woNewPt.xml.gz");
 		
 		//Create a network around the schedule
@@ -120,7 +120,7 @@ public class RunGTFS2MATSimOpenBerlin {
 		
 	}
 
-	private static Network removeExistingPtFromNetwork(Network network, String ptNetworkIdentifier) {
+	private static Network getNetworkWOExistingPtLinksAndNodes(Network network, String ptNetworkIdentifier) {
 		NetworkFilterManager nfmPT = new NetworkFilterManager(network);
 		nfmPT.addLinkFilter(new NetworkLinkFilter() {
 			
