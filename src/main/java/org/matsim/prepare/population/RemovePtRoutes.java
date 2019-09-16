@@ -19,8 +19,11 @@
 
 package org.matsim.prepare.population;
 
+import java.util.List;
+
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
@@ -31,12 +34,13 @@ import org.matsim.api.core.v01.population.PopulationWriter;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.gbl.Gbl;
-import org.matsim.core.population.algorithms.TripsToLegsAlgorithm;
+import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.router.MainModeIdentifierImpl;
 import org.matsim.core.router.StageActivityTypesImpl;
+import org.matsim.core.router.TripStructureUtils;
+import org.matsim.core.router.TripStructureUtils.Trip;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.pt.router.TransitActsRemover;
 
 /**
  * 
@@ -56,10 +60,13 @@ public class RemovePtRoutes {
 		
 		for (Person person: scenario.getPopulation().getPersons().values()) {
 			for (Plan plan: person.getPlans()) {
-				new TransitActsRemover().run(plan);			
+				// new TransitActsRemover().run(plan); // converts pt trips to a single non_network_walk leg :-(
 				
-				// TODO: Better TripsToLegsAlgorithm? Affects not only pt trips, but all trips, so not useable yet here,
+				// TripsToLegsAlgorithm affects not only pt trips, but all trips, so not useable yet here,
 				// new TripsToLegsAlgorithm(new StageActivityTypesImpl(), new MainModeIdentifierImpl()).run(plan);
+				
+				// use adapted copy of TripsToLegsAlgorithm.run() to restrict to pt trips
+				run(plan);
 				
 				// check if there are references to the old now replaced pseudo pt network
 				for (PlanElement pe : plan.getPlanElements()){
@@ -89,4 +96,21 @@ public class RemovePtRoutes {
 		popWriter.write("berlin-v5.4-1pct.plans_wo_PtRoutes.xml.gz");
 	}
 
+	private static void run(final Plan plan) {
+		final List<PlanElement> planElements = plan.getPlanElements();
+		final List<Trip> trips = TripStructureUtils.getTrips( plan , new StageActivityTypesImpl() );
+
+		for ( Trip trip : trips ) {
+			final List<PlanElement> fullTrip =
+				planElements.subList(
+						planElements.indexOf( trip.getOriginActivity() ) + 1,
+						planElements.indexOf( trip.getDestinationActivity() ));
+			final String mode = (new MainModeIdentifierImpl()).identifyMainMode( fullTrip );
+			if (mode.equals(TransportMode.pt)) {
+				fullTrip.clear();
+				fullTrip.add( PopulationUtils.createLeg(mode) );
+				if ( fullTrip.size() != 1 ) throw new RuntimeException( fullTrip.toString() );
+			}
+		}
+	}
 }
