@@ -43,8 +43,8 @@ import org.matsim.vehicles.VehicleType;
 
 public class RunOfflineAirPollutionAnalysis {
 	
-	final static String runDirectory = "public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/";	
-	final static String runId = "berlin-v5.4-1pct";
+	final static String runDirectory = "public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/output-berlin-v5.4-10pct/";	
+	final static String runId = "berlin-v5.4-10pct";
 
 	final static String hbefaFileCold = "shared-svn/projects/detailedEval/matsim-input-files/hbefa-files/v3.2/EFA_ColdStart_vehcat_2005average.txt";
 	final static String hbefaFileWarm = "shared-svn/projects/detailedEval/matsim-input-files/hbefa-files/v3.2/EFA_HOT_vehcat_2005average.txt";
@@ -71,7 +71,7 @@ public class RunOfflineAirPollutionAnalysis {
 		eConfig.setHbefaRoadTypeSource(HbefaRoadTypeSource.fromLinkAttributes);
 		eConfig.setNonScenarioVehicles(NonScenarioVehicles.ignore);
 		
-		final String emissionEventOutputFile = rootDirectory + runDirectory + runId + "." + config.controler().getLastIteration() + ".emission.events.offline.xml.gz";
+		final String emissionEventOutputFile = rootDirectory + runDirectory + runId + ".emission.events.offline.xml.gz";
 		final String eventsFile = rootDirectory + runDirectory + runId + ".output_events.xml.gz";
 		
 		Scenario scenario = ScenarioUtils.loadScenario(config);
@@ -144,7 +144,7 @@ public class RunOfflineAirPollutionAnalysis {
 				bind( EventsManager.class ).toInstance( eventsManager );
 				bind( EmissionModule.class ) ;
 			}
-		};;
+		};
 
 		com.google.inject.Injector injector = Injector.createInjector(config, module);
 
