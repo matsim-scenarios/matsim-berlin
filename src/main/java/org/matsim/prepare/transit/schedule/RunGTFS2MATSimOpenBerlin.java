@@ -22,6 +22,7 @@
  */
 package org.matsim.prepare.transit.schedule;
 
+import java.io.File;
 import java.time.LocalDate;
 
 import org.apache.log4j.Logger;
@@ -33,6 +34,9 @@ import org.matsim.api.core.v01.network.Node;
 import org.matsim.contrib.gtfs.RunGTFS2MATSim;
 import org.matsim.contrib.gtfs.TransitSchedulePostProcessTools;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.controler.AbstractModule;
+import org.matsim.core.controler.Controler;
+import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.network.filter.NetworkFilterManager;
 import org.matsim.core.network.filter.NetworkLinkFilter;
 import org.matsim.core.network.filter.NetworkNodeFilter;
@@ -42,6 +46,7 @@ import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
+import org.matsim.prepare.transit.schedule.CheckPtDelays.DelayRecord;
 import org.matsim.pt.transitSchedule.api.Departure;
 import org.matsim.pt.transitSchedule.api.TransitLine;
 import org.matsim.pt.transitSchedule.api.TransitRoute;
@@ -59,6 +64,8 @@ import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleWriterV1;
 import org.matsim.vehicles.VehiclesFactory;
 import org.matsim.vehicles.VehicleType.DoorOperationMode;
+
+import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 
 /**
  * @author  vsp-gleich
@@ -127,6 +134,23 @@ public class RunGTFS2MATSimOpenBerlin {
 		new TransitScheduleWriter(scenario.getTransitSchedule()).writeFile(scheduleFile);
 		new VehicleWriterV1(scenario.getTransitVehicles()).writeFile(transitVehiclesFile);
 		
+		// test for delays
+		String outputDirectory = "RunGTFS2MATSimOpenBerlin/runOneIteration";
+		runOneIteration(scenario, outputDirectory);
+		CheckPtDelays delayChecker = new CheckPtDelays(outputDirectory + "/output_events.xml.gz", scheduleFile);
+		delayChecker.run();
+		DelayRecord minDelay = delayChecker.getMinDelay();
+		DelayRecord maxDelay = delayChecker.getMaxDelay();
+		log.warn(minDelay);
+		if (minDelay.getDelay() < -1) {
+			log.warn(delayChecker.minDelayPerTransitLine());
+		}
+		log.warn(maxDelay);
+		if (maxDelay.getDelay() > 1) {
+			log.warn(delayChecker.maxDelayPerTransitLine());
+		}
+		
+		// delays up to 60s are probably ok, because most input gtfs schedule data has an accuracy of only one minute
 	}
 
 	private static Network getNetworkWOExistingPtLinksAndNodes(Network network, String ptNetworkIdentifier) {
@@ -219,7 +243,11 @@ public class RunGTFS2MATSimOpenBerlin {
 		// set link speeds and create vehicles according to pt mode
 		for (TransitLine line: scenario.getTransitSchedule().getTransitLines().values()) {
 			VehicleType lineVehicleType;
-			double linkFreespeed;
+			// the idea is to differentiate between short links (low average speed due to acceleration and braking)
+			// and long links longer than 1km (almost speed limit) 
+			double shortLinkFreespeed;
+			double longLinkFreespeed;
+			double shortLongLinkThreshold;
 			String stopFilter = ""; 
 			
 			// identify veh type / mode using gtfs route type (3-digit code, also found at the end of the line id (gtfs: route_id))
@@ -232,24 +260,50 @@ public class RunGTFS2MATSimOpenBerlin {
 				throw new RuntimeException("unknown transit mode");
 			}
 			
+			int agencyId;
+			try {
+				agencyId = Integer.parseInt( (String) line.getAttributes().getAttribute("gtfs_agency_id"));
+			} catch (NumberFormatException e) {
+				log.error("invalid transit agency! Line id was " + line.getId().toString() + 
+						"; gtfs agency was " + (String) line.getAttributes().getAttribute("gtfs_agency_id"));
+				throw new RuntimeException("invalid transit agency");
+			}
+			
 			switch (gtfsTransitType) {
 			// the vbb gtfs file generally uses the new gtfs route types, but some lines use the old enum in the range 0 to 7
 			// see https://sites.google.com/site/gtfschanges/proposals/route-type 
 			// and https://developers.google.com/transit/gtfs/reference/#routestxt
 			// In GTFS-VBB-20181214.zip some RE lines are wrongly attributed as type 700 (bus)!
+			
+			// freespeed are set to make sure that no transit service is delayed 
+			// and arrivals are as punctual (not too early) as possible
 			case 100: 
 				lineVehicleType = reRbVehicleType;
-				linkFreespeed = 100.0 / 3.6;
+				// free speed:  RE2 Brand->Koenigs Wusterhausen ca. 140km/h -> 5 min delay at 100km/h!
+				// however: RE7 Ostkreuz -> Schoenefeld ca. 5 min early arrival at 100km/h 
+				// vmax is typically <= 160km/h
+				shortLinkFreespeed = 80.0 / 3.6;
+				longLinkFreespeed = 150.0 / 3.6;
+				shortLongLinkThreshold = 3000.0;
 				stopFilter = "station_S/U/RE/RB";
 				break;
 			case 109: 
 				lineVehicleType = sBahnVehicleType;
-				linkFreespeed = 60.0 / 3.6;
+				// vmax is typically <= 100km/h in Berlin, S-Bahn in other cities is rather similar to RB/RE in Berlin
+				// (vmax 120/140/160km/h)
+				// TODO check S Bahn Berlin has still the same agency id?
+				int sbahnBerlinAcencyId = 1;
+				shortLinkFreespeed = agencyId == sbahnBerlinAcencyId ? 50 / 3.6 : 60 / 3.6;
+				longLinkFreespeed = agencyId == sbahnBerlinAcencyId ? 80 / 3.6 : 150 / 3.6;
+				shortLongLinkThreshold = agencyId == sbahnBerlinAcencyId ? 1500.0 : 3000.0;
 				stopFilter = "station_S/U/RE/RB";
 				break;
 			case 400: 
 				lineVehicleType = uBahnVehicleType;
-				linkFreespeed = 50.0 / 3.6;
+				// vmax is typically <= 70km/h
+				shortLinkFreespeed = 40.0 / 3.6;
+				longLinkFreespeed = 60.0 / 3.6;
+				shortLongLinkThreshold = 1000;
 				stopFilter = "station_S/U/RE/RB";
 				break;
 			case 3: // bus, same as 700
@@ -259,8 +313,8 @@ public class RunGTFS2MATSimOpenBerlin {
 				// differentiate between rural and urban buses using the agency which runs them, i.e.
 				// urban 30km/h: BVG (id=796 in GTFS-VBB-20181214.zip)
 				// rural 50km/h: all other agencies
+				// vmax is typically <= 80km/h
 				// TODO check BVG has still the same agency id?
-				int agencyId;
 				try {
 					agencyId = Integer.parseInt( (String) line.getAttributes().getAttribute("gtfs_agency_id"));
 				} catch (NumberFormatException e) {
@@ -268,15 +322,23 @@ public class RunGTFS2MATSimOpenBerlin {
 							"; gtfs agency was " + (String) line.getAttributes().getAttribute("gtfs_agency_id"));
 					throw new RuntimeException("invalid transit agency");
 				}
-				linkFreespeed = agencyId == 796 ? 30 / 3.6 : 50 / 3.6;
+				int bvgAcencyId = 796;
+				shortLinkFreespeed = agencyId == bvgAcencyId ? 40 / 3.6 : 60 / 3.6;
+				longLinkFreespeed = agencyId == bvgAcencyId ? 60 / 3.6 : 90 / 3.6;
+				shortLongLinkThreshold = agencyId == bvgAcencyId ? 600.0 : 1500.0;
 				break;
 			case 900: 
 				lineVehicleType = tramVehicleType;
-				linkFreespeed = 30.0 / 3.6;
+				// vmax is typically <= 70km/h
+				shortLinkFreespeed = 30.0 / 3.6;
+				longLinkFreespeed = 60.0 / 3.6;
+				shortLongLinkThreshold = 600;
 				break;
 			case 1000: 
 				lineVehicleType = ferryVehicleType;
-				linkFreespeed = 30.0 / 3.6;
+				shortLinkFreespeed = 25.0 / 3.6;
+				longLinkFreespeed = 25.0 / 3.6;
+				shortLongLinkThreshold = 1000;
 				break;
 			default:
 				log.error("unknown transit mode! Line id was " + line.getId().toString() + 
@@ -291,11 +353,23 @@ public class RunGTFS2MATSimOpenBerlin {
 				// Should different transit modes use the same link, the higher freespeed will 
 				NetworkRoute networkRoute = route.getRoute();
 				
-				increaseLinkFreespeedIfLower(network.getLinks().get(networkRoute.getStartLinkId()), linkFreespeed);
-				increaseLinkFreespeedIfLower(network.getLinks().get(networkRoute.getEndLinkId()), linkFreespeed);
+				if (network.getLinks().get(networkRoute.getStartLinkId()).getLength() < shortLongLinkThreshold) {
+					increaseLinkFreespeedIfLower(network.getLinks().get(networkRoute.getStartLinkId()), shortLinkFreespeed);
+				} else {
+					increaseLinkFreespeedIfLower(network.getLinks().get(networkRoute.getStartLinkId()), longLinkFreespeed);
+				}
+				if (network.getLinks().get(networkRoute.getEndLinkId()).getLength() < shortLongLinkThreshold) {
+					increaseLinkFreespeedIfLower(network.getLinks().get(networkRoute.getEndLinkId()), shortLinkFreespeed);
+				} else {
+					increaseLinkFreespeedIfLower(network.getLinks().get(networkRoute.getEndLinkId()), longLinkFreespeed);
+				}
 				
 				for (Id<Link> linkId: networkRoute.getLinkIds()) {
-					increaseLinkFreespeedIfLower(network.getLinks().get(linkId), linkFreespeed);
+					if (network.getLinks().get(linkId).getLength() < shortLongLinkThreshold) {
+						increaseLinkFreespeedIfLower(network.getLinks().get(linkId), shortLinkFreespeed);
+					} else {
+						increaseLinkFreespeedIfLower(network.getLinks().get(linkId), longLinkFreespeed);
+					}
 				}
 				
 				// create vehicles for Departures
@@ -318,6 +392,29 @@ public class RunGTFS2MATSimOpenBerlin {
 	}
 	
 	private static void increaseLinkFreespeedIfLower(Link link, double newFreespeed) {
-		if (link.getFreespeed() < newFreespeed) link.setFreespeed(newFreespeed); 
+		if (link.getFreespeed() < newFreespeed) {
+			link.setFreespeed(newFreespeed); 
+		}
+	}
+	
+	private static void runOneIteration(Scenario scenario, String outputDirectory) {
+		new File(outputDirectory).mkdirs();
+		scenario.getConfig().controler().setOutputDirectory(outputDirectory);
+		scenario.getConfig().controler().setLastIteration(0);
+		scenario.getConfig().controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
+		
+		scenario.getConfig().transit().setUseTransit(true);
+		
+		Controler controler = new Controler( scenario );
+		
+		// use the sbb pt raptor router which takes less time to build a transit router network
+		controler.addOverridingModule( new AbstractModule() {
+			@Override
+			public void install() {
+				install( new SwissRailRaptorModule() );
+			}
+		} );
+		
+		controler.run();
 	}
 }
