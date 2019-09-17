@@ -69,9 +69,11 @@ import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 
 /**
  * @author  vsp-gleich
- * This is an example script that utilizes GTFS2MATSim and creates a pseudo network and vehicles using MATSim standard API functionality.
+ * This is an script that utilizes GTFS2MATSim and creates a pseudo network and vehicles using MATSim standard API functionality.
  * 
- * copy from GTFS2MATSim repository, adapted for Berlin file paths
+ * It then adapts the link freespeeds of the pt pseudo network to reduce pt delays and early arrivals. This is not perfect.
+ * Check manually after running, e.g. using the log output on maximum delays per TransitLine.
+ * 
  */
 
 public class RunGTFS2MATSimOpenBerlin {
