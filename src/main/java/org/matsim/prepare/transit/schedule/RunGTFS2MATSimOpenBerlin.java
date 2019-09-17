@@ -95,10 +95,11 @@ public class RunGTFS2MATSimOpenBerlin {
 		// check date for construction work in BVG Navi booklet: 18-20 Dec'2018 seemed best over the period from Dec'2018 to Sep'2019
 		LocalDate date = LocalDate.parse("2018-12-20"); 
 
-		//output files 
-		String scheduleFile = "transitSchedule.xml.gz";
-		String networkFile = "network.xml.gz";
-		String transitVehiclesFile ="transitVehicles.xml.gz";
+		//output files
+		String outputDirectory = "RunGTFS2MATSimOpenBerlin";
+		String networkFile = outputDirectory + "/berlin-v5.5-network.xml.gz";
+		String scheduleFile = outputDirectory + "/berlin-v5.5-transit-schedule.xml.gz";
+		String transitVehiclesFile = outputDirectory + "/berlin-v5.5-transit-vehicles.xml.gz";
 		
 		//Convert GTFS
 		RunGTFS2MATSim.convertGtfs(gtfsZipFile, scheduleFile, date, ct, false);
@@ -116,7 +117,7 @@ public class RunGTFS2MATSimOpenBerlin {
 		
 		//remove existing pt network (nodes and links)
 		Network networkWoPt = getNetworkWOExistingPtLinksAndNodes(scenario.getNetwork(), "pt_");
-		new NetworkWriter(networkWoPt).write(networkFile + "_network_filtered_woNewPt.xml.gz");
+		new NetworkWriter(networkWoPt).write(outputDirectory + "network_filtered_woNewPt.xml.gz");
 		
 		//Create a network around the schedule and transit vehicles
 		scenario = getScenarioWithPseudoPtNetworkAndTransitVehicles(networkWoPt, scenario.getTransitSchedule(), "pt_");
@@ -137,9 +138,9 @@ public class RunGTFS2MATSimOpenBerlin {
 		new VehicleWriterV1(scenario.getTransitVehicles()).writeFile(transitVehiclesFile);
 		
 		// test for delays
-		String outputDirectory = "RunGTFS2MATSimOpenBerlin/runOneIteration";
-		runOneIteration(scenario, outputDirectory);
-		CheckPtDelays delayChecker = new CheckPtDelays(outputDirectory + "/output_events.xml.gz", scheduleFile);
+		String testRunOutputDirectory = outputDirectory + "/runOneIteration";
+		runOneIteration(scenario, testRunOutputDirectory);
+		CheckPtDelays delayChecker = new CheckPtDelays(testRunOutputDirectory + "/output_events.xml.gz", scheduleFile);
 		delayChecker.run();
 		DelayRecord minDelay = delayChecker.getMinDelay();
 		DelayRecord maxDelay = delayChecker.getMaxDelay();
