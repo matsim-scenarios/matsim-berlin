@@ -24,6 +24,7 @@ package org.matsim.prepare.transit.schedule;
 
 import java.io.File;
 import java.time.LocalDate;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -42,7 +43,6 @@ import org.matsim.core.network.filter.NetworkLinkFilter;
 import org.matsim.core.network.filter.NetworkNodeFilter;
 import org.matsim.core.network.io.MatsimNetworkReader;
 import org.matsim.core.network.io.NetworkWriter;
-import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
@@ -144,11 +144,17 @@ public class RunGTFS2MATSimOpenBerlin {
 		delayChecker.run();
 		DelayRecord minDelay = delayChecker.getMinDelay();
 		DelayRecord maxDelay = delayChecker.getMaxDelay();
-		log.warn(minDelay);
+		log.warn("min delay: " + minDelay);
+		log.warn("average of negatively delayed over total number of arrivals and departures "
+				+ delayChecker.getAverageOfNegativelyDelayedOverTotalNumberOfRecords() + " s");
 		if (minDelay.getDelay() < -1) {
 			log.warn(delayChecker.minDelayPerTransitLine());
 		}
-		log.warn(maxDelay);
+		log.warn("max delay: " + maxDelay);
+		log.warn("average of positively delayed over positively delayed arrivals and departures "
+				+ delayChecker.getAverageOfPositivelyDelayedOverPositivelyDelayed() + " s");
+		log.warn("average of positively delayed over total number of arrivals and departures "
+				+ delayChecker.getAverageOfPositivelyDelayedOverTotalNumberOfRecords() + " s");
 		if (maxDelay.getDelay() > 1) {
 			log.warn(delayChecker.maxDelayPerTransitLine());
 		}
@@ -246,11 +252,6 @@ public class RunGTFS2MATSimOpenBerlin {
 		// set link speeds and create vehicles according to pt mode
 		for (TransitLine line: scenario.getTransitSchedule().getTransitLines().values()) {
 			VehicleType lineVehicleType;
-			// the idea is to differentiate between short links (low average speed due to acceleration and braking)
-			// and long links longer than 1km (almost speed limit) 
-			double shortLinkFreespeed;
-			double longLinkFreespeed;
-			double shortLongLinkThreshold;
 			String stopFilter = ""; 
 			
 			// identify veh type / mode using gtfs route type (3-digit code, also found at the end of the line id (gtfs: route_id))
@@ -282,66 +283,27 @@ public class RunGTFS2MATSimOpenBerlin {
 			// and arrivals are as punctual (not too early) as possible
 			case 100: 
 				lineVehicleType = reRbVehicleType;
-				// free speed:  RE2 Brand->Koenigs Wusterhausen ca. 140km/h -> 5 min delay at 100km/h!
-				// however: RE7 Ostkreuz -> Schoenefeld ca. 5 min early arrival at 100km/h 
-				// vmax is typically <= 160km/h
-				shortLinkFreespeed = 80.0 / 3.6;
-				longLinkFreespeed = 150.0 / 3.6;
-				shortLongLinkThreshold = 3000.0;
 				stopFilter = "station_S/U/RE/RB";
 				break;
 			case 109: 
+				// S-Bahn-Berlin is agency id 1
 				lineVehicleType = sBahnVehicleType;
-				// vmax is typically <= 100km/h in Berlin, S-Bahn in other cities is rather similar to RB/RE in Berlin
-				// (vmax 120/140/160km/h)
-				// TODO check S Bahn Berlin has still the same agency id?
-				int sbahnBerlinAcencyId = 1;
-				shortLinkFreespeed = agencyId == sbahnBerlinAcencyId ? 50 / 3.6 : 60 / 3.6;
-				longLinkFreespeed = agencyId == sbahnBerlinAcencyId ? 80 / 3.6 : 150 / 3.6;
-				shortLongLinkThreshold = agencyId == sbahnBerlinAcencyId ? 1500.0 : 3000.0;
 				stopFilter = "station_S/U/RE/RB";
 				break;
 			case 400: 
 				lineVehicleType = uBahnVehicleType;
-				// vmax is typically <= 70km/h
-				shortLinkFreespeed = 40.0 / 3.6;
-				longLinkFreespeed = 60.0 / 3.6;
-				shortLongLinkThreshold = 1000;
 				stopFilter = "station_S/U/RE/RB";
 				break;
 			case 3: // bus, same as 700
 			case 700: 
+				// BVG is agency id 796
 				lineVehicleType = busVehicleType;
-				// rural bus lines shall have higher speed
-				// differentiate between rural and urban buses using the agency which runs them, i.e.
-				// urban 30km/h: BVG (id=796 in GTFS-VBB-20181214.zip)
-				// rural 50km/h: all other agencies
-				// vmax is typically <= 80km/h
-				// TODO check BVG has still the same agency id?
-				try {
-					agencyId = Integer.parseInt( (String) line.getAttributes().getAttribute("gtfs_agency_id"));
-				} catch (NumberFormatException e) {
-					log.error("invalid transit agency! Line id was " + line.getId().toString() + 
-							"; gtfs agency was " + (String) line.getAttributes().getAttribute("gtfs_agency_id"));
-					throw new RuntimeException("invalid transit agency");
-				}
-				int bvgAcencyId = 796;
-				shortLinkFreespeed = agencyId == bvgAcencyId ? 40 / 3.6 : 60 / 3.6;
-				longLinkFreespeed = agencyId == bvgAcencyId ? 60 / 3.6 : 90 / 3.6;
-				shortLongLinkThreshold = agencyId == bvgAcencyId ? 600.0 : 1500.0;
 				break;
 			case 900: 
 				lineVehicleType = tramVehicleType;
-				// vmax is typically <= 70km/h
-				shortLinkFreespeed = 30.0 / 3.6;
-				longLinkFreespeed = 60.0 / 3.6;
-				shortLongLinkThreshold = 600;
 				break;
 			case 1000: 
 				lineVehicleType = ferryVehicleType;
-				shortLinkFreespeed = 25.0 / 3.6;
-				longLinkFreespeed = 25.0 / 3.6;
-				shortLongLinkThreshold = 1000;
 				break;
 			default:
 				log.error("unknown transit mode! Line id was " + line.getId().toString() + 
@@ -353,26 +315,34 @@ public class RunGTFS2MATSimOpenBerlin {
 				int routeVehId = 0; // simple counter for vehicle id _per_ TransitRoute
 				
 				// increase speed if current freespeed is lower. 
-				// Should different transit modes use the same link, the higher freespeed will 
-				NetworkRoute networkRoute = route.getRoute();
-				
-				if (network.getLinks().get(networkRoute.getStartLinkId()).getLength() < shortLongLinkThreshold) {
-					increaseLinkFreespeedIfLower(network.getLinks().get(networkRoute.getStartLinkId()), shortLinkFreespeed);
-				} else {
-					increaseLinkFreespeedIfLower(network.getLinks().get(networkRoute.getStartLinkId()), longLinkFreespeed);
-				}
-				if (network.getLinks().get(networkRoute.getEndLinkId()).getLength() < shortLongLinkThreshold) {
-					increaseLinkFreespeedIfLower(network.getLinks().get(networkRoute.getEndLinkId()), shortLinkFreespeed);
-				} else {
-					increaseLinkFreespeedIfLower(network.getLinks().get(networkRoute.getEndLinkId()), longLinkFreespeed);
+				List<TransitRouteStop> routeStops = route.getStops();
+				if (routeStops.size() < 2) {
+					log.error("TransitRoute with less than 2 stops found: line " + line.getId().toString() + 
+							", route " + route.getId().toString());
+					throw new RuntimeException("");
 				}
 				
-				for (Id<Link> linkId: networkRoute.getLinkIds()) {
-					if (network.getLinks().get(linkId).getLength() < shortLongLinkThreshold) {
-						increaseLinkFreespeedIfLower(network.getLinks().get(linkId), shortLinkFreespeed);
-					} else {
-						increaseLinkFreespeedIfLower(network.getLinks().get(linkId), longLinkFreespeed);
-					}
+				double lastDepartureOffset = route.getStops().get(0).getDepartureOffset();
+				// min. time spend at a stop, useful especially for stops whose arrival and departure offset is identical,
+				// so we need to add time for passengers to board and alight
+				double minStopTime = 30.0;
+				
+				for (int i = 1; i < routeStops.size(); i++) {
+					// TODO cater for loop link at first stop? Seems to just work without.
+					TransitRouteStop routeStop = routeStops.get(i);
+					// if there is no departure offset set (or infinity), it is the last stop of the line, 
+					// so we don't need to care about the stop duration
+					double stopDuration = Double.isFinite(routeStop.getDepartureOffset()) ? 
+							routeStop.getDepartureOffset() - routeStop.getArrivalOffset() : minStopTime;
+					// ensure arrival at next stop early enough to allow for 30s stop duration -> time for passengers to board / alight
+					// if link freespeed had been set such that the pt veh arrives exactly on time, but departure tiome is identical 
+					// with arrival time the pt vehicle would have been always delayed
+					// Math.max to avoid negative values of travelTime
+					double travelTime = Math.max(1, routeStop.getArrivalOffset() - lastDepartureOffset - 1.0 -
+							(stopDuration >= minStopTime ? 0 : (minStopTime - stopDuration))) ;
+					Link link = network.getLinks().get(routeStop.getStopFacility().getLinkId());
+					increaseLinkFreespeedIfLower(link, link.getLength() / travelTime);
+					lastDepartureOffset = routeStop.getDepartureOffset();
 				}
 				
 				// create vehicles for Departures
@@ -382,7 +352,7 @@ public class RunGTFS2MATSimOpenBerlin {
 					departure.setVehicleId(veh.getId());
 				}
 				
-				// tag RE, RB, S- and U-Bahn stations for Drt satop filter attribute
+				// tag RE, RB, S- and U-Bahn stations for Drt stop filter attribute
 				if (!stopFilter.isEmpty()) {
 					for (TransitRouteStop routeStop: route.getStops()) {
 						routeStop.getStopFacility().getAttributes().putAttribute("stopFilter", stopFilter);
