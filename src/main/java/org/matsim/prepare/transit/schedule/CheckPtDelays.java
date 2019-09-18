@@ -19,9 +19,11 @@
 
 package org.matsim.prepare.transit.schedule;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -56,6 +58,7 @@ public class CheckPtDelays {
 	private final String eventsFile;
 	private final String scheduleFile;
 	private Scenario scenario;
+	private List<DelayRecord> allDelays = new ArrayList<>();
 	private Map<Id<Vehicle>, DelayRecord> veh2minDelay = new HashMap<>();
 	private Map<Id<Vehicle>, DelayRecord> veh2maxDelay = new HashMap<>();
 	private Map<Id<TransitLine>, DelayRecord> line2minDelay = new TreeMap<>();
@@ -116,6 +119,7 @@ public class CheckPtDelays {
 			DelayRecord delay = new DelayRecord(lineId, routeId, vehId, event.getFacilityId(), event.getDelay());
 			
 			if (Double.isFinite(delay.delay)) {
+				allDelays.add(delay);
 				if (!veh2minDelay.containsKey(event.getVehicleId())) veh2minDelay.put(event.getVehicleId(), delay);
 				if (!veh2maxDelay.containsKey(event.getVehicleId())) veh2maxDelay.put(event.getVehicleId(), delay);
 				if (delay.delay > 0) {
@@ -138,6 +142,7 @@ public class CheckPtDelays {
 			DelayRecord delay = new DelayRecord(lineId, routeId, vehId, event.getFacilityId(), event.getDelay());
 			
 			if (Double.isFinite(delay.delay)) {
+				allDelays.add(delay);
 				if (!veh2maxDelay.containsKey(event.getVehicleId())) veh2maxDelay.put(event.getVehicleId(), delay);
 				if (!veh2minDelay.containsKey(event.getVehicleId())) veh2minDelay.put(event.getVehicleId(), delay);
 				if (delay.delay > 0) {
@@ -179,6 +184,47 @@ public class CheckPtDelays {
 	
 	DelayRecord getMinDelay() {
 		return Collections.min(line2minDelay.values(), new DelayRecordDelayComparator());
+	}
+	
+	double getAverageOfPositivelyDelayedOverPositivelyDelayed() {
+		double sum = 0;
+		int counter = 0;
+		for (DelayRecord delay: allDelays) {
+			if (delay.delay > 0) {
+				counter++;
+				sum = sum + delay.delay;
+			}
+		}
+		if (counter < 1) {
+			return Double.NaN;
+		}
+		return sum / counter;
+	}
+	
+	double getAverageOfPositivelyDelayedOverTotalNumberOfRecords() {
+		double sum = 0;
+		for (DelayRecord delay: allDelays) {
+			if (delay.delay > 0) {
+				sum = sum + delay.delay;
+			}
+		}
+		if (allDelays.size() < 1) {
+			return Double.NaN;
+		}
+		return sum / allDelays.size();
+	}
+	
+	double getAverageOfNegativelyDelayedOverTotalNumberOfRecords() {
+		double sum = 0;
+		for (DelayRecord delay: allDelays) {
+			if (delay.delay < 0) {
+				sum = sum + delay.delay;
+			}
+		}
+		if (allDelays.size() < 1) {
+			return Double.NaN;
+		}
+		return sum / allDelays.size();
 	}
 	
 	String minDelayPerTransitLine() {
