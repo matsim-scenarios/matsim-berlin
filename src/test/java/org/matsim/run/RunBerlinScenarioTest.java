@@ -124,7 +124,7 @@ public class RunBerlinScenarioTest {
 			Assert.assertEquals("Change in score (ride + walk agent)", 128.2797261151769, scenario.getPopulation().getPersons().get(Id.createPersonId("100087501")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
 			Assert.assertEquals("Change in score (bicycle agent)", 129.80394930541985, scenario.getPopulation().getPersons().get(Id.createPersonId("100200201")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
 			Assert.assertEquals("Change in score (ride agent)", 131.71443152316658, scenario.getPopulation().getPersons().get(Id.createPersonId("10099501")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Change in score (pt agent)", 134.91804284998503, scenario.getPopulation().getPersons().get(Id.createPersonId("100024301")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Change in score (pt agent)", 135.48909078721348, scenario.getPopulation().getPersons().get(Id.createPersonId("100024301")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
 			
 			log.info( "Done with dTest1person1iteration"  );
 			log.info("") ;
@@ -157,8 +157,8 @@ public class RunBerlinScenarioTest {
 			controler.run() ;
 			
 			// Scores in iteration 0
-			Assert.assertEquals("Different avg. executed score in iteration 0 .", 114.75008227161196, controler.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(0), MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Different avg. avg. score in iteration 0 .", 114.75008227161196, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Different avg. executed score in iteration 0 .", 115.21465477882244, controler.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(0), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Different avg. avg. score in iteration 0 .", 115.21465477882244, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
 			
 			// Scores in iteration 1
 //			Assert.assertEquals("Different avg. executed score in iteration 1 .", 112.76204261716643, controler.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(1), MatsimTestUtils.EPSILON);

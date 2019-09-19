@@ -4,24 +4,24 @@
 <population>
 
 <person id="100024301">
-                <plan score="134.91804284998503" selected="yes">
+                <plan score="135.48909078721348" selected="yes">
                         <activity type="home_93600.0" link="117737" x="4626119.172329882" y="5825228.028849992" end_time="11:34:40" >
                                 <attributes>
                                         <attribute name="zoneId" class="java.lang.String" >12064472</attribute>
                                 </attributes>
                         </activity>
-                        <leg mode="access_walk" dep_time="11:34:40">
-                                <route type="generic" start_link="117737" end_link="pt_362" trav_time="00:15:06" distance="734.8443620484985"></route>
+                        <leg mode="non_network_walk" dep_time="11:34:40">
+                                <route type="generic" start_link="117737" end_link="pt_42801" trav_time="00:15:06" distance="955.297670663048"></route>
                         </leg>
-                        <activity type="pt interaction" link="pt_362" x="4626731.422625715" y="5825634.410212369" max_dur="00:00:00" >
+                        <activity type="pt interaction" link="pt_42801" x="4626731.422625715" y="5825634.410212369" max_dur="00:00:00" >
                         </activity>
                         <leg mode="pt" dep_time="11:49:46">
-                                <route type="experimentalPt1" start_link="pt_362" end_link="pt_363" trav_time="00:12:14" distance="3481.19291722263">PT1===060320003001===10157_109===10157_109_0===060320002001</route>
+                                <route type="experimentalPt1" start_link="pt_42801" end_link="pt_42802" trav_time="00:12:32" distance="3481.19291722263">PT1===060320003001===S5---10157_109===S5---10157_109_6===060320002001</route>
                         </leg>
-                        <activity type="pt interaction" link="pt_363" x="4628104.442420426" y="5828833.3976725275" max_dur="00:00:00" >
+                        <activity type="pt interaction" link="pt_42802" x="4628104.442420426" y="5828833.3976725275" max_dur="00:00:00" >
                         </activity>
-                        <leg mode="egress_walk" dep_time="12:02:00">
-                                <route type="generic" start_link="pt_363" end_link="71096" trav_time="00:00:35" distance="28.3059841969104"></route>
+                        <leg mode="non_network_walk" dep_time="12:02:18">
+                                <route type="generic" start_link="pt_42802" end_link="71096" trav_time="00:00:35" distance="36.79777945598352"></route>
                         </leg>
                         <activity type="leisure_1200.0" link="71096" x="4628089.674090119" y="5828809.249687905" max_dur="00:26:21" >
                                 <attributes>
@@ -29,18 +29,18 @@
                                         <attribute name="zoneId" class="java.lang.String" >12064472</attribute>
                                 </attributes>
                         </activity>
-                        <leg mode="access_walk" dep_time="12:28:56">
-                                <route type="generic" start_link="71096" end_link="pt_390" trav_time="00:00:35" distance="28.3059841969104"></route>
+                        <leg mode="non_network_walk" dep_time="12:29:14">
+                                <route type="generic" start_link="71096" end_link="pt_42825" trav_time="00:00:35" distance="36.79777945598352"></route>
                         </leg>
-                        <activity type="pt interaction" link="pt_390" x="4628104.442420426" y="5828833.3976725275" max_dur="00:00:00" >
+                        <activity type="pt interaction" link="pt_42825" x="4628104.442420426" y="5828833.3976725275" max_dur="00:00:00" >
                         </activity>
-                        <leg mode="pt" dep_time="12:29:31">
-                                <route type="experimentalPt1" start_link="pt_390" end_link="pt_370" trav_time="00:05:59" distance="3481.192917222633">PT1===060320002001.2===10157_109===10157_109_9===060320003001.1</route>
+                        <leg mode="pt" dep_time="12:29:49">
+                                <route type="experimentalPt1" start_link="pt_42825" end_link="pt_42821" trav_time="00:05:59" distance="3481.192917222633">PT1===060320002001.2===S5---10157_109===S5---10157_109_12===060320003001.1</route>
                         </leg>
-                        <activity type="pt interaction" link="pt_370" x="4626731.422625715" y="5825634.410212369" max_dur="00:00:00" >
+                        <activity type="pt interaction" link="pt_42821" x="4626731.422625715" y="5825634.410212369" max_dur="00:00:00" >
                         </activity>
-                        <leg mode="egress_walk" dep_time="12:35:30">
-                                <route type="generic" start_link="pt_370" end_link="117737" trav_time="00:15:06" distance="734.8443620484985"></route>
+                        <leg mode="non_network_walk" dep_time="12:35:48">
+                                <route type="generic" start_link="pt_42821" end_link="117737" trav_time="00:15:06" distance="955.297670663048"></route>
                         </leg>
                         <activity type="home_93600.0" link="117737" x="4626119.172329882" y="5825228.028849992" >
                                 <attributes>
