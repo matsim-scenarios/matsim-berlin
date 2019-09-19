@@ -158,7 +158,7 @@ public class RunBerlinScenarioTest {
 			
 			// Scores in iteration 0
 			Assert.assertEquals("Different avg. executed score in iteration 0 .", 115.21465477882244, controler.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(0), MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Different avg. avg. score in iteration 0 .", 115.21465477882244, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Different avg. avg. score in iteration 0 .", 115.11424073750435, controler.getScoreStats().getScoreHistory().get(ScoreItem.average).get(0), MatsimTestUtils.EPSILON);
 			
 			// Scores in iteration 1
 //			Assert.assertEquals("Different avg. executed score in iteration 1 .", 112.76204261716643, controler.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(1), MatsimTestUtils.EPSILON);
