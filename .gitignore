@@ -22,3 +22,5 @@ output*
 
 *.DS_STORE
 /.DS_Store
+
+/RunGTFS2MATSimOpenBerlin/

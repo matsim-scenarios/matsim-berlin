@@ -117,7 +117,7 @@ public class RunGTFS2MATSimOpenBerlin {
 		
 		//remove existing pt network (nodes and links)
 		Network networkWoPt = getNetworkWOExistingPtLinksAndNodes(scenario.getNetwork(), "pt_");
-		new NetworkWriter(networkWoPt).write(outputDirectory + "network_filtered_woNewPt.xml.gz");
+		new NetworkWriter(networkWoPt).write(outputDirectory + "/network_filtered_woNewPt.xml.gz");
 		
 		//Create a network around the schedule and transit vehicles
 		scenario = getScenarioWithPseudoPtNetworkAndTransitVehicles(networkWoPt, scenario.getTransitSchedule(), "pt_");
