@@ -111,7 +111,7 @@
 			<!-- Note that this will also pick up the local version if that local version has com.github.XXX as groupId!-->
 			<groupId>com.github.vsp-gleich</groupId>
 			<artifactId>matsim-sbb-extensions</artifactId>
-			<version>11.6-vsp-2019-09-20</version>
+			<version>11.6-vsp-2019-09-20b</version>
         </dependency>
             
 		<dependency>
