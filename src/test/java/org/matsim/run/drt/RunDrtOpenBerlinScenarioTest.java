@@ -40,7 +40,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			final String[] args = {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drtA-v5.5-1pct-Berlkoenig.config.xml"};
 			
 			Config config = RunDrtOpenBerlinScenario.prepareConfig( args ) ;
-			config.controler().setLastIteration(3);
+			config.controler().setLastIteration(2);
 			config.strategy().setFractionOfIterationsToDisableInnovation(1);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
