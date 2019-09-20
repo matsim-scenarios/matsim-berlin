@@ -219,7 +219,7 @@ public final class RunDrtOpenBerlinScenario {
 				IntermodalAccessEgressParameterSet paramSetWalk = new IntermodalAccessEgressParameterSet();
 				// paramSetXxx.setMode( TransportMode.walk ); // this does not work because sbb raptor treats it in a special way
 				paramSetWalk.setMode(TransportMode.non_network_walk);
-				paramSetWalk.setRadius(100000);
+				paramSetWalk.setMaxRadius(100000);
 				paramSetWalk.setInitialSearchRadius(3000);
 				paramSetWalk.setSearchExtensionRadius(1000);
 				configRaptor.addIntermodalAccessEgress(paramSetWalk);
@@ -236,7 +236,7 @@ public final class RunDrtOpenBerlinScenario {
 				 * (RandomAccessEgressModeRaptorStopFinder will try again with walk, the other available access/egress mode)
 				 * maybe we should restrict even further, see comment below for InitialSearchRadius.
 				 */
-				paramSetDrt.setRadius(12000); 
+				paramSetDrt.setMaxRadius(12000); 
 				/* If more than 1 transit stop is found in the initial search radius, the raptor stop finder will stop to search
 				 * more distant transit stops.
 				 * Setting setInitialSearchRadius(12000) will allow for crossing the whole Berlkoenig area with drt as 
@@ -258,7 +258,7 @@ public final class RunDrtOpenBerlinScenario {
 				 * So we have to make use of the speed up options (and exclude theoretically possible but unlikely drt trips).
 				 *  - gleich aug'19
 				 */
-				paramSetDrt.setInitialSearchRadius(4000); 
+				paramSetDrt.setInitialSearchRadius(3000); 
 				paramSetDrt.setSearchExtensionRadius(1000);
 				configRaptor.addIntermodalAccessEgress(paramSetDrt);
 			}
