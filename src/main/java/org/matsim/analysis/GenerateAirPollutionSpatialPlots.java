@@ -80,12 +80,11 @@ public class GenerateAirPollutionSpatialPlots {
         
         final String configFile = runDir + runId + ".output_config.xml";
 		final String events = runDir + runId + ".emission.events.offline.xml.gz";
-		final String outputFile = runDir + runId + ".NOx";
-		
-		plots.writeEmissions(configFile , events, outputFile, runDir, runId);
+
+		plots.writeEmissions(configFile , events, runDir, runId);
     }
 
-    private void writeEmissions(String configPath, String eventsPath, String outputFile, String runDir, String runId) {
+    private void writeEmissions(String configPath, String eventsPath, String runDir, String runId) {
 
 		Config config = ConfigUtils.loadConfig(configPath);
 		config.plans().setInputFile(null);
@@ -109,10 +108,10 @@ public class GenerateAirPollutionSpatialPlots {
                 .build();
 
 		TimeBinMap<Grid<Map<String, Double>>> timeBins = analyzer.process(eventsPath);
-		analyzer.processToJsonFile(eventsPath, outputFile + ".json");
+		analyzer.processToJsonFile(eventsPath, runDir + runId + ".emissions.json");
 		
         log.info("Writing to csv...");
-        writeGridToCSV(timeBins, "NOX", outputFile + ".csv");
+        writeGridToCSV(timeBins, "NOX", runDir + runId + ".NOx.csv");
     }
 
     private void writeGridToCSV(TimeBinMap<Grid<Map<String, Double>>> bins, String pollutant, String outputPath) {
