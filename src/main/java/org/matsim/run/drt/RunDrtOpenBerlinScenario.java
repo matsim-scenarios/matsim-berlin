@@ -57,6 +57,7 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.algorithms.NetworkCleaner;
 import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
+import org.matsim.core.network.io.NetworkWriter;
 import org.matsim.core.population.routes.RouteFactories;
 import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.run.RunBerlinScenario;
@@ -124,7 +125,8 @@ public final class RunDrtOpenBerlinScenario {
 		RouteFactories routeFactories = scenario.getPopulation().getFactory().getRouteFactories();
 		routeFactories.setRouteFactory(DrtRoute.class, new DrtRouteFactory());
 
-		addDRTmode(scenario, drtNetworkMode);
+		AvoevConfigGroup avoevConfigGroup = ConfigUtils.addOrGetModule( scenario.getConfig(), AvoevConfigGroup.class ) ;
+		addDRTmode(scenario, drtNetworkMode, avoevConfigGroup.getDrtServiceAreaShapeFileName());
 
 		return scenario;
 	}
@@ -143,14 +145,14 @@ public final class RunDrtOpenBerlinScenario {
 			// We cannot use the config file to pass that argument, because AvoevConfigGroup does not support that yet.
 			// Hard code the DrtServiceAreaShapeFileName until some decision is made. gl jul'19
 			avoevConfigGroup.setDrtServiceAreaShapeFileName(
-					  "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlin-sav-v5.2-10pct/input/shp-berlkoenig-area/berlkoenig-area.shp" );
+					  "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlin-sav-v5.2-10pct/input/shp-inner-city-area/inner-city-area.shp" );
 			
 		} else {
-			config = RunBerlinScenario.prepareConfig( new String [] {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drtA-v5.5-1pct-Berlkoenig.config.xml"} ) ;
+			config = RunBerlinScenario.prepareConfig( new String [] {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drtA-v5.5-1pct-Hundekopf.config.xml"} ) ;
 
 			AvoevConfigGroup avoevConfigGroup = ConfigUtils.addOrGetModule( config, AvoevConfigGroup.class ) ;
 			avoevConfigGroup.setDrtServiceAreaShapeFileName(
-				  "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlin-sav-v5.2-10pct/input/shp-berlkoenig-area/berlkoenig-area.shp" );
+				  "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlin-sav-v5.2-10pct/input/shp-inner-city-area/inner-city-area.shp" );
 		}
 		
 		ConfigUtils.addOrGetModule( config, DvrpConfigGroup.class ) ;
@@ -158,6 +160,9 @@ public final class RunDrtOpenBerlinScenario {
 		ConfigUtils.addOrGetModule( config, DrtFaresConfigGroup.class ) ;
 		
 		ConfigUtils.addOrGetModule( config, VspExperimentalConfigGroup.class ).setVspDefaultsCheckingLevel(VspDefaultsCheckingLevel.warn); ;
+		
+		// switch off pt vehicle simulation
+		config.transit().setUsingTransitInMobsim(false);
 
 		// add drt mode	
     	List<String> modes = new ArrayList<String>(Arrays.asList(config.subtourModeChoice().getModes()));
@@ -267,12 +272,11 @@ public final class RunDrtOpenBerlinScenario {
 		return config ;
 	}
 	
-	private static void addDRTmode(Scenario scenario, String drtNetworkMode) {
+	public static void addDRTmode(Scenario scenario, String drtNetworkMode, String drtServiceAreaShp) {
 		
 		log.info("Adjusting network...");
 		
-		AvoevConfigGroup avoevConfigGroup = ConfigUtils.addOrGetModule( scenario.getConfig(), AvoevConfigGroup.class ) ;
-		BerlinShpUtils shpUtils = new BerlinShpUtils( avoevConfigGroup.getDrtServiceAreaShapeFileName() );
+		BerlinShpUtils shpUtils = new BerlinShpUtils( drtServiceAreaShp );
 
 		int counter = 0;
 		for (Link link : scenario.getNetwork().getLinks().values()) {
@@ -331,6 +335,8 @@ public final class RunDrtOpenBerlinScenario {
 			log.error("Cleaning drt network did not work properly.");
 			throw new RuntimeException("Cleaning drt network did not work properly.");
 		}
+		
+		new NetworkWriter(scenario.getNetwork()).write("BLA.xml.gz");
 	}
 
 }
