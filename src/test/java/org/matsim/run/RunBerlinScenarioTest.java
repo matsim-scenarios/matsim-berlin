@@ -102,6 +102,41 @@ public class RunBerlinScenarioTest {
 		}
 	}
 	
+	@Test
+	public final void c2TestEquil() {
+		// this should work (but does not since RunBerlinScenario enforces vsp-abort). kai, sep'19
+		
+		try {
+			String configFilename = "scenarios/equil/config.xml" ;
+			final String[] args = {configFilename,
+					"--config:controler.outputDirectory", utils.getOutputDirectory(),
+			};
+			RunBerlinScenario.main( args );
+			
+		} catch ( Exception ee ) {
+			ee.printStackTrace();
+			throw new RuntimeException(ee) ;
+		}
+	}
+	
+	@Test
+	public final void c2TestEquilB() {
+		// this is overriding the vsp-abort but is still not working.  kai, sep'19
+
+		try {
+			String configFilename = "scenarios/equil/config.xml" ;
+			final String[] args = {configFilename,
+					"--config:controler.outputDirectory", utils.getOutputDirectory(),
+					"--config:vspExperimental.vspDefaultsCheckingLevel", "warn"
+			};
+			RunBerlinScenario.main( args );
+			
+		} catch ( Exception ee ) {
+			ee.printStackTrace();
+			throw new RuntimeException(ee) ;
+		}
+	}
+	
 	// 1pct, testing the scores in iteration 0 and 1
 	@Test
 	public final void dTest1person1iteration() {
