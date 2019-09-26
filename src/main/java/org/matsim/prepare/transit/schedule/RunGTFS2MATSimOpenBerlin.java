@@ -59,7 +59,6 @@ import org.matsim.pt.utils.TransitScheduleValidator;
 import org.matsim.pt.utils.TransitScheduleValidator.ValidationResult;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleCapacity;
-import org.matsim.vehicles.VehicleCapacityImpl;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleWriterV1;
 import org.matsim.vehicles.VehiclesFactory;
@@ -201,54 +200,55 @@ public class RunGTFS2MATSimOpenBerlin {
 		// capacity is higher than the real used vehicle's capacity (gtfs provides no information on which vehicle type is used,
 		// and this would be beyond scope here). - gleich sep'19
 		VehiclesFactory vb = scenario.getVehicles().getFactory();
-		VehicleType reRbVehicleType = vb.createVehicleType(Id.create("RE_RB_veh_type", VehicleType.class));
-		VehicleCapacity capacity = new VehicleCapacityImpl();
-		capacity.setSeats(Integer.valueOf(500));
-		capacity.setStandingRoom(Integer.valueOf(600));
-		reRbVehicleType.setCapacity(capacity);
-		reRbVehicleType.setDoorOperationMode(DoorOperationMode.parallel);
-		scenario.getTransitVehicles().addVehicleType(reRbVehicleType);
-		
-		VehicleType sBahnVehicleType = vb.createVehicleType(Id.create("S-Bahn_veh_type", VehicleType.class));
-		capacity = new VehicleCapacityImpl();
-		capacity.setSeats(Integer.valueOf(400));
-		capacity.setStandingRoom(Integer.valueOf(800));
-		sBahnVehicleType.setCapacity(capacity);
-		reRbVehicleType.setDoorOperationMode(DoorOperationMode.parallel);
-		scenario.getTransitVehicles().addVehicleType(sBahnVehicleType);
-		
-		VehicleType uBahnVehicleType = vb.createVehicleType(Id.create("U-Bahn_veh_type", VehicleType.class));
-		capacity = new VehicleCapacityImpl();
-		capacity.setSeats(Integer.valueOf(300));
-		capacity.setStandingRoom(Integer.valueOf(600));
-		uBahnVehicleType.setCapacity(capacity);
-		reRbVehicleType.setDoorOperationMode(DoorOperationMode.parallel);
-		scenario.getTransitVehicles().addVehicleType(uBahnVehicleType);
-		
-		VehicleType tramVehicleType = vb.createVehicleType(Id.create("Tram_veh_type", VehicleType.class));
-		capacity = new VehicleCapacityImpl();
-		capacity.setSeats(Integer.valueOf(80));
-		capacity.setStandingRoom(Integer.valueOf(170));
-		tramVehicleType.setCapacity(capacity);
-		reRbVehicleType.setDoorOperationMode(DoorOperationMode.parallel);
-		scenario.getTransitVehicles().addVehicleType(tramVehicleType);
-		
-		VehicleType busVehicleType = vb.createVehicleType(Id.create("Bus_veh_type", VehicleType.class));
-		capacity = new VehicleCapacityImpl();
-		capacity.setSeats(Integer.valueOf(50));
-		capacity.setStandingRoom(Integer.valueOf(100));
-		busVehicleType.setCapacity(capacity);
-		reRbVehicleType.setDoorOperationMode(DoorOperationMode.parallel);
-		scenario.getTransitVehicles().addVehicleType(busVehicleType);
-		
-		VehicleType ferryVehicleType = vb.createVehicleType(Id.create("Ferry_veh_type", VehicleType.class));
-		capacity = new VehicleCapacityImpl();
-		capacity.setSeats(Integer.valueOf(100));
-		capacity.setStandingRoom(Integer.valueOf(100));
-		ferryVehicleType.setCapacity(capacity);
-		reRbVehicleType.setDoorOperationMode(DoorOperationMode.parallel);
-		scenario.getTransitVehicles().addVehicleType(ferryVehicleType);
-		
+
+		VehicleType reRbVehicleType = vb.createVehicleType( Id.create( "RE_RB_veh_type", VehicleType.class ) );
+		{
+			VehicleCapacity capacity = reRbVehicleType.getCapacity();
+			capacity.setSeats( 500 );
+			capacity.setStandingRoom( 600 );
+			reRbVehicleType.setDoorOperationMode( DoorOperationMode.parallel );
+			scenario.getTransitVehicles().addVehicleType( reRbVehicleType );
+		}
+		VehicleType sBahnVehicleType = vb.createVehicleType( Id.create( "S-Bahn_veh_type", VehicleType.class ) );
+		{
+			VehicleCapacity capacity = sBahnVehicleType.getCapacity();
+			capacity.setSeats( 400 );
+			capacity.setStandingRoom( 800 );
+			sBahnVehicleType.setDoorOperationMode( DoorOperationMode.parallel );
+			scenario.getTransitVehicles().addVehicleType( sBahnVehicleType );
+		}
+		VehicleType uBahnVehicleType = vb.createVehicleType( Id.create( "U-Bahn_veh_type", VehicleType.class ) );
+		{
+			VehicleCapacity capacity = uBahnVehicleType.getCapacity() ;
+			capacity.setSeats( 300 );
+			capacity.setStandingRoom( 600 );
+			uBahnVehicleType.setDoorOperationMode( DoorOperationMode.parallel );
+			scenario.getTransitVehicles().addVehicleType( uBahnVehicleType );
+		}
+		VehicleType tramVehicleType = vb.createVehicleType( Id.create( "Tram_veh_type", VehicleType.class ) );
+		{
+			VehicleCapacity capacity = tramVehicleType.getCapacity() ;
+			capacity.setSeats( 80 );
+			capacity.setStandingRoom( 170 );
+			tramVehicleType.setDoorOperationMode( DoorOperationMode.parallel );
+			scenario.getTransitVehicles().addVehicleType( tramVehicleType );
+		}
+		VehicleType busVehicleType = vb.createVehicleType( Id.create( "Bus_veh_type", VehicleType.class ) );
+		{
+			VehicleCapacity capacity = busVehicleType.getCapacity() ;
+			capacity.setSeats( 50 );
+			capacity.setStandingRoom( 100 );
+			busVehicleType.setDoorOperationMode( DoorOperationMode.parallel );
+			scenario.getTransitVehicles().addVehicleType( busVehicleType );
+		}
+		VehicleType ferryVehicleType = vb.createVehicleType( Id.create( "Ferry_veh_type", VehicleType.class ) );
+		{
+			VehicleCapacity capacity = ferryVehicleType.getCapacity() ;
+			capacity.setSeats( 100 );
+			capacity.setStandingRoom( 100 );
+			ferryVehicleType.setDoorOperationMode( DoorOperationMode.parallel );
+			scenario.getTransitVehicles().addVehicleType( ferryVehicleType );
+		}
 		// set link speeds and create vehicles according to pt mode
 		for (TransitLine line: scenario.getTransitSchedule().getTransitLines().values()) {
 			VehicleType lineVehicleType;

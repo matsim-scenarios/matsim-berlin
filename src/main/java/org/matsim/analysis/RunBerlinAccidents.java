@@ -1,15 +1,11 @@
 package org.matsim.analysis;
 
-import java.io.BufferedReader;
-
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.contrib.accidents.AccidentsConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
-import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
-import org.matsim.core.utils.io.IOUtils;
 import org.matsim.run.RunBerlinScenario;
 
 public class RunBerlinAccidents {
@@ -39,12 +35,12 @@ public class RunBerlinAccidents {
 	
 	config.controler().setOutputDirectory(outputFile);
 
-	AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
-	accidentsSettings.setSampleSize(10);
-	accidentsSettings.setLanduseOSMInputShapeFile(landOSMInputShapeFile);
-	accidentsSettings.setPlacesOSMInputFile(placesOSMInputFile);
-//	accidentsSettings.setTunnelLinkCSVInputFile(tunnelLinkCSVInputFile);
-//	accidentsSettings.setPlanFreeLinkCSVInputFile(planFreeLinkCSVInputFile);
+	AccidentsConfigGroup accidentsConfig = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
+	accidentsConfig.setSampleSize(10);
+	accidentsConfig.setLanduseOSMInputShapeFile(landOSMInputShapeFile);
+	accidentsConfig.setPlacesOSMInputFile(placesOSMInputFile);
+//	accidentsConfig.setTunnelLinkCSVInputFile(tunnelLinkCSVInputFile);
+//	accidentsConfig.setPlanFreeLinkCSVInputFile(planFreeLinkCSVInputFile);
 	controler.run();
 	
 	
