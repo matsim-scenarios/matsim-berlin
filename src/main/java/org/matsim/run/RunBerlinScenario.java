@@ -130,7 +130,7 @@ public final class RunBerlinScenario {
 		config.qsim().setInsertingWaitingVehiclesBeforeDrivingVehicles( true );
 				
 		// vsp defaults
-		config.vspExperimental().setVspDefaultsCheckingLevel( VspExperimentalConfigGroup.VspDefaultsCheckingLevel.info );
+		config.vspExperimental().setVspDefaultsCheckingLevel( VspExperimentalConfigGroup.VspDefaultsCheckingLevel.abort );
 		config.plansCalcRoute().setInsertingAccessEgressWalk( true );
 		config.qsim().setUsingTravelTimeCheckInTeleportation( true );
 		config.qsim().setTrafficDynamics( TrafficDynamics.kinematicWaves );
