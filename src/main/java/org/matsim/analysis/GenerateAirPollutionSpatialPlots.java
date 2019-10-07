@@ -27,11 +27,14 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.analysis.spatial.Grid;
+import org.matsim.contrib.analysis.spatial.Grid.Cell;
 import org.matsim.contrib.analysis.time.TimeBinMap;
 import org.matsim.contrib.emissions.analysis.EmissionGridAnalyzer;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.scenario.ScenarioUtils;
+
+import com.google.common.collect.Iterables;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -73,8 +76,8 @@ public class GenerateAirPollutionSpatialPlots {
         final double smoothingRadius = 500.;
         final double scaleFactor = 100.;
         
-        final String runDir = rootDirectory + "public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/output-berlin-v5.4-10pct/";
-    	final String runId = "berlin-v5.4-10pct";
+        final String runDir = rootDirectory + "public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/";
+    	final String runId = "berlin-v5.4-1pct";
 
         GenerateAirPollutionSpatialPlots plots = new GenerateAirPollutionSpatialPlots(gridSize, smoothingRadius, scaleFactor);
         
@@ -94,7 +97,7 @@ public class GenerateAirPollutionSpatialPlots {
 		config.network().setInputFile(runDir + runId + ".output_network.xml.gz");
         Scenario scenario = ScenarioUtils.loadScenario(config);
 
-        double binSize = 200000; // make the bin size bigger than the scenario has seconds
+        double binSize = 9600; // for daily numbers: make the bin size bigger than the scenario has seconds
         Network network = scenario.getNetwork();
 
         EmissionGridAnalyzer analyzer = new EmissionGridAnalyzer.Builder()
@@ -110,8 +113,11 @@ public class GenerateAirPollutionSpatialPlots {
 		TimeBinMap<Grid<Map<String, Double>>> timeBins = analyzer.process(eventsPath);
 		analyzer.processToJsonFile(eventsPath, runDir + runId + ".emissions.json");
 		
-        log.info("Writing to csv...");
-        writeGridToCSV(timeBins, "NOX", runDir + runId + ".NOx.csv");
+		Cell<Map<String, Double>> cell = Iterables.get(timeBins.getTimeBin(timeBins.getEndTimeOfLastBin()).getValue().getCells(), 0);
+		for (String pollutant : cell.getValue().keySet()) {
+			log.info("Writing data to csv file: " + pollutant);
+	        writeGridToCSV(timeBins, pollutant, runDir + runId + ".emissions." + pollutant + ".csv");
+		}
     }
 
     private void writeGridToCSV(TimeBinMap<Grid<Map<String, Double>>> bins, String pollutant, String outputPath) {
