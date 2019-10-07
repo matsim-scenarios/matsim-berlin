@@ -39,9 +39,12 @@ import org.matsim.contrib.av.robotaxi.fares.drt.DrtFareModule;
 import org.matsim.contrib.av.robotaxi.fares.drt.DrtFaresConfigGroup;
 import org.matsim.contrib.drt.routing.DrtRoute;
 import org.matsim.contrib.drt.routing.DrtRouteFactory;
+import org.matsim.contrib.drt.routing.DrtStageActivityType;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.drt.run.DrtConfigs;
-import org.matsim.contrib.drt.run.DrtModule;
+import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
+import org.matsim.contrib.drt.run.MultiModeDrtModule;
+import org.matsim.contrib.drt.run.DrtConfigGroup.OperationalScheme;
 import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.contrib.dvrp.run.DvrpModule;
 import org.matsim.contrib.dvrp.run.DvrpQSimComponents;
@@ -60,6 +63,8 @@ import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
 import org.matsim.core.population.routes.RouteFactories;
 import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.run.RunBerlinScenario;
+
+import com.google.common.collect.ImmutableSet;
 
 
 /**
@@ -94,9 +99,9 @@ public final class RunDrtOpenBerlinScenario {
 		Controler controler = RunBerlinScenario.prepareControler( scenario ) ;
 		
 		// drt + dvrp module
-		controler.addOverridingModule(new DrtModule());
+		controler.addOverridingModule(new MultiModeDrtModule());
 		controler.addOverridingModule(new DvrpModule());
-		controler.configureQSimComponents( DvrpQSimComponents.activateModes(DrtConfigGroup.get(controler.getConfig()).getMode()));
+		controler.configureQSimComponents(DvrpQSimComponents.activateAllModes(MultiModeDrtConfigGroup.get(controler.getConfig())));
 		
 		controler.addOverridingModule(new AbstractModule() {
 			
@@ -134,7 +139,7 @@ public final class RunDrtOpenBerlinScenario {
 		Config config = null ;
 
 		if ( args.length != 0 ){
-			config = RunBerlinScenario.prepareConfig( args ) ;
+			config = RunBerlinScenario.prepareConfig( args, DvrpConfigGroup ) ;
 			AvoevConfigGroup avoevConfigGroup = ConfigUtils.addOrGetModule( config, AvoevConfigGroup.class ) ;
 			
 			// With the CommandLine.Builder removed from Avoev, we cannot pass the argument DrtServiceAreaShapeFileName any longer
@@ -167,14 +172,7 @@ public final class RunDrtOpenBerlinScenario {
     	// required by drt module
     	config.qsim().setNumberOfThreads(1);
     	config.qsim().setSimStarttimeInterpretation(StarttimeInterpretation.onlyUseStarttime);
-		DrtConfigs.adjustDrtConfig(DrtConfigGroup.get(config), config.planCalcScore());
-		
-		// add drt stage activity (per default only added in case of stop-based drt operation mode)
-    	PlanCalcScoreConfigGroup.ActivityParams params = new PlanCalcScoreConfigGroup.ActivityParams(TransportMode.drt + " interaction");
-		params.setTypicalDuration(1);
-		params.setScoringThisActivityAtAll(false);
-		config.planCalcScore().getScoringParametersPerSubpopulation().values().forEach(k -> k.addActivityParams(params));
-		config.planCalcScore().addActivityParams(params);
+		DrtConfigs.adjustMultiModeDrtConfig(MultiModeDrtConfigGroup.get(config), config.planCalcScore());
 		
 		// add drt scoring parameters
 		PlanCalcScoreConfigGroup.ModeParams drtModeParams = new PlanCalcScoreConfigGroup.ModeParams(TransportMode.drt);
@@ -185,20 +183,42 @@ public final class RunDrtOpenBerlinScenario {
 		config.planCalcScore().getScoringParametersPerSubpopulation().values().forEach(k -> k.addModeParams(drtModeParams));
     	    	
     	// set drt parameters
-    	DrtConfigGroup drtCfg = DrtConfigGroup.get(config);
-    	drtCfg.getVehiclesFile();
-    	drtCfg.setVehiclesFile(drtVehiclesFile);
-    	drtCfg.setMaxTravelTimeAlpha(1.7);
-    	drtCfg.setMaxTravelTimeBeta(120.0);
-    	drtCfg.setStopDuration(60.);
-    	drtCfg.setMaxWaitTime(300.);
-    	drtCfg.setChangeStartLinkToLastLinkInSchedule(true);
-    	drtCfg.setIdleVehiclesReturnToDepots(false);
-    	drtCfg.setRequestRejection(false);
-    	drtCfg.setPrintDetailedWarnings(false);
-    	    	
+		// TODO: find a way to set bdifferent params per drt mode, e.g. move to config file
+		Set<String> dvrpNetworkModes = new HashSet<>();
+		
+		for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
+			drtCfg.setOperationalScheme(OperationalScheme.serviceAreaBased);
+			drtCfg.setUseModeFilteredSubnetwork(true);
+			
+	    	drtCfg.getVehiclesFile();
+	    	drtCfg.setVehiclesFile(drtVehiclesFile);
+	    	drtCfg.setMaxTravelTimeAlpha(1.7);
+	    	drtCfg.setMaxTravelTimeBeta(120.0);
+	    	drtCfg.setStopDuration(60.);
+	    	drtCfg.setMaxWaitTime(300.);
+	    	drtCfg.setChangeStartLinkToLastLinkInSchedule(true);
+	    	drtCfg.setIdleVehiclesReturnToDepots(false);
+	    	drtCfg.setRejectRequestIfMaxWaitOrTravelTimeViolated(false);
+	    	drtCfg.setPrintDetailedWarnings(false);
+			
+			DrtStageActivityType drtStageActivityType = new DrtStageActivityType(drtCfg.getMode());
+			// add drt stage activity (per default only added in case of stop-based drt operation mode)
+			if (config.planCalcScore().getActivityParams(drtStageActivityType.drtStageActivity) == null) {
+				PlanCalcScoreConfigGroup.ActivityParams params = new PlanCalcScoreConfigGroup.ActivityParams(drtStageActivityType.drtStageActivity);
+				params.setTypicalDuration(1); // TODO why 1 and not 0?
+				params.setScoringThisActivityAtAll(false);
+				config.planCalcScore().getScoringParametersPerSubpopulation().values().forEach(k -> k.addActivityParams(params));
+			}
+			
+			dvrpNetworkModes.add(drtCfg.getMode());
+		}
+		
+		DvrpConfigGroup dvrpConfigGroup = DvrpConfigGroup.get(config);
+		dvrpConfigGroup.setNetworkModes(ImmutableSet.copyOf(dvrpNetworkModes));
+		
     	// set drt fare
     	for (DrtFareConfigGroup drtFareCfg : DrtFaresConfigGroup.get(config).getDrtFareConfigGroups()) {
+    		drtFareCfg.setMode(TransportMode.drt);
     		drtFareCfg.setBasefare(0.);
         	drtFareCfg.setDailySubscriptionFee(0.);
         	drtFareCfg.setDistanceFare_m(0.0015);
