@@ -130,7 +130,7 @@ public final class RunDrtOpenBerlinScenario {
 		routeFactories.setRouteFactory(DrtRoute.class, new DrtRouteFactory());
 
 		AvoevConfigGroup avoevConfigGroup = ConfigUtils.addOrGetModule( scenario.getConfig(), AvoevConfigGroup.class ) ;		
-		addDRTmode(scenario, drtNetworkMode, avoevConfigGroup.getDrtServiceAreaShapeFileName());
+		addDRTmode(scenario, drtNetworkMode, avoevConfigGroup.getDrtServiceAreaShapeFileName()); // TODO use real service area plus buffer around it
 
 		return scenario;
 	}
@@ -187,11 +187,13 @@ public final class RunDrtOpenBerlinScenario {
 		config.planCalcScore().getScoringParametersPerSubpopulation().values().forEach(k -> k.addModeParams(drtModeParams));
     	    	
     	// set drt parameters
-		// TODO: find a way to set bdifferent params per drt mode, e.g. move to config file
+		// TODO: find a way to set different params per drt mode, e.g. move to config file
 		Set<String> dvrpNetworkModes = new HashSet<>();
 		
 		for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 			drtCfg.setOperationalScheme(OperationalScheme.serviceAreaBased);
+			AvoevConfigGroup avoevConfigGroup = ConfigUtils.addOrGetModule( config, AvoevConfigGroup.class ) ;
+			drtCfg.setDrtServiceAreaShapeFile(avoevConfigGroup.getDrtServiceAreaShapeFileName());
 			drtCfg.setUseModeFilteredSubnetwork(true);
 			
 	    	drtCfg.getVehiclesFile();
