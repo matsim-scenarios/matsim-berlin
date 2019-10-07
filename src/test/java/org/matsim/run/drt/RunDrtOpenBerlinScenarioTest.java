@@ -12,8 +12,8 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
+import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.gbl.MatsimRandom;
@@ -48,7 +48,10 @@ public class RunDrtOpenBerlinScenarioTest {
 			// jvm on build server has less cores than we set in the input config file and would complain about that
 			config.global().setNumberOfThreads(1);
 			config.qsim().setNumberOfThreads(1);
-			ConfigUtils.addOrGetModule(config, DrtConfigGroup.class).setNumberOfThreads(1);
+			
+			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
+				drtCfg.setNumberOfThreads(1);
+			}
 			
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 			// Decrease population to 0.1% sample 
