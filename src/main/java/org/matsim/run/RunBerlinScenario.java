@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
@@ -35,7 +36,6 @@ import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.gbl.Gbl;
-import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.core.scenario.ScenarioUtils;
 
 import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
@@ -110,12 +110,12 @@ public final class RunBerlinScenario {
 		return scenario;
 	}
 	
-	public static Config prepareConfig( String [] args ) {
+	public static Config prepareConfig( String [] args, ConfigGroup... customModules ) {
 		OutputDirectoryLogging.catchLogEntries();
 		
 		String[] typedArgs = Arrays.copyOfRange( args, 1, args.length );
 
-		final Config config = ConfigUtils.loadConfig( args[ 0 ] ); // I need this to set the context
+		final Config config = ConfigUtils.loadConfig( args[ 0 ], customModules ); // I need this to set the context
 		
 		config.controler().setRoutingAlgorithmType( FastAStarLandmarks );
 		

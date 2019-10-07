@@ -63,6 +63,7 @@ import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleWriterV1;
 import org.matsim.vehicles.VehiclesFactory;
 import org.matsim.vehicles.VehicleType.DoorOperationMode;
+import org.matsim.vehicles.VehicleUtils;
 
 import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 
@@ -206,7 +207,7 @@ public class RunGTFS2MATSimOpenBerlin {
 			VehicleCapacity capacity = reRbVehicleType.getCapacity();
 			capacity.setSeats( 500 );
 			capacity.setStandingRoom( 600 );
-			reRbVehicleType.setDoorOperationMode( DoorOperationMode.parallel );
+			VehicleUtils.setDoorOperationMode(reRbVehicleType, DoorOperationMode.parallel);
 			scenario.getTransitVehicles().addVehicleType( reRbVehicleType );
 		}
 		VehicleType sBahnVehicleType = vb.createVehicleType( Id.create( "S-Bahn_veh_type", VehicleType.class ) );
@@ -214,7 +215,7 @@ public class RunGTFS2MATSimOpenBerlin {
 			VehicleCapacity capacity = sBahnVehicleType.getCapacity();
 			capacity.setSeats( 400 );
 			capacity.setStandingRoom( 800 );
-			sBahnVehicleType.setDoorOperationMode( DoorOperationMode.parallel );
+			VehicleUtils.setDoorOperationMode(sBahnVehicleType, DoorOperationMode.parallel);
 			scenario.getTransitVehicles().addVehicleType( sBahnVehicleType );
 		}
 		VehicleType uBahnVehicleType = vb.createVehicleType( Id.create( "U-Bahn_veh_type", VehicleType.class ) );
@@ -222,7 +223,7 @@ public class RunGTFS2MATSimOpenBerlin {
 			VehicleCapacity capacity = uBahnVehicleType.getCapacity() ;
 			capacity.setSeats( 300 );
 			capacity.setStandingRoom( 600 );
-			uBahnVehicleType.setDoorOperationMode( DoorOperationMode.parallel );
+			VehicleUtils.setDoorOperationMode(uBahnVehicleType, DoorOperationMode.parallel);
 			scenario.getTransitVehicles().addVehicleType( uBahnVehicleType );
 		}
 		VehicleType tramVehicleType = vb.createVehicleType( Id.create( "Tram_veh_type", VehicleType.class ) );
@@ -230,7 +231,7 @@ public class RunGTFS2MATSimOpenBerlin {
 			VehicleCapacity capacity = tramVehicleType.getCapacity() ;
 			capacity.setSeats( 80 );
 			capacity.setStandingRoom( 170 );
-			tramVehicleType.setDoorOperationMode( DoorOperationMode.parallel );
+			VehicleUtils.setDoorOperationMode(tramVehicleType, DoorOperationMode.parallel);
 			scenario.getTransitVehicles().addVehicleType( tramVehicleType );
 		}
 		VehicleType busVehicleType = vb.createVehicleType( Id.create( "Bus_veh_type", VehicleType.class ) );
@@ -238,7 +239,7 @@ public class RunGTFS2MATSimOpenBerlin {
 			VehicleCapacity capacity = busVehicleType.getCapacity() ;
 			capacity.setSeats( 50 );
 			capacity.setStandingRoom( 100 );
-			busVehicleType.setDoorOperationMode( DoorOperationMode.parallel );
+			VehicleUtils.setDoorOperationMode(busVehicleType, DoorOperationMode.parallel);
 			scenario.getTransitVehicles().addVehicleType( busVehicleType );
 		}
 		VehicleType ferryVehicleType = vb.createVehicleType( Id.create( "Ferry_veh_type", VehicleType.class ) );
@@ -246,7 +247,7 @@ public class RunGTFS2MATSimOpenBerlin {
 			VehicleCapacity capacity = ferryVehicleType.getCapacity() ;
 			capacity.setSeats( 100 );
 			capacity.setStandingRoom( 100 );
-			ferryVehicleType.setDoorOperationMode( DoorOperationMode.parallel );
+			VehicleUtils.setDoorOperationMode(ferryVehicleType, DoorOperationMode.parallel);
 			scenario.getTransitVehicles().addVehicleType( ferryVehicleType );
 		}
 		// set link speeds and create vehicles according to pt mode
