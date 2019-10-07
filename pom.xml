@@ -112,8 +112,8 @@
 			<groupId>com.github.vsp-gleich</groupId>
 			<artifactId>matsim-sbb-extensions</artifactId>
 			<version>11.6-vsp-2019-09-20b</version>
-		</dependency>
-
+        </dependency>
+            
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>common</artifactId>
