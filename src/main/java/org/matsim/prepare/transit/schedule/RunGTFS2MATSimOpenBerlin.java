@@ -46,6 +46,7 @@ import org.matsim.core.network.io.NetworkWriter;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
+import org.matsim.core.utils.io.MatsimFileTypeGuesser;
 import org.matsim.prepare.transit.schedule.CheckPtDelays.DelayRecord;
 import org.matsim.pt.transitSchedule.api.Departure;
 import org.matsim.pt.transitSchedule.api.TransitLine;
@@ -100,6 +101,12 @@ public class RunGTFS2MATSimOpenBerlin {
 		String networkFile = outputDirectory + "/berlin-v5.5-network.xml.gz";
 		String scheduleFile = outputDirectory + "/berlin-v5.5-transit-schedule.xml.gz";
 		String transitVehiclesFile = outputDirectory + "/berlin-v5.5-transit-vehicles.xml.gz";
+		
+		// ensure output directory exists
+	    File directory = new File(outputDirectory);
+	    if (! directory.exists()){
+	        directory.mkdirs();
+	    }
 		
 		//Convert GTFS
 		RunGTFS2MATSim.convertGtfs(gtfsZipFile, scheduleFile, date, ct, false);
