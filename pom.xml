@@ -97,24 +97,6 @@
 		</dependency>
 
 		<dependency>
-			<!--<groupId>com.github.simunto</groupId>-->
-			<!--<artifactId>matsim-sbb-extensions</artifactId>-->
-			<!--<version>0.11.0-2018w44</version>-->
-
-			<!--Include SBB MATSim Extensions local version: -->
-			<!-- <groupId>com.github.vsp-gleich</groupId>
-			<artifactId>matsim-sbb-extensions</artifactId>
-			<version>11.6-vsp-2019-SNAPSHOT</version>-->
-			<!--(careful, this is not matsim, thus not ${matsim.version})-->
-
-			<!-- Include SBB MATSim Extensions from jitpack: -->
-			<!-- Note that this will also pick up the local version if that local version has com.github.XXX as groupId!-->
-			<groupId>com.github.vsp-gleich</groupId>
-			<artifactId>matsim-sbb-extensions</artifactId>
-			<version>11.6-vsp-2019-09-20b</version>
-        </dependency>
-            
-		<dependency>
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>common</artifactId>
 			<version>${matsim.version}</version>
