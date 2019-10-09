@@ -107,24 +107,29 @@ public class AbfallUtilsTest {
 					singleCarrier.getCarrierCapabilities().getVehicleTypes().contains(AbfallUtils.carrierVehType));
 			Assert.assertEquals(1, singleCarrier.getCarrierCapabilities().getCarrierVehicles().size());
 		}
-		
+
 	}
 
 	@Test
 	public final void testCreateMapWithLinksInDistricts() {
-		
+
 	}
-	
+
 	@Test
 	public final void testCreateDumpMap() {
 		HashMap<String, Id<Link>> garbageDumps = AbfallUtils.createDumpMap();
 		Assert.assertEquals(5, garbageDumps.size());
+		Assert.assertTrue(garbageDumps.get("Ruhleben").toString().equals("142010"));
+		Assert.assertTrue(garbageDumps.get("Gradestr").toString().equals("71781"));
+		Assert.assertTrue(garbageDumps.get("Pankow").toString().equals("145812"));
+		Assert.assertTrue(garbageDumps.get("ReinickenD").toString().equals("59055"));
+		Assert.assertTrue(garbageDumps.get("GruenauerStr").toString().equals("97944"));
 		for (Id<Link> link : garbageDumps.values()) {
 			Assert.assertNotNull(link);
 		}
-		
+
 	}
-	
+
 	@Test
 	public final void testShapeFile() {
 		final String berlinDistrictsWithGarbageInformations = "scenarios/garbageInput/districtsWithGarbageInformations.shp";
@@ -133,8 +138,25 @@ public class AbfallUtilsTest {
 		for (SimpleFeature districtInformation : districtsWithGarbage) {
 			Assert.assertNotNull(districtInformation.getAttribute("Depot"));
 			Assert.assertNotNull(districtInformation.getAttribute("Ortsteil"));
-			//...
+			Assert.assertTrue(((double) districtInformation.getAttribute("MO")
+					+ (double) districtInformation.getAttribute("DI") + (double) districtInformation.getAttribute("MI")
+					+ (double) districtInformation.getAttribute("DO")
+					+ (double) districtInformation.getAttribute("FR")) > 0);
+
+			HashMap<String, Id<Link>> garbageDumps = AbfallUtils.createDumpMap();
+			if ((double) districtInformation.getAttribute("MO") > 0)
+				Assert.assertTrue(garbageDumps.containsKey(districtInformation.getAttribute("Mo-Ent").toString()));
+			if ((double) districtInformation.getAttribute("DI") > 0)
+				Assert.assertTrue(garbageDumps.containsKey(districtInformation.getAttribute("Di-Ent").toString()));
+			if ((double) districtInformation.getAttribute("MI") > 0)
+				Assert.assertTrue(garbageDumps.containsKey(districtInformation.getAttribute("Mi-Ent").toString()));
+			if ((double) districtInformation.getAttribute("DO") > 0)
+				Assert.assertTrue(garbageDumps.containsKey(districtInformation.getAttribute("Do-Ent").toString()));
+			if ((double) districtInformation.getAttribute("FR") > 0)
+				Assert.assertTrue(garbageDumps.containsKey(districtInformation.getAttribute("Fr-Ent").toString()));
+			Assert.assertNotNull(districtInformation.getDefaultGeometry());
+
 		}
-		Assert.assertEquals(96,districtsWithGarbage.size());
+		Assert.assertEquals(96, districtsWithGarbage.size());
 	}
 }
