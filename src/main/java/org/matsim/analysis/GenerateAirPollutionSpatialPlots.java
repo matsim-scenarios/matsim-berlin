@@ -97,7 +97,8 @@ public class GenerateAirPollutionSpatialPlots {
 		config.network().setInputFile(runDir + runId + ".output_network.xml.gz");
         Scenario scenario = ScenarioUtils.loadScenario(config);
 
-        double binSize = 9600; // for daily numbers: make the bin size bigger than the scenario has seconds
+        double binSize = 3600. * 3; // for daily numbers: make the bin size bigger than the scenario has seconds
+
         Network network = scenario.getNetwork();
 
         EmissionGridAnalyzer analyzer = new EmissionGridAnalyzer.Builder()
@@ -113,7 +114,7 @@ public class GenerateAirPollutionSpatialPlots {
 		TimeBinMap<Grid<Map<String, Double>>> timeBins = analyzer.process(eventsPath);
 		analyzer.processToJsonFile(eventsPath, runDir + runId + ".emissions.json");
 		
-		Cell<Map<String, Double>> cell = Iterables.get(timeBins.getTimeBin(timeBins.getEndTimeOfLastBin()).getValue().getCells(), 0);
+		Cell<Map<String, Double>> cell = Iterables.get(timeBins.getTimeBin(0).getValue().getCells(), 0);
 		for (String pollutant : cell.getValue().keySet()) {
 			log.info("Writing data to csv file: " + pollutant);
 	        writeGridToCSV(timeBins, pollutant, runDir + runId + ".emissions." + pollutant + ".csv");
