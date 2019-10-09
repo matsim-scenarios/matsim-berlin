@@ -39,7 +39,6 @@ import org.matsim.core.config.Config;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.router.MainModeIdentifierImpl;
-import org.matsim.core.router.StageActivityTypesImpl;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
 import org.matsim.testcases.MatsimTestUtils;
@@ -217,13 +216,12 @@ public class RunBerlinScenarioTest {
 		
 		Map<String,Double> modeCnt = new TreeMap<>() ;
 
-		StageActivityTypesImpl stageActivities = new StageActivityTypesImpl(Arrays.asList("pt interaction", "car interaction", "ride interaction", "bicycle interaction", "freight interaction"));
 		MainModeIdentifierImpl mainModeIdentifier = new MainModeIdentifierImpl();
 		
 		for (Person person : population.getPersons().values()) {
 			Plan plan = person.getSelectedPlan() ;
 
-			List<Trip> trips = TripStructureUtils.getTrips(plan, stageActivities) ;
+			List<Trip> trips = TripStructureUtils.getTrips(plan) ;
 			for ( Trip trip : trips ) {
 				String mode = mainModeIdentifier.identifyMainMode( trip.getTripElements() ) ;
 				
