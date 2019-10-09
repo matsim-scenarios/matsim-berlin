@@ -29,8 +29,8 @@ public class RunBerlinAccidents {
 	String outputFile = "/../../shared-svn/studies/countries/de/accidents/data/output/"; 
 	String landOSMInputShapeFile = "/../../shared-svn/studies/countries/de/accidents/data/input/osmBerlin/gis.osm_landuse_a_free_1.shx";  
 	String placesOSMInputFile = "/../../shared-svn/studies/countries/de/accidents/data/input/osmBerlinBrandenburg/gis.osm_landuse_a_free_1_GK4.shx";
-	String tunnelLinkCSVInputFile = "/../../shared-svn/studies/countries/de/accidents/data/input/tunnellinks.csv";
-	String planFreeLinkCSVInputFile = "/../../shared-svn/studies/countries/de/accidents/data/input/planfreelinks.csv";
+	String tunnelLinkCSVInputFile = "D:/GIT/shared-svn/studies/countries/de/accidents/data/input/CSV files/tunnellinks.csv";
+	String planFreeLinkCSVInputFile = "D:/GIT/shared-svn/studies/countries/de/accidents/data/input/CSV files/planfreelinks.csv";
 
 	
 	Config config = RunBerlinScenario.prepareConfig( args );
@@ -42,11 +42,11 @@ public class RunBerlinAccidents {
 
 	
 	AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
-	accidentsSettings.setSampleSize(100);
-	accidentsSettings.setLanduseOSMInputShapeFile(landOSMInputShapeFile);
-	accidentsSettings.setPlacesOSMInputFile(placesOSMInputFile);
-	accidentsSettings.setTunnelLinkCSVInputFile(tunnelLinkCSVInputFile);
-	accidentsSettings.setPlanFreeLinkCSVInputFile(planFreeLinkCSVInputFile);
+//	accidentsSettings.setSampleSize(100);
+//	accidentsSettings.setLanduseOSMInputShapeFile(landOSMInputShapeFile);
+//	accidentsSettings.setPlacesOSMInputFile(placesOSMInputFile);
+//	accidentsSettings.setTunnelLinkCSVInputFile(tunnelLinkCSVInputFile);
+//	accidentsSettings.setPlanFreeLinkCSVInputFile(planFreeLinkCSVInputFile);
 	controler.run();
 	
 	
