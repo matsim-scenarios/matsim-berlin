@@ -1,10 +1,17 @@
 package org.matsim.analysis;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.accidents.AccidentsConfigGroup;
+import org.matsim.contrib.accidents.AccidentsConfigGroup.AccidentsComputationMethod;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
@@ -16,7 +23,7 @@ public class RunBerlinAccidents {
 	
 	private static final Logger log = Logger.getLogger(RunBerlinAccidents.class);
 	
-	public static void main(String[] args) { 
+	public static void main(String[] args) throws IOException { 
 	
 		for (String arg : args) {
 			log.info( arg );
@@ -42,6 +49,47 @@ public class RunBerlinAccidents {
 
 	
 	AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
+	accidentsSettings.setScaleFactor(100);
+	
+	//doing some preprocessing
+	
+	//adding BVWP attributes as link Attributes
+	for (Link link : scenario.getNetwork().getLinks().values()) {
+	link.getAttributes().putAttribute(accidentsSettings.getAccidentsComputationMethodAttributeName(), AccidentsComputationMethod.BVWP.toString());
+	
+	//adding the Lanes as an attribute
+	int numberOfLanesBVWP;
+	if (link.getNumberOfLanes() > 4){
+		numberOfLanesBVWP = 4;
+	} else {
+		numberOfLanesBVWP = (int) link.getNumberOfLanes();
+	}
+	
+	String aux = link.getId().toString();
+    String line = ";";
+    
+    //setting the tunnelslinks
+    List<String[]> tunnelLinks  = new ArrayList<>();  
+    try(BufferedReader br = new BufferedReader(new FileReader(tunnelLinkCSVInputFile))) {
+    while ((line = br.readLine()) != null)
+    {
+        tunnelLinks.add(line.split(","));
+    }
+    } 
+	catch (FileNotFoundException e) {
+  //Some error logging
+    }
+    //comparing Ids from the ones in the list
+    for (int x=0; x<tunnelLinks.size();x++ ) {   
+    if (aux.equals(tunnelLinks.get(x))) {
+    	link.getAttributes().putAttribute(accidentsSettings.getBvwpRoadTypeAttributeName(), "1,0," + numberOfLanesBVWP);
+    }
+    System.out.println("the link " +link.getId().toString() + "was categorized with the Type BVWP" + link.getAttributes().getAttribute(accidentsSettings.getBvwpRoadTypeAttributeName()));
+    }
+	}
+
+
+	
 //	accidentsSettings.setSampleSize(100);
 //	accidentsSettings.setLanduseOSMInputShapeFile(landOSMInputShapeFile);
 //	accidentsSettings.setPlacesOSMInputFile(placesOSMInputFile);
