@@ -18,6 +18,12 @@
  * *********************************************************************** */
 package org.matsim.analysis;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.log4j.Logger;
@@ -27,18 +33,11 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.analysis.spatial.Grid;
-import org.matsim.contrib.analysis.spatial.Grid.Cell;
 import org.matsim.contrib.analysis.time.TimeBinMap;
 import org.matsim.contrib.emissions.analysis.EmissionGridAnalyzer;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.scenario.ScenarioUtils;
-
-import com.google.common.collect.Iterables;
-
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Map;
 
 /**
  * @author amit, ihab
@@ -54,7 +53,7 @@ public class GenerateAirPollutionSpatialPlots {
     private static final double xMin = 4565039. - 125.;
 	private static final double xMax = 4632739. + 125.; 
 	private static final double yMin = 5801108. - 125.;
-    private static final double yMax = 5845708. + 125.;
+	private static final double yMax = 5845708. + 125.;
 
     private GenerateAirPollutionSpatialPlots(final double gridSize, final double smoothingRadius, final double countScaleFactor) {
         this.gridSize = gridSize;
@@ -114,8 +113,15 @@ public class GenerateAirPollutionSpatialPlots {
 		TimeBinMap<Grid<Map<String, Double>>> timeBins = analyzer.process(eventsPath);
 		analyzer.processToJsonFile(eventsPath, runDir + runId + ".emissions.json");
 		
-		Cell<Map<String, Double>> cell = Iterables.get(timeBins.getTimeBin(0).getValue().getCells(), 0);
-		for (String pollutant : cell.getValue().keySet()) {
+		Set<String> pollutants = new HashSet<>();
+		for (TimeBinMap.TimeBin<Grid<Map<String, Double>>> bin : timeBins.getTimeBins()) {
+            for (Grid.Cell<Map<String, Double>> cell : bin.getValue().getCells()) {
+                for (String pollutentInCell : cell.getValue().keySet()) {
+                	if (!pollutants.contains(pollutentInCell)) pollutants.add(pollutentInCell);
+                }
+			}
+		}
+		for (String pollutant : pollutants) {
 			log.info("Writing data to csv file: " + pollutant);
 	        writeGridToCSV(timeBins, pollutant, runDir + runId + ".emissions." + pollutant + ".csv");
 		}
