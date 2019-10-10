@@ -59,6 +59,9 @@ public class RunBerlinAccidents {
 	
 	//adding the Lanes as an attribute
 	int numberOfLanesBVWP;
+	int typeofIntersections = 0;
+	int typeofRoad = 0;
+	
 	if (link.getNumberOfLanes() > 4){
 		numberOfLanesBVWP = 4;
 	} else {
@@ -68,7 +71,7 @@ public class RunBerlinAccidents {
 	String aux = link.getId().toString();
     String line = ";";
     
-    //setting the tunnelslinks
+    //Setting the links that are considered tunnels
     List<String[]> tunnelLinks  = new ArrayList<>();  
     try(BufferedReader br = new BufferedReader(new FileReader(tunnelLinkCSVInputFile))) {
     while ((line = br.readLine()) != null)
@@ -82,8 +85,12 @@ public class RunBerlinAccidents {
     //comparing Ids from the ones in the list
     for (int x=0; x<tunnelLinks.size();x++ ) {   
     if (aux.equals(tunnelLinks.get(x))) {
-    	link.getAttributes().putAttribute(accidentsSettings.getBvwpRoadTypeAttributeName(), "1,0," + numberOfLanesBVWP);
+    	typeofIntersections = 1;
     }
+    
+    //Defining with int the attribute for BVWP
+    
+  	link.getAttributes().putAttribute(accidentsSettings.getBvwpRoadTypeAttributeName(), typeofIntersections +","+ typeofRoad + "," + numberOfLanesBVWP);
     System.out.println("the link " +link.getId().toString() + "was categorized with the Type BVWP" + link.getAttributes().getAttribute(accidentsSettings.getBvwpRoadTypeAttributeName()));
     }
 	}
