@@ -220,6 +220,8 @@
 
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
+				<!--Presumably, you can run this by mvn assembly:assembly (?)-->
+
 				<configuration>
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
@@ -234,6 +236,9 @@
 					<execution>
 						<id>make-assembly</id>
 						<phase>package</phase>
+						<!--Presumably, this plugin is thus run as part of the package phase.  So-->
+						<!--you can either only run assembly:assembly, or package, where the-->
+						<!--latter may run additional stuff or not.-->
 						<goals>
 							<goal>single</goal>
 						</goals>
@@ -260,8 +265,18 @@
 		<profile>
 			<id>release</id>
 			<build>
+
 				<defaultGoal>assembly:assembly</defaultGoal>
+				<!--(I think that the above line is the reason why mvn -Prelease works-->
+				<!--without defining a goal. And it presumably only works because the-->
+				<!--assemply plugin is defined above. kai, oct'19)-->
+
 				<pluginManagement>
+					<!--pluginManagement further defines plugins *if* they are loaded-->
+					<!--elsewhere.  So this will only have an effect if the assembly plugin or-->
+					<!--the jar plugin are loaded above.  It then reconfigures it for the-->
+					<!--profile run.-->
+
 					<plugins>
 						<plugin>
 							<artifactId>maven-assembly-plugin</artifactId>
