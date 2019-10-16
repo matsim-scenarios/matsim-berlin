@@ -18,6 +18,12 @@
  * *********************************************************************** */
 package org.matsim.analysis;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.log4j.Logger;
@@ -33,10 +39,6 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Map;
-
 /**
  * @author amit, ihab
  */
@@ -51,7 +53,7 @@ public class GenerateAirPollutionSpatialPlots {
     private static final double xMin = 4565039. - 125.;
 	private static final double xMax = 4632739. + 125.; 
 	private static final double yMin = 5801108. - 125.;
-    private static final double yMax = 5845708. + 125.;
+	private static final double yMax = 5845708. + 125.;
 
     private GenerateAirPollutionSpatialPlots(final double gridSize, final double smoothingRadius, final double countScaleFactor) {
         this.gridSize = gridSize;
@@ -73,8 +75,8 @@ public class GenerateAirPollutionSpatialPlots {
         final double smoothingRadius = 500.;
         final double scaleFactor = 100.;
         
-        final String runDir = rootDirectory + "public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/output-berlin-v5.4-10pct/";
-    	final String runId = "berlin-v5.4-10pct";
+        final String runDir = rootDirectory + "public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/";
+    	final String runId = "berlin-v5.4-1pct";
 
         GenerateAirPollutionSpatialPlots plots = new GenerateAirPollutionSpatialPlots(gridSize, smoothingRadius, scaleFactor);
         
@@ -94,7 +96,8 @@ public class GenerateAirPollutionSpatialPlots {
 		config.network().setInputFile(runDir + runId + ".output_network.xml.gz");
         Scenario scenario = ScenarioUtils.loadScenario(config);
 
-        double binSize = 200000; // make the bin size bigger than the scenario has seconds
+        double binSize = 3600. * 3; // for daily numbers: make the bin size bigger than the scenario has seconds
+
         Network network = scenario.getNetwork();
 
         EmissionGridAnalyzer analyzer = new EmissionGridAnalyzer.Builder()
@@ -110,8 +113,18 @@ public class GenerateAirPollutionSpatialPlots {
 		TimeBinMap<Grid<Map<String, Double>>> timeBins = analyzer.process(eventsPath);
 		analyzer.processToJsonFile(eventsPath, runDir + runId + ".emissions.json");
 		
-        log.info("Writing to csv...");
-        writeGridToCSV(timeBins, "NOX", runDir + runId + ".NOx.csv");
+		Set<String> pollutants = new HashSet<>();
+		for (TimeBinMap.TimeBin<Grid<Map<String, Double>>> bin : timeBins.getTimeBins()) {
+            for (Grid.Cell<Map<String, Double>> cell : bin.getValue().getCells()) {
+                for (String pollutentInCell : cell.getValue().keySet()) {
+                	if (!pollutants.contains(pollutentInCell)) pollutants.add(pollutentInCell);
+                }
+			}
+		}
+		for (String pollutant : pollutants) {
+			log.info("Writing data to csv file: " + pollutant);
+	        writeGridToCSV(timeBins, pollutant, runDir + runId + ".emissions." + pollutant + ".csv");
+		}
     }
 
     private void writeGridToCSV(TimeBinMap<Grid<Map<String, Double>>> bins, String pollutant, String outputPath) {

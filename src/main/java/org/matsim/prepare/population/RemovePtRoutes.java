@@ -37,7 +37,6 @@ import org.matsim.core.gbl.Gbl;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.router.MainModeIdentifierImpl;
-import org.matsim.core.router.StageActivityTypesImpl;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
 import org.matsim.core.scenario.ScenarioUtils;
@@ -98,7 +97,7 @@ public class RemovePtRoutes {
 
 	private static void run(final Plan plan) {
 		final List<PlanElement> planElements = plan.getPlanElements();
-		final List<Trip> trips = TripStructureUtils.getTrips( plan , new StageActivityTypesImpl() );
+		final List<Trip> trips = TripStructureUtils.getTrips( plan );
 
 		for ( Trip trip : trips ) {
 			final List<PlanElement> fullTrip =
