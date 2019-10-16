@@ -162,7 +162,6 @@ public final class RunDrtOpenBerlinScenario {
 		ConfigUtils.addOrGetModule( config, DvrpConfigGroup.class ) ;
 		ConfigUtils.addOrGetModule( config, MultiModeDrtConfigGroup.class ) ;
 		ConfigUtils.addOrGetModule( config, DrtFaresConfigGroup.class ) ;
-		
 		ConfigUtils.addOrGetModule( config, VspExperimentalConfigGroup.class ).setVspDefaultsCheckingLevel(VspDefaultsCheckingLevel.warn); ;
 		
 		// switch off pt vehicle simulation
@@ -223,7 +222,8 @@ public final class RunDrtOpenBerlinScenario {
 		dvrpConfigGroup.setNetworkModes(ImmutableSet.copyOf(dvrpNetworkModes));
 		
     	// set drt fare
-    	for (DrtFareConfigGroup drtFareCfg : DrtFaresConfigGroup.get(config).getDrtFareConfigGroups()) {
+		DrtFaresConfigGroup faresCfg = ConfigUtils.addOrGetModule(config, DrtFaresConfigGroup.class);
+    	for (DrtFareConfigGroup drtFareCfg : faresCfg.getDrtFareConfigGroups()) {
     		drtFareCfg.setMode(TransportMode.drt);
     		drtFareCfg.setBasefare(0.);
         	drtFareCfg.setDailySubscriptionFee(0.);
