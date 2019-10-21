@@ -81,9 +81,9 @@ public class RunBerlinAccidents {
     //comparing Ids from the ones in the list
 	typeofIntersections = defineAtributteFromList(tunnelLinks,link, 1, typeofIntersections);
 	typeofIntersections = defineAtributteFromList(planfreeLinks,link, 2, typeofIntersections);
-	
-  	link.getAttributes().putAttribute(accidentsSettings.getBvwpRoadTypeAttributeName(), typeofIntersections +","+ typeofRoad + "," + numberOfLanesBVWP);
-    System.out.println("the link " +link.getId().toString() + "was categorized with the Type BVWP" + link.getAttributes().getAttribute(accidentsSettings.getBvwpRoadTypeAttributeName()));
+	// FIXME
+//  	link.getAttributes().putAttribute(accidentsSettings.getBvwpRoadTypeAttributeName(), typeofIntersections +","+ typeofRoad + "," + numberOfLanesBVWP);
+//    System.out.println("the link " +link.getId().toString() + "was categorized with the Type BVWP" + link.getAttributes().getAttribute(accidentsSettings.getBvwpRoadTypeAttributeName()));
 	}
 	System.out.println("the number of analyzed links was" + nofLinks);
 //	running
