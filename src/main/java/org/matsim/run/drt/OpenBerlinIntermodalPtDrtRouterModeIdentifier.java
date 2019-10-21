@@ -82,7 +82,7 @@ public final class OpenBerlinIntermodalPtDrtRouterModeIdentifier implements Main
 				mode = TransportMode.pt;
 			} else {
 				for (String drtMode: drtModes) {
-					if (mode.equals(drtMode + "_walk")) {// transit_walk / drt_walk / ... to be replaced by _fallback soon
+					if (mode.equals(drtMode + "_fallback")) {// transit_walk / drt_walk / ... to be replaced by _fallback soon
 						mode = drtMode;
 					}
 				}
