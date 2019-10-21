@@ -193,22 +193,6 @@
 			<param name="vehiclesFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlin-sav-v5.2-10pct/input/berlkoenig-vehicles/berlin-v5.2.berlkoenig150veh_6seats.xml.gz" />
 			<!-- Writes out detailed DRT customer stats in each iteration. True by default. -->
 			<param name="writeDetailedCustomerStats" value="true" />
-			<!--
-			<parameterset type="minCostFlowRebalancing" >
-				<!-- size of square cells used for demand aggregation. Depends on demand, supply and network. Often used with values in the range of 500 - 2000 m -->
-				<param name="cellSize" value="2000.0" />
-				<!-- Specifies how often empty vehicle rebalancing is executed. 0 s means no rebalancing. Default is 1800 s. -->
-				<param name="interval" value="1800" />
-				<!-- Maximum remaining time before busy vehicle becomes idle to be considered as soon-idle vehicle. Default is 900 s. In general should be lower than interval (e.g. 0.5 x interval) -->
-				<param name="maxTimeBeforeIdle" value="900.0" />
-				<!-- Minimum remaining service time of an idle/busy vehicle to be considered as rebalancable/soon-idle (respectively). Default is 3600 s. In general, should be higher than interval (e.g. 2 x interval). -->
-				<param name="minServiceTime" value="3600.0" />
-				<!-- alpha coefficient in linear target calculation. In general, should be lower then 1.0 to prevent over-reacting and high empty milleage. -->
-				<param name="targetAlpha" value="0.5" />
-				<!-- beta constant in linear target calculation. In general, should be lower then 1.0 to prevent over-reacting and high empty milleage. -->
-				<param name="targetBeta" value="0.5" />
-			</parameterset>
-			-->
 		</parameterset>
 	</module>
 	
