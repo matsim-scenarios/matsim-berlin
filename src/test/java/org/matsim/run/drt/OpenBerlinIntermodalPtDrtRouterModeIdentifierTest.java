@@ -30,6 +30,7 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.api.core.v01.population.PopulationFactory;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.router.TripRouter;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.pt.PtConstants;
 import org.matsim.testcases.MatsimTestUtils;
@@ -100,13 +101,13 @@ public class OpenBerlinIntermodalPtDrtRouterModeIdentifierTest {
 		
 		{
 			List<PlanElement> planElements = new ArrayList<>();
-			planElements.add(factory.createLeg(TransportMode.drt + "_walk"));
+			planElements.add(factory.createLeg(TripRouter.getFallbackMode(TransportMode.drt)));
 			Assert.assertEquals("Wrong mode!", TransportMode.drt, mainModeIdentifier.identifyMainMode(planElements));
 		}
 		
 		{
 			List<PlanElement> planElements = new ArrayList<>();
-			planElements.add(factory.createLeg("drt2" + "_walk"));
+			planElements.add(factory.createLeg(TripRouter.getFallbackMode("drt2")));
 			Assert.assertEquals("Wrong mode!", "drt2", mainModeIdentifier.identifyMainMode(planElements));
 		}
 		
