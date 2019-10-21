@@ -125,7 +125,7 @@ public final class RunDrtOpenBerlinScenario {
 		if ( args.length != 0 ){
 			config = RunBerlinScenario.prepareConfig( args, new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup()  ) ;
 		} else {
-			config = RunBerlinScenario.prepareConfig( new String [] {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drtA-v5.5-1pct-Berlkoenig.config.xml"}, new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup() ) ;
+			config = RunBerlinScenario.prepareConfig( new String [] {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-Berlkoenig-v5.5-1pct.config.xml"}, new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup() ) ;
 		}
 		
 		// switch off pt vehicle simulation
