@@ -19,7 +19,6 @@
 package org.matsim.run.drt;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -107,8 +106,8 @@ public class OpenBerlinIntermodalPtDrtRouterModeIdentifierTest {
 		
 		{
 			List<PlanElement> planElements = new ArrayList<>();
-			planElements.add(factory.createLeg("BerlkoenigBC" + "_walk"));
-			Assert.assertEquals("Wrong mode!", "BerlkoenigBC", mainModeIdentifier.identifyMainMode(planElements));
+			planElements.add(factory.createLeg("drt2" + "_walk"));
+			Assert.assertEquals("Wrong mode!", "drt2", mainModeIdentifier.identifyMainMode(planElements));
 		}
 		
 		log.info("Running testDrtPtFallbackModesRecognition... Done.");
@@ -142,9 +141,9 @@ public class OpenBerlinIntermodalPtDrtRouterModeIdentifierTest {
 		{
 			List<PlanElement> planElements = new ArrayList<>();
 			planElements.add(factory.createLeg(TransportMode.non_network_walk));
-			planElements.add(factory.createActivityFromLinkId("BerlkoenigBC interaction", null));
-			planElements.add(factory.createLeg("BerlkoenigBC"));
-			planElements.add(factory.createActivityFromLinkId("BerlkoenigBC interaction", null));
+			planElements.add(factory.createActivityFromLinkId("drt2 interaction", null));
+			planElements.add(factory.createLeg("drt2"));
+			planElements.add(factory.createActivityFromLinkId("drt2 interaction", null));
 			planElements.add(factory.createLeg(TransportMode.non_network_walk));
 			planElements.add(factory.createActivityFromLinkId(PtConstants.TRANSIT_ACTIVITY_TYPE, null));
 			planElements.add(factory.createLeg(TransportMode.pt));
@@ -168,9 +167,9 @@ public class OpenBerlinIntermodalPtDrtRouterModeIdentifierTest {
 			planElements.add(factory.createLeg(TransportMode.pt));
 			planElements.add(factory.createActivityFromLinkId(PtConstants.TRANSIT_ACTIVITY_TYPE, null));
 			planElements.add(factory.createLeg(TransportMode.non_network_walk));
-			planElements.add(factory.createActivityFromLinkId("BerlkoenigBC interaction", null));
-			planElements.add(factory.createLeg("BerlkoenigBC"));
-			planElements.add(factory.createActivityFromLinkId("BerlkoenigBC interaction", null));
+			planElements.add(factory.createActivityFromLinkId("drt2 interaction", null));
+			planElements.add(factory.createLeg("drt2"));
+			planElements.add(factory.createActivityFromLinkId("drt2 interaction", null));
 			planElements.add(factory.createLeg(TransportMode.non_network_walk));
 			Assert.assertEquals("Wrong mode!", TransportMode.pt, mainModeIdentifier.identifyMainMode(planElements));
 		}
