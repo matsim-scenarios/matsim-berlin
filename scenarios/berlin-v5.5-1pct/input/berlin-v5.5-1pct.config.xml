@@ -6,7 +6,7 @@
 	</module>
 	<module name="controler" >
 		<param name="lastIteration" value="500" />
-		<param name="overwriteFiles" value="deleteDirectoryIfExists" />
+		<param name="overwriteFiles" value="failIfDirectoryExists" />
 		<param name="runId" value="berlin-v5.5-1pct" />
 		<param name="outputDirectory" value="./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct" />
 		<param name="writeEventsInterval" value="50" />
@@ -42,16 +42,6 @@
 		<parameterset type="teleportedModeParameters" >
 			<param name="beelineDistanceFactor" value="1.3" />
 			<param name="mode" value="walk" />
-			<param name="teleportedModeSpeed" value="1.0555556" />
-		</parameterset>
-		<parameterset type="teleportedModeParameters" >
-			<param name="beelineDistanceFactor" value="1.3" />
-			<param name="mode" value="transit_walk" />
-			<param name="teleportedModeSpeed" value="1.0555556" />
-		</parameterset>
-		<parameterset type="teleportedModeParameters" >
-			<param name="beelineDistanceFactor" value="1.3" />
-			<param name="mode" value="non_network_walk" />
 			<param name="teleportedModeSpeed" value="1.0555556" />
 		</parameterset>
 	</module>
@@ -154,10 +144,6 @@
 			<parameterset type="modeParams" >
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="transit_walk" />
-			</parameterset>
-			<parameterset type="modeParams" >
-				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-				<param name="mode" value="non_network_walk" />
 			</parameterset>
 		</parameterset>
 	</module>

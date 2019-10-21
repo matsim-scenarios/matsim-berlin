@@ -131,8 +131,6 @@ public final class RunDrtOpenBerlinScenario {
 			config = RunBerlinScenario.prepareConfig( new String [] {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drtA-v5.5-1pct-Berlkoenig.config.xml"}, new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup() ) ;
 		}
 		
-		ConfigUtils.addOrGetModule( config, VspExperimentalConfigGroup.class ).setVspDefaultsCheckingLevel(VspDefaultsCheckingLevel.warn); ;
-		
 		// switch off pt vehicle simulation
 //		config.transit().setUsingTransitInMobsim(false);
 

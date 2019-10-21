@@ -5,12 +5,12 @@
 		<param name="mutationRange" value="7200.0" />
 	</module>
 	<module name="controler" >
-		<param name="lastIteration" value="10" />
+		<param name="lastIteration" value="500" />
 		<param name="overwriteFiles" value="failIfDirectoryExists" />
-		<param name="runId" value="berlin-drtA-v5.5-1pct-Hundekopf" />
-		<param name="outputDirectory" value="./output/berlin-drtA-v5.5-1pct-Hundekopf" />
-		<param name="writeEventsInterval" value="1" />
-		<param name="writePlansInterval" value="1" />
+		<param name="runId" value="berlin-drt-Hundekopf-v5.5-1pct" />
+		<param name="outputDirectory" value="./output/berlin-drt-Hundekopf-v5.5-1pct" />
+		<param name="writeEventsInterval" value="50" />
+		<param name="writePlansInterval" value="50" />
 	</module>
 	<module name="global" >
 		<param name="coordinateSystem" value="GK4" />
@@ -108,17 +108,12 @@
 	<module name="planCalcScore" >
 		<param name="fractionOfIterationsToStartScoreMSA" value="1.0" />
 		<parameterset type="scoringParameters" >
-			<parameterset type="activityParams" >
-				<param name="activityType" value="drt interaction" />
-				<param name="priority" value="1.0" />
-				<param name="scoringThisActivityAtAll" value="false" />
-			</parameterset>
 			<parameterset type="modeParams" >
 				<param name="constant" value="-0.45" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="car" />
 				<param name="monetaryDistanceRate" value="-0.0002" />
-				<param name="dailyMonetaryConstant" value="-5.4" />
+				<param name="dailyMonetaryConstant" value="-5.3" />
 			</parameterset>
 			<parameterset type="modeParams" >
 				<param name="constant" value="-0.0" />
@@ -160,8 +155,6 @@
 
 	<module name="multiModeDrt">
 		<parameterset type="drt">
-			<!-- Mode which will be handled by PassengerEngine and VrpOptimizer (passengers'/customers' perspective) -->
-			<param name="mode" value="drt" />
 			<!-- If true, the startLink is changed to last link in the current schedule, so the taxi starts the next day at the link where it stopped operating the day before. False by default. -->
 			<param name="changeStartLinkToLastLinkInSchedule" value="true" />
 			<!-- allows to configure a service area per drt mode.Used with serviceArea Operational Scheme -->
@@ -177,28 +170,31 @@
 			<!-- Defines the shift of the maxTravelTime estimation function (optimisation constraint), i.e. maxTravelTimeAlpha * estimated_drt_travel_time + maxTravelTimeBeta. Beta should not be smaller than 0. -->
 			<param name="maxTravelTimeBeta" value="120.0" />
 			<!-- Max wait time for the bus to come (optimisation constraint). -->
-			<param name="maxWaitTime" value="900.0" />
+			<param name="maxWaitTime" value="300.0" />
 			<!-- Maximum desired walk distance (in meters) to next stop location in stopbased system. If no suitable stop is found in that range, the search radius will be extended in steps of maxWalkDistance until a stop is found. -->
 			<param name="maxWalkDistance" value="0.0" />
+			<!-- Mode which will be handled by PassengerEngine and VrpOptimizer (passengers'/customers' perspective) -->
+			<param name="mode" value="drt" />
 			<!-- Number of threads used for parallel evaluation of request insertion into existing schedules. Scales well up to 4, due to path data provision, the most computationally intensive part, using up to 4 threads. Default value is 'min(4, no. of cores available to JVM)' -->
 			<param name="numberOfThreads" value="4" />
-			<!-- Operational Scheme, door2door, serviceAreaBased or stopbased. door2door by default -->
+			<!-- Operational Scheme, either of door2door, stopbased or serviceAreaBased. door2door by default -->
 			<param name="operationalScheme" value="serviceAreaBased" />
-			<!-- Prints detailed warnings for DRT customers that cannot be served or routed. Default is false. -->
+			<!-- Prints detailed warnings for DRT customers that cannot be served or routed. Default is true. -->
 			<param name="plotDetailedWarnings" value="true" />
 			<!-- If true, the max travel and wait times of a submitted request are considered hard constraints (the request gets rejected if one of the constraints is violated). If false, the max travel and wait times are considered soft constraints (insertion of a request that violates one of the constraints is allowed, but its cost is increased by additional penalty to make it relatively less attractive). Penalisation of insertions can be customised by injecting a customised InsertionCostCalculator.PenaltyCalculator -->
 			<param name="rejectRequestIfMaxWaitOrTravelTimeViolated" value="false" />
-			<!-- Bus stop duration. -->
+			<!-- Bus stop duration. Must be positive. -->
 			<param name="stopDuration" value="60.0" />
 			<!-- Stop locations file (transit schedule format, but without lines) for DRT stops. Used only for the stopbased mode -->
 			<param name="transitStopFile" value="null" />
 			<!-- Limit the operation of vehicles to links (of the 'dvrp_routing' network) with 'allowedModes' containing this 'mode'. For backward compatibility, the value is set to false by default - this means that the vehicles are allowed to operate on all links of the 'dvrp_routing' network. The 'dvrp_routing' is defined by DvrpConfigGroup.networkModes) -->
-			<param name="useModeFilteredSubnetwork" value="true" />
+			<param name="useModeFilteredSubnetwork" value="false" />
 			<!-- An XML file specifying the vehicle fleet. The file format according to dvrp_vehicles_v1.dtd -->
 			<!-- <param name="vehiclesFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlin-sav-v5.2-10pct/input/drt-vehicles-hundekopf/berlin-v5.2_hundekopf500veh_5seats.xml.gz" /> -->
 			<param name="vehiclesFile" value="/home/gregor/git/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlin-sav-v5.5-10pct/input/drt-vehicles-hundekopf/berlin-v5.5_drt_hundekopf500veh_4seats.xml.gz" />
 			<!-- Writes out detailed DRT customer stats in each iteration. True by default. -->
 			<param name="writeDetailedCustomerStats" value="true" />
+			<!--
 			<parameterset type="minCostFlowRebalancing" >
 				<!-- size of square cells used for demand aggregation. Depends on demand, supply and network. Often used with values in the range of 500 - 2000 m -->
 				<param name="cellSize" value="2000.0" />
@@ -213,14 +209,15 @@
 				<!-- beta constant in linear target calculation. In general, should be lower then 1.0 to prevent over-reacting and high empty milleage. -->
 				<param name="targetBeta" value="0.5" />
 			</parameterset>
+			-->
 		</parameterset>
 	</module>
 	
 	<module name="dvrp" >
 		<!-- Mode of which the network will be used for throwing events and hence calculating travel times. Default is car. -->
 		<param name="mobsimMode" value="car" />
-		<!-- Mode of which the network will be used for routing vehicles, calculating travel times, etc. (fleet operator's perspective). Default is car. -->
-		<param name="networkModes" value="drt" />
+		<!-- Set of modes of which the network will be used for DVRP travel time estimation and routing DVRP vehicles. Each specific DVRP mode may use a subnetwork of this network for routing vehicles (e.g. DRT buses travelling only along a specified links or serving a limited area). Default is "car" (i.e. single-element set of modes), i.e. the car network is used. Empty value "" (i.e. empty set of modes) means no network filtering, i.e. the original scenario.network is used -->
+		<param name="networkModes" value="car" />
 		<!-- Used for OFFLINE estimation of travel times for VrpOptimizer by means of the exponential moving average. The weighting decrease, alpha, must be in (0,1]. We suggest small values of alpha, e.g. 0.05. The averaging starts from the initial travel time estimates. If not provided, the free-speed TTs is used as the initial estimates -->
 		<param name="travelTimeEstimationAlpha" value="0.05" />
 		<!-- Used for ONLINE estimation of travel times for VrpOptimizer by combining WithinDayTravelTime and DvrpOfflineTravelTimeEstimator. The beta coefficient is provided in seconds and should be either 0 (no online estimation) or positive (mixed online-offline estimation). For 'beta = 0', only the offline estimate is used: 'onlineTT(t) = offlineTT(t)', where 'offlineTT(t)' in the offline estimate for TT at time 't', For 'beta > 0', estimating future TTs at time 't', uses the currently observed TT to correct the offline estimates is made: where 'currentTT' is the currently observed TT, and 'correction = min(1, max(0, 1 - (time - currentTime) / beta))' The rule is that correction decreases linearly from 1 (when 'time = currentTime') to 0 (when 'time = currentTime + beta' For 'time > currentTime + beta' correction is 0, whereas if 'time < currentTime' it is 1. If beta is sufficiently large, 'beta >> 0', only the currently observed TT is used. -->
