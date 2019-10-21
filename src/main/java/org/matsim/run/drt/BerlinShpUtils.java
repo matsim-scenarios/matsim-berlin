@@ -19,7 +19,6 @@
 
 package org.matsim.run.drt;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -50,21 +49,17 @@ public final class BerlinShpUtils {
 
 	private Map<Integer, Geometry> serviceAreaGeometries;
 
-	public BerlinShpUtils(String carRestrictedAreaShpFile, String drtServiceAreaShapeFile) {	
+	public BerlinShpUtils(String drtServiceAreaShapeFile) {	
 		if (drtServiceAreaShapeFile != null && drtServiceAreaShapeFile != "" && drtServiceAreaShapeFile != "null" ) {
 			this.serviceAreaGeometries = loadShapeFile(drtServiceAreaShapeFile);
 		}
-	}
-
-	public BerlinShpUtils(String serviceAreaShapeFile) {
-		this(null, serviceAreaShapeFile);
 	}
 
 	private Map<Integer, Geometry> loadShapeFile(String shapeFile) {
 		Map<Integer, Geometry> geometries = new HashMap<>();
 
 		Collection<SimpleFeature> features = null;
-		if (new File(shapeFile).exists()) {
+		if (!shapeFile.startsWith("http")) {
 			features = ShapeFileReader.getAllFeatures(shapeFile);	
 		} else {
 			try {

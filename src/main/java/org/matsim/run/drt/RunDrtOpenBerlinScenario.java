@@ -39,10 +39,7 @@ import org.matsim.contrib.dvrp.run.DvrpModule;
 import org.matsim.contrib.dvrp.run.DvrpQSimComponents;
 import org.matsim.core.config.CommandLine;
 import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.config.groups.VspExperimentalConfigGroup;
-import org.matsim.core.config.groups.VspExperimentalConfigGroup.VspDefaultsCheckingLevel;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
@@ -113,7 +110,7 @@ public final class RunDrtOpenBerlinScenario {
 
 		for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 			
-			String drtServiceAreaShapeFile = ConfigGroup.getInputFileURL(config.getContext(), drtCfg.getDrtServiceAreaShapeFile()).getFile();
+			String drtServiceAreaShapeFile = drtCfg.getDrtServiceAreaShapeFile();
 			if (drtServiceAreaShapeFile != null && !drtServiceAreaShapeFile.equals("") && !drtServiceAreaShapeFile.equals("null")) {
 				addDRTmode(scenario, drtCfg.getMode(), drtServiceAreaShapeFile);
 			}
