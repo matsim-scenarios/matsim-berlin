@@ -19,52 +19,40 @@
 
 package org.matsim.run.drt;
 
-import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
-import ch.sbb.matsim.config.SwissRailRaptorConfigGroup.IntermodalAccessEgressModeSelection;
-import ch.sbb.matsim.config.SwissRailRaptorConfigGroup.IntermodalAccessEgressParameterSet;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.api.core.v01.network.Network;
-import org.matsim.contrib.av.robotaxi.fares.drt.DrtFareConfigGroup;
 import org.matsim.contrib.av.robotaxi.fares.drt.DrtFareModule;
 import org.matsim.contrib.av.robotaxi.fares.drt.DrtFaresConfigGroup;
 import org.matsim.contrib.drt.routing.DrtRoute;
 import org.matsim.contrib.drt.routing.DrtRouteFactory;
-import org.matsim.contrib.drt.routing.DrtStageActivityType;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.drt.run.DrtConfigs;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.contrib.drt.run.MultiModeDrtModule;
-import org.matsim.contrib.drt.run.DrtConfigGroup.OperationalScheme;
 import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.contrib.dvrp.run.DvrpModule;
 import org.matsim.contrib.dvrp.run.DvrpQSimComponents;
 import org.matsim.core.config.CommandLine;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.config.groups.QSimConfigGroup.StarttimeInterpretation;
-import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup.VspDefaultsCheckingLevel;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
-import org.matsim.core.network.NetworkUtils;
-import org.matsim.core.network.algorithms.NetworkCleaner;
-import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
+import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
 import org.matsim.core.population.routes.RouteFactories;
 import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.run.RunBerlinScenario;
 
-import com.google.common.collect.ImmutableSet;
+import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
+import ch.sbb.matsim.config.SwissRailRaptorConfigGroup.IntermodalAccessEgressModeSelection;
+import ch.sbb.matsim.config.SwissRailRaptorConfigGroup.IntermodalAccessEgressParameterSet;
 
 
 /**
@@ -80,12 +68,6 @@ import com.google.common.collect.ImmutableSet;
 public final class RunDrtOpenBerlinScenario {
 
 	private static final Logger log = Logger.getLogger(RunDrtOpenBerlinScenario.class);
-
-	private static final String drtNetworkMode = TransportMode.drt;
-
-	// TODO: also add the following to the avoev config group?
-	private static final String drtVehiclesFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlin-sav-v5.2-10pct/input/berlkoenig-vehicles/berlin-v5.2.berlkoenig100veh_6seats.xml.gz";
-
 
 	public static void main(String[] args) throws CommandLine.ConfigurationException {
 		Config config = prepareConfig( args ) ;
@@ -129,9 +111,13 @@ public final class RunDrtOpenBerlinScenario {
 		RouteFactories routeFactories = scenario.getPopulation().getFactory().getRouteFactories();
 		routeFactories.setRouteFactory(DrtRoute.class, new DrtRouteFactory());
 
-		AvoevConfigGroup avoevConfigGroup = ConfigUtils.addOrGetModule( scenario.getConfig(), AvoevConfigGroup.class ) ;		
-		addDRTmode(scenario, drtNetworkMode, avoevConfigGroup.getDrtServiceAreaShapeFileName()); // TODO use real service area plus buffer around it
-
+		for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
+			
+			String drtServiceAreaShapeFile = ConfigGroup.getInputFileURL(config.getContext(), drtCfg.getDrtServiceAreaShapeFile()).getFile();
+			if (drtServiceAreaShapeFile != null && !drtServiceAreaShapeFile.equals("") && !drtServiceAreaShapeFile.equals("null")) {
+				addDRTmode(scenario, drtCfg.getMode(), drtServiceAreaShapeFile);
+			}
+		}
 		return scenario;
 	}
 	
@@ -141,99 +127,17 @@ public final class RunDrtOpenBerlinScenario {
 
 		if ( args.length != 0 ){
 			config = RunBerlinScenario.prepareConfig( args, new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup()  ) ;
-			AvoevConfigGroup avoevConfigGroup = ConfigUtils.addOrGetModule( config, AvoevConfigGroup.class ) ;
-			
-			// With the CommandLine.Builder removed from Avoev, we cannot pass the argument DrtServiceAreaShapeFileName any longer
-			// However we cannot pass it as a normal command line argument (e.g. in args[1]) either, because RunBerlinScenario still uses CommandLine.Builder via ConfigUtils.applyCommandline.
-			// ConfigUtils.applyCommandline prohibits positional arguments such as having DrtServiceAreaShapeFileName as unnamed args[1]
-			// We cannot use the config file to pass that argument, because AvoevConfigGroup does not support that yet.
-			// Hard code the DrtServiceAreaShapeFileName until some decision is made. gl jul'19
-			avoevConfigGroup.setDrtServiceAreaShapeFileName(
-					  "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlin-sav-v5.2-10pct/input/shp-berlkoenig-area/berlkoenig-area.shp" );
-			
 		} else {
 			config = RunBerlinScenario.prepareConfig( new String [] {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drtA-v5.5-1pct-Berlkoenig.config.xml"}, new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup() ) ;
-
-			AvoevConfigGroup avoevConfigGroup = ConfigUtils.addOrGetModule( config, AvoevConfigGroup.class ) ;
-			avoevConfigGroup.setDrtServiceAreaShapeFileName(
-				  "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlin-sav-v5.2-10pct/input/shp-berlkoenig-area/berlkoenig-area.shp" );
 		}
 		
-		ConfigUtils.addOrGetModule( config, DvrpConfigGroup.class ) ;
-		ConfigUtils.addOrGetModule( config, MultiModeDrtConfigGroup.class ) ;
-		ConfigUtils.addOrGetModule( config, DrtFaresConfigGroup.class ) ;
 		ConfigUtils.addOrGetModule( config, VspExperimentalConfigGroup.class ).setVspDefaultsCheckingLevel(VspDefaultsCheckingLevel.warn); ;
 		
 		// switch off pt vehicle simulation
 //		config.transit().setUsingTransitInMobsim(false);
 
-		// add drt mode	
-    	List<String> modes = new ArrayList<String>(Arrays.asList(config.subtourModeChoice().getModes()));
-    	modes.add(TransportMode.drt);
-    	config.subtourModeChoice().setModes(modes.toArray(new String[modes.size()]));
-    	
-    	// required by drt module
-    	config.qsim().setNumberOfThreads(1);
-    	config.qsim().setSimStarttimeInterpretation(StarttimeInterpretation.onlyUseStarttime);
 		DrtConfigs.adjustMultiModeDrtConfig(MultiModeDrtConfigGroup.get(config), config.planCalcScore());
-		
-		// add drt scoring parameters
-		PlanCalcScoreConfigGroup.ModeParams drtModeParams = new PlanCalcScoreConfigGroup.ModeParams(TransportMode.drt);
-		drtModeParams.setConstant(0.);
-		drtModeParams.setMarginalUtilityOfDistance(0.);
-		drtModeParams.setMarginalUtilityOfTraveling(0.);
-		drtModeParams.setMonetaryDistanceRate(0.);
-		config.planCalcScore().getScoringParametersPerSubpopulation().values().forEach(k -> k.addModeParams(drtModeParams));
-    	    	
-    	// set drt parameters
-		// TODO: find a way to set different params per drt mode, e.g. move to config file
-		Set<String> dvrpNetworkModes = new HashSet<>();
-		
-		for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
-			drtCfg.setOperationalScheme(OperationalScheme.serviceAreaBased);
-			AvoevConfigGroup avoevConfigGroup = ConfigUtils.addOrGetModule( config, AvoevConfigGroup.class ) ;
-			drtCfg.setDrtServiceAreaShapeFile(avoevConfigGroup.getDrtServiceAreaShapeFileName());
-			drtCfg.setUseModeFilteredSubnetwork(true);
-			
-	    	drtCfg.getVehiclesFile();
-	    	drtCfg.setVehiclesFile(drtVehiclesFile);
-	    	drtCfg.setMaxTravelTimeAlpha(1.7);
-	    	drtCfg.setMaxTravelTimeBeta(120.0);
-	    	drtCfg.setStopDuration(60.);
-	    	drtCfg.setMaxWaitTime(300.);
-	    	drtCfg.setChangeStartLinkToLastLinkInSchedule(true);
-	    	drtCfg.setIdleVehiclesReturnToDepots(false);
-	    	drtCfg.setRejectRequestIfMaxWaitOrTravelTimeViolated(false);
-	    	drtCfg.setPrintDetailedWarnings(false);
-			
-			DrtStageActivityType drtStageActivityType = new DrtStageActivityType(drtCfg.getMode());
-			// add drt stage activity (per default only added in case of stop-based drt operation mode)
-			if (config.planCalcScore().getActivityParams(drtStageActivityType.drtStageActivity) == null) {
-				PlanCalcScoreConfigGroup.ActivityParams params = new PlanCalcScoreConfigGroup.ActivityParams(drtStageActivityType.drtStageActivity);
-				params.setTypicalDuration(1); // TODO why 1 and not 0?
-				params.setScoringThisActivityAtAll(false);
-				config.planCalcScore().getScoringParametersPerSubpopulation().values().forEach(k -> k.addActivityParams(params));
-			}
-			
-			dvrpNetworkModes.add(drtCfg.getMode());
-		}
-		
-		DvrpConfigGroup dvrpConfigGroup = DvrpConfigGroup.get(config);
-		dvrpConfigGroup.setNetworkModes(ImmutableSet.copyOf(dvrpNetworkModes));
-		
-    	// set drt fare
-		DrtFaresConfigGroup faresCfg = ConfigUtils.addOrGetModule(config, DrtFaresConfigGroup.class);
-    	for (DrtFareConfigGroup drtFareCfg : faresCfg.getDrtFareConfigGroups()) {
-    		drtFareCfg.setMode(TransportMode.drt);
-    		drtFareCfg.setBasefare(0.);
-        	drtFareCfg.setDailySubscriptionFee(0.);
-        	drtFareCfg.setDistanceFare_m(0.0015);
-        	drtFareCfg.setMinFarePerTrip(4.0);
-        	drtFareCfg.setTimeFare_h(0.);
-    	}
-		
-		config.plansCalcRoute().setInsertingAccessEgressWalk(true);
-		
+				
 		// intermodal routing pt+drt(/walk)
 		{
 			SwissRailRaptorConfigGroup configRaptor = ConfigUtils.addOrGetModule(config, SwissRailRaptorConfigGroup.class);
@@ -300,6 +204,8 @@ public final class RunDrtOpenBerlinScenario {
 		BerlinShpUtils shpUtils = new BerlinShpUtils( drtServiceAreaShapeFile );
 
 		int counter = 0;
+		int counterInside = 0;
+		int counterOutside = 0;
 		for (Link link : scenario.getNetwork().getLinks().values()) {
 			if (counter % 10000 == 0)
 				log.info("link #" + counter);
@@ -312,6 +218,9 @@ public final class RunDrtOpenBerlinScenario {
 					allowedModes.add(drtNetworkMode);
 
 					link.setAllowedModes(allowedModes);
+					counterInside++;
+				} else {
+					counterOutside++;
 				}
 
 			} else if (link.getAllowedModes().contains(TransportMode.pt)) {
@@ -321,41 +230,13 @@ public final class RunDrtOpenBerlinScenario {
 			}
 		}
 		
-		// clean drt network
-		Set<String> filterTransportModes = new HashSet<>();
-		filterTransportModes.add(drtNetworkMode);
-		Network subnetwork = NetworkUtils.createNetwork();
-		new TransportModeNetworkFilter(scenario.getNetwork()).filter(subnetwork, filterTransportModes);
-		new NetworkCleaner().run(subnetwork);
+		log.info("Total links: " + counter);
+		log.info("Total links inside service area: " + counterInside);
+		log.info("Total links outside service area: " + counterOutside);
 		
-		counter = 0;
-		// remove drt from all links not included in the cleaned drt network
-		for (Link link : scenario.getNetwork().getLinks().values()) {
-			if (counter % 10000 == 0)
-				log.info("link #" + counter);
-			counter++;
-			if (link.getAllowedModes().contains(drtNetworkMode) && !subnetwork.getLinks().containsKey(link.getId())) {
-				if (shpUtils.isCoordInDrtServiceArea(link.getFromNode().getCoord())
-						|| shpUtils.isCoordInDrtServiceArea(link.getToNode().getCoord())) {
-					Set<String> allowedModes = new HashSet<>(link.getAllowedModes());
-					
-					allowedModes.remove(drtNetworkMode);
-
-					link.setAllowedModes(allowedModes);
-				}
-			}
-		}
-		
-		// check
-		Network subnetwork2 = NetworkUtils.createNetwork();
-		new TransportModeNetworkFilter(scenario.getNetwork()).filter(subnetwork2, filterTransportModes);
-		int nNodesBeforeCleaning = subnetwork2.getNodes().size();
-		new NetworkCleaner().run(subnetwork2);
-		
-		if (subnetwork2.getNodes().size() != nNodesBeforeCleaning) {
-			log.error("Cleaning drt network did not work properly.");
-			throw new RuntimeException("Cleaning drt network did not work properly.");
-		}
+		Set<String> modes = new HashSet<>();
+		modes.add(drtNetworkMode);
+		new MultimodalNetworkCleaner(scenario.getNetwork()).run(modes);
 	}
 
 }

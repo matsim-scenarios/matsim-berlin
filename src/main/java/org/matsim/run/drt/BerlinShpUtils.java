@@ -48,15 +48,9 @@ import org.opengis.feature.simple.SimpleFeature;
 
 public final class BerlinShpUtils {
 
-	private Map<Integer, Geometry> carRestrictedAreaGeometries;
 	private Map<Integer, Geometry> serviceAreaGeometries;
 
-	public BerlinShpUtils(String carRestrictedAreaShpFile, String drtServiceAreaShapeFile) {
-		
-		if (carRestrictedAreaShpFile != null && carRestrictedAreaShpFile != "" && carRestrictedAreaShpFile != "null" ) {
-			this.carRestrictedAreaGeometries = loadShapeFile(carRestrictedAreaShpFile);
-		}
-		
+	public BerlinShpUtils(String carRestrictedAreaShpFile, String drtServiceAreaShapeFile) {	
 		if (drtServiceAreaShapeFile != null && drtServiceAreaShapeFile != "" && drtServiceAreaShapeFile != "null" ) {
 			this.serviceAreaGeometries = loadShapeFile(drtServiceAreaShapeFile);
 		}
@@ -86,10 +80,6 @@ public final class BerlinShpUtils {
 			featureCounter++;
 		}
 		return geometries;
-	}
-
-	public boolean isCoordInCarRestrictedArea(Coord coord) {
-		return isCoordInArea(coord, carRestrictedAreaGeometries);
 	}
 
 	public boolean isCoordInDrtServiceArea(Coord coord) {
