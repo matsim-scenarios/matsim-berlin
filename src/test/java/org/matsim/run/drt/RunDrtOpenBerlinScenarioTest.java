@@ -92,7 +92,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			final String[] args = {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-Berlkoenig-v5.5-1pct.config.xml"};
 			
 			Config config = RunDrtOpenBerlinScenario.prepareConfig( args ) ;
-			config.controler().setLastIteration(0);
+			config.controler().setLastIteration(2);
 			config.strategy().setFractionOfIterationsToDisableInnovation(1);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
@@ -102,6 +102,9 @@ public class RunDrtOpenBerlinScenarioTest {
 			config.global().setNumberOfThreads(1);
 			config.qsim().setNumberOfThreads(1);
 			
+			config.controler().setWritePlansInterval(1);
+			
+			// make pt more attractive to obtain less transit_walks due to drt triangle walk being more attractive 
 			config.planCalcScore().setMarginalUtlOfWaitingPt_utils_hr(5);
 			
 			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
