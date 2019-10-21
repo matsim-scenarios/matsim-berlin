@@ -1,22 +1,31 @@
 package org.matsim.run.drt;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Plan;
+import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.gbl.MatsimRandom;
+import org.matsim.core.router.TripStructureUtils;
+import org.matsim.core.router.TripStructureUtils.Trip;
 import org.matsim.testcases.MatsimTestUtils;
 
 /**
@@ -83,7 +92,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			final String[] args = {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-Berlkoenig-v5.5-1pct.config.xml"};
 			
 			Config config = RunDrtOpenBerlinScenario.prepareConfig( args ) ;
-			config.controler().setLastIteration(2);
+			config.controler().setLastIteration(0);
 			config.strategy().setFractionOfIterationsToDisableInnovation(1);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
@@ -93,25 +102,33 @@ public class RunDrtOpenBerlinScenarioTest {
 			config.global().setNumberOfThreads(1);
 			config.qsim().setNumberOfThreads(1);
 			
+			config.planCalcScore().setMarginalUtlOfWaitingPt_utils_hr(5);
+			
 			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 				drtCfg.setNumberOfThreads(1);
 			}
 			
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
-			// Decrease population to 0.1% sample 
-			List<Id<Person>> agentsToRemove = new ArrayList<>();
-			for (Id<Person> id: scenario.getPopulation().getPersons().keySet()) {
-				if (MatsimRandom.getRandom().nextDouble() < 0.1) {agentsToRemove.add(id);}
-			}
-			for (Id<Person> id: agentsToRemove) {
-				scenario.getPopulation().removePerson(id);
-			}
-			
 			Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
+			controler.run() ;	
 			
-			controler.run() ;			
+			Plan intermodalPtAgentPlan = scenario.getPopulation().getPersons().get(Id.createPersonId("285614901pt")).getSelectedPlan();
 			
-			// TODO: test the scores in iteration 0 and 4
+			boolean foundIntermodalTrip = false;
+			
+			List<Trip> trips = TripStructureUtils.getTrips(intermodalPtAgentPlan.getPlanElements());
+			
+			for (Trip trip: trips) {
+				Set<String> modes = new HashSet<>();
+				for (Leg leg: trip.getLegsOnly()) {
+					modes.add(leg.getMode());
+				}
+				if (modes.contains(TransportMode.drt) && modes.contains(TransportMode.pt)) {
+					foundIntermodalTrip = true;
+				}
+			}
+			Assert.assertTrue(foundIntermodalTrip);
+			
 		} catch ( Exception ee ) {
 			throw new RuntimeException(ee) ;
 		}
