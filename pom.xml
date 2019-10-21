@@ -108,13 +108,6 @@
 			<version>${matsim.version}</version>
 		</dependency>
 
-		<!--  TransitSchedule creation VSP repository (without mapping buses to roads, separate pt pseudo network only) -->
-		<!-- <dependency>
-                                <groupId>org.matsim.contrib</groupId>
-                                <artifactId>matsim-gtfs</artifactId>
-                                <version>11.1-SNAPSHOT</version>
-                        </dependency> -->
-		<!--  jitpack naming -->
 		<dependency>
 			<groupId>com.github.matsim-org</groupId>
 			<artifactId>GTFS2MATSim</artifactId>
