@@ -172,7 +172,7 @@
 			<!-- Max wait time for the bus to come (optimisation constraint). -->
 			<param name="maxWaitTime" value="300.0" />
 			<!-- Maximum desired walk distance (in meters) to next stop location in stopbased system. If no suitable stop is found in that range, the search radius will be extended in steps of maxWalkDistance until a stop is found. -->
-			<param name="maxWalkDistance" value="0.0" />
+			<param name="maxWalkDistance" value="2000.0" />
 			<!-- Mode which will be handled by PassengerEngine and VrpOptimizer (passengers'/customers' perspective) -->
 			<param name="mode" value="drt" />
 			<!-- Number of threads used for parallel evaluation of request insertion into existing schedules. Scales well up to 4, due to path data provision, the most computationally intensive part, using up to 4 threads. Default value is 'min(4, no. of cores available to JVM)' -->
