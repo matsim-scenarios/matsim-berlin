@@ -131,7 +131,7 @@ public final class RunDrtOpenBerlinScenario {
 		// switch off pt vehicle simulation
 //		config.transit().setUsingTransitInMobsim(false);
 
-		DrtConfigs.adjustMultiModeDrtConfig(MultiModeDrtConfigGroup.get(config), config.planCalcScore());
+		DrtConfigs.adjustMultiModeDrtConfig(MultiModeDrtConfigGroup.get(config), config.planCalcScore(), config.plansCalcRoute());
 				
 		// intermodal routing pt+drt(/walk)
 		{
