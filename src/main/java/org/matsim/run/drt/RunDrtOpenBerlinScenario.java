@@ -45,6 +45,8 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
 import org.matsim.core.population.routes.RouteFactories;
 import org.matsim.core.router.MainModeIdentifier;
+import org.matsim.pt.transitSchedule.api.TransitSchedule;
+import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.run.RunBerlinScenario;
 
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
@@ -65,6 +67,9 @@ import ch.sbb.matsim.config.SwissRailRaptorConfigGroup.IntermodalAccessEgressPar
 public final class RunDrtOpenBerlinScenario {
 
 	private static final Logger log = Logger.getLogger(RunDrtOpenBerlinScenario.class);
+	
+	private static final String DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_ATTRIBUTE = "drtStopFilter";
+	private static final String DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_VALUE = "station_S/U/RE/RB_drtServiceArea";
 
 	public static void main(String[] args) throws CommandLine.ConfigurationException {
 		Config config = prepareConfig( args ) ;
@@ -113,8 +118,18 @@ public final class RunDrtOpenBerlinScenario {
 			String drtServiceAreaShapeFile = drtCfg.getDrtServiceAreaShapeFile();
 			if (drtServiceAreaShapeFile != null && !drtServiceAreaShapeFile.equals("") && !drtServiceAreaShapeFile.equals("null")) {
 				addDRTmode(scenario, drtCfg.getMode(), drtServiceAreaShapeFile);
+				tagTransitStopsInServiceArea(scenario.getTransitSchedule(), 
+						DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_ATTRIBUTE, DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_VALUE, 
+						drtServiceAreaShapeFile,
+						"stopFilter", "station_S/U/RE/RB",
+						// some S+U stations are located slightly outside the shp File, e.g. U7 Neukoelln, U8
+						// Hermannstr., so allow buffer around the shape.
+						// This does not mean that a drt vehicle can pick the passenger up outside the service area,
+						// rather the passenger has to walk the last few meters from the drt drop off to the station.
+						200.0); // TODO: Use constant in RunGTFS2MATSimOpenBerlin and here? Or better some kind of set available pt modes?
 			}
 		}
+		
 		return scenario;
 	}
 	
@@ -185,6 +200,8 @@ public final class RunDrtOpenBerlinScenario {
 				 */
 				paramSetDrt.setInitialSearchRadius(3000); 
 				paramSetDrt.setSearchExtensionRadius(1000);
+				paramSetDrt.setStopFilterAttribute(DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_ATTRIBUTE);
+				paramSetDrt.setStopFilterValue(DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_VALUE);
 				configRaptor.addIntermodalAccessEgress(paramSetDrt);
 			}
 		}
@@ -232,6 +249,23 @@ public final class RunDrtOpenBerlinScenario {
 		Set<String> modes = new HashSet<>();
 		modes.add(drtNetworkMode);
 		new MultimodalNetworkCleaner(scenario.getNetwork()).run(modes);
+	}
+	
+	private static void tagTransitStopsInServiceArea(TransitSchedule transitSchedule, 
+			String newAttributeName, String newAttributeValue, 
+			String drtServiceAreaShapeFile, 
+			String oldFilterAttribute, String oldFilterValue,
+			double bufferAroundServiceArea) {
+		BerlinShpUtils shpUtils = new BerlinShpUtils( drtServiceAreaShapeFile );
+		for (TransitStopFacility stop: transitSchedule.getFacilities().values()) {
+			if (stop.getAttributes().getAttribute(oldFilterAttribute) != null) {
+				if (stop.getAttributes().getAttribute(oldFilterAttribute).equals(oldFilterValue)) {
+					if (shpUtils.isCoordInDrtServiceAreaWithBuffer(stop.getCoord(), bufferAroundServiceArea)) {
+						stop.getAttributes().putAttribute(newAttributeName, newAttributeValue);
+					}
+				}
+			}
+		}
 	}
 
 }

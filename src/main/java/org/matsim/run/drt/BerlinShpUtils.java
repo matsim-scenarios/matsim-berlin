@@ -48,6 +48,7 @@ import org.opengis.feature.simple.SimpleFeature;
 public final class BerlinShpUtils {
 
 	private Map<Integer, Geometry> serviceAreaGeometries;
+	private Map<Double, Map<Integer, Geometry>> serviceAreaGeometriesWithBuffer = new HashMap<>();
 
 	public BerlinShpUtils(String drtServiceAreaShapeFile) {	
 		if (drtServiceAreaShapeFile != null && drtServiceAreaShapeFile != "" && drtServiceAreaShapeFile != "null" ) {
@@ -79,6 +80,21 @@ public final class BerlinShpUtils {
 
 	public boolean isCoordInDrtServiceArea(Coord coord) {
 		return isCoordInArea(coord, serviceAreaGeometries);
+	}
+	
+	public boolean isCoordInDrtServiceAreaWithBuffer(Coord coord, double buffer) {
+		if (!serviceAreaGeometriesWithBuffer.containsKey(buffer)) {
+			serviceAreaGeometriesWithBuffer.put(buffer, prepareAndSaveGeometriesWithBuffer(serviceAreaGeometries, buffer));
+		}
+		return isCoordInArea(coord, serviceAreaGeometriesWithBuffer.get(buffer));
+	}
+	
+	private Map<Integer, Geometry> prepareAndSaveGeometriesWithBuffer(Map<Integer, Geometry> geometries, double buffer) {
+		Map<Integer, Geometry> geometriesWithBuffer = new HashMap<>();
+		for (Map.Entry<Integer, Geometry> entry: geometries.entrySet()) {
+			geometriesWithBuffer.put(entry.getKey(), entry.getValue().buffer(buffer));
+		}
+		return geometriesWithBuffer;
 	}
 
 	private boolean isCoordInArea(Coord coord, Map<Integer, Geometry> areaGeometries) {
