@@ -160,7 +160,7 @@ public final class RunDrtOpenBerlinScenario {
 				// paramSetXxx.setMode( TransportMode.walk ); // this does not work because sbb raptor treats it in a special way
 				paramSetWalk.setMode(TransportMode.non_network_walk);
 				paramSetWalk.setMaxRadius(100000);
-				paramSetWalk.setInitialSearchRadius(3000);
+				paramSetWalk.setInitialSearchRadius(1500);
 				paramSetWalk.setSearchExtensionRadius(1000);
 				configRaptor.addIntermodalAccessEgress(paramSetWalk);
 				// (in principle, walk as alternative to drt will not work, since drt is always
