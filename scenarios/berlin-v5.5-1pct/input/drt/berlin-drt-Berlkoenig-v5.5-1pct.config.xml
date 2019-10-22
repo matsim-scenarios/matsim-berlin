@@ -5,10 +5,10 @@
 		<param name="mutationRange" value="7200.0" />
 	</module>
 	<module name="controler" >
-		<param name="lastIteration" value="500" />
+		<param name="lastIteration" value="300" />
 		<param name="overwriteFiles" value="failIfDirectoryExists" />
 		<param name="runId" value="berlin-drt-Berlkoenig-v5.5-1pct" />
-		<param name="outputDirectory" value="./scenarios/berlin-drt-Berlkoenig-v5.5-1pct" />
+		<param name="outputDirectory" value="./scenarios/berlin-v5.5-1pct/output-berlin-drt-Berlkoenig-v5.5-1pct" />
 		<param name="writeEventsInterval" value="50" />
 		<param name="writePlansInterval" value="50" />
 	</module>
