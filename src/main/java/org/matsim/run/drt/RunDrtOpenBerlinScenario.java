@@ -128,7 +128,7 @@ public final class RunDrtOpenBerlinScenario {
 			config = RunBerlinScenario.prepareConfig( new String [] {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-Berlkoenig-v5.5-1pct.config.xml"}, new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup() ) ;
 		}
 		
-		// switch off pt vehicle simulation
+		// switch off pt vehicle simulation: very slow, because also switches from Raptor to the old pt router
 //		config.transit().setUsingTransitInMobsim(false);
 
 		DrtConfigs.adjustMultiModeDrtConfig(MultiModeDrtConfigGroup.get(config), config.planCalcScore(), config.plansCalcRoute());
