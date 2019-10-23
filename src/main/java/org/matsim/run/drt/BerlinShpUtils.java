@@ -109,7 +109,7 @@ public final class BerlinShpUtils {
 		return coordInArea;
 	}
 	
-	public static Collection<SimpleFeature> getAllFeatures(final URL url) {
+	static Collection<SimpleFeature> getAllFeatures(final URL url) {
 		try {
 			FileDataStore store = FileDataStoreFinder.getDataStore(url);
 			SimpleFeatureSource featureSource = store.getFeatureSource();

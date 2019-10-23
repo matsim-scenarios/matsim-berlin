@@ -78,7 +78,7 @@ public final class RunDrtOpenBerlinScenario {
 		controler.run() ;
 	}
 	
-	public static Controler prepareControler( Scenario scenario ) {
+	static Controler prepareControler( Scenario scenario ) {
 
 		Controler controler = RunBerlinScenario.prepareControler( scenario ) ;
 		
@@ -106,7 +106,7 @@ public final class RunDrtOpenBerlinScenario {
 		return controler;
 	}
 	
-	public static Scenario prepareScenario( Config config ) {
+	static Scenario prepareScenario( Config config ) {
 
 		Scenario scenario = RunBerlinScenario.prepareScenario( config );
 
@@ -133,7 +133,7 @@ public final class RunDrtOpenBerlinScenario {
 		return scenario;
 	}
 	
-	public static Config prepareConfig( String [] args ) {
+	static Config prepareConfig( String [] args ) {
 
 		Config config = null ;
 
