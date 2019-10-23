@@ -7,8 +7,8 @@
 	<module name="controler" >
 		<param name="lastIteration" value="500" />
 		<param name="overwriteFiles" value="failIfDirectoryExists" />
-		<param name="runId" value="berlin-drt-v5.5-1pct" />
-		<param name="outputDirectory" value="./scenarios/berlin-v5.5-1pct/output-berlin-drt-v5.5-1pct" />
+		<param name="runId" value="berlin-v5.5-10pct" />
+		<param name="outputDirectory" value="./scenarios/berlin-v5.5-10pct/output-berlin-v5.5-10pct" />
 		<param name="writeEventsInterval" value="50" />
 		<param name="writePlansInterval" value="50" />
 	</module>
@@ -21,7 +21,7 @@
 		<param name="inputNetworkFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz" />
 	</module>
 	<module name="plans" >
-		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/input/berlin-v5.5-1pct.plans_wo_PtRoutes.xml.gz" />
+		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.plans_wo_PtRoutes.xml.gz" />
 		<param name="removingUnnecessaryPlanAttributes" value="false" />
 	</module>
 	<module name="vehicles" >
@@ -48,11 +48,11 @@
 	<module name="qsim" >
 		<param name="simStarttimeInterpretation" value="onlyUseStarttime" />
 		<param name="endTime" value="36:00:00" />
-		<param name="flowCapacityFactor" value="0.015" />
+		<param name="flowCapacityFactor" value="0.1" />
 		<param name="mainMode" value="car,freight" />
 		<param name="numberOfThreads" value="1" />
 		<param name="startTime" value="00:00:00" />
-		<param name="storageCapacityFactor" value="0.015" />
+		<param name="storageCapacityFactor" value="0.1" />
 		<param name="stuckTime" value="30.0" />
 		<param name="trafficDynamics" value="kinematicWaves" />
 		<param name="vehiclesSource" value="modeVehicleTypesFromVehiclesData" />
