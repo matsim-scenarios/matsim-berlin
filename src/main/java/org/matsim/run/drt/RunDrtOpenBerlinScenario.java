@@ -39,7 +39,6 @@ import org.matsim.contrib.dvrp.run.DvrpModule;
 import org.matsim.contrib.dvrp.run.DvrpQSimComponents;
 import org.matsim.core.config.CommandLine;
 import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
@@ -50,9 +49,6 @@ import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.run.RunBerlinScenario;
 
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
-import ch.sbb.matsim.config.SwissRailRaptorConfigGroup.IntermodalAccessEgressModeSelection;
-import ch.sbb.matsim.config.SwissRailRaptorConfigGroup.IntermodalAccessEgressParameterSet;
-
 
 /**
  * This class starts a simulation run with DRT.
@@ -138,73 +134,15 @@ public final class RunDrtOpenBerlinScenario {
 		Config config = null ;
 
 		if ( args.length != 0 ){
-			config = RunBerlinScenario.prepareConfig( args, new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup()  ) ;
+			config = RunBerlinScenario.prepareConfig( args, new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup()  ) ;
 		} else {
-			config = RunBerlinScenario.prepareConfig( new String [] {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-Berlkoenig-v5.5-1pct.config.xml"}, new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup() ) ;
+			config = RunBerlinScenario.prepareConfig( new String [] {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-Berlkoenig-v5.5-1pct.config.xml"}, new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup() ) ;
 		}
 		
 		// switch off pt vehicle simulation: very slow, because also switches from Raptor to the old pt router
 //		config.transit().setUsingTransitInMobsim(false);
 
 		DrtConfigs.adjustMultiModeDrtConfig(MultiModeDrtConfigGroup.get(config), config.planCalcScore(), config.plansCalcRoute());
-				
-		// intermodal routing pt+drt(/walk)
-		{
-			SwissRailRaptorConfigGroup configRaptor = ConfigUtils.addOrGetModule(config, SwissRailRaptorConfigGroup.class);
-
-			configRaptor.setUseIntermodalAccessEgress(true);
-			configRaptor.setIntermodalAccessEgressModeSelection(IntermodalAccessEgressModeSelection.RandomSelectOneModePerRoutingRequestAndDirection);
-			{
-				// walk
-				IntermodalAccessEgressParameterSet paramSetWalk = new IntermodalAccessEgressParameterSet();
-				// paramSetXxx.setMode( TransportMode.walk ); // this does not work because sbb raptor treats it in a special way
-				paramSetWalk.setMode(TransportMode.non_network_walk);
-				paramSetWalk.setMaxRadius(100000);
-				paramSetWalk.setInitialSearchRadius(1500);
-				paramSetWalk.setSearchExtensionRadius(1000);
-				configRaptor.addIntermodalAccessEgress(paramSetWalk);
-				// (in principle, walk as alternative to drt will not work, since drt is always
-				// faster. Need to give the ASC to the router! However, with
-				// the reduced drt network we should be able to see differentiation.)
-			}
-			{
-				// drt
-				IntermodalAccessEgressParameterSet paramSetDrt = new IntermodalAccessEgressParameterSet();
-				paramSetDrt.setMode(TransportMode.drt);
-				/* Berlkoenig service area has a maximum diameter of ca. 11km, access trips over 12km don't make sense.
-				 * Prohibit them to save computation time. 
-				 * (RandomAccessEgressModeRaptorStopFinder will try again with walk, the other available access/egress mode)
-				 * maybe we should restrict even further, see comment below for InitialSearchRadius.
-				 */
-				paramSetDrt.setMaxRadius(12000); 
-				/* If more than 1 transit stop is found in the initial search radius, the raptor stop finder will stop to search
-				 * more distant transit stops.
-				 * Setting setInitialSearchRadius(12000) will allow for crossing the whole Berlkoenig area with drt as 
-				 * access/egress mode to pt. This way we are on the safe side and do not exclude any theoretically possible 
-				 * drt ride.
-				 * Unfortunately that means that for a route from Alexanderplatz to Friedrichstrasse the pt router basically has 
-				 * to route from all transit stops in the city center of Berlin to all transit stops in the city center of Berlin,
-				 * because it has to consider all transit stops in that 12 km radius from Alexanderplatz and Friedrichstrasse, 
-				 * respectively. This slows down pt routing enormously. 
-				 * To speed up there are two options:
-				 *  - restrict the set of transit stops accessible by drt using a stop filter attribute, e.g. only RE+S+U-Bahn
-				 *  - reduce the initial search radius (and thereby effectively prohibit drt rides longer than that initial
-				 *    search radius for access/egress to pt, because there is always more than 1 transit stop in that radius). 
-				 *    
-				 * For 2528 agents and no stop filter attribute PlanRouter in iteration 1 took 
-				 *  - ca. 1 min at InitialSearchRadius 3 km
-				 *  - but 53 min at InitialSearchRadius 12km
-				 * 
-				 * So we have to make use of the speed up options (and exclude theoretically possible but unlikely drt trips).
-				 *  - gleich aug'19
-				 */
-				paramSetDrt.setInitialSearchRadius(3000); 
-				paramSetDrt.setSearchExtensionRadius(1000);
-				paramSetDrt.setStopFilterAttribute(DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_ATTRIBUTE);
-				paramSetDrt.setStopFilterValue(DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_VALUE);
-				configRaptor.addIntermodalAccessEgress(paramSetDrt);
-			}
-		}
 
 		return config ;
 	}
