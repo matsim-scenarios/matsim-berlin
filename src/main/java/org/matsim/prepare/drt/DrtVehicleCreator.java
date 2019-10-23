@@ -68,11 +68,11 @@ public class DrtVehicleCreator {
 	public static void main(String[] args) {
 
 		String networkFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz";
-		String drtServiceAreaShapeFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlin-sav-v5.2-10pct/input/shp-inner-city-area/inner-city-area.shp";
-	    CoordinateTransformation ct = TransformationFactory.getCoordinateTransformation("EPSG:25832", "EPSG:25832"); 
+		String drtServiceAreaShapeFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-shp/berlin.shp";
+	    CoordinateTransformation ct = TransformationFactory.getCoordinateTransformation("EPSG:31468", "EPSG:31468"); 
 		
-		String vehiclesFilePrefix = "berlin-v5.5_drt_hundekopf";
-	    int numberOfVehicles = 500;
+		String vehiclesFilePrefix = "berlin-drt-v5.5.drt-";
+	    int numberOfVehicles = 10000;
 	    int seats = 4;
 		
 		DrtVehicleCreator tvc = new DrtVehicleCreator(networkFile, drtServiceAreaShapeFile, vehiclesFilePrefix, ct);
@@ -127,7 +127,7 @@ public class DrtVehicleCreator {
 			
 			if (i%100 == 0) log.info("#"+i);
 
-			vehicles.add(ImmutableDvrpVehicleSpecification.newBuilder().id(Id.create("rt" + i, DvrpVehicle.class))
+			vehicles.add(ImmutableDvrpVehicleSpecification.newBuilder().id(Id.create("drt" + i, DvrpVehicle.class))
 					.startLinkId(link.getId())
 					.capacity(seats)
 					.serviceBeginTime(Math.round(1))
@@ -136,7 +136,7 @@ public class DrtVehicleCreator {
 
 
 		}
-		new FleetWriter(vehicles.stream()).write(vehiclesFilePrefix + amount + "veh_" + seats + "seats.xml.gz");
+		new FleetWriter(vehicles.stream()).write(vehiclesFilePrefix + amount + "vehicles-" + seats + "seats.xml.gz");
 	}
 
 }
