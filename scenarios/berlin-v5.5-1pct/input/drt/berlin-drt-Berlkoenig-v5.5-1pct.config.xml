@@ -242,7 +242,7 @@
 		<param name="useIntermodalAccessEgress" value="true" />
 		<parameterset type="intermodalAccessEgress" >
 			<!-- Radius from the origin / destination coord in which transit stops are searched. Only if less than 2 transit stops are found the search radius is increased step-wise until the maximum search radius set in param radius is reached. -->
-			<param name="initialSearchRadius" value="3000.0" />
+			<param name="initialSearchRadius" value="1500.0" />
 			<!-- If the mode is routed on the network, specify which linkId acts as access link to this stop in the transport modes sub-network. -->
 			<param name="linkIdAttribute" value="null" />
 			<!-- Radius from the origin / destination coord in which transit stops are accessible by this mode. -->
