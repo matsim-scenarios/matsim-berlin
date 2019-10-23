@@ -68,6 +68,15 @@ public final class RunDrtOpenBerlinScenario {
 	private static final String DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_VALUE = "station_S/U/RE/RB_drtServiceArea";
 
 	public static void main(String[] args) throws CommandLine.ConfigurationException {
+		
+		for (String arg : args) {
+			log.info( arg );
+		}
+		
+		if ( args.length==0 ) {
+			args = new String[] {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-Berlkoenig-v5.5-1pct.config.xml"}  ;
+		}
+		
 		Config config = prepareConfig( args ) ;
 		Scenario scenario = prepareScenario( config ) ;
 		Controler controler = prepareControler( scenario ) ;
@@ -131,13 +140,7 @@ public final class RunDrtOpenBerlinScenario {
 	
 	static Config prepareConfig( String [] args ) {
 
-		Config config = null ;
-
-		if ( args.length != 0 ){
-			config = RunBerlinScenario.prepareConfig( args, new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup()  ) ;
-		} else {
-			config = RunBerlinScenario.prepareConfig( new String [] {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-Berlkoenig-v5.5-1pct.config.xml"}, new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup() ) ;
-		}
+		Config config = RunBerlinScenario.prepareConfig( args, new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup()  ) ;
 		
 		// switch off pt vehicle simulation: very slow, because also switches from Raptor to the old pt router
 //		config.transit().setUsingTransitInMobsim(false);
