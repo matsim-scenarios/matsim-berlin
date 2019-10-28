@@ -61,7 +61,7 @@ import org.matsim.pt.utils.TransitScheduleValidator.ValidationResult;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleCapacity;
 import org.matsim.vehicles.VehicleType;
-import org.matsim.vehicles.VehicleWriterV1;
+import org.matsim.vehicles.MatsimVehicleWriter;
 import org.matsim.vehicles.VehiclesFactory;
 import org.matsim.vehicles.VehicleType.DoorOperationMode;
 import org.matsim.vehicles.VehicleUtils;
@@ -142,7 +142,7 @@ public class RunGTFS2MATSimOpenBerlin {
 		//Write out network, vehicles and schedule
 		new NetworkWriter(networkWoPt).write(networkFile);
 		new TransitScheduleWriter(scenario.getTransitSchedule()).writeFile(scheduleFile);
-		new VehicleWriterV1(scenario.getTransitVehicles()).writeFile(transitVehiclesFile);
+		new MatsimVehicleWriter(scenario.getTransitVehicles()).writeFile(transitVehiclesFile);
 		
 		// test for delays
 		String testRunOutputDirectory = outputDirectory + "/runOneIteration";
@@ -207,9 +207,9 @@ public class RunGTFS2MATSimOpenBerlin {
 		// capacity of the matsim vehicle equals roughly the real vehicles capacity and on other lines the Matsim vehicle 
 		// capacity is higher than the real used vehicle's capacity (gtfs provides no information on which vehicle type is used,
 		// and this would be beyond scope here). - gleich sep'19
-		VehiclesFactory vb = scenario.getVehicles().getFactory();
+		VehiclesFactory vehicleFactory = scenario.getVehicles().getFactory();
 
-		VehicleType reRbVehicleType = vb.createVehicleType( Id.create( "RE_RB_veh_type", VehicleType.class ) );
+		VehicleType reRbVehicleType = vehicleFactory.createVehicleType( Id.create( "RE_RB_veh_type", VehicleType.class ) );
 		{
 			VehicleCapacity capacity = reRbVehicleType.getCapacity();
 			capacity.setSeats( 500 );
@@ -217,7 +217,7 @@ public class RunGTFS2MATSimOpenBerlin {
 			VehicleUtils.setDoorOperationMode(reRbVehicleType, DoorOperationMode.parallel);
 			scenario.getTransitVehicles().addVehicleType( reRbVehicleType );
 		}
-		VehicleType sBahnVehicleType = vb.createVehicleType( Id.create( "S-Bahn_veh_type", VehicleType.class ) );
+		VehicleType sBahnVehicleType = vehicleFactory.createVehicleType( Id.create( "S-Bahn_veh_type", VehicleType.class ) );
 		{
 			VehicleCapacity capacity = sBahnVehicleType.getCapacity();
 			capacity.setSeats( 400 );
@@ -225,7 +225,7 @@ public class RunGTFS2MATSimOpenBerlin {
 			VehicleUtils.setDoorOperationMode(sBahnVehicleType, DoorOperationMode.parallel);
 			scenario.getTransitVehicles().addVehicleType( sBahnVehicleType );
 		}
-		VehicleType uBahnVehicleType = vb.createVehicleType( Id.create( "U-Bahn_veh_type", VehicleType.class ) );
+		VehicleType uBahnVehicleType = vehicleFactory.createVehicleType( Id.create( "U-Bahn_veh_type", VehicleType.class ) );
 		{
 			VehicleCapacity capacity = uBahnVehicleType.getCapacity() ;
 			capacity.setSeats( 300 );
@@ -233,7 +233,7 @@ public class RunGTFS2MATSimOpenBerlin {
 			VehicleUtils.setDoorOperationMode(uBahnVehicleType, DoorOperationMode.parallel);
 			scenario.getTransitVehicles().addVehicleType( uBahnVehicleType );
 		}
-		VehicleType tramVehicleType = vb.createVehicleType( Id.create( "Tram_veh_type", VehicleType.class ) );
+		VehicleType tramVehicleType = vehicleFactory.createVehicleType( Id.create( "Tram_veh_type", VehicleType.class ) );
 		{
 			VehicleCapacity capacity = tramVehicleType.getCapacity() ;
 			capacity.setSeats( 80 );
@@ -241,7 +241,7 @@ public class RunGTFS2MATSimOpenBerlin {
 			VehicleUtils.setDoorOperationMode(tramVehicleType, DoorOperationMode.parallel);
 			scenario.getTransitVehicles().addVehicleType( tramVehicleType );
 		}
-		VehicleType busVehicleType = vb.createVehicleType( Id.create( "Bus_veh_type", VehicleType.class ) );
+		VehicleType busVehicleType = vehicleFactory.createVehicleType( Id.create( "Bus_veh_type", VehicleType.class ) );
 		{
 			VehicleCapacity capacity = busVehicleType.getCapacity() ;
 			capacity.setSeats( 50 );
@@ -249,7 +249,7 @@ public class RunGTFS2MATSimOpenBerlin {
 			VehicleUtils.setDoorOperationMode(busVehicleType, DoorOperationMode.parallel);
 			scenario.getTransitVehicles().addVehicleType( busVehicleType );
 		}
-		VehicleType ferryVehicleType = vb.createVehicleType( Id.create( "Ferry_veh_type", VehicleType.class ) );
+		VehicleType ferryVehicleType = vehicleFactory.createVehicleType( Id.create( "Ferry_veh_type", VehicleType.class ) );
 		{
 			VehicleCapacity capacity = ferryVehicleType.getCapacity() ;
 			capacity.setSeats( 100 );
@@ -355,7 +355,7 @@ public class RunGTFS2MATSimOpenBerlin {
 				
 				// create vehicles for Departures
 				for (Departure departure: route.getDepartures().values()) {
-					Vehicle veh = vb.createVehicle(Id.create("pt_" + route.getId().toString() + "_" + Long.toString(routeVehId++), Vehicle.class), lineVehicleType);
+					Vehicle veh = vehicleFactory.createVehicle(Id.create("pt_" + route.getId().toString() + "_" + Long.toString(routeVehId++), Vehicle.class), lineVehicleType);
 					scenario.getTransitVehicles().addVehicle(veh);
 					departure.setVehicleId(veh.getId());
 				}
