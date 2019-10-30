@@ -8,20 +8,23 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Point;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.freight.carrier.Carrier;
 import org.matsim.contrib.freight.carrier.CarrierCapabilities;
+import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
 import org.matsim.contrib.freight.carrier.CarrierImpl;
 import org.matsim.contrib.freight.carrier.CarrierPlan;
 import org.matsim.contrib.freight.carrier.CarrierPlanXmlWriterV2;
 import org.matsim.contrib.freight.carrier.CarrierShipment;
 import org.matsim.contrib.freight.carrier.CarrierVehicle;
-import org.matsim.contrib.freight.carrier.CarrierVehicleType;
 import org.matsim.contrib.freight.carrier.CarrierVehicleTypeLoader;
 import org.matsim.contrib.freight.carrier.CarrierVehicleTypes;
 import org.matsim.contrib.freight.carrier.Carriers;
@@ -31,16 +34,16 @@ import org.matsim.contrib.freight.carrier.Tour.Delivery;
 import org.matsim.contrib.freight.carrier.Tour.Leg;
 import org.matsim.contrib.freight.carrier.Tour.Pickup;
 import org.matsim.contrib.freight.carrier.Tour.TourElement;
-import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
 import org.matsim.contrib.freight.controler.CarrierModule;
 import org.matsim.contrib.freight.jsprit.MatsimJspritFactory;
 import org.matsim.contrib.freight.jsprit.NetworkBasedTransportCosts;
-import org.matsim.contrib.freight.jsprit.NetworkRouter;
 import org.matsim.contrib.freight.jsprit.NetworkBasedTransportCosts.Builder;
+import org.matsim.contrib.freight.jsprit.NetworkRouter;
 import org.matsim.contrib.freight.replanning.CarrierPlanStrategyManagerFactory;
 import org.matsim.contrib.freight.scoring.CarrierScoringFunctionFactory;
 import org.matsim.contrib.freight.usecases.chessboard.CarrierScoringFunctionFactoryImpl;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.groups.ControlerConfigGroup;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
@@ -49,10 +52,10 @@ import org.matsim.core.population.routes.RouteUtils;
 import org.matsim.core.replanning.GenericStrategyManager;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
-import org.matsim.vehicles.EngineInformationImpl;
+import org.matsim.vehicles.EngineInformation.FuelType;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
-import org.matsim.vehicles.EngineInformation.FuelType;
+import org.matsim.vehicles.VehicleUtils;
 import org.opengis.feature.simple.SimpleFeature;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -63,8 +66,6 @@ import com.graphhopper.jsprit.core.algorithm.box.SchrimpfFactory;
 import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
 import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolution;
 import com.graphhopper.jsprit.core.util.Solutions;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Point;
 
 /**
  * @author Ricardo Ewert
@@ -95,7 +96,7 @@ class AbfallUtils {
 	static List<String> districtsWithNoShipments = new ArrayList<String>();
 	static HashMap<String, String> dataEnt = new HashMap<String, String>();
 	static CarrierVehicleTypes vehicleTypes = null;
-	static CarrierVehicleType carrierVehType = null;
+	static VehicleType carrierVehType = null;
 	static int capacityTruck = 0;
 	static double powerConsumptionPerWeight = 0;
 	static double powerConsumptionPerDistance = 0;
@@ -196,7 +197,7 @@ class AbfallUtils {
 	static Config prepareConfig(Config config, int lastIteration) {
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 		new OutputDirectoryHierarchy(config.controler().getOutputDirectory(), config.controler().getRunId(),
-				config.controler().getOverwriteFileSetting());
+				config.controler().getOverwriteFileSetting(), ControlerConfigGroup.CompressionType.gzip);
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.overwriteExistingFiles);
 
 		config.controler().setLastIteration(lastIteration);
@@ -486,7 +487,7 @@ class AbfallUtils {
 					.setPickupServiceTime(serviceTime).setPickupTimeWindow(TimeWindow.newInstance(6 * 3600, 14 * 3600))
 					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * 3600, 14 * 3600))
 					.setDeliveryServiceTime(deliveryTime).build();
-			thisCarrier.getShipments().add(shipment);
+			thisCarrier.getShipments().put(shipment.getId(), shipment);
 			countingGarbage(dumpId, volumeGarbage);
 		}
 		numberOfShipments = numberOfShipments + garbageLinks.size();
@@ -531,7 +532,7 @@ class AbfallUtils {
 					.setPickupServiceTime(serviceTime).setPickupTimeWindow(TimeWindow.newInstance(6 * 3600, 14 * 3600))
 					.setDeliveryTimeWindow(TimeWindow.newInstance(6 * 3600, 14 * 3600))
 					.setDeliveryServiceTime(deliveryTime).build();
-			thisCarrier.getShipments().add(shipment);
+			thisCarrier.getShipments().put(shipment.getId(), shipment);
 			garbageCount = garbageCount + volumeGarbage;
 			countingGarbage(garbageDumpId, volumeGarbage);
 		}
@@ -597,10 +598,10 @@ class AbfallUtils {
 	 */
 	private static void createGarbageTruckType(String vehicleTypeId, double maxVelocity, double costPerDistanceUnit,
 			double costPerTimeUnit, double fixCosts, FuelType engineInformation, double literPerMeter) {
-		carrierVehType = CarrierVehicleType.Builder.newInstance(Id.create(vehicleTypeId, VehicleType.class))
-				.setCapacity(capacityTruck).setMaxVelocity(maxVelocity).setCostPerDistanceUnit(costPerDistanceUnit)
-				.setCostPerTimeUnit(costPerTimeUnit).setFixCost(fixCosts)
-				.setEngineInformation(new EngineInformationImpl(engineInformation, literPerMeter)).build();
+		carrierVehType = VehicleUtils.createVehicleType(Id.create(vehicleTypeId, VehicleType.class));
+				carrierVehType.getCapacity().setOther(capacityTruck);
+				carrierVehType.setMaximumVelocity(maxVelocity);
+				carrierVehType.getCostInformation().setCostsPerMeter(costPerDistanceUnit).setCostsPerSecond(costPerTimeUnit).setFixedCost(fixCosts);
 
 	}
 
@@ -898,12 +899,13 @@ class AbfallUtils {
 		for (Carrier thisCarrier : carrierMap.values()) {
 
 			Collection<ScheduledTour> tours = thisCarrier.getSelectedPlan().getScheduledTours();
-			Collection<CarrierShipment> shipments = thisCarrier.getShipments();
+			Map<Id<CarrierShipment>, CarrierShipment> shipments = thisCarrier.getShipments();
 			HashMap<String, Integer> shipmentSizes = new HashMap<String, Integer>();
 			matsimCosts = matsimCosts + thisCarrier.getSelectedPlan().getScore();
-			for (CarrierShipment carrierShipment : shipments) {
-				String shipmentId = carrierShipment.getId().toString();
-				int shipmentSize = carrierShipment.getSize();
+			
+			for (Entry<Id<CarrierShipment>, CarrierShipment> entry : shipments.entrySet()) {	
+				String shipmentId = entry.getKey().toString();
+				int shipmentSize = entry.getValue().getSize();
 				shipmentSizes.put(shipmentId, shipmentSize);
 			}
 			for (ScheduledTour scheduledTour : tours) {

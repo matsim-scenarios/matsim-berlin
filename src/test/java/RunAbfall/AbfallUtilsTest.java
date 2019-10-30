@@ -69,11 +69,11 @@ public class AbfallUtilsTest {
 	public final void testCreateAndAddVehicles() {
 		AbfallUtils.createAndAddVehicles(true);
 		Assert.assertEquals(FuelType.electricity, AbfallUtils.carrierVehType.getEngineInformation().getFuelType());
-		Assert.assertEquals(0., AbfallUtils.carrierVehType.getVehicleCostInformation().perTimeUnit, 0);
+		Assert.assertEquals(0., AbfallUtils.carrierVehType.getVehicleCostInformation().getCostsPerSecond(), 0);
 		Assert.assertTrue(AbfallUtils.vehicleTypes.getVehicleTypes().containsKey(AbfallUtils.carrierVehType.getId()));
 		AbfallUtils.createAndAddVehicles(false);
 		Assert.assertEquals(FuelType.diesel, AbfallUtils.carrierVehType.getEngineInformation().getFuelType());
-		Assert.assertEquals(0., AbfallUtils.carrierVehType.getVehicleCostInformation().perTimeUnit, 0);
+		Assert.assertEquals(0., AbfallUtils.carrierVehType.getCostInformation().getCostsPerSecond(), 0);
 		Assert.assertTrue(AbfallUtils.vehicleTypes.getVehicleTypes().containsKey(AbfallUtils.carrierVehType.getId()));
 	}
 

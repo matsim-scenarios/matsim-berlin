@@ -33,6 +33,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Map.Entry;
 
 public class RunAnalyse {
 	static final Logger log = Logger.getLogger(RunAnalyse.class);
@@ -94,7 +95,7 @@ public class RunAnalyse {
 		log.info("Running analysis for " + scenarioWahl + " : " + inputDir);
 
 		Carriers carriers = new Carriers();
-		new CarrierPlanXmlReaderV2(carriers)
+		new CarrierPlanXmlReader(carriers)
 				.readFile(new File(inputDir + "output_CarrierPlans.xml").getCanonicalPath());
 
 		Network network = NetworkUtils.readNetwork(inputDir + "output_network.xml.gz");
@@ -106,12 +107,12 @@ public class RunAnalyse {
 			int tourNumber = 0;
 
 			Collection<ScheduledTour> tours = carrier.getSelectedPlan().getScheduledTours();
-			Collection<CarrierShipment> shipments = carrier.getShipments();
+			Map<Id<CarrierShipment>, CarrierShipment> shipments = carrier.getShipments();
 			HashMap<String, Integer> shipmentSizes = new HashMap<String, Integer>();
 
-			for (CarrierShipment carrierShipment : shipments) {
-				String shipmentId = carrierShipment.getId().toString();
-				int shipmentSize = carrierShipment.getSize();
+			for (Entry<Id<CarrierShipment>, CarrierShipment> entry : shipments.entrySet()) {
+				String shipmentId = entry.getKey().toString();
+				int shipmentSize = entry.getValue().getSize();
 				shipmentSizes.put(shipmentId, shipmentSize);
 			}
 			for (ScheduledTour scheduledTour : tours) {
