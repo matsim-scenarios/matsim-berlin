@@ -101,10 +101,7 @@ public class DrtVehicleCreator {
 		new NetworkWriter(drtNetwork).write("drtNetwork.xml.gz");
 	}
 	
-	public final void run(int amount, int seats) {
-		
-
-		
+	public final void run(int amount, int seats) {	
 		List<DvrpVehicleSpecification> vehicles = new ArrayList<>();
 
 		for (int i = 0 ; i< amount; i++) {
