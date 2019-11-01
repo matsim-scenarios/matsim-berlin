@@ -83,7 +83,7 @@ public final class RunDrtOpenBerlinScenario {
 		controler.run() ;
 	}
 	
-	static Controler prepareControler( Scenario scenario ) {
+	public static Controler prepareControler( Scenario scenario ) {
 
 		Controler controler = RunBerlinScenario.prepareControler( scenario ) ;
 		
@@ -111,7 +111,7 @@ public final class RunDrtOpenBerlinScenario {
 		return controler;
 	}
 	
-	static Scenario prepareScenario( Config config ) {
+	public static Scenario prepareScenario( Config config ) {
 
 		Scenario scenario = RunBerlinScenario.prepareScenario( config );
 
@@ -138,7 +138,7 @@ public final class RunDrtOpenBerlinScenario {
 		return scenario;
 	}
 	
-	static Config prepareConfig( String [] args ) {
+	public static Config prepareConfig( String [] args ) {
 
 		Config config = RunBerlinScenario.prepareConfig( args, new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup()  ) ;
 		
