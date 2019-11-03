@@ -75,6 +75,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			
 			// TODO: test the scores in iteration 0 and 4
 		} catch ( Exception ee ) {
+			ee.printStackTrace();
 			throw new RuntimeException(ee) ;
 		}
 	}
