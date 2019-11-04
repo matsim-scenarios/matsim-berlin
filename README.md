@@ -64,9 +64,10 @@ This will result in a new `matsim-berlin` directory.  Memorize where you have pu
 This will update your repository to the newest version.
 
 ### Run the MATSim Berlin scenario
-(Requires either cloning or downloading the repository.)
 
 ##### ... using a runnable jar file
+(Requires either cloning or downloading the repository.)
+
 1. There should be a file directly in the `matsim-berlin` directory with name approximately as `matsim-berlin-5.x-jar-with-dependencies.jar`.
 1. Double-click on that file (in a file system browser).  A simple GUI should open.
 1. In the GUI, click on the "Choose" button for configuration file.  Navigate to one of the `scenario` directories and load one of the configuration files.
@@ -75,12 +76,49 @@ This will update your repository to the newest version.
 1. "Open" the output directory.  You can drag files into VIA as was already done above.
 1. "Edit..." (in the GUI) the config file.  Re-run MATSim.
 
-##### ... using an IDE, e.g. Eclipse, IntelliJ
+##### ... using an IDE, e.g. Eclipse, IntelliJ alternative 1
+(Requires either cloning or downloading the repository.)
+
 1. Set up the project in your IDE.
 1. Make sure the project is configured as maven project.
 1. Run the JAVA class `src/main/java/org/matsim/run/RunBerlinScenario.java` or `src/main/java/org/matsim/gui/RunBerlinScenarioGUI.java`.
 1. "Open" the output directory.  You can drag files into VIA as was already done above.
 1. Edit the config file or adjust the run class. Re-run MATSim.
+
+##### ... using an IDE, e.g. Eclipse, IntelliJ alternative 2
+1. Clone the matsim-example-project: https://github.com/matsim-org/matsim-example-project
+2. Add a maven dependency to the open berlin project by writing the following to the pom file:
+
+```xml
+<repository>
+  <id>jitpack.io</id>
+  <url>https://jitpack.io</url>
+</repository>
+```
+
+```xml
+<dependency>
+  <groupId>com.github.matsim-vsp</groupId>
+  <artifactId>matsim-berlin</artifactId>
+  <version>5.4</version>
+</dependency>
+```
+
+3. Write your own run class and make sure to execute the required public methods in RunBerlinScenario:
+
+```
+Config config = RunBerlinScenario.prepareConfig( args ) ;
+// possibly modify config here
+
+Scenario scenario = RunBerlinScenario.prepareScenario( config ) ;
+// possibly modify scenario here
+
+Controler controler = RunBerlinScenario.prepareControler( scenario ) ;
+// possibly modify controler here, e.g. add your own module
+
+controler.run
+
+```
 
 ### More information
 
