@@ -37,13 +37,13 @@ Handling of large files within git is not without problems (git lfs files are no
 1. Get these files into VIA.  This can be achieved in various ways; one is to open VIA and then drag the files from a file browser into VIA.
 1. Run VIA and enjoy.
 
-### Downloading the repository alternative 1: Download ZIP
+### Downloading the repository - Alternative 1: Download ZIP
 
 1. Click on `Clone or download` and then on `Download ZIP`.
 1. Unzip the repository.
 1. Go to "Run the MATSim Berlin scenario" below.
 
-### Downloading the repository alternative 2: Clone the repository
+### Downloading the repository - Alternative 2: Clone the repository
 
 ##### Initial stuff (needs to be done once)
 
@@ -76,7 +76,7 @@ This will update your repository to the newest version.
 1. "Open" the output directory.  You can drag files into VIA as was already done above.
 1. "Edit..." (in the GUI) the config file.  Re-run MATSim.
 
-##### ... using an IDE, e.g. Eclipse, IntelliJ alternative 1
+##### ... using an IDE, e.g. Eclipse, IntelliJ - Alternative 1: use cloned/downloaded matsim-berlin repository
 (Requires either cloning or downloading the repository.)
 
 1. Set up the project in your IDE.
@@ -85,7 +85,8 @@ This will update your repository to the newest version.
 1. "Open" the output directory.  You can drag files into VIA as was already done above.
 1. Edit the config file or adjust the run class. Re-run MATSim.
 
-##### ... using an IDE, e.g. Eclipse, IntelliJ alternative 2
+##### ... using an IDE, e.g. Eclipse, IntelliJ - Alternative 2: use matsim-berlin as a maven dependency
+
 1. Clone the matsim-example-project: https://github.com/matsim-org/matsim-example-project
 2. Add a maven dependency to the open berlin project by writing the following to the pom file:
 
