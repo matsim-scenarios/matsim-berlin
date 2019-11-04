@@ -39,6 +39,7 @@ import org.matsim.contrib.dvrp.run.DvrpModule;
 import org.matsim.contrib.dvrp.run.DvrpQSimComponents;
 import org.matsim.core.config.CommandLine;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
@@ -138,7 +139,20 @@ public final class RunDrtOpenBerlinScenario {
 		return scenario;
 	}
 	
-	public static Config prepareConfig( String [] args ) {
+	public static Config prepareConfig( String [] args, ConfigGroup... customModules) {
+		ConfigGroup[] customModulesToAdd = new ConfigGroup[]{new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup() };
+		ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
+		
+		int counter = 0;
+		for (ConfigGroup customModule : customModules) {
+			customModulesAll[counter] = customModule;
+			counter++;
+		}
+		
+		for (ConfigGroup customModule : customModulesToAdd) {
+			customModulesAll[counter] = customModule;
+			counter++;
+		}
 
 		Config config = RunBerlinScenario.prepareConfig( args, new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup()  ) ;
 		
