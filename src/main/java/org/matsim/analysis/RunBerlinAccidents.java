@@ -3,6 +3,8 @@ package org.matsim.analysis;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.contrib.accidents.AccidentsConfigGroup;
@@ -25,40 +27,44 @@ public class RunBerlinAccidents {
 		}
 		
 		if ( args.length==0 ) {
-			args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
+			args = new String[] {"https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
 		}
 		
 	String outputFile = "/../shared-svn/studies/countries/de/accidents/data/output/"; 
 	String landOSMInputShapeFile = "/../shared-svn/studies/countries/de/accidents/data/input/osmBerlin/gis.osm_landuse_a_free_1.shx";  
 	String placesOSMInputFile = "/../shared-svn/studies/countries/de/accidents/data/input/osmBerlinBrandenburg/gis.osm_landuse_a_free_1_GK4.shx";
-	String tunnelLinkCSVInputFile = "D:/GIT/shared-svn/studies/countries/de/accidents/data/input/CSV files/tunnellinks.csv";
+	String tunnelLinkCSVInputFile = "D:/SVN-public/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.1.tunnel-linkIDs.csv";
+	//the CSV has also a column for the percentage of the links wich is tunnel
 	String planfreeLinkCSVInputFile = "/../shared-svn/studies/countries/de/accidents/data/input/CSV files/planfreelinks.csv";
+	//The Ids of links the between the two versions have change. Because of that the equivalent in the new network  for the plan free links should be found 
+	System.out.println(readLinksFromCSV(tunnelLinkCSVInputFile));
 
-	//The Ids of the between the two versions have change. BEcause of that the equivalent in the new network should be found 
-	
-	Config config = RunBerlinScenario.prepareConfig( args );
+	Config config = RunBerlinScenario.prepareConfig(args);
 	Scenario scenario = RunBerlinScenario.prepareScenario(config);
 	Controler controler = RunBerlinScenario.prepareControler(scenario);
 	
 	config.controler().setOutputDirectory(outputFile);
 	config.controler().setLastIteration(0);
 
-	
 	AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
 	accidentsSettings.setScaleFactor(100);
 	AccidentsNetworkModification accidentsNetworkModification = new AccidentsNetworkModification(scenario);
-	accidentsNetworkModification.setLinkAttributsBasedOnOSMFile(landOSMInputShapeFile, placesOSMInputFile, "EPSG:31468" ,readLinksFromCSV(tunnelLinkCSVInputFile),readLinksFromCSV(planfreeLinkCSVInputFile) );
+	accidentsNetworkModification.setLinkAttributsBasedOnOSMFile(landOSMInputShapeFile, placesOSMInputFile,"EPSG:31468", readColumn(1,tunnelLinkCSVInputFile,";"),readLinksFromCSV(planfreeLinkCSVInputFile));
 	controler.run();	
 	}
 
 	private static String[] readLinksFromCSV(String CSV) {
-	    String line = ";";
+	    String line = "";
 	    //Setting the links that are considered tunnels
+	    String [] lines = null;
 	    String [] links = null;
+	    int a = 0;
 	    try(BufferedReader br = new BufferedReader(new FileReader(CSV))) {
 	    while ((line = br.readLine()) != null)
-	    {
-	     links  = line.split(",");   
+	    {	    
+	     lines  = line.split(";");
+	     links [a] = lines [0];
+	     a++;
 	    }
 	    } 
 		catch (IOException e) {
@@ -67,5 +73,35 @@ public class RunBerlinAccidents {
 	    }
 	    return links;
 	}	
+	
+	
+
+	public static String[] readColumn(int numCol ,String CSV, String sep) {
+				
+		
+		//java.util.ArrayList<String> lb = new java.util.ArrayList<String>();
+		StringBuilder sb = new StringBuilder();
+		String line;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(CSV))) {
+
+            // read line by line
+            while ((line = br.readLine()) != null) 
+            {
+            	String valor = "ERROR";
+            	String lista[] = line.split(sep);
+            	if(numCol<lista.length) {
+            		valor = lista[numCol];
+            	}
+            	
+                sb.append(valor).append(sep);
+            }
+
+        } catch (IOException e) {
+            System.err.format("IOException: %s%n", e);
+        }
+        
+        return sb.toString().split(sep);
+	}
 	}
 
