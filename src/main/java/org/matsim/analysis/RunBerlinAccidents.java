@@ -3,8 +3,6 @@ package org.matsim.analysis;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.contrib.accidents.AccidentsConfigGroup;
@@ -14,6 +12,11 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
 import org.matsim.run.RunBerlinScenario;
 
+/**
+ * @author Hugo
+ */
+
+//to run the program there is a problem with the input files from the config file, I think is very likely that in the current state of the branch 5.5 it is solved 
 
 
 public class RunBerlinAccidents {
@@ -34,9 +37,9 @@ public class RunBerlinAccidents {
 	String landOSMInputShapeFile = "/../shared-svn/studies/countries/de/accidents/data/input/osmBerlin/gis.osm_landuse_a_free_1.shx";  
 	String placesOSMInputFile = "/../shared-svn/studies/countries/de/accidents/data/input/osmBerlinBrandenburg/gis.osm_landuse_a_free_1_GK4.shx";
 	String tunnelLinkCSVInputFile = "D:/SVN-public/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.1.tunnel-linkIDs.csv";
-	//the CSV has also a column for the percentage of the links wich is tunnel
+	//the CSV has also a column for the percentage of the links wich is tunnel, The new String is produced by a new class
 	String planfreeLinkCSVInputFile = "/../shared-svn/studies/countries/de/accidents/data/input/CSV files/planfreelinks.csv";
-	//The Ids of links the between the two versions have change. Because of that the equivalent in the new network  for the plan free links should be found 
+	//The Ids of links the between the two versions have change. Because of that the equivalent in the new network  for the plan free links
 	System.out.println(readLinksFromCSV(tunnelLinkCSVInputFile));
 
 	Config config = RunBerlinScenario.prepareConfig(args);
