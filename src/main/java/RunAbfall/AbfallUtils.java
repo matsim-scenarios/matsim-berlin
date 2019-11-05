@@ -44,6 +44,7 @@ import org.matsim.contrib.freight.scoring.CarrierScoringFunctionFactory;
 import org.matsim.contrib.freight.usecases.chessboard.CarrierScoringFunctionFactoryImpl;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.groups.ControlerConfigGroup;
+import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
@@ -602,6 +603,7 @@ class AbfallUtils {
 				carrierVehType.getCapacity().setOther(capacityTruck);
 				carrierVehType.setMaximumVelocity(maxVelocity);
 				carrierVehType.getCostInformation().setCostsPerMeter(costPerDistanceUnit).setCostsPerSecond(costPerTimeUnit).setFixedCost(fixCosts);
+				carrierVehType.getEngineInformation().setFuelType(engineInformation).setFuelConsumption(literPerMeter);
 
 	}
 
@@ -766,13 +768,15 @@ class AbfallUtils {
 	/**
 	 * @param
 	 */
-	static void scoringAndManagerFactory(Scenario scenario, Carriers carriers, final Controler controler) {
-		CarrierScoringFunctionFactory scoringFunctionFactory = createMyScoringFunction2(scenario);
-		CarrierPlanStrategyManagerFactory planStrategyManagerFactory = createMyStrategymanager();
-
-		CarrierModule listener = new CarrierModule(carriers, planStrategyManagerFactory, scoringFunctionFactory);
-		listener.setPhysicallyEnforceTimeWindowBeginnings(true);
-		controler.addOverridingModule(listener);
+	static void scoringAndManagerFactory(Scenario scenario, final Controler controler) {
+		controler.addOverridingModule(new CarrierModule());
+		controler.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				bind(CarrierScoringFunctionFactory.class).toInstance(createMyScoringFunction2(scenario));
+				bind(CarrierPlanStrategyManagerFactory.class).toInstance(createMyStrategymanager());
+			}
+		});
 	}
 
 	/**

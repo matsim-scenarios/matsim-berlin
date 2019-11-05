@@ -15,6 +15,7 @@ import org.matsim.contrib.freight.carrier.Carrier;
 import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
 import org.matsim.contrib.freight.carrier.CarrierPlanXmlWriterV2;
 import org.matsim.contrib.freight.carrier.Carriers;
+import org.matsim.contrib.freight.utils.FreightUtils;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
@@ -98,7 +99,7 @@ public class Run_Abfall {
 		Scenario scenario = ScenarioUtils.loadScenario(config);
 
 		// creates carrier
-		Carriers carriers = new Carriers();
+		Carriers carriers = FreightUtils.getOrCreateCarriers(scenario);
 		HashMap<String, Carrier> carrierMap = AbfallUtils.createCarrier();
 
 		// creates a garbage truck type and ads this type to the carrierVehicleTypes
@@ -191,7 +192,7 @@ public class Run_Abfall {
 
 		final Controler controler = new Controler(scenario);
 
-		AbfallUtils.scoringAndManagerFactory(scenario, carriers, controler);
+		AbfallUtils.scoringAndManagerFactory(scenario, controler);
 
 		controler.run();
 
