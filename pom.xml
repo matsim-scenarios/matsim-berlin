@@ -111,7 +111,7 @@
 		<dependency>
 			<groupId>com.github.matsim-org</groupId>
 			<artifactId>GTFS2MATSim</artifactId>
-			<version>11.2</version>
+			<version>11.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
@@ -119,7 +119,12 @@
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
 		</dependency>
-
+		<dependency>
+		<!-- This is the matsim "freight" contrib: -->
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>freight</artifactId>
+			<version>${matsim.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
