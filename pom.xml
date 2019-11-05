@@ -111,7 +111,7 @@
 		<dependency>
 			<groupId>com.github.matsim-org</groupId>
 			<artifactId>GTFS2MATSim</artifactId>
-			<version>11.1</version>
+			<version>11.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
