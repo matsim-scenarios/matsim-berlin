@@ -63,7 +63,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			// Decrease population to 0.01% sample 
 			List<Id<Person>> agentsToRemove = new ArrayList<>();
 			for (Id<Person> id: scenario.getPopulation().getPersons().keySet()) {
-				if (MatsimRandom.getRandom().nextDouble() < 0.01) {agentsToRemove.add(id);}
+				if (MatsimRandom.getRandom().nextDouble() > 0.01) {agentsToRemove.add(id);}
 			}
 			for (Id<Person> id: agentsToRemove) {
 				scenario.getPopulation().removePerson(id);
