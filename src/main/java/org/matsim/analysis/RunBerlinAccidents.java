@@ -55,7 +55,8 @@ public class RunBerlinAccidents {
 	accidentsNetworkModification.setLinkAttributsBasedOnOSMFile(landOSMInputShapeFile, placesOSMInputFile,"EPSG:31468", readColumn(1,tunnelLinkCSVInputFile,";"),readLinksFromCSV(planfreeLinkCSVInputFile));
 	controler.run();	
 	}
-
+	
+	@Deprecated
 	private static String[] readLinksFromCSV(String CSV) {
 	    String line = "";
 	    //Setting the links that are considered tunnels
