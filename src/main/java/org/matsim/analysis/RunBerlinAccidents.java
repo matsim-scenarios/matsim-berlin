@@ -79,7 +79,7 @@ public class RunBerlinAccidents {
 	
 	
 
-	public static String[] readColumn(int numCol ,String CSV, String sep) {
+	public static String[] readColumn(int numCol ,String CSV, String separator) {
 				
 		
 		//java.util.ArrayList<String> lb = new java.util.ArrayList<String>();
@@ -91,20 +91,20 @@ public class RunBerlinAccidents {
             // read line by line
             while ((line = br.readLine()) != null) 
             {
-            	String valor = "ERROR";
-            	String lista[] = line.split(sep);
-            	if(numCol<lista.length) {
-            		valor = lista[numCol];
+            	String value = "ERROR";
+            	String list[] = line.split(separator);
+            	if(numCol<list.length) {
+            		value = list[numCol];
             	}
             	
-                sb.append(valor).append(sep);
+                sb.append(value).append(separator);
             }
 
         } catch (IOException e) {
             System.err.format("IOException: %s%n", e);
         }
         
-        return sb.toString().split(sep);
+        return sb.toString().split(separator);
 	}
 	}
 
