@@ -10,7 +10,6 @@ import org.junit.runners.MethodSorters;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
-import org.matsim.berlin.OpenBerlinIntermodalPtDrtRouterModeIdentifierWithDrtTeleportation;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.groups.PlansCalcRouteConfigGroup.ModeRoutingParams;
 import org.matsim.core.controler.AbstractModule;
@@ -20,7 +19,6 @@ import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.drtSpeedUp.DrtSpeedUpConfigGroup;
 import org.matsim.drtSpeedUp.DrtSpeedUpModule;
-import org.matsim.run.drt.RunDrtOpenBerlinScenario;
 import org.matsim.testcases.MatsimTestUtils;
 
 /**
@@ -29,7 +27,7 @@ import org.matsim.testcases.MatsimTestUtils;
  *
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class RunDrtSpeedUpOpenBerlinScenarioTest {
+public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 		
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 	
@@ -60,18 +58,7 @@ public class RunDrtSpeedUpOpenBerlinScenarioTest {
 			downsample( scenario.getPopulation().getPersons(), 1.0 );
 			
 			Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
-			
-			controler.addOverridingModule(new AbstractModule() {
-				
-				@Override
-				public void install() {
-					// the current one in open berlin needs to be overwritten
-					bind(MainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifierWithDrtTeleportation.class);
-				}
-			});
-			
 			controler.addOverridingModule(new DrtSpeedUpModule());
-
 			controler.run() ;			
 			
 		} catch ( Exception ee ) {
@@ -104,19 +91,8 @@ public class RunDrtSpeedUpOpenBerlinScenarioTest {
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 			downsample( scenario.getPopulation().getPersons(), 0.01 );
 			
-			Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
-			
-			controler.addOverridingModule(new AbstractModule() {
-				
-				@Override
-				public void install() {
-					// the current one in open berlin needs to be overwritten
-					bind(MainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifierWithDrtTeleportation.class);
-				}
-			});
-			
+			Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;			
 			controler.addOverridingModule(new DrtSpeedUpModule());
-
 			controler.run() ;			
 			
 		} catch ( Exception ee ) {

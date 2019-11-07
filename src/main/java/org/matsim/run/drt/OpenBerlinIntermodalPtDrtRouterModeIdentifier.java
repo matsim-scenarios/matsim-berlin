@@ -45,7 +45,7 @@ public final class OpenBerlinIntermodalPtDrtRouterModeIdentifier implements Main
 
 	@Inject
 	public OpenBerlinIntermodalPtDrtRouterModeIdentifier() {
-		drtModes = Arrays.asList(TransportMode.drt, "drt2");
+		drtModes = Arrays.asList(TransportMode.drt, "drt2", "drt_teleportation");
 		
 		modeHierarchy.add( TransportMode.walk ) ;
 		modeHierarchy.add( "bicycle" ); // TransportMode.bike is not registered as main mode, only "bicycle" ;
