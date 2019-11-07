@@ -1,13 +1,8 @@
 package org.matsim.analysis;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.apache.log4j.Logger;
@@ -61,7 +56,7 @@ public class RunBerlinAccidents {
 			landOSMInputShapeFile,
 			placesOSMInputFile,"EPSG:31468",
 			readColumn(1,tunnelLinkCSVInputFile,";"),
-			readColumn(1, planfreeLinkCSVInputFile, ";")
+			readColumn(1,planfreeLinkCSVInputFile, ";")
 			);
 	
 	Controler controler = RunBerlinScenario.prepareControler(scenario);
