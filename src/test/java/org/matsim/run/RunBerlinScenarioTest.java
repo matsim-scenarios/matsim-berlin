@@ -18,7 +18,6 @@
  * *********************************************************************** */
 package org.matsim.run;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -29,7 +28,6 @@ import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
-import org.matsim.analysis.ScoreStatsControlerListener.ScoreItem;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
@@ -165,6 +163,7 @@ public class RunBerlinScenarioTest {
 			
 			
 		} catch ( Exception ee ) {
+			ee.printStackTrace();
 			throw new RuntimeException(ee) ;
 		}
 	}
@@ -208,6 +207,7 @@ public class RunBerlinScenarioTest {
 			
 			
 		} catch ( Exception ee ) {
+			ee.printStackTrace();
 			throw new RuntimeException(ee) ;
 		}
 	}
