@@ -12,11 +12,9 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.groups.PlansCalcRouteConfigGroup.ModeRoutingParams;
-import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.gbl.MatsimRandom;
-import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.drtSpeedUp.DrtSpeedUpConfigGroup;
 import org.matsim.drtSpeedUp.DrtSpeedUpModule;
 import org.matsim.testcases.MatsimTestUtils;
@@ -34,7 +32,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 	@Test
 	public final void test1() {
 		try {
-			final String[] args = {"test/input/berlin-drt-v5.5-1pct.config.xml"};
+			final String[] args = {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-v5.5-1pct.config.xml"};
 			
 			Config config = RunDrtOpenBerlinScenario.prepareConfig( args , new DrtSpeedUpConfigGroup()) ;
 			config.controler().setLastIteration(10);
@@ -44,7 +42,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 			config.planCalcScore().setWriteExperiencedPlans(true);
 			config.controler().setOutputDirectory(utils.getOutputDirectory());
 			config.global().setNumberOfThreads(1);
-			config.plans().setInputFile("drt-test-agents.xml");
+			config.plans().setInputFile("../../../../test/input/drt/drt-test-agents.xml");
 			
 			// switch off transit and use teleportation instead
 			config.transit().setUseTransit(false);
@@ -70,7 +68,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 	@Test
 	public final void test2() {
 		try {
-			final String[] args = {"test/input/berlin-drt-v5.5-1pct.config.xml"};
+			final String[] args = {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-v5.5-1pct.config.xml"};
 			
 			Config config = RunDrtOpenBerlinScenario.prepareConfig( args , new DrtSpeedUpConfigGroup()) ;
 			config.controler().setLastIteration(30);

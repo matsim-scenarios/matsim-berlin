@@ -4,7 +4,7 @@
 <population>
 
         <attributes>
-                <attribute name="coordinateReferenceSystem" class="java.lang.String" >GK4</attribute>
+                <attribute name="coordinateReferenceSystem" class="java.lang.String" >EPSG:31468</attribute>
         </attributes>
 <!-- ====================================================================== -->
 <!-- work_25200 location moved into berlkoenig area -->

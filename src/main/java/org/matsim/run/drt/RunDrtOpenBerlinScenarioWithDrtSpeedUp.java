@@ -39,7 +39,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 		}
 		
 		if ( args.length==0 ) {
-			args = new String[] {"test/input/berlin-drt-v5.5-1pct.config.xml"}  ;
+			args = new String[] {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-v5.5-1pct.config.xml"}  ;
 		}
 		
 		Config config = RunDrtOpenBerlinScenario.prepareConfig( args , new DrtSpeedUpConfigGroup() ) ;
