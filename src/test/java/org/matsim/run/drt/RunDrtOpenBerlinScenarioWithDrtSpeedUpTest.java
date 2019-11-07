@@ -45,10 +45,10 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 			config.plans().setInputFile("../../../../test/input/drt/drt-test-agents.xml");
 			
 			// switch off transit and use teleportation instead
-			config.transit().setUseTransit(false);
-			ModeRoutingParams pars = new ModeRoutingParams("pt");
-			pars.setTeleportedModeSpeed(3.1388889);
-			config.plansCalcRoute().addModeRoutingParams(pars);
+//			config.transit().setUseTransit(false);
+//			ModeRoutingParams pars = new ModeRoutingParams("pt");
+//			pars.setTeleportedModeSpeed(3.1388889);
+//			config.plansCalcRoute().addModeRoutingParams(pars);
 			
 			DrtSpeedUpModule.adjustConfig(config);
 
