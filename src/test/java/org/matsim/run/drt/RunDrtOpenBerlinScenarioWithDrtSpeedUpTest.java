@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Random;
 
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -11,7 +12,6 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.config.Config;
-import org.matsim.core.config.groups.PlansCalcRouteConfigGroup.ModeRoutingParams;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.gbl.MatsimRandom;
@@ -35,20 +35,14 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 			final String[] args = {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-v5.5-1pct.config.xml"};
 			
 			Config config = RunDrtOpenBerlinScenario.prepareConfig( args , new DrtSpeedUpConfigGroup()) ;
-			config.controler().setLastIteration(10);
+			config.controler().setLastIteration(2);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
-			config.controler().setWritePlansInterval(1);
-			config.controler().setWriteEventsInterval(1);
+			config.controler().setWritePlansInterval(4);
+			config.controler().setWriteEventsInterval(4);
 			config.planCalcScore().setWriteExperiencedPlans(true);
 			config.controler().setOutputDirectory(utils.getOutputDirectory());
 			config.global().setNumberOfThreads(1);
 			config.plans().setInputFile("../../../../test/input/drt/drt-test-agents.xml");
-			
-			// switch off transit and use teleportation instead
-//			config.transit().setUseTransit(false);
-//			ModeRoutingParams pars = new ModeRoutingParams("pt");
-//			pars.setTeleportedModeSpeed(3.1388889);
-//			config.plansCalcRoute().addModeRoutingParams(pars);
 			
 			DrtSpeedUpModule.adjustConfig(config);
 
@@ -65,6 +59,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 		}
 	}
 	
+	@Ignore
 	@Test
 	public final void test2() {
 		try {
@@ -73,16 +68,10 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 			Config config = RunDrtOpenBerlinScenario.prepareConfig( args , new DrtSpeedUpConfigGroup()) ;
 			config.controler().setLastIteration(30);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
-			config.controler().setWritePlansInterval(1);
-			config.controler().setWriteEventsInterval(10);
+			config.controler().setWritePlansInterval(30);
+			config.controler().setWriteEventsInterval(30);
 			config.global().setNumberOfThreads(1);
 			config.controler().setOutputDirectory(utils.getOutputDirectory());
-			
-			// switch off transit and use teleportation instead
-			config.transit().setUseTransit(false);
-			ModeRoutingParams pars = new ModeRoutingParams("pt");
-			pars.setTeleportedModeSpeed(3.1388889);
-			config.plansCalcRoute().addModeRoutingParams(pars);
 			
 			DrtSpeedUpModule.adjustConfig(config);
 
