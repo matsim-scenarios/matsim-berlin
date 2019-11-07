@@ -119,6 +119,11 @@
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+	    	<groupId>com.github.matsim-vsp</groupId>
+	    	<artifactId>drt-speed-up</artifactId>
+	    	<version>e67e3ef08e</version>
+		</dependency>
 
 	</dependencies>
 
