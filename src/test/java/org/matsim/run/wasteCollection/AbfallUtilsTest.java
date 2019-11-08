@@ -91,7 +91,7 @@ public class AbfallUtilsTest {
 
 	@Test
 	public final void testCreateCarriersBerlin() {
-		final String berlinDistrictsWithGarbageInformations = "scenarios/garbageInput/districtsWithGarbageInformations.shp";
+		final String berlinDistrictsWithGarbageInformations = "scenarios/berlin-v5.5-10pct/input/wasteCollection/districtsWithGarbageInformations.shp";
 		Carriers testCarriers = new Carriers();
 		HashMap<String, Carrier> carrierMap = AbfallUtils.createCarrier();
 		Collection<SimpleFeature> districtsWithGarbage = ShapeFileReader
@@ -132,7 +132,7 @@ public class AbfallUtilsTest {
 
 	@Test
 	public final void testShapeFile() {
-		final String berlinDistrictsWithGarbageInformations = "scenarios/garbageInput/districtsWithGarbageInformations.shp";
+		final String berlinDistrictsWithGarbageInformations = "scenarios/berlin-v5.5-10pct/input/wasteCollection/districtsWithGarbageInformations.shp";
 		Collection<SimpleFeature> districtsWithGarbage = ShapeFileReader
 				.getAllFeatures(berlinDistrictsWithGarbageInformations);
 		for (SimpleFeature districtInformation : districtsWithGarbage) {
