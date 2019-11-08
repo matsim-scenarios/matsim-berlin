@@ -13,7 +13,7 @@
 		<param name="writePlansInterval" value="50" />
 	</module>
 	<module name="global" >
-		<param name="coordinateSystem" value="GK4" />
+		<param name="coordinateSystem" value="EPSG:31468" />
 		<param name="insistingOnDeprecatedConfigVersion" value="false" />
 		<param name="numberOfThreads" value="8" />
 	</module>
@@ -21,7 +21,7 @@
 		<param name="inputNetworkFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz" />
 	</module>
 	<module name="plans" >
-		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.4-10pct.plans_wo_PtRoutes.xml.gz" />
+		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.plans_uncalibrated.xml.gz" />
 		<param name="removingUnnecessaryPlanAttributes" value="false" />
 	</module>
 	<module name="vehicles" >
@@ -178,7 +178,7 @@
 			<param name="maxTravelTimeBeta" value="120.0" />
 			<!-- Max wait time for the bus to come (optimisation constraint). -->
 			<param name="maxWaitTime" value="300.0" />
-			<!-- Maximum desired walk distance (in meters) to next stop location in stopbased system. If no suitable stop is found in that range, the search radius will be extended in steps of maxWalkDistance until a stop is found. -->
+			<!-- Maximum beeline distance (in meters) to next stop location in stopbased system for access/egress walk leg to/from drt. If no stop can be found within this maximum distance will return a direct walk of type drtMode_walk. -->
 			<param name="maxWalkDistance" value="2000.0" />
 			<!-- Mode which will be handled by PassengerEngine and VrpOptimizer (passengers'/customers' perspective) -->
 			<param name="mode" value="drt" />

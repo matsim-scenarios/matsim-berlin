@@ -19,6 +19,7 @@ This scenario contains a 1pct sample of the Greater Berlin population; road capa
 
 Handling of large files within git is not without problems (git lfs files are not included in the zip download; we have to pay; ...).  In consequence, large files, both on the input and on the output side, reside at https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin .  
 
+----
 ### Simple things (without installing/running MATSim)
 
 ##### Movies
@@ -38,6 +39,7 @@ Handling of large files within git is not without problems (git lfs files are no
 1. Get these files into VIA.  This can be achieved in various ways; one is to open VIA and then drag the files from a file browser into VIA.
 1. Run VIA and enjoy.
 
+----
 ### Downloading the repository - Alternative 1: Download ZIP
 
 1. Click on `Clone or download` and then on `Download ZIP`.
@@ -64,6 +66,7 @@ This will result in a new `matsim-berlin` directory.  Memorize where you have pu
 
 This will update your repository to the newest version.
 
+----
 ### Run the MATSim Berlin scenario
 
 ##### ... using a runnable jar file
@@ -122,6 +125,7 @@ controler.run
 
 ```
 
+---
 ### More information
 
 For more information about the scenario generation, see VSP working paper # 19-01, here: https://www.vsp.tu-berlin.de/publications/vspwp .

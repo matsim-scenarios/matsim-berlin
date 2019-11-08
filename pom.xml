@@ -120,6 +120,12 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
+	    	<groupId>com.github.matsim-vsp</groupId>
+	    	<artifactId>drt-speed-up</artifactId>
+	    	<version>0f1a4049fd</version>
+		</dependency>
+
+		<dependency>
 		<!-- This is the matsim "freight" contrib: -->
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>freight</artifactId>
