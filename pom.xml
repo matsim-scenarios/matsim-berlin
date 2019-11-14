@@ -125,6 +125,12 @@
 	    	<version>0f1a4049fd</version>
 		</dependency>
 
+		<dependency>
+		<!-- This is the matsim "freight" contrib: -->
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>freight</artifactId>
+			<version>${matsim.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
