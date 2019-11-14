@@ -55,8 +55,8 @@ public class RunBerlinAccidents {
 	accidentsNetworkModification.setLinkAttributsBasedOnOSMFile(
 			landOSMInputShapeFile,
 			placesOSMInputFile,"EPSG:31468",
-			readColumn(1,tunnelLinkCSVInputFile,";"),
-			readColumn(1,planfreeLinkCSVInputFile, ";")
+			readColumn(0,tunnelLinkCSVInputFile,";"),
+			readColumn(0,planfreeLinkCSVInputFile, ";")
 			);
 	
 	Controler controler = RunBerlinScenario.prepareControler(scenario);
