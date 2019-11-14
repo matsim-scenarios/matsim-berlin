@@ -75,6 +75,8 @@ import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
  * It then adapts the link freespeeds of the pt pseudo network to reduce pt delays and early arrivals. This is not perfect.
  * Check manually after running, e.g. using the log output on maximum delays per TransitLine.
  * 
+ * TODO: Theoretically we would have to increase the boarding/alighting time and reduce the capacity of the transit vehicle types
+ * according to the sample size.
  */
 
 public class RunGTFS2MATSimOpenBerlin {
