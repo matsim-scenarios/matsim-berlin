@@ -131,6 +131,12 @@
 	    	<artifactId>drt-speed-up</artifactId>
 	    	<version>v0.0.1</version>
 		</dependency>
+		
+		<dependency>
+	    	<groupId>com.github.matsim-vsp</groupId>
+	    	<artifactId>matsim-analysis</artifactId>
+	    	<version>eca8d63ef5</version>
+		</dependency>
 
 		<dependency>
 		<!-- This is the matsim "freight" contrib: -->
