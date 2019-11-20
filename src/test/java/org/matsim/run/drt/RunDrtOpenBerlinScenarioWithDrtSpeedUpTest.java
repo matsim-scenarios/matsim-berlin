@@ -39,11 +39,11 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 			config.controler().setWritePlansInterval(4);
 			config.controler().setWriteEventsInterval(4);
-			config.planCalcScore().setWriteExperiencedPlans(true);
+			config.planCalcScore().setWriteExperiencedPlans(false);
 			config.controler().setOutputDirectory(utils.getOutputDirectory());
 			config.global().setNumberOfThreads(1);
 			config.plans().setInputFile("../../../../test/input/drt/drt-test-agents.xml");
-			
+						
 			DrtSpeedUpModule.adjustConfig(config);
 
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;

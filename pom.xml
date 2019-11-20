@@ -10,8 +10,8 @@
 	<description>MATSim Open Berlin scenario project</description>
 
 	<properties>
-		<matsim.version>12.0-SNAPSHOT</matsim.version>
-		<!-- <matsim.version>12.0-2019w34-SNAPSHOT</matsim.version> -->
+		<!-- <matsim.version>12.0-SNAPSHOT</matsim.version> -->
+		<matsim.version>12.0-2019w45-SNAPSHOT</matsim.version>
 	</properties>
 
 	<repositories>
@@ -78,6 +78,13 @@
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>vsp</artifactId>
+			<version>${matsim.version}</version>
+			<scope>compile</scope>
+		</dependency>
 
 		<!-- Include the JUnit testing library.  Not transitive. -->
 		<dependency>
@@ -128,9 +135,21 @@
 		<dependency>
 	    	<groupId>com.github.matsim-vsp</groupId>
 	    	<artifactId>drt-speed-up</artifactId>
-	    	<version>0f1a4049fd</version>
+	    	<version>v0.0.1</version>
+		</dependency>
+		
+		<dependency>
+	    	<groupId>com.github.matsim-vsp</groupId>
+	    	<artifactId>matsim-analysis</artifactId>
+	    	<version>eca8d63ef5</version>
 		</dependency>
 
+		<dependency>
+		<!-- This is the matsim "freight" contrib: -->
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>freight</artifactId>
+			<version>${matsim.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>

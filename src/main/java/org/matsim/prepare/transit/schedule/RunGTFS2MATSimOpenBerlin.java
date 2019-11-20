@@ -75,6 +75,8 @@ import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
  * It then adapts the link freespeeds of the pt pseudo network to reduce pt delays and early arrivals. This is not perfect.
  * Check manually after running, e.g. using the log output on maximum delays per TransitLine.
  * 
+ * TODO: Theoretically we would have to increase the boarding/alighting time and reduce the capacity of the transit vehicle types
+ * according to the sample size.
  */
 
 public class RunGTFS2MATSimOpenBerlin {
@@ -214,7 +216,9 @@ public class RunGTFS2MATSimOpenBerlin {
 			VehicleCapacity capacity = reRbVehicleType.getCapacity();
 			capacity.setSeats( 500 );
 			capacity.setStandingRoom( 600 );
-			VehicleUtils.setDoorOperationMode(reRbVehicleType, DoorOperationMode.parallel);
+			VehicleUtils.setDoorOperationMode(reRbVehicleType, DoorOperationMode.serial); // first finish boarding, then start alighting
+			VehicleUtils.setAccessTime(reRbVehicleType, 1.0 / 10.0); // 1s per boarding agent, distributed on 10 doors
+			VehicleUtils.setEgressTime(reRbVehicleType, 1.0 / 10.0); // 1s per alighting agent, distributed on 10 doors
 			scenario.getTransitVehicles().addVehicleType( reRbVehicleType );
 		}
 		VehicleType sBahnVehicleType = vehicleFactory.createVehicleType( Id.create( "S-Bahn_veh_type", VehicleType.class ) );
@@ -222,7 +226,9 @@ public class RunGTFS2MATSimOpenBerlin {
 			VehicleCapacity capacity = sBahnVehicleType.getCapacity();
 			capacity.setSeats( 400 );
 			capacity.setStandingRoom( 800 );
-			VehicleUtils.setDoorOperationMode(sBahnVehicleType, DoorOperationMode.parallel);
+			VehicleUtils.setDoorOperationMode(sBahnVehicleType, DoorOperationMode.serial); // first finish boarding, then start alighting
+			VehicleUtils.setAccessTime(sBahnVehicleType, 1.0 / 24.0); // 1s per boarding agent, distributed on 8*3 doors
+			VehicleUtils.setEgressTime(sBahnVehicleType, 1.0 / 24.0); // 1s per alighting agent, distributed on 8*3 doors
 			scenario.getTransitVehicles().addVehicleType( sBahnVehicleType );
 		}
 		VehicleType uBahnVehicleType = vehicleFactory.createVehicleType( Id.create( "U-Bahn_veh_type", VehicleType.class ) );
@@ -230,7 +236,9 @@ public class RunGTFS2MATSimOpenBerlin {
 			VehicleCapacity capacity = uBahnVehicleType.getCapacity() ;
 			capacity.setSeats( 300 );
 			capacity.setStandingRoom( 600 );
-			VehicleUtils.setDoorOperationMode(uBahnVehicleType, DoorOperationMode.parallel);
+			VehicleUtils.setDoorOperationMode(uBahnVehicleType, DoorOperationMode.serial); // first finish boarding, then start alighting
+			VehicleUtils.setAccessTime(uBahnVehicleType, 1.0 / 18.0); // 1s per boarding agent, distributed on 6*3 doors
+			VehicleUtils.setEgressTime(uBahnVehicleType, 1.0 / 18.0); // 1s per alighting agent, distributed on 6*3 doors
 			scenario.getTransitVehicles().addVehicleType( uBahnVehicleType );
 		}
 		VehicleType tramVehicleType = vehicleFactory.createVehicleType( Id.create( "Tram_veh_type", VehicleType.class ) );
@@ -238,7 +246,9 @@ public class RunGTFS2MATSimOpenBerlin {
 			VehicleCapacity capacity = tramVehicleType.getCapacity() ;
 			capacity.setSeats( 80 );
 			capacity.setStandingRoom( 170 );
-			VehicleUtils.setDoorOperationMode(tramVehicleType, DoorOperationMode.parallel);
+			VehicleUtils.setDoorOperationMode(tramVehicleType, DoorOperationMode.serial); // first finish boarding, then start alighting
+			VehicleUtils.setAccessTime(tramVehicleType, 1.0 / 5.0); // 1s per boarding agent, distributed on 5 doors
+			VehicleUtils.setEgressTime(tramVehicleType, 1.0 / 5.0); // 1s per alighting agent, distributed on 5 doors
 			scenario.getTransitVehicles().addVehicleType( tramVehicleType );
 		}
 		VehicleType busVehicleType = vehicleFactory.createVehicleType( Id.create( "Bus_veh_type", VehicleType.class ) );
@@ -246,7 +256,9 @@ public class RunGTFS2MATSimOpenBerlin {
 			VehicleCapacity capacity = busVehicleType.getCapacity() ;
 			capacity.setSeats( 50 );
 			capacity.setStandingRoom( 100 );
-			VehicleUtils.setDoorOperationMode(busVehicleType, DoorOperationMode.parallel);
+			VehicleUtils.setDoorOperationMode(busVehicleType, DoorOperationMode.serial); // first finish boarding, then start alighting
+			VehicleUtils.setAccessTime(busVehicleType, 1.0 / 3.0); // 1s per boarding agent, distributed on 3 doors
+			VehicleUtils.setEgressTime(busVehicleType, 1.0 / 3.0); // 1s per alighting agent, distributed on 3 doors
 			scenario.getTransitVehicles().addVehicleType( busVehicleType );
 		}
 		VehicleType ferryVehicleType = vehicleFactory.createVehicleType( Id.create( "Ferry_veh_type", VehicleType.class ) );
@@ -254,7 +266,9 @@ public class RunGTFS2MATSimOpenBerlin {
 			VehicleCapacity capacity = ferryVehicleType.getCapacity() ;
 			capacity.setSeats( 100 );
 			capacity.setStandingRoom( 100 );
-			VehicleUtils.setDoorOperationMode(ferryVehicleType, DoorOperationMode.parallel);
+			VehicleUtils.setDoorOperationMode(ferryVehicleType, DoorOperationMode.serial); // first finish boarding, then start alighting
+			VehicleUtils.setAccessTime(ferryVehicleType, 1.0 / 1.0); // 1s per boarding agent, distributed on 1 door
+			VehicleUtils.setEgressTime(ferryVehicleType, 1.0 / 1.0); // 1s per alighting agent, distributed on 1 door
 			scenario.getTransitVehicles().addVehicleType( ferryVehicleType );
 		}
 		// set link speeds and create vehicles according to pt mode
