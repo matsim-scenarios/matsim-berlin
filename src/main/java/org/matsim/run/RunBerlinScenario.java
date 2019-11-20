@@ -26,6 +26,8 @@ import java.util.Arrays;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
+import org.matsim.contrib.bicycle.BicycleConfigGroup;
+import org.matsim.contrib.bicycle.Bicycles;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
@@ -55,10 +57,18 @@ public final class RunBerlinScenario {
 		}
 		
 		if ( args.length==0 ) {
-			args = new String[] {"scenarios/berlin-v5.5-10pct/input/berlin-v5.5-10pct.config.xml"}  ;
+			// args = new String[] {"scenarios/berlin-v5.5-10pct/input/berlin-v5.5-10pct.config.xml"}  ;
+			args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.bicycle.config.xml"}  ;
 		}
 
-		Config config = prepareConfig( args ) ;
+		//
+		// add a bicycle config group and configure it with "bike" as mode identifier and 24.6km/h as max speed
+		BicycleConfigGroup bikeConfigGroup = new BicycleConfigGroup();
+		bikeConfigGroup.setBicycleMode("bicycle");
+		bikeConfigGroup.setMaxBicycleSpeedForRouting(6.84);
+		//
+
+		Config config = prepareConfig( args, bikeConfigGroup ) ;
 		Scenario scenario = prepareScenario( config ) ;
 		Controler controler = prepareControler( scenario ) ;
 		controler.run() ;
@@ -94,6 +104,10 @@ public final class RunBerlinScenario {
 				addTravelDisutilityFactoryBinding( TransportMode.ride ).to( carTravelDisutilityFactoryKey() );
 			}
 		} );
+
+		//
+		Bicycles.addAsOverridingModule(controler);
+		//
 
 		return controler;
 	}
@@ -146,6 +160,8 @@ public final class RunBerlinScenario {
 		config.planCalcScore().addActivityParams( new ActivityParams( "freight" ).setTypicalDuration( 12.*3600. ) );
 
 		ConfigUtils.applyCommandline( config, typedArgs ) ;
+
+
 
 		return config ;
 	}
