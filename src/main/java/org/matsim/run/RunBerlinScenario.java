@@ -96,8 +96,8 @@ public final class RunBerlinScenario {
 				addTravelTimeBinding( TransportMode.ride ).to( networkTravelTime() );
 				addTravelDisutilityFactoryBinding( TransportMode.ride ).to( carTravelDisutilityFactoryKey() );
 				
-				addPlanStrategyBinding("randomSingleTripReRoute").toProvider(RandomSingleTripReRoute.class);
-				addPlanStrategyBinding("subtourModeChoice_RepairReRoute").toProvider(SubtourModeChoiceRepairReRoute.class);
+				addPlanStrategyBinding("RandomSingleTripReRoute").toProvider(RandomSingleTripReRoute.class);
+				addPlanStrategyBinding("SubtourModeChoice_RepairReRoute").toProvider(SubtourModeChoiceRepairReRoute.class);
 
 			}
 		} );
@@ -159,20 +159,6 @@ public final class RunBerlinScenario {
 			config.planCalcScore().addActivityParams( new ActivityParams( "other_" + ii + ".0" ).setTypicalDuration( ii ) );
 		}
 		config.planCalcScore().addActivityParams( new ActivityParams( "freight" ).setTypicalDuration( 12.*3600. ) );
-
-		{
-			StrategySettings stratSets = new StrategySettings();
-			stratSets.setStrategyName("randomSingleTripReRoute");
-			stratSets.setWeight(0.05);
-			config.strategy().addStrategySettings(stratSets);
-		}
-		
-		{
-			StrategySettings stratSets = new StrategySettings();
-			stratSets.setStrategyName("subtourModeChoice_RepairReRoute");
-			stratSets.setWeight(0.05);
-			config.strategy().addStrategySettings(stratSets);
-		}
 		
 		ConfigUtils.applyCommandline( config, typedArgs ) ;
 
