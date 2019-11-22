@@ -81,21 +81,23 @@ public class RandomSingleTripPlanRouter implements PlanAlgorithm, PersonAlgorith
 	public void run(final Plan plan) {
 		final List<Trip> trips = TripStructureUtils.getTrips( plan );
 
-		int rndIdx = this.rnd.nextInt(trips.size());
-		Trip oldTrip = trips.get(rndIdx);
-		final List<? extends PlanElement> newTrip =
-				tripRouter.calcRoute(
-						tripRouter.getMainModeIdentifier().identifyMainMode( oldTrip.getTripElements() ),
-					  FacilitiesUtils.toFacility( oldTrip.getOriginActivity(), facilities ),
-					  FacilitiesUtils.toFacility( oldTrip.getDestinationActivity(), facilities ),
-						calcEndOfActivity( oldTrip.getOriginActivity() , plan, tripRouter.getConfig() ),
-						plan.getPerson() );
-		putVehicleFromOldTripIntoNewTripIfMeaningful(oldTrip, newTrip);
-		TripRouter.insertTrip(
-				plan, 
-				oldTrip.getOriginActivity(),
-				newTrip,
-				oldTrip.getDestinationActivity());
+		if (trips.size() > 0) {
+			int rndIdx = this.rnd.nextInt(trips.size());
+			Trip oldTrip = trips.get(rndIdx);
+			final List<? extends PlanElement> newTrip =
+					tripRouter.calcRoute(
+							tripRouter.getMainModeIdentifier().identifyMainMode( oldTrip.getTripElements() ),
+						  FacilitiesUtils.toFacility( oldTrip.getOriginActivity(), facilities ),
+						  FacilitiesUtils.toFacility( oldTrip.getDestinationActivity(), facilities ),
+							calcEndOfActivity( oldTrip.getOriginActivity() , plan, tripRouter.getConfig() ),
+							plan.getPerson() );
+			putVehicleFromOldTripIntoNewTripIfMeaningful(oldTrip, newTrip);
+			TripRouter.insertTrip(
+					plan, 
+					oldTrip.getOriginActivity(),
+					newTrip,
+					oldTrip.getDestinationActivity());
+		}
 	}
 
 	/**
