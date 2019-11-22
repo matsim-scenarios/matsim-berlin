@@ -30,8 +30,8 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
-import org.matsim.core.config.groups.PlansCalcRouteConfigGroup.ModeRoutingParams;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
+import org.matsim.core.config.groups.StrategyConfigGroup.StrategySettings;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
@@ -87,15 +87,21 @@ public final class RunBerlinScenario {
 					+ "Should only be used for testing or car-focused studies with a fixed modal split.  ");
 		}
 		
+		
+		
 		// use the (congested) car travel time for the teleported ride mode
 		controler.addOverridingModule( new AbstractModule() {
 			@Override
 			public void install() {
 				addTravelTimeBinding( TransportMode.ride ).to( networkTravelTime() );
 				addTravelDisutilityFactoryBinding( TransportMode.ride ).to( carTravelDisutilityFactoryKey() );
+				
+				addPlanStrategyBinding("randomSingleTripReRoute").toProvider(RandomSingleTripReRoute.class);
+				addPlanStrategyBinding("subtourModeChoice_RepairReRoute").toProvider(SubtourModeChoiceRepairReRoute.class);
+
 			}
 		} );
-
+		
 		return controler;
 	}
 	
@@ -154,6 +160,21 @@ public final class RunBerlinScenario {
 		}
 		config.planCalcScore().addActivityParams( new ActivityParams( "freight" ).setTypicalDuration( 12.*3600. ) );
 
+		{
+			StrategySettings stratSets = new StrategySettings();
+			stratSets.setStrategyName("randomSingleTripReRoute");
+			stratSets.setWeight(0.05);
+			config.strategy().addStrategySettings(stratSets);
+		}
+		
+		{
+			StrategySettings stratSets = new StrategySettings();
+			stratSets.setStrategyName("subtourModeChoice_RepairReRoute");
+			stratSets.setWeight(0.05);
+			ConfigGroup parameterSet;
+			config.strategy().addStrategySettings(stratSets);
+		}
+		
 		ConfigUtils.applyCommandline( config, typedArgs ) ;
 
 		return config ;
