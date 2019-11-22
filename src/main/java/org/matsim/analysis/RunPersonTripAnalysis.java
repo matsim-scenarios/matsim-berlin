@@ -146,7 +146,6 @@ public class RunPersonTripAnalysis {
 		}
 
 		MatsimAnalysis analysis = new MatsimAnalysis();
-		analysis.run();
 		
 		analysis.setScenario1(scenario1);	
 		analysis.setScenario0(scenario0);
@@ -160,7 +159,9 @@ public class RunPersonTripAnalysis {
 		analysis.setModes(modes);
 		analysis.setVisualizationScriptInputDirectory(visualizationScriptInputDirectory);
 		analysis.setHomeActivityPrefix(homeActivityPrefix);
-		analysis.setScalingFactor(scalingFactor);		
+		analysis.setScalingFactor(scalingFactor);
+		
+		analysis.run();
 	}
 	
 	private static Scenario loadScenario(String runDirectory, String runId, String personAttributesFileToReplaceOutputFile) {
