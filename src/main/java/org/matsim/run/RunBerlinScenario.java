@@ -171,7 +171,6 @@ public final class RunBerlinScenario {
 			StrategySettings stratSets = new StrategySettings();
 			stratSets.setStrategyName("subtourModeChoice_RepairReRoute");
 			stratSets.setWeight(0.05);
-			ConfigGroup parameterSet;
 			config.strategy().addStrategySettings(stratSets);
 		}
 		
