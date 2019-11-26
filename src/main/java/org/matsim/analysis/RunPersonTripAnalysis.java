@@ -87,8 +87,8 @@ public class RunPersonTripAnalysis {
 			
 		} else {
 			
-			runDirectory = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/output-berlin-v5.4-10pct/";
-			runId = "berlin-v5.4-10pct";		
+			runDirectory = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/";
+			runId = "berlin-v5.4-1pct";		
 			runDirectoryToCompareWith = null;
 			runIdToCompareWith = null;
 			
@@ -101,7 +101,7 @@ public class RunPersonTripAnalysis {
 			zoneId = "SCHLUESSEL";
 			
 			homeActivityPrefix = "home";
-			scalingFactor = 10;
+			scalingFactor = 100;
 			
 			modesString = "car,pt,bicycle,walk,ride";			
 		}
