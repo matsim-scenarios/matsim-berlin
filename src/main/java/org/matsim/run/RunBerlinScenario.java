@@ -161,12 +161,13 @@ public final class RunBerlinScenario {
 		config.plansCalcRoute().removeModeRoutingParams("bicycle");
 		config.plansCalcRoute().removeModeRoutingParams("undefined");
 		
-		// TransportMode.non_network_walk has no longer a default, copy from walk
-		ModeRoutingParams walkRoutingParams = config.plansCalcRoute().getOrCreateModeRoutingParams(TransportMode.walk);
-		ModeRoutingParams non_network_walk_routingParams = new ModeRoutingParams(TransportMode.non_network_walk);
-		non_network_walk_routingParams.setBeelineDistanceFactor(walkRoutingParams.getBeelineDistanceFactor());
-		non_network_walk_routingParams.setTeleportedModeSpeed(walkRoutingParams.getTeleportedModeSpeed());
-		config.plansCalcRoute().addModeRoutingParams(non_network_walk_routingParams);
+		// TransportMode.non_network_walk has no longer a default,
+		// in the long run: copy from walk; for now: use the parameter set given in the config (for backward compatibility)
+//		ModeRoutingParams walkRoutingParams = config.plansCalcRoute().getOrCreateModeRoutingParams(TransportMode.walk);
+//		ModeRoutingParams non_network_walk_routingParams = new ModeRoutingParams(TransportMode.non_network_walk);
+//		non_network_walk_routingParams.setBeelineDistanceFactor(walkRoutingParams.getBeelineDistanceFactor());
+//		non_network_walk_routingParams.setTeleportedModeSpeed(walkRoutingParams.getTeleportedModeSpeed());
+//		config.plansCalcRoute().addModeRoutingParams(non_network_walk_routingParams);
 	
 		config.qsim().setInsertingWaitingVehiclesBeforeDrivingVehicles( true );
 				

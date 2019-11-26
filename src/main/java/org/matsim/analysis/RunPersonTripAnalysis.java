@@ -47,6 +47,7 @@ public class RunPersonTripAnalysis {
 		String homeActivityPrefix = null;
 		int scalingFactor;
 		String modesString = null;
+		String analysisOutputDirectory = null;
 		
 		if (args.length > 0) {
 			if (!args[0].equals("null")) runDirectory = args[0];
@@ -85,14 +86,16 @@ public class RunPersonTripAnalysis {
 			if (!args[11].equals("null")) modesString = args[11];
 			log.info("modes: " + modesString);
 			
+			analysisOutputDirectory = null;
+			
 		} else {
 			
-			runDirectory = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/output-berlin-v5.4-10pct/";
-			runId = "berlin-v5.4-10pct";		
+			runDirectory = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/";
+			runId = "berlin-v5.4-1pct";		
 			runDirectoryToCompareWith = null;
 			runIdToCompareWith = null;
 			
-			visualizationScriptInputDirectory = "./visualization-scripts/";
+			visualizationScriptInputDirectory = null;
 			
 			scenarioCRS = TransformationFactory.DHDN_GK4;	
 			
@@ -101,9 +104,11 @@ public class RunPersonTripAnalysis {
 			zoneId = "SCHLUESSEL";
 			
 			homeActivityPrefix = "home";
-			scalingFactor = 10;
+			scalingFactor = 100;
 			
-			modesString = "car,pt,bicycle,walk,ride";			
+			modesString = "car,pt,bicycle,walk,ride";
+			
+			analysisOutputDirectory = "./scenarios/berlin-v5.5-1pct/";
 		}
 		
 		Scenario scenario1 = loadScenario(runDirectory, runId, null);
@@ -146,7 +151,6 @@ public class RunPersonTripAnalysis {
 		}
 
 		MatsimAnalysis analysis = new MatsimAnalysis();
-		analysis.run();
 		
 		analysis.setScenario1(scenario1);	
 		analysis.setScenario0(scenario0);
@@ -160,7 +164,11 @@ public class RunPersonTripAnalysis {
 		analysis.setModes(modes);
 		analysis.setVisualizationScriptInputDirectory(visualizationScriptInputDirectory);
 		analysis.setHomeActivityPrefix(homeActivityPrefix);
-		analysis.setScalingFactor(scalingFactor);		
+		analysis.setScalingFactor(scalingFactor);
+		
+		analysis.setAnalysisOutputDirectory(analysisOutputDirectory);
+		
+		analysis.run();
 	}
 	
 	private static Scenario loadScenario(String runDirectory, String runId, String personAttributesFileToReplaceOutputFile) {
