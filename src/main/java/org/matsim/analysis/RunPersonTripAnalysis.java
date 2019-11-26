@@ -92,7 +92,7 @@ public class RunPersonTripAnalysis {
 			runDirectoryToCompareWith = null;
 			runIdToCompareWith = null;
 			
-			visualizationScriptInputDirectory = "./visualization-scripts/";
+			visualizationScriptInputDirectory = null;
 			
 			scenarioCRS = TransformationFactory.DHDN_GK4;	
 			
