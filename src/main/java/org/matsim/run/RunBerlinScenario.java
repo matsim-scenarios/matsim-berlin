@@ -26,7 +26,10 @@ import java.util.Arrays;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Leg;
 import org.matsim.contrib.bicycle.BicycleConfigGroup;
+import org.matsim.contrib.bicycle.BicycleUtils;
 import org.matsim.contrib.bicycle.Bicycles;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
@@ -63,10 +66,8 @@ public final class RunBerlinScenario {
 		}
 
 		//
-		// add a bicycle config group and configure it with "bike" as mode identifier and 24.6km/h as max speed
 		BicycleConfigGroup bikeConfigGroup = new BicycleConfigGroup();
 		bikeConfigGroup.setBicycleMode("bicycle");
-		bikeConfigGroup.setMaxBicycleSpeedForRouting(6.84);
 		//
 
 		Config config = prepareConfig( args, bikeConfigGroup ) ;
@@ -122,6 +123,20 @@ public final class RunBerlinScenario {
 
 		final Scenario scenario = ScenarioUtils.loadScenario( config );
 
+		// Delete routes for bicycling agents
+		scenario.getPopulation().getPersons().values().parallelStream()
+				.flatMap(person -> person.getPlans().stream())
+				.flatMap(plan -> plan.getPlanElements().stream())
+				.filter(element -> element instanceof Leg)
+				.map(element -> (Leg) element)
+				.filter(leg -> leg.getMode().equals("bicycle"))
+				.forEach(leg -> leg.setRoute(null));
+
+		// Add bicycle infrastructure speed factor for all links
+		scenario.getNetwork().getLinks().values().parallelStream()
+				.filter(link -> ((Link) link).getAllowedModes().contains("bicycle"))
+				.forEach(link -> ((Link) link).getAttributes().putAttribute(BicycleUtils.BICYCLE_INFRASTRUCTURE_SPEED_FACTOR, 1.0));
+
 		return scenario;
 	}
 	
@@ -133,6 +148,9 @@ public final class RunBerlinScenario {
 		final Config config = ConfigUtils.loadConfig( args[ 0 ], customModules ); // I need this to set the context
 		
 		config.controler().setRoutingAlgorithmType( FastAStarLandmarks );
+		//
+		config.controler().setLastIteration(0);
+		//
 		
 		config.subtourModeChoice().setProbaForRandomSingleTripMode( 0.5 );
 		
@@ -140,6 +158,7 @@ public final class RunBerlinScenario {
 		config.plansCalcRoute().removeModeRoutingParams(TransportMode.ride);
 		config.plansCalcRoute().removeModeRoutingParams(TransportMode.pt);
 		config.plansCalcRoute().removeModeRoutingParams(TransportMode.bike);
+		config.plansCalcRoute().removeModeRoutingParams("bicycle");
 		config.plansCalcRoute().removeModeRoutingParams("undefined");
 		
 		// TransportMode.non_network_walk has no longer a default, copy from walk
