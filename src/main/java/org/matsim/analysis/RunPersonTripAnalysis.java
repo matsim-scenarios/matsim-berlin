@@ -108,7 +108,7 @@ public class RunPersonTripAnalysis {
 			
 			modesString = "car,pt,bicycle,walk,ride";
 			
-			analysisOutputDirectory = "./sceanarios/berlin-v5.5-1pct";
+			analysisOutputDirectory = "./scenarios/berlin-v5.5-1pct/";
 		}
 		
 		Scenario scenario1 = loadScenario(runDirectory, runId, null);
