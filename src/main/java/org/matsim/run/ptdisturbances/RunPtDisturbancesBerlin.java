@@ -3,7 +3,7 @@
  *                                                                         *
  * *********************************************************************** *
  *                                                                         *
- * copyright       : (C) 2017 by the members listed in the COPYING,        *
+ * copyright       : (C) 2019 by the members listed in the COPYING,        *
  *                   LICENSE and WARRANTY file.                            *
  * email           : info at matsim dot org                                *
  *                                                                         *
@@ -31,6 +31,9 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.network.NetworkFactory;
+import org.matsim.api.core.v01.network.Node;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Plan;
@@ -55,10 +58,17 @@ import org.matsim.core.mobsim.qsim.agents.WithinDayAgentUtils;
 import org.matsim.core.mobsim.qsim.components.QSimComponentsConfigGroup;
 import org.matsim.core.mobsim.qsim.interfaces.MobsimEngine;
 import org.matsim.core.mobsim.qsim.pt.TransitDriverAgentImpl;
+import org.matsim.core.network.NetworkChangeEvent;
+import org.matsim.core.network.NetworkUtils;
+import org.matsim.core.population.routes.NetworkRoute;
+import org.matsim.core.population.routes.RouteUtils;
+import org.matsim.core.network.NetworkChangeEvent.ChangeType;
+import org.matsim.core.network.NetworkChangeEvent.ChangeValue;
 import org.matsim.core.router.StageActivityTypeIdentifier;
 import org.matsim.core.router.TripRouter;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.pt.config.TransitConfigGroup;
 import org.matsim.pt.router.TransitScheduleChangedEvent;
 import org.matsim.pt.routes.ExperimentalTransitRoute;
@@ -93,6 +103,11 @@ public final class RunPtDisturbancesBerlin {
 		Config config = prepareConfig( args ) ;
 
 		Scenario scenario = prepareScenario( config ) ;
+	
+//		NetworkChangeEvents are added so there are no U9 departures between 0730 and 0830. This ensures that no agent can use U9 in the disturbed period
+		addNetworkChangeEvents( scenario );
+		
+		
 		Controler controler = prepareControler( scenario ) ;
 		
 		QSimComponentsConfigGroup qsimComponentsConfig = ConfigUtils.addOrGetModule(config,
@@ -116,6 +131,122 @@ public final class RunPtDisturbancesBerlin {
 		
 		controler.run() ;
 
+	}
+
+	private static void addNetworkChangeEvents(Scenario scenario) {
+		
+		{
+		NetworkFactory networkFactory = scenario.getNetwork().getFactory();
+		
+		Link oldFirstLink = scenario.getNetwork().getLinks().get(Id.createLinkId("pt_43431"));
+		oldFirstLink.setFreespeed(50.);
+		Node toNodeLink1 = oldFirstLink.getFromNode();
+		Node fromNodeLink1 = networkFactory.createNode(Id.createNodeId("dummyNodeRathausSteglitz1"), CoordUtils.createCoord(toNodeLink1.getCoord().getX() + 1000, toNodeLink1.getCoord().getY()));
+		Node fromNodeLink0 = networkFactory.createNode(Id.createNodeId("dummyNodeRathausSteglitz0"), CoordUtils.createCoord(toNodeLink1.getCoord().getX() + 1010, toNodeLink1.getCoord().getY()));
+		Link link1 = networkFactory.createLink(Id.createLinkId("dummyLinkRathausSteglitz1"), fromNodeLink1, toNodeLink1);
+		link1.setAllowedModes(oldFirstLink.getAllowedModes());
+		link1.setFreespeed(999.);
+		link1.setCapacity(oldFirstLink.getCapacity());
+		
+		Link link0 = networkFactory.createLink(Id.createLinkId("dummyLinkRathausSteglitz0"), fromNodeLink0, fromNodeLink1);
+		link0.setAllowedModes(oldFirstLink.getAllowedModes());
+		link0.setFreespeed(999.);
+		link0.setCapacity(oldFirstLink.getCapacity());
+		
+		scenario.getNetwork().addNode(fromNodeLink1);
+		scenario.getNetwork().addNode(fromNodeLink0);
+		scenario.getNetwork().addLink(link1);
+		scenario.getNetwork().addLink(link0);
+		
+		TransitLine disturbedLine = scenario.getTransitSchedule().getTransitLines().get(Id.create("U9---17526_400", TransitLine.class));
+		
+		for (TransitRoute transitRoute : disturbedLine.getRoutes().values()) {
+			if (transitRoute.getRoute().getStartLinkId().equals(oldFirstLink.getId())) {
+
+				List<Id<Link>> newRouteLinkIds = new ArrayList<>();
+				List<Id<Link>> oldRouteLinkIds = new ArrayList<>();
+				newRouteLinkIds.add(link0.getId());
+				newRouteLinkIds.add(link1.getId());
+				oldRouteLinkIds = transitRoute.getRoute().getLinkIds();
+				newRouteLinkIds.add(transitRoute.getRoute().getStartLinkId());
+				newRouteLinkIds.addAll(oldRouteLinkIds);
+				newRouteLinkIds.add(transitRoute.getRoute().getEndLinkId());
+				
+				NetworkRoute networkRoute = RouteUtils.createNetworkRoute(newRouteLinkIds, scenario.getNetwork());
+				transitRoute.setRoute(networkRoute);
+
+				transitRoute.setRoute(networkRoute);
+			}
+		}
+	
+		NetworkChangeEvent networkChangeEvent1 = new NetworkChangeEvent(7.5*3600);
+//		Link link = scenario.getNetwork().getLinks().get(Id.createLinkId("pt_43431"));
+		networkChangeEvent1.setFreespeedChange(new ChangeValue(ChangeType.ABSOLUTE_IN_SI_UNITS, link1.getLength()/3600));
+		networkChangeEvent1.addLink(link1);
+		NetworkUtils.addNetworkChangeEvent(scenario.getNetwork(), networkChangeEvent1);
+//		NetworkChangeEvent networkChangeEvent2 = new NetworkChangeEvent(8.5*3600);
+//		networkChangeEvent2.setFreespeedChange(new ChangeValue(ChangeType.ABSOLUTE_IN_SI_UNITS, 50. / 3.6));
+//		networkChangeEvent2.addLink(link1);
+//		NetworkUtils.addNetworkChangeEvent(scenario.getNetwork(), networkChangeEvent2);
+		}
+		
+		{
+		NetworkFactory networkFactory = scenario.getNetwork().getFactory();
+		
+		Link oldFirstLink = scenario.getNetwork().getLinks().get(Id.createLinkId("pt_43450"));
+		oldFirstLink.setFreespeed(50.);
+		Node toNodeLink1 = oldFirstLink.getFromNode();
+		Node fromNodeLink1 = networkFactory.createNode(Id.createNodeId("dummyNodeOslo1"), CoordUtils.createCoord(toNodeLink1.getCoord().getX() + 1000, toNodeLink1.getCoord().getY()));
+		Node fromNodeLink0 = networkFactory.createNode(Id.createNodeId("dummyNodeOslo0"), CoordUtils.createCoord(toNodeLink1.getCoord().getX() + 1010, toNodeLink1.getCoord().getY()));
+		Link link1 = networkFactory.createLink(Id.createLinkId("dummyLinkOslo1"), fromNodeLink1, toNodeLink1);
+		link1.setAllowedModes(oldFirstLink.getAllowedModes());
+		link1.setFreespeed(999.);
+		link1.setCapacity(oldFirstLink.getCapacity());
+		
+		Link link0 = networkFactory.createLink(Id.createLinkId("dummyLinkOslo0"), fromNodeLink0, fromNodeLink1);
+		link0.setAllowedModes(oldFirstLink.getAllowedModes());
+		link0.setFreespeed(999.);
+		link0.setCapacity(oldFirstLink.getCapacity());
+		
+		scenario.getNetwork().addNode(fromNodeLink1);
+		scenario.getNetwork().addNode(fromNodeLink0);
+		scenario.getNetwork().addLink(link1);
+		scenario.getNetwork().addLink(link0);
+		
+		TransitLine disturbedLine = scenario.getTransitSchedule().getTransitLines().get(Id.create("U9---17526_400", TransitLine.class));
+		
+		for (TransitRoute transitRoute : disturbedLine.getRoutes().values()) {
+			if (transitRoute.getRoute().getStartLinkId().equals(oldFirstLink.getId())) {
+
+				List<Id<Link>> newRouteLinkIds = new ArrayList<>();
+				List<Id<Link>> oldRouteLinkIds = new ArrayList<>();
+				newRouteLinkIds.add(link0.getId());
+				newRouteLinkIds.add(link1.getId());
+				oldRouteLinkIds = transitRoute.getRoute().getLinkIds();
+				newRouteLinkIds.add(transitRoute.getRoute().getStartLinkId());
+				newRouteLinkIds.addAll(oldRouteLinkIds);
+				newRouteLinkIds.add(transitRoute.getRoute().getEndLinkId());
+				
+				NetworkRoute networkRoute = RouteUtils.createNetworkRoute(newRouteLinkIds, scenario.getNetwork());
+				transitRoute.setRoute(networkRoute);
+
+				transitRoute.setRoute(networkRoute);
+			}
+		}
+	
+		NetworkChangeEvent networkChangeEvent1 = new NetworkChangeEvent(7.5*3600);
+//		Link link = scenario.getNetwork().getLinks().get(Id.createLinkId("pt_43431"));
+		networkChangeEvent1.setFreespeedChange(new ChangeValue(ChangeType.ABSOLUTE_IN_SI_UNITS, link1.getLength()/3600));
+		networkChangeEvent1.addLink(link1);
+		NetworkUtils.addNetworkChangeEvent(scenario.getNetwork(), networkChangeEvent1);
+//		NetworkChangeEvent networkChangeEvent2 = new NetworkChangeEvent(8.5*3600);
+//		networkChangeEvent2.setFreespeedChange(new ChangeValue(ChangeType.ABSOLUTE_IN_SI_UNITS, 50. / 3.6));
+//		networkChangeEvent2.addLink(link1);
+//		NetworkUtils.addNetworkChangeEvent(scenario.getNetwork(), networkChangeEvent2);
+		}
+		
+		
+		
 	}
 
 	public static Controler prepareControler( Scenario scenario ) {
@@ -184,6 +315,8 @@ public final class RunPtDisturbancesBerlin {
 		config.plansCalcRoute().removeModeRoutingParams(TransportMode.bike);
 		config.plansCalcRoute().removeModeRoutingParams("undefined");
 		
+		config.network().setTimeVariantNetwork(true);
+		
 		// TransportMode.non_network_walk has no longer a default,
 		// in the long run: copy from walk; for now: use the parameter set given in the config (for backward compatibility)
 //		ModeRoutingParams walkRoutingParams = config.plansCalcRoute().getOrCreateModeRoutingParams(TransportMode.walk);
@@ -231,7 +364,7 @@ public final class RunPtDisturbancesBerlin {
 
 			// replan after an affected bus has already departed -> pax on the bus are
 			// replanned to get off earlier
-			double replanTime = 7.5*3600;
+			double replanTime = 7 * 3600 + 40 * 60;
 
 			if ((int) now == replanTime - 1.) { // yyyyyy this needs to come one sec earlier. :-(
 				// clear transit schedule from transit router provider:
