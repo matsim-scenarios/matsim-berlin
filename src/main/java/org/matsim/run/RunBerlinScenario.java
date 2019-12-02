@@ -24,6 +24,7 @@ import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorith
 import java.util.Arrays;
 
 import org.apache.log4j.Logger;
+import org.matsim.analysis.TransportPlanningMainModeIdentifier;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.core.config.Config;
@@ -37,6 +38,7 @@ import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.gbl.Gbl;
+import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scenario.ScenarioUtils;
 
 import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
@@ -93,6 +95,7 @@ public final class RunBerlinScenario {
 			public void install() {
 				addTravelTimeBinding( TransportMode.ride ).to( networkTravelTime() );
 				addTravelDisutilityFactoryBinding( TransportMode.ride ).to( carTravelDisutilityFactoryKey() );
+				bind(AnalysisMainModeIdentifier.class).to(TransportPlanningMainModeIdentifier.class);
 			}
 		} );
 

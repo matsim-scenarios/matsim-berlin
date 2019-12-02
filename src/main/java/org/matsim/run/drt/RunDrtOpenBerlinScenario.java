@@ -44,6 +44,7 @@ import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
 import org.matsim.core.population.routes.RouteFactories;
+import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
@@ -102,6 +103,7 @@ public final class RunDrtOpenBerlinScenario {
 				// with its own implementation
 				// So we need our own main mode indentifier which replaces both :-(
 				bind(MainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifier.class);
+				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifier.class);
 			}
 		});
 
