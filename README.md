@@ -51,7 +51,7 @@ Handling of large files within git is not without problems (git lfs files are no
 ##### Initial stuff (needs to be done once)
 
 1. Install git for the command line.
-1. Type `git clone https://github.com/matsim-vsp/matsim-berlin.git` in the command line.
+1. Type `git clone https://github.com/matsim-scenarios/matsim-berlin.git` in the command line.
 
 (Or use your IDE, e.g. Eclipse, IntelliJ, to clone the repository.)
 
@@ -103,7 +103,7 @@ This will update your repository to the newest version.
 
 ```xml
 <dependency>
-  <groupId>com.github.matsim-vsp</groupId>
+  <groupId>com.github.matsim-scenarios</groupId>
   <artifactId>matsim-berlin</artifactId>
   <version>5.4</version>
 </dependency>
