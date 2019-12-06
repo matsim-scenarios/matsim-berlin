@@ -45,21 +45,24 @@ import org.matsim.core.events.MatsimEventsReader;
 public class RunEventAnalysis {
 	
 	private static final Logger log = Logger.getLogger(RunEventAnalysis.class );
-	private static final String eventsFile = "scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct/berlin-v5.5-1pct.output_events.xml";
 
 	public static void main(String[] args) throws IOException {
 		
 		
+		Map<Id<Person>, List<Event>> personMapBase = handleEvents("/Volumes/smueller_ssd/Replanning0800neu/berlin-drt-v5.5-10pct.output_events.xml");
+		
+		writeTravelTimesToCSV(personMapBase);
+		
+	}
+
+	private static Map<Id<Person>, List<Event>> handleEvents(String eventsFile) {
 		EventsManager events = EventsUtils.createEventsManager();
 		PtAnalysisEventHandler ptAnalysisEventHandler = new PtAnalysisEventHandler();
 		events.addHandler(ptAnalysisEventHandler);
 		MatsimEventsReader reader = new MatsimEventsReader(events);
 		reader.readFile(eventsFile);
-
 		Map<Id<Person>, List<Event>> personMap = PtAnalysisEventHandler.getPersonMap();
-		
-		writeTravelTimesToCSV(personMap);
-		
+		return personMap;
 	}
 
 	private static void writeTravelTimesToCSV(Map<Id<Person>, List<Event>> personMap) throws IOException {
@@ -67,12 +70,13 @@ public class RunEventAnalysis {
 		BufferedWriter bw;
 		FileWriter fw = new FileWriter("Events.csv");
 		bw = new BufferedWriter(fw);
-		bw.write("PersonId;LegStartTime;LegEndTime;TravelTime;NextActType;Line1/Vehicle;Line2;Line3;Line4;Line5");
+		bw.write("PersonId;TripIndex;PersonId+TripId;LegStartTime;LegEndTime;TravelTime;NextActType;LineChanges;Line1;Line2;Line3;Line4;Line5;Line6;Line7;Line8");
 		bw.newLine();
 		for (List<Event> eventList : personMap.values()) {
 			double legStartTime = 0;
 			double legEndTime = 0;
 			boolean isPtTrip = false;
+			int tripId = 0;
 			List<String> vehicles = new ArrayList<>();
 			
 			for (int ii = 0; ii < eventList.size(); ii++) {
@@ -80,6 +84,7 @@ public class RunEventAnalysis {
 				
 				if (event.getEventType().equals("actend")) {
 					legStartTime = event.getTime();
+					tripId++;
 				}
 				
 				if (event.getEventType().equals("PersonEntersVehicle")) {
@@ -91,10 +96,17 @@ public class RunEventAnalysis {
 				}
 
 				if (event.getEventType().equals("actstart")) {
-					if(isPtTrip) {
-						legEndTime = event.getTime();
 					
+					legEndTime = event.getTime();
+					
+					if(isPtTrip && legStartTime > 6. * 3600 && legStartTime < 10. * 3600) {
+//						if(isPtTrip) {
+						
 						bw.write(((ActivityStartEvent) event).getPersonId().toString());
+						bw.write(";");
+						bw.write(String.valueOf(tripId));
+						bw.write(";");
+						bw.write(((ActivityStartEvent) event).getPersonId().toString()+"+"+String.valueOf(tripId));
 						bw.write(";");
 						bw.write(String.valueOf(legStartTime));
 						bw.write(";");
@@ -103,6 +115,8 @@ public class RunEventAnalysis {
 						bw.write(String.valueOf(legEndTime-legStartTime));
 						bw.write(";");
 						bw.write(((ActivityStartEvent) event).getActType().toString());
+						bw.write(";");
+						bw.write(String.valueOf(vehicles.size()-1));
 						bw.write(";");
 						if (vehicles != null) {
 							for (int jj = 0; jj < vehicles.size(); jj++) {
