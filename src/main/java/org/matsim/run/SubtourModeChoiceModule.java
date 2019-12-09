@@ -33,6 +33,7 @@ import org.matsim.core.population.algorithms.PlanAlgorithm;
 import org.matsim.core.replanning.modules.AbstractMultithreadedModule;
 import org.matsim.core.replanning.modules.SubtourModeChoice.Behavior;
 import org.matsim.core.router.TripRouter;
+import org.matsim.core.router.TripStructureUtils;
 
 /**
  * Changes the transportation mode of all legs of one randomly chosen subtour in a plan to a randomly chosen
@@ -110,7 +111,7 @@ public class SubtourModeChoiceModule extends AbstractMultithreadedModule {
 		
 		final ChooseRandomLegModeForSubtour chooseRandomLegMode =
 				new ChooseRandomLegModeForSubtour(
-						tripRouter.getMainModeIdentifier(),
+						TripStructureUtils.getRoutingModeIdentifier(),
 						this.permissibleModesCalculator,
 						this.modes,
 						this.chainBasedModes,

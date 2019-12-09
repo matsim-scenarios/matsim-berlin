@@ -86,7 +86,7 @@ public class RandomSingleTripPlanRouter implements PlanAlgorithm, PersonAlgorith
 			Trip oldTrip = trips.get(rndIdx);
 			final List<? extends PlanElement> newTrip =
 					tripRouter.calcRoute(
-							tripRouter.getMainModeIdentifier().identifyMainMode( oldTrip.getTripElements() ),
+							TripStructureUtils.identifyMainMode( oldTrip.getTripElements() ),
 						  FacilitiesUtils.toFacility( oldTrip.getOriginActivity(), facilities ),
 						  FacilitiesUtils.toFacility( oldTrip.getDestinationActivity(), facilities ),
 							calcEndOfActivity( oldTrip.getOriginActivity() , plan, tripRouter.getConfig() ),
