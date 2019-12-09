@@ -92,6 +92,8 @@ public final class RunBerlinScenario {
 					+ "Should only be used for testing or car-focused studies with a fixed modal split.  ");
 		}
 		
+		
+		
 		// use the (congested) car travel time for the teleported ride mode
 		controler.addOverridingModule( new AbstractModule() {
 			@Override
@@ -99,6 +101,10 @@ public final class RunBerlinScenario {
 				addTravelTimeBinding( TransportMode.ride ).to( networkTravelTime() );
 				addTravelDisutilityFactoryBinding( TransportMode.ride ).to( carTravelDisutilityFactoryKey() );
 				bind(AnalysisMainModeIdentifier.class).to(TransportPlanningMainModeIdentifier.class);
+				
+				addPlanStrategyBinding("RandomSingleTripReRoute").toProvider(RandomSingleTripReRoute.class);
+				addPlanStrategyBinding("SubtourModeChoice_RepairReRoute").toProvider(SubtourModeChoiceRepairReRoute.class);
+
 			}
 		} );
 

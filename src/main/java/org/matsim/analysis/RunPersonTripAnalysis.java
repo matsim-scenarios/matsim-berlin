@@ -166,8 +166,11 @@ public class RunPersonTripAnalysis {
 		analysis.setHomeActivityPrefix(homeActivityPrefix);
 		analysis.setScalingFactor(scalingFactor);
 		
+<<<<<<< HEAD
 		analysis.setAnalysisOutputDirectory(analysisOutputDirectory);
 		
+=======
+>>>>>>> refs/heads/matsim-berlin_5.5_singleTripReRoute
 		analysis.run();
 	}
 	
