@@ -61,16 +61,10 @@ public final class RunBerlinScenario {
 		}
 		
 		if ( args.length==0 ) {
-			// args = new String[] {"scenarios/berlin-v5.5-10pct/input/berlin-v5.5-10pct.config.xml"}  ;
-			args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.bicycle.config.xml"}  ;
+			args = new String[] {"scenarios/berlin-v5.5-10pct/input/berlin-v5.5-10pct.config.xml"}  ;
 		}
 
-		//
-		BicycleConfigGroup bikeConfigGroup = new BicycleConfigGroup();
-		bikeConfigGroup.setBicycleMode("bicycle");
-		//
-
-		Config config = prepareConfig( args, bikeConfigGroup ) ;
+		Config config = prepareConfig( args ) ;
 		Scenario scenario = prepareScenario( config ) ;
 		Controler controler = prepareControler( scenario ) ;
 		controler.run() ;
@@ -107,10 +101,6 @@ public final class RunBerlinScenario {
 			}
 		} );
 
-		//
-		Bicycles.addAsOverridingModule(controler);
-		//
-
 		return controler;
 	}
 	
@@ -123,20 +113,6 @@ public final class RunBerlinScenario {
 
 		final Scenario scenario = ScenarioUtils.loadScenario( config );
 
-		// Delete routes for bicycling agents
-		scenario.getPopulation().getPersons().values().parallelStream()
-				.flatMap(person -> person.getPlans().stream())
-				.flatMap(plan -> plan.getPlanElements().stream())
-				.filter(element -> element instanceof Leg)
-				.map(element -> (Leg) element)
-				.filter(leg -> leg.getMode().equals("bicycle"))
-				.forEach(leg -> leg.setRoute(null));
-
-		// Add bicycle infrastructure speed factor for all links
-		scenario.getNetwork().getLinks().values().parallelStream()
-				.filter(link -> ((Link) link).getAllowedModes().contains("bicycle"))
-				.forEach(link -> ((Link) link).getAttributes().putAttribute(BicycleUtils.BICYCLE_INFRASTRUCTURE_SPEED_FACTOR, 1.0));
-
 		return scenario;
 	}
 	
@@ -148,9 +124,6 @@ public final class RunBerlinScenario {
 		final Config config = ConfigUtils.loadConfig( args[ 0 ], customModules ); // I need this to set the context
 		
 		config.controler().setRoutingAlgorithmType( FastAStarLandmarks );
-		//
-		config.controler().setLastIteration(0);
-		//
 		
 		config.subtourModeChoice().setProbaForRandomSingleTripMode( 0.5 );
 		
@@ -158,16 +131,7 @@ public final class RunBerlinScenario {
 		config.plansCalcRoute().removeModeRoutingParams(TransportMode.ride);
 		config.plansCalcRoute().removeModeRoutingParams(TransportMode.pt);
 		config.plansCalcRoute().removeModeRoutingParams(TransportMode.bike);
-		config.plansCalcRoute().removeModeRoutingParams("bicycle");
 		config.plansCalcRoute().removeModeRoutingParams("undefined");
-		
-		// TransportMode.non_network_walk has no longer a default,
-		// in the long run: copy from walk; for now: use the parameter set given in the config (for backward compatibility)
-//		ModeRoutingParams walkRoutingParams = config.plansCalcRoute().getOrCreateModeRoutingParams(TransportMode.walk);
-//		ModeRoutingParams non_network_walk_routingParams = new ModeRoutingParams(TransportMode.non_network_walk);
-//		non_network_walk_routingParams.setBeelineDistanceFactor(walkRoutingParams.getBeelineDistanceFactor());
-//		non_network_walk_routingParams.setTeleportedModeSpeed(walkRoutingParams.getTeleportedModeSpeed());
-//		config.plansCalcRoute().addModeRoutingParams(non_network_walk_routingParams);
 	
 		config.qsim().setInsertingWaitingVehiclesBeforeDrivingVehicles( true );
 				
@@ -188,8 +152,6 @@ public final class RunBerlinScenario {
 		config.planCalcScore().addActivityParams( new ActivityParams( "freight" ).setTypicalDuration( 12.*3600. ) );
 
 		ConfigUtils.applyCommandline( config, typedArgs ) ;
-
-
 
 		return config ;
 	}
