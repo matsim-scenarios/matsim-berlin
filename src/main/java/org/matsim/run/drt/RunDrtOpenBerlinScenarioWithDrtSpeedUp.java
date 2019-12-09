@@ -25,6 +25,7 @@ import org.matsim.core.config.Config;
 import org.matsim.core.controler.Controler;
 import org.matsim.drtSpeedUp.DrtSpeedUpConfigGroup;
 import org.matsim.drtSpeedUp.DrtSpeedUpModule;
+import org.matsim.run.RunBerlinScenario;
 
 /**
 * @author ikaddoura
@@ -51,6 +52,8 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 		controler.addOverridingModule(new DrtSpeedUpModule());
 		
 		controler.run() ;
+		
+		RunBerlinScenario.runAnalysis(controler);
 	}
 
 }

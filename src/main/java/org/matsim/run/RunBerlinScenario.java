@@ -21,9 +21,11 @@ package org.matsim.run;
 
 import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType.FastAStarLandmarks;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.log4j.Logger;
+import org.matsim.analysis.RunPersonTripAnalysis;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.core.config.Config;
@@ -37,6 +39,7 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.gbl.Gbl;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 
 import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 
@@ -148,6 +151,46 @@ public final class RunBerlinScenario {
 		ConfigUtils.applyCommandline( config, typedArgs ) ;
 
 		return config ;
+	}
+	
+	public static void runAnalysis(Controler controler) {
+		Config config = controler.getConfig();
+		
+		String modesString = "";
+		for (String mode: config.planCalcScore().getAllModes()) {
+			modesString = modesString + mode + ",";
+		}
+		// remove last ","
+		if (modesString.length() < 2) {
+			log.error("no valid mode found");
+			modesString = null;
+		} else {
+			modesString = modesString.substring(0, modesString.length() - 1);
+		}
+		
+//		String analysisOutputDirectory = config.controler().getOutputDirectory() + "/analysis/RunPersonTripAnalysis";
+		
+		String[] args = new String[] {
+				config.controler().getOutputDirectory(),
+				config.controler().getRunId(),
+				"null", // TODO: reference run, hard to automate
+				"null", // TODO: reference run, hard to automate
+				config.global().getCoordinateSystem(),
+				"https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-bezirke/bezirke_berlin.shp",
+				TransformationFactory.DHDN_GK4,
+				"SCHLUESSEL",
+				"home",
+				"10", // TODO: scaling factor, should be 10 for 10pct scenario and 100 for 1pct scenario
+				"null", // visualizationScriptInputDirectory
+				modesString
+		};
+		
+		try {
+			RunPersonTripAnalysis.main(args);
+		} catch (IOException e) {
+			log.error(e.getStackTrace());
+			throw new RuntimeException(e.getMessage());
+		}
 	}
 
 }
