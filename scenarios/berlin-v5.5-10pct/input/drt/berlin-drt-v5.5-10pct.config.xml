@@ -149,10 +149,6 @@
 			</parameterset>
 			<parameterset type="modeParams" >
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-				<param name="mode" value="transit_walk" />
-			</parameterset>
-			<parameterset type="modeParams" >
-				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="drt" />
 			</parameterset>
 		</parameterset>
