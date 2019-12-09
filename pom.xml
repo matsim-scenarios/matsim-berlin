@@ -10,8 +10,8 @@
 	<description>MATSim Open Berlin scenario project</description>
 
 	<properties>
-		<matsim.version>12.0-SNAPSHOT</matsim.version>
-		<!-- <matsim.version>12.0-2019w45-SNAPSHOT</matsim.version> -->
+		<!-- <matsim.version>12.0-SNAPSHOT</matsim.version> -->
+		<matsim.version>12.0-2019w49-SNAPSHOT</matsim.version>
 	</properties>
 
 	<repositories>
@@ -129,7 +129,8 @@
 		<dependency>
 	    	<groupId>com.github.matsim-vsp</groupId>
 	    	<artifactId>drt-speed-up</artifactId>
-	    	<version>v0.0.1</version>
+	    	<!-- for some reason jitpack does not like release v0.0.2, but is happy with the commit id of the very same release -->
+	    	<version>83d661919a</version>
 		</dependency>
 		
 		<dependency>
