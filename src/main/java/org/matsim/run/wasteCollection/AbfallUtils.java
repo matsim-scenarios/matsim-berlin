@@ -34,23 +34,16 @@ import org.matsim.contrib.freight.carrier.Tour.Delivery;
 import org.matsim.contrib.freight.carrier.Tour.Leg;
 import org.matsim.contrib.freight.carrier.Tour.Pickup;
 import org.matsim.contrib.freight.carrier.Tour.TourElement;
-import org.matsim.contrib.freight.controler.CarrierModule;
 import org.matsim.contrib.freight.jsprit.MatsimJspritFactory;
 import org.matsim.contrib.freight.jsprit.NetworkBasedTransportCosts;
 import org.matsim.contrib.freight.jsprit.NetworkBasedTransportCosts.Builder;
 import org.matsim.contrib.freight.jsprit.NetworkRouter;
-import org.matsim.contrib.freight.replanning.CarrierPlanStrategyManagerFactory;
-import org.matsim.contrib.freight.scoring.CarrierScoringFunctionFactory;
-import org.matsim.contrib.freight.usecases.chessboard.CarrierScoringFunctionFactoryImpl;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.groups.ControlerConfigGroup;
-import org.matsim.core.controler.AbstractModule;
-import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.population.routes.RouteUtils;
-import org.matsim.core.replanning.GenericStrategyManager;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.vehicles.EngineInformation.FuelType;
@@ -763,64 +756,6 @@ class AbfallUtils {
 		new CarrierPlanXmlWriterV2(carriers)
 				.write(scenario.getConfig().controler().getOutputDirectory() + "/jsprit_CarrierPlans.xml");
 
-	}
-
-	/**
-	 * @param
-	 */
-	static void scoringAndManagerFactory(Scenario scenario, final Controler controler) {
-		controler.addOverridingModule(new CarrierModule());
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				bind(CarrierScoringFunctionFactory.class).toInstance(createMyScoringFunction2(scenario));
-				bind(CarrierPlanStrategyManagerFactory.class).toInstance(createMyStrategymanager());
-			}
-		});
-	}
-
-	/**
-	 * @param scenario
-	 * @return
-	 */
-	private static CarrierScoringFunctionFactoryImpl createMyScoringFunction2(final Scenario scenario) {
-
-		return new CarrierScoringFunctionFactoryImpl(scenario.getNetwork());
-//		return new CarrierScoringFunctionFactoryImpl (scenario, scenario.getConfig().controler().getOutputDirectory()) {
-//
-//			public ScoringFunction createScoringFunction(final Carrier carrier){
-//				SumScoringFunction sumSf = new SumScoringFunction() ;
-//
-//				VehicleFixCostScoring fixCost = new VehicleFixCostScoring(carrier);
-//				sumSf.addScoringFunction(fixCost);
-//
-//				LegScoring legScoring = new LegScoring(carrier);
-//				sumSf.addScoringFunction(legScoring);
-//
-//				//Score Activity w/o correction of waitingTime @ 1st Service.
-//				//			ActivityScoring actScoring = new ActivityScoring(carrier);
-//				//			sumSf.addScoringFunction(actScoring);
-//
-//				//Alternativ:
-//				//Score Activity with correction of waitingTime @ 1st Service.
-//				ActivityScoringWithCorrection actScoring = new ActivityScoringWithCorrection(carrier);
-//				sumSf.addScoringFunction(actScoring);
-//
-//				return sumSf;
-//			}
-//		};
-	}
-
-	/**
-	 * @return
-	 */
-	private static CarrierPlanStrategyManagerFactory createMyStrategymanager() {
-		return new CarrierPlanStrategyManagerFactory() {
-			@Override
-			public GenericStrategyManager<CarrierPlan, Carrier> createStrategyManager() {
-				return null;
-			}
-		};
 	}
 
 	/**

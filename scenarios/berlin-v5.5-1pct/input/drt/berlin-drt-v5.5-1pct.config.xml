@@ -149,10 +149,6 @@
 			</parameterset>
 			<parameterset type="modeParams" >
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-				<param name="mode" value="transit_walk" />
-			</parameterset>
-			<parameterset type="modeParams" >
-				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="drt" />
 			</parameterset>
 		</parameterset>
@@ -250,7 +246,7 @@
 			<param name="linkIdAttribute" value="null" />
 			<!-- Radius from the origin / destination coord in which transit stops are accessible by this mode. -->
 			<param name="maxRadius" value="100000.0" />
-			<param name="mode" value="non_network_walk" />
+			<param name="mode" value="walk" />
 			<!-- If less than 2 stops were found in initialSearchRadius take the distance of the closest transit stop and add this extension radius to search again.The search radius will not exceed the maximum search radius set in param radius. -->
 			<param name="searchExtensionRadius" value="1000.0" />
 			<!-- Name of the transit stop attribute used to filter stops that should be included in the set of potential stops for access and egress. The attribute should be of type String. 'null' disables the filter and all stops within the specified radius will be used. -->

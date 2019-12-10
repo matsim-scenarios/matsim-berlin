@@ -11,6 +11,7 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.contrib.freight.Freight;
 import org.matsim.contrib.freight.carrier.Carrier;
 import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
 import org.matsim.contrib.freight.carrier.CarrierPlanXmlWriterV2;
@@ -193,8 +194,7 @@ public class Run_Abfall {
 
 		final Controler controler = new Controler(scenario);
 
-		AbfallUtils.scoringAndManagerFactory(scenario, controler);
-
+		Freight.configure(controler);
 		controler.run();
 
 		new CarrierPlanXmlWriterV2(carriers)
