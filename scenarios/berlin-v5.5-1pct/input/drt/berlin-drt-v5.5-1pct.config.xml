@@ -287,6 +287,8 @@
 			<!-- take care that this still corresponds to the attribute used for tagging these TransitStops in RunDrtOpenBerlinScenario -->
 			<param name="stopFilterAttribute" value="drtStopFilter" />
 			<param name="stopFilterValue" value="station_S/U/RE/RB_drtServiceArea" />
+			<param name="personFilterAttribute" value="canUseDrt" />
+			<param name="personFilterValue" value="true" />
 		</parameterset>
 	</module>
 </config>

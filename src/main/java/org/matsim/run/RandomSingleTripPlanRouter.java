@@ -84,6 +84,9 @@ public class RandomSingleTripPlanRouter implements PlanAlgorithm, PersonAlgorith
 		if (trips.size() > 0) {
 			int rndIdx = this.rnd.nextInt(trips.size());
 			Trip oldTrip = trips.get(rndIdx);
+			
+			plan.getPerson().getAttributes().putAttribute("canUseDrt", "true");
+			
 			final List<? extends PlanElement> newTrip =
 					tripRouter.calcRoute(
 							TripStructureUtils.identifyMainMode( oldTrip.getTripElements() ),
@@ -91,6 +94,9 @@ public class RandomSingleTripPlanRouter implements PlanAlgorithm, PersonAlgorith
 						  FacilitiesUtils.toFacility( oldTrip.getDestinationActivity(), facilities ),
 							calcEndOfActivity( oldTrip.getOriginActivity() , plan, tripRouter.getConfig() ),
 							plan.getPerson() );
+			
+			plan.getPerson().getAttributes().removeAttribute("canUseDrt");
+			
 			putVehicleFromOldTripIntoNewTripIfMeaningful(oldTrip, newTrip);
 			TripRouter.insertTrip(
 					plan, 
