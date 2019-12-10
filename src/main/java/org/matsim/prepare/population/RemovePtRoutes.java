@@ -52,9 +52,9 @@ public class RemovePtRoutes {
 
 	public static void main(String[] args) {
 		Config config = ConfigUtils.createConfig();
-		config.global().setCoordinateSystem("GK4");
-		config.network().setInputFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/input/berlin-v5-network.xml.gz");
-		config.plans().setInputFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/input/berlin-v5.4-1pct.plans.xml.gz");
+		config.global().setCoordinateSystem("EPSG:31468");
+		config.network().setInputFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz");
+		config.plans().setInputFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/input/berlin-v5.5-1pct.plans_uncalibrated.xml.gz");
 		Scenario scenario = ScenarioUtils.loadScenario(config);
 		
 		for (Person person: scenario.getPopulation().getPersons().values()) {
@@ -92,7 +92,7 @@ public class RemovePtRoutes {
 		}
 		
 		PopulationWriter popWriter = new PopulationWriter(scenario.getPopulation());
-		popWriter.write("berlin-v5.4-1pct.plans_wo_PtRoutes.xml.gz");
+		popWriter.write("berlin-v5.5-1pct.plans_uncalibrated_wo_PtRoutes.xml.gz");
 	}
 
 	private static void run(final Plan plan) {
