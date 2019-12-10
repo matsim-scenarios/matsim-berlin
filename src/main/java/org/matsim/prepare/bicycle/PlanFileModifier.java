@@ -10,8 +10,8 @@ import org.matsim.core.scenario.ScenarioUtils;
 public class PlanFileModifier {
 
     public static void main(String[] args) {
-        String inputPlansFile = "../../public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/input/berlin-v5.5-1pct.plans_uncalibrated.xml.gz";
-        String outputPlansFile = "../../public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/input/berlin-v5.5-1pct.plans-no-bicycle-routes.xml.gz";
+        String inputPlansFile = "../../public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.plans_uncalibrated.xml.gz";
+        String outputPlansFile = "../../public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.plans-no-bicycle-routes.xml.gz";
 
         Scenario scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
         PopulationReader populationReader = new PopulationReader(scenario);
