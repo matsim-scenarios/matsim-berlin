@@ -38,8 +38,8 @@ public class RunBerlinAccidents {
  			args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
 		}
 		
-	String outputFile = "D:/GIT/shared-svn/studies/countries/de/accidents/data/output/"; 
-	String landOSMInputShapeFile = "D:/GIT/shared-svn/studies/countries/de/accidents/data/input/osmBerlinBrandenburg/gis.osm_landuse_a_free_1_GK4.shp";  
+	String outputFile = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-accidents"; 
+	String landOSMInputShapeFile = "../shared-svn/studies/countries/de/accidents/data/input/osmBerlinBrandenburg/gis.osm_landuse_a_free_1_GK4.shp";  
 	
 	String tunnelLinkCSVInputFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.1.tunnel-linkIDs.csv";
 	//the CSV has also a column for the percentage of the links wich is tunnel, The new String is produced by a new class
@@ -48,7 +48,6 @@ public class RunBerlinAccidents {
 
 	Config config = RunBerlinScenario.prepareConfig(args);
 	config.controler().setOutputDirectory(outputFile);
-	config.controler().setLastIteration(0);
 	AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
 	accidentsSettings.setScaleFactor(100);
 	
