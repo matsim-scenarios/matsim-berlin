@@ -7,11 +7,14 @@ import java.net.URL;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.network.Network;
+import org.matsim.api.core.v01.network.NetworkFactory;
 import org.matsim.contrib.accidents.AccidentsConfigGroup;
 import org.matsim.contrib.accidents.runExample.AccidentsNetworkModification;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.network.NetworkUtils;
 import org.matsim.run.RunBerlinScenario;
 
 /**
@@ -32,12 +35,11 @@ public class RunBerlinAccidents {
 		}
 		
 		if ( args.length==0 ) {
-			args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
+ 			args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
 		}
 		
-	String outputFile = "/../../shared-svn/studies/countries/de/accidents/data/output/"; 
-	String landOSMInputShapeFile = "/../../shared-svn/studies/countries/de/accidents/data/input/osmBerlin/gis.osm_landuse_a_free_1.shx";  
-	String placesOSMInputFile = "/../../shared-svn/studies/countries/de/accidents/data/input/osmBerlinBrandenburg/gis.osm_landuse_a_free_1_GK4.shx";
+	String outputFile = "D:/GIT/shared-svn/studies/countries/de/accidents/data/output/"; 
+	String landOSMInputShapeFile = "D:/GIT/shared-svn/studies/countries/de/accidents/data/input/osmBerlinBrandenburg/gis.osm_landuse_a_free_1_GK4.shp";  
 	
 	String tunnelLinkCSVInputFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.1.tunnel-linkIDs.csv";
 	//the CSV has also a column for the percentage of the links wich is tunnel, The new String is produced by a new class
@@ -54,7 +56,7 @@ public class RunBerlinAccidents {
 	AccidentsNetworkModification accidentsNetworkModification = new AccidentsNetworkModification(scenario);
 	accidentsNetworkModification.setLinkAttributsBasedOnOSMFile(
 			landOSMInputShapeFile,
-			placesOSMInputFile,"EPSG:31468",
+			"EPSG:31468",
 			readColumn(0,tunnelLinkCSVInputFile,";"),
 			readColumn(0,planfreeLinkCSVInputFile, ";")
 			);
