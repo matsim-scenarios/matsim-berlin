@@ -4,8 +4,8 @@
 	<module name="controler" >
 		<param name="lastIteration" value="500" />
 		<param name="overwriteFiles" value="failIfDirectoryExists" />
-		<param name="runId" value="berlin-drt-v5.5-1pct_drt-118" />
-		<param name="outputDirectory" value="./output/berlin-drt-v5.5-1pct_drt-118/" />
+		<param name="runId" value="berlin-drt-v5.5-1pct_multiPtModesSingleTripReplan" />
+		<param name="outputDirectory" value="./scenarios/berlin-v5.5-1pct/output-berlin-drt-v5.5-1pct.config_multiPtModesSingleTripReplan" />
 		<param name="writeEventsInterval" value="50" />
 		<param name="writePlansInterval" value="50" />
 	</module>
