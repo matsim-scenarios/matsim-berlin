@@ -202,6 +202,10 @@
         <!-- ====================================================================== -->
         
         <person id="agent-with-DrtRoute">
+                <attributes>
+                        <attribute name="home-activity-zone" class="java.lang.String" >berlin</attribute>
+                        <attribute name="subpopulation" class="java.lang.String" >person</attribute>
+                </attributes>
                 <plan score="123.4" selected="yes">
                         <activity type="home_45600.0" link="120005" x="4595582.101818748" y="5820365.6864615" end_time="00:00:00" >
                                 <attributes>
