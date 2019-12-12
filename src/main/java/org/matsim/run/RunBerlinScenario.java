@@ -28,6 +28,8 @@ import org.apache.log4j.Logger;
 import org.matsim.analysis.RunPersonTripAnalysis;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
+import org.matsim.contrib.drt.routing.DrtRoute;
+import org.matsim.contrib.drt.routing.DrtRouteFactory;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
@@ -38,6 +40,7 @@ import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.gbl.Gbl;
+import org.matsim.core.population.routes.RouteFactories;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
@@ -111,7 +114,17 @@ public final class RunBerlinScenario {
 		// when run from command line/IDE (java root).  :-(    See comment in method.  kai, jul'18
 		// yy Does this comment still apply?  kai, jul'19
 
-		final Scenario scenario = ScenarioUtils.loadScenario( config );
+		/*
+		 * We need to set the DrtRouteFactory before loading the scenario. Otherwise DrtRoutes in input plans are loaded
+		 * as GenericRouteImpls and will later cause exceptions in DrtRequestCreator. So we do this here, although this
+		 * class is also used for runs without drt.
+		 */
+		final Scenario scenario = ScenarioUtils.createScenario( config );
+
+		RouteFactories routeFactories = scenario.getPopulation().getFactory().getRouteFactories();
+		routeFactories.setRouteFactory(DrtRoute.class, new DrtRouteFactory());
+		
+		ScenarioUtils.loadScenario(scenario);
 
 		return scenario;
 	}
