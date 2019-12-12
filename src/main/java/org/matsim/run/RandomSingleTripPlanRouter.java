@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
@@ -85,17 +86,32 @@ public class RandomSingleTripPlanRouter implements PlanAlgorithm, PersonAlgorith
 			int rndIdx = this.rnd.nextInt(trips.size());
 			Trip oldTrip = trips.get(rndIdx);
 			
-			plan.getPerson().getAttributes().putAttribute("canUseDrt", "true");
+			// emulate a routing mode pt+drt using person attributes
+			String originalRoutingMode = TripStructureUtils.identifyMainMode( oldTrip.getTripElements() );
+			String routingMode;
+			if (originalRoutingMode.equals("pt+drt")) {
+				plan.getPerson().getAttributes().putAttribute("canUseDrt", "true");
+				routingMode = TransportMode.pt;
+			} else {
+				routingMode = originalRoutingMode;
+			}
 			
 			final List<? extends PlanElement> newTrip =
 					tripRouter.calcRoute(
-							TripStructureUtils.identifyMainMode( oldTrip.getTripElements() ),
+							routingMode,
 						  FacilitiesUtils.toFacility( oldTrip.getOriginActivity(), facilities ),
 						  FacilitiesUtils.toFacility( oldTrip.getDestinationActivity(), facilities ),
 							calcEndOfActivity( oldTrip.getOriginActivity() , plan, tripRouter.getConfig() ),
 							plan.getPerson() );
 			
-			plan.getPerson().getAttributes().removeAttribute("canUseDrt");
+			if (originalRoutingMode.equals("pt+drt")) {
+				plan.getPerson().getAttributes().putAttribute("canUseDrt", "true");
+				for (PlanElement pe: newTrip) {
+					if (pe instanceof Leg) {
+						TripStructureUtils.setRoutingMode((Leg) pe, originalRoutingMode);
+					}
+				}
+			}
 			
 			putVehicleFromOldTripIntoNewTripIfMeaningful(oldTrip, newTrip);
 			TripRouter.insertTrip(

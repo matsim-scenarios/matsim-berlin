@@ -20,12 +20,15 @@
 package org.matsim.run.drt;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.contrib.av.robotaxi.fares.drt.DrtFareModule;
 import org.matsim.contrib.av.robotaxi.fares.drt.DrtFaresConfigGroup;
 import org.matsim.contrib.drt.routing.DrtRoute;
@@ -46,6 +49,8 @@ import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
 import org.matsim.core.population.routes.RouteFactories;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.MainModeIdentifier;
+import org.matsim.core.router.RoutingModule;
+import org.matsim.facilities.Facility;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.run.RunBerlinScenario;
@@ -111,6 +116,26 @@ public final class RunDrtOpenBerlinScenario {
 		controler.addOverridingModule(new DrtFareModule());
 		// yyyy there is fareSModule (with S) in config. ?!?!  kai, jul'19
 
+		// Add dummy routing mode binding, replanning strategies will map this to pt with adequate person attribute
+		controler.addOverridingModule(new AbstractModule() {
+			
+			@Override
+			public void install() {
+                addRoutingModuleBinding("pt+drt").toInstance(new RoutingModule() {
+
+					@Override
+					public List<? extends PlanElement> calcRoute(Facility fromFacility, Facility toFacility,
+							double departureTime, Person person) {
+						// TODO Auto-generated method stub
+						log.error("dummy router is used, but should never be called. Person " + person.getId().toString() +
+								" fromFacility: " + fromFacility + " toFacility: " + toFacility + " departureTime: " + departureTime);
+						throw new RuntimeException("");
+					}
+                	
+                });
+			}
+		});
+		
 		return controler;
 	}
 	
