@@ -126,7 +126,7 @@ public final class OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier impleme
 			if (isDrtPt) {
 				return "pt+drt";
 			} else {
-				return "pt+walk";
+				return TransportMode.pt;
 			}
 			
 		} else {
