@@ -38,6 +38,7 @@ import org.matsim.core.router.TripStructureUtils.Trip;
 import org.matsim.core.utils.misc.Time;
 import org.matsim.facilities.ActivityFacilities;
 import org.matsim.facilities.FacilitiesUtils;
+import org.matsim.run.drt.RunDrtOpenBerlinScenario;
 import org.matsim.vehicles.Vehicle;
 
 /**
@@ -89,11 +90,13 @@ public class RepairTripPlanRouter implements PlanAlgorithm, PersonAlgorithm {
 			
 			if (legWithInvalidRoute) {
 				
-				// emulate a routing mode pt+drt using person attributes
+				// emulate a routing mode ROUTING_MODE_PT_WITH_DRT_ENABLED_FOR_ACCESS_EGRESS = "pt_w_drt" using person attributes
 				String originalRoutingMode = TripStructureUtils.identifyMainMode( oldTrip.getTripElements() );
 				String routingMode;
-				if (originalRoutingMode.equals("pt+drt")) {
-					plan.getPerson().getAttributes().putAttribute("canUseDrt", "true");
+				if (originalRoutingMode.equals(RunDrtOpenBerlinScenario.ROUTING_MODE_PT_WITH_DRT_ENABLED_FOR_ACCESS_EGRESS)) {
+					plan.getPerson().getAttributes().putAttribute(
+							RunDrtOpenBerlinScenario.DRT_ACCESS_EGRESS_TO_PT_PERSON_FILTER_ATTRIBUTE, 
+							RunDrtOpenBerlinScenario.DRT_ACCESS_EGRESS_TO_PT_PERSON_FILTER_VALUE);
 					routingMode = TransportMode.pt;
 				} else {
 					routingMode = originalRoutingMode;
@@ -107,8 +110,8 @@ public class RepairTripPlanRouter implements PlanAlgorithm, PersonAlgorithm {
 								calcEndOfActivity( oldTrip.getOriginActivity() , plan, tripRouter.getConfig() ),
 								plan.getPerson() );
 				
-				if (originalRoutingMode.equals("pt+drt")) {
-					plan.getPerson().getAttributes().putAttribute("canUseDrt", "true");
+				if (originalRoutingMode.equals(RunDrtOpenBerlinScenario.ROUTING_MODE_PT_WITH_DRT_ENABLED_FOR_ACCESS_EGRESS)) {
+					plan.getPerson().getAttributes().removeAttribute(RunDrtOpenBerlinScenario.DRT_ACCESS_EGRESS_TO_PT_PERSON_FILTER_ATTRIBUTE);
 					for (PlanElement pe: newTrip) {
 						if (pe instanceof Leg) {
 							TripStructureUtils.setRoutingMode((Leg) pe, originalRoutingMode);

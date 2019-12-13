@@ -19,6 +19,7 @@
 
 package org.matsim.run.drt;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -29,9 +30,9 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.contrib.av.robotaxi.fares.drt.DrtFareConfigGroup;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.PlanElement;
+import org.matsim.contrib.av.robotaxi.fares.drt.DrtFareConfigGroup;
 import org.matsim.contrib.av.robotaxi.fares.drt.DrtFareModule;
 import org.matsim.contrib.av.robotaxi.fares.drt.DrtFaresConfigGroup;
 import org.matsim.contrib.drt.routing.DrtRoute;
@@ -54,12 +55,18 @@ import org.matsim.core.population.routes.RouteFactories;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.core.router.RoutingModule;
+import org.matsim.core.utils.collections.Tuple;
 import org.matsim.facilities.Facility;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.run.RunBerlinScenario;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
+import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptor;
+import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorRoutingModule;
 
 /**
  * This class starts a simulation run with DRT.
@@ -77,6 +84,9 @@ public final class RunDrtOpenBerlinScenario {
 	
 	private static final String DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_ATTRIBUTE = "drtStopFilter";
 	private static final String DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_VALUE = "station_S/U/RE/RB_drtServiceArea";
+	public static final String DRT_ACCESS_EGRESS_TO_PT_PERSON_FILTER_ATTRIBUTE = "canUseDrt";
+	public static final String DRT_ACCESS_EGRESS_TO_PT_PERSON_FILTER_VALUE = "true";
+	public static final String ROUTING_MODE_PT_WITH_DRT_ENABLED_FOR_ACCESS_EGRESS = "pt_w_drt";
 
 	public static void main(String[] args) throws CommandLine.ConfigurationException {
 		
@@ -143,23 +153,15 @@ public final class RunDrtOpenBerlinScenario {
 			}
 		});
 
-		// Add dummy routing mode binding, replanning strategies will map this to pt with adequate person attribute
+		// register router for the intermodal pt+drt routing mode
+		List<Tuple<String,String>> personAttributes2Values = new ArrayList<>();
+		personAttributes2Values.add(new Tuple<String, String>(DRT_ACCESS_EGRESS_TO_PT_PERSON_FILTER_ATTRIBUTE, DRT_ACCESS_EGRESS_TO_PT_PERSON_FILTER_VALUE));
+		
 		controler.addOverridingModule(new AbstractModule() {
 			
 			@Override
 			public void install() {
-                addRoutingModuleBinding("pt+drt").toInstance(new RoutingModule() {
-
-					@Override
-					public List<? extends PlanElement> calcRoute(Facility fromFacility, Facility toFacility,
-							double departureTime, Person person) {
-						// TODO Auto-generated method stub
-						log.error("dummy router is used, but should never be called. Person " + person.getId().toString() +
-								" fromFacility: " + fromFacility + " toFacility: " + toFacility + " departureTime: " + departureTime);
-						throw new RuntimeException("");
-					}
-                	
-                });
+                addRoutingModuleBinding(ROUTING_MODE_PT_WITH_DRT_ENABLED_FOR_ACCESS_EGRESS).toProvider(new PtRoutingModeWrapperProvider(personAttributes2Values));
 			}
 		});
 		

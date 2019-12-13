@@ -97,7 +97,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			config.plans().setInputFile("../../../../test/input/drt/drt-test-agents.xml");
 			
 			// jvm on build server has less cores than we set in the input config file and would complain about that
-			config.global().setNumberOfThreads(1);
+			config.global().setNumberOfThreads(4);
 			config.qsim().setNumberOfThreads(1);
 			
 			config.controler().setWritePlansInterval(1);
@@ -114,7 +114,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
 			controler.run() ;	
 			
-			Plan intermodalPtAgentPlan = scenario.getPopulation().getPersons().get(Id.createPersonId("285614901pt")).getSelectedPlan();
+			Plan intermodalPtAgentPlan = scenario.getPopulation().getPersons().get(Id.createPersonId("285614901pt_w_drt")).getSelectedPlan();
 			
 			boolean foundIntermodalTrip = false;
 			
