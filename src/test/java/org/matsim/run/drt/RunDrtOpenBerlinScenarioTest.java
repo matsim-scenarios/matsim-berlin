@@ -19,6 +19,7 @@ import org.matsim.api.core.v01.population.Plan;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.groups.StrategyConfigGroup.StrategySettings;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.gbl.MatsimRandom;
@@ -91,6 +92,15 @@ public class RunDrtOpenBerlinScenarioTest {
 			
 			Config config = RunDrtOpenBerlinScenario.prepareConfig( args ) ;
 			config.controler().setLastIteration(2);
+			config.strategy().clearStrategySettings();
+			
+			// Use RandomSingleTripReRoute, because in this branch only in RandomSingleTripReRoute drt is allowed as access/egress mode to pt
+			StrategySettings stratSets = new StrategySettings();
+			stratSets.setStrategyName("RandomSingleTripReRoute");
+			stratSets.setWeight(1.0);
+			stratSets.setSubpopulation("person");
+			config.strategy().addStrategySettings(stratSets);
+			
 			config.strategy().setFractionOfIterationsToDisableInnovation(1);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
@@ -102,7 +112,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			
 			config.controler().setWritePlansInterval(1);
 			
-			// make pt more attractive to obtain less transit_walks due to drt triangle walk being more attractive 
+			// make pt more attractive to obtain less direct walks (routing mode pt) due to drt triangle walk being more attractive 
 			config.planCalcScore().setMarginalUtlOfWaitingPt_utils_hr(5);
 			
 			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
@@ -129,7 +139,7 @@ public class RunDrtOpenBerlinScenarioTest {
 					foundIntermodalTrip = true;
 				}
 			}
-			Assert.assertTrue(foundIntermodalTrip);
+			Assert.assertTrue("pt agent has no intermodal route (=drt for access or egress to pt)", foundIntermodalTrip);
 			
 		} catch ( Exception ee ) {
 			throw new RuntimeException(ee) ;
