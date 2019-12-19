@@ -80,7 +80,6 @@ public final class RunBerlinScenario {
 		
 		final Controler controler = new Controler( scenario );
 		
-//		if (controler.getConfig().transit().isUsingTransitInMobsim()) {
 		if (controler.getConfig().transit().isUseTransit()) {
 			// use the sbb pt raptor router
 			controler.addOverridingModule( new AbstractModule() {
@@ -147,14 +146,6 @@ public final class RunBerlinScenario {
 		config.plansCalcRoute().removeModeRoutingParams(TransportMode.bike);
 		config.plansCalcRoute().removeModeRoutingParams("undefined");
 		
-		// TransportMode.non_network_walk has no longer a default,
-		// in the long run: copy from walk; for now: use the parameter set given in the config (for backward compatibility)
-//		ModeRoutingParams walkRoutingParams = config.plansCalcRoute().getOrCreateModeRoutingParams(TransportMode.walk);
-//		ModeRoutingParams non_network_walk_routingParams = new ModeRoutingParams(TransportMode.non_network_walk);
-//		non_network_walk_routingParams.setBeelineDistanceFactor(walkRoutingParams.getBeelineDistanceFactor());
-//		non_network_walk_routingParams.setTeleportedModeSpeed(walkRoutingParams.getTeleportedModeSpeed());
-//		config.plansCalcRoute().addModeRoutingParams(non_network_walk_routingParams);
-	
 		config.qsim().setInsertingWaitingVehiclesBeforeDrivingVehicles( true );
 				
 		// vsp defaults
@@ -192,8 +183,6 @@ public final class RunBerlinScenario {
 		} else {
 			modesString = modesString.substring(0, modesString.length() - 1);
 		}
-		
-//		String analysisOutputDirectory = config.controler().getOutputDirectory() + "/analysis/RunPersonTripAnalysis";
 		
 		String[] args = new String[] {
 				config.controler().getOutputDirectory(),
