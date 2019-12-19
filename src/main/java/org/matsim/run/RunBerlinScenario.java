@@ -80,7 +80,8 @@ public final class RunBerlinScenario {
 		
 		final Controler controler = new Controler( scenario );
 		
-		if (controler.getConfig().transit().isUsingTransitInMobsim()) {
+//		if (controler.getConfig().transit().isUsingTransitInMobsim()) {
+		if (controler.getConfig().transit().isUseTransit()) {
 			// use the sbb pt raptor router
 			controler.addOverridingModule( new AbstractModule() {
 				@Override
@@ -167,6 +168,10 @@ public final class RunBerlinScenario {
 		config.plansCalcRoute().setInsertingAccessEgressWalk( true );
 		config.qsim().setUsingTravelTimeCheckInTeleportation( true );
 		config.qsim().setTrafficDynamics( TrafficDynamics.kinematicWaves );
+		
+		config.transit().setUsingTransitInMobsim(false);
+		config.plans().setInputFile("/home/gregor/Downloads/berlin-drt-v5.5-1pct_drt-119_0.1.output_plans.xml.gz");
+		config.controler().setLastIteration(3000);
 				
 		// activities:
 		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {

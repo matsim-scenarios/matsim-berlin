@@ -183,7 +183,7 @@ public final class RunDrtOpenBerlinScenario {
 			counter++;
 		}
 
-		Config config = RunBerlinScenario.prepareConfig( args, new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup()  ) ;
+		Config config = RunBerlinScenario.prepareConfig( args, customModulesAll ) ;
 		
 		// switch off pt vehicle simulation: very slow, because also switches from Raptor to the old pt router
 //		config.transit().setUsingTransitInMobsim(false);
