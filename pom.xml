@@ -119,6 +119,12 @@
 			<groupId>com.github.matsim-org</groupId>
 			<artifactId>GTFS2MATSim</artifactId>
 			<version>11.2</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>gt-epsg-hsql</artifactId>
+					<groupId>org.geotools</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
