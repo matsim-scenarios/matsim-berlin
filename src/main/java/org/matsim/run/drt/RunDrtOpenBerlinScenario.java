@@ -75,6 +75,7 @@ public final class RunDrtOpenBerlinScenario {
 	public static final String DRT_ACCESS_EGRESS_TO_PT_PERSON_FILTER_ATTRIBUTE = "canUseDrt";
 	public static final String DRT_ACCESS_EGRESS_TO_PT_PERSON_FILTER_VALUE = "true";
 	public static final String ROUTING_MODE_PT_WITH_DRT_ENABLED_FOR_ACCESS_EGRESS = "pt_w_drt";
+	public static final String ANALYSIS_MAIN_MODE_PT_WITH_DRT_USED_FOR_ACCESS_OR_EGRESS = "pt_w_drt_used";
 
 	public static void main(String[] args) throws CommandLine.ConfigurationException {
 		

@@ -124,7 +124,7 @@ public final class OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier impleme
 			}
 			
 			if (isDrtPt) {
-				return "pt+drt";
+				return RunDrtOpenBerlinScenario.ANALYSIS_MAIN_MODE_PT_WITH_DRT_USED_FOR_ACCESS_OR_EGRESS;
 			} else {
 				return TransportMode.pt;
 			}
