@@ -19,16 +19,13 @@
 
 package org.matsim.run.drt;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.contrib.av.robotaxi.fares.drt.DrtFareConfigGroup;
 import org.matsim.contrib.av.robotaxi.fares.drt.DrtFareModule;
 import org.matsim.contrib.av.robotaxi.fares.drt.DrtFaresConfigGroup;
 import org.matsim.contrib.drt.routing.DrtRoute;
@@ -43,7 +40,6 @@ import org.matsim.contrib.dvrp.run.DvrpQSimComponents;
 import org.matsim.core.config.CommandLine;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
-import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
@@ -55,6 +51,8 @@ import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.run.RunBerlinScenario;
 import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesConfigGroup;
 import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesModule;
+import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
+import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
 
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
 
@@ -120,28 +118,30 @@ public final class RunDrtOpenBerlinScenario {
 		controler.addOverridingModule(new DrtFareModule());
 		// yyyy there is fareSModule (with S) in config. ?!?!  kai, jul'19
 		
-		Map<String, Double> drtMode2Compensation = new HashMap<>();
-		Set<String> ptModes = new HashSet<>();
+		controler.addOverridingModule(new IntermodalTripFareCompensatorsModule());
 		
-		ptModes.add(TransportMode.pt);
-		
-		DrtFaresConfigGroup drtFaresCfg = ConfigUtils.addOrGetModule(controler.getConfig(), DrtFaresConfigGroup.class);
-		
-		for (DrtFareConfigGroup drtFareCfg: drtFaresCfg.getDrtFareConfigGroups()) {
-			// TODO: make configurable
-			// effectively compensate min fare - fare for 1 km (otherwise to many users?)
-			double compensation = drtFareCfg.getMinFarePerTrip() - drtFareCfg.getDistanceFare_m() * 1000;
-			drtMode2Compensation.put(drtFareCfg.getMode(), compensation); // here min fare, not base fare
-			drtMode2Compensation.put(drtFareCfg.getMode() + "_teleportation", compensation); // drt speed up mode
-		}
-		
-		controler.addOverridingModule(new AbstractModule() {
-			
-			@Override
-			public void install() {
-				addEventHandlerBinding().toInstance(new PtDrtIntermodalTripDrtFareCompensator(drtMode2Compensation, ptModes));		
-			}
-		});
+//		Map<String, Double> drtMode2Compensation = new HashMap<>();
+//		Set<String> ptModes = new HashSet<>();
+//		
+//		ptModes.add(TransportMode.pt);
+//		
+//		DrtFaresConfigGroup drtFaresCfg = ConfigUtils.addOrGetModule(controler.getConfig(), DrtFaresConfigGroup.class);
+//		
+//		for (DrtFareConfigGroup drtFareCfg: drtFaresCfg.getDrtFareConfigGroups()) {
+//			// TODO: make configurable
+//			// effectively compensate min fare - fare for 1 km (otherwise to many users?)
+//			double compensation = drtFareCfg.getMinFarePerTrip() - drtFareCfg.getDistanceFare_m() * 1000;
+//			drtMode2Compensation.put(drtFareCfg.getMode(), compensation); // here min fare, not base fare
+//			drtMode2Compensation.put(drtFareCfg.getMode() + "_teleportation", compensation); // drt speed up mode
+//		}
+//		
+//		controler.addOverridingModule(new AbstractModule() {
+//			
+//			@Override
+//			public void install() {
+//				addEventHandlerBinding().toInstance(new IntermodalTripFareCompensator(drtMode2Compensation, ptModes));		
+//			}
+//		});
 		
 		controler.addOverridingModule(new PtIntermodalRoutingModesModule());
 		
@@ -176,7 +176,7 @@ public final class RunDrtOpenBerlinScenario {
 	}
 	
 	public static Config prepareConfig( String [] args, ConfigGroup... customModules) {
-		ConfigGroup[] customModulesToAdd = new ConfigGroup[]{new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup(), new PtIntermodalRoutingModesConfigGroup() };
+		ConfigGroup[] customModulesToAdd = new ConfigGroup[]{new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup(), new IntermodalTripFareCompensatorsConfigGroup(), new PtIntermodalRoutingModesConfigGroup() };
 		ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
 		
 		int counter = 0;
@@ -192,7 +192,7 @@ public final class RunDrtOpenBerlinScenario {
 
 		Config config = RunBerlinScenario.prepareConfig( args, customModulesAll ) ;
 		
-		// switch off pt vehicle simulation: very slow, because also switches from Raptor to the old pt router
+		// switch off pt vehicle simulation
 //		config.transit().setUsingTransitInMobsim(false);
 
 		DrtConfigs.adjustMultiModeDrtConfig(MultiModeDrtConfigGroup.get(config), config.planCalcScore(), config.plansCalcRoute());
