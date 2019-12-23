@@ -17,11 +17,9 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.run.drt;
+package org.matsim.run.drt.intermodalTripFareCompensator;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.matsim.api.core.v01.Id;
@@ -46,16 +44,23 @@ import com.google.inject.Inject;
  * @author vsp-gleich
  *
  */
-public class PtDrtIntermodalTripDrtFareCompensator implements PersonDepartureEventHandler, ActivityStartEventHandler, AfterMobsimListener {
+public class IntermodalTripFareCompensator implements PersonDepartureEventHandler, ActivityStartEventHandler, AfterMobsimListener {
 	@Inject private EventsManager events;
 	Set<Id<Person>> personsOnPtTrip = new HashSet<>();
-	Map<Id<Person>, String> person2DrtModeOnTrip = new HashMap<>();
-	Map<String, Double> drtMode2Compensation;
+	Set<Id<Person>> personsOnDrtTrip = new HashSet<>();
+	double compensation;
+	Set<String> drtModes;
 	Set<String> ptModes;
 	
-	PtDrtIntermodalTripDrtFareCompensator (Map<String, Double> drtMode2Compensation, Set<String> ptModes) {
-		this.drtMode2Compensation = drtMode2Compensation;
-		this.ptModes = ptModes;
+	public IntermodalTripFareCompensator(IntermodalTripFareCompensatorConfigGroup intermodalFareConfigGroup) {
+		this.compensation = intermodalFareConfigGroup.getCompensationPerTrip();
+		this.drtModes = intermodalFareConfigGroup.getDrtModes();
+		this.ptModes = intermodalFareConfigGroup.getPtModes();
+	}
+	
+	public IntermodalTripFareCompensator(IntermodalTripFareCompensatorConfigGroup intermodalFareConfigGroup, EventsManager events) {
+		this(intermodalFareConfigGroup);
+		this.events = events;
 	}
 
 	@Override
@@ -63,29 +68,29 @@ public class PtDrtIntermodalTripDrtFareCompensator implements PersonDepartureEve
 		if (ptModes.contains(event.getLegMode())) {
 			personsOnPtTrip.add(event.getPersonId());
 			
-			String drtMode = person2DrtModeOnTrip.get(event.getPersonId());
- 			if (drtMode != null) {
+ 			if (personsOnDrtTrip.contains(event.getPersonId())) {
 				// drt before pt case: compensate here when pt leg follows
-				compensate(event.getTime(), event.getPersonId(), drtMode2Compensation.get(drtMode));
+				compensate(event.getTime(), event.getPersonId(), compensation);
+				personsOnDrtTrip.remove(event.getPersonId());
 			}
 		}
-		if (drtMode2Compensation.containsKey(event.getLegMode())) {
+		if (drtModes.contains(event.getLegMode())) {
 			if (personsOnPtTrip.contains(event.getPersonId())) {
 				// drt after pt case: compensate immediately
-				compensate(event.getTime(), event.getPersonId(), drtMode2Compensation.get(event.getLegMode()));
+				compensate(event.getTime(), event.getPersonId(), compensation);
 			} else {
 				// drt before pt case: compensate later _if_ pt leg follows
-				person2DrtModeOnTrip.put(event.getPersonId(), event.getLegMode());
+				personsOnDrtTrip.add(event.getPersonId());
 			}
 		}
 	}
 
 	@Override
 	public void handleEvent(ActivityStartEvent event) {
-		if (!StageActivityTypeIdentifier.isStageActivity(event.getEventType())) {
+		if (!StageActivityTypeIdentifier.isStageActivity(event.getActType())) {
 			// reset after trip has finished
 			personsOnPtTrip.remove(event.getPersonId());
-			person2DrtModeOnTrip.remove(event.getPersonId());
+			personsOnDrtTrip.remove(event.getPersonId());
 		}
 		
 	}
@@ -98,7 +103,7 @@ public class PtDrtIntermodalTripDrtFareCompensator implements PersonDepartureEve
 	public void notifyAfterMobsim(AfterMobsimEvent event) {
 		// reset for stuck agents after mobsim
 		personsOnPtTrip.clear();
-		person2DrtModeOnTrip.clear();
+		personsOnDrtTrip.clear();
 	}
 	
 }

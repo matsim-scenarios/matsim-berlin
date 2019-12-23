@@ -237,6 +237,17 @@
         </parameterset>
 	</module>
 	
+	<module name="intermodalTripFareCompensators" >
+		<parameterset type="intermodalTripFareCompensator" >
+			<!-- Compensation per Trip (compensation = refund paid to the customer = positive value) -->
+			<param name="compensationPerTrip" value="1.0" />
+			<!-- drt modes for which the compensation applies (comma separated list). -->
+			<param name="drtModes" value="drt,drt_teleported" />
+			<!-- pt modes for which the compensation applies (comma separated list). -->
+			<param name="ptModes" value="pt" />
+		</parameterset>
+	</module>
+	
 	<module name="swissRailRaptor" >
 		<!-- KN comments: in principle, walk as alternative to drt will not work, since drt is always faster. Need to give the ASC to the router! However, with the reduced drt network we should be able to see differentiation.) -->
 	
