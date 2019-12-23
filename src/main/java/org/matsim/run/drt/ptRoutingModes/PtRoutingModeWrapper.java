@@ -17,7 +17,7 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.run.drt;
+package org.matsim.run.drt.ptRoutingModes;
 
 import java.util.List;
 
@@ -25,21 +25,30 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.core.router.RoutingModule;
-import org.matsim.core.utils.collections.Tuple;
 import org.matsim.facilities.Facility;
+import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesConfigGroup.PersonAttribute2ValuePair;
+import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesConfigGroup.PtIntermodalRoutingModeParameterSet;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+/**
+ * 
+ * @author vsp-gleich
+ *
+ */
 public class PtRoutingModeWrapper implements RoutingModule {
 	
 //	@Inject @Named(TransportMode.pt) RoutingModule ptRouter; // This does not work, is always null
 	private final RoutingModule ptRouter;
-	private final List<Tuple<String,String>> personAttributes2Values;
+	private final PtIntermodalRoutingModeParameterSet routingModeParams;
+	private final ImmutableList<PersonAttribute2ValuePair> personAttribute2ValuePairs;
 	
 	@Inject
-	PtRoutingModeWrapper (List<Tuple<String,String>> personAttributes2Values, @Named(TransportMode.pt) RoutingModule ptRouter) {
-		this.personAttributes2Values = personAttributes2Values;
+	PtRoutingModeWrapper (PtIntermodalRoutingModeParameterSet routingModeParams, @Named(TransportMode.pt) RoutingModule ptRouter) {
+		this.routingModeParams = routingModeParams;
+		this.personAttribute2ValuePairs = ImmutableList.copyOf(routingModeParams.getPersonAttribute2ValuePairs());
 		this.ptRouter = ptRouter;
 		System.err.println(ptRouter.toString());
 	}
@@ -47,14 +56,15 @@ public class PtRoutingModeWrapper implements RoutingModule {
 	@Override
 	public List<? extends PlanElement> calcRoute(Facility fromFacility, Facility toFacility, double departureTime,
 			Person person) {
-		for (Tuple<String,String> attribute2value: personAttributes2Values) {
-			person.getAttributes().putAttribute(attribute2value.getFirst(), attribute2value.getSecond());
+		for (PersonAttribute2ValuePair personAttribute2ValuePair: personAttribute2ValuePairs) {
+			person.getAttributes().putAttribute(personAttribute2ValuePair.getPersonFilterAttribute(), 
+					personAttribute2ValuePair.getPersonFilterValue());
 		}
 
 		List<? extends PlanElement> route = ptRouter.calcRoute(fromFacility, toFacility, departureTime, person);
 		
-		for (Tuple<String,String> attribute2value: personAttributes2Values) {
-			person.getAttributes().removeAttribute(attribute2value.getFirst());
+		for (PersonAttribute2ValuePair personAttribute2ValuePair: personAttribute2ValuePairs) {
+			person.getAttributes().removeAttribute(personAttribute2ValuePair.getPersonFilterAttribute());
 		}
 		
 		return route;
