@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Random;
 
 import org.matsim.api.core.v01.Id;
-import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
@@ -39,7 +38,6 @@ import org.matsim.core.router.TripStructureUtils.Trip;
 import org.matsim.core.utils.misc.Time;
 import org.matsim.facilities.ActivityFacilities;
 import org.matsim.facilities.FacilitiesUtils;
-import org.matsim.run.drt.RunDrtOpenBerlinScenario;
 import org.matsim.vehicles.Vehicle;
 
 /**
@@ -87,34 +85,13 @@ public class RandomSingleTripPlanRouter implements PlanAlgorithm, PersonAlgorith
 			int rndIdx = this.rnd.nextInt(trips.size());
 			Trip oldTrip = trips.get(rndIdx);
 			
-			// emulate a routing mode ROUTING_MODE_PT_WITH_DRT_ENABLED_FOR_ACCESS_EGRESS = "pt_w_drt" using person attributes
-			String originalRoutingMode = TripStructureUtils.identifyMainMode( oldTrip.getTripElements() );
-			String routingMode;
-			if (originalRoutingMode.equals(RunDrtOpenBerlinScenario.ROUTING_MODE_PT_WITH_DRT_ENABLED_FOR_ACCESS_EGRESS)) {
-				plan.getPerson().getAttributes().putAttribute(
-						RunDrtOpenBerlinScenario.DRT_ACCESS_EGRESS_TO_PT_PERSON_FILTER_ATTRIBUTE, 
-						RunDrtOpenBerlinScenario.DRT_ACCESS_EGRESS_TO_PT_PERSON_FILTER_VALUE);
-				routingMode = TransportMode.pt;
-			} else {
-				routingMode = originalRoutingMode;
-			}
-			
 			final List<? extends PlanElement> newTrip =
 					tripRouter.calcRoute(
-							routingMode,
+							TripStructureUtils.identifyMainMode( oldTrip.getTripElements() ),
 						  FacilitiesUtils.toFacility( oldTrip.getOriginActivity(), facilities ),
 						  FacilitiesUtils.toFacility( oldTrip.getDestinationActivity(), facilities ),
 							calcEndOfActivity( oldTrip.getOriginActivity() , plan, tripRouter.getConfig() ),
 							plan.getPerson() );
-			
-			if (originalRoutingMode.equals(RunDrtOpenBerlinScenario.ROUTING_MODE_PT_WITH_DRT_ENABLED_FOR_ACCESS_EGRESS)) {
-				plan.getPerson().getAttributes().removeAttribute(RunDrtOpenBerlinScenario.DRT_ACCESS_EGRESS_TO_PT_PERSON_FILTER_ATTRIBUTE);
-				for (PlanElement pe: newTrip) {
-					if (pe instanceof Leg) {
-						TripStructureUtils.setRoutingMode((Leg) pe, originalRoutingMode);
-					}
-				}
-			}
 			
 			putVehicleFromOldTripIntoNewTripIfMeaningful(oldTrip, newTrip);
 			TripRouter.insertTrip(
