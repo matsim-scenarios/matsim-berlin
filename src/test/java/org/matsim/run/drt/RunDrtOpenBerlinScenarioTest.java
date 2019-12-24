@@ -134,7 +134,8 @@ public class RunDrtOpenBerlinScenarioTest {
 			
 			controler.run() ;	
 			
-			Plan intermodalPtAgentPlan = scenario.getPopulation().getPersons().get(Id.createPersonId("285614901pt_w_drt")).getSelectedPlan();
+			Id<Person> intermodalPtAgentId = Id.createPersonId("285614901pt_w_drt");
+			Plan intermodalPtAgentPlan = scenario.getPopulation().getPersons().get(intermodalPtAgentId).getSelectedPlan();
 			
 			int intermodalTripCounter = 0;
 			int drtLegsInIntermodalTripsCounter = 0;
@@ -158,7 +159,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			Assert.assertTrue("pt agent has no intermodal route (=drt for access or egress to pt)", intermodalTripCounter > 0);
 			
 			// check drt-pt-intermodal trip fare compensator
-			List<PersonMoneyEvent> moneyEventsIntermodalAgent = fareChecker.getEventsForPerson(Id.createPersonId("285614901pt"));
+			List<PersonMoneyEvent> moneyEventsIntermodalAgent = fareChecker.getEventsForPerson(intermodalPtAgentId);
 			double expectedCompensationAmountPerTrip = 1.0;// TODO: get from config instead?
 			int compensatorMoneyEventsCounter = 0;
 			for(PersonMoneyEvent event: moneyEventsIntermodalAgent) {
