@@ -148,7 +148,7 @@ public class RunDrtOpenBerlinScenarioTest {
 					if (!mode2NumberOfLegs.containsKey(leg.getMode())) {
 						mode2NumberOfLegs.put(leg.getMode(), 1);
 					} else {
-						mode2NumberOfLegs.put(leg.getMode(), mode2NumberOfLegs.get(leg.getMode() + 1));
+						mode2NumberOfLegs.put(leg.getMode(), mode2NumberOfLegs.get(leg.getMode()) + 1);
 					}
 				}
 				if (mode2NumberOfLegs.containsKey(TransportMode.drt) && mode2NumberOfLegs.containsKey(TransportMode.pt)) {
