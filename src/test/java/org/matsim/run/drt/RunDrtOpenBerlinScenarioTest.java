@@ -168,7 +168,7 @@ public class RunDrtOpenBerlinScenarioTest {
 				}
 			}
 			
-			Assert.assertEquals("Number of intermodal trips and of intermodal trip fare compensator money events should be equal.", intermodalTripCounter, compensatorMoneyEventsCounter);
+			Assert.assertEquals("Number of intermodal trips and of intermodal trip fare compensator money events should be equal.", drtLegsInIntermodalTripsCounter, compensatorMoneyEventsCounter);
 			
 		} catch ( Exception ee ) {
 			throw new RuntimeException(ee) ;
