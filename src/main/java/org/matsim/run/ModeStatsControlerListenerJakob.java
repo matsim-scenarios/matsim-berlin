@@ -56,7 +56,7 @@ import java.util.Map.Entry;
  *
  * @author mrieser
  */
-public class ModeStatsControlerListener implements StartupListener, IterationEndsListener,
+public class ModeStatsControlerListenerJakob implements StartupListener, IterationEndsListener,
         ShutdownListener {
 
 	public static final String FILENAME_MODESTATS = "modestats";
@@ -84,8 +84,8 @@ public class ModeStatsControlerListener implements StartupListener, IterationEnd
 	private Map<String, Double> cumulativeModeCnt = new TreeMap<>() ;
 
 	@Inject
-	ModeStatsControlerListener(ControlerConfigGroup controlerConfigGroup, Population population1, OutputDirectoryHierarchy controlerIO,
-							   PlanCalcScoreConfigGroup scoreConfig, AnalysisMainModeIdentifier mainModeIdentifier) {
+    ModeStatsControlerListenerJakob(ControlerConfigGroup controlerConfigGroup, Population population1, OutputDirectoryHierarchy controlerIO,
+                                    PlanCalcScoreConfigGroup scoreConfig, AnalysisMainModeIdentifier mainModeIdentifier) {
 
 		this.controlerConfigGroup = controlerConfigGroup;
 		this.population = population1;
