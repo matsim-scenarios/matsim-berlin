@@ -105,8 +105,6 @@ public final class RunBerlinScenario {
 				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifier.class);
 				
 				addPlanStrategyBinding("RandomSingleTripReRoute").toProvider(RandomSingleTripReRoute.class);
-				addPlanStrategyBinding("SubtourModeChoice_RepairReRoute").toProvider(SubtourModeChoiceRepairReRoute.class);
-
 			}
 		} );
 
