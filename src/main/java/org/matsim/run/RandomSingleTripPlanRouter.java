@@ -23,19 +23,17 @@ import java.util.List;
 import java.util.Random;
 
 import org.matsim.api.core.v01.Id;
-import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.PlanElement;
-import org.matsim.core.config.Config;
 import org.matsim.core.population.algorithms.PersonAlgorithm;
 import org.matsim.core.population.algorithms.PlanAlgorithm;
 import org.matsim.core.population.routes.NetworkRoute;
+import org.matsim.core.router.PlanRouter;
 import org.matsim.core.router.TripRouter;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
-import org.matsim.core.utils.misc.Time;
 import org.matsim.facilities.ActivityFacilities;
 import org.matsim.facilities.FacilitiesUtils;
 import org.matsim.vehicles.Vehicle;
@@ -84,19 +82,15 @@ public class RandomSingleTripPlanRouter implements PlanAlgorithm, PersonAlgorith
 		if (trips.size() > 0) {
 			int rndIdx = this.rnd.nextInt(trips.size());
 			Trip oldTrip = trips.get(rndIdx);
-			
-			plan.getPerson().getAttributes().putAttribute("canUseDrt", "true");
-			
+						
 			final List<? extends PlanElement> newTrip =
 					tripRouter.calcRoute(
 							TripStructureUtils.identifyMainMode( oldTrip.getTripElements() ),
-						  FacilitiesUtils.toFacility( oldTrip.getOriginActivity(), facilities ),
-						  FacilitiesUtils.toFacility( oldTrip.getDestinationActivity(), facilities ),
-							calcEndOfActivity( oldTrip.getOriginActivity() , plan, tripRouter.getConfig() ),
+							FacilitiesUtils.toFacility( oldTrip.getOriginActivity(), facilities ),
+							FacilitiesUtils.toFacility( oldTrip.getDestinationActivity(), facilities ),
+							PlanRouter.calcEndOfActivity( oldTrip.getOriginActivity() , plan, tripRouter.getConfig() ),
 							plan.getPerson() );
-			
-			plan.getPerson().getAttributes().removeAttribute("canUseDrt");
-			
+						
 			putVehicleFromOldTripIntoNewTripIfMeaningful(oldTrip, newTrip);
 			TripRouter.insertTrip(
 					plan, 
@@ -144,30 +138,6 @@ public class RandomSingleTripPlanRouter implements PlanAlgorithm, PersonAlgorith
 		for (Plan plan : person.getPlans()) {
 			run( plan );
 		}
-	}
-
-	public static double calcEndOfActivity(
-			final Activity activity,
-			final Plan plan,
-			final Config config ) {
-		// yyyy similar method in PopulationUtils.  TripRouter.calcEndOfPlanElement in fact uses it.  However, this seems doubly inefficient; calling the
-		// method in PopulationUtils directly would probably be faster.  kai, jul'19
-
-		if (!Time.isUndefinedTime(activity.getEndTime())) return activity.getEndTime();
-
-		// no sufficient information in the activity...
-		// do it the long way.
-		// XXX This is inefficient! Using a cache for each plan may be an option
-		// (knowing that plan elements are iterated in proper sequence,
-		// no need to re-examine the parts of the plan already known)
-		double now = 0;
-
-		for (PlanElement pe : plan.getPlanElements()) {
-			now = TripRouter.calcEndOfPlanElement( now, pe, config );
-			if (pe == activity) return now;
-		}
-
-		throw new RuntimeException( "activity "+activity+" not found in "+plan.getPlanElements() );
 	}
 
 }
