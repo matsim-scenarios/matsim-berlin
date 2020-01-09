@@ -106,7 +106,8 @@ public final class RunBerlinScenario {
 				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifier.class);
 				
 				addPlanStrategyBinding("RandomSingleTripReRoute").toProvider(RandomSingleTripReRoute.class);
-				
+				addPlanStrategyBinding("ChangeSingleTripModeAndSingleTripReRoute").toProvider(ChangeSingleTripModeAndSingleTripReRoute.class);
+
 				bind(RaptorIntermodalAccessEgress.class).to(BerlinRaptorIntermodalAccessEgress.class);
 			}
 		} );
