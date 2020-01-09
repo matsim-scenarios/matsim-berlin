@@ -19,14 +19,19 @@
  * *********************************************************************** */
 package org.matsim.run;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.PlanElement;
+import org.matsim.core.config.groups.ChangeModeConfigGroup;
+import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.algorithms.PersonAlgorithm;
 import org.matsim.core.population.algorithms.PlanAlgorithm;
 import org.matsim.core.population.routes.NetworkRoute;
@@ -39,17 +44,22 @@ import org.matsim.facilities.FacilitiesUtils;
 import org.matsim.vehicles.Vehicle;
 
 /**
- * {@link PlanAlgorithm} responsible for routing a single trip which is randomly chosen.
+ * {@link PlanAlgorithm} responsible for (1) changing the trip mode and (2) routing a randomly chosen single trip.
  * Activity times are not updated, even if the previous trip arrival time
  * is after the activity end time.
  *
- * @author thibautd, ikaddoura
+ * @author ikaddoura
  */
 public class ChangeSingleTripModeAndSingleTripReRoutePlanRouter implements PlanAlgorithm, PersonAlgorithm {
 	private final Random rnd;
 	private final TripRouter tripRouter;
 	private final ActivityFacilities facilities;
-
+	
+	private String[] possibleModes;
+	private boolean ignoreCarAvailability;
+	private boolean allowSwitchFromListedModesOnly;
+	private final List<String> possibleFromModes = new ArrayList<>();
+	
 	/**
 	 * Initialises an instance.
 	 * @param tripRouter the {@link TripRouter} to use to route individual trips
@@ -60,33 +70,55 @@ public class ChangeSingleTripModeAndSingleTripReRoutePlanRouter implements PlanA
 	public ChangeSingleTripModeAndSingleTripReRoutePlanRouter(
 			final TripRouter tripRouter,
 			final ActivityFacilities facilities,
-			final Random rnd) {
+			final Random rnd,
+			final ChangeModeConfigGroup changeModeConfigGroup) {
 		this.tripRouter = tripRouter;
 		this.facilities = facilities;
-		this.rnd = rnd;		
-	}
-
-	/**
-	 * Short for initialising without facilities.
-	 */
-	public ChangeSingleTripModeAndSingleTripReRoutePlanRouter(
-			final TripRouter routingHandler,
-			final Random rnd) {
-		this( routingHandler, null , rnd);
+		this.rnd = rnd;
+		this.possibleModes = changeModeConfigGroup.getModes();
+		this.ignoreCarAvailability = changeModeConfigGroup.getIgnoreCarAvailability();
+		
+		if (changeModeConfigGroup.getBehavior().equals(ChangeModeConfigGroup.Behavior.fromSpecifiedModesToSpecifiedModes)) {
+			this.allowSwitchFromListedModesOnly = true;
+		} else this.allowSwitchFromListedModesOnly=false;
+		
+		if (allowSwitchFromListedModesOnly){
+			this.possibleFromModes.addAll(Arrays.asList(possibleModes));
+		}
+		
 	}
 
 	@Override
 	public void run(final Plan plan) {
+		boolean forbidCar = false;
+		if (!this.ignoreCarAvailability) {
+			String carAvail = PersonUtils.getCarAvail(plan.getPerson());
+			if ("never".equals(carAvail)) {
+				forbidCar = true;
+			}
+		}
+		
 		final List<Trip> trips = TripStructureUtils.getTrips( plan );
 
 		if (trips.size() > 0) {
 			int rndIdx = this.rnd.nextInt(trips.size());
 			Trip oldTrip = trips.get(rndIdx);
-						
+			
+			String oldTripMainMode = TripStructureUtils.identifyMainMode( oldTrip.getTripElements() );
+			String newTripMainMode = null;
+			if (allowSwitchFromListedModesOnly) {
+				if (this.possibleFromModes.contains(oldTripMainMode)) {
+					// choose a new trip mode
+					newTripMainMode = chooseModeOtherThan(oldTripMainMode, forbidCar);
+				} else {
+					// keep the old trip mode
+					newTripMainMode = oldTripMainMode;
+				}
+			}
+			
 			final List<? extends PlanElement> newTrip =
-					// TODO
 					tripRouter.calcRoute(
-							TripStructureUtils.identifyMainMode( oldTrip.getTripElements() ),
+							newTripMainMode,
 							FacilitiesUtils.toFacility( oldTrip.getOriginActivity(), facilities ),
 							FacilitiesUtils.toFacility( oldTrip.getDestinationActivity(), facilities ),
 							PlanRouter.calcEndOfActivity( oldTrip.getOriginActivity() , plan, tripRouter.getConfig() ),
@@ -99,6 +131,32 @@ public class ChangeSingleTripModeAndSingleTripReRoutePlanRouter implements PlanA
 					newTrip,
 					oldTrip.getDestinationActivity());
 		}
+	}
+	
+	private String chooseModeOtherThan(final String currentMode, final boolean forbidCar) {
+		String newMode;
+		while (true) {
+			int newModeIdx = this.rnd.nextInt(this.possibleModes.length - 1);
+			for (int i = 0; i <= newModeIdx; i++) {
+				if (this.possibleModes[i].equals(currentMode)) {
+					/* if the new Mode is after the currentMode in the list of possible
+					 * modes, go one further, as we have to ignore the current mode in
+					 * the list of possible modes. */
+					newModeIdx++;
+					break;
+				}
+			}
+			newMode = this.possibleModes[newModeIdx];
+			if (!(forbidCar && TransportMode.car.equals(newMode))) {
+				break;
+			} else {
+				if (this.possibleModes.length == 2) {
+					newMode = currentMode; // there is no other mode available
+					break;
+				}
+			}
+		}
+		return newMode;
 	}
 
 	/**
