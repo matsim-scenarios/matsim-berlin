@@ -185,6 +185,11 @@ public class RunDrtOpenBerlinScenarioTest {
 			}
 			person2moneyEvents.get(event.getPersonId()).add(event);
 		}
+		
+		@Override
+		public void reset(int iteration) {
+			person2moneyEvents.clear();
+		}
 
 		List<PersonMoneyEvent> getEventsForPerson(Id<Person> personId) {
 			return person2moneyEvents.get(personId);
