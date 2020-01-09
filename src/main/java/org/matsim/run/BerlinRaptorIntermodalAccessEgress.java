@@ -8,6 +8,7 @@ import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.core.config.Config;
+import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.utils.misc.Time;
 
 import com.google.inject.Inject;
@@ -16,6 +17,7 @@ import ch.sbb.matsim.routing.pt.raptor.RaptorIntermodalAccessEgress;
 import ch.sbb.matsim.routing.pt.raptor.RaptorParameters;
 
 import java.util.List;
+import java.util.Random;
 
 /**
  * A default implementation of {@link RaptorIntermodalAccessEgress} returning a new RIntermodalAccessEgress,
@@ -26,6 +28,8 @@ import java.util.List;
 public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAccessEgress {
 	
 	@Inject Config config;
+	
+	Random random = MatsimRandom.getLocalInstance();
 
     @Override
     public RIntermodalAccessEgress calcIntermodalAccessEgress(final List<? extends PlanElement> legs, RaptorParameters params, Person person) {
@@ -46,6 +50,9 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                 	utility += distance * config.planCalcScore().getModes().get(mode).getMonetaryDistanceRate() * config.planCalcScore().getMarginalUtilityOfMoney();
                 }
                 utility += config.planCalcScore().getModes().get(mode).getConstant();
+                if (mode.contains("drt")) {
+                	utility += (random.nextDouble() - 0.5) * 20.;
+                }
             }
         }
         return new RIntermodalAccessEgress(legs, -utility, tTime);
