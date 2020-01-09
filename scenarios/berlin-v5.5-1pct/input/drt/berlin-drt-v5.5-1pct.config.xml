@@ -44,11 +44,6 @@
 			<param name="mode" value="walk" />
 			<param name="teleportedModeSpeed" value="1.0555556" />
 		</parameterset>
-		<parameterset type="teleportedModeParameters" >
-			<param name="beelineDistanceFactor" value="1.3" />
-			<param name="mode" value="non_network_walk" />
-			<param name="teleportedModeSpeed" value="0.8333333333333333" />
-		</parameterset>
 	</module>
 	<module name="qsim" >
 		<param name="simStarttimeInterpretation" value="onlyUseStarttime" />
