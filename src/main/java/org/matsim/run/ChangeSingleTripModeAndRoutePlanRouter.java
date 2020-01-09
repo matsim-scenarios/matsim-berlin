@@ -50,7 +50,7 @@ import org.matsim.vehicles.Vehicle;
  *
  * @author ikaddoura
  */
-public class ChangeSingleTripModeAndSingleTripReRoutePlanRouter implements PlanAlgorithm, PersonAlgorithm {
+public class ChangeSingleTripModeAndRoutePlanRouter implements PlanAlgorithm, PersonAlgorithm {
 	private final Random rnd;
 	private final TripRouter tripRouter;
 	private final ActivityFacilities facilities;
@@ -67,7 +67,7 @@ public class ChangeSingleTripModeAndSingleTripReRoutePlanRouter implements PlanA
 	 * May be <tt>null</tt>: in this case, the router will be given facilities wrapping the
 	 * origin and destination activity.
 	 */
-	public ChangeSingleTripModeAndSingleTripReRoutePlanRouter(
+	public ChangeSingleTripModeAndRoutePlanRouter(
 			final TripRouter tripRouter,
 			final ActivityFacilities facilities,
 			final Random rnd,

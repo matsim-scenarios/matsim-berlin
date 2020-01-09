@@ -75,7 +75,7 @@
 			<param name="weight" value="0.05" />
 		</parameterset>
 		<parameterset type="strategysettings" >
-			<param name="strategyName" value="SubtourModeChoice_RepairReRoute" />
+			<param name="strategyName" value="ChangeSingleTripModeAndRoute" />
 			<param name="subpopulation" value="person" />
 			<param name="weight" value="0.05" />
 		</parameterset>
