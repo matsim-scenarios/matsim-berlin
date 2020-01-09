@@ -250,10 +250,8 @@
 	
 	<module name="swissRailRaptor" >
 		<!-- KN comments: in principle, walk as alternative to drt will not work, since drt is always faster. Need to give the ASC to the router! However, with the reduced drt network we should be able to see differentiation.) -->
-	
-	
 		<!-- Possible values: CalcLeastCostModePerStop, RandomSelectOneModePerRoutingRequestAndDirection -->
-		<param name="intermodalAccessEgressModeSelection" value="RandomSelectOneModePerRoutingRequestAndDirection" />
+		<param name="intermodalAccessEgressModeSelection" value="CalcLeastCostModePerStop" />
 		<param name="useIntermodalAccessEgress" value="true" />
 		<parameterset type="intermodalAccessEgress" >
 			<!-- Radius from the origin / destination coord in which transit stops are searched. Only if less than 2 transit stops are found the search radius is increased step-wise until the maximum search radius set in param radius is reached. -->
@@ -303,8 +301,6 @@
 			<!-- take care that this still corresponds to the attribute used for tagging these TransitStops in RunDrtOpenBerlinScenario -->
 			<param name="stopFilterAttribute" value="drtStopFilter" />
 			<param name="stopFilterValue" value="station_S/U/RE/RB_drtServiceArea" />
-			<param name="personFilterAttribute" value="canUseDrt" />
-			<param name="personFilterValue" value="true" />
 		</parameterset>
 	</module>
 </config>
