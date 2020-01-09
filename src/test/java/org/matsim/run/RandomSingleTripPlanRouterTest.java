@@ -68,6 +68,7 @@ public class RandomSingleTripPlanRouterTest {
                 addTravelDisutilityFactoryBinding("car").toInstance(new OnlyTimeDependentTravelDisutilityFactory());
             }
         });
+        TripRouter tripRouter = injector.getInstance(TripRouter.class);
         
         Plan plan = scenario.getPopulation().getPersons().get(Id.createPersonId(1)).getSelectedPlan();
         int carTripsBefore = 0;
@@ -80,9 +81,7 @@ public class RandomSingleTripPlanRouterTest {
         		}
         	}
         }
-        
-        TripRouter tripRouter = injector.getInstance(TripRouter.class);
-        
+                
         RandomSingleTripPlanRouter singleTripPlanRouter = new RandomSingleTripPlanRouter(tripRouter, MatsimRandom.getLocalInstance());     
         singleTripPlanRouter.run(plan);
         
