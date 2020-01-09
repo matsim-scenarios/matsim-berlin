@@ -57,11 +57,6 @@ public class RunBerlinScenarioSingleTripStrategiesTest {
 			
 			controler.run() ;
 			
-//			Assert.assertEquals("Change in score (ride + walk agent)", 128.2797261151769, scenario.getPopulation().getPersons().get(Id.createPersonId("100087501")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
-//			Assert.assertEquals("Change in score (bicycle agent)", 129.80394930541985, scenario.getPopulation().getPersons().get(Id.createPersonId("100200201")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
-//			Assert.assertEquals("Change in score (ride agent)", 131.71443152316658, scenario.getPopulation().getPersons().get(Id.createPersonId("10099501")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
-//			Assert.assertEquals("Change in score (pt agent)", 135.48909078721348, scenario.getPopulation().getPersons().get(Id.createPersonId("100024301")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
-			
 			log.info("") ;
 			
 			
