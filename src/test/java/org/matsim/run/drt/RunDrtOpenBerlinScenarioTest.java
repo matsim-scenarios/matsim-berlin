@@ -1,9 +1,9 @@
 package org.matsim.run.drt;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -13,12 +13,16 @@ import org.junit.runners.MethodSorters;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.events.PersonMoneyEvent;
+import org.matsim.api.core.v01.events.handler.PersonMoneyEventHandler;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.groups.StrategyConfigGroup.StrategySettings;
+import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.gbl.MatsimRandom;
@@ -82,8 +86,6 @@ public class RunDrtOpenBerlinScenarioTest {
 	
 	// During debug some exceptions only occured at the replanning stage of the 3rd
 	// iteration, so we need at least 3 iterations.
-	// Have at least 0.1 pct of the population to have as many strange corner cases
-	// as possible (because those tend to cause exceptions otherwise not found).
 	@Test
 	public final void testAFewAgentsOnly() {
 		try {
@@ -91,6 +93,15 @@ public class RunDrtOpenBerlinScenarioTest {
 			
 			Config config = RunDrtOpenBerlinScenario.prepareConfig( args ) ;
 			config.controler().setLastIteration(2);
+			config.strategy().clearStrategySettings();
+			
+			// Use RandomSingleTripReRoute, because in this branch only in RandomSingleTripReRoute drt is allowed as access/egress mode to pt
+			StrategySettings stratSets = new StrategySettings();
+			stratSets.setStrategyName("RandomSingleTripReRoute");
+			stratSets.setWeight(1.0);
+			stratSets.setSubpopulation("person");
+			config.strategy().addStrategySettings(stratSets);
+			
 			config.strategy().setFractionOfIterationsToDisableInnovation(1);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
@@ -102,7 +113,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			
 			config.controler().setWritePlansInterval(1);
 			
-			// make pt more attractive to obtain less transit_walks due to drt triangle walk being more attractive 
+			// make pt more attractive to obtain less direct walks (routing mode pt) due to drt triangle walk being more attractive 
 			config.planCalcScore().setMarginalUtlOfWaitingPt_utils_hr(5);
 			
 			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
@@ -112,27 +123,71 @@ public class RunDrtOpenBerlinScenarioTest {
 			
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 			Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
+			
+			FareEventChecker fareChecker = new FareEventChecker();
+			controler.addOverridingModule(new AbstractModule() {
+				@Override
+				public void install() {
+					addEventHandlerBinding().toInstance(fareChecker);
+				}
+			});
+			
 			controler.run() ;	
 			
 			Plan intermodalPtAgentPlan = scenario.getPopulation().getPersons().get(Id.createPersonId("285614901pt")).getSelectedPlan();
 			
-			boolean foundIntermodalTrip = false;
+			int intermodalTripCounter = 0;
+			int drtLegsInIntermodalTripsCounter = 0;
 			
 			List<Trip> trips = TripStructureUtils.getTrips(intermodalPtAgentPlan.getPlanElements());
 			
 			for (Trip trip: trips) {
-				Set<String> modes = new HashSet<>();
+				Map<String, Integer> mode2NumberOfLegs = new HashMap<>();
 				for (Leg leg: trip.getLegsOnly()) {
-					modes.add(leg.getMode());
+					if (!mode2NumberOfLegs.containsKey(leg.getMode())) {
+						mode2NumberOfLegs.put(leg.getMode(), 1);
+					} else {
+						mode2NumberOfLegs.put(leg.getMode(), mode2NumberOfLegs.get(leg.getMode() + 1));
+					}
 				}
-				if (modes.contains(TransportMode.drt) && modes.contains(TransportMode.pt)) {
-					foundIntermodalTrip = true;
+				if (mode2NumberOfLegs.containsKey(TransportMode.drt) && mode2NumberOfLegs.containsKey(TransportMode.pt)) {
+					intermodalTripCounter++;
+					drtLegsInIntermodalTripsCounter = drtLegsInIntermodalTripsCounter + mode2NumberOfLegs.get(TransportMode.drt);
 				}
 			}
-			Assert.assertTrue(foundIntermodalTrip);
+			Assert.assertTrue("pt agent has no intermodal route (=drt for access or egress to pt)", intermodalTripCounter > 0);
+			
+			// check drt-pt-intermodal trip fare compensator
+			List<PersonMoneyEvent> moneyEventsIntermodalAgent = fareChecker.getEventsForPerson(Id.createPersonId("285614901pt"));
+			double expectedCompensationAmountPerTrip = 1.0;// TODO: get from config instead?
+			int compensatorMoneyEventsCounter = 0;
+			for(PersonMoneyEvent event: moneyEventsIntermodalAgent) {
+				if (Math.abs(event.getAmount() - expectedCompensationAmountPerTrip) < MatsimTestUtils.EPSILON) {
+					compensatorMoneyEventsCounter++;
+				}
+			}
+			
+			Assert.assertEquals("Number of intermodal trips and of intermodal trip fare compensator money events should be equal.", drtLegsInIntermodalTripsCounter, compensatorMoneyEventsCounter);
 			
 		} catch ( Exception ee ) {
 			throw new RuntimeException(ee) ;
+		}
+	}
+
+
+	class FareEventChecker implements PersonMoneyEventHandler {
+		private Map<Id<Person>, List<PersonMoneyEvent>> person2moneyEvents = new HashMap<>();
+
+		@Override
+		public void handleEvent(PersonMoneyEvent event) {
+			if (!person2moneyEvents.containsKey(event.getPersonId())) {
+				person2moneyEvents.put(event.getPersonId(), new ArrayList<>());
+			}
+			person2moneyEvents.get(event.getPersonId()).add(event);
+		}
+
+		List<PersonMoneyEvent> getEventsForPerson(Id<Person> personId) {
+			return person2moneyEvents.get(personId);
 		}
 	}
 }
