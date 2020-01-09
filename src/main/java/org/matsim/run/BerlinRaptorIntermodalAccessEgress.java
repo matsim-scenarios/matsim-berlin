@@ -40,7 +40,7 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                     // overrides individual parameters per person
                     utility += travelTime * config.planCalcScore().getModes().get(mode).getMarginalUtilityOfTraveling() / 3600;
                 }
-                utility = config.planCalcScore().getModes().get(mode).getConstant();
+                utility += config.planCalcScore().getModes().get(mode).getConstant();
             }
         }
         return new RIntermodalAccessEgress(legs, -utility, tTime);
