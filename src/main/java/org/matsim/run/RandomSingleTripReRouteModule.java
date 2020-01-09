@@ -22,7 +22,6 @@ package org.matsim.run;
 
 import javax.inject.Provider;
 
-import org.matsim.api.core.v01.Scenario;
 import org.matsim.core.config.groups.GlobalConfigGroup;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.gbl.MatsimRandom;
@@ -47,10 +46,6 @@ public class RandomSingleTripReRouteModule extends AbstractMultithreadedModule {
 		super(globalConfigGroup);
 		this.facilities = facilities;
 		this.tripRouterProvider = tripRouterProvider;
-	}
-
-	public RandomSingleTripReRouteModule(Scenario scenario, Provider<TripRouter> tripRouterProvider) {
-		this(scenario.getActivityFacilities(), tripRouterProvider, scenario.getConfig().global());
 	}
 
 	@Override
