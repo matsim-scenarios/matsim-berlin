@@ -35,10 +35,15 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
             if (pe instanceof Leg) {
                 String mode = ((Leg) pe).getMode();
                 double travelTime = ((Leg) pe).getTravelTime();
+                // overrides individual parameters per person
                 if (Time.getUndefinedTime() != travelTime) {
                     tTime += travelTime;
-                    // overrides individual parameters per person
-                    utility += travelTime * config.planCalcScore().getModes().get(mode).getMarginalUtilityOfTraveling() / 3600;
+                    utility += travelTime * (config.planCalcScore().getModes().get(mode).getMarginalUtilityOfTraveling() + (-1) * config.planCalcScore().getPerforming_utils_hr()) / 3600;
+                }
+                Double distance = ((Leg) pe).getRoute().getDistance();
+                if (distance != null && distance != 0.) {
+                	utility += distance * config.planCalcScore().getModes().get(mode).getMarginalUtilityOfDistance();
+                	utility += distance * config.planCalcScore().getModes().get(mode).getMonetaryDistanceRate() * config.planCalcScore().getMarginalUtilityOfMoney();
                 }
                 utility += config.planCalcScore().getModes().get(mode).getConstant();
             }
