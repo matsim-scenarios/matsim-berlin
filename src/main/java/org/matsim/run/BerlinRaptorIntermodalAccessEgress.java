@@ -83,7 +83,8 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                 	}
                 }
                 
-                // apply randmization to drtModes
+                // apply randmization to drtModes;
+                // TODO: use mode-specific parameters in the berlin experimental config group instead of hard-coded 'drt'
                 if (mode.contains("drt")) {
                 	double drtIntermodalAccessEgressRandomization = berlinCfg.getDrtIntermodalAccessEgressRandomization();
                 	utility += (random.nextDouble() - 0.5) * drtIntermodalAccessEgressRandomization;
