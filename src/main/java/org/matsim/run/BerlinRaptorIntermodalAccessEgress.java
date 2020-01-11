@@ -4,10 +4,16 @@
 
 package org.matsim.run;
 
+import java.util.List;
+import java.util.Random;
+
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.PlanElement;
+import org.matsim.contrib.av.robotaxi.fares.drt.DrtFareConfigGroup;
+import org.matsim.contrib.av.robotaxi.fares.drt.DrtFaresConfigGroup;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.utils.misc.Time;
 
@@ -15,9 +21,6 @@ import com.google.inject.Inject;
 
 import ch.sbb.matsim.routing.pt.raptor.RaptorIntermodalAccessEgress;
 import ch.sbb.matsim.routing.pt.raptor.RaptorParameters;
-
-import java.util.List;
-import java.util.Random;
 
 /**
  * A default implementation of {@link RaptorIntermodalAccessEgress} returning a new RIntermodalAccessEgress,
@@ -29,9 +32,18 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
 	
 	@Inject Config config;
 	
+	BerlinExperimentalConfigGroup berlinCfg;
+	DrtFaresConfigGroup drtFaresConfigGroup;
+	
 	Random random = MatsimRandom.getLocalInstance();
+	
+	@Inject
+    BerlinRaptorIntermodalAccessEgress(Config config) {
+		this.berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
+		this.drtFaresConfigGroup = ConfigUtils.addOrGetModule(config, DrtFaresConfigGroup.class);
+	}
 
-    @Override
+	@Override
     public RIntermodalAccessEgress calcIntermodalAccessEgress(final List<? extends PlanElement> legs, RaptorParameters params, Person person) {
         double utility = 0.0;
         double tTime = 0.0;
@@ -39,7 +51,8 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
             if (pe instanceof Leg) {
                 String mode = ((Leg) pe).getMode();
                 double travelTime = ((Leg) pe).getTravelTime();
-                // overrides individual parameters per person
+                
+                // overrides individual parameters per person; use default scoring parameters
                 if (Time.getUndefinedTime() != travelTime) {
                     tTime += travelTime;
                     utility += travelTime * (config.planCalcScore().getModes().get(mode).getMarginalUtilityOfTraveling() + (-1) * config.planCalcScore().getPerforming_utils_hr()) / 3600;
@@ -50,9 +63,32 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                 	utility += distance * config.planCalcScore().getModes().get(mode).getMonetaryDistanceRate() * config.planCalcScore().getMarginalUtilityOfMoney();
                 }
                 utility += config.planCalcScore().getModes().get(mode).getConstant();
-                if (mode.contains("drt")) {
-                	utility += (random.nextDouble() - 0.5) * 20.;
+                
+                // account for a drt fares
+                for (DrtFareConfigGroup drtFareConfigGroup : drtFaresConfigGroup.getDrtFareConfigGroups()) {
+                	if (drtFareConfigGroup.getMode().equals(mode)) {
+                        double fare = 0.;
+                		if (distance != null && distance != 0.) {
+                        	fare += drtFareConfigGroup.getDistanceFare_m() * distance;
+                        }
+                                                
+                        if (Time.getUndefinedTime() != travelTime) {
+                            fare += drtFareConfigGroup.getTimeFare_h() * travelTime / 3600.;
+
+                        }
+                        
+                        fare += drtFareConfigGroup.getBasefare(); 
+                        fare = Math.min(fare, drtFareConfigGroup.getMinFarePerTrip());
+                        utility += -1. * fare * config.planCalcScore().getMarginalUtilityOfMoney();
+                	}
                 }
+                
+                // apply randmization to drtModes
+                if (mode.contains("drt")) {
+                	double drtIntermodalAccessEgressRandomization = berlinCfg.getDrtIntermodalAccessEgressRandomization();
+                	utility += (random.nextDouble() - 0.5) * drtIntermodalAccessEgressRandomization;
+                }
+                
             }
         }
         return new RIntermodalAccessEgress(legs, -utility, tTime);
