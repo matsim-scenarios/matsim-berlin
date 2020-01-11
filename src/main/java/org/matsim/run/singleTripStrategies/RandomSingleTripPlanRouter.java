@@ -17,7 +17,7 @@
  *   See also COPYING, LICENSE and WARRANTY file                           *
  *                                                                         *
  * *********************************************************************** */
-package org.matsim.run;
+package org.matsim.run.singleTripStrategies;
 
 import java.util.List;
 import java.util.Random;

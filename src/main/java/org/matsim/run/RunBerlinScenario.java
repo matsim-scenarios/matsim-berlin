@@ -45,6 +45,8 @@ import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
+import org.matsim.run.singleTripStrategies.ChangeSingleTripModeAndRoute;
+import org.matsim.run.singleTripStrategies.RandomSingleTripReRoute;
 
 import ch.sbb.matsim.routing.pt.raptor.RaptorIntermodalAccessEgress;
 import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;

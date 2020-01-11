@@ -18,7 +18,7 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.run;
+package org.matsim.run.singleTripStrategies;
 
 import javax.inject.Provider;
 

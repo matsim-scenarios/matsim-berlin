@@ -17,14 +17,10 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.run;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
+package org.matsim.run.singleTripStrategies;
 
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
-import org.matsim.core.config.groups.ChangeModeConfigGroup;
 import org.matsim.core.config.groups.GlobalConfigGroup;
 import org.matsim.core.replanning.PlanStrategy;
 import org.matsim.core.replanning.PlanStrategyImpl;
@@ -33,17 +29,19 @@ import org.matsim.core.replanning.selectors.RandomPlanSelector;
 import org.matsim.core.router.TripRouter;
 import org.matsim.facilities.ActivityFacilities;
 
-public class ChangeSingleTripModeAndRoute implements Provider<PlanStrategy> {
+import javax.inject.Inject;
+import javax.inject.Provider;
+
+public class RandomSingleTripReRoute implements Provider<PlanStrategy> {
 
 	@Inject private GlobalConfigGroup globalConfigGroup;
-	@Inject private ChangeModeConfigGroup changeModeConfigGroup;
 	@Inject private ActivityFacilities facilities;
 	@Inject private Provider<TripRouter> tripRouterProvider;
 
 	@Override
 	public PlanStrategy get() {
 		Builder builder = new PlanStrategyImpl.Builder(new RandomPlanSelector<Plan,Person>()) ;
-		builder.addStrategyModule(new ChangeSingleTripModeAndRouteModule(facilities, tripRouterProvider, globalConfigGroup, changeModeConfigGroup));
+		builder.addStrategyModule(new RandomSingleTripReRouteModule(facilities, tripRouterProvider, globalConfigGroup));
 		return builder.build() ;
 	}
 

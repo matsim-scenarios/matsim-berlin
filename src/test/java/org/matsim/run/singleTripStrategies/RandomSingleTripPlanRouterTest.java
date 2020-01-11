@@ -20,7 +20,7 @@
  *  * ***********************************************************************
  */
 
-package org.matsim.run;
+package org.matsim.run.singleTripStrategies;
 
 import org.junit.Assert;
 import org.junit.Rule;
@@ -45,6 +45,7 @@ import org.matsim.core.scenario.ScenarioByInstanceModule;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.examples.ExamplesUtils;
+import org.matsim.run.singleTripStrategies.RandomSingleTripPlanRouter;
 import org.matsim.testcases.MatsimTestUtils;
 
 public class RandomSingleTripPlanRouterTest {
