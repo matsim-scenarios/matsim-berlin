@@ -21,6 +21,7 @@ import org.matsim.api.core.v01.population.Plan;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.StrategyConfigGroup.StrategySettings;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
@@ -28,6 +29,7 @@ import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
+import org.matsim.run.BerlinExperimentalConfigGroup;
 import org.matsim.testcases.MatsimTestUtils;
 
 /**
@@ -115,6 +117,9 @@ public class RunDrtOpenBerlinScenarioTest {
 			
 			// make pt more attractive to obtain less direct walks (routing mode pt) due to drt triangle walk being more attractive 
 			config.planCalcScore().setMarginalUtlOfWaitingPt_utils_hr(5);
+			
+			BerlinExperimentalConfigGroup berlinExpConfigGroup = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
+			berlinExpConfigGroup.setDrtIntermodalAccessEgressRandomization(20.);
 			
 			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 				drtCfg.setNumberOfThreads(1);
