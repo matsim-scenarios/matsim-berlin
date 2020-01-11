@@ -141,8 +141,22 @@ public final class RunBerlinScenario {
 		OutputDirectoryLogging.catchLogEntries();
 		
 		String[] typedArgs = Arrays.copyOfRange( args, 1, args.length );
-
-		final Config config = ConfigUtils.loadConfig( args[ 0 ], customModules ); // I need this to set the context
+		
+		ConfigGroup[] customModulesToAdd = new ConfigGroup[]{ new BerlinExperimentalConfigGroup() };
+		ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
+		
+		int counter = 0;
+		for (ConfigGroup customModule : customModules) {
+			customModulesAll[counter] = customModule;
+			counter++;
+		}
+		
+		for (ConfigGroup customModule : customModulesToAdd) {
+			customModulesAll[counter] = customModule;
+			counter++;
+		}
+		
+		final Config config = ConfigUtils.loadConfig( args[ 0 ], customModulesAll );
 		
 		config.controler().setRoutingAlgorithmType( FastAStarLandmarks );
 		
