@@ -78,7 +78,7 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                         }
                         
                         fare += drtFareConfigGroup.getBasefare(); 
-                        fare = Math.min(fare, drtFareConfigGroup.getMinFarePerTrip());
+                        fare = Math.max(fare, drtFareConfigGroup.getMinFarePerTrip());
                         utility += -1. * fare * config.planCalcScore().getMarginalUtilityOfMoney();
                 	}
                 }
