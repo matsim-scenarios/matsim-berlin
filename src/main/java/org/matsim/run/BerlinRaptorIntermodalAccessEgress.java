@@ -30,8 +30,7 @@ import ch.sbb.matsim.routing.pt.raptor.RaptorParameters;
  */
 public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAccessEgress {
 	
-	@Inject Config config;
-	
+	Config config;	
 	BerlinExperimentalConfigGroup berlinCfg;
 	DrtFaresConfigGroup drtFaresConfigGroup;
 	
@@ -39,6 +38,7 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
 	
 	@Inject
     BerlinRaptorIntermodalAccessEgress(Config config) {
+		this.config = config;
 		this.berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 		this.drtFaresConfigGroup = ConfigUtils.addOrGetModule(config, DrtFaresConfigGroup.class);
 	}
