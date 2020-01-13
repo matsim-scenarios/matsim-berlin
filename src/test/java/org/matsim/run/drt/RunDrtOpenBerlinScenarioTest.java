@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -30,6 +31,8 @@ import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
 import org.matsim.run.BerlinExperimentalConfigGroup;
+import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup;
+import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
 import org.matsim.testcases.MatsimTestUtils;
 
 /**
@@ -40,6 +43,7 @@ import org.matsim.testcases.MatsimTestUtils;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RunDrtOpenBerlinScenarioTest {
 		
+	private static final Logger log = Logger.getLogger(RunDrtOpenBerlinScenarioTest.class);
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 	
 	// During debug some exceptions only occured at the replanning stage of the 3rd
@@ -94,7 +98,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			final String[] args = {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-v5.5-1pct.config.xml"};
 			
 			Config config = RunDrtOpenBerlinScenario.prepareConfig( args ) ;
-			config.controler().setLastIteration(2);
+			config.controler().setLastIteration(0);
 			config.strategy().clearStrategySettings();
 			
 			// Use RandomSingleTripReRoute, because in this branch only in RandomSingleTripReRoute drt is allowed as access/egress mode to pt
@@ -152,7 +156,7 @@ public class RunDrtOpenBerlinScenarioTest {
 					if (!mode2NumberOfLegs.containsKey(leg.getMode())) {
 						mode2NumberOfLegs.put(leg.getMode(), 1);
 					} else {
-						mode2NumberOfLegs.put(leg.getMode(), mode2NumberOfLegs.get(leg.getMode() + 1));
+						mode2NumberOfLegs.put(leg.getMode(), mode2NumberOfLegs.get(leg.getMode()) + 1);
 					}
 				}
 				if (mode2NumberOfLegs.containsKey(TransportMode.drt) && mode2NumberOfLegs.containsKey(TransportMode.pt)) {
@@ -164,15 +168,23 @@ public class RunDrtOpenBerlinScenarioTest {
 			
 			// check drt-pt-intermodal trip fare compensator
 			List<PersonMoneyEvent> moneyEventsIntermodalAgent = fareChecker.getEventsForPerson(Id.createPersonId("285614901pt"));
-			double expectedCompensationAmountPerTrip = 1.0;// TODO: get from config instead?
+			IntermodalTripFareCompensatorsConfigGroup fareCompensators = ConfigUtils.addOrGetModule(config, IntermodalTripFareCompensatorsConfigGroup.class);
+			double expectedCompensationAmountPerTrip = Double.NaN;
+			for (IntermodalTripFareCompensatorConfigGroup fareCompensator : fareCompensators.getIntermodalTripFareCompensatorConfigGroups()) {
+				if (fareCompensator.getDrtModes().contains(TransportMode.drt) && fareCompensator.getPtModes().contains(TransportMode.pt)) { 
+					expectedCompensationAmountPerTrip = fareCompensator.getCompensationPerTrip();
+				}
+			}
+			
 			int compensatorMoneyEventsCounter = 0;
 			for(PersonMoneyEvent event: moneyEventsIntermodalAgent) {
 				if (Math.abs(event.getAmount() - expectedCompensationAmountPerTrip) < MatsimTestUtils.EPSILON) {
+					// We do not know where the money event comes from, so these are money events *potentially* thrown by the intermodal trip fare compensator.
 					compensatorMoneyEventsCounter++;
 				}
 			}
 			
-			Assert.assertEquals("Number of intermodal trips and of intermodal trip fare compensator money events should be equal.", drtLegsInIntermodalTripsCounter, compensatorMoneyEventsCounter);
+			Assert.assertTrue("Number of potential intermodal trip fare compensator money events should be equal or higher than the number of intermodal trips.", drtLegsInIntermodalTripsCounter <= compensatorMoneyEventsCounter);
 			
 		} catch ( Exception ee ) {
 			throw new RuntimeException(ee) ;
