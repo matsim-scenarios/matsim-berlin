@@ -98,7 +98,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			final String[] args = {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-v5.5-1pct.config.xml"};
 			
 			Config config = RunDrtOpenBerlinScenario.prepareConfig( args ) ;
-			config.controler().setLastIteration(0);
+			config.controler().setLastIteration(2);
 			config.strategy().clearStrategySettings();
 			
 			// Use RandomSingleTripReRoute, because in this branch only in RandomSingleTripReRoute drt is allowed as access/egress mode to pt
