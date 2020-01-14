@@ -38,9 +38,8 @@ import com.google.inject.name.Named;
  * @author vsp-gleich
  *
  */
-public class PtRoutingModeWrapper implements RoutingModule {
+class PtRoutingModeWrapper implements RoutingModule {
 	
-//	@Inject @Named(TransportMode.pt) RoutingModule ptRouter; // This does not work, is always null
 	private final RoutingModule ptRouter;
 	private final PtIntermodalRoutingModeParameterSet routingModeParams;
 	private final ImmutableList<PersonAttribute2ValuePair> personAttribute2ValuePairs;

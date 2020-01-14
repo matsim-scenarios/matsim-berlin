@@ -19,23 +19,23 @@
 
 package org.matsim.run.drt.ptRoutingModes;
 
-import org.matsim.api.core.v01.TransportMode;
+import java.util.Map;
+
 import org.matsim.core.router.RoutingModule;
 import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesConfigGroup.PtIntermodalRoutingModeParameterSet;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.google.inject.name.Named;
 
 /**
  * 
  * @author vsp-gleich
  *
  */
-public class PtRoutingModeWrapperProvider implements Provider<RoutingModule> {
+class PtRoutingModeWrapperProvider implements Provider<RoutingModule> {
 	
 	private final PtIntermodalRoutingModeParameterSet routingModeParams;
-	@Inject private @Named(TransportMode.pt) RoutingModule ptRouter; // TODO: replace with SwissRailRaptorRoutingModuleProvider
+	@Inject private Map<String, Provider<RoutingModule>> routingModuleProviders;
 	
 	PtRoutingModeWrapperProvider(final PtIntermodalRoutingModeParameterSet routingModeParams) {
 		this.routingModeParams = routingModeParams;
@@ -43,7 +43,7 @@ public class PtRoutingModeWrapperProvider implements Provider<RoutingModule> {
 
 	@Override
 	public RoutingModule get() {
-		return new PtRoutingModeWrapper(routingModeParams, ptRouter);
+		return new PtRoutingModeWrapper(routingModeParams, routingModuleProviders.get(routingModeParams.getDelegateMode()).get());
 	}
 
 }
