@@ -11,6 +11,8 @@ import org.junit.runners.MethodSorters;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.contrib.drt.run.DrtConfigGroup;
+import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
@@ -42,7 +44,12 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 			config.planCalcScore().setWriteExperiencedPlans(false);
 			config.controler().setOutputDirectory(utils.getOutputDirectory());
 			config.global().setNumberOfThreads(1);
+			config.qsim().setNumberOfThreads(1);
 			config.plans().setInputFile("../../../../test/input/drt/drt-test-agents.xml");
+			
+			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
+				drtCfg.setNumberOfThreads(1);
+			}
 						
 			DrtSpeedUpModule.adjustConfig(config);
 
@@ -71,7 +78,12 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 			config.controler().setWritePlansInterval(30);
 			config.controler().setWriteEventsInterval(30);
 			config.global().setNumberOfThreads(1);
+			config.qsim().setNumberOfThreads(1);
 			config.controler().setOutputDirectory(utils.getOutputDirectory());
+			
+			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
+				drtCfg.setNumberOfThreads(1);
+			}
 			
 			DrtSpeedUpModule.adjustConfig(config);
 
