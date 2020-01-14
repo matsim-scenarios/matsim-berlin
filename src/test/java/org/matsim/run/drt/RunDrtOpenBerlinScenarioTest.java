@@ -70,15 +70,11 @@ public class RunDrtOpenBerlinScenarioTest {
 				drtCfg.setNumberOfThreads(1);
 			}
 			
-			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 			// Decrease population to 0.01% sample 
-			List<Id<Person>> agentsToRemove = new ArrayList<>();
-			for (Id<Person> id: scenario.getPopulation().getPersons().keySet()) {
-				if (MatsimRandom.getRandom().nextDouble() > 0.01) {agentsToRemove.add(id);}
-			}
-			for (Id<Person> id: agentsToRemove) {
-				scenario.getPopulation().removePerson(id);
-			}
+			BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
+			berlinCfg.setPopulationDownsampleFactor(0.01);
+			
+			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 			
 			Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
 			

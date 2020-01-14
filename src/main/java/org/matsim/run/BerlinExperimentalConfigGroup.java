@@ -33,10 +33,13 @@ import org.matsim.core.config.ReflectiveConfigGroup;
 public class BerlinExperimentalConfigGroup extends ReflectiveConfigGroup {
 	public static final String GROUP_NAME = "berlinExperimental" ;
 
+    private static final String POPULATION_DOWNSAMPLE_FACTOR = "populationDownsampleFactor";
+	
 	public BerlinExperimentalConfigGroup() {
 		super(GROUP_NAME);
 	}
 	
+	private double populationDownsampleFactor = 1.0;
 	private Map<String, IntermodalAccessEgressModeUtilityRandomization> intermodalAccessEgressMode2utilityRandomization = new HashMap<>();
 	
     public void addIntermodalAccessEgressModeUtilityRandomization(IntermodalAccessEgressModeUtilityRandomization paramSet) {
@@ -85,6 +88,16 @@ public class BerlinExperimentalConfigGroup extends ReflectiveConfigGroup {
         public void setAdditiveRandomizationWidth(double additiveRandomizationWidth) {
             this.additiveRandomizationWidth = additiveRandomizationWidth;
         }
+    }
+    
+    @StringGetter(POPULATION_DOWNSAMPLE_FACTOR)
+    public double getPopulationDownsampleFactor() {
+        return populationDownsampleFactor;
+    }
+
+    @StringSetter(POPULATION_DOWNSAMPLE_FACTOR)
+    public void setPopulationDownsampleFactor(double populationDownsampleFactor) {
+        this.populationDownsampleFactor = populationDownsampleFactor;
     }
 			
 }

@@ -23,11 +23,15 @@ import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorith
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Random;
 
 import org.apache.log4j.Logger;
 import org.matsim.analysis.RunPersonTripAnalysis;
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.drt.routing.DrtRoute;
 import org.matsim.contrib.drt.routing.DrtRouteFactory;
 import org.matsim.core.config.Config;
@@ -40,6 +44,7 @@ import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.gbl.Gbl;
+import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.population.routes.RouteFactories;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scenario.ScenarioUtils;
@@ -136,6 +141,11 @@ public final class RunBerlinScenario {
 		
 		ScenarioUtils.loadScenario(scenario);
 
+		BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
+		if (berlinCfg.getPopulationDownsampleFactor() != 1.0) {
+			downsample(scenario.getPopulation().getPersons(), berlinCfg.getPopulationDownsampleFactor());
+		}
+		
 		return scenario;
 	}
 	
@@ -229,6 +239,13 @@ public final class RunBerlinScenario {
 			log.error(e.getStackTrace());
 			throw new RuntimeException(e.getMessage());
 		}
+	}
+	
+	private static void downsample( final Map<Id<Person>, ? extends Person> map, final double sample ) {
+		final Random rnd = MatsimRandom.getLocalInstance();
+		log.warn( "Population downsampled from " + map.size() + " agents." ) ;
+		map.values().removeIf( person -> rnd.nextDouble() > sample ) ;
+		log.warn( "Population downsampled to " + map.size() + " agents." ) ;
 	}
 
 }
