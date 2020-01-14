@@ -16,6 +16,7 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.utils.misc.Time;
+import org.matsim.run.BerlinExperimentalConfigGroup.IntermodalAccessEgressModeUtilityRandomization;
 
 import com.google.inject.Inject;
 
@@ -64,7 +65,7 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                 }
                 utility += config.planCalcScore().getModes().get(mode).getConstant();
                 
-                // account for a drt fares
+                // account for drt fares
                 for (DrtFareConfigGroup drtFareConfigGroup : drtFaresConfigGroup.getDrtFareConfigGroups()) {
                 	if (drtFareConfigGroup.getMode().equals(mode)) {
                         double fare = 0.;
@@ -83,13 +84,12 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                 	}
                 }
                 
-                // apply randmization to drtModes;
-                // TODO: use mode-specific parameters in the berlin experimental config group instead of hard-coded 'drt'
-                if (mode.contains("drt")) {
-                	double drtIntermodalAccessEgressRandomization = berlinCfg.getDrtIntermodalAccessEgressRandomization();
-                	utility += (random.nextDouble() - 0.5) * drtIntermodalAccessEgressRandomization;
+                // apply randomization to utility if applicable;
+                IntermodalAccessEgressModeUtilityRandomization randomization = berlinCfg.getIntermodalAccessEgressModeUtilityRandomization(mode);
+                if (randomization != null) {
+                	double utilityRandomizationSigma = berlinCfg.getIntermodalAccessEgressModeUtilityRandomization(mode).getAdditiveRandomizationWidth();
+                	utility += (random.nextDouble() - 0.5) * utilityRandomizationSigma;
                 }
-                
             }
         }
         return new RIntermodalAccessEgress(legs, -utility, tTime);

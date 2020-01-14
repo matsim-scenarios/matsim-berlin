@@ -31,6 +31,7 @@ import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
 import org.matsim.run.BerlinExperimentalConfigGroup;
+import org.matsim.run.BerlinExperimentalConfigGroup.IntermodalAccessEgressModeUtilityRandomization;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
 import org.matsim.testcases.MatsimTestUtils;
@@ -123,7 +124,11 @@ public class RunDrtOpenBerlinScenarioTest {
 			config.planCalcScore().setMarginalUtlOfWaitingPt_utils_hr(5);
 			
 			BerlinExperimentalConfigGroup berlinExpConfigGroup = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
-			berlinExpConfigGroup.setDrtIntermodalAccessEgressRandomization(20.);
+			
+			IntermodalAccessEgressModeUtilityRandomization utilityRandomization = new IntermodalAccessEgressModeUtilityRandomization();
+			utilityRandomization.setAccessEgressMode(TransportMode.drt);
+			utilityRandomization.setAdditiveRandomizationWidth(20.);
+			berlinExpConfigGroup.addIntermodalAccessEgressModeUtilityRandomization(utilityRandomization);
 			
 			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 				drtCfg.setNumberOfThreads(1);
