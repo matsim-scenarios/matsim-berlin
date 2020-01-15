@@ -28,6 +28,8 @@ import org.matsim.contrib.otfvis.OTFVisLiveModule;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
+import org.matsim.core.config.groups.QSimConfigGroup;
+import org.matsim.core.config.groups.QSimConfigGroup.SnapshotStyle;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.population.PopulationUtils;
@@ -65,12 +67,14 @@ public class KNVisOutputDrtOpenBerlinScenario {
 		
 		config.network().setInputFile( config.controler().getRunId() + ".output_network.xml.gz" );
 
-//		config.plans().setInputFile( config.controler().getRunId() + ".output_plans.xml.gz" );
-		config.plans().setInputFile( "/Users/kainagel/git/berlin-matsim/popSel.xml.gz" );
+		config.plans().setInputFile( config.controler().getRunId() + ".output_plans.xml.gz" );
+//		config.plans().setInputFile( "/Users/kainagel/git/berlin-matsim/popSel.xml.gz" );
 
 		config.global().setNumberOfThreads( 6 );
 		
 		config.controler().setOverwriteFileSetting( OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
+
+		config.qsim().setSnapshotStyle( SnapshotStyle.kinematicWaves );
 		
 		final OTFVisConfigGroup otfVisConfigGroup = ConfigUtils.addOrGetModule( config, OTFVisConfigGroup.class );
 		otfVisConfigGroup.setDrawTransitFacilityIds( false );
@@ -108,7 +112,7 @@ public class KNVisOutputDrtOpenBerlinScenario {
 					containsPT = true ;
 				}
 			}
-			if ( ! ( containsDrt  && containsPT ) ) {
+			if ( ! ( containsDrt  /*&& containsPT*/ ) ) {
 				toRemove.add( person );
 			}
 		}
