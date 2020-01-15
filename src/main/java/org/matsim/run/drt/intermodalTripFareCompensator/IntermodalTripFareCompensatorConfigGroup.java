@@ -32,10 +32,13 @@ public class IntermodalTripFareCompensatorConfigGroup extends ReflectiveConfigGr
 	    public static final String GROUP_NAME = "intermodalTripFareCompensator";
 
 	    public static final String COMPENSATION_PER_TRIP = "compensationPerTrip";
+	    public static final String COMPENSATION_CONDITION= "compensationCondition";
 	    public static final String DRT_MODES = "drtModes";
 	    public static final String PT_MODES = "ptModes";
 
 	    private double compensationPerTrip = 0.0;
+	    private CompensationCondition compensationCondition = CompensationCondition.PtModeUsedInSameTrip;
+	    
 	    /*
 	     * initialize, otherwise getDrtModesAsString might return null and thereby writing out a new
 	     * IntermodalTripFareCompensatorConfigGroup (e.g. in regular matsim shutdown after last iteration)
@@ -44,6 +47,10 @@ public class IntermodalTripFareCompensatorConfigGroup extends ReflectiveConfigGr
 	    private ImmutableSet<String> drtModes = ImmutableSet.of(TransportMode.drt); 
 	    private ImmutableSet<String> ptModes = ImmutableSet.of(TransportMode.pt); // same
 
+	    enum CompensationCondition {
+	    	PtModeUsedInSameTrip, PtModeUsedAnywhereInTheDay
+	    }
+	    
 	    public IntermodalTripFareCompensatorConfigGroup() {
 	        super(GROUP_NAME);
 	    }
@@ -65,6 +72,16 @@ public class IntermodalTripFareCompensatorConfigGroup extends ReflectiveConfigGr
 	    @StringSetter(COMPENSATION_PER_TRIP)
 	    public void setCompensationPerTrip(double compensationPerTrip) {
 	        this.compensationPerTrip = compensationPerTrip;
+	    }
+	    
+	    @StringGetter(COMPENSATION_CONDITION)
+	    public CompensationCondition getCompensationCondition() {
+	        return this.compensationCondition;
+	    }
+
+	    @StringSetter(COMPENSATION_CONDITION)
+	    public void setCompensationCondition(CompensationCondition compensationCondition) {
+	        this.compensationCondition = compensationCondition;
 	    }
 	    
 		@StringGetter(DRT_MODES)

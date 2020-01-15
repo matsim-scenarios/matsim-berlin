@@ -44,21 +44,23 @@ import com.google.inject.Inject;
  * @author vsp-gleich
  *
  */
-public class IntermodalTripFareCompensator implements PersonDepartureEventHandler, ActivityStartEventHandler, AfterMobsimListener {
+public class IntermodalTripFareCompensatorPerTrip implements PersonDepartureEventHandler, ActivityStartEventHandler, AfterMobsimListener {
 	@Inject private EventsManager events;
-	Set<Id<Person>> personsOnPtTrip = new HashSet<>();
-	Set<Id<Person>> personsOnDrtTrip = new HashSet<>();
-	double compensation;
-	Set<String> drtModes;
-	Set<String> ptModes;
+	private Set<Id<Person>> personsOnPtTrip = new HashSet<>();
+	private Set<Id<Person>> personsOnDrtTrip = new HashSet<>();
+	private double compensation;
+	private Set<String> drtModes;
+	private Set<String> ptModes;
 	
-	public IntermodalTripFareCompensator(IntermodalTripFareCompensatorConfigGroup intermodalFareConfigGroup) {
+	// for the module
+	IntermodalTripFareCompensatorPerTrip(IntermodalTripFareCompensatorConfigGroup intermodalFareConfigGroup) {
 		this.compensation = intermodalFareConfigGroup.getCompensationPerTrip();
 		this.drtModes = intermodalFareConfigGroup.getDrtModes();
 		this.ptModes = intermodalFareConfigGroup.getPtModes();
 	}
 	
-	public IntermodalTripFareCompensator(IntermodalTripFareCompensatorConfigGroup intermodalFareConfigGroup, EventsManager events) {
+	// for tests
+	IntermodalTripFareCompensatorPerTrip(IntermodalTripFareCompensatorConfigGroup intermodalFareConfigGroup, EventsManager events) {
 		this(intermodalFareConfigGroup);
 		this.events = events;
 	}

@@ -22,12 +22,26 @@ package org.matsim.run.drt.intermodalTripFareCompensator;
 import org.matsim.core.controler.AbstractModule;
 
 public class IntermodalTripFareCompensatorsModule extends AbstractModule {
-    @Override
+	@Override
 	public void install() {
 		IntermodalTripFareCompensatorsConfigGroup intermodalFaresConfigGroup = IntermodalTripFareCompensatorsConfigGroup
 				.get(getConfig());
-		intermodalFaresConfigGroup.getIntermodalTripFareCompensatorConfigGroups()
-				.forEach(intermodalFareConfigGroup -> addEventHandlerBinding()
-						.toInstance(new IntermodalTripFareCompensator(intermodalFareConfigGroup)));
+		intermodalFaresConfigGroup.getIntermodalTripFareCompensatorConfigGroups().forEach(intermodalFareConfigGroup -> {
+			switch (intermodalFareConfigGroup.getCompensationCondition()) {
+			case PtModeUsedInSameTrip:
+				IntermodalTripFareCompensatorPerTrip compensatorPerTrip = new IntermodalTripFareCompensatorPerTrip(intermodalFareConfigGroup);
+				addEventHandlerBinding().toInstance(compensatorPerTrip);
+				addControlerListenerBinding().toInstance(compensatorPerTrip);
+				break;
+			case PtModeUsedAnywhereInTheDay:
+				IntermodalTripFareCompensatorPerDay compensatorPerDay = new IntermodalTripFareCompensatorPerDay(intermodalFareConfigGroup);
+				addEventHandlerBinding().toInstance(compensatorPerDay);
+				addControlerListenerBinding().toInstance(compensatorPerDay);
+				break;
+			default:
+				throw new RuntimeException(
+						"unknown CompensationCondition: " + intermodalFareConfigGroup.getCompensationCondition());
+			}
+		});
 	}
 }
