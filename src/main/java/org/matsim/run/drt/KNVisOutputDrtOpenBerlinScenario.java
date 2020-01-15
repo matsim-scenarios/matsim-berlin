@@ -48,11 +48,20 @@ public class KNVisOutputDrtOpenBerlinScenario {
 	private static final Logger log = Logger.getLogger( KNVisOutputDrtOpenBerlinScenario.class);
 
 	public static void main(String[] args) {
-	
+
+//		final String base = "/Users/kainagel/mnt/mathe/ils3/leich/open-berlin/output/";
+//		final String runID="berlin-drt-v5.5-1pct_drt-132";
+
+		final String base="/Users/kainagel/mnt/mathe/ils3/kaddoura/avoev-intermodal-routing/output/output-";
+		final String runID="i89e";
+
 //		Config config = RunDrtOpenBerlinScenario.prepareConfig( new String[] {"berlin-drt-v5.5-1pct_drt-114/berlin-drt-v5.5-1pct_drt-114.output_config.xml"} ) ;
-		Config config = RunDrtOpenBerlinScenario.prepareConfig( new String[] {"/Users/kainagel/mnt/mathe/ils3/leich/open-berlin/output/berlin-drt-v5" +
-															    ".5-1pct_drt-132/berlin-drt-v5.5-1pct_drt-132.output_config_reduced.xml"} ) ;
+//		Config config = RunDrtOpenBerlinScenario.prepareConfig( new String[] {"/Users/kainagel/mnt/mathe/ils3/leich/open-berlin/output/berlin-drt-v5" +
+//															    ".5-1pct_drt-132/berlin-drt-v5.5-1pct_drt-132.output_config_reduced.xml"} ) ;
 		// yyyyyy todo do the above in a more flexible way!
+		Config config = RunDrtOpenBerlinScenario.prepareConfig( new String[] {
+				base + runID + "/" + runID + ".output_config_reduced.xml"
+		} ) ;
 		
 		config.network().setInputFile( config.controler().getRunId() + ".output_network.xml.gz" );
 
