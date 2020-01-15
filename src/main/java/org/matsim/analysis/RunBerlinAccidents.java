@@ -21,8 +21,6 @@ import org.matsim.run.RunBerlinScenario;
  * @author Hugo
  */
 
-//to run the program there is a problem with the input files from the config file, I think is very likely that in the current state of the branch 5.5 it is solved 
-
 
 public class RunBerlinAccidents {
 	
@@ -45,7 +43,7 @@ public class RunBerlinAccidents {
 	//the CSV has also a column for the percentage of the links wich is tunnel, The new String is produced by a new class
 	String planfreeLinkCSVInputFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5.planfree-linkIDs.csv";
 	//The Ids of links the between the two versions have change. Because of that the equivalent in the new network  for the plan free links
-
+	
 	Config config = RunBerlinScenario.prepareConfig(args);
 	config.controler().setOutputDirectory(outputFile);
 	AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);

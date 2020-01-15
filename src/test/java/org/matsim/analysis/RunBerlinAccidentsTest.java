@@ -4,24 +4,16 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.geotools.data.simple.SimpleFeatureSource;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.accidents.AccidentsConfigGroup;
 import org.matsim.contrib.accidents.runExample.AccidentsNetworkModification;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.network.NetworkUtils;
-import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.core.utils.gis.ShapeFileReader;
 import org.matsim.run.RunBerlinScenario;
-import org.matsim.testcases.MatsimTestUtils;
-import org.opengis.filter.Filter;
 
 /**
  * @author hacastrom
@@ -64,16 +56,29 @@ String planfreeLinkCSVInputFile = "https://svn.vsp.tu-berlin.de/repos/public-svn
 		Config config = RunBerlinScenario.prepareConfig(args);
 		config.controler().setOutputDirectory(outputFile);
         AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
-		
+        
         Scenario scenario = RunBerlinScenario.prepareScenario(config);
 		
-		Id<Link> id = Id.createLinkId("100016");
-		Link link = scenario.getNetwork().getLinks().get(id);
-		Network network = NetworkUtils.createNetwork();
-		network.addLink(link);
-		NetworkUtils.writeNetwork(network, "");
-		Config configtest = ConfigUtils.createConfig();
+        //Back up links of interest
+		Id<Link> id1 = Id.createLinkId("100016");
+		Link link = scenario.getNetwork().getLinks().get(id1);
+		Id<Link> id2 = Id.createLinkId("124900");
+		Link link2 = scenario.getNetwork().getLinks().get(id2);
+		Id<Link> id3 = Id.createLinkId("149434");
+		Link link3 = scenario.getNetwork().getLinks().get(id3);
 		
+		//erasing links
+		Map<Id<Link>, ?> Links = scenario.getNetwork().getLinks();
+		for (Id<Link> l : Links.keySet()) {
+			scenario.getNetwork().removeLink(l);
+		}
+		
+		//adding links in backup
+		scenario.getNetwork().addLink(link);
+		scenario.getNetwork().addLink(link2);
+		scenario.getNetwork().addLink(link3);
+		
+		//doing pre-proccesing
 		AccidentsNetworkModification accidentsNetworkModification = new AccidentsNetworkModification(scenario);
 		accidentsNetworkModification.setLinkAttributsBasedOnOSMFile(
 				landOSMInputShapeFile,
@@ -81,11 +86,16 @@ String planfreeLinkCSVInputFile = "https://svn.vsp.tu-berlin.de/repos/public-svn
 				RunBerlinAccidents.readColumn(0,tunnelLinkCSVInputFile,";"),
 				RunBerlinAccidents.readColumn(0,planfreeLinkCSVInputFile, ";")
 				);
-		 String bvwpType = scenario.getNetwork().getLinks().get(id).getAttributes().getAttribute(AccidentsConfigGroup.BVWP_ROAD_TYPE_ATTRIBUTE_NAME).toString();
-		 System.out.println(bvwpType);
-//		 Assert.assertEquals("Elements were not read right it should be 1,3,1 and is: " + bvwpType,"1,3,1",bvwpType );
-	}
-	
-	
+		
+		//Getting link Attributes
+		 String bvwpType1 = scenario.getNetwork().getLinks().get(id1).getAttributes().getAttribute(AccidentsConfigGroup.BVWP_ROAD_TYPE_ATTRIBUTE_NAME).toString();
+		 String bvwpType2 = scenario.getNetwork().getLinks().get(id2).getAttributes().getAttribute(AccidentsConfigGroup.BVWP_ROAD_TYPE_ATTRIBUTE_NAME).toString();
+		 String bvwpType3 = scenario.getNetwork().getLinks().get(id3).getAttributes().getAttribute(AccidentsConfigGroup.BVWP_ROAD_TYPE_ATTRIBUTE_NAME).toString();
 
+		 //Comparing Link attributes to manually calculated ones
+		 Assert.assertEquals("Elements were not read right it should be 1,2,1 and is: " + bvwpType1,"1,2,1",bvwpType1 );
+		 Assert.assertEquals("Elements were not read right it should be 1,0,1 and is: " + bvwpType2,"1,0,1",bvwpType2 );
+		 Assert.assertEquals("Elements were not read right it should be 2,1,3 and is: " + bvwpType3,"2,1,3",bvwpType3 );
+	
+	}
 }
