@@ -7,6 +7,7 @@ package org.matsim.run;
 import java.util.List;
 import java.util.Random;
 
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.PlanElement;
@@ -17,6 +18,8 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.utils.misc.Time;
 import org.matsim.run.BerlinExperimentalConfigGroup.IntermodalAccessEgressModeUtilityRandomization;
+import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup;
+import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
 
 import com.google.inject.Inject;
 
@@ -34,6 +37,7 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
 	Config config;	
 	BerlinExperimentalConfigGroup berlinCfg;
 	DrtFaresConfigGroup drtFaresConfigGroup;
+	IntermodalTripFareCompensatorsConfigGroup interModalTripFareCompensatorsCfg;
 	
 	Random random = MatsimRandom.getLocalInstance();
 	
@@ -42,6 +46,7 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
 		this.config = config;
 		this.berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 		this.drtFaresConfigGroup = ConfigUtils.addOrGetModule(config, DrtFaresConfigGroup.class);
+		this.interModalTripFareCompensatorsCfg = ConfigUtils.addOrGetModule(config, IntermodalTripFareCompensatorsConfigGroup.class);
 	}
 
 	@Override
@@ -81,6 +86,14 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                         fare += drtFareConfigGroup.getBasefare(); 
                         fare = Math.max(fare, drtFareConfigGroup.getMinFarePerTrip());
                         utility += -1. * fare * config.planCalcScore().getMarginalUtilityOfMoney();
+                	}
+                }
+                
+                // account for intermodal trip fare compensations
+                for (IntermodalTripFareCompensatorConfigGroup compensatorCfg : interModalTripFareCompensatorsCfg.getIntermodalTripFareCompensatorConfigGroups()) {
+                	if (compensatorCfg.getDrtModes().contains(mode) && compensatorCfg.getPtModes().contains(TransportMode.pt)) {
+                		// the following is a compensation, thus positive!
+                		utility += compensatorCfg.getCompensationPerTrip() * config.planCalcScore().getMarginalUtilityOfMoney();
                 	}
                 }
                 
