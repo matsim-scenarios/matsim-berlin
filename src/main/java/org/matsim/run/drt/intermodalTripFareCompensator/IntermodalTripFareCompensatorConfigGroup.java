@@ -59,6 +59,8 @@ public class IntermodalTripFareCompensatorConfigGroup extends ReflectiveConfigGr
 	    public Map<String, String> getComments() {
 	        Map<String, String> map = super.getComments();
 	        map.put(COMPENSATION_PER_TRIP, "Compensation per Trip (compensation = refund paid to the customer = positive value)");
+	        map.put(COMPENSATION_CONDITION, "Condition which governs which agents are compensated. Options: "
+				+ CompensationCondition.PtModeUsedInSameTrip + ", " + CompensationCondition.PtModeUsedAnywhereInTheDay);
 	        map.put(DRT_MODES, "drt modes for which the compensation applies (comma separated list).");
 	        map.put(PT_MODES, "pt modes for which the compensation applies (comma separated list).");
 	        return map;
