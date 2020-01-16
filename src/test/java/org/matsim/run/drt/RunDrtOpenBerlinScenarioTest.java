@@ -306,7 +306,7 @@ public class RunDrtOpenBerlinScenarioTest {
 		}
 	}
 
-	class FareEventChecker implements PersonMoneyEventHandler {
+	private class FareEventChecker implements PersonMoneyEventHandler {
 		private Map<Id<Person>, List<PersonMoneyEvent>> person2moneyEvents = new HashMap<>();
 
 		@Override
