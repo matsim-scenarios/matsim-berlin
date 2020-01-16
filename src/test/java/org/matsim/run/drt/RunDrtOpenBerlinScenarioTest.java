@@ -11,6 +11,7 @@ import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
+import org.matsim.analysis.ScoreStatsControlerListener;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -27,12 +28,12 @@ import org.matsim.core.config.groups.StrategyConfigGroup.StrategySettings;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
-import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
 import org.matsim.run.BerlinExperimentalConfigGroup;
 import org.matsim.run.BerlinExperimentalConfigGroup.IntermodalAccessEgressModeUtilityRandomization;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup;
+import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup.CompensationCondition;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
 import org.matsim.testcases.MatsimTestUtils;
 
@@ -192,6 +193,118 @@ public class RunDrtOpenBerlinScenarioTest {
 		}
 	}
 
+	@Test
+	public final void testAFewAgentsOnlyWithHugeIntermodalTripFareCompensation() {
+		try {
+			final String[] args = {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-v5.5-1pct.config.xml"};
+			
+			Config config = RunDrtOpenBerlinScenario.prepareConfig( args ) ;
+			config.controler().setLastIteration(0);
+			config.strategy().clearStrategySettings();
+			
+			// Use RandomSingleTripReRoute, because in this branch only in RandomSingleTripReRoute drt is allowed as access/egress mode to pt
+			StrategySettings stratSets = new StrategySettings();
+			stratSets.setStrategyName("RandomSingleTripReRoute");
+			stratSets.setWeight(1.0);
+			stratSets.setSubpopulation("person");
+			config.strategy().addStrategySettings(stratSets);
+			
+			config.strategy().setFractionOfIterationsToDisableInnovation(1);
+			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
+			config.controler().setOutputDirectory( utils.getOutputDirectory() );
+			config.plans().setInputFile("../../../../test/input/drt/drt-test-agents.xml");
+			
+			// jvm on build server has less cores than we set in the input config file and would complain about that
+			config.global().setNumberOfThreads(1);
+			config.qsim().setNumberOfThreads(1);
+			
+			config.controler().setWritePlansInterval(1);
+			
+			// make pt more attractive to obtain less direct walks (routing mode pt) due to drt triangle walk being more attractive 
+			config.planCalcScore().setMarginalUtlOfWaitingPt_utils_hr(5);
+			
+			BerlinExperimentalConfigGroup berlinExpConfigGroup = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
+			
+			IntermodalAccessEgressModeUtilityRandomization utilityRandomization = new IntermodalAccessEgressModeUtilityRandomization();
+			utilityRandomization.setAccessEgressMode(TransportMode.drt);
+			utilityRandomization.setAdditiveRandomizationWidth(20.);
+			berlinExpConfigGroup.addIntermodalAccessEgressModeUtilityRandomization(utilityRandomization);
+			
+			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
+				drtCfg.setNumberOfThreads(1);
+				drtCfg.setDrtServiceAreaShapeFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlkoenig-area/berlkoenig-area.shp");
+			}
+			
+			IntermodalTripFareCompensatorsConfigGroup compensatorsCfg = ConfigUtils.addOrGetModule(config, IntermodalTripFareCompensatorsConfigGroup.class);
+			List<IntermodalTripFareCompensatorConfigGroup> remove = new ArrayList<>();
+			for (IntermodalTripFareCompensatorConfigGroup previousCfg : compensatorsCfg.getIntermodalTripFareCompensatorConfigGroups()) {
+				remove.add(previousCfg);
+			}
+			for (IntermodalTripFareCompensatorConfigGroup previousCfg : remove) {
+				compensatorsCfg.removeParameterSet(previousCfg);
+			}
+			IntermodalTripFareCompensatorConfigGroup compensatorCfg = new IntermodalTripFareCompensatorConfigGroup();
+			compensatorCfg.setCompensationCondition(CompensationCondition.PtModeUsedAnywhereInTheDay);
+			compensatorCfg.setDrtModesAsString("drt");
+			compensatorCfg.setPtModesAsString("pt");
+			compensatorCfg.setCompensationPerTrip(111111.);
+			compensatorsCfg.addParameterSet(compensatorCfg);
+			
+			config.transit().setUsingTransitInMobsim(false);
+			
+			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
+			Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
+			
+			FareEventChecker fareChecker = new FareEventChecker();
+			controler.addOverridingModule(new AbstractModule() {
+				@Override
+				public void install() {
+					addEventHandlerBinding().toInstance(fareChecker);
+				}
+			});
+			
+			controler.run() ;	
+			
+			Plan intermodalPtAgentPlan = scenario.getPopulation().getPersons().get(Id.createPersonId("285614901pt")).getSelectedPlan();
+			
+			int intermodalTripCounter = 0;
+			int drtLegsInIntermodalTripsCounter = 0;
+			
+			List<Trip> trips = TripStructureUtils.getTrips(intermodalPtAgentPlan.getPlanElements());
+			
+			for (Trip trip: trips) {
+				Map<String, Integer> mode2NumberOfLegs = new HashMap<>();
+				for (Leg leg: trip.getLegsOnly()) {
+					if (!mode2NumberOfLegs.containsKey(leg.getMode())) {
+						mode2NumberOfLegs.put(leg.getMode(), 1);
+					} else {
+						mode2NumberOfLegs.put(leg.getMode(), mode2NumberOfLegs.get(leg.getMode()) + 1);
+					}
+				}
+				if (mode2NumberOfLegs.containsKey(TransportMode.drt) && mode2NumberOfLegs.containsKey(TransportMode.pt)) {
+					intermodalTripCounter++;
+					drtLegsInIntermodalTripsCounter = drtLegsInIntermodalTripsCounter + mode2NumberOfLegs.get(TransportMode.drt);
+				}
+			}
+			Assert.assertTrue("pt agent has no intermodal route (=drt for access or egress to pt)", intermodalTripCounter > 0);
+			
+			// check drt-pt-intermodal trip fare compensator
+			List<PersonMoneyEvent> moneyEventsIntermodalAgent = fareChecker.getEventsForPerson(Id.createPersonId("285614901pt"));
+			
+			int hugeMoneyEventCounter = 0;
+			for(PersonMoneyEvent event: moneyEventsIntermodalAgent) {
+				if (event.getAmount() > 10000) {
+					hugeMoneyEventCounter++;
+				}
+			}
+			
+			Assert.assertEquals("Number of potential intermodal trip fare compensator money events should be equal to the number of persons who get a compensation.", 1, hugeMoneyEventCounter);
+			Assert.assertEquals("Huge money events thrown at the end of the day should translate into a very large score!", true, 10000 < controler.getScoreStats().getScoreHistory().get( ScoreStatsControlerListener.ScoreItem.average ).get(0));
+
+		} catch ( Exception ee ) {
+			throw new RuntimeException(ee) ;
+		}
+	}
 
 	class FareEventChecker implements PersonMoneyEventHandler {
 		private Map<Id<Person>, List<PersonMoneyEvent>> person2moneyEvents = new HashMap<>();
