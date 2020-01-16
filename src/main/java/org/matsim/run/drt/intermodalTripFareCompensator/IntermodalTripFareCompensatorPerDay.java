@@ -54,19 +54,10 @@ public class IntermodalTripFareCompensatorPerDay implements PersonDepartureEvent
 	private Set<String> ptModes;
 	private double compensationTime = Double.NaN;
 
-	// for the module
 	IntermodalTripFareCompensatorPerDay(IntermodalTripFareCompensatorConfigGroup intermodalFareConfigGroup) {
 		this.compensation = intermodalFareConfigGroup.getCompensationPerTrip();
 		this.drtModes = intermodalFareConfigGroup.getDrtModes();
 		this.ptModes = intermodalFareConfigGroup.getPtModes();
-	}
-
-	// for tests
-	IntermodalTripFareCompensatorPerDay(IntermodalTripFareCompensatorConfigGroup intermodalFareConfigGroup,
-			EventsManager events, QSimConfigGroup qSimConfigGroup) {
-		this(intermodalFareConfigGroup);
-		this.events = events;
-		this.qSimConfigGroup = qSimConfigGroup;
 	}
 
 	@Override

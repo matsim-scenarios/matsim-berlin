@@ -38,6 +38,7 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
 import org.matsim.core.controler.Controler;
+import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup.CompensationCondition;
 import org.matsim.testcases.MatsimTestUtils;
 
 /**
@@ -59,94 +60,30 @@ public class IntermodalTripFareCompensatorPerDayTest {
         Scenario scenario = fixture.scenario;
 
         IntermodalTripFareCompensatorConfigGroup compensatorConfig = new IntermodalTripFareCompensatorConfigGroup();
+        compensatorConfig.setCompensationCondition(CompensationCondition.PtModeUsedAnywhereInTheDay);
         compensatorConfig.setDrtModesAsString(TransportMode.drt + ",drt2");
         compensatorConfig.setPtModesAsString(TransportMode.pt);
         double compensationPerTrip = 1.0;
         compensatorConfig.setCompensationPerTrip(compensationPerTrip);
         
-        config.addModule(compensatorConfig);
-
-        double endOfDay = 30 * 3600.0;
-        config.qsim().setEndTime(endOfDay);
+        IntermodalTripFareCompensatorsConfigGroup compensatorsConfig = new IntermodalTripFareCompensatorsConfigGroup();
+        compensatorsConfig.addParameterSet(compensatorConfig);
         
-        // prepare dummy simulation to trigger an AfterMobsimEvent
+        config.addModule(compensatorsConfig);
+        
         config.controler().setOutputDirectory(utils.getOutputDirectory());
         config.controler().setLastIteration(0);
-//        Scenario scenario = ScenarioUtils.createScenario(config);
-
-//        
-//        Module module = new AbstractModule() {
-//            @Override
-//            public void install() {
-//                install( new NewControlerModule() );
-//                install( new ControlerDefaultCoreListenersModule() );
-//                install( new ControlerDefaultsModule() );
-//                install( new ScenarioByInstanceModule( scenario ));
-//            }
-//        };
-//        com.google.inject.Injector injector = Injector.createInjector( config, module );
-//        EventsManager events = injector.getInstance(EventsManager.class);
-//        
+        
         Controler controler = new Controler( scenario );
+		controler.addOverridingModule(new IntermodalTripFareCompensatorsModule());
+        
         EventsManager events = controler.getEvents();
-        
-        IntermodalTripFareCompensatorPerDay tfh = new IntermodalTripFareCompensatorPerDay(compensatorConfig, events, config.qsim());
-        events.addHandler(tfh);
-        controler.addControlerListener(tfh);
-        
-        Map<Id<Person>, Double> person2Fare = new HashMap<>();
-        events.addHandler(new PersonMoneyEventHandler() {
-            @Override
-            public void handleEvent(PersonMoneyEvent event) {
-            	if (!person2Fare.containsKey(event.getPersonId())) {
-            		person2Fare.put(event.getPersonId(), event.getAmount());
-            	} else {
-            		person2Fare.put(event.getPersonId(), person2Fare.get(event.getPersonId()) + event.getAmount());
-            	}
-            }
-
-            @Override
-            public void reset(int iteration) {
-            }
-        });
+        FareSumCalculator fareSummer = new FareSumCalculator();
+        events.addHandler(fareSummer);
         
         controler.run();
         
-//        Id<Person> personIdNoPtButDrt = Id.createPersonId("NoPtButDrt");
-//        Id<Person> personIdPtNoDrt = Id.createPersonId("PtNoDrt");
-//        Id<Person> personIdPt1Drt = Id.createPersonId("Pt1Drt");
-//        Id<Person> personIdPt3Drt = Id.createPersonId("Pt3Drt");
-//
-//        // test trip with drt mode but not intermodal
-//        events.processEvent(new PersonDepartureEvent(0.0, personIdNoPtButDrt, Id.createLinkId("12"), TransportMode.drt));
-//        
-//        // test intermodal trip without drt mode (only unrelated other mode)
-//        events.processEvent(new PersonDepartureEvent(12.0, personIdPtNoDrt, Id.createLinkId("23"), TransportMode.car));
-//        events.processEvent(new PersonDepartureEvent(13.0, personIdPtNoDrt, Id.createLinkId("34"), TransportMode.pt));
-//        
-//        // test intermodal trip with pt and drt mode
-//        events.processEvent(new PersonDepartureEvent(22.0, personIdPt1Drt, Id.createLinkId("23"), TransportMode.drt));
-//        events.processEvent(new PersonDepartureEvent(23.0, personIdPt1Drt, Id.createLinkId("34"), TransportMode.pt));
-//        events.processEvent(new PersonDepartureEvent(24.0, personIdPt1Drt, Id.createLinkId("23"), TransportMode.car));
-//        
-//        // test intermodal trips with pt and multiple drt legs
-//        events.processEvent(new PersonDepartureEvent(32.0, personIdPt3Drt, Id.createLinkId("23"), TransportMode.drt));
-//        events.processEvent(new PersonDepartureEvent(33.0, personIdPt3Drt, Id.createLinkId("34"), TransportMode.pt));
-//        events.processEvent(new PersonDepartureEvent(34.0, personIdPt3Drt, Id.createLinkId("23"), TransportMode.drt));
-//		// end trip
-////        events.processEvent(new ActivityStartEvent(35.0, personIdPt3Drt, Id.createLinkId("23"), Id.create("dummy", ActivityFacility.class), "blub"));
-//        
-//        // drt on other monomodal drt trip (without pt)
-//        events.processEvent(new PersonDepartureEvent(36.0, personIdPt3Drt, Id.createLinkId("23"), TransportMode.drt));
-        
-        // trigger compensation payment
-//        controler.run();
-//        events.processEvent(new AfterMobsimEvent(null, 0));        
-        
-//        injector.getInstance(ControlerListenerManagerImpl.class).fireControlerAfterMobsimEvent(0);
-//        log.error(person2Fare.get(personIdPt3Drt));
-        
-        // compensation paid third time (second trip)
+        Map<Id<Person>, Double> person2Fare = fareSummer.getPerson2Fare();
         
 		Assert.assertTrue("NoPtButDrt received compensation but should not", person2Fare.get(fixture.personIdNoPtButDrt) == null);
 		Assert.assertTrue("PtNoDrt received compensation but should not", person2Fare.get(fixture.personIdPtNoDrt) == null);
@@ -161,6 +98,26 @@ public class IntermodalTripFareCompensatorPerDayTest {
 				person2Fare.get(fixture.personIdPt3DrtIn2IntermodalTrips), MatsimTestUtils.EPSILON);
 
     }
+    
+    private static class FareSumCalculator implements PersonMoneyEventHandler {
+        Map<Id<Person>, Double> person2Fare = new HashMap<>();
+    	
+        @Override
+        public void handleEvent(PersonMoneyEvent event) {
+        	if (!person2Fare.containsKey(event.getPersonId())) {
+        		person2Fare.put(event.getPersonId(), event.getAmount());
+        	} else {
+        		person2Fare.put(event.getPersonId(), person2Fare.get(event.getPersonId()) + event.getAmount());
+        	}
+        }
 
-
+        @Override
+        public void reset(int iteration) {
+        	person2Fare.clear();
+        }
+        
+        private Map<Id<Person>, Double> getPerson2Fare() {
+        	return person2Fare;
+        }
+    }
 }
