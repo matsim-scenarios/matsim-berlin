@@ -37,8 +37,10 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ModeParams;
 import org.matsim.core.config.groups.PlansCalcRouteConfigGroup.ModeRoutingParams;
+import org.matsim.core.config.groups.StrategyConfigGroup.StrategySettings;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.routes.GenericRouteImpl;
+import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule.DefaultSelector;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 
@@ -63,6 +65,11 @@ class Fixture {
 	private void buildConfig() {
 		this.config = ConfigUtils.createConfig();
 		config.qsim().setEndTime(10 * 3600.0);
+		
+		StrategySettings stratSets = new StrategySettings();
+		stratSets.setStrategyName(DefaultSelector.KeepLastSelected);
+		stratSets.setWeight(1.0);
+		config.strategy().addStrategySettings(stratSets);
 		
 		ActivityParams actParamsHome = new ActivityParams("home");
 		actParamsHome.setTypicalDuration(1.0 * 3600);
