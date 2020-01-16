@@ -31,7 +31,6 @@ public class IntermodalTripFareCompensatorsModule extends AbstractModule {
 			case PtModeUsedInSameTrip:
 				IntermodalTripFareCompensatorPerTrip compensatorPerTrip = new IntermodalTripFareCompensatorPerTrip(intermodalFareConfigGroup);
 				addEventHandlerBinding().toInstance(compensatorPerTrip);
-				addControlerListenerBinding().toInstance(compensatorPerTrip);
 				break;
 			case PtModeUsedAnywhereInTheDay:
 				IntermodalTripFareCompensatorPerDay compensatorPerDay = new IntermodalTripFareCompensatorPerDay(intermodalFareConfigGroup);
