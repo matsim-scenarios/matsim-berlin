@@ -180,13 +180,17 @@ public class RunDrtOpenBerlinScenarioTest {
 			
 			int compensatorMoneyEventsCounter = 0;
 			for(PersonMoneyEvent event: moneyEventsIntermodalAgent) {
-				if (Math.abs(event.getAmount() - expectedCompensationAmountPerTrip) < MatsimTestUtils.EPSILON) {
+				if (Math.abs(event.getAmount() - expectedCompensationAmountPerTrip * drtLegsInIntermodalTripsCounter) < MatsimTestUtils.EPSILON) {
 					// We do not know where the money event comes from, so these are money events *potentially* thrown by the intermodal trip fare compensator.
 					compensatorMoneyEventsCounter++;
 				}
 			}
 			
-			Assert.assertTrue("Number of potential intermodal trip fare compensator money events should be equal or higher than the number of intermodal trips.", drtLegsInIntermodalTripsCounter <= compensatorMoneyEventsCounter);
+			Assert.assertTrue(
+					"Number of potential intermodal trip fare compensator money events should be equal or higher than the number of intermodal trips."
+							+ "drtLegsInIntermodalTripsCounter: " + drtLegsInIntermodalTripsCounter
+							+ ", compensatorMoneyEventsCounter:" + compensatorMoneyEventsCounter,
+					1 <= compensatorMoneyEventsCounter);
 			
 		} catch ( Exception ee ) {
 			throw new RuntimeException(ee) ;
