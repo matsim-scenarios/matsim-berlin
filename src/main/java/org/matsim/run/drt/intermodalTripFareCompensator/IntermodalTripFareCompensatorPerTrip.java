@@ -44,7 +44,7 @@ import com.google.inject.Inject;
  * @author vsp-gleich
  *
  */
-public class IntermodalTripFareCompensatorPerTrip implements PersonDepartureEventHandler, ActivityStartEventHandler, AfterMobsimListener {
+public class IntermodalTripFareCompensatorPerTrip implements PersonDepartureEventHandler, ActivityStartEventHandler {
 	@Inject private EventsManager events;
 	private Set<Id<Person>> personsOnPtTrip = new HashSet<>();
 	private Set<Id<Person>> personsOnDrtTrip = new HashSet<>();
@@ -101,11 +101,11 @@ public class IntermodalTripFareCompensatorPerTrip implements PersonDepartureEven
 		events.processEvent(new PersonMoneyEvent(time, agentId, amount));
 	}
 
-	@Override
-	public void notifyAfterMobsim(AfterMobsimEvent event) {
+    @Override
+    public void reset(int iteration) {
 		// reset for stuck agents after mobsim
-		personsOnPtTrip.clear();
-		personsOnDrtTrip.clear();
-	}
+    	personsOnPtTrip.clear();
+    	personsOnDrtTrip.clear();
+    }
 	
 }

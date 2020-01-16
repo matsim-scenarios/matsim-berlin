@@ -87,11 +87,14 @@ public class IntermodalTripFareCompensatorPerDay implements PersonDepartureEvent
 				compensate(time, person2DrtTrips.getKey(), compensation * person2DrtTrips.getValue());
 			}
 		}
-
+	}
+	
+    @Override
+    public void reset(int iteration) {
 		// reset for stuck agents after mobsim
 		personsOnPtTrip.clear();
 		persons2DrtTrips.clear();
-	}
+    }
 
 	private double getOrCalcCompensationTime() {
 		if (Double.isNaN(this.compensationTime)) {
