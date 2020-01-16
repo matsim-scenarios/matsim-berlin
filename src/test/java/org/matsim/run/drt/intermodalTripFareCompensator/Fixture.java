@@ -160,9 +160,11 @@ class Fixture {
 			Leg leg1 = createAddAndRouteLeg(planNoPtButDrt, TransportMode.walk, Id.create("12", Link.class), Id.create("23", Link.class));
 			TripStructureUtils.setRoutingMode(leg1, TransportMode.drt);
 			Activity actStage1 = PopulationUtils.createAndAddActivityFromLinkId(planNoPtButDrt, "drt interaction", Id.create("23", Link.class));
+			actStage1.setMaximumDuration(0);
 			Leg leg2 = createAddAndRouteLeg(planNoPtButDrt, TransportMode.drt, Id.create("23", Link.class), Id.create("34", Link.class));
 			TripStructureUtils.setRoutingMode(leg2, TransportMode.drt);
 			Activity actStage2 = PopulationUtils.createAndAddActivityFromLinkId(planNoPtButDrt, "drt interaction", Id.create("34", Link.class));
+			actStage2.setMaximumDuration(0);
 			Leg leg3 = createAddAndRouteLeg(planNoPtButDrt, TransportMode.walk, Id.create("34", Link.class), Id.create("23", Link.class));
 			TripStructureUtils.setRoutingMode(leg3, TransportMode.drt);
 			Activity act2 = PopulationUtils.createAndAddActivityFromLinkId(planNoPtButDrt, "work", Id.create("23", Link.class));
@@ -170,6 +172,7 @@ class Fixture {
 			Leg leg4 = createAddAndRouteLeg(planNoPtButDrt, TransportMode.walk, Id.create("23", Link.class), Id.create("12", Link.class));
 			TripStructureUtils.setRoutingMode(leg4, TransportMode.walk);
 			Activity act3 = PopulationUtils.createAndAddActivityFromLinkId(planNoPtButDrt, "home", Id.create("12", Link.class));
+			act3.setEndTime(Double.POSITIVE_INFINITY);
 		}
 		
 		{
@@ -183,9 +186,11 @@ class Fixture {
 			Leg leg1 = createAddAndRouteLeg(planPtNoDrt, TransportMode.walk, Id.create("12", Link.class), Id.create("23", Link.class));
 			TripStructureUtils.setRoutingMode(leg1, TransportMode.pt);
 			Activity actStage1 = PopulationUtils.createAndAddActivityFromLinkId(planPtNoDrt, "pt interaction", Id.create("23", Link.class));
+			actStage1.setMaximumDuration(0);
 			Leg leg2 = createAddAndRouteLeg(planPtNoDrt, TransportMode.pt, Id.create("23", Link.class), Id.create("34", Link.class));
 			TripStructureUtils.setRoutingMode(leg2, TransportMode.pt);
 			Activity actStage2 = PopulationUtils.createAndAddActivityFromLinkId(planPtNoDrt, "pt interaction", Id.create("34", Link.class));
+			actStage2.setMaximumDuration(0);
 			Leg leg3 = createAddAndRouteLeg(planPtNoDrt, TransportMode.walk, Id.create("34", Link.class), Id.create("45", Link.class));
 			TripStructureUtils.setRoutingMode(leg3, TransportMode.pt);
 			Activity act2 = PopulationUtils.createAndAddActivityFromLinkId(planPtNoDrt, "work", Id.create("45", Link.class));
@@ -193,6 +198,7 @@ class Fixture {
 			Leg leg4 = createAddAndRouteLeg(planPtNoDrt, TransportMode.walk, Id.create("45", Link.class), Id.create("12", Link.class));
 			TripStructureUtils.setRoutingMode(leg4, TransportMode.walk);
 			Activity act3 = PopulationUtils.createAndAddActivityFromLinkId(planPtNoDrt, "home", Id.create("12", Link.class));
+			act3.setEndTime(Double.POSITIVE_INFINITY);
 		}
 
 		{
@@ -206,15 +212,19 @@ class Fixture {
 			Leg leg1 = createAddAndRouteLeg(planPt1DrtSameTrip, TransportMode.walk, Id.create("12", Link.class), Id.create("23", Link.class));
 			TripStructureUtils.setRoutingMode(leg1, TransportMode.pt);
 			Activity actStage1 = PopulationUtils.createAndAddActivityFromLinkId(planPt1DrtSameTrip, "pt interaction", Id.create("23", Link.class));
+			actStage1.setMaximumDuration(0);
 			Leg leg2 = createAddAndRouteLeg(planPt1DrtSameTrip, TransportMode.pt, Id.create("23", Link.class), Id.create("34", Link.class));
 			TripStructureUtils.setRoutingMode(leg2, TransportMode.pt);
 			Activity actStage2 = PopulationUtils.createAndAddActivityFromLinkId(planPt1DrtSameTrip, "pt interaction", Id.create("34", Link.class));
+			actStage2.setMaximumDuration(0);
 			Leg leg3 = createAddAndRouteLeg(planPt1DrtSameTrip, TransportMode.walk, Id.create("34", Link.class), Id.create("45", Link.class));
 			TripStructureUtils.setRoutingMode(leg3, TransportMode.pt);
 			Activity actStage3 = PopulationUtils.createAndAddActivityFromLinkId(planPt1DrtSameTrip, "pt interaction", Id.create("45", Link.class));
+			actStage3.setMaximumDuration(0);
 			Leg leg4 = createAddAndRouteLeg(planPt1DrtSameTrip, TransportMode.drt, Id.create("45", Link.class), Id.create("56", Link.class));
 			TripStructureUtils.setRoutingMode(leg4, TransportMode.pt);
 			Activity actStage4 = PopulationUtils.createAndAddActivityFromLinkId(planPt1DrtSameTrip, "pt interaction", Id.create("56", Link.class));
+			actStage4.setMaximumDuration(0);
 			Leg leg5 = createAddAndRouteLeg(planPt1DrtSameTrip, TransportMode.walk, Id.create("56", Link.class), Id.create("56", Link.class));
 			TripStructureUtils.setRoutingMode(leg5, TransportMode.pt);
 			Activity act2 = PopulationUtils.createAndAddActivityFromLinkId(planPt1DrtSameTrip, "work", Id.create("56", Link.class));
@@ -222,6 +232,7 @@ class Fixture {
 			Leg leg6 = createAddAndRouteLeg(planPt1DrtSameTrip, TransportMode.walk, Id.create("56", Link.class), Id.create("12", Link.class));
 			TripStructureUtils.setRoutingMode(leg6, TransportMode.pt);
 			Activity act3 = PopulationUtils.createAndAddActivityFromLinkId(planPt1DrtSameTrip, "home", Id.create("12", Link.class));
+			act3.setEndTime(Double.POSITIVE_INFINITY);
 		}
 		
 		{
@@ -235,9 +246,11 @@ class Fixture {
 			Leg leg1 = createAddAndRouteLeg(planPt1DrtDifferentTrips, TransportMode.walk, Id.create("12", Link.class), Id.create("23", Link.class));
 			TripStructureUtils.setRoutingMode(leg1, TransportMode.pt);
 			Activity actStage1 = PopulationUtils.createAndAddActivityFromLinkId(planPt1DrtDifferentTrips, "pt interaction", Id.create("23", Link.class));
+			actStage1.setMaximumDuration(0);
 			Leg leg2 = createAddAndRouteLeg(planPt1DrtDifferentTrips, TransportMode.pt, Id.create("23", Link.class), Id.create("34", Link.class));
 			TripStructureUtils.setRoutingMode(leg2, TransportMode.pt);
 			Activity actStage2 = PopulationUtils.createAndAddActivityFromLinkId(planPt1DrtDifferentTrips, "pt interaction", Id.create("34", Link.class));
+			actStage2.setMaximumDuration(0);
 			Leg leg3 = createAddAndRouteLeg(planPt1DrtDifferentTrips, TransportMode.walk, Id.create("34", Link.class), Id.create("56", Link.class));
 			TripStructureUtils.setRoutingMode(leg3, TransportMode.pt);
 			Activity act2 = PopulationUtils.createAndAddActivityFromLinkId(planPt1DrtDifferentTrips, "work", Id.create("56", Link.class));
@@ -245,12 +258,15 @@ class Fixture {
 			Leg leg4 = createAddAndRouteLeg(planPt1DrtDifferentTrips, TransportMode.walk, Id.create("56", Link.class), Id.create("54", Link.class));
 			TripStructureUtils.setRoutingMode(leg4, TransportMode.drt);
 			Activity actStage3 = PopulationUtils.createAndAddActivityFromLinkId(planPt1DrtDifferentTrips, "drt interaction", Id.create("54", Link.class));
+			actStage3.setMaximumDuration(0);
 			Leg leg5 = createAddAndRouteLeg(planPt1DrtDifferentTrips, TransportMode.drt, Id.create("54", Link.class), Id.create("32", Link.class));
 			TripStructureUtils.setRoutingMode(leg5, TransportMode.drt);
 			Activity actStage4 = PopulationUtils.createAndAddActivityFromLinkId(planPt1DrtDifferentTrips, "drt interaction", Id.create("32", Link.class));
+			actStage4.setMaximumDuration(0);
 			Leg leg6 = createAddAndRouteLeg(planPt1DrtDifferentTrips, TransportMode.walk, Id.create("32", Link.class), Id.create("12", Link.class));
 			TripStructureUtils.setRoutingMode(leg6, TransportMode.drt);
 			Activity act3 = PopulationUtils.createAndAddActivityFromLinkId(planPt1DrtDifferentTrips, "home", Id.create("12", Link.class));
+			act3.setEndTime(Double.POSITIVE_INFINITY);
 		}
 		
 		{
@@ -264,27 +280,35 @@ class Fixture {
 			Leg leg1 = createAddAndRouteLeg(planPt3DrtIn2IntermodalTrips, TransportMode.walk, Id.create("12", Link.class), Id.create("23", Link.class));
 			TripStructureUtils.setRoutingMode(leg1, TransportMode.pt);
 			Activity actStage1 = PopulationUtils.createAndAddActivityFromLinkId(planPt3DrtIn2IntermodalTrips, "pt interaction", Id.create("23", Link.class));
+			actStage1.setMaximumDuration(0);
 			Leg leg2 = createAddAndRouteLeg(planPt3DrtIn2IntermodalTrips, TransportMode.drt, Id.create("23", Link.class), Id.create("34", Link.class));
 			TripStructureUtils.setRoutingMode(leg2, TransportMode.pt);
 			Activity actStage2 = PopulationUtils.createAndAddActivityFromLinkId(planPt3DrtIn2IntermodalTrips, "pt interaction", Id.create("34", Link.class));
+			actStage2.setMaximumDuration(0);
 			Leg leg3 = createAddAndRouteLeg(planPt3DrtIn2IntermodalTrips, TransportMode.walk, Id.create("34", Link.class), Id.create("45", Link.class));
 			TripStructureUtils.setRoutingMode(leg3, TransportMode.pt);
 			Activity actStage3 = PopulationUtils.createAndAddActivityFromLinkId(planPt3DrtIn2IntermodalTrips, "pt interaction", Id.create("45", Link.class));
+			actStage3.setMaximumDuration(0);
 			Leg leg4 = createAddAndRouteLeg(planPt3DrtIn2IntermodalTrips, TransportMode.pt, Id.create("45", Link.class), Id.create("56", Link.class));
 			TripStructureUtils.setRoutingMode(leg4, TransportMode.pt);
 			Activity actStage4 = PopulationUtils.createAndAddActivityFromLinkId(planPt3DrtIn2IntermodalTrips, "pt interaction", Id.create("56", Link.class));
+			actStage4.setMaximumDuration(0);
 			Leg leg5 = createAddAndRouteLeg(planPt3DrtIn2IntermodalTrips, TransportMode.walk, Id.create("56", Link.class), Id.create("65", Link.class));
 			TripStructureUtils.setRoutingMode(leg5, TransportMode.pt);
 			Activity actStage5 = PopulationUtils.createAndAddActivityFromLinkId(planPt3DrtIn2IntermodalTrips, "pt interaction", Id.create("65", Link.class));
+			actStage5.setMaximumDuration(0);
 			Leg leg6 = createAddAndRouteLeg(planPt3DrtIn2IntermodalTrips, TransportMode.pt, Id.create("65", Link.class), Id.create("54", Link.class));
 			TripStructureUtils.setRoutingMode(leg6, TransportMode.pt);
 			Activity actStage6 = PopulationUtils.createAndAddActivityFromLinkId(planPt3DrtIn2IntermodalTrips, "pt interaction", Id.create("54", Link.class));
+			actStage6.setMaximumDuration(0);
 			Leg leg7 = createAddAndRouteLeg(planPt3DrtIn2IntermodalTrips, TransportMode.walk, Id.create("54", Link.class), Id.create("43", Link.class));
 			TripStructureUtils.setRoutingMode(leg7, TransportMode.pt);
 			Activity actStage7 = PopulationUtils.createAndAddActivityFromLinkId(planPt3DrtIn2IntermodalTrips, "pt interaction", Id.create("43", Link.class));
+			actStage7.setMaximumDuration(0);
 			Leg leg8 = createAddAndRouteLeg(planPt3DrtIn2IntermodalTrips, TransportMode.drt, Id.create("43", Link.class), Id.create("32", Link.class));
 			TripStructureUtils.setRoutingMode(leg8, TransportMode.pt);
 			Activity actStage8 = PopulationUtils.createAndAddActivityFromLinkId(planPt3DrtIn2IntermodalTrips, "pt interaction", Id.create("32", Link.class));
+			actStage8.setMaximumDuration(0);
 			Leg leg9 = createAddAndRouteLeg(planPt3DrtIn2IntermodalTrips, TransportMode.walk, Id.create("32", Link.class), Id.create("21", Link.class));
 			TripStructureUtils.setRoutingMode(leg9, TransportMode.pt);
 			Activity act2 = PopulationUtils.createAndAddActivityFromLinkId(planPt3DrtIn2IntermodalTrips, "work", Id.create("21", Link.class));
@@ -292,18 +316,23 @@ class Fixture {
 			Leg leg10 = createAddAndRouteLeg(planPt3DrtIn2IntermodalTrips, TransportMode.walk, Id.create("21", Link.class), Id.create("12", Link.class));
 			TripStructureUtils.setRoutingMode(leg10, TransportMode.pt);
 			Activity actStage9 = PopulationUtils.createAndAddActivityFromLinkId(planPt3DrtIn2IntermodalTrips, "pt interaction", Id.create("12", Link.class));
+			actStage9.setMaximumDuration(0);
 			Leg leg11 = createAddAndRouteLeg(planPt3DrtIn2IntermodalTrips, TransportMode.drt, Id.create("12", Link.class), Id.create("23", Link.class));
 			TripStructureUtils.setRoutingMode(leg11, TransportMode.pt);
 			Activity actStage10 = PopulationUtils.createAndAddActivityFromLinkId(planPt3DrtIn2IntermodalTrips, "pt interaction", Id.create("23", Link.class));
+			actStage10.setMaximumDuration(0);
 			Leg leg12 = createAddAndRouteLeg(planPt3DrtIn2IntermodalTrips, TransportMode.walk, Id.create("23", Link.class), Id.create("34", Link.class));
 			TripStructureUtils.setRoutingMode(leg12, TransportMode.pt);
 			Activity actStage11 = PopulationUtils.createAndAddActivityFromLinkId(planPt3DrtIn2IntermodalTrips, "pt interaction", Id.create("34", Link.class));
+			actStage11.setMaximumDuration(0);
 			Leg leg13 = createAddAndRouteLeg(planPt3DrtIn2IntermodalTrips, TransportMode.pt, Id.create("34", Link.class), Id.create("43", Link.class));
 			TripStructureUtils.setRoutingMode(leg13, TransportMode.pt);
 			Activity actStage12 = PopulationUtils.createAndAddActivityFromLinkId(planPt3DrtIn2IntermodalTrips, "pt interaction", Id.create("43", Link.class));
+			actStage12.setMaximumDuration(0);
 			Leg leg14 = createAddAndRouteLeg(planPt3DrtIn2IntermodalTrips, TransportMode.walk, Id.create("43", Link.class), Id.create("12", Link.class));
 			TripStructureUtils.setRoutingMode(leg14, TransportMode.pt);
 			Activity act3 = PopulationUtils.createAndAddActivityFromLinkId(planPt3DrtIn2IntermodalTrips, "home", Id.create("12", Link.class));
+			act3.setEndTime(Double.POSITIVE_INFINITY);
 		}
 	}
 	
