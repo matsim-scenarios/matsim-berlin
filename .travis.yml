@@ -13,7 +13,8 @@ env:
     # - TEST=RunBerlinScenarioIT#test10pctUntilIteration1 # does not fit into travis.  kai, aug'18
     # - TEST=RunBerlinScenarioIT#test1pctManyIterations # does probably not fit into travis (not tested).  kai, aug'18
     - TEST=AbfallUtilsTest
-    - TEST=IntermodalTripFareCompensatorTest
+    - TEST=IntermodalTripFareCompensatorPerDayTest
+    - TEST=IntermodalTripFareCompensatorPerTripTest
     - TEST=OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifierTest
     - TEST=RunDrtOpenBerlinScenarioWithDrtSpeedUpTest
     - TEST=ChangeSingleTripModeAndRoutePlanRouterTest
