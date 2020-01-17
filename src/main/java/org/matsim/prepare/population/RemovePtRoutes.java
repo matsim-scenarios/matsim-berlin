@@ -21,6 +21,7 @@ package org.matsim.prepare.population;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -36,10 +37,10 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.gbl.Gbl;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.routes.NetworkRoute;
-import org.matsim.core.router.MainModeIdentifierImpl;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 
 /**
  * 
@@ -49,6 +50,8 @@ import org.matsim.core.scenario.ScenarioUtils;
  *
  */
 public class RemovePtRoutes {
+	
+	private final static Logger log = Logger.getLogger(RemovePtRoutes.class);
 
 	public static void main(String[] args) {
 		Config config = ConfigUtils.createConfig();
@@ -72,6 +75,13 @@ public class RemovePtRoutes {
 					if (pe instanceof Leg){
 						Leg leg = (Leg) pe;
 						if (leg.getRoute() != null) {
+							if (leg.getRoute().getStartLinkId().toString().startsWith("pt_") || leg.getRoute().getEndLinkId().toString().startsWith("pt_")) {
+								log.error("agent " + person.getId()
+										+ " still has route starting or ending at a link of the pt network after removing pt routes: "
+										+ leg.getRoute().getStartLinkId().toString() + " / "
+										+ leg.getRoute().getEndLinkId().toString());
+								log.error("full plan: " + plan);
+							}
 							Gbl.assertIf(!leg.getRoute().getStartLinkId().toString().startsWith("pt_"));
 							Gbl.assertIf(!leg.getRoute().getEndLinkId().toString().startsWith("pt_"));
 							if (leg.getRoute() instanceof NetworkRoute) {
@@ -104,7 +114,7 @@ public class RemovePtRoutes {
 				planElements.subList(
 						planElements.indexOf( trip.getOriginActivity() ) + 1,
 						planElements.indexOf( trip.getDestinationActivity() ));
-			final String mode = (new MainModeIdentifierImpl()).identifyMainMode( fullTrip );
+			final String mode = (new OpenBerlinIntermodalPtDrtRouterModeIdentifier()).identifyMainMode( fullTrip );
 			if (mode.equals(TransportMode.pt)) {
 				fullTrip.clear();
 				fullTrip.add( PopulationUtils.createLeg(mode) );
