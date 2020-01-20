@@ -47,6 +47,7 @@ public class RunBerlinAccidents {
 	Config config = RunBerlinScenario.prepareConfig(args);
 	config.controler().setOutputDirectory(outputFile);
 	AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
+	accidentsSettings.setEnableAccidentsModule(true);
 	accidentsSettings.setScaleFactor(100);
 	
 	Scenario scenario = RunBerlinScenario.prepareScenario(config);
