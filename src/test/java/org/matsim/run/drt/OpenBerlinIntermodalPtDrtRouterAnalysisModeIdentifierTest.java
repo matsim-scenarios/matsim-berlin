@@ -177,6 +177,70 @@ public class OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifierTest {
 		
 		log.info("Running testIntermodalPtDrtTrip... Done.");
 	}
+	
+	@Test
+	public final void testIntermodalPtDrtTripWithWalk() {
+		log.info("Running testIntermodalPtDrtTrip...");
+		
+		OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier mainModeIdentifier = new OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier();
+		
+		Scenario scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
+		PopulationFactory factory = scenario.getPopulation().getFactory();
+		
+		{
+			List<PlanElement> planElements = new ArrayList<>();
+			planElements.add(factory.createLeg(TransportMode.walk));
+			planElements.add(factory.createActivityFromLinkId("drt interaction", null));
+			planElements.add(factory.createLeg(TransportMode.drt));
+			planElements.add(factory.createActivityFromLinkId("drt interaction", null));
+			planElements.add(factory.createLeg(TransportMode.walk));
+			planElements.add(factory.createActivityFromLinkId(PtConstants.TRANSIT_ACTIVITY_TYPE, null));
+			planElements.add(factory.createLeg(TransportMode.pt));
+			planElements.add(factory.createActivityFromLinkId(PtConstants.TRANSIT_ACTIVITY_TYPE, null));
+			planElements.add(factory.createLeg(TransportMode.pt));
+			planElements.add(factory.createActivityFromLinkId(PtConstants.TRANSIT_ACTIVITY_TYPE, null));
+			planElements.add(factory.createLeg(TransportMode.walk));
+			Assert.assertEquals("Wrong mode!", "pt+drt", mainModeIdentifier.identifyMainMode(planElements));
+		}
+		
+		{
+			List<PlanElement> planElements = new ArrayList<>();
+			planElements.add(factory.createLeg(TransportMode.walk));
+			planElements.add(factory.createActivityFromLinkId("drt2 interaction", null));
+			planElements.add(factory.createLeg("drt2"));
+			planElements.add(factory.createActivityFromLinkId("drt2 interaction", null));
+			planElements.add(factory.createLeg(TransportMode.walk));
+			planElements.add(factory.createActivityFromLinkId(PtConstants.TRANSIT_ACTIVITY_TYPE, null));
+			planElements.add(factory.createLeg(TransportMode.pt));
+			planElements.add(factory.createActivityFromLinkId(PtConstants.TRANSIT_ACTIVITY_TYPE, null));
+			planElements.add(factory.createLeg(TransportMode.pt));
+			planElements.add(factory.createActivityFromLinkId(PtConstants.TRANSIT_ACTIVITY_TYPE, null));
+			planElements.add(factory.createLeg(TransportMode.walk));
+			Assert.assertEquals("Wrong mode!", "pt+drt", mainModeIdentifier.identifyMainMode(planElements));
+		}
+		
+		{
+			List<PlanElement> planElements = new ArrayList<>();
+			planElements.add(factory.createLeg(TransportMode.walk));
+			planElements.add(factory.createActivityFromLinkId("drt interaction", null));
+			planElements.add(factory.createLeg(TransportMode.drt));
+			planElements.add(factory.createActivityFromLinkId("drt interaction", null));
+			planElements.add(factory.createLeg(TransportMode.walk));
+			planElements.add(factory.createActivityFromLinkId(PtConstants.TRANSIT_ACTIVITY_TYPE, null));
+			planElements.add(factory.createLeg(TransportMode.pt));
+			planElements.add(factory.createActivityFromLinkId(PtConstants.TRANSIT_ACTIVITY_TYPE, null));
+			planElements.add(factory.createLeg(TransportMode.pt));
+			planElements.add(factory.createActivityFromLinkId(PtConstants.TRANSIT_ACTIVITY_TYPE, null));
+			planElements.add(factory.createLeg(TransportMode.walk));
+			planElements.add(factory.createActivityFromLinkId("drt2 interaction", null));
+			planElements.add(factory.createLeg("drt2"));
+			planElements.add(factory.createActivityFromLinkId("drt2 interaction", null));
+			planElements.add(factory.createLeg(TransportMode.walk));
+			Assert.assertEquals("Wrong mode!", "pt+drt", mainModeIdentifier.identifyMainMode(planElements));
+		}
+		
+		log.info("Running testIntermodalPtDrtTrip... Done.");
+	}
 
 	@Test(expected = RuntimeException.class)
 	public void testRuntimeExceptionTripWithoutMainMode() {
