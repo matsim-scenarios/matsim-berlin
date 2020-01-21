@@ -4,6 +4,9 @@
 <population>
 
 <person id="100024301">
+	<attributes>
+		<attribute name="subpopulation" class="java.lang.String" >person</attribute>
+	</attributes>
                 <plan score="135.48909078721348" selected="yes">
                         <activity type="home_93600.0" link="117737" x="4626119.172329882" y="5825228.028849992" end_time="11:34:40" >
                                 <attributes>
@@ -54,6 +57,9 @@
 
 
   <person id="100200201">
+  <attributes>
+		<attribute name="subpopulation" class="java.lang.String" >person</attribute>
+	</attributes>
                 <plan score="129.80394930541985" selected="yes">
                         <activity type="home_94200.0" link="105509" x="4628278.146699034" y="5829113.277546146" end_time="10:59:26" >
                                 <attributes>
@@ -84,6 +90,9 @@
 
         
          <person id="100087501">
+         <attributes>
+		<attribute name="subpopulation" class="java.lang.String" >person</attribute>
+	</attributes>
                 <plan score="128.2797261151769" selected="yes">
                         <activity type="home_52800.0" link="88170" x="4628350.015051064" y="5828323.230259925" end_time="07:08:00" >
                                 <attributes>
@@ -149,6 +158,9 @@
         </person>
 
  <person id="10099501">
+ <attributes>
+		<attribute name="subpopulation" class="java.lang.String" >person</attribute>
+	</attributes>
                 <plan score="131.71443152316658" selected="yes">
                         <activity type="home_64800.0" link="99131" x="4609439.096790492" y="5804286.265642875" end_time="11:36:51" >
                                 <attributes>
@@ -178,6 +190,9 @@
         </person>
         
         <person id="100274201">
+        <attributes>
+		<attribute name="subpopulation" class="java.lang.String" >person</attribute>
+	</attributes>
                 <plan score="112.72205618728404" selected="yes">
                         <activity type="home_45600.0" link="24781" x="4633734.28687133" y="5827828.145726077" end_time="06:19:21" >
                                 <attributes>

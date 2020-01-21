@@ -49,6 +49,8 @@ import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.run.RunBerlinScenario;
+import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
+import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
 
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
 
@@ -103,14 +105,16 @@ public final class RunDrtOpenBerlinScenario {
 				// with its own implementation
 				// So we need our own main mode indentifier which replaces both :-(
 				bind(MainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifier.class);
-				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifier.class);
+				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier.class);
 			}
 		});
 
 		// Add drt-specific fare module
 		controler.addOverridingModule(new DrtFareModule());
 		// yyyy there is fareSModule (with S) in config. ?!?!  kai, jul'19
-
+		
+		controler.addOverridingModule(new IntermodalTripFareCompensatorsModule());
+		
 		return controler;
 	}
 	
@@ -142,7 +146,7 @@ public final class RunDrtOpenBerlinScenario {
 	}
 	
 	public static Config prepareConfig( String [] args, ConfigGroup... customModules) {
-		ConfigGroup[] customModulesToAdd = new ConfigGroup[]{new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup() };
+		ConfigGroup[] customModulesToAdd = new ConfigGroup[]{new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup(), new IntermodalTripFareCompensatorsConfigGroup() };
 		ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
 		
 		int counter = 0;
@@ -156,10 +160,7 @@ public final class RunDrtOpenBerlinScenario {
 			counter++;
 		}
 
-		Config config = RunBerlinScenario.prepareConfig( args, new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup()  ) ;
-		
-		// switch off pt vehicle simulation: very slow, because also switches from Raptor to the old pt router
-//		config.transit().setUsingTransitInMobsim(false);
+		Config config = RunBerlinScenario.prepareConfig( args, customModulesAll ) ;
 
 		DrtConfigs.adjustMultiModeDrtConfig(MultiModeDrtConfigGroup.get(config), config.planCalcScore(), config.plansCalcRoute());
 

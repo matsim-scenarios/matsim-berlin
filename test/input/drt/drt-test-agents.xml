@@ -198,6 +198,62 @@
 
 
         </person>
+        
+        <!-- ====================================================================== -->
+        
+        <person id="agent-with-DrtRoute">
+                <attributes>
+                        <attribute name="home-activity-zone" class="java.lang.String" >berlin</attribute>
+                        <attribute name="subpopulation" class="java.lang.String" >person</attribute>
+                </attributes>
+                <plan score="123.4" selected="yes">
+                        <activity type="home_45600.0" link="120005" x="4595582.101818748" y="5820365.6864615" end_time="00:00:00" >
+                                <attributes>
+                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer">28800</attribute>
+                                        <attribute name="zoneId" class="java.lang.String">901011305</attribute>
+                                </attributes>
+                        </activity>
+                        <leg mode="walk" dep_time="00:00:00" trav_time="00:01:09">
+                                <attributes>
+                                        <attribute name="routingMode" class="java.lang.String">drt</attribute>
+                                </attributes>
+                                <route type="generic" start_link="120005" end_link="35685" trav_time="00:01:09" distance="73.3450616136653"></route>
+                        </leg>
+                        <activity type="drt interaction" link="35685" x="4595569.552844599" y="5820310.680478222" max_dur="00:00:00" >
+                        </activity>
+                        <leg mode="drt" dep_time="00:01:09" trav_time="00:34:07">
+                                <attributes>
+                                        <attribute name="routingMode" class="java.lang.String">drt</attribute>
+                                </attributes>
+                                <route type="drt" start_link="35685" end_link="50211" trav_time="00:33:14" distance="6921.839210381295">300.0 1102.4963167791575</route>
+                        </leg>
+                        <activity type="drt interaction" link="50211" x="4591031.66058986" y="5817718.141564841" max_dur="00:00:00" >
+                        </activity>
+                        <leg mode="walk" dep_time="00:35:16" trav_time="00:00:22">
+                                <attributes>
+                                        <attribute name="routingMode" class="java.lang.String">drt</attribute>
+                                </attributes>
+                                <route type="generic" start_link="50211" end_link="46756" trav_time="00:00:22" distance="23.86999956642561"></route>
+                        </leg>
+                        <activity type="leisure_5400.0" link="46756" x="4591039.311131848" y="5817734.833337956" max_dur="00:51:20" >
+                                <attributes>
+                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer">5580</attribute>
+                                        <attribute name="zoneId" class="java.lang.String">907020202</attribute>
+                                </attributes>
+                        </activity>
+                        <leg mode="walk" dep_time="19:03:07" trav_time="00:00:22">
+                                <attributes>
+                                        <attribute name="routingMode" class="java.lang.String">drt</attribute>
+                                </attributes>
+                        </leg>
+                        <activity type="home_45600.0" link="120005" x="4595582.101818748" y="5820365.6864615" end_time="18:27:49" >
+                                <attributes>
+                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer">28800</attribute>
+                                        <attribute name="zoneId" class="java.lang.String">901011305</attribute>
+                                </attributes>
+                        </activity>
+                 </plan>
+        </person>
 
 <!-- ====================================================================== -->
 
