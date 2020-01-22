@@ -12,6 +12,7 @@ import org.matsim.contrib.accidents.runExample.AccidentsNetworkModification;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.run.RunBerlinScenario;
 
 /**
@@ -43,6 +44,8 @@ public class RunBerlinAccidents {
 	
 	Config config = RunBerlinScenario.prepareConfig(args);
 	config.controler().setOutputDirectory(outputFile);
+	config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
+	
 	AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
 	accidentsSettings.setEnableAccidentsModule(true);
 	accidentsSettings.setScaleFactor(100);
