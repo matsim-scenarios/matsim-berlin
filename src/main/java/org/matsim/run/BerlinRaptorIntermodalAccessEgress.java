@@ -15,6 +15,7 @@ import org.matsim.contrib.av.robotaxi.fares.drt.DrtFareConfigGroup;
 import org.matsim.contrib.av.robotaxi.fares.drt.DrtFaresConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ScoringParameterSet;
 import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.utils.misc.Time;
 import org.matsim.run.BerlinExperimentalConfigGroup.IntermodalAccessEgressModeUtilityRandomization;
@@ -51,6 +52,15 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
 
 	@Override
     public RIntermodalAccessEgress calcIntermodalAccessEgress(final List<? extends PlanElement> legs, RaptorParameters params, Person person) {
+		// maybe nicer using raptor parameters per person ?
+		String subpopulationName = null;
+		if (person.getAttributes() != null) {
+			Object attr = person.getAttributes().getAttribute("subpopulation") ;
+			subpopulationName = attr == null ? null : attr.toString();
+		}
+		
+		ScoringParameterSet scoringParams = config.planCalcScore().getScoringParameters(subpopulationName);
+		
         double utility = 0.0;
         double tTime = 0.0;
         for (PlanElement pe : legs) {
@@ -61,14 +71,14 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                 // overrides individual parameters per person; use default scoring parameters
                 if (Time.getUndefinedTime() != travelTime) {
                     tTime += travelTime;
-                    utility += travelTime * (config.planCalcScore().getModes().get(mode).getMarginalUtilityOfTraveling() + (-1) * config.planCalcScore().getPerforming_utils_hr()) / 3600;
+                    utility += travelTime * (scoringParams.getModes().get(mode).getMarginalUtilityOfTraveling() + (-1) * scoringParams.getPerforming_utils_hr()) / 3600;
                 }
                 Double distance = ((Leg) pe).getRoute().getDistance();
                 if (distance != null && distance != 0.) {
-                	utility += distance * config.planCalcScore().getModes().get(mode).getMarginalUtilityOfDistance();
-                	utility += distance * config.planCalcScore().getModes().get(mode).getMonetaryDistanceRate() * config.planCalcScore().getMarginalUtilityOfMoney();
+                	utility += distance * scoringParams.getModes().get(mode).getMarginalUtilityOfDistance();
+                	utility += distance * scoringParams.getModes().get(mode).getMonetaryDistanceRate() * scoringParams.getMarginalUtilityOfMoney();
                 }
-                utility += config.planCalcScore().getModes().get(mode).getConstant();
+                utility += scoringParams.getModes().get(mode).getConstant();
                 
                 // account for drt fares
                 for (DrtFareConfigGroup drtFareConfigGroup : drtFaresConfigGroup.getDrtFareConfigGroups()) {
@@ -85,7 +95,7 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                         
                         fare += drtFareConfigGroup.getBasefare(); 
                         fare = Math.max(fare, drtFareConfigGroup.getMinFarePerTrip());
-                        utility += -1. * fare * config.planCalcScore().getMarginalUtilityOfMoney();
+                        utility += -1. * fare * scoringParams.getMarginalUtilityOfMoney();
                 	}
                 }
                 
@@ -93,7 +103,7 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                 for (IntermodalTripFareCompensatorConfigGroup compensatorCfg : interModalTripFareCompensatorsCfg.getIntermodalTripFareCompensatorConfigGroups()) {
                 	if (compensatorCfg.getDrtModes().contains(mode) && compensatorCfg.getPtModes().contains(TransportMode.pt)) {
                 		// the following is a compensation, thus positive!
-                		utility += compensatorCfg.getCompensationPerTrip() * config.planCalcScore().getMarginalUtilityOfMoney();
+                		utility += compensatorCfg.getCompensationPerTrip() * scoringParams.getMarginalUtilityOfMoney();
                 	}
                 }
                 

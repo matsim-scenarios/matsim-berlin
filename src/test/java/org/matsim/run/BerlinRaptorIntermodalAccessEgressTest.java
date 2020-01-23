@@ -28,10 +28,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.PlanElement;
+import org.matsim.api.core.v01.population.Population;
+import org.matsim.api.core.v01.population.PopulationFactory;
 import org.matsim.api.core.v01.population.Route;
 import org.matsim.contrib.av.robotaxi.fares.drt.DrtFareConfigGroup;
 import org.matsim.contrib.av.robotaxi.fares.drt.DrtFaresConfigGroup;
@@ -42,6 +45,7 @@ import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ModeParams;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.routes.GenericRouteImpl;
+import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.testcases.MatsimTestUtils;
 
 import ch.sbb.matsim.routing.pt.raptor.RaptorIntermodalAccessEgress.RIntermodalAccessEgress;
@@ -61,8 +65,12 @@ public class BerlinRaptorIntermodalAccessEgressTest {
 	public final void testDrtAccess() {
 		List<PlanElement> legs = new ArrayList<>();
 		RaptorParameters params = null;
-		Person person = null;
+
 		Config config = ConfigUtils.createConfig();
+		Scenario scenario = ScenarioUtils.createScenario(config);
+		Population pop = scenario.getPopulation();
+		PopulationFactory f = pop.getFactory();
+		Person person = f.createPerson(Id.createPersonId("personSubpopulationNull"));
 
 		// daily constants / rates are ignored, but set them anyway (to see whether they are used by error)
 		PlanCalcScoreConfigGroup scoreCfg = config.planCalcScore();
@@ -143,8 +151,12 @@ public class BerlinRaptorIntermodalAccessEgressTest {
 	public final void testWalkAccess() {
 		List<PlanElement> legs = new ArrayList<>();
 		RaptorParameters params = null;
-		Person person = null;
+		
 		Config config = ConfigUtils.createConfig();
+		Scenario scenario = ScenarioUtils.createScenario(config);
+		Population pop = scenario.getPopulation();
+		PopulationFactory f = pop.getFactory();
+		Person person = f.createPerson(Id.createPersonId("personSubpopulationNull"));
 
 		// daily constants / rates are ignored, but set them anyway (to see whether they are used by error)
 		PlanCalcScoreConfigGroup scoreCfg = config.planCalcScore();
@@ -157,6 +169,68 @@ public class BerlinRaptorIntermodalAccessEgressTest {
 		walkParams.setMarginalUtilityOfDistance(-0.00015);
 		walkParams.setMarginalUtilityOfTraveling(-0.00016 * 3600.0);
 		walkParams.setMonetaryDistanceRate(-0.00017);
+	
+		BerlinRaptorIntermodalAccessEgress raptorIntermodalAccessEgress = new BerlinRaptorIntermodalAccessEgress(config);
+		
+		Leg walkLeg1 = PopulationUtils.createLeg(TransportMode.walk);
+		walkLeg1.setDepartureTime(7*3600.0);
+		walkLeg1.setTravelTime(100);
+		Route walkRoute1 = new GenericRouteImpl(Id.createLinkId("dummy1"), Id.createLinkId("dummy2"));
+		walkRoute1.setDistance(200.0);
+		walkLeg1.setRoute(walkRoute1);
+		legs.add(walkLeg1);
+		
+		RIntermodalAccessEgress result = raptorIntermodalAccessEgress.calcIntermodalAccessEgress(legs, params, person);
+		
+		//Asserts
+		Assert.assertEquals("Total travel time is wrong!", 100.0, result.travelTime, MatsimTestUtils.EPSILON);
+		
+		/* 
+		 * disutility: -1 * ( ASC + distance + time + monetary distance rate + fare)
+		 * 
+		 * walkLeg1: -1 * (-1.2 -0.00015*200 -(0.00016+0.00011)*100 -0.00017*200 -0 ) = 1.291
+		 */
+		Assert.assertEquals("Total disutility is wrong!", 1.291, result.disutility, MatsimTestUtils.EPSILON);
+
+		for (int i = 0; i < legs.size(); i++) {
+			Assert.assertEquals("Input legs != output legs!", legs.get(i), result.routeParts.get(i));
+		}
+		Assert.assertEquals("Input legs != output legs!", legs.size(), result.routeParts.size());
+	}
+	
+	@Test
+	public final void testWalkAccessSubpopulation() {
+		List<PlanElement> legs = new ArrayList<>();
+		RaptorParameters params = null;
+		
+		Config config = ConfigUtils.createConfig();
+		Scenario scenario = ScenarioUtils.createScenario(config);
+		Population pop = scenario.getPopulation();
+		PopulationFactory f = pop.getFactory();
+		Person person = f.createPerson(Id.createPersonId("personSubpopulationDummy"));
+		
+		String subpopulationName = "dummySubpopulation";
+		person.getAttributes().putAttribute("subpopulation", subpopulationName);
+
+		// daily constants / rates are ignored, but set them anyway (to see whether they are used by error)
+		PlanCalcScoreConfigGroup.ScoringParameterSet scoreCfg = config.planCalcScore().getOrCreateScoringParameters(subpopulationName);
+		scoreCfg.setMarginalUtilityOfMoney(1.0);
+		scoreCfg.setPerforming_utils_hr(0.00011 * 3600.0);
+		ModeParams walkParams = scoreCfg.getOrCreateModeParams(TransportMode.walk);
+		walkParams.setConstant(-1.2);
+		walkParams.setDailyMonetaryConstant(-1.3);
+		walkParams.setDailyUtilityConstant(-1.4);
+		walkParams.setMarginalUtilityOfDistance(-0.00015);
+		walkParams.setMarginalUtilityOfTraveling(-0.00016 * 3600.0);
+		walkParams.setMonetaryDistanceRate(-0.00017);
+		
+		// set other values for subpopulation null to check that they are not used by error
+		PlanCalcScoreConfigGroup.ScoringParameterSet scoreCfgNullParams = config.planCalcScore().getOrCreateScoringParameters(null); // is this really necessary
+		PlanCalcScoreConfigGroup scoreCfgNull = config.planCalcScore();
+		scoreCfgNull.setMarginalUtilityOfMoney(1.0);
+		scoreCfgNull.setPerforming_utils_hr(0.0002 * 3600.0);
+		ModeParams walkParamsNull = scoreCfgNull.getOrCreateModeParams(TransportMode.walk);
+		walkParamsNull.setConstant(-100);
 	
 		BerlinRaptorIntermodalAccessEgress raptorIntermodalAccessEgress = new BerlinRaptorIntermodalAccessEgress(config);
 		
