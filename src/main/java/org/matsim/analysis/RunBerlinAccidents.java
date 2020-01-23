@@ -45,6 +45,7 @@ public class RunBerlinAccidents {
 	Config config = RunBerlinScenario.prepareConfig(args);
 	config.controler().setOutputDirectory(outputFile);
 	config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
+	config.controler().setLastIteration(0);
 	
 	AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
 	accidentsSettings.setEnableAccidentsModule(true);
