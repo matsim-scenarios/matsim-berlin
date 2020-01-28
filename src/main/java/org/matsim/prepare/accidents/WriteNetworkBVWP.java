@@ -7,8 +7,10 @@ import java.net.URL;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.contrib.accidents.AccidentsConfigGroup;
 import org.matsim.contrib.accidents.runExample.AccidentsNetworkModification;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.run.RunBerlinScenario;
 
@@ -26,8 +28,8 @@ public class WriteNetworkBVWP {
  			args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
 		}
 		
-	String outputFile = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-accidents"; 
-	String landOSMInputShapeFile = "../shared-svn/studies/countries/de/accidents/data/input/osmBerlinBrandenburg/gis.osm_landuse_a_free_1_GK4.shp";  
+	String outputFile = "../shared-svn/studies/countries/de/accidents/data/input/berlin-v5.5-network-with-bvwp-accidents-attributes.xml.gz"; 
+	String landOSMInputShapeFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/original-data/osmBerlin/gis.osm_places_a_free_1_GK4.shp";  
 	
 	String tunnelLinkCSVInputFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.1.tunnel-linkIDs.csv";
 	//the CSV has also a column for the percentage of the links wich is tunnel, The new String is produced by a new class
@@ -37,6 +39,8 @@ public class WriteNetworkBVWP {
 	Config config = RunBerlinScenario.prepareConfig(args);
 		
 	Scenario scenario = RunBerlinScenario.prepareScenario(config);
+	
+	AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
 	
 	AccidentsNetworkModification accidentsNetworkModification = new AccidentsNetworkModification(scenario);
 	NetworkUtils.writeNetwork(accidentsNetworkModification.setLinkAttributsBasedOnOSMFile(

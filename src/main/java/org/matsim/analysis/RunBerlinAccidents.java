@@ -31,7 +31,7 @@ public class RunBerlinAccidents {
 		}
 		
 	String outputFile = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-accidents"; 
-	String BVWPNetwork = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.10.BVWPNwtwork.xml.gz";
+	String BVWPNetwork = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network-with-bvwp-accidents-attributes.xml.gz";
 
 	
 	Config config = RunBerlinScenario.prepareConfig(args);
