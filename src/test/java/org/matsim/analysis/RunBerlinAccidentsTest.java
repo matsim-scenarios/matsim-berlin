@@ -14,7 +14,7 @@ import org.matsim.contrib.accidents.AccidentsConfigGroup;
 import org.matsim.contrib.accidents.runExample.AccidentsNetworkModification;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.prepare.accidents.WriteNetworkBVWP;
+import org.matsim.prepare.accidents.WriteBVWPAccidentRoadTypesIntoLinkAttributes;
 import org.matsim.run.RunBerlinScenario;
 import org.matsim.testcases.MatsimTestUtils;
 
@@ -31,7 +31,6 @@ public class RunBerlinAccidentsTest {
 @Rule public MatsimTestUtils utils = new MatsimTestUtils();
 	
 String landOSMInputShapeFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/original-data/osmBerlin/gis.osm_landuse_a_free_1_GK4.shp";  
-String placesOSMInputFile = null;
 String tunnelLinkCSVInputFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.1.tunnel-linkIDs.csv";
 String planfreeLinkCSVInputFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5.planfree-linkIDs.csv";
 
@@ -42,14 +41,14 @@ String planfreeLinkCSVInputFile = "https://svn.vsp.tu-berlin.de/repos/public-svn
 	@Test
 	public final void columnTestTunnels() throws IOException {
 		
-		String[] testString1 = WriteNetworkBVWP.readColumn(0, tunnelLinkCSVInputFile, ";");
+		String[] testString1 = WriteBVWPAccidentRoadTypesIntoLinkAttributes.readColumn(0, tunnelLinkCSVInputFile, ";");
 		Assert.assertEquals("Elements were not read right it should be 9467 and is: " + testString1[2],"9467",testString1[2] );
 	}
 	
 	@Test
 	public final void columnTestPlanfree() throws IOException {
 		
-		String[] testString2 = WriteNetworkBVWP.readColumn(0, planfreeLinkCSVInputFile, ";");
+		String[] testString2 = WriteBVWPAccidentRoadTypesIntoLinkAttributes.readColumn(0, planfreeLinkCSVInputFile, ";");
 		Assert.assertEquals("Elements were not read right it should be 9467 and is: " + testString2[2],"100025",testString2[2] );
 	}
 	
@@ -88,8 +87,8 @@ String planfreeLinkCSVInputFile = "https://svn.vsp.tu-berlin.de/repos/public-svn
 		accidentsNetworkModification.setLinkAttributsBasedOnOSMFile(
 				landOSMInputShapeFile,
 				"EPSG:31468",
-				WriteNetworkBVWP.readColumn(0,tunnelLinkCSVInputFile,";"),
-				WriteNetworkBVWP.readColumn(0,planfreeLinkCSVInputFile, ";")
+				WriteBVWPAccidentRoadTypesIntoLinkAttributes.readColumn(0,tunnelLinkCSVInputFile,";"),
+				WriteBVWPAccidentRoadTypesIntoLinkAttributes.readColumn(0,planfreeLinkCSVInputFile, ";")
 				);
 		
 		//Getting link Attributes

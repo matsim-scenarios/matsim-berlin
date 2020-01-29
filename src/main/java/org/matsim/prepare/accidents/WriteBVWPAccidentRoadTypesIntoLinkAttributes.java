@@ -14,9 +14,9 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.run.RunBerlinScenario;
 
-public class WriteNetworkBVWP {
+public class WriteBVWPAccidentRoadTypesIntoLinkAttributes {
 	
-	private static final Logger log = Logger.getLogger(WriteNetworkBVWP.class);
+	private static final Logger log = Logger.getLogger(WriteBVWPAccidentRoadTypesIntoLinkAttributes.class);
 	
 	public static void main(String[] args) throws IOException { 
 		
