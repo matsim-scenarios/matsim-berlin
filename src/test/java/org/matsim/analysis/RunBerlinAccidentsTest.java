@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -15,6 +16,7 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.prepare.accidents.WriteNetworkBVWP;
 import org.matsim.run.RunBerlinScenario;
+import org.matsim.testcases.MatsimTestUtils;
 
 /**
  * @author hacastrom
@@ -26,8 +28,9 @@ import org.matsim.run.RunBerlinScenario;
 
 public class RunBerlinAccidentsTest {
 	
-String outputFile = "/../../shared-svn/studies/countries/de/accidents/data/output/"; 
-String landOSMInputShapeFile = "D:/GIT/shared-svn/studies/countries/de/accidents/data/input/osmBerlinBrandenburg/gis.osm_landuse_a_free_1_GK4.shp";  
+@Rule public MatsimTestUtils utils = new MatsimTestUtils();
+	
+String landOSMInputShapeFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/original-data/osmBerlin/gis.osm_landuse_a_free_1_GK4.shp";  
 String placesOSMInputFile = null;
 String tunnelLinkCSVInputFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.1.tunnel-linkIDs.csv";
 String planfreeLinkCSVInputFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5.planfree-linkIDs.csv";
@@ -55,8 +58,9 @@ String planfreeLinkCSVInputFile = "https://svn.vsp.tu-berlin.de/repos/public-svn
 		final String[] args = {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"};
 		
 		Config config = RunBerlinScenario.prepareConfig(args);
-		config.controler().setOutputDirectory(outputFile);
-        AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
+		config.controler().setOutputDirectory(utils.getOutputDirectory());
+		config.plans().setInputFile(null);
+        ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
         
         Scenario scenario = RunBerlinScenario.prepareScenario(config);
 		
