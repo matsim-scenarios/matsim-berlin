@@ -212,6 +212,8 @@ public class BerlinRaptorIntermodalAccessEgressTest {
 		String subpopulationName = "dummySubpopulation";
 		person.getAttributes().putAttribute("subpopulation", subpopulationName);
 
+		Person personSubpopulationNull = f.createPerson(Id.createPersonId("personSubpopulationNull"));
+		
 		// daily constants / rates are ignored, but set them anyway (to see whether they are used by error)
 		PlanCalcScoreConfigGroup.ScoringParameterSet scoreCfg = config.planCalcScore().getOrCreateScoringParameters(subpopulationName);
 		scoreCfg.setMarginalUtilityOfMoney(1.0);
@@ -231,6 +233,7 @@ public class BerlinRaptorIntermodalAccessEgressTest {
 		scoreCfgNull.setPerforming_utils_hr(0.0002 * 3600.0);
 		ModeParams walkParamsNull = scoreCfgNull.getOrCreateModeParams(TransportMode.walk);
 		walkParamsNull.setConstant(-100);
+		walkParamsNull.setMarginalUtilityOfTraveling(0.0);
 	
 		BerlinRaptorIntermodalAccessEgress raptorIntermodalAccessEgress = new BerlinRaptorIntermodalAccessEgress(config);
 		
@@ -242,6 +245,7 @@ public class BerlinRaptorIntermodalAccessEgressTest {
 		walkLeg1.setRoute(walkRoute1);
 		legs.add(walkLeg1);
 		
+		// Agent in dummy subpopulation
 		RIntermodalAccessEgress result = raptorIntermodalAccessEgress.calcIntermodalAccessEgress(legs, params, person);
 		
 		//Asserts
@@ -258,5 +262,23 @@ public class BerlinRaptorIntermodalAccessEgressTest {
 			Assert.assertEquals("Input legs != output legs!", legs.get(i), result.routeParts.get(i));
 		}
 		Assert.assertEquals("Input legs != output legs!", legs.size(), result.routeParts.size());
+		
+		// Agent in subpopulation null
+		RIntermodalAccessEgress resultSubpopulationNull = raptorIntermodalAccessEgress.calcIntermodalAccessEgress(legs, params, personSubpopulationNull);
+		
+		//Asserts
+		Assert.assertEquals("Total travel time is wrong!", 100.0, resultSubpopulationNull.travelTime, MatsimTestUtils.EPSILON);
+		
+		/* 
+		 * disutility: -1 * ( ASC + distance + time + monetary distance rate + fare)
+		 * 
+		 * walkLeg1: -1 * (-100 -0*200 -(0.0002)*100 -0.0*200 -0 ) = 100.02
+		 */
+		Assert.assertEquals("Total disutility is wrong!", 100.02, resultSubpopulationNull.disutility, MatsimTestUtils.EPSILON);
+
+		for (int i = 0; i < legs.size(); i++) {
+			Assert.assertEquals("Input legs != output legs!", legs.get(i), resultSubpopulationNull.routeParts.get(i));
+		}
+		Assert.assertEquals("Input legs != output legs!", legs.size(), resultSubpopulationNull.routeParts.size());
 	}
 }
