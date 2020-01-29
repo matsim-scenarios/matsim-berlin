@@ -29,7 +29,7 @@ public class WriteNetworkBVWP {
 		}
 		
 	String outputFile = "../shared-svn/studies/countries/de/accidents/data/input/berlin-v5.5-network-with-bvwp-accidents-attributes.xml.gz"; 
-	String landOSMInputShapeFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/original-data/osmBerlin/gis.osm_places_a_free_1_GK4.shp";  
+	String landOSMInputShapeFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/original-data/osmBerlin/gis.osm_landuse_a_free_1_GK4.shp";  
 	
 	String tunnelLinkCSVInputFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.1.tunnel-linkIDs.csv";
 	//the CSV has also a column for the percentage of the links wich is tunnel, The new String is produced by a new class
@@ -39,6 +39,7 @@ public class WriteNetworkBVWP {
 	Config config = RunBerlinScenario.prepareConfig(args);
 		
 	Scenario scenario = RunBerlinScenario.prepareScenario(config);
+	
 	
 	AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
 	
