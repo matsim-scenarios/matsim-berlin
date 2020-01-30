@@ -32,16 +32,17 @@ public class RunBerlinAccidents {
 		
 	String outputFile = "./scenarios/berlin-v5.5-1pct/output-berlin-v5.5-1pct-accidents"; 
 	String BVWPNetwork = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network-with-bvwp-accidents-attributes.xml.gz";
-
+	String plans = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.plans_uncalibrated.xml.gz";
 	
 	Config config = RunBerlinScenario.prepareConfig(args);
 	config.controler().setOutputDirectory(outputFile);
 	config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 	config.controler().setLastIteration(0);
-	
+	config.plans().setInputFile(plans);
+ 
 	AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
 	accidentsSettings.setEnableAccidentsModule(true);
-	accidentsSettings.setScaleFactor(100);
+	accidentsSettings.setScaleFactor(10);
     config.network().setInputFile(BVWPNetwork);
 	
 	Scenario scenario = RunBerlinScenario.prepareScenario(config);
