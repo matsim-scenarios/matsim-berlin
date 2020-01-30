@@ -65,6 +65,8 @@ public class IntermodalTripFareCompensatorsTest {
         compensatorConfig.setPtModesAsString(TransportMode.pt);
         double compensationPerTrip = 1.0;
         compensatorConfig.setCompensationPerTrip(compensationPerTrip);
+        double compensationPerDay = 10.0;
+        compensatorConfig.setCompensationPerDay(compensationPerDay);
         
         IntermodalTripFareCompensatorsConfigGroup compensatorsConfig = new IntermodalTripFareCompensatorsConfigGroup();
         compensatorsConfig.addParameterSet(compensatorConfig);
@@ -88,13 +90,13 @@ public class IntermodalTripFareCompensatorsTest {
 		Assert.assertNull("NoPtButDrt received compensation but should not", person2Fare.get(fixture.personIdNoPtButDrt));
 		Assert.assertNull("PtNoDrt received compensation but should not", person2Fare.get(fixture.personIdPtNoDrt));
 		
-		Assert.assertEquals("Pt1DrtSameTrip received wrong compensation", 1 * compensationPerTrip,
+		Assert.assertEquals("Pt1DrtSameTrip received wrong compensation", compensationPerDay + 1 * compensationPerTrip,
 				person2Fare.get(fixture.personIdPt1DrtSameTrip), MatsimTestUtils.EPSILON);
 		
-		Assert.assertEquals("Pt1DrtDifferentTrips received wrong compensation", 1 * compensationPerTrip,
+		Assert.assertEquals("Pt1DrtDifferentTrips received wrong compensation", compensationPerDay + 1 * compensationPerTrip,
 				person2Fare.get(fixture.personIdPt1DrtDifferentTrips), MatsimTestUtils.EPSILON);
 		
-		Assert.assertEquals("Pt3DrtIn2IntermodalTrips received wrong compensation", 3 * compensationPerTrip,
+		Assert.assertEquals("Pt3DrtIn2IntermodalTrips received wrong compensation", compensationPerDay + 3 * compensationPerTrip,
 				person2Fare.get(fixture.personIdPt3DrtIn2IntermodalTrips), MatsimTestUtils.EPSILON);
 
     }
@@ -159,6 +161,8 @@ public class IntermodalTripFareCompensatorsTest {
         compensatorPerDayConfig.setPtModesAsString(TransportMode.pt);
         double compensationPerTripAnywhereInTheDay = 111.0;
         compensatorPerDayConfig.setCompensationPerTrip(compensationPerTripAnywhereInTheDay);
+        double compensationPerDayAnywhereInTheDay = 1111.0;
+        compensatorPerDayConfig.setCompensationPerDay(compensationPerDayAnywhereInTheDay);
         compensatorsConfig.addParameterSet(compensatorPerDayConfig);
 
         IntermodalTripFareCompensatorConfigGroup compensatorPerTripConfig = new IntermodalTripFareCompensatorConfigGroup();
@@ -191,14 +195,14 @@ public class IntermodalTripFareCompensatorsTest {
 		Assert.assertNull("PtNoDrt received compensation but should not", person2Fare.get(fixture.personIdPtNoDrt));
 
 		Assert.assertEquals("Pt1DrtSameTrip received wrong compensation",
-				1 * (compensationPerTripAnywhereInTheDay + compensationPerTripSameTrip),
+				compensationPerDayAnywhereInTheDay + 1 * (compensationPerTripAnywhereInTheDay + compensationPerTripSameTrip),
 				person2Fare.get(fixture.personIdPt1DrtSameTrip), MatsimTestUtils.EPSILON);
 
-		Assert.assertEquals("Pt1DrtDifferentTrips received wrong compensation", 1 * compensationPerTripAnywhereInTheDay,
+		Assert.assertEquals("Pt1DrtDifferentTrips received wrong compensation", compensationPerDayAnywhereInTheDay + 1 * compensationPerTripAnywhereInTheDay,
 				person2Fare.get(fixture.personIdPt1DrtDifferentTrips), MatsimTestUtils.EPSILON);
 
 		Assert.assertEquals("Pt3DrtIn2IntermodalTrips received wrong compensation",
-				3 * (compensationPerTripAnywhereInTheDay + compensationPerTripSameTrip),
+				compensationPerDayAnywhereInTheDay + 3 * (compensationPerTripAnywhereInTheDay + compensationPerTripSameTrip),
 				person2Fare.get(fixture.personIdPt3DrtIn2IntermodalTrips), MatsimTestUtils.EPSILON);
     }
     

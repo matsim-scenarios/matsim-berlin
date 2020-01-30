@@ -32,10 +32,12 @@ public class IntermodalTripFareCompensatorConfigGroup extends ReflectiveConfigGr
 	    public static final String GROUP_NAME = "intermodalTripFareCompensator";
 
 	    public static final String COMPENSATION_PER_TRIP = "compensationPerTrip";
+	    public static final String COMPENSATION_PER_DAY = "compensationPerDay";
 	    public static final String COMPENSATION_CONDITION= "compensationCondition";
 	    public static final String DRT_MODES = "drtModes";
 	    public static final String PT_MODES = "ptModes";
 
+	    private double compensationPerDay = 0.0;
 	    private double compensationPerTrip = 0.0;
 	    private CompensationCondition compensationCondition = CompensationCondition.PtModeUsedInSameTrip;
 	    
@@ -59,6 +61,7 @@ public class IntermodalTripFareCompensatorConfigGroup extends ReflectiveConfigGr
 	    public Map<String, String> getComments() {
 	        Map<String, String> map = super.getComments();
 	        map.put(COMPENSATION_PER_TRIP, "Compensation per Trip (compensation = refund paid to the customer = positive value)");
+	        map.put(COMPENSATION_PER_DAY, "Compensation per Day, i.e. only paid once per day no matter the number of trips. Not implemented yet for compensationCondition==PtModeUsedInSameTrip (compensation = refund paid to the customer = positive value)");
 	        map.put(COMPENSATION_CONDITION, "Condition which governs which agents are compensated. Options: "
 				+ CompensationCondition.PtModeUsedInSameTrip + ", " + CompensationCondition.PtModeUsedAnywhereInTheDay);
 	        map.put(DRT_MODES, "drt modes for which the compensation applies (comma separated list).");
@@ -74,6 +77,16 @@ public class IntermodalTripFareCompensatorConfigGroup extends ReflectiveConfigGr
 	    @StringSetter(COMPENSATION_PER_TRIP)
 	    public void setCompensationPerTrip(double compensationPerTrip) {
 	        this.compensationPerTrip = compensationPerTrip;
+	    }
+	    
+	    @StringGetter(COMPENSATION_PER_DAY)
+	    public double getCompensationPerDay() {
+	        return compensationPerDay;
+	    }
+
+	    @StringSetter(COMPENSATION_PER_DAY)
+	    public void setCompensationPerDay(double compensationPerDay) {
+	        this.compensationPerDay = compensationPerDay;
 	    }
 	    
 	    @StringGetter(COMPENSATION_CONDITION)
