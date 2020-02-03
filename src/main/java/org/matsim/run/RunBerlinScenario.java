@@ -38,6 +38,7 @@ import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.gbl.Gbl;
 import org.matsim.core.population.routes.RouteFactories;
@@ -63,10 +64,11 @@ public final class RunBerlinScenario {
 		}
 		
 		if ( args.length==0 ) {
-			args = new String[] {"scenarios/berlin-v5.5-10pct/input/berlin-v5.5-10pct.config.xml"}  ;
+			args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
 		}
 
 		Config config = prepareConfig( args ) ;
+		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists); //jr
 		Scenario scenario = prepareScenario( config ) ;
 		Controler controler = prepareControler( scenario ) ;
 		controler.run() ;
@@ -79,7 +81,7 @@ public final class RunBerlinScenario {
 		Gbl.assertNotNull(scenario);
 		
 		final Controler controler = new Controler( scenario );
-		
+
 		if (controler.getConfig().transit().isUseTransit()) {
 			// use the sbb pt raptor router
 			controler.addOverridingModule( new AbstractModule() {
@@ -103,6 +105,20 @@ public final class RunBerlinScenario {
 				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifier.class);
 			}
 		} );
+
+
+		//jr
+		 controler.addOverridingModule(new AbstractModule() {
+					@Override
+					public void install() {
+						this.addControlerListenerBinding().to(ModeStatsControlerListenerJakob.class);
+		//				this.bind(MyEventHandler.class);
+					}
+				});
+
+
+
+
 
 		return controler;
 	}

@@ -55,6 +55,8 @@ import java.util.Map.Entry;
  * a separate line.
  *
  * @author mrieser
+ *
+ * TODO:
  */
 public class ModeStatsControlerListenerJakob implements StartupListener, IterationEndsListener,
         ShutdownListener {
@@ -80,7 +82,8 @@ public class ModeStatsControlerListenerJakob implements StartupListener, Iterati
 
 
 	//jr
-	Map<Id<Person>, Map<Integer, Set<String>>> megaMap = new LinkedHashMap<>();
+//	private Map<Id<Person>, Map<Integer, Set<String>>> megaMap = new LinkedHashMap<>(); //old
+		private Map<Id<Person>, Map<Integer, Set<String>>> megaMap = new LinkedHashMap<>();
 	private Map<String, Double> cumulativeModeCnt = new TreeMap<>() ;
 
 	@Inject
@@ -90,8 +93,9 @@ public class ModeStatsControlerListenerJakob implements StartupListener, Iterati
 		this.controlerConfigGroup = controlerConfigGroup;
 		this.population = population1;
 		this.modeFileName = controlerIO.getOutputFilename(FILENAME_MODESTATS);
-		this.createPNG = controlerConfigGroup.isCreateGraphs();
-		this.modeOut = IOUtils.getBufferedWriter(this.modeFileName + ".txt");
+//		this.createPNG = controlerConfigGroup.isCreateGraphs();
+		this.createPNG = true ; //jr
+		this.modeOut = IOUtils.getBufferedWriter(this.modeFileName+ "JAKOBXXXX" + ".txt"); //jr
 		try {
 			this.modeOut.write("Iteration");
 			this.modes = new TreeSet<>();
@@ -140,7 +144,7 @@ public class ModeStatsControlerListenerJakob implements StartupListener, Iterati
 				// jr:
 				tripNumber++ ;
 				Set<String> setForPersonTrip = mapForPerson.get(tripNumber); // open set for person trip
-				if (mapForPerson == null) {
+				if (setForPersonTrip == null) {
 					setForPersonTrip = new HashSet<>();
 				}
 				setForPersonTrip.add(mode);
@@ -219,7 +223,7 @@ public class ModeStatsControlerListenerJakob implements StartupListener, Iterati
 		// Why? The charts seem to be useful (JB, April 2017)
 		if (this.createPNG && event.getIteration() > this.minIteration) {
 			// create chart when data of more than one iteration is available.
-			XYLineChart chart = new XYLineChart("Mode Statistics", "iteration", "mode");
+			XYLineChart chart = new XYLineChart("Mode Choice Coverage Statistics", "iteration", "mode choice coverage (%)");
 			for ( Entry<String, Map<Integer, Double>> entry : this.modeHistories.entrySet() ) {
 				String mode = entry.getKey() ;
 				Map<Integer, Double> history = entry.getValue() ;
@@ -230,7 +234,7 @@ public class ModeStatsControlerListenerJakob implements StartupListener, Iterati
 				chart.addSeries(mode, history ) ;
 			}
 			chart.addMatsimLogo();
-			chart.saveAsPng(this.modeFileName + ".png", 800, 600);
+			chart.saveAsPng(this.modeFileName + "JAKOBXXXXXXXX" + ".png", 800, 600);
 		}
 		modeCnt.clear();
 	}
