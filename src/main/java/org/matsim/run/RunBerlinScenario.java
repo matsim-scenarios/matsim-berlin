@@ -68,8 +68,13 @@ public final class RunBerlinScenario {
 		}
 
 		Config config = prepareConfig( args ) ;
+		config.plans().setInputFile("C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\run\\berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");//src/main/java/org/matsim/run/berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");
 		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists); //jr
+		config.qsim().setFlowCapFactor(0.00015);
+		config.qsim().setStorageCapFactor(0.00015);
 		Scenario scenario = prepareScenario( config ) ;
+
+
 		Controler controler = prepareControler( scenario ) ;
 		controler.run() ;
 
@@ -111,7 +116,7 @@ public final class RunBerlinScenario {
 		 controler.addOverridingModule(new AbstractModule() {
 					@Override
 					public void install() {
-						this.addControlerListenerBinding().to(ModeStatsControlerListenerJakob.class);
+						this.addControlerListenerBinding().to(ModeChoiceCoverageControlerListenerJakob.class);
 		//				this.bind(MyEventHandler.class);
 					}
 				});
