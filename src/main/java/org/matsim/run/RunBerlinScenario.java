@@ -50,6 +50,7 @@ import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
+import org.matsim.run.drt.RunDrtOpenBerlinScenario;
 import org.matsim.run.singleTripStrategies.ChangeSingleTripModeAndRoute;
 import org.matsim.run.singleTripStrategies.RandomSingleTripReRoute;
 
@@ -148,13 +149,22 @@ public final class RunBerlinScenario {
 		
 		return scenario;
 	}
-	
-	public static Config prepareConfig( String [] args, ConfigGroup... customModules ) {
+
+	public static Config prepareConfig( String [] args, ConfigGroup... customModules ){
+		return prepareConfig( RunDrtOpenBerlinScenario.AdditionalInformation.none, args, customModules ) ;
+	}
+	public static Config prepareConfig( RunDrtOpenBerlinScenario.AdditionalInformation additionalInformation, String [] args,
+					    ConfigGroup... customModules ) {
 		OutputDirectoryLogging.catchLogEntries();
 		
 		String[] typedArgs = Arrays.copyOfRange( args, 1, args.length );
 		
-		ConfigGroup[] customModulesToAdd = new ConfigGroup[]{ new BerlinExperimentalConfigGroup() };
+		ConfigGroup[] customModulesToAdd = null ;
+		if ( additionalInformation== RunDrtOpenBerlinScenario.AdditionalInformation.acceptUnknownParamsBerlinConfig ) {
+			customModulesToAdd = new ConfigGroup[]{ new BerlinExperimentalConfigGroup(true) };
+		} else {
+			customModulesToAdd = new ConfigGroup[]{ new BerlinExperimentalConfigGroup(false) };
+		}
 		ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
 		
 		int counter = 0;

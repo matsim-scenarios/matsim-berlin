@@ -38,6 +38,10 @@ public class BerlinExperimentalConfigGroup extends ReflectiveConfigGroup {
 	public BerlinExperimentalConfigGroup() {
 		super(GROUP_NAME);
 	}
+
+	public BerlinExperimentalConfigGroup( boolean storeUnknownParametersAsStrings ){
+            super( GROUP_NAME, storeUnknownParametersAsStrings ) ;
+        }
 	
 	private double populationDownsampleFactor = 1.0;
 	private Map<String, IntermodalAccessEgressModeUtilityRandomization> intermodalAccessEgressMode2utilityRandomization = new HashMap<>();

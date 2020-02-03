@@ -144,27 +144,32 @@ public final class RunDrtOpenBerlinScenario {
 		
 		return scenario;
 	}
-	
-	public static Config prepareConfig( String [] args, ConfigGroup... customModules) {
+
+	public enum AdditionalInformation { none, acceptUnknownParamsBerlinConfig }
+
+	public static Config prepareConfig( AdditionalInformation additionalInformation, String [] args, ConfigGroup... customModules) {
 		ConfigGroup[] customModulesToAdd = new ConfigGroup[]{new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup(), new IntermodalTripFareCompensatorsConfigGroup() };
 		ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
-		
+
 		int counter = 0;
 		for (ConfigGroup customModule : customModules) {
 			customModulesAll[counter] = customModule;
 			counter++;
 		}
-		
+
 		for (ConfigGroup customModule : customModulesToAdd) {
 			customModulesAll[counter] = customModule;
 			counter++;
 		}
 
-		Config config = RunBerlinScenario.prepareConfig( args, customModulesAll ) ;
+		Config config = RunBerlinScenario.prepareConfig( additionalInformation, args, customModulesAll ) ;
 
 		DrtConfigs.adjustMultiModeDrtConfig(MultiModeDrtConfigGroup.get(config), config.planCalcScore(), config.plansCalcRoute());
 
 		return config ;
+	}
+	public static Config prepareConfig( String [] args, ConfigGroup... customModules) {
+		return prepareConfig( AdditionalInformation.none, args, customModules ) ;
 	}
 	
 	public static void addDRTmode(Scenario scenario, String drtNetworkMode, String drtServiceAreaShapeFile) {
