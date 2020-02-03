@@ -21,6 +21,7 @@ package org.matsim.prepare.population;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -36,10 +37,10 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.gbl.Gbl;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.routes.NetworkRoute;
-import org.matsim.core.router.MainModeIdentifierImpl;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 
 /**
  * 
@@ -49,12 +50,14 @@ import org.matsim.core.scenario.ScenarioUtils;
  *
  */
 public class RemovePtRoutes {
+	
+	private final static Logger log = Logger.getLogger(RemovePtRoutes.class);
 
 	public static void main(String[] args) {
 		Config config = ConfigUtils.createConfig();
-		config.global().setCoordinateSystem("GK4");
-		config.network().setInputFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/input/berlin-v5-network.xml.gz");
-		config.plans().setInputFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/input/berlin-v5.4-1pct.plans.xml.gz");
+		config.global().setCoordinateSystem("EPSG:31468");
+		config.network().setInputFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz");
+		config.plans().setInputFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/input/berlin-v5.5-1pct.plans_uncalibrated.xml.gz");
 		Scenario scenario = ScenarioUtils.loadScenario(config);
 		
 		for (Person person: scenario.getPopulation().getPersons().values()) {
@@ -72,6 +75,13 @@ public class RemovePtRoutes {
 					if (pe instanceof Leg){
 						Leg leg = (Leg) pe;
 						if (leg.getRoute() != null) {
+							if (leg.getRoute().getStartLinkId().toString().startsWith("pt_") || leg.getRoute().getEndLinkId().toString().startsWith("pt_")) {
+								log.error("agent " + person.getId()
+										+ " still has route starting or ending at a link of the pt network after removing pt routes: "
+										+ leg.getRoute().getStartLinkId().toString() + " / "
+										+ leg.getRoute().getEndLinkId().toString());
+								log.error("full plan: " + plan);
+							}
 							Gbl.assertIf(!leg.getRoute().getStartLinkId().toString().startsWith("pt_"));
 							Gbl.assertIf(!leg.getRoute().getEndLinkId().toString().startsWith("pt_"));
 							if (leg.getRoute() instanceof NetworkRoute) {
@@ -92,7 +102,7 @@ public class RemovePtRoutes {
 		}
 		
 		PopulationWriter popWriter = new PopulationWriter(scenario.getPopulation());
-		popWriter.write("berlin-v5.4-1pct.plans_wo_PtRoutes.xml.gz");
+		popWriter.write("berlin-v5.5-1pct.plans_uncalibrated_wo_PtRoutes.xml.gz");
 	}
 
 	private static void run(final Plan plan) {
@@ -104,7 +114,7 @@ public class RemovePtRoutes {
 				planElements.subList(
 						planElements.indexOf( trip.getOriginActivity() ) + 1,
 						planElements.indexOf( trip.getDestinationActivity() ));
-			final String mode = (new MainModeIdentifierImpl()).identifyMainMode( fullTrip );
+			final String mode = (new OpenBerlinIntermodalPtDrtRouterModeIdentifier()).identifyMainMode( fullTrip );
 			if (mode.equals(TransportMode.pt)) {
 				fullTrip.clear();
 				fullTrip.add( PopulationUtils.createLeg(mode) );

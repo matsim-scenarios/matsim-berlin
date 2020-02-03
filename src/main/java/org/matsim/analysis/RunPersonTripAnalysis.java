@@ -86,8 +86,6 @@ public class RunPersonTripAnalysis {
 			if (!args[11].equals("null")) modesString = args[11];
 			log.info("modes: " + modesString);
 			
-			analysisOutputDirectory = null;
-			
 		} else {
 			
 			runDirectory = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/";
