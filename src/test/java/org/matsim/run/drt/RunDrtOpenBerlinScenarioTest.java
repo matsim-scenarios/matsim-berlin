@@ -6,10 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.junit.Assert;
-import org.junit.FixMethodOrder;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.matsim.analysis.ScoreStatsControlerListener;
 import org.matsim.api.core.v01.Id;
@@ -24,6 +21,7 @@ import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.StrategyConfigGroup.StrategySettings;
 import org.matsim.core.controler.AbstractModule;
@@ -51,6 +49,43 @@ public class RunDrtOpenBerlinScenarioTest {
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 
 	@Test
+	@Ignore
+	public final void testConfigStatus2() {
+		{
+			// generate a test config that sets two values away from their defaults, and write it to file:
+			Config config = ConfigUtils.createConfig();
+			MultiModeDrtConfigGroup multiModeDrtConfigGroup = ConfigUtils.addOrGetModule( config, MultiModeDrtConfigGroup.class );
+			{
+				ConfigGroup abc = multiModeDrtConfigGroup.createParameterSet( DrtConfigGroup.GROUP_NAME );
+				abc.addParam( "mode", "drt20" );
+			}
+			{
+				ConfigGroup abc = multiModeDrtConfigGroup.createParameterSet( DrtConfigGroup.GROUP_NAME );
+				abc.addParam( "mode", "drt20000" );
+			}
+			ConfigUtils.writeConfig( config, utils.getOutputDirectory() + "ad-hoc-config.xml" );
+		}
+
+		{
+			// load config file without materializing the drt config group
+			Config config = ConfigUtils.loadConfig( new String[] { utils.getOutputDirectory() + "ad-hoc-config.xml"} );
+
+			// materialize the config group
+			MultiModeDrtConfigGroup multiModeDrtConfigGroup = ConfigUtils.addOrGetModule( config, MultiModeDrtConfigGroup.class );
+
+			// this should have two config groups here, but does not:
+			Assert.assertEquals( 2, multiModeDrtConfigGroup.getModalElements().size() );
+
+			// check if you are getting back the values from the config file:
+			for( DrtConfigGroup drtConfigGroup : multiModeDrtConfigGroup.getModalElements() ){
+				log.info( drtConfigGroup.getMode() );
+			}
+
+
+		}
+	}
+
+	@Test
 	public final void testConfigStatus() {
 		{
 			// generate a test config that sets two values away from their defaults, and write it to file:
@@ -73,7 +108,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			Assert.assertEquals( 4.56, dvrpConfig.getTravelTimeEstimationBeta(), Double.MIN_VALUE );
 		}
 	}
-	
+
 	// During debug some exceptions only occured at the replanning stage of the 3rd
 	// iteration, so we need at least 3 iterations.
 	// Have at least 0.1 pct of the population to have as many strange corner cases
