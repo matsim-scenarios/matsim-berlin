@@ -55,8 +55,12 @@ public class KNVisOutputDrtOpenBerlinScenario {
 //		final String base = "/Users/kainagel/mnt/mathe/ils3/leich/open-berlin/output/";
 //		final String runID="berlin-drt-v5.5-1pct_drt-132";
 
-		final String base="/Users/kainagel/mnt/mathe/ils3/kaddoura/avoev-intermodal-routing/output/output-";
-		final String runID="i89e";
+//		final String base="/Users/kainagel/mnt/mathe/ils3/kaddoura/avoev-intermodal-routing/output/output-";
+//		final String runID="i89e";
+
+		final String base="/Users/kainagel/mnt/mathe/ils3/leich/open-berlin-intermodal-remove-buses/output/output-";
+		final String runID="B115b";
+
 
 //		Config config = RunDrtOpenBerlinScenario.prepareConfig( new String[] {"berlin-drt-v5.5-1pct_drt-114/berlin-drt-v5.5-1pct_drt-114.output_config.xml"} ) ;
 //		Config config = RunDrtOpenBerlinScenario.prepareConfig( new String[] {"/Users/kainagel/mnt/mathe/ils3/leich/open-berlin/output/berlin-drt-v5" +
@@ -69,6 +73,8 @@ public class KNVisOutputDrtOpenBerlinScenario {
 
 		config.plans().setInputFile( config.controler().getRunId() + ".output_plans.xml.gz" );
 //		config.plans().setInputFile( "/Users/kainagel/git/berlin-matsim/popSel.xml.gz" );
+
+		config.transit().setTransitScheduleFile( config.controler().getRunId() + ".output_transitSchedule.xml.gz" );
 
 		config.global().setNumberOfThreads( 6 );
 		

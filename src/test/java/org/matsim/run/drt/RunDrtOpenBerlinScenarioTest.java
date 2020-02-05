@@ -22,6 +22,7 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
+import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.StrategyConfigGroup.StrategySettings;
@@ -32,6 +33,7 @@ import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
 import org.matsim.run.BerlinExperimentalConfigGroup;
 import org.matsim.run.BerlinExperimentalConfigGroup.IntermodalAccessEgressModeUtilityRandomization;
+import org.matsim.run.RunBerlinScenario;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup.CompensationCondition;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
@@ -47,6 +49,30 @@ public class RunDrtOpenBerlinScenarioTest {
 		
 	private static final Logger log = Logger.getLogger(RunDrtOpenBerlinScenarioTest.class);
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
+
+	@Test
+	public final void testConfigStatus() {
+		{
+			// generate a test config that sets two values away from their defaults, and write it to file:
+			Config config = ConfigUtils.createConfig();
+			DvrpConfigGroup dvrpConfigGroup = ConfigUtils.addOrGetModule( config, DvrpConfigGroup.class );
+			dvrpConfigGroup.setTravelTimeEstimationAlpha( 1.23 );
+			dvrpConfigGroup.setTravelTimeEstimationBeta( 4.56 );
+			ConfigUtils.writeConfig( config, utils.getOutputDirectory() + "ad-hoc-config.xml" );
+		}
+
+		{
+			// load config file without materializing the drt config group
+			Config config = ConfigUtils.loadConfig( new String[] { utils.getOutputDirectory() + "ad-hoc-config.xml"} );
+
+			// materialize the config group
+			DvrpConfigGroup dvrpConfig = ConfigUtils.addOrGetModule( config, DvrpConfigGroup.class );
+
+			// check if you are getting back the values from the config file:
+			Assert.assertEquals( 1.23, dvrpConfig.getTravelTimeEstimationAlpha(), Double.MIN_VALUE );
+			Assert.assertEquals( 4.56, dvrpConfig.getTravelTimeEstimationBeta(), Double.MIN_VALUE );
+		}
+	}
 	
 	// During debug some exceptions only occured at the replanning stage of the 3rd
 	// iteration, so we need at least 3 iterations.
