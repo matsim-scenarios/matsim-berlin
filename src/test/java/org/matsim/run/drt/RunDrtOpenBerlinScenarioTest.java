@@ -67,67 +67,6 @@ public class RunDrtOpenBerlinScenarioTest {
 	private static final Logger log = Logger.getLogger(RunDrtOpenBerlinScenarioTest.class);
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 
-	@Test
-	@Ignore
-	public final void testConfigStatus2() {
-		{
-			// generate a test config that sets two values away from their defaults, and write it to file:
-			Config config = ConfigUtils.createConfig();
-			MultiModeDrtConfigGroup multiModeDrtConfigGroup = ConfigUtils.addOrGetModule( config, MultiModeDrtConfigGroup.class );
-			{
-				ConfigGroup abc = multiModeDrtConfigGroup.createParameterSet( DrtConfigGroup.GROUP_NAME );
-				abc.addParam( "mode", "drt20" );
-			}
-			{
-				ConfigGroup abc = multiModeDrtConfigGroup.createParameterSet( DrtConfigGroup.GROUP_NAME );
-				abc.addParam( "mode", "drt20000" );
-			}
-			ConfigUtils.writeConfig( config, utils.getOutputDirectory() + "ad-hoc-config.xml" );
-		}
-
-		{
-			// load config file without materializing the drt config group
-			Config config = ConfigUtils.loadConfig( new String[] { utils.getOutputDirectory() + "ad-hoc-config.xml"} );
-
-			// materialize the config group
-			MultiModeDrtConfigGroup multiModeDrtConfigGroup = ConfigUtils.addOrGetModule( config, MultiModeDrtConfigGroup.class );
-
-			// this should have two config groups here, but does not:
-			Assert.assertEquals( 2, multiModeDrtConfigGroup.getModalElements().size() );
-
-			// check if you are getting back the values from the config file:
-			for( DrtConfigGroup drtConfigGroup : multiModeDrtConfigGroup.getModalElements() ){
-				log.info( drtConfigGroup.getMode() );
-			}
-
-
-		}
-	}
-
-	@Test
-	public final void testConfigStatus() {
-		{
-			// generate a test config that sets two values away from their defaults, and write it to file:
-			Config config = ConfigUtils.createConfig();
-			DvrpConfigGroup dvrpConfigGroup = ConfigUtils.addOrGetModule( config, DvrpConfigGroup.class );
-			dvrpConfigGroup.setTravelTimeEstimationAlpha( 1.23 );
-			dvrpConfigGroup.setTravelTimeEstimationBeta( 4.56 );
-			ConfigUtils.writeConfig( config, utils.getOutputDirectory() + "ad-hoc-config.xml" );
-		}
-
-		{
-			// load config file without materializing the drt config group
-			Config config = ConfigUtils.loadConfig( new String[] { utils.getOutputDirectory() + "ad-hoc-config.xml"} );
-
-			// materialize the config group
-			DvrpConfigGroup dvrpConfig = ConfigUtils.addOrGetModule( config, DvrpConfigGroup.class );
-
-			// check if you are getting back the values from the config file:
-			Assert.assertEquals( 1.23, dvrpConfig.getTravelTimeEstimationAlpha(), Double.MIN_VALUE );
-			Assert.assertEquals( 4.56, dvrpConfig.getTravelTimeEstimationBeta(), Double.MIN_VALUE );
-		}
-	}
-
 	// During debug some exceptions only occured at the replanning stage of the 3rd
 	// iteration, so we need at least 3 iterations.
 	// Have at least 0.1 pct of the population to have as many strange corner cases
