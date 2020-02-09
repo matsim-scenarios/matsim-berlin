@@ -60,7 +60,7 @@ import java.util.Map.Entry;
 public class ModeChoiceCoverageControlerListenerJakob implements StartupListener, IterationEndsListener,
         ShutdownListener {
 
-	public static final String FILENAME_MODESTATS = "modeChoiceStats";
+	private static final String FILENAME_MODESTATS = "modeChoiceStats";
 
 	final private Population population;
 	
@@ -71,9 +71,11 @@ public class ModeChoiceCoverageControlerListenerJakob implements StartupListener
 	private final ControlerConfigGroup controlerConfigGroup;
 
 
-	Map<String, Map<Integer, Double>> modeHistoriesOne = new HashMap<>() ;
-	Map<String, Map<Integer, Double>> modeHistoriesFive = new HashMap<>() ;
-	Map<String, Map<Integer, Double>> modeHistoriesTen = new HashMap<>() ;
+	private Integer[] limits = new Integer[]{1,5,10};
+	private Map<String, Map<Integer, Double>> modeHistory = new HashMap<>() ;
+	private Map<String, Map<Integer, Double>> modeHistoriesOne = new HashMap<>() ;
+	private Map<String, Map<Integer, Double>> modeHistoriesFive = new HashMap<>() ;
+	private Map<String, Map<Integer, Double>> modeHistoriesTen = new HashMap<>() ;
 	private int minIteration = 0;
 	private MainModeIdentifier mainModeIdentifier;
 	private Map<String, Double> modeCnt = new TreeMap<>() ;
@@ -84,9 +86,11 @@ public class ModeChoiceCoverageControlerListenerJakob implements StartupListener
 
 
 	//jr
-//	private Map<Id<Person>, Map<Integer, Set<String>>> megaMap = new LinkedHashMap<>(); //old
-		private Map<Id<Person>, Map<Integer, Map<String, Integer>>> megaMap = new LinkedHashMap<>();
+	private Map<Id<Person>, Map<Integer, Map<String, Integer>>> megaMap = new LinkedHashMap<>();
 		// Map (      Person,    Map (Trip #,Map (Mode,  Count)))
+
+	private Map<Integer, Map<String, Double>> modeCountXXX = new TreeMap<>() ;
+	// Map     <limit  , Map<mode  , count >>
 	private Map<String, Double> modeUsedOneTime = new TreeMap<>() ;
     private Map<String, Double> modeUsedFiveTimes = new TreeMap<>() ;
     private Map<String, Double> modeUsedTenTimes = new TreeMap<>() ;
@@ -133,45 +137,25 @@ public class ModeChoiceCoverageControlerListenerJakob implements StartupListener
 		for (Person person : this.population.getPersons().values()) {
 
 			//jr
+			megaMap.computeIfAbsent(person.getId(), v -> new LinkedHashMap<>());
 			Map<Integer, Map<String,Integer>> mapForPerson = megaMap.get(person.getId()); // open map for person
-			if (mapForPerson == null) {
-				mapForPerson = new LinkedHashMap<>();
-			}
 
 			Plan plan = person.getSelectedPlan() ;
 			List<Trip> trips = TripStructureUtils.getTrips(plan) ;
 			Integer tripNumber = 0 ;
 			for ( Trip trip : trips ) {
 
-
-
 				String mode = this.mainModeIdentifier.identifyMainMode( trip.getTripElements() ) ;
-				if (mode.equals("pt")) {
-
-				}
-				for (Leg leg : trip.getLegsOnly()) {
-					leg.getMode();
-				}
-				// yy as stated elsewhere, the "computer science" mode identification may not be the same as the "transport planning" 
+				// yy as stated elsewhere, the "computer science" mode identification may not be the same as the "transport planning"
 				// mode identification.  Maybe revise.  kai, nov'16
 
 				// jr:
 				tripNumber++ ;
-                Map<String,Integer> mapForPersonTrip = mapForPerson.get(tripNumber); // open set for person trip
-				if (mapForPersonTrip == null) {
-					mapForPersonTrip = new HashMap<>();
-				}
+				mapForPerson.computeIfAbsent(tripNumber, v -> new HashMap<>());
+                Map<String,Integer> mapForPersonTrip = mapForPerson.get(tripNumber);
 
-//				mapForPersonTrip.merge(mode, 1, (prev, one) -> prev + 1);
-//				jkdshaflk.computeIfAbsent();
-				Integer modeCount = mapForPersonTrip.get(mode) ;
-                if (modeCount == null) {
-                    modeCount = 1;
-
-                } else {
-                    modeCount ++ ;
-                }
-
+				mapForPersonTrip.computeIfAbsent(mode, v -> 0);
+				Integer modeCount = mapForPersonTrip.get(mode) + 1;
                 mapForPersonTrip.put(mode, modeCount);
 
 				mapForPerson.put(tripNumber, mapForPersonTrip); // close map for person trip
@@ -190,6 +174,7 @@ public class ModeChoiceCoverageControlerListenerJakob implements StartupListener
 
 		// jr
 		int totalPersonTripCount = 0;
+		modeCountXXX.clear();
 		modeUsedOneTime.clear();
 		modeUsedFiveTimes.clear();
 		modeUsedTenTimes.clear();
@@ -198,21 +183,23 @@ public class ModeChoiceCoverageControlerListenerJakob implements StartupListener
 				for (Map<String, Integer> mapForPersonTrip : mapForPerson.values()) {
 					totalPersonTripCount++;
 					for (String mode : mapForPersonTrip.keySet()) {
-                        if (mapForPersonTrip.get(mode) >= 1) {
+						Integer realCount = mapForPersonTrip.get(mode);
+
+						if (realCount >= 1) {
                             Double cnt = this.modeUsedOneTime.get( mode );
                             if ( cnt==null ) {
                                 cnt = 0. ;
                             }
                             this.modeUsedOneTime.put( mode, cnt + 1 ) ;
                         }
-                        if (mapForPersonTrip.get(mode) >= 5) {
+                        if (realCount >= 5) {
                             Double cnt = this.modeUsedFiveTimes.get( mode );
                             if ( cnt==null ) {
                                 cnt = 0. ;
                             }
                             this.modeUsedFiveTimes.put( mode, cnt + 1 ) ;
                         }
-                        if (mapForPersonTrip.get(mode) >= 10) {
+                        if (realCount >= 10) {
                             Double cnt = this.modeUsedTenTimes.get( mode );
                             if ( cnt==null ) {
                                 cnt = 0. ;
@@ -224,20 +211,7 @@ public class ModeChoiceCoverageControlerListenerJakob implements StartupListener
 			}
 		}
 
-//		double sum = 0 ;
-//		for ( Double val : this.modeCnt.values() ) {
-//			sum += val ;
-//		}
-
-		// JR JR JR
 		double sum = totalPersonTripCount ;
-//		modeCnt = modeUsedOneTime;
-//        Map< String, Map<String, Double>> maps = new HashMap();
-//        maps.put("One Time", modeUsedOneTime);
-//        maps.put("Five Times", modeUsedFiveTimes);
-//        maps.put("Ten Times", modeUsedTenTimes);
-
-//        for (String mapName : maps.keySet()) {
 
 		// One Time
 		{
@@ -255,12 +229,8 @@ public class ModeChoiceCoverageControlerListenerJakob implements StartupListener
                     log.info("-- mode share of mode " + mode + " = " + share);
                     this.modeOut.write("\t" + share);
 
-                    Map<Integer, Double> modeHistory = modeHistoriesGeneric.get(mode);
-                    if (modeHistory == null) {
-                        modeHistory = new TreeMap<>();
-                        modeHistoriesGeneric.put(mode, modeHistory);
-                    }
-                    modeHistory.put(event.getIteration(), share);
+					Map<Integer, Double> modeHistory = modeHistoriesGeneric.computeIfAbsent(mode, k -> new TreeMap<>());
+					modeHistory.put(event.getIteration(), share);
 
                 }
                 this.modeOut.write("\n");

@@ -132,7 +132,6 @@ public final class RunBerlinScenario {
 					@Override
 					public void install() {
 						this.addControlerListenerBinding().to(ModeChoiceCoverageControlerListenerJakob.class);
-		//				this.bind(MyEventHandler.class);
 					}
 				});
 
