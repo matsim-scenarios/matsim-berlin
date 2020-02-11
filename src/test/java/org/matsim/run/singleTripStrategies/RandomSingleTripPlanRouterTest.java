@@ -20,7 +20,7 @@
  *  * ***********************************************************************
  */
 
-package org.matsim.run;
+package org.matsim.run.singleTripStrategies;
 
 import org.junit.Assert;
 import org.junit.Rule;
@@ -45,28 +45,21 @@ import org.matsim.core.scenario.ScenarioByInstanceModule;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.examples.ExamplesUtils;
+import org.matsim.run.singleTripStrategies.RandomSingleTripPlanRouter;
 import org.matsim.testcases.MatsimTestUtils;
 
-public class SingleTripPlanRouterTest {
+public class RandomSingleTripPlanRouterTest {
 
     @Rule
     public MatsimTestUtils utils = new MatsimTestUtils();
-
+    
     @Test
     public void test0() {
         final Config config = ConfigUtils.loadConfig(IOUtils.extendUrl(ExamplesUtils.getTestScenarioURL("equil"), "config.xml"));
         config.plans().setInputFile("plans1.xml");
         
         final Scenario scenario = ScenarioUtils.loadScenario(config);
-        Plan plan = scenario.getPopulation().getPersons().get(Id.createPersonId(1)).getSelectedPlan();
-        for (Trip trip: TripStructureUtils.getTrips(plan)) {
-        	for (Leg leg : trip.getLegsOnly()) {
-        		if (leg.getMode().equals(TransportMode.car)) {
-        			leg.setRoute(null);
-        		}
-        	}
-        }
-        
+            
         com.google.inject.Injector injector = Injector.createInjector(scenario.getConfig(), new AbstractModule() {
             @Override
             public void install() {
@@ -78,19 +71,38 @@ public class SingleTripPlanRouterTest {
         });
         TripRouter tripRouter = injector.getInstance(TripRouter.class);
         
-        RandomSingleTripPlanRouter singleTripPlanRouter = new RandomSingleTripPlanRouter(tripRouter, MatsimRandom.getLocalInstance());     
-        singleTripPlanRouter.run(plan);
-        
-        int tripsWithRouteAfterSingleTripPlanRouter = 0;
+        Plan plan = scenario.getPopulation().getPersons().get(Id.createPersonId(1)).getSelectedPlan();
+        int carTripsBefore = 0;
         for (Trip trip: TripStructureUtils.getTrips(plan)) {
+        	System.out.println(trip.toString());
         	for (Leg leg : trip.getLegsOnly()) {
-        		if (leg.getMode().equals(TransportMode.car) && leg.getRoute() != null) {
-        			tripsWithRouteAfterSingleTripPlanRouter++;
+        		if (leg.getMode().equals(TransportMode.car)) {
+        			carTripsBefore++;
+        			leg.setRoute(null);
         		}
         	}
         }
+                
+        RandomSingleTripPlanRouter singleTripPlanRouter = new RandomSingleTripPlanRouter(tripRouter, MatsimRandom.getLocalInstance());     
+        singleTripPlanRouter.run(plan);
         
-		Assert.assertEquals("Wrong number of car routes.", 1, tripsWithRouteAfterSingleTripPlanRouter);		
+    	System.out.println("----");
+
+        int carTripsAfterPlanRouter = 0;
+        int tripsWithRouteAfterSingleTripPlanRouter = 0;
+        for (Trip trip: TripStructureUtils.getTrips(plan)) {
+        	System.out.println(trip.toString());
+        	for (Leg leg : trip.getLegsOnly()) {
+        		if (leg.getMode().equals(TransportMode.car)) {
+        			carTripsAfterPlanRouter++;
+        			if (leg.getRoute() != null) {
+            			tripsWithRouteAfterSingleTripPlanRouter++;
+        			}
+        		}
+        	}
+        }
+		Assert.assertEquals("Number of car trips should not change.", carTripsBefore, carTripsAfterPlanRouter);		
+		Assert.assertEquals("Should only re-route a single trip. There should only be a single trip for which the route is not null.", 1, tripsWithRouteAfterSingleTripPlanRouter);		
     }
 
 }

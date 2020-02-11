@@ -1,5 +1,6 @@
 /* *********************************************************************** *
  * project: org.matsim.*
+ * ReRoute.java
  *                                                                         *
  * *********************************************************************** *
  *                                                                         *
@@ -17,32 +18,42 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.run;
+package org.matsim.run.singleTripStrategies;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.matsim.core.config.groups.GlobalConfigGroup;
-import org.matsim.core.config.groups.SubtourModeChoiceConfigGroup;
-import org.matsim.core.replanning.PlanStrategy;
-import org.matsim.core.replanning.PlanStrategyImpl;
-import org.matsim.core.replanning.selectors.RandomPlanSelector;
+import org.matsim.core.controler.Controler;
+import org.matsim.core.gbl.MatsimRandom;
+import org.matsim.core.population.algorithms.PlanAlgorithm;
+import org.matsim.core.replanning.modules.AbstractMultithreadedModule;
 import org.matsim.core.router.TripRouter;
 import org.matsim.facilities.ActivityFacilities;
 
-public class SubtourModeChoiceRepairReRoute implements Provider<PlanStrategy> {
+/**
+ * Uses the routing algorithm provided by the {@linkplain Controler} for 
+ * calculating the routes of plans during Replanning.
+ *
+ * @author mrieser
+ */
+public class RandomSingleTripReRouteModule extends AbstractMultithreadedModule {
+	
+	private ActivityFacilities facilities;
 
-	@Inject private Provider<TripRouter> tripRouterProvider;
-	@Inject private ActivityFacilities facilities;
-	@Inject private GlobalConfigGroup globalConfigGroup;
-	@Inject private SubtourModeChoiceConfigGroup subtourModeChoiceConfigGroup;
+	private final Provider<TripRouter> tripRouterProvider;
 
-    @Override
-	public PlanStrategy get() {
-		PlanStrategyImpl strategy = new PlanStrategyImpl(new RandomPlanSelector());
-		strategy.addStrategyModule(new SubtourModeChoiceModule(tripRouterProvider, globalConfigGroup, subtourModeChoiceConfigGroup));
-		strategy.addStrategyModule(new RepairReRouteModule(facilities, tripRouterProvider, globalConfigGroup));
-		return strategy;
+	public RandomSingleTripReRouteModule(ActivityFacilities facilities, Provider<TripRouter> tripRouterProvider, GlobalConfigGroup globalConfigGroup) {
+		super(globalConfigGroup);
+		this.facilities = facilities;
+		this.tripRouterProvider = tripRouterProvider;
+	}
+
+	@Override
+	public final PlanAlgorithm getPlanAlgoInstance() {
+			return new RandomSingleTripPlanRouter(
+					tripRouterProvider.get(),
+					facilities,
+					MatsimRandom.getLocalInstance());
 	}
 
 }

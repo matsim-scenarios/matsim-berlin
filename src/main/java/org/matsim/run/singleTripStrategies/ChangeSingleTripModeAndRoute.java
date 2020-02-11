@@ -1,6 +1,5 @@
 /* *********************************************************************** *
  * project: org.matsim.*
- * ReRoute.java
  *                                                                         *
  * *********************************************************************** *
  *                                                                         *
@@ -18,45 +17,34 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.run;
+package org.matsim.run.singleTripStrategies;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Plan;
+import org.matsim.core.config.groups.ChangeModeConfigGroup;
 import org.matsim.core.config.groups.GlobalConfigGroup;
-import org.matsim.core.controler.Controler;
-import org.matsim.core.population.algorithms.PlanAlgorithm;
-import org.matsim.core.replanning.modules.AbstractMultithreadedModule;
+import org.matsim.core.replanning.PlanStrategy;
+import org.matsim.core.replanning.PlanStrategyImpl;
+import org.matsim.core.replanning.PlanStrategyImpl.Builder;
+import org.matsim.core.replanning.selectors.RandomPlanSelector;
 import org.matsim.core.router.TripRouter;
 import org.matsim.facilities.ActivityFacilities;
 
-/**
- * Uses the routing algorithm provided by the {@linkplain Controler} for 
- * calculating the routes of plans during Replanning.
- *
- * @author mrieser
- */
-public class RepairReRouteModule extends AbstractMultithreadedModule {
-	
-	private ActivityFacilities facilities;
+public class ChangeSingleTripModeAndRoute implements Provider<PlanStrategy> {
 
-	private final Provider<TripRouter> tripRouterProvider;
-
-	public RepairReRouteModule(ActivityFacilities facilities, Provider<TripRouter> tripRouterProvider, GlobalConfigGroup globalConfigGroup) {
-		super(globalConfigGroup);
-		this.facilities = facilities;
-		this.tripRouterProvider = tripRouterProvider;
-	}
-
-	public RepairReRouteModule(Scenario scenario, Provider<TripRouter> tripRouterProvider) {
-		this(scenario.getActivityFacilities(), tripRouterProvider, scenario.getConfig().global());
-	}
+	@Inject private GlobalConfigGroup globalConfigGroup;
+	@Inject private ChangeModeConfigGroup changeModeConfigGroup;
+	@Inject private ActivityFacilities facilities;
+	@Inject private Provider<TripRouter> tripRouterProvider;
 
 	@Override
-	public final PlanAlgorithm getPlanAlgoInstance() {
-			return new RepairTripPlanRouter(
-					tripRouterProvider.get(),
-					facilities);
+	public PlanStrategy get() {
+		Builder builder = new PlanStrategyImpl.Builder(new RandomPlanSelector<Plan,Person>()) ;
+		builder.addStrategyModule(new ChangeSingleTripModeAndRouteModule(facilities, tripRouterProvider, globalConfigGroup, changeModeConfigGroup));
+		return builder.build() ;
 	}
 
 }

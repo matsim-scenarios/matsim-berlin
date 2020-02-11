@@ -11,12 +11,15 @@ import org.junit.runners.MethodSorters;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.contrib.drt.run.DrtConfigGroup;
+import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
-import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.drtSpeedUp.DrtSpeedUpConfigGroup;
 import org.matsim.drtSpeedUp.DrtSpeedUpModule;
+import org.matsim.run.BerlinExperimentalConfigGroup;
 import org.matsim.testcases.MatsimTestUtils;
 
 /**
@@ -42,12 +45,19 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 			config.planCalcScore().setWriteExperiencedPlans(false);
 			config.controler().setOutputDirectory(utils.getOutputDirectory());
 			config.global().setNumberOfThreads(1);
+			config.qsim().setNumberOfThreads(1);
 			config.plans().setInputFile("../../../../test/input/drt/drt-test-agents.xml");
+			
+			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
+				drtCfg.setNumberOfThreads(1);
+			}
+			
+			BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
+			berlinCfg.setPopulationDownsampleFactor(1.0);
 						
 			DrtSpeedUpModule.adjustConfig(config);
 
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
-			downsample( scenario.getPopulation().getPersons(), 1.0 );
 			
 			Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
 			controler.addOverridingModule(new DrtSpeedUpModule());
@@ -71,12 +81,19 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 			config.controler().setWritePlansInterval(30);
 			config.controler().setWriteEventsInterval(30);
 			config.global().setNumberOfThreads(1);
+			config.qsim().setNumberOfThreads(1);
 			config.controler().setOutputDirectory(utils.getOutputDirectory());
+			
+			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
+				drtCfg.setNumberOfThreads(1);
+			}
+			
+			BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
+			berlinCfg.setPopulationDownsampleFactor(0.01);
 			
 			DrtSpeedUpModule.adjustConfig(config);
 
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
-			downsample( scenario.getPopulation().getPersons(), 0.01 );
 			
 			Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;			
 			controler.addOverridingModule(new DrtSpeedUpModule());
@@ -88,8 +105,4 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 		}
 	}
 	
-	private static void downsample( final Map<Id<Person>, ? extends Person> map, final double sample ) {
-		final Random rnd = MatsimRandom.getLocalInstance();
-		map.values().removeIf( person -> rnd.nextDouble() > sample ) ;
-	}
 }

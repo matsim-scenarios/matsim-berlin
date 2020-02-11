@@ -17,39 +17,49 @@
  *   See also COPYING, LICENSE and WARRANTY file                           *
  *                                                                         *
  * *********************************************************************** */
-package org.matsim.run;
+package org.matsim.run.singleTripStrategies;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import org.matsim.api.core.v01.Id;
-import org.matsim.api.core.v01.population.Activity;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.PlanElement;
-import org.matsim.core.config.Config;
+import org.matsim.core.config.groups.ChangeModeConfigGroup;
+import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.algorithms.PersonAlgorithm;
 import org.matsim.core.population.algorithms.PlanAlgorithm;
 import org.matsim.core.population.routes.NetworkRoute;
+import org.matsim.core.router.PlanRouter;
 import org.matsim.core.router.TripRouter;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
-import org.matsim.core.utils.misc.Time;
 import org.matsim.facilities.ActivityFacilities;
 import org.matsim.facilities.FacilitiesUtils;
 import org.matsim.vehicles.Vehicle;
 
 /**
- * {@link PlanAlgorithm} responsible for routing only those trips which don't have a route in at least one leg.
+ * {@link PlanAlgorithm} responsible for (1) changing the trip mode and (2) routing a randomly chosen single trip.
  * Activity times are not updated, even if the previous trip arrival time
  * is after the activity end time.
  *
- * @author thibautd, ikaddoura
+ * @author ikaddoura
  */
-public class RepairTripPlanRouter implements PlanAlgorithm, PersonAlgorithm {
+public class ChangeSingleTripModeAndRoutePlanRouter implements PlanAlgorithm, PersonAlgorithm {
+	private final Random rnd;
 	private final TripRouter tripRouter;
 	private final ActivityFacilities facilities;
-
+	
+	private String[] possibleModes;
+	private boolean ignoreCarAvailability;
+	private boolean allowSwitchFromListedModesOnly;
+	private final List<String> possibleFromModes = new ArrayList<>();
+	
 	/**
 	 * Initialises an instance.
 	 * @param tripRouter the {@link TripRouter} to use to route individual trips
@@ -57,54 +67,96 @@ public class RepairTripPlanRouter implements PlanAlgorithm, PersonAlgorithm {
 	 * May be <tt>null</tt>: in this case, the router will be given facilities wrapping the
 	 * origin and destination activity.
 	 */
-	public RepairTripPlanRouter(
+	public ChangeSingleTripModeAndRoutePlanRouter(
 			final TripRouter tripRouter,
-			final ActivityFacilities facilities) {
+			final ActivityFacilities facilities,
+			final Random rnd,
+			final ChangeModeConfigGroup changeModeConfigGroup) {
 		this.tripRouter = tripRouter;
 		this.facilities = facilities;
-	}
-
-	/**
-	 * Short for initialising without facilities.
-	 */
-	public RepairTripPlanRouter(
-			final TripRouter routingHandler) {
-		this( routingHandler, null);
+		this.rnd = rnd;
+		this.possibleModes = changeModeConfigGroup.getModes();
+		this.ignoreCarAvailability = changeModeConfigGroup.getIgnoreCarAvailability();
+		
+		if (changeModeConfigGroup.getBehavior().equals(ChangeModeConfigGroup.Behavior.fromSpecifiedModesToSpecifiedModes)) {
+			this.allowSwitchFromListedModesOnly = true;
+		} else this.allowSwitchFromListedModesOnly=false;
+		
+		if (allowSwitchFromListedModesOnly){
+			this.possibleFromModes.addAll(Arrays.asList(possibleModes));
+		}
+		
 	}
 
 	@Override
 	public void run(final Plan plan) {
+		boolean forbidCar = false;
+		if (!this.ignoreCarAvailability) {
+			String carAvail = PersonUtils.getCarAvail(plan.getPerson());
+			if ("never".equals(carAvail)) {
+				forbidCar = true;
+			}
+		}
+		
 		final List<Trip> trips = TripStructureUtils.getTrips( plan );
 
-		for (Trip oldTrip : trips) {
-			boolean legWithInvalidRoute = false;
+		if (trips.size() > 0) {
+			int rndIdx = this.rnd.nextInt(trips.size());
+			Trip oldTrip = trips.get(rndIdx);
 			
-			for (Leg leg : oldTrip.getLegsOnly()) {
-				if (leg.getRoute() == null) {
-					legWithInvalidRoute = true;
-					break;
+			String oldTripMainMode = TripStructureUtils.identifyMainMode( oldTrip.getTripElements() );
+			String newTripMainMode = null;
+			if (allowSwitchFromListedModesOnly) {
+				if (this.possibleFromModes.contains(oldTripMainMode)) {
+					// choose a new trip mode
+					newTripMainMode = chooseModeOtherThan(oldTripMainMode, forbidCar);
+				} else {
+					// keep the old trip mode
+					newTripMainMode = oldTripMainMode;
 				}
 			}
 			
-			if (legWithInvalidRoute) {
-				
-				final List<? extends PlanElement> newTrip =
-						tripRouter.calcRoute(
-								TripStructureUtils.identifyMainMode( oldTrip.getTripElements() ),
-							  FacilitiesUtils.toFacility( oldTrip.getOriginActivity(), facilities ),
-							  FacilitiesUtils.toFacility( oldTrip.getDestinationActivity(), facilities ),
-								calcEndOfActivity( oldTrip.getOriginActivity() , plan, tripRouter.getConfig() ),
-								plan.getPerson() );
-				
-				putVehicleFromOldTripIntoNewTripIfMeaningful(oldTrip, newTrip);
-				TripRouter.insertTrip(
-						plan, 
-						oldTrip.getOriginActivity(),
-						newTrip,
-						oldTrip.getDestinationActivity());
-			}
-			
+			final List<? extends PlanElement> newTrip =
+					tripRouter.calcRoute(
+							newTripMainMode,
+							FacilitiesUtils.toFacility( oldTrip.getOriginActivity(), facilities ),
+							FacilitiesUtils.toFacility( oldTrip.getDestinationActivity(), facilities ),
+							PlanRouter.calcEndOfActivity( oldTrip.getOriginActivity() , plan, tripRouter.getConfig() ),
+							plan.getPerson() );
+						
+			putVehicleFromOldTripIntoNewTripIfMeaningful(oldTrip, newTrip);
+			TripRouter.insertTrip(
+					plan, 
+					oldTrip.getOriginActivity(),
+					newTrip,
+					oldTrip.getDestinationActivity());
 		}
+	}
+	
+	private String chooseModeOtherThan(final String currentMode, final boolean forbidCar) {
+		String newMode;
+		while (true) {
+			int newModeIdx = this.rnd.nextInt(this.possibleModes.length - 1);
+			for (int i = 0; i <= newModeIdx; i++) {
+				if (this.possibleModes[i].equals(currentMode)) {
+					/* if the new Mode is after the currentMode in the list of possible
+					 * modes, go one further, as we have to ignore the current mode in
+					 * the list of possible modes. */
+					newModeIdx++;
+					break;
+				}
+			}
+			newMode = this.possibleModes[newModeIdx];
+			if (!(forbidCar && TransportMode.car.equals(newMode))) {
+				break;
+			} else {
+				if (this.possibleModes.length == 2) {
+					newMode = currentMode; // there is no other mode available
+					break;
+				}
+			}
+		}
+		return newMode;
 	}
 
 	/**
@@ -145,30 +197,6 @@ public class RepairTripPlanRouter implements PlanAlgorithm, PersonAlgorithm {
 		for (Plan plan : person.getPlans()) {
 			run( plan );
 		}
-	}
-
-	public static double calcEndOfActivity(
-			final Activity activity,
-			final Plan plan,
-			final Config config ) {
-		// yyyy similar method in PopulationUtils.  TripRouter.calcEndOfPlanElement in fact uses it.  However, this seems doubly inefficient; calling the
-		// method in PopulationUtils directly would probably be faster.  kai, jul'19
-
-		if (!Time.isUndefinedTime(activity.getEndTime())) return activity.getEndTime();
-
-		// no sufficient information in the activity...
-		// do it the long way.
-		// XXX This is inefficient! Using a cache for each plan may be an option
-		// (knowing that plan elements are iterated in proper sequence,
-		// no need to re-examine the parts of the plan already known)
-		double now = 0;
-
-		for (PlanElement pe : plan.getPlanElements()) {
-			now = TripRouter.calcEndOfPlanElement( now, pe, config );
-			if (pe == activity) return now;
-		}
-
-		throw new RuntimeException( "activity "+activity+" not found in "+plan.getPlanElements() );
 	}
 
 }

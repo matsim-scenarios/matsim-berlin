@@ -18,11 +18,12 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.run;
+package org.matsim.run.singleTripStrategies;
 
 import javax.inject.Provider;
 
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.core.config.groups.ChangeModeConfigGroup;
 import org.matsim.core.config.groups.GlobalConfigGroup;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.gbl.MatsimRandom;
@@ -37,28 +38,28 @@ import org.matsim.facilities.ActivityFacilities;
  *
  * @author mrieser
  */
-public class RandomSingleTripReRouteModule extends AbstractMultithreadedModule {
+public class ChangeSingleTripModeAndRouteModule extends AbstractMultithreadedModule {
 	
 	private ActivityFacilities facilities;
 
 	private final Provider<TripRouter> tripRouterProvider;
+	private final ChangeModeConfigGroup changeModeConfigGroup;
 
-	public RandomSingleTripReRouteModule(ActivityFacilities facilities, Provider<TripRouter> tripRouterProvider, GlobalConfigGroup globalConfigGroup) {
+	public ChangeSingleTripModeAndRouteModule(ActivityFacilities facilities, Provider<TripRouter> tripRouterProvider, GlobalConfigGroup globalConfigGroup, ChangeModeConfigGroup changeModeConfigGroup) {
 		super(globalConfigGroup);
 		this.facilities = facilities;
 		this.tripRouterProvider = tripRouterProvider;
-	}
-
-	public RandomSingleTripReRouteModule(Scenario scenario, Provider<TripRouter> tripRouterProvider) {
-		this(scenario.getActivityFacilities(), tripRouterProvider, scenario.getConfig().global());
+		this.changeModeConfigGroup = changeModeConfigGroup;
 	}
 
 	@Override
 	public final PlanAlgorithm getPlanAlgoInstance() {
-			return new RandomSingleTripPlanRouter(
+			return new ChangeSingleTripModeAndRoutePlanRouter(
 					tripRouterProvider.get(),
 					facilities,
-					MatsimRandom.getLocalInstance());
+					MatsimRandom.getLocalInstance(),
+					changeModeConfigGroup
+					);
 	}
 
 }

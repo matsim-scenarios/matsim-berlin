@@ -72,10 +72,6 @@ public final class RunDrtOpenBerlinScenario {
 	
 	private static final String DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_ATTRIBUTE = "drtStopFilter";
 	private static final String DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_VALUE = "station_S/U/RE/RB_drtServiceArea";
-	public static final String DRT_ACCESS_EGRESS_TO_PT_PERSON_FILTER_ATTRIBUTE = "canUseDrt";
-	public static final String DRT_ACCESS_EGRESS_TO_PT_PERSON_FILTER_VALUE = "true";
-	public static final String ROUTING_MODE_PT_WITH_DRT_ENABLED_FOR_ACCESS_EGRESS = "pt_w_drt";
-	public static final String ANALYSIS_MAIN_MODE_PT_WITH_DRT_USED_FOR_ACCESS_OR_EGRESS = "pt_w_drt_used";
 
 	public static void main(String[] args) throws CommandLine.ConfigurationException {
 		
@@ -121,29 +117,6 @@ public final class RunDrtOpenBerlinScenario {
 		
 		controler.addOverridingModule(new IntermodalTripFareCompensatorsModule());
 		
-//		Map<String, Double> drtMode2Compensation = new HashMap<>();
-//		Set<String> ptModes = new HashSet<>();
-//		
-//		ptModes.add(TransportMode.pt);
-//		
-//		DrtFaresConfigGroup drtFaresCfg = ConfigUtils.addOrGetModule(controler.getConfig(), DrtFaresConfigGroup.class);
-//		
-//		for (DrtFareConfigGroup drtFareCfg: drtFaresCfg.getDrtFareConfigGroups()) {
-//			// TODO: make configurable
-//			// effectively compensate min fare - fare for 1 km (otherwise to many users?)
-//			double compensation = drtFareCfg.getMinFarePerTrip() - drtFareCfg.getDistanceFare_m() * 1000;
-//			drtMode2Compensation.put(drtFareCfg.getMode(), compensation); // here min fare, not base fare
-//			drtMode2Compensation.put(drtFareCfg.getMode() + "_teleportation", compensation); // drt speed up mode
-//		}
-//		
-//		controler.addOverridingModule(new AbstractModule() {
-//			
-//			@Override
-//			public void install() {
-//				addEventHandlerBinding().toInstance(new IntermodalTripFareCompensator(drtMode2Compensation, ptModes));		
-//			}
-//		});
-		
 		controler.addOverridingModule(new PtIntermodalRoutingModesModule());
 		
 		return controler;
@@ -175,30 +148,32 @@ public final class RunDrtOpenBerlinScenario {
 		
 		return scenario;
 	}
-	
-	public static Config prepareConfig( String [] args, ConfigGroup... customModules) {
+
+	public enum AdditionalInformation { none, acceptUnknownParamsBerlinConfig }
+
+	public static Config prepareConfig( AdditionalInformation additionalInformation, String [] args, ConfigGroup... customModules) {
 		ConfigGroup[] customModulesToAdd = new ConfigGroup[]{new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup(), new IntermodalTripFareCompensatorsConfigGroup(), new PtIntermodalRoutingModesConfigGroup() };
 		ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
-		
+
 		int counter = 0;
 		for (ConfigGroup customModule : customModules) {
 			customModulesAll[counter] = customModule;
 			counter++;
 		}
-		
+
 		for (ConfigGroup customModule : customModulesToAdd) {
 			customModulesAll[counter] = customModule;
 			counter++;
 		}
 
-		Config config = RunBerlinScenario.prepareConfig( args, customModulesAll ) ;
-		
-		// switch off pt vehicle simulation
-//		config.transit().setUsingTransitInMobsim(false);
+		Config config = RunBerlinScenario.prepareConfig( additionalInformation, args, customModulesAll ) ;
 
 		DrtConfigs.adjustMultiModeDrtConfig(MultiModeDrtConfigGroup.get(config), config.planCalcScore(), config.plansCalcRoute());
 
 		return config ;
+	}
+	public static Config prepareConfig( String [] args, ConfigGroup... customModules) {
+		return prepareConfig( AdditionalInformation.none, args, customModules ) ;
 	}
 	
 	public static void addDRTmode(Scenario scenario, String drtNetworkMode, String drtServiceAreaShapeFile) {
