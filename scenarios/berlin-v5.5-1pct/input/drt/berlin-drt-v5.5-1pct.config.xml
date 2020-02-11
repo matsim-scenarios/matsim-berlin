@@ -300,5 +300,4 @@
 			<param name="stopFilterValue" value="station_S/U/RE/RB_drtServiceArea" />
 		</parameterset>
 	</module>
-
 </config>
