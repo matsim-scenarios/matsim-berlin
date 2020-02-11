@@ -149,7 +149,7 @@
 			<parameterset type="modeParams" >
 			<!-- This parameter set should never actually be used. It is only here to let ModeStatsControlerListener include "pt+drt" until ModeStats is fixed for that. -->
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-				<param name="mode" value="pt_w_drt_used" />
+				<param name="mode" value="pt+drt" />
 			</parameterset>
 		</parameterset>
 	</module>
@@ -300,19 +300,5 @@
 			<param name="stopFilterValue" value="station_S/U/RE/RB_drtServiceArea" />
 		</parameterset>
 	</module>
-	
-	<module name="ptIntermodalRoutingModes" >
-		<parameterset type="ptIntermodalRoutingMode" >
-			<!-- The routing mode to which is delegated (typically TransportMode.pt). -->
-			<param name="delegateMode" value="pt" />
-			<!-- Routing mode to be installed. -->
-			<param name="routingMode" value="pt_w_drt" />
-			<parameterset type="personAttribute2ValuePair" >
-				<!-- Name of the person attribute added before calling the routing module of the delegate mode. The attribute is removed immediately after routing. Should be the same attribute as in the IntermodalAccessEgressParameterSet of the SwissRailRaptorConfigGroup. -->
-				<param name="personFilterAttribute" value="canUseDrt" />
-				<!-- Value of the person attribute added before calling the routing module of the delegate mode. -->
-				<param name="personFilterValue" value="true" />
-			</parameterset>
-		</parameterset>
-	</module>
+
 </config>
