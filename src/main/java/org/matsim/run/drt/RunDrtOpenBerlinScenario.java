@@ -72,6 +72,7 @@ public final class RunDrtOpenBerlinScenario {
 	
 	private static final String DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_ATTRIBUTE = "drtStopFilter";
 	private static final String DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_VALUE = "station_S/U/RE/RB_drtServiceArea";
+	public static final String ANALYSIS_MAIN_MODE_PT_WITH_DRT_USED_FOR_ACCESS_OR_EGRESS = "pt+drt";
 
 	public static void main(String[] args) throws CommandLine.ConfigurationException {
 		
