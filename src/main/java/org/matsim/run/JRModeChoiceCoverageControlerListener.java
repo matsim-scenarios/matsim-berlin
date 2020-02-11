@@ -56,7 +56,7 @@ import java.util.Map.Entry;
  *
  * @author mrieser
  */
-public class ModeChoiceCoverageControlerListenerJakob implements StartupListener, IterationEndsListener,
+public class JRModeChoiceCoverageControlerListener implements StartupListener, IterationEndsListener,
         ShutdownListener {
 
 	private static final String FILENAME_MODESTATS = "modeChoiceStats";
@@ -99,8 +99,8 @@ public class ModeChoiceCoverageControlerListenerJakob implements StartupListener
 	// testfewagentsonly
 
 	@Inject
-	ModeChoiceCoverageControlerListenerJakob(ControlerConfigGroup controlerConfigGroup, Population population1, OutputDirectoryHierarchy controlerIO,
-											 PlanCalcScoreConfigGroup scoreConfig, AnalysisMainModeIdentifier mainModeIdentifier) {
+	JRModeChoiceCoverageControlerListener(ControlerConfigGroup controlerConfigGroup, Population population1, OutputDirectoryHierarchy controlerIO,
+										  PlanCalcScoreConfigGroup scoreConfig, AnalysisMainModeIdentifier mainModeIdentifier) {
 
 		this.controlerConfigGroup = controlerConfigGroup;
 		this.population = population1;
@@ -116,7 +116,6 @@ public class ModeChoiceCoverageControlerListenerJakob implements StartupListener
 				this.modeOut.write("\t" + mode);
 			}
 			this.modeOut.write("\n");
-			;
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
@@ -187,7 +186,7 @@ public class ModeChoiceCoverageControlerListenerJakob implements StartupListener
 			Map<String, Map<Integer, Double>> modeIterationShareMap = modeHistoryAll.computeIfAbsent(limit, k -> new HashMap<>());
 
 			try {
-				this.modeOut.write(String.valueOf(event.getIteration()) + " (" + limit + "x)");
+				this.modeOut.write(event.getIteration() + " (" + limit + "x)");
 				log.info("Mode shares over all " + sum + " trips found. MainModeIdentifier: " + mainModeIdentifier.getClass());
 				for (String mode : modes) {
 					Double cnt = modeCnt.get(mode);

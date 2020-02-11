@@ -127,13 +127,21 @@ public final class RunBerlinScenario {
 		} );
 
 
-		//jr
+//		jr
 		 controler.addOverridingModule(new AbstractModule() {
 					@Override
 					public void install() {
-						this.addControlerListenerBinding().to(ModeChoiceCoverageControlerListenerJakob.class);
+						this.addControlerListenerBinding().to(JRModeChoiceCoverageControlerListener.class);
 					}
 				});
+
+		 // jr2
+		controler.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				this.addControlerListenerBinding().to(JRDynamicShutdownControlerListener.class);
+			}
+		});
 
 
 
