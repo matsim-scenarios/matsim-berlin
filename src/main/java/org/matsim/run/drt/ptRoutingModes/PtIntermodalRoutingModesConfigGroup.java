@@ -99,19 +99,11 @@ public class PtIntermodalRoutingModesConfigGroup extends ReflectiveConfigGroup {
             this.routingMode = routingMode;
         }
         
-        /**
-         * Not implemented yet!
-         * @param delegateMode
-         */
         @StringGetter(PARAM_DELEGATE_MODE)
         public String getDelegateMode() {
             return delegateMode;
         }
 
-        /**
-         * Not implemented yet!
-         * @param delegateMode
-         */
         @StringSetter(PARAM_DELEGATE_MODE)
         public void setDelegateMode(String delegateMode) {
             this.delegateMode = delegateMode;
