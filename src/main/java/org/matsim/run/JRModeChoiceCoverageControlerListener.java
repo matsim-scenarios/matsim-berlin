@@ -71,32 +71,19 @@ public class JRModeChoiceCoverageControlerListener implements StartupListener, I
 
 
 	private Integer[] limits = new Integer[]{1, 5, 10};
-	private Map<Integer, Map<String, Map<Integer, Double>>> modeHistoryAll = new HashMap<>();
-	//      Map<Limit  , Map<mode  , Map<iter   , count >>>
-//	private Map<String, Map<Integer, Double>> modeHistoriesOne = new HashMap<>();
-//	private Map<String, Map<Integer, Double>> modeHistoriesFive = new HashMap<>();
-//	private Map<String, Map<Integer, Double>> modeHistoriesTen = new HashMap<>();
+	private static Map<Integer, Map<String, Map<Integer, Double>>> modeHistoryAll = new HashMap<>();
+	private Map<Id<Person>, Map<Integer, Map<String, Integer>>> megaMap = new LinkedHashMap<>();
+	// Map (      Person,    Map (Trip #,Map (Mode,  Count)))
+
 	private int minIteration = 0;
 	private MainModeIdentifier mainModeIdentifier;
-//	private Map<String, Double> modeCnt = new TreeMap<>() ;
 
 	private final Set<String> modes;
 
 	private final static Logger log = Logger.getLogger(org.matsim.analysis.ModeStatsControlerListener.class);
 
 
-	//jr
-	private Map<Id<Person>, Map<Integer, Map<String, Integer>>> megaMap = new LinkedHashMap<>();
-	// Map (      Person,    Map (Trip #,Map (Mode,  Count)))
 
-	private Map<Integer, Map<String, Double>> modeCountCurrentIteration = new TreeMap<>();
-	// Map     <limit  , Map<mode  , count >>
-//	private Map<String, Double> modeUsedOneTime = new TreeMap<>();
-//	private Map<String, Double> modeUsedFiveTimes = new TreeMap<>();
-//	private Map<String, Double> modeUsedTenTimes = new TreeMap<>();
-
-
-	// testfewagentsonly
 
 	@Inject
 	JRModeChoiceCoverageControlerListener(ControlerConfigGroup controlerConfigGroup, Population population1, OutputDirectoryHierarchy controlerIO,
@@ -133,33 +120,21 @@ public class JRModeChoiceCoverageControlerListener implements StartupListener, I
 	}
 
 	private void collectModeShareInfo(final IterationEndsEvent event) {
+		/**
+		 *  megaMap: for each person-trip, how many times (iterations) was each mode used. The following code adds the
+		 * 	mode information from the current iteration to the megaMap.
+		 */
 
-		// Counts mode instances for current iteration
-		for (Person person : this.population.getPersons().values()) {
-
-			Map<Integer, Map<String, Integer>> mapForPerson = megaMap.computeIfAbsent(person.getId(), v -> new LinkedHashMap<>());
-
-			Plan plan = person.getSelectedPlan();
-			Integer tripNumber = 0;
-			for (Trip trip : TripStructureUtils.getTrips(plan)) {
-
-				tripNumber++;
-				String mode = this.mainModeIdentifier.identifyMainMode(trip.getTripElements());
-
-				Map<String, Integer> mapForPersonTrip = mapForPerson.computeIfAbsent(tripNumber, v -> new HashMap<>());
-
-				Integer modeCount = mapForPersonTrip.computeIfAbsent(mode, v -> 0);
-				mapForPersonTrip.put(mode, modeCount + 1);
-
-				mapForPerson.put(tripNumber, mapForPersonTrip); // close map for person trip
-			}
-			megaMap.put(person.getId(), mapForPerson); // reinsert map for person
-		}
+		updateMegaMapWithCurrentIteration();
 
 
-		// Counts for how many person-trips, the mode count exceeds the predefined limits.
+		/**
+		 * 		 Looks through megaMap at each person-trip. How many of those person trips have used the each mode more than the
+		 * 		 predefined limits.
+		 */
 		int totalPersonTripCount = 0;
-		modeCountCurrentIteration.clear();
+		Map<Integer, Map<String, Double>> modeCountCurrentIteration = new TreeMap<>();
+
 		for (Map<Integer, Map<String, Integer>> mapForPerson : megaMap.values()) {
 			for (Map<String, Integer> mapForPersonTrip : mapForPerson.values()) {
 				totalPersonTripCount++;
@@ -177,6 +152,7 @@ public class JRModeChoiceCoverageControlerListener implements StartupListener, I
 				}
 			}
 		}
+
 
 
 		double sum = totalPersonTripCount;
@@ -197,8 +173,8 @@ public class JRModeChoiceCoverageControlerListener implements StartupListener, I
 					log.info("-- mode choice coverage (" + limit + "x) of mode " + mode + " = " + share);
 					this.modeOut.write("\t" + share);
 
-					Map<Integer, Double> IterationShareMap = modeIterationShareMap.computeIfAbsent(mode, k -> new TreeMap<>());
-					IterationShareMap.put(event.getIteration(), share);
+					Map<Integer, Double> iterationShareMap = modeIterationShareMap.computeIfAbsent(mode, k -> new TreeMap<>());
+					iterationShareMap.put(event.getIteration(), share);
 
 				}
 				this.modeOut.write("\n");
@@ -210,174 +186,45 @@ public class JRModeChoiceCoverageControlerListener implements StartupListener, I
 
 		// Produces Graphs
 		if (this.createPNG && event.getIteration() > this.minIteration) {
-			for (Integer limit : limits) {
-				XYLineChart chart = new XYLineChart("Mode Choice Coverage Statistics (Mode Used >= " + limit + "x)", "iteration", "mode choice coverage");
-				for (Entry<String, Map<Integer, Double>> entry : modeHistoryAll.get(limit).entrySet()) {
-					String mode = entry.getKey();
-					Map<Integer, Double> history = entry.getValue();
-					chart.addSeries(mode, history);
-				}
-				chart.addMatsimLogo();
-				chart.saveAsPng(this.modeFileName + limit+ "x" + ".png", 800, 600);
-			}
+			produceGraphs();
 		}
 	}
 
-//		// One Time
-//		{
-//
-//			modeCnt = modeUsedOneTime;
-//			Map<String, Map<Integer, Double>> modeHistoriesGeneric = modeHistoriesOne;
-//			try {
-//				this.modeOut.write(String.valueOf(event.getIteration()) + " (1x)");
-//				log.info("Mode shares over all " + sum + " trips found. MainModeIdentifier: " + mainModeIdentifier.getClass());
-//				for (String mode : modes) {
-//					Double cnt = this.modeCnt.get(mode);
-//					double share = 0.;
-//					if (cnt != null) {
-//						share = cnt / sum;
-//					}
-//					log.info("-- mode share of mode " + mode + " = " + share);
-//					this.modeOut.write("\t" + share);
-//
-//					Map<Integer, Double> modeHistory = modeHistoriesGeneric.computeIfAbsent(mode, k -> new TreeMap<>());
-//					modeHistory.put(event.getIteration(), share);
-//
-//				}
-//				this.modeOut.write("\n");
-//				this.modeOut.flush();
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//
-//
-//			// yyyy the following does not work!!
-//			// Why? The charts seem to be useful (JB, April 2017)
-//			if (this.createPNG && event.getIteration() > this.minIteration) {
-//				// create chart when data of more than one iteration is available.
-//				XYLineChart chart = new XYLineChart("Mode Choice Coverage Statistics (Mode Used >= 1x)", "iteration", "mode choice coverage");
-//				for (Entry<String, Map<Integer, Double>> entry : modeHistoriesGeneric.entrySet()) {
-//					String mode = entry.getKey();
-//					Map<Integer, Double> history = entry.getValue();
-////				log.warn( "about to add the following series:" ) ;
-////				for ( Entry<Integer, Double> item : history.entrySet() ) {
-////					log.warn( item.getKey() + " -- " + item.getValue() );
-////				}
-//					chart.addSeries(mode, history);
-//				}
-//				chart.addMatsimLogo();
-//				chart.saveAsPng(this.modeFileName + "One" + ".png", 800, 600);
-//			}
-//			modeHistoriesOne = modeHistoriesGeneric;
-//			modeCnt.clear();
-//		}
-//
-//        // Five Times
-//		{
-//			modeCnt = modeUsedFiveTimes;
-//			Map<String, Map<Integer, Double>> modeHistoriesGeneric = modeHistoriesFive ;
-//			try {
-//				this.modeOut.write(String.valueOf (event.getIteration())+   " (5x)");
-//				log.info("Mode shares over all " + sum + " trips found. MainModeIdentifier: " + mainModeIdentifier.getClass());
-//				for (String mode : modes) {
-//					Double cnt = this.modeCnt.get(mode);
-//					double share = 0.;
-//					if (cnt != null) {
-//						share = cnt / sum;
-//					}
-//					log.info("-- mode share of mode " + mode + " = " + share);
-//					this.modeOut.write("\t" + share);
-//
-//					Map<Integer, Double> modeHistory = modeHistoriesGeneric.get(mode);
-//					if (modeHistory == null) {
-//						modeHistory = new TreeMap<>();
-//						modeHistoriesGeneric.put(mode, modeHistory);
-//					}
-//					modeHistory.put(event.getIteration(), share);
-//
-//				}
-//				this.modeOut.write("\n");
-//				this.modeOut.flush();
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//
-//
-//			// yyyy the following does not work!!
-//			// Why? The charts seem to be useful (JB, April 2017)
-//			if (this.createPNG && event.getIteration() > this.minIteration) {
-//				// create chart when data of more than one iteration is available.
-//				XYLineChart chart = new XYLineChart("Mode Choice Coverage Statistics (Mode Used >= 5x)", "iteration", "mode choice coverage");
-//				for (Entry<String, Map<Integer, Double>> entry : modeHistoriesGeneric.entrySet()) {
-//					String mode = entry.getKey();
-//					Map<Integer, Double> history = entry.getValue();
-////				log.warn( "about to add the following series:" ) ;
-////				for ( Entry<Integer, Double> item : history.entrySet() ) {
-////					log.warn( item.getKey() + " -- " + item.getValue() );
-////				}
-//					chart.addSeries(mode, history);
-//				}
-//				chart.addMatsimLogo();
-//				chart.saveAsPng(this.modeFileName + "Five" + ".png", 800, 600);
-//			}
-//			modeHistoriesFive = modeHistoriesGeneric ;
-//			modeCnt.clear();
-//		}
-//
-//
-//		// Ten Times
-//		{
-//			modeCnt = modeUsedTenTimes;
-//			Map<String, Map<Integer, Double>> modeHistoriesGeneric = modeHistoriesTen ;
-//			try {
-//				this.modeOut.write(String.valueOf (event.getIteration()) + " (10x)");
-//				log.info("Mode shares over all " + sum + " trips found. MainModeIdentifier: " + mainModeIdentifier.getClass());
-//				for (String mode : modes) {
-//					Double cnt = this.modeCnt.get(mode);
-//					double share = 0.;
-//					if (cnt != null) {
-//						share = cnt / sum;
-//					}
-//					log.info("-- mode share of mode " + mode + " = " + share);
-//					this.modeOut.write("\t" + share);
-//
-//					Map<Integer, Double> modeHistory = modeHistoriesGeneric.get(mode);
-//					if (modeHistory == null) {
-//						modeHistory = new TreeMap<>();
-//						modeHistoriesGeneric.put(mode, modeHistory);
-//					}
-//					modeHistory.put(event.getIteration(), share);
-//
-//				}
-//				this.modeOut.write("\n");
-//				this.modeOut.flush();
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//
-//
-//			// yyyy the following does not work!!
-//			// Why? The charts seem to be useful (JB, April 2017)
-//			if (this.createPNG && event.getIteration() > this.minIteration) {
-//				// create chart when data of more than one iteration is available.
-//				XYLineChart chart = new XYLineChart("Mode Choice Coverage Statistics (Mode Used >= 10x)", "iteration", "mode choice coverage");
-//				for (Entry<String, Map<Integer, Double>> entry : modeHistoriesGeneric.entrySet()) {
-//					String mode = entry.getKey();
-//					Map<Integer, Double> history = entry.getValue();
-////				log.warn( "about to add the following series:" ) ;
-////				for ( Entry<Integer, Double> item : history.entrySet() ) {
-////					log.warn( item.getKey() + " -- " + item.getValue() );
-////				}
-//					chart.addSeries(mode, history);
-//				}
-//				chart.addMatsimLogo();
-//				chart.saveAsPng(this.modeFileName + "Ten" + ".png", 800, 600);
-//			}
-//			modeHistoriesTen = modeHistoriesGeneric ;
-//			modeCnt.clear();
-//		}
-//	}
+	private void updateMegaMapWithCurrentIteration() {
+		for (Person person : this.population.getPersons().values()) {
 
+			Map<Integer, Map<String, Integer>> mapForPerson = megaMap.computeIfAbsent(person.getId(), v -> new LinkedHashMap<>());
+
+			Plan plan = person.getSelectedPlan();
+			Integer tripNumber = 0;
+			for (Trip trip : TripStructureUtils.getTrips(plan)) {
+
+				tripNumber++;
+				String mode = this.mainModeIdentifier.identifyMainMode(trip.getTripElements());
+
+				Map<String, Integer> mapForPersonTrip = mapForPerson.computeIfAbsent(tripNumber, v -> new HashMap<>());
+
+				Integer modeCount = mapForPersonTrip.computeIfAbsent(mode, v -> 0);
+				mapForPersonTrip.put(mode, modeCount + 1);
+
+				mapForPerson.put(tripNumber, mapForPersonTrip); // close map for person trip
+			}
+			megaMap.put(person.getId(), mapForPerson); // reinsert map for person
+		}
+	}
+
+	private void produceGraphs() {
+		for (Integer limit : limits) {
+			XYLineChart chart = new XYLineChart("Mode Choice Coverage Statistics (Mode Used >= " + limit + "x)", "iteration", "mode choice coverage");
+			for (Entry<String, Map<Integer, Double>> entry : modeHistoryAll.get(limit).entrySet()) {
+				String mode = entry.getKey();
+				Map<Integer, Double> history = entry.getValue();
+				chart.addSeries(mode, history);
+			}
+			chart.addMatsimLogo();
+			chart.saveAsPng(this.modeFileName + limit+ "x" + ".png", 800, 600);
+		}
+	}
 
 
 	@Override
@@ -389,4 +236,11 @@ public class JRModeChoiceCoverageControlerListener implements StartupListener, I
 		}
 
 	}
+
+
+
+	public static Map<Integer, Map<String, Map<Integer, Double>>> getModeHistory() {
+		return modeHistoryAll;
+	}
+
 }

@@ -125,13 +125,13 @@ public final class RunBerlinScenario {
 		} );
 
 
-////		jr
-//		 controler.addOverridingModule(new AbstractModule() {
-//					@Override
-//					public void install() {
-//						this.addControlerListenerBinding().to(JRModeChoiceCoverageControlerListener.class);
-//					}
-//				});
+//		jr
+		 controler.addOverridingModule(new AbstractModule() {
+					@Override
+					public void install() {
+						this.addControlerListenerBinding().to(JRModeChoiceCoverageControlerListener.class);
+					}
+				});
 //
 //		 // jr2
 //		controler.addOverridingModule(new AbstractModule() {
@@ -147,6 +147,13 @@ public final class RunBerlinScenario {
 				bind(TerminationCriterion.class).to(JRTerminateScoreConverganceWithInnovation.class);
 			}
 		});
+
+//		controler.addOverridingModule(new AbstractModule() {
+//			@Override
+//			public void install() {
+//				bind(JRModeStats.class).to(JRModeChoiceCoverageControlerListener.class);
+//			}
+//		});
 
 		return controler;
 	}
