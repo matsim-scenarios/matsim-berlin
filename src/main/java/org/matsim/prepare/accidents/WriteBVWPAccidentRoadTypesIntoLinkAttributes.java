@@ -28,7 +28,7 @@ public class WriteBVWPAccidentRoadTypesIntoLinkAttributes {
  			args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
 		}
 		
-	String outputFile = "../shared-svn/studies/countries/de/accidents/data/input/berlin-v5.5-network-with-bvwp-accidents-attributes.xml.gz"; 
+	String outputFile = "scenarios/input/berlin-v5.5-network-with-bvwp-accidents-attributes.xml.gz"; 
 	String landOSMInputShapeFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/original-data/osmBerlin/gis.osm_landuse_a_free_1_GK4.shp";  
 	
 	String tunnelLinkCSVInputFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.1.tunnel-linkIDs.csv";
@@ -37,11 +37,11 @@ public class WriteBVWPAccidentRoadTypesIntoLinkAttributes {
 	//The Ids of links the between the two versions have change. Because of that the equivalent in the new network  for the plan free links
 	
 	Config config = RunBerlinScenario.prepareConfig(args);
-		
+	AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
+	
+	
 	Scenario scenario = RunBerlinScenario.prepareScenario(config);
 	
-	
-	AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
 	
 	AccidentsNetworkModification accidentsNetworkModification = new AccidentsNetworkModification(scenario);
 	NetworkUtils.writeNetwork(accidentsNetworkModification.setLinkAttributsBasedOnOSMFile(
