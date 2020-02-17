@@ -40,10 +40,8 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
-import org.matsim.core.controler.AbstractModule;
+import org.matsim.core.controler.*;
 import org.matsim.core.controler.Controler;
-import org.matsim.core.controler.OutputDirectoryHierarchy;
-import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.gbl.Gbl;
 import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.population.routes.RouteFactories;
@@ -127,25 +125,28 @@ public final class RunBerlinScenario {
 		} );
 
 
-//		jr
-		 controler.addOverridingModule(new AbstractModule() {
-					@Override
-					public void install() {
-						this.addControlerListenerBinding().to(JRModeChoiceCoverageControlerListener.class);
-					}
-				});
+////		jr
+//		 controler.addOverridingModule(new AbstractModule() {
+//					@Override
+//					public void install() {
+//						this.addControlerListenerBinding().to(JRModeChoiceCoverageControlerListener.class);
+//					}
+//				});
+//
+//		 // jr2
+//		controler.addOverridingModule(new AbstractModule() {
+//			@Override
+//			public void install() {
+//				this.addControlerListenerBinding().to(JRDynamicShutdownControlerListener.class);
+//			}
+//		});
 
-		 // jr2
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
-				this.addControlerListenerBinding().to(JRDynamicShutdownControlerListener.class);
+				bind(TerminationCriterion.class).to(JRTerminateScoreConverganceWithInnovation.class);
 			}
 		});
-
-
-
-
 
 		return controler;
 	}
