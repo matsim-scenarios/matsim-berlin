@@ -49,7 +49,6 @@ class PtRoutingModeWrapper implements RoutingModule {
 		this.routingModeParams = routingModeParams;
 		this.personAttribute2ValuePairs = ImmutableList.copyOf(routingModeParams.getPersonAttribute2ValuePairs());
 		this.ptRouter = ptRouter;
-		System.err.println(ptRouter.toString());
 	}
 
 	@Override
