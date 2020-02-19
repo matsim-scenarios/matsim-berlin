@@ -21,7 +21,6 @@ package org.matsim.run.drt.ptRoutingModes;
 
 import java.util.List;
 
-import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.core.router.RoutingModule;
@@ -30,8 +29,6 @@ import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesConfigGroup.Per
 import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesConfigGroup.PtIntermodalRoutingModeParameterSet;
 
 import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 /**
  * 
@@ -44,8 +41,7 @@ class PtRoutingModeWrapper implements RoutingModule {
 	private final PtIntermodalRoutingModeParameterSet routingModeParams;
 	private final ImmutableList<PersonAttribute2ValuePair> personAttribute2ValuePairs;
 	
-	@Inject
-	PtRoutingModeWrapper (PtIntermodalRoutingModeParameterSet routingModeParams, @Named(TransportMode.pt) RoutingModule ptRouter) {
+	PtRoutingModeWrapper (PtIntermodalRoutingModeParameterSet routingModeParams, RoutingModule ptRouter) {
 		this.routingModeParams = routingModeParams;
 		this.personAttribute2ValuePairs = ImmutableList.copyOf(routingModeParams.getPersonAttribute2ValuePairs());
 		this.ptRouter = ptRouter;
