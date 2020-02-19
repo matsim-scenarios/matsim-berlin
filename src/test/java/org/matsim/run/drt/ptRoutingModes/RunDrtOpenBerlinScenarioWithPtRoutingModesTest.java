@@ -83,7 +83,7 @@ public class RunDrtOpenBerlinScenarioWithPtRoutingModesTest {
 			config.plans().setInputFile("../../../../test/input/drt/drt-test-agents.xml");
 			
 			// jvm on build server has less cores than we set in the input config file and would complain about that
-			config.global().setNumberOfThreads(10);
+			config.global().setNumberOfThreads(1);
 			config.qsim().setNumberOfThreads(1);
 			
 			config.controler().setWritePlansInterval(1);
