@@ -201,55 +201,6 @@
         
         <!-- ====================================================================== -->
         
-        <person id="285614901pt_w_drt">
-                <attributes>
-                        <attribute name="home-activity-zone" class="java.lang.String" >berlin</attribute>
-                        <attribute name="subpopulation" class="java.lang.String" >person</attribute>
-                </attributes>
-                <plan score="125.742234628425" selected="yes">
-                        <activity type="home_61200.0" link="121440" x="4598799.775126854" y="5819943.559707888" end_time="08:04:39" >
-                                <attributes>
-                                        <attribute name="zoneId" class="java.lang.String" >902050803</attribute>
-                                </attributes>
-                        </activity>
-                        <leg mode="pt_w_drt" dep_time="08:04:39">
-                         </leg>
-                         <activity type="work_3600.0" link="53942" x="4597677.601208622" y="5825245.001288694" max_dur="00:49:36" >
-                                <attributes>
-                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer" >3720</attribute>
-                                        <attribute name="zoneId" class="java.lang.String" >903050923</attribute>
-                                </attributes>
-                        </activity>
-                        <leg mode="pt_w_drt" dep_time="09:37:00">
-                        </leg>
-                        <activity type="leisure_1800.0" link="135235" x="4598909.484393673" y="5826082.882422043" max_dur="00:21:28" >
-                                <attributes>
-                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer" >1680</attribute>
-                                        <attribute name="zoneId" class="java.lang.String" >903050920</attribute>
-                                </attributes>
-                        </activity>
-                        <leg mode="pt_w_drt" dep_time="10:21:24">
-                        </leg>
-                        <activity type="work_25200.0" link="62194" x="4597613.0" y="5823959.0" end_time="16:15:02" >
-                                <attributes>
-                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer" >25200</attribute>
-                                </attributes>
-                        </activity>
-                        <leg mode="pt_w_drt" dep_time="16:15:02">
-                        </leg>
-                        <activity type="home_61200.0" link="121440" x="4598799.775126854" y="5819943.559707888" >
-                                <attributes>
-                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer" >33060</attribute>
-                                        <attribute name="zoneId" class="java.lang.String" >902050803</attribute>
-                                </attributes>
-                        </activity>
-                </plan>
-
-
-        </person>
-        
-        <!-- ====================================================================== -->
-        
         <person id="agent-with-DrtRoute">
                 <attributes>
                         <attribute name="home-activity-zone" class="java.lang.String" >berlin</attribute>
