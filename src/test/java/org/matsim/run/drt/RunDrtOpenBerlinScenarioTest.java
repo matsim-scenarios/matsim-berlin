@@ -179,7 +179,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			config.controler().setWritePlansInterval(1);
 			
 			// make pt more attractive to obtain less direct walks (routing mode pt) due to drt triangle walk being more attractive 
-			config.planCalcScore().setMarginalUtlOfWaitingPt_utils_hr(5);
+			config.planCalcScore().getScoringParameters("person").setMarginalUtlOfWaitingPt_utils_hr(5.0);
 			
 			BerlinExperimentalConfigGroup berlinExpConfigGroup = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 			
