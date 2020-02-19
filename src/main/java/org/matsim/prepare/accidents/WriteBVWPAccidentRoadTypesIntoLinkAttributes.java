@@ -14,6 +14,7 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.run.RunBerlinScenario;
 
+
 public class WriteBVWPAccidentRoadTypesIntoLinkAttributes {
 	
 	private static final Logger log = Logger.getLogger(WriteBVWPAccidentRoadTypesIntoLinkAttributes.class);
@@ -28,7 +29,7 @@ public class WriteBVWPAccidentRoadTypesIntoLinkAttributes {
  			args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
 		}
 		
-	String outputFile = "scenarios/input/berlin-v5.5-network-with-bvwp-accidents-attributes.xml.gz"; 
+	String outputFile = "./scenarios/input/berlin-v5.5-network-with-bvwp-accidents-attributes.xml.gz"; 
 	String landOSMInputShapeFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/original-data/osmBerlin/gis.osm_landuse_a_free_1_GK4.shp";  
 	
 	String tunnelLinkCSVInputFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.1.tunnel-linkIDs.csv";
@@ -39,9 +40,7 @@ public class WriteBVWPAccidentRoadTypesIntoLinkAttributes {
 	Config config = RunBerlinScenario.prepareConfig(args);
 	AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
 	
-	
 	Scenario scenario = RunBerlinScenario.prepareScenario(config);
-	
 	
 	AccidentsNetworkModification accidentsNetworkModification = new AccidentsNetworkModification(scenario);
 	NetworkUtils.writeNetwork(accidentsNetworkModification.setLinkAttributsBasedOnOSMFile(
