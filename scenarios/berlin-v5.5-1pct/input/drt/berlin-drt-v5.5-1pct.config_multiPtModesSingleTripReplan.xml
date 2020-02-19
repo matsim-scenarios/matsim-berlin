@@ -225,7 +225,7 @@
 				<param name="mode" value="drt" />
 			</parameterset>
 			<parameterset type="modeParams" >
-			<!-- This parameter set should never actually be used. It is only here to let ModeStatsControlerListener include "pt+drt" until ModeStats is fixed for that. -->
+			<!-- This parameter set should never actually be used. It is only here to let ModeStatsControlerListener include "pt_w_drt_used" until ModeStats is fixed for that. -->
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="pt_w_drt_used" />
 			</parameterset>
