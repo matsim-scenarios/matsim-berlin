@@ -49,6 +49,8 @@ import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.run.RunBerlinScenario;
+import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesConfigGroup;
+import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesModule;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
 
@@ -115,6 +117,8 @@ public final class RunDrtOpenBerlinScenario {
 		
 		controler.addOverridingModule(new IntermodalTripFareCompensatorsModule());
 		
+		controler.addOverridingModule(new PtIntermodalRoutingModesModule());
+		
 		return controler;
 	}
 	
@@ -148,7 +152,7 @@ public final class RunDrtOpenBerlinScenario {
 	public enum AdditionalInformation { none, acceptUnknownParamsBerlinConfig }
 
 	public static Config prepareConfig( AdditionalInformation additionalInformation, String [] args, ConfigGroup... customModules) {
-		ConfigGroup[] customModulesToAdd = new ConfigGroup[]{new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup(), new IntermodalTripFareCompensatorsConfigGroup() };
+		ConfigGroup[] customModulesToAdd = new ConfigGroup[]{new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup(), new IntermodalTripFareCompensatorsConfigGroup(), new PtIntermodalRoutingModesConfigGroup() };
 		ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
 
 		int counter = 0;

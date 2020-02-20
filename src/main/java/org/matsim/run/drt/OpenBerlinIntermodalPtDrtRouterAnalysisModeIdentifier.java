@@ -47,6 +47,7 @@ public final class OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier impleme
 	private final List<String> modeHierarchy = new ArrayList<>() ;
 	private final List<String> drtModes;
 	private static final Logger log = Logger.getLogger(OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier.class);
+	public static final String ANALYSIS_MAIN_MODE_PT_WITH_DRT_USED_FOR_ACCESS_OR_EGRESS = "pt_w_drt_used";
 
 	@Inject
 	public OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier() {
@@ -124,7 +125,7 @@ public final class OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier impleme
 			}
 			
 			if (isDrtPt) {
-				return "pt+drt";
+				return OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier.ANALYSIS_MAIN_MODE_PT_WITH_DRT_USED_FOR_ACCESS_OR_EGRESS;
 			} else {
 				return TransportMode.pt;
 			}
