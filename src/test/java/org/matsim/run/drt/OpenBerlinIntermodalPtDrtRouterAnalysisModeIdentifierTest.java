@@ -96,19 +96,19 @@ public class OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifierTest {
 		{
 			List<PlanElement> planElements = new ArrayList<>();
 			planElements.add(factory.createLeg(TransportMode.transit_walk));
-			Assert.assertEquals("Wrong mode!", TransportMode.pt, mainModeIdentifier.identifyMainMode(planElements));
+			Assert.assertEquals("Wrong mode!", TransportMode.walk, mainModeIdentifier.identifyMainMode(planElements));
 		}
 		
 		{
 			List<PlanElement> planElements = new ArrayList<>();
 			planElements.add(factory.createLeg(TripRouter.getFallbackMode(TransportMode.drt)));
-			Assert.assertEquals("Wrong mode!", TransportMode.drt, mainModeIdentifier.identifyMainMode(planElements));
+			Assert.assertEquals("Wrong mode!", TransportMode.walk, mainModeIdentifier.identifyMainMode(planElements));
 		}
 		
 		{
 			List<PlanElement> planElements = new ArrayList<>();
 			planElements.add(factory.createLeg(TripRouter.getFallbackMode("drt2")));
-			Assert.assertEquals("Wrong mode!", "drt2", mainModeIdentifier.identifyMainMode(planElements));
+			Assert.assertEquals("Wrong mode!", TransportMode.walk, mainModeIdentifier.identifyMainMode(planElements));
 		}
 		
 		log.info("Running testDrtPtFallbackModesRecognition... Done.");
