@@ -8,6 +8,7 @@ import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.StrategyConfigGroup;
 import org.matsim.core.controler.TerminationCriterion;
 import org.matsim.core.replanning.PlanStrategy;
+import org.matsim.core.replanning.ReplanningUtils;
 import org.matsim.core.replanning.StrategyManager;
 
 import javax.inject.Inject;
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
     public class JRTerminateScoreConverganceWithInnovation implements TerminationCriterion {
-        private static final double SCORE_PRECISION_4_SHUTDOWN = 0.50;
+        private static final double SCORE_PRECISION_4_SHUTDOWN = 0.5;
         private static final int MINIMUM_ITERATION = 10 ;
         private final int lastIteration;
         private ScoreStats scoreStats ;
@@ -24,7 +25,7 @@ import java.util.Map;
         private static int dynamicShutdownIteration;
         private static boolean dynamicShutdownInitiated = false ;
         private StrategyConfigGroup strategyConfigGroup ;
-        Map<StrategyConfigGroup.StrategySettings, PlanStrategy> planStrategies ;
+        private Map<StrategyConfigGroup.StrategySettings, PlanStrategy> planStrategies ;
         private static final Logger log = Logger.getLogger(StrategyManager.class);
 
 
@@ -75,14 +76,17 @@ import java.util.Map;
         }
 
         private void shutdownInnovation(int iteration) {
-            dynamicShutdownIteration = (int) (iteration / strategyConfigGroup.getFractionOfIterationsToDisableInnovation()) + 1;
+            dynamicShutdownIteration = (int) (iteration / strategyConfigGroup.getFractionOfIterationsToDisableInnovation()) + 3;
             for (Map.Entry<StrategyConfigGroup.StrategySettings, PlanStrategy> entry : planStrategies.entrySet()) {
                 PlanStrategy strategy = entry.getValue();
                 StrategyConfigGroup.StrategySettings settings = entry.getKey();
-                strategyManager.addChangeRequest(iteration,strategy, settings.getSubpopulation(), 0.0);
+//                strategyManager.addChangeRequest(iteration+1,strategy, settings.getSubpopulation(), 0.0);
+                if (!ReplanningUtils.isOnlySelector(strategy)) {
+                    strategyManager.changeWeightOfStrategy(strategy, settings.getSubpopulation(), 0.0);
+                }
             }
 
-            log.error("Innovation Shutdown at iteration " + (iteration));
+            log.error("Innovation Shutdown at iteration " + (iteration+1));
             log.error("Full Shutdown at iteration " + dynamicShutdownIteration);
             dynamicShutdownInitiated = true;
         }
