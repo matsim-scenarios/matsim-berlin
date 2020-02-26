@@ -43,6 +43,7 @@ import org.matsim.core.utils.io.IOUtils;
 import org.matsim.core.utils.io.UncheckedIOException;
 
 import javax.inject.Inject;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.*;
@@ -63,7 +64,7 @@ public class JRModeChoiceCoverageControlerListener implements StartupListener, I
 
 	final private Population population;
 
-	final private BufferedWriter modeOut;
+	final private Map<Integer, BufferedWriter> modeOutMap = new HashMap<>();
 	final private String modeFileName;
 
 	private final boolean createPNG;
@@ -94,18 +95,25 @@ public class JRModeChoiceCoverageControlerListener implements StartupListener, I
 		this.modeFileName = controlerIO.getOutputFilename(FILENAME_MODESTATS);
 //		this.createPNG = controlerConfigGroup.isCreateGraphs();
 		this.createPNG = true; //jr
-		this.modeOut = IOUtils.getBufferedWriter(this.modeFileName + ".txt"); //jr
-		try {
-			this.modeOut.write("Iteration");
-			this.modes = new TreeSet<>();
-			this.modes.addAll(scoreConfig.getAllModes());
-			for (String mode : modes) {
-				this.modeOut.write("\t" + mode);
+
+		this.modes = new TreeSet<>();
+		this.modes.addAll(scoreConfig.getAllModes());
+		for (Integer limit : limits){
+			BufferedWriter modeOut = IOUtils.getBufferedWriter(this.modeFileName + "(" + limit + "x).txt"); //jr
+			try {
+				modeOut.write("Iteration");
+
+				for (String mode : modes) {
+					modeOut.write("\t" + mode);
+				}
+				modeOut.write("\n");
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
 			}
-			this.modeOut.write("\n");
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
+			this.modeOutMap.put(limit, modeOut);
 		}
+
+
 		this.mainModeIdentifier = mainModeIdentifier;
 	}
 
@@ -160,9 +168,9 @@ public class JRModeChoiceCoverageControlerListener implements StartupListener, I
 		for (Integer limit : limits) {
 			Map<String, Double> modeCnt = modeCountCurrentIteration.get(limit);
 			Map<String, Map<Integer, Double>> modeIterationShareMap = modeHistoryAll.computeIfAbsent(limit, k -> new HashMap<>());
-
+			BufferedWriter modeOut = modeOutMap.get(limit);
 			try {
-				this.modeOut.write(event.getIteration() + " (" + limit + "x)");
+				modeOut.write(event.getIteration());
 				log.info("Mode shares over all " + sum + " trips found. MainModeIdentifier: " + mainModeIdentifier.getClass());
 				for (String mode : modes) {
 					Double cnt = modeCnt.get(mode);
@@ -171,14 +179,14 @@ public class JRModeChoiceCoverageControlerListener implements StartupListener, I
 						share = cnt / sum;
 					}
 					log.info("-- mode choice coverage (" + limit + "x) of mode " + mode + " = " + share);
-					this.modeOut.write("\t" + share);
+					modeOut.write("\t" + share);
 
 					Map<Integer, Double> iterationShareMap = modeIterationShareMap.computeIfAbsent(mode, k -> new TreeMap<>());
 					iterationShareMap.put(event.getIteration(), share);
 
 				}
-				this.modeOut.write("\n");
-				this.modeOut.flush();
+				modeOut.write("\n");
+				modeOut.flush();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -229,11 +237,15 @@ public class JRModeChoiceCoverageControlerListener implements StartupListener, I
 
 	@Override
 	public void notifyShutdown(final ShutdownEvent controlerShudownEvent) {
-		try {
-			this.modeOut.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+
+		for (BufferedWriter modeOut : modeOutMap.values()) {
+			try {
+				modeOut.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
+
 
 	}
 
