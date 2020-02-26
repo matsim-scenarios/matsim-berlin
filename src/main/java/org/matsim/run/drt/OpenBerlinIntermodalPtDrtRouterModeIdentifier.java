@@ -96,7 +96,7 @@ public final class OpenBerlinIntermodalPtDrtRouterModeIdentifier implements Anal
 			}
 		}
 		if (mainModeIndex == -1) {
-			throw new RuntimeException("know main mode found for trip " + planElements.toString() ) ;
+			throw new RuntimeException("no main mode found for trip " + planElements.toString() ) ;
 		}
 		return modeHierarchy.get( mainModeIndex ) ;
 	}

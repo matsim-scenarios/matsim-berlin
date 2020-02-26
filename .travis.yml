@@ -16,6 +16,7 @@ env:
     - TEST=IntermodalTripFareCompensatorsTest
     - TEST=IntermodalTripFareCompensatorPerTripTest
     - TEST=OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifierTest
+    - TEST=RunDrtOpenBerlinScenarioWithPtRoutingModesTest
     - TEST=RunDrtOpenBerlinScenarioWithDrtSpeedUpTest
     - TEST=ChangeSingleTripModeAndRoutePlanRouterTest
     - TEST=RandomSingleTripPlanRouterTest

@@ -17,11 +17,18 @@
 		<param name="insistingOnDeprecatedConfigVersion" value="false" />
 		<param name="numberOfThreads" value="8" />
 	</module>
+	<module name="berlinExperimental" >
+		<parameterset type="intermodalAccessEgressModeUtilityRandomization" >
+			<param name="accessEgressMode" value="drt" />
+			<param name="additiveRandomizationWidth" value="0." />
+		</parameterset>
+		<param name="populationDownsampleFactor" value="1.0" />
+	</module>
 	<module name="network" >
 		<param name="inputNetworkFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz" />
 	</module>
 	<module name="plans" >
-		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/input/berlin-v5.5-1pct.plans_uncalibrated.xml.gz" />
+		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/input/berlin-v5.5-1pct.plans.xml.gz" />
 		<param name="removingUnnecessaryPlanAttributes" value="false" />
 	</module>
 	<module name="vehicles" >
@@ -66,7 +73,8 @@
 			<param name="weight" value="0.85" />
 		</parameterset>
 		<parameterset type="strategysettings" >
-			<param name="strategyName" value="ReRoute" />
+			<!-- <param name="strategyName" value="ReRoute" /> -->
+			<param name="strategyName" value="RandomSingleTripReRoute" />
 			<param name="subpopulation" value="person" />
 			<param name="weight" value="0.05" />
 		</parameterset>
@@ -109,7 +117,7 @@
 		<param name="fractionOfIterationsToStartScoreMSA" value="1.0" />
 		<parameterset type="scoringParameters" >
 			<parameterset type="modeParams" >
-				<param name="constant" value="-0.45" />
+				<param name="constant" value="-0.0" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="car" />
 				<param name="monetaryDistanceRate" value="-0.0002" />
@@ -147,9 +155,9 @@
 				<param name="mode" value="drt" />
 			</parameterset>
 			<parameterset type="modeParams" >
-			<!-- This parameter set should never actually be used. It is only here to let ModeStatsControlerListener include "pt+drt" until ModeStats is fixed for that. -->
+			<!-- This parameter set should never actually be used. It is only here to let ModeStatsControlerListener include "pt_w_drt_used" until ModeStats is fixed for that. -->
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-				<param name="mode" value="pt+drt" />
+				<param name="mode" value="pt_w_drt_used" />
 			</parameterset>
 		</parameterset>
 	</module>
@@ -222,11 +230,11 @@
 			<!-- Basefare per Trip (fare = positive value) -->
             <param name="basefare" value="0.0"/>
             <!-- Minimum fare per trip (paid instead of the sum of base, time and distance fare if that sum would be lower than the minimum fare, fee = positive value). -->
-            <param name="minFarePerTrip" value="4.0"/>
+            <param name="minFarePerTrip" value="2.0"/>
             <!-- Daily subscription fee (fee = positive value) -->
             <param name="dailySubscriptionFee" value="0.0"/>
 			<!-- drt fare per meter (fee = positive value) -->
-            <param name="distanceFare_m" value="0.0015"/>
+            <param name="distanceFare_m" value="0.00035"/>
 			<!-- drt fare per hour (fee = positive value) -->
             <param name="timeFare_h" value="0.0"/>
         </parameterset>
@@ -235,9 +243,9 @@
 	<module name="intermodalTripFareCompensators" >
 		<parameterset type="intermodalTripFareCompensator" >
 			<!-- Compensation per Trip (compensation = refund paid to the customer = positive value) -->
-			<param name="compensationPerTrip" value="1.0" />
+			<param name="compensationPerTrip" value="0.0" />
 			<!-- Condition which governs which agents are compensated. Options: PtModeUsedInSameTrip, PtModeUsedAnywhereInTheDay -->
-			<param name="compensationCondition" value="PtModeUsedAnywhereInTheDay" />
+			<param name="compensationCondition" value="PtModeUsedInSameTrip" />
 			<!-- drt modes for which the compensation applies (comma separated list). -->
 			<param name="drtModes" value="drt,drt_teleportation" />
 			<!-- pt modes for which the compensation applies (comma separated list). -->

@@ -51,6 +51,8 @@ import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.run.JRModeChoiceCoverageControlerListener;
 import org.matsim.run.RunBerlinScenario;
+import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesConfigGroup;
+import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesModule;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
 
@@ -135,6 +137,8 @@ public final class RunDrtOpenBerlinScenario {
 		//jr
 
 		
+		controler.addOverridingModule(new PtIntermodalRoutingModesModule());
+		
 		return controler;
 	}
 	
@@ -164,27 +168,32 @@ public final class RunDrtOpenBerlinScenario {
 		
 		return scenario;
 	}
-	
-	public static Config prepareConfig( String [] args, ConfigGroup... customModules) {
-		ConfigGroup[] customModulesToAdd = new ConfigGroup[]{new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup(), new IntermodalTripFareCompensatorsConfigGroup() };
+
+	public enum AdditionalInformation { none, acceptUnknownParamsBerlinConfig }
+
+	public static Config prepareConfig( AdditionalInformation additionalInformation, String [] args, ConfigGroup... customModules) {
+		ConfigGroup[] customModulesToAdd = new ConfigGroup[]{new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup(), new IntermodalTripFareCompensatorsConfigGroup(), new PtIntermodalRoutingModesConfigGroup() };
 		ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
-		
+
 		int counter = 0;
 		for (ConfigGroup customModule : customModules) {
 			customModulesAll[counter] = customModule;
 			counter++;
 		}
-		
+
 		for (ConfigGroup customModule : customModulesToAdd) {
 			customModulesAll[counter] = customModule;
 			counter++;
 		}
 
-		Config config = RunBerlinScenario.prepareConfig( args, customModulesAll ) ;
+		Config config = RunBerlinScenario.prepareConfig( additionalInformation, args, customModulesAll ) ;
 
 		DrtConfigs.adjustMultiModeDrtConfig(MultiModeDrtConfigGroup.get(config), config.planCalcScore(), config.plansCalcRoute());
 
 		return config ;
+	}
+	public static Config prepareConfig( String [] args, ConfigGroup... customModules) {
+		return prepareConfig( AdditionalInformation.none, args, customModules ) ;
 	}
 	
 	public static void addDRTmode(Scenario scenario, String drtNetworkMode, String drtServiceAreaShapeFile) {

@@ -21,7 +21,7 @@
 		<param name="inputNetworkFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz" />
 	</module>
 	<module name="plans" >
-		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.plans_uncalibrated.xml.gz" />
+		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.plans.xml.gz" />
 		<param name="removingUnnecessaryPlanAttributes" value="true" />
 	</module>
 	<module name="vehicles" >
@@ -43,11 +43,6 @@
 			<param name="beelineDistanceFactor" value="1.3" />
 			<param name="mode" value="walk" />
 			<param name="teleportedModeSpeed" value="1.0555556" />
-		</parameterset>
-		<parameterset type="teleportedModeParameters" >
-			<param name="beelineDistanceFactor" value="1.3" />
-			<param name="mode" value="non_network_walk" />
-			<param name="teleportedModeSpeed" value="0.8333333333333333" />
 		</parameterset>
 	</module>
 	<module name="qsim" >
@@ -113,7 +108,7 @@
 		<param name="fractionOfIterationsToStartScoreMSA" value="1.0" />
 		<parameterset type="scoringParameters" >
 			<parameterset type="modeParams" >
-				<param name="constant" value="-0.45" />
+				<param name="constant" value="-0.0" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="car" />
 				<param name="monetaryDistanceRate" value="-0.0002" />
