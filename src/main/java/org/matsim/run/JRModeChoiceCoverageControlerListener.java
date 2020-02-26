@@ -43,7 +43,6 @@ import org.matsim.core.utils.io.IOUtils;
 import org.matsim.core.utils.io.UncheckedIOException;
 
 import javax.inject.Inject;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.*;
@@ -128,7 +127,7 @@ public class JRModeChoiceCoverageControlerListener implements StartupListener, I
 	}
 
 	private void collectModeShareInfo(final IterationEndsEvent event) {
-		/**
+		/*
 		 *  megaMap: for each person-trip, how many times (iterations) was each mode used. The following code adds the
 		 * 	mode information from the current iteration to the megaMap.
 		 */
@@ -136,7 +135,7 @@ public class JRModeChoiceCoverageControlerListener implements StartupListener, I
 		updateMegaMapWithCurrentIteration();
 
 
-		/**
+		/*
 		 * 		 Looks through megaMap at each person-trip. How many of those person trips have used the each mode more than the
 		 * 		 predefined limits.
 		 */
