@@ -26,6 +26,7 @@ import com.google.inject.Inject;
 
 import ch.sbb.matsim.routing.pt.raptor.RaptorIntermodalAccessEgress;
 import ch.sbb.matsim.routing.pt.raptor.RaptorParameters;
+import ch.sbb.matsim.routing.pt.raptor.RaptorStopFinder.Direction;
 
 /**
  * A default implementation of {@link RaptorIntermodalAccessEgress} returning a new RIntermodalAccessEgress,
@@ -51,7 +52,7 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
 	}
 
 	@Override
-    public RIntermodalAccessEgress calcIntermodalAccessEgress(final List<? extends PlanElement> legs, RaptorParameters params, Person person) {
+    public RIntermodalAccessEgress calcIntermodalAccessEgress(final List<? extends PlanElement> legs, RaptorParameters params, Person person, Direction direction) {
 		// maybe nicer using raptor parameters per person ?
 		String subpopulationName = null;
 		if (person.getAttributes() != null) {
@@ -115,6 +116,6 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                 }
             }
         }
-        return new RIntermodalAccessEgress(legs, -utility, tTime);
+        return new RIntermodalAccessEgress(legs, -utility, tTime, direction);
     }
 }
