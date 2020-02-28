@@ -24,6 +24,8 @@ class InfectionEventHandler implements BasicEventHandler {
         private Map<Id<Link>,LinkWrapper> linkMap = new HashMap<>();
 
         private int cnt = 10 ;
+        private int noOfInfectedPersons = cnt;
+        private int noOfInfectedDrivers = 0;
 
         @Override public void handleEvent( Event event ){
                 if ( event instanceof PersonEntersVehicleEvent ) {
@@ -53,7 +55,22 @@ class InfectionEventHandler implements BasicEventHandler {
                         // the fact that nothing is done here means that an infected person that enters a vehicle leaves the virus in the vehicle forever
                 }
                 if ( event instanceof PersonDepartureEvent ) {
-                        // the fact that nothing is done here means that an infected person that arrives at a link leaves the virus at the link forever
+                        // if nothing is done here it means that an infected person that arrives at a link leaves the virus at the link forever
+                	for (LinkWrapper linkWrapper : linkMap.values()) {
+                		boolean foundPersonWrapper = false;
+                		PersonWrapper toBeDeletedPersonWrapper = null;
+                		for (PersonWrapper personWrapper : linkWrapper.getPersons()) {
+                			if (personWrapper.getPersonId().equals(((PersonDepartureEvent ) event).getPersonId())) {
+                				toBeDeletedPersonWrapper = personWrapper;
+                				foundPersonWrapper = true;
+                				break;
+                			}
+                		}
+                		if (foundPersonWrapper) {
+            				linkWrapper.deletePerson(toBeDeletedPersonWrapper);
+                			break;
+            			}
+                	}
                 }
 
         }
@@ -65,6 +82,7 @@ class InfectionEventHandler implements BasicEventHandler {
                                 person.getAttributes().putAttribute( AgentSnapshotInfo.marker, true );
                                 cnt--;
                                 personWrapper.setStatus( Status.infected );
+                                log.warn(" person " + personWrapper.personId +" has initial infection");
                         }
                 }
         }
@@ -73,19 +91,21 @@ class InfectionEventHandler implements BasicEventHandler {
                 // including drivers!
 
                 boolean infected = false;
+                PersonWrapper infector = null;
                 for( PersonWrapper person : persons ){
                         if( person.getStatus() == Status.infected ){
                                 infected = true;
+                                infector = person;
                                 break;
                         }
                 }
                 if( infected ){
                         for( PersonWrapper person : persons ){
-                                infectPerson( person );
+                                infectPerson( person, infector );
                         }
                 }
         }
-        private void infectPerson( PersonWrapper personWrapper ){
+        private void infectPerson( PersonWrapper personWrapper, PersonWrapper infector ){
                 Status prevStatus = personWrapper.getStatus();
                 personWrapper.setStatus( Status.infected );
                 final Person person = PopulationUtils.findPerson( personWrapper.personId, scenario );
@@ -93,12 +113,19 @@ class InfectionEventHandler implements BasicEventHandler {
                         person.getAttributes().putAttribute( AgentSnapshotInfo.marker, true );
                 }
                 if ( prevStatus!= Status.infected ) {
-                        log.warn( "infection of personId=" + personWrapper.getPersonId() );
+                	if (personWrapper.getPersonId().toString().startsWith("pt_pt")) {
+                		noOfInfectedDrivers++;
+                	}
+                	else {
+                		noOfInfectedPersons++;
+                	}
+                	log.warn( "infection of personId=" + personWrapper.getPersonId() + " by person=" + infector.getPersonId() );
+                	log.warn( "No of infected persons=" + noOfInfectedPersons );
+                	log.warn( "No of infected drivers=" + noOfInfectedDrivers );
                 }
         }
         @Override public void reset( int iteration ){
         }
-
         private static class LinkWrapper {
                 private final Id<Link> linkId;
                 private Set<PersonWrapper> persons = new HashSet<>();
@@ -107,6 +134,9 @@ class InfectionEventHandler implements BasicEventHandler {
                 }
                 void addPerson( PersonWrapper person ) {
                         persons.add( person );
+                }
+                void deletePerson( PersonWrapper person ) {
+                    persons.remove( person );
                 }
                 public Id<Link> getLinkId(){
                         return linkId;
