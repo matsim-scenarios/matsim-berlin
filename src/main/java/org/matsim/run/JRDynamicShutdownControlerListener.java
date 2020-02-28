@@ -9,12 +9,14 @@ import org.matsim.api.core.v01.population.Plan;
 import org.matsim.core.config.groups.ControlerConfigGroup;
 import org.matsim.core.config.groups.StrategyConfigGroup;
 import org.matsim.core.controler.TerminationCriterion;
+import org.matsim.core.controler.events.StartupEvent;
+import org.matsim.core.controler.listener.StartupListener;
 import org.matsim.core.replanning.*;
 
 import javax.inject.Inject;
 import java.util.*;
 
-public class JRTerminateScoreConverganceWithInnovation implements TerminationCriterion {
+public class JRDynamicShutdownControlerListener implements StartupListener {
         private static final double SCORE_PRECISION_4_SHUTDOWN = 0.5;
         private static final int MINIMUM_ITERATION = 5 ;
         private final int lastIteration;
@@ -34,8 +36,8 @@ public class JRTerminateScoreConverganceWithInnovation implements TerminationCri
 
 
     @Inject
-    JRTerminateScoreConverganceWithInnovation(ControlerConfigGroup controlerConfigGroup, ScoreStats scoreStats, StrategyManager strategyManager,
-                                              StrategyConfigGroup strategyConfigGroup, Map<StrategyConfigGroup.StrategySettings, PlanStrategy> planStrategies, Scenario scenario) {
+    JRDynamicShutdownControlerListener(ControlerConfigGroup controlerConfigGroup, ScoreStats scoreStats, StrategyManager strategyManager,
+                                       StrategyConfigGroup strategyConfigGroup, Map<StrategyConfigGroup.StrategySettings, PlanStrategy> planStrategies, Scenario scenario) {
 
         this.lastIteration = controlerConfigGroup.getLastIteration();
         this.scenario = scenario;
@@ -52,39 +54,36 @@ public class JRTerminateScoreConverganceWithInnovation implements TerminationCri
 
     }
 
-        @Override
-        public boolean continueIterations(int iteration) {
+    @Override
+    public void notifyStartup(StartupEvent startupEvent) {
 
+        int iteration = startupEvent.getIteration();
 
-            // Step 1: Add newest percent difference to the pctDifference ArrayList
-
-
-
-            pctChangeForModeChoice(iteration);
-            for (String mode : pctChangesForModeShare.keySet()) {
-                System.out.println(mode + " *********************************");
-                for (Double pc : pctChangesForModeShare.get(mode)) {
-                    System.out.println(pc);
-                }
+        // Step 1: Add newest percent difference to the pctDifference ArrayList
+        pctChangeForModeChoice(iteration);
+        for (String mode : pctChangesForModeShare.keySet()) {
+            System.out.println(mode + " *********************************");
+            for (Double pc : pctChangesForModeShare.get(mode)) {
+                System.out.println(pc);
             }
-
-
-            pctChangeForScore(iteration);
-
-            // Step 2: Check Last x percent changes, to see if innovation shutdown should be initiated
-
-            boolean modeChoiceCriteriaSatisfied = checkModeChoiceCriteria(2);;
-            boolean scoreCoverageCriteriaSatisfied = checkScoreCriteria(2);;
-
-
-            if (iteration > MINIMUM_ITERATION && modeChoiceCriteriaSatisfied  && scoreCoverageCriteriaSatisfied && !dynamicShutdownInitiated) {
-
-                shutdownInnovation(iteration);
-
-            }
-
-            return (iteration <= lastIteration && iteration <= dynamicShutdownIteration);
         }
+
+
+        pctChangeForScore(iteration);
+
+        // Step 2: Check Last x percent changes, to see if innovation shutdown should be initiated
+
+        boolean modeChoiceCriteriaSatisfied = checkModeChoiceCriteria(2);;
+        boolean scoreCoverageCriteriaSatisfied = checkScoreCriteria(2);;
+
+
+        if (iteration > MINIMUM_ITERATION && modeChoiceCriteriaSatisfied  && scoreCoverageCriteriaSatisfied && !dynamicShutdownInitiated) {
+
+            shutdownInnovation(iteration);
+
+        }
+    }
+
 
     private void pctChangeForModeChoice(int iteration) {
         Map<Integer, Map<String, Map<Integer, Double>>> modeHistory ;
@@ -234,5 +233,6 @@ public class JRTerminateScoreConverganceWithInnovation implements TerminationCri
 
         }
 
-    }
+
+}
 
