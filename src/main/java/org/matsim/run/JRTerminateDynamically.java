@@ -37,8 +37,8 @@ class JRTerminateDynamically implements TerminationCriterion {
 
 	@Override
 	public boolean continueIterations(int iteration) {
-		if (JRTerminateScoreConverganceWithInnovation.dynamicShutdownInitiated) {
-			int lastIterationDynamic = JRTerminateScoreConverganceWithInnovation.dynamicShutdownIteration;
+		if (JRDynamicShutdownControlerListener.isDynamicShutdownInitiated()) {
+			int lastIterationDynamic = JRDynamicShutdownControlerListener.getDynamicShutdownIteration();
 			return (iteration <= lastIteration && iteration <= lastIterationDynamic);
 		}
 

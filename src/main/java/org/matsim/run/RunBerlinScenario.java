@@ -142,19 +142,26 @@ public final class RunBerlinScenario {
 //			}
 //		});
 
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				bind(TerminationCriterion.class).to(JRTerminateScoreConverganceWithInnovation.class);
-			}
-		});
-
 //		controler.addOverridingModule(new AbstractModule() {
 //			@Override
 //			public void install() {
-//				bind(JRModeStats.class).to(JRModeChoiceCoverageControlerListener.class);
+//				bind(TerminationCriterion.class).to(JRTerminateScoreConverganceWithInnovation.class);
 //			}
 //		});
+
+		controler.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				this.addControlerListenerBinding().to(JRDynamicShutdownControlerListener.class);
+			}
+		});
+
+		controler.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				bind(TerminationCriterion.class).to(JRTerminateDynamically.class);
+			}
+		});
 
 		return controler;
 	}
