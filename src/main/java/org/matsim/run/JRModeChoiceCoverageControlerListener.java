@@ -169,7 +169,7 @@ public class JRModeChoiceCoverageControlerListener implements StartupListener, I
 			Map<String, Map<Integer, Double>> modeIterationShareMap = modeHistoryAll.computeIfAbsent(limit, k -> new HashMap<>());
 			BufferedWriter modeOut = modeOutMap.get(limit);
 			try {
-				modeOut.write(event.getIteration());
+				modeOut.write(event.getIteration()+"");
 				log.info("Mode shares over all " + sum + " trips found. MainModeIdentifier: " + mainModeIdentifier.getClass());
 				for (String mode : modes) {
 					Double cnt = modeCnt.get(mode);
@@ -222,7 +222,7 @@ public class JRModeChoiceCoverageControlerListener implements StartupListener, I
 
 	private void produceGraphs() {
 		for (Integer limit : limits) {
-			XYLineChart chart = new XYLineChart("Mode Choice Coverage Statistics (Mode Used >= " + limit + "x)", "iteration", "mode choice coverage");
+			XYLineChart chart = new XYLineChart("Mode Choice Coverage Statistics (Mode Used >= " + limit + "x per trip)", "iteration", "mode choice coverage");
 			for (Entry<String, Map<Integer, Double>> entry : modeHistoryAll.get(limit).entrySet()) {
 				String mode = entry.getKey();
 				Map<Integer, Double> history = entry.getValue();
