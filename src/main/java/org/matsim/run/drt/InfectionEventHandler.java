@@ -21,6 +21,7 @@ class InfectionEventHandler implements BasicEventHandler {
 
         private Map<Id<Person>,PersonWrapper> personMap = new HashMap<>();
         private Map<Id<Vehicle>,VehicleWrapper> vehicleMap = new HashMap<>();
+        private Map<String,PseudoFacilityWrapper> pseudoFacilityMap = new HashMap<>();
         private Map<Id<Link>,LinkWrapper> linkMap = new HashMap<>();
 
         private int cnt = 10 ;
@@ -41,36 +42,57 @@ class InfectionEventHandler implements BasicEventHandler {
                         infectionDynamics( vehicleWrapper.getPersons() );
                 }
                 if ( event instanceof PersonArrivalEvent ) {
-
-                        LinkWrapper linkWrapper = this.linkMap.computeIfAbsent( ((PersonArrivalEvent) event).getLinkId(), LinkWrapper::new );
+                	
+                        this.linkMap.computeIfAbsent( ((PersonArrivalEvent) event).getLinkId(), LinkWrapper::new );
 
                         PersonWrapper personWrapper = this.personMap.computeIfAbsent( ((PersonArrivalEvent) event).getPersonId(), PersonWrapper::new );
+                        
+                        personWrapper.setLastLink(((PersonArrivalEvent) event).getLinkId());
 
-                        linkWrapper.addPerson( personWrapper );
+//                        linkWrapper.addPerson( personWrapper );
+//                       
+//                        infectionDynamics( linkWrapper.getPersons() );
 
-                        infectionDynamics( linkWrapper.getPersons() );
-
+                }
+                if (event instanceof ActivityStartEvent) {
+                		
+                		if(!((ActivityStartEvent) event).getPersonId().toString().startsWith("drt")) {
+                		
+	                		PersonWrapper personWrapper = this.personMap.get(((ActivityStartEvent) event).getPersonId());
+	
+	                		LinkWrapper linkWrapper = this.linkMap.get(personWrapper.getLastLink());
+	                		
+	                		String pseudoFacilityId =  ((ActivityStartEvent) event).getActType().toString().split("_")[0] + "_" + linkWrapper.getLinkId().toString();
+	                	
+	                		PseudoFacilityWrapper pseudoFacilityWrapper = this.pseudoFacilityMap.computeIfAbsent(pseudoFacilityId, PseudoFacilityWrapper::new);
+	                		
+	                		pseudoFacilityWrapper.addPerson(personWrapper);
+	                		
+	                		linkWrapper.addPseudoFacility(pseudoFacilityWrapper);
+	                		
+	                		infectionDynamics( pseudoFacilityWrapper.getPersons() );
+                		}
                 }
                 if (event instanceof PersonLeavesVehicleEvent ) {
                         // the fact that nothing is done here means that an infected person that enters a vehicle leaves the virus in the vehicle forever
                 }
                 if ( event instanceof PersonDepartureEvent ) {
                         // if nothing is done here it means that an infected person that arrives at a link leaves the virus at the link forever
-                	for (LinkWrapper linkWrapper : linkMap.values()) {
-                		boolean foundPersonWrapper = false;
-                		PersonWrapper toBeDeletedPersonWrapper = null;
-                		for (PersonWrapper personWrapper : linkWrapper.getPersons()) {
-                			if (personWrapper.getPersonId().equals(((PersonDepartureEvent ) event).getPersonId())) {
-                				toBeDeletedPersonWrapper = personWrapper;
-                				foundPersonWrapper = true;
-                				break;
-                			}
-                		}
-                		if (foundPersonWrapper) {
-            				linkWrapper.deletePerson(toBeDeletedPersonWrapper);
-                			break;
-            			}
-                	}
+//                	for (LinkWrapper linkWrapper : linkMap.values()) {
+//                		boolean foundPersonWrapper = false;
+//                		PersonWrapper toBeDeletedPersonWrapper = null;
+//                		for (PersonWrapper personWrapper : linkWrapper.getPersons()) {
+//                			if (personWrapper.getPersonId().equals(((PersonDepartureEvent ) event).getPersonId())) {
+//                				toBeDeletedPersonWrapper = personWrapper;
+//                				foundPersonWrapper = true;
+//                				break;
+//                			}
+//                		}
+//                		if (foundPersonWrapper) {
+//            				linkWrapper.deletePerson(toBeDeletedPersonWrapper);
+//                			break;
+//            			}
+//                	}
                 }
 
         }
@@ -128,21 +150,15 @@ class InfectionEventHandler implements BasicEventHandler {
         }
         private static class LinkWrapper {
                 private final Id<Link> linkId;
-                private Set<PersonWrapper> persons = new HashSet<>();
+                private Set<PseudoFacilityWrapper> pseudoFacilites = new HashSet<>();
                 LinkWrapper( Id<Link> vehicleId ) {
                         this.linkId = vehicleId;
                 }
-                void addPerson( PersonWrapper person ) {
-                        persons.add( person );
-                }
-                void deletePerson( PersonWrapper person ) {
-                    persons.remove( person );
+                void addPseudoFacility( PseudoFacilityWrapper pseudoFacility ) {
+                	pseudoFacilites.add( pseudoFacility );
                 }
                 public Id<Link> getLinkId(){
                         return linkId;
-                }
-                public Set<PersonWrapper> getPersons(){
-                        return Collections.unmodifiableSet( persons );
                 }
         }
         private static class VehicleWrapper {
@@ -163,9 +179,11 @@ class InfectionEventHandler implements BasicEventHandler {
         }
         private static class PersonWrapper {
                 private final Id<Person> personId;
+                private Id<Link> lastLink;
                 private Status status = Status.susceptible;
                 PersonWrapper( Id<Person> personId ) {
                         this.personId = personId;
+                        this.lastLink = null;
                 }
                 void setStatus( Status status ) {
                         this.status = status;
@@ -176,6 +194,28 @@ class InfectionEventHandler implements BasicEventHandler {
                 Status getStatus(){
                         return status;
                 }
+                Id<Link> getLastLink(){
+                		return lastLink;
+                }
+                void setLastLink(Id<Link> lastLink){
+            			this.lastLink = lastLink;
+                }
+        }
+        private static class PseudoFacilityWrapper {
+        	private final String pseudoFacilityId;
+        	private Set<PersonWrapper> persons = new HashSet<>();
+        	PseudoFacilityWrapper(String pseudoFacilityId) {
+        		this.pseudoFacilityId = pseudoFacilityId;
+        	}
+        	void addPerson( PersonWrapper person ) {
+        		persons.add( person );
+        	}
+        	void deletePerson( PersonWrapper person ) {
+        		persons.remove( person );
+        	}
+            public Set<PersonWrapper> getPersons(){
+                return Collections.unmodifiableSet( persons );
+            }
         }
         enum Status {susceptible, infected, immune};
 
