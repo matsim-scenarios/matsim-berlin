@@ -101,6 +101,8 @@ public class KNVisInfection{
 		// ---
 		
 //		Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
+		// yyyyyy why not use the default berlin scenario generation?  Is this a typo, or was there a reason?
+
 		Scenario scenario = DrtControlerCreator.createScenarioWithDrtRouteFactory( config ) ;
 		ScenarioUtils.loadScenario( scenario );
 
