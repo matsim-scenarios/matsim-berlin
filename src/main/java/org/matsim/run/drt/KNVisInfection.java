@@ -38,6 +38,7 @@ import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.drtSpeedUp.DrtSpeedUpModule;
 import org.matsim.pt.ReconstructingUmlaufBuilder;
 import org.matsim.pt.UmlaufBuilder;
+import org.matsim.run.RunBerlinScenario;
 import org.matsim.vis.otfvis.OTFVisConfigGroup;
 import playground.vsp.andreas.mzilske.pt.queuesim.GreedyUmlaufBuilderImpl;
 
@@ -49,38 +50,25 @@ import java.util.List;
 
 public class KNVisInfection{
 	private static final Logger log = Logger.getLogger( KNVisInfection.class );
+
 	private static final String MODIFIED_TRANSIT_ENGINE_NAME = "modifiedTransitEngine";
 
 	public static void main(String[] args) {
 
-//		final String base = "/Users/kainagel/mnt/mathe/ils3/leich/open-berlin/output/";
-//		final String runID="berlin-drt-v5.5-1pct_drt-132";
+		for (String arg : args) {
+			log.info( arg );
+		}
 
-//		final String base="/Users/kainagel/mnt/mathe/ils3/kaddoura/avoev-intermodal-routing/output/output-";
-//		final String runID="i89e";
+		if ( args.length==0 ) {
+			args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
+		}
 
-		final String base="/Users/kainagel/mnt/mathe/ils3/leich/open-berlin-intermodal-remove-buses/output/output-";
-		final String runID="B115b";
+		Config config = RunBerlinScenario.prepareConfig( args ) ;
 
-
-//		Config config = RunDrtOpenBerlinScenario.prepareConfig( new String[] {"berlin-drt-v5.5-1pct_drt-114/berlin-drt-v5.5-1pct_drt-114.output_config.xml"} ) ;
-//		Config config = RunDrtOpenBerlinScenario.prepareConfig( new String[] {"/Users/kainagel/mnt/mathe/ils3/leich/open-berlin/output/berlin-drt-v5" +
-//															    ".5-1pct_drt-132/berlin-drt-v5.5-1pct_drt-132.output_config_reduced.xml"} ) ;
-		// yyyyyy todo do the above in a more flexible way!
-		Config config = RunDrtOpenBerlinScenario.prepareConfig( RunDrtOpenBerlinScenario.AdditionalInformation.acceptUnknownParamsBerlinConfig,
-				new String[] {base + runID + "/" + runID + ".output_config_reduced.xml"} ) ;
-		
-		config.network().setInputFile( config.controler().getRunId() + ".output_network.xml.gz" );
-
-		config.plans().setInputFile( config.controler().getRunId() + ".output_plans.xml.gz" );
-//		config.plans().setInputFile( "/Users/kainagel/git/berlin-matsim/popSel.xml.gz" );
-
-		config.transit().setTransitScheduleFile( config.controler().getRunId() + ".output_transitSchedule.xml.gz" );
-
-		config.global().setNumberOfThreads( 6 );
+		config.global().setNumberOfThreads( 4 );
 		
 		config.controler().setOverwriteFileSetting( OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
-		config.controler().setLastIteration( 0 );
+		config.controler().setLastIteration( 100 );
 
 		final OTFVisConfigGroup otfVisConfigGroup = ConfigUtils.addOrGetModule( config, OTFVisConfigGroup.class );
 		otfVisConfigGroup.setDrawTransitFacilityIds( false );
@@ -88,13 +76,12 @@ public class KNVisInfection{
 		otfVisConfigGroup.setLinkWidth( 10.f );
 		otfVisConfigGroup.setColoringScheme( OTFVisConfigGroup.ColoringScheme.infection );
 		
-		DrtSpeedUpModule.adjustConfig(config);
-		
 		for ( final PlanCalcScoreConfigGroup.ActivityParams params : config.planCalcScore().getActivityParams() ) {
 			if ( params.getActivityType().endsWith( "interaction" ) ) {
 				params.setScoringThisActivityAtAll( false ) ;
 			}
 		}
+		// yyyyyy why is this needed at all?  bug?  kai, mar'20
 
 		config.qsim().setSnapshotStyle( SnapshotStyle.kinematicWaves );
 		config.qsim().setTrafficDynamics( QSimConfigGroup.TrafficDynamics.kinematicWaves );
@@ -109,42 +96,11 @@ public class KNVisInfection{
 
 		// ---
 		
-//		Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
-		// yyyyyy why not use the default berlin scenario generation?  Is this a typo, or was there a reason?
+		Scenario scenario = RunBerlinScenario.prepareScenario( config );
 
-		Scenario scenario = DrtControlerCreator.createScenarioWithDrtRouteFactory( config ) ;
-		ScenarioUtils.loadScenario( scenario );
-
-//		for ( final Person person : scenario.getPopulation().getPersons().values() ) {
-//			person.getPlans().removeIf( (plan) -> !plan.equals( person.getSelectedPlan() ) ) ;
-//		}
-//		PopulationUtils.writePopulation( scenario.getPopulation(), "popWOnlySelectedPlans.xml.gz" );
-		
-//		List<Person> toRemove = new ArrayList<>() ;
-//		for ( final Person person : scenario.getPopulation().getPersons().values() ) {
-//			boolean containsDrt = false ;
-//			boolean containsPT = false ;
-//			for ( final Leg leg : TripStructureUtils.getLegs( person.getSelectedPlan() ) ) {
-//				if ( leg.getMode().contains( "drt" ) ) {
-//					containsDrt = true ;
-//				}
-//				if ( leg.getMode().contains( "pt" ) ) {
-//					containsPT = true ;
-//				}
-//			}
-//			if ( ! ( containsDrt  /*&& containsPT*/ ) ) {
-//				toRemove.add( person );
-//			}
-//		}
-//		log.warn( "population size before=" + scenario.getPopulation().getPersons().size() );
-//		scenario.getPopulation().getPersons().values().removeAll( toRemove ) ;
-//		log.warn( "population size after=" + scenario.getPopulation().getPersons().size() );
-//
-//		PopulationUtils.writePopulation( scenario.getPopulation(), "popWOnlyDrtPtPlans.xml.gz" );
-		
 		// ---
 		
-		Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
+		Controler controler = RunBerlinScenario.prepareControler( scenario ) ;
 
 		controler.addOverridingModule( new AbstractModule(){
 			@Override public void install(){
@@ -170,7 +126,7 @@ public class KNVisInfection{
 //			}
 //		} );
 		
-		controler.addOverridingModule( new OTFVisLiveModule() ) ;
+//		controler.addOverridingModule( new OTFVisLiveModule() ) ;
 //		controler.addOverridingModule(new DrtSpeedUpModule());
 		
 		// ---

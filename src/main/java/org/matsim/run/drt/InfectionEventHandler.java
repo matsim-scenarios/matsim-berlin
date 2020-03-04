@@ -8,10 +8,14 @@ import org.matsim.api.core.v01.events.*;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.events.handler.BasicEventHandler;
+import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.population.PopulationUtils;
+import org.matsim.core.utils.io.IOUtils;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vis.snapshotwriters.AgentSnapshotInfo;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.*;
 
 class InfectionEventHandler implements BasicEventHandler {
@@ -28,6 +32,28 @@ class InfectionEventHandler implements BasicEventHandler {
         private int noOfInfectedPersons = cnt;
         private int noOfInfectedDrivers = 0;
 
+        private BufferedWriter writer;
+
+        private enum Fields { time, nInfected, nInfectedDrivers, nInfectedPersons }
+
+        private int iteration=0;
+
+        private Random rnd = MatsimRandom.getLocalInstance();
+
+        @Inject InfectionEventHandler() {
+                writer = IOUtils.getBufferedWriter( "infection.txt" );
+                StringBuilder line = new StringBuilder();
+                for( Fields field : Fields.values() ){
+                        line.append( field.name() ).append( "\t" );
+                }
+                try{
+                        writer.write( line.toString() );
+                        writer.newLine();
+                } catch( IOException e ){
+                        throw new RuntimeException( e );
+                }
+        }
+
         @Override public void handleEvent( Event event ){
                 if ( event instanceof PersonEntersVehicleEvent ) {
 
@@ -39,7 +65,7 @@ class InfectionEventHandler implements BasicEventHandler {
 
                         handleInitialInfections( personWrapper );
 
-                        infectionDynamics( vehicleWrapper.getPersons() );
+                        infectionDynamics( vehicleWrapper.getPersons(), event.getTime() );
                 }
                 if ( event instanceof PersonArrivalEvent ) {
                 	
@@ -70,7 +96,7 @@ class InfectionEventHandler implements BasicEventHandler {
 	                		
 	                		linkWrapper.addPseudoFacility(pseudoFacilityWrapper);
 	                		
-	                		infectionDynamics( pseudoFacilityWrapper.getPersons() );
+	                		infectionDynamics( pseudoFacilityWrapper.getPersons(), event.getTime());
                 		}
                 }
                 if (event instanceof PersonLeavesVehicleEvent ) {
@@ -108,26 +134,24 @@ class InfectionEventHandler implements BasicEventHandler {
                         }
                 }
         }
-        private void infectionDynamics( Set<PersonWrapper> persons ){
-                // this very simplified infection dynamics assumes that one infected person on a link or in a vehicle infects everybody
-                // including drivers!
+        private void infectionDynamics( Set<PersonWrapper> persons, double now ){
 
-                boolean infected = false;
-                PersonWrapper infector = null;
-                for( PersonWrapper person : persons ){
-                        if( person.getStatus() == Status.infected ){
-                                infected = true;
-                                infector = person;
-                                break;
+                for( PersonWrapper infector : persons ){
+                        if( infector.getStatus() == Status.infected ){
+                                for( PersonWrapper person : persons ){
+                                        if ( rnd.nextDouble() < 1. ){
+                                                infectPerson( person, infector, now );
+                                        }
+                                }
                         }
                 }
-                if( infected ){
-                        for( PersonWrapper person : persons ){
-                                infectPerson( person, infector );
-                        }
-                }
+
         }
-        private void infectPerson( PersonWrapper personWrapper, PersonWrapper infector ){
+        private double lastTimeStep = 0 ;
+        private void infectPerson( PersonWrapper personWrapper, PersonWrapper infector, double now ){
+                if ( personWrapper.getPersonId().toString().startsWith( "pt_pt" ) ) {
+                        return;
+                }
                 Status prevStatus = personWrapper.getStatus();
                 personWrapper.setStatus( Status.infected );
                 final Person person = PopulationUtils.findPerson( personWrapper.personId, scenario );
@@ -141,12 +165,36 @@ class InfectionEventHandler implements BasicEventHandler {
                 	else {
                 		noOfInfectedPersons++;
                 	}
-                	log.warn( "infection of personId=" + personWrapper.getPersonId() + " by person=" + infector.getPersonId() );
-                	log.warn( "No of infected persons=" + noOfInfectedPersons );
-                	log.warn( "No of infected drivers=" + noOfInfectedDrivers );
+                	if ( now - lastTimeStep>=300 ){
+                                lastTimeStep = now;
+                                log.warn( "infection of personId=" + personWrapper.getPersonId() + " by person=" + infector.getPersonId() );
+                                log.warn( "No of infected persons=" + noOfInfectedPersons );
+                                log.warn( "No of infected drivers=" + noOfInfectedDrivers );
+
+
+                                String[] array = new String[Fields.values().length];
+
+                                array[Fields.time.ordinal()] = Double.toString( now + iteration * 3600. * 24. );
+                                array[Fields.nInfectedDrivers.ordinal()] = Double.toString( noOfInfectedDrivers );
+                                array[Fields.nInfectedPersons.ordinal()] = Double.toString( noOfInfectedPersons );
+                                array[Fields.nInfected.ordinal()] = Double.toString( noOfInfectedDrivers + noOfInfectedPersons );
+
+                                StringBuilder line = new StringBuilder();
+                                for( String str : array ){
+                                        line.append( str ).append( "\t" );
+                                }
+                                try{
+                                        writer.write( line.toString() );
+                                        writer.newLine();
+                                        writer.flush();
+                                } catch( IOException e ){
+                                        throw new RuntimeException( e );
+                                }
+                        }
                 }
         }
         @Override public void reset( int iteration ){
+                this.iteration = iteration;
         }
         private static class LinkWrapper {
                 private final Id<Link> linkId;
