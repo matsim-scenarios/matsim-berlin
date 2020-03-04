@@ -7,6 +7,7 @@ package org.matsim.run;
 import java.util.List;
 import java.util.Random;
 
+import ch.sbb.matsim.routing.pt.raptor.RaptorStopFinder;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
@@ -51,7 +52,8 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
 	}
 
 	@Override
-    public RIntermodalAccessEgress calcIntermodalAccessEgress(final List<? extends PlanElement> legs, RaptorParameters params, Person person) {
+    public RIntermodalAccessEgress calcIntermodalAccessEgress( final List<? extends PlanElement> legs, RaptorParameters params, Person person,
+                                                               RaptorStopFinder.Direction direction) {
 		// maybe nicer using raptor parameters per person ?
 		String subpopulationName = null;
 		if (person.getAttributes() != null) {
@@ -115,6 +117,6 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                 }
             }
         }
-        return new RIntermodalAccessEgress(legs, -utility, tTime);
+        return new RIntermodalAccessEgress(legs, -utility, tTime, direction);
     }
 }
