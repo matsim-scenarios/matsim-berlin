@@ -37,7 +37,9 @@ import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.drtSpeedUp.DrtSpeedUpModule;
+import org.matsim.pt.UmlaufBuilder;
 import org.matsim.vis.otfvis.OTFVisConfigGroup;
+import playground.vsp.andreas.mzilske.pt.queuesim.GreedyUmlaufBuilderImpl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -141,6 +143,7 @@ public class KNVisInfection{
 		controler.addOverridingModule( new AbstractModule(){
 			@Override public void install(){
 				this.addEventHandlerBinding().to( InfectionEventHandler.class );
+				this.bind( UmlaufBuilder.class ).to( GreedyUmlaufBuilderImpl.class );
 			}
 		} );
 		
