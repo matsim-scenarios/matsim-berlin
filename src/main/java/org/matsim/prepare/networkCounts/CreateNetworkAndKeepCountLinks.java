@@ -28,7 +28,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.FileAppender;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.matsim.api.core.v01.Id;
@@ -247,11 +246,12 @@ public class CreateNetworkAndKeepCountLinks {
 	}
 	
 	private void initLogger(){
-		FileAppender fa = new FileAppender();
-		fa.setFile(outputDir + prefix +"_LOG_" + CreateNetworkAndKeepCountLinks.class.getSimpleName() + outnetworkPrefix + ".txt");
-		fa.setName("BerlinNetworkCreator");
-		fa.activateOptions();
-		fa.setLayout(new PatternLayout("%d{dd MMM yyyy HH:mm:ss,SSS} %-4r [%t] %-5p %c %x - %m%n"));
-	    log.addAppender(fa);
+//		FileAppender fa = new FileAppender();
+//		fa.setFile(outputDir + prefix +"_LOG_" + CreateNetworkAndKeepCountLinks.class.getSimpleName() + outnetworkPrefix + ".txt");
+//		fa.setName("BerlinNetworkCreator");
+//		fa.activateOptions();
+//		fa.setLayout(new PatternLayout("%d{dd MMM yyyy HH:mm:ss,SSS} %-4r [%t] %-5p %c %x - %m%n"));
+//	    log.addAppender(fa);
+		throw new RuntimeException( "seems to have broken with update of log4j.  kai, mar'20" );
 	}
 }
