@@ -84,6 +84,7 @@ public class KNVisInfection{
 		otfVisConfigGroup.setDrawTransitFacilityIds( false );
 		otfVisConfigGroup.setDrawTransitFacilities( false );
 		otfVisConfigGroup.setLinkWidth( 10.f );
+		otfVisConfigGroup.setColoringScheme( OTFVisConfigGroup.ColoringScheme.infection );
 		
 		DrtSpeedUpModule.adjustConfig(config);
 		
