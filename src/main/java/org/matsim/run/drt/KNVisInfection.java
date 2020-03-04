@@ -68,6 +68,7 @@ public class KNVisInfection{
 		config.global().setNumberOfThreads( 4 );
 		
 		config.controler().setOverwriteFileSetting( OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
+		config.controler().setFirstIteration( 9 ); // improves startup speed since some things are not dumped to file!
 		config.controler().setLastIteration( 100 );
 
 		final OTFVisConfigGroup otfVisConfigGroup = ConfigUtils.addOrGetModule( config, OTFVisConfigGroup.class );
@@ -126,7 +127,7 @@ public class KNVisInfection{
 //			}
 //		} );
 		
-//		controler.addOverridingModule( new OTFVisLiveModule() ) ;
+		controler.addOverridingModule( new OTFVisLiveModule() ) ;
 //		controler.addOverridingModule(new DrtSpeedUpModule());
 		
 		// ---

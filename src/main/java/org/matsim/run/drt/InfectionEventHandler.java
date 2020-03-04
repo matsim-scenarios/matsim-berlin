@@ -55,7 +55,31 @@ class InfectionEventHandler implements BasicEventHandler {
         }
 
         @Override public void handleEvent( Event event ){
-                if ( event instanceof PersonEntersVehicleEvent ) {
+                // @Sebatian: Es gibt in PopulationUtils, FaciitiesUtils einige helper methods, die mit diesen Unklarheiten bzgl. linkIds, facilityIds
+                // umgehen.  Schaust Du bitte mal rein?  Im Grunde muesste es reichen, sich fuer die Dynamik in Gebaeuden nur die Activity events
+                // anzuschauen, und fuer die Dynamik in Vehicles nur die Vehicle enter/leave events.  Danke.  kai, mar'20
+
+
+                // the events follow the matsim sequence, i.e. all agents start at activities.  kai, mar'20
+
+                if ( event instanceof ActivityEndEvent ) {
+
+                       // nothing to do
+
+                } else if ( event instanceof PersonDepartureEvent ) {
+                        // it should, in principle, be possible to use the AcitivityEndEvent, and to remove the person directly from the activity.  However,
+                        // we cannot rely on the activity having a facilityId.  kai, mar'20
+
+                        LinkWrapper link = this.linkMap.computeIfAbsent( ((PersonDepartureEvent) event).getLinkId() , LinkWrapper::new );
+                        for( PseudoFacilityWrapper facilityWrapper : link.getPseudoFacilities() ){
+                                PersonWrapper result = facilityWrapper.removePerson( ((PersonDepartureEvent) event).getPersonId() );
+                                if( result != null ){
+                                        break;
+                                }
+                        }
+                        // note that persons are not found on those facilities where they started.  Maybe fix. kai, mar'20
+
+                } else if ( event instanceof PersonEntersVehicleEvent ) {
 
                         VehicleWrapper vehicleWrapper = this.vehicleMap.computeIfAbsent( ((PersonEntersVehicleEvent) event).getVehicleId(), VehicleWrapper::new );
 
@@ -66,61 +90,54 @@ class InfectionEventHandler implements BasicEventHandler {
                         handleInitialInfections( personWrapper );
 
                         infectionDynamics( vehicleWrapper.getPersons(), event.getTime() );
-                }
-                if ( event instanceof PersonArrivalEvent ) {
-                	
-                        this.linkMap.computeIfAbsent( ((PersonArrivalEvent) event).getLinkId(), LinkWrapper::new );
+
+                } else if (event instanceof PersonLeavesVehicleEvent ) {
+
+                        VehicleWrapper vehicle = this.vehicleMap.get( ((PersonLeavesVehicleEvent) event).getVehicleId() );
+                        vehicle.removePerson( ((PersonLeavesVehicleEvent) event).getPersonId() );
+
+                } else if ( event instanceof PersonArrivalEvent ) {
+                        // it should, in principle, be possible to only look at the ActivityStartEvent.  Unfortunately, we cannot rely on the
+                        // ActivityStartEvent always having linkId.  (Is that statement really correct?)  kai, mar'20
+
+//                        this.linkMap.computeIfAbsent( ((PersonArrivalEvent) event).getLinkId(), LinkWrapper::new );
 
                         PersonWrapper personWrapper = this.personMap.computeIfAbsent( ((PersonArrivalEvent) event).getPersonId(), PersonWrapper::new );
-                        
-                        personWrapper.setLastLink(((PersonArrivalEvent) event).getLinkId());
+
+                        personWrapper.setLinkId(((PersonArrivalEvent) event).getLinkId() );
 
 //                        linkWrapper.addPerson( personWrapper );
 //                       
 //                        infectionDynamics( linkWrapper.getPersons() );
 
-                }
-                if (event instanceof ActivityStartEvent) {
-                		
-                		if(!((ActivityStartEvent) event).getPersonId().toString().startsWith("drt")) {
-                		
-	                		PersonWrapper personWrapper = this.personMap.get(((ActivityStartEvent) event).getPersonId());
-	
-	                		LinkWrapper linkWrapper = this.linkMap.get(personWrapper.getLastLink());
-	                		
-	                		String pseudoFacilityId =  ((ActivityStartEvent) event).getActType().toString().split("_")[0] + "_" + linkWrapper.getLinkId().toString();
-	                	
-	                		PseudoFacilityWrapper pseudoFacilityWrapper = this.pseudoFacilityMap.computeIfAbsent(pseudoFacilityId, PseudoFacilityWrapper::new);
-	                		
-	                		pseudoFacilityWrapper.addPerson(personWrapper);
-	                		
-	                		linkWrapper.addPseudoFacility(pseudoFacilityWrapper);
-	                		
-	                		infectionDynamics( pseudoFacilityWrapper.getPersons(), event.getTime());
-                		}
-                }
-                if (event instanceof PersonLeavesVehicleEvent ) {
-                        // the fact that nothing is done here means that an infected person that enters a vehicle leaves the virus in the vehicle forever
-                }
-                if ( event instanceof PersonDepartureEvent ) {
-                        // if nothing is done here it means that an infected person that arrives at a link leaves the virus at the link forever
-//                	for (LinkWrapper linkWrapper : linkMap.values()) {
-//                		boolean foundPersonWrapper = false;
-//                		PersonWrapper toBeDeletedPersonWrapper = null;
-//                		for (PersonWrapper personWrapper : linkWrapper.getPersons()) {
-//                			if (personWrapper.getPersonId().equals(((PersonDepartureEvent ) event).getPersonId())) {
-//                				toBeDeletedPersonWrapper = personWrapper;
-//                				foundPersonWrapper = true;
-//                				break;
-//                			}
-//                		}
-//                		if (foundPersonWrapper) {
-//            				linkWrapper.deletePerson(toBeDeletedPersonWrapper);
-//                			break;
-//            			}
-//                	}
+                } else if (event instanceof ActivityStartEvent) {
+                        // it should, in principle, be possible to only look at the ActivityStartEvent.  Unfortunately, we cannot rely on the
+                        // ActivityStartEvent always having linkId.  (Is that statement really correct?)  kai, mar'20
+
+                        if(((ActivityStartEvent) event).getPersonId().toString().startsWith("drt")){
+                                return;
+                        }
+
+                        PersonWrapper personWrapper = this.personMap.get(((ActivityStartEvent) event).getPersonId());
+
+                        LinkWrapper linkWrapper = this.linkMap.computeIfAbsent(personWrapper.getLastLink(), LinkWrapper::new );
+
+                        String pseudoFacilityId = getPseudoFacilityId( ((ActivityStartEvent) event).getActType(), linkWrapper.getLinkId() );
+
+                        PseudoFacilityWrapper pseudoFacilityWrapper = this.pseudoFacilityMap.computeIfAbsent(pseudoFacilityId, PseudoFacilityWrapper::new);
+
+                        pseudoFacilityWrapper.addPerson(personWrapper);
+
+                        linkWrapper.addPseudoFacility(pseudoFacilityWrapper);
+
+
+                        infectionDynamics( pseudoFacilityWrapper.getPersons(), event.getTime());
+
                 }
 
+        }
+        private String getPseudoFacilityId( String activityType, Id<Link> linkId) {
+                return activityType.split("_" )[0] + "_" + linkId.toString();
         }
         private void handleInitialInfections( PersonWrapper personWrapper ){
                 // initial infections:
@@ -134,11 +151,11 @@ class InfectionEventHandler implements BasicEventHandler {
                         }
                 }
         }
-        private void infectionDynamics( Set<PersonWrapper> persons, double now ){
+        private void infectionDynamics( Map<Id<Person>,PersonWrapper> persons, double now ){
 
-                for( PersonWrapper infector : persons ){
+                for( PersonWrapper infector : persons.values() ){
                         if( infector.getStatus() == Status.infected ){
-                                for( PersonWrapper person : persons ){
+                                for( PersonWrapper person : persons.values() ){
                                         if ( rnd.nextDouble() < 1. ){
                                                 infectPerson( person, infector, now );
                                         }
@@ -159,15 +176,15 @@ class InfectionEventHandler implements BasicEventHandler {
                         person.getAttributes().putAttribute( AgentSnapshotInfo.marker, true );
                 }
                 if ( prevStatus!= Status.infected ) {
-                	if (personWrapper.getPersonId().toString().startsWith("pt_pt")) {
-                		noOfInfectedDrivers++;
-                	}
-                	else {
-                		noOfInfectedPersons++;
-                	}
-                	if ( now - lastTimeStep>=300 ){
+                        if (personWrapper.getPersonId().toString().startsWith("pt_pt")) {
+                                noOfInfectedDrivers++;
+                        }
+                        else {
+                                noOfInfectedPersons++;
+                        }
+                        log.warn( "infection of personId=" + personWrapper.getPersonId() + " by person=" + infector.getPersonId() );
+                        if ( now - lastTimeStep>=300 ){
                                 lastTimeStep = now;
-                                log.warn( "infection of personId=" + personWrapper.getPersonId() + " by person=" + infector.getPersonId() );
                                 log.warn( "No of infected persons=" + noOfInfectedPersons );
                                 log.warn( "No of infected drivers=" + noOfInfectedDrivers );
 
@@ -203,26 +220,32 @@ class InfectionEventHandler implements BasicEventHandler {
                         this.linkId = vehicleId;
                 }
                 void addPseudoFacility( PseudoFacilityWrapper pseudoFacility ) {
-                	pseudoFacilites.add( pseudoFacility );
+                        pseudoFacilites.add( pseudoFacility );
                 }
-                public Id<Link> getLinkId(){
+                Id<Link> getLinkId(){
                         return linkId;
+                }
+                Set<PseudoFacilityWrapper> getPseudoFacilities() {
+                        return pseudoFacilites;
                 }
         }
         private static class VehicleWrapper {
                 private final Id<Vehicle> vehicleId;
-                private Set<PersonWrapper> persons = new HashSet<>();
+                private Map<Id<Person>,PersonWrapper> persons = new LinkedHashMap<>();
                 VehicleWrapper( Id<Vehicle> vehicleId ) {
                         this.vehicleId = vehicleId;
                 }
                 void addPerson( PersonWrapper person ) {
-                        persons.add( person );
+                        persons.put( person.getPersonId(), person );
+                }
+                void removePerson( Id<Person> personId ) {
+                        persons.remove( personId );
                 }
                 public Id<Vehicle> getVehicleId(){
                         return vehicleId;
                 }
-                public Set<PersonWrapper> getPersons(){
-                        return Collections.unmodifiableSet( persons );
+                public Map<Id<Person>,PersonWrapper> getPersons(){
+                        return Collections.unmodifiableMap( persons );
                 }
         }
         private static class PersonWrapper {
@@ -243,27 +266,27 @@ class InfectionEventHandler implements BasicEventHandler {
                         return status;
                 }
                 Id<Link> getLastLink(){
-                		return lastLink;
+                        return lastLink;
                 }
-                void setLastLink(Id<Link> lastLink){
-            			this.lastLink = lastLink;
+                void setLinkId( Id<Link> lastLink ){
+                        this.lastLink = lastLink;
                 }
         }
         private static class PseudoFacilityWrapper {
-        	private final String pseudoFacilityId;
-        	private Set<PersonWrapper> persons = new HashSet<>();
-        	PseudoFacilityWrapper(String pseudoFacilityId) {
-        		this.pseudoFacilityId = pseudoFacilityId;
-        	}
-        	void addPerson( PersonWrapper person ) {
-        		persons.add( person );
-        	}
-        	void deletePerson( PersonWrapper person ) {
-        		persons.remove( person );
-        	}
-            public Set<PersonWrapper> getPersons(){
-                return Collections.unmodifiableSet( persons );
-            }
+                private final String pseudoFacilityId;
+                private Map<Id<Person>,PersonWrapper> persons = new LinkedHashMap<>();
+                PseudoFacilityWrapper(String pseudoFacilityId) {
+                        this.pseudoFacilityId = pseudoFacilityId;
+                }
+                void addPerson( PersonWrapper person ) {
+                        persons.put( person.getPersonId(), person );
+                }
+                PersonWrapper removePerson( Id<Person> personId ) {
+                        return persons.remove( personId );
+                }
+                public Map<Id<Person>,PersonWrapper> getPersons(){
+                        return Collections.unmodifiableMap( persons );
+                }
         }
         enum Status {susceptible, infected, immune};
 
