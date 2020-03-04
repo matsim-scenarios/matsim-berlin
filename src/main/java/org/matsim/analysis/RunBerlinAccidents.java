@@ -52,12 +52,17 @@ public class RunBerlinAccidents {
 	
 	Scenario scenario = RunBerlinScenario.prepareScenario(config);
 	AccidentsNetworkModification accidentsNetworkModification = new AccidentsNetworkModification(scenario);
-	accidentsNetworkModification.setLinkAttributsBasedOnOSMFile(
-			landOSMInputShapeFile,
-			placesOSMInputFile,"EPSG:31468",
-			readColumn(1,tunnelLinkCSVInputFile,";"),
-			readColumn(1,planfreeLinkCSVInputFile, ";")
-			);
+
+	if ( true ) {
+		throw new RuntimeException( "the syntax of the command that follows seems to have changed (it does not compile any more); commenting it out" );
+	}
+
+//	accidentsNetworkModification.setLinkAttributsBasedOnOSMFile(
+//			landOSMInputShapeFile,
+//			placesOSMInputFile,"EPSG:31468",
+//			readColumn(1,tunnelLinkCSVInputFile,";"),
+//			readColumn(1,planfreeLinkCSVInputFile, ";")
+//			);
 	
 	Controler controler = RunBerlinScenario.prepareControler(scenario);
 	

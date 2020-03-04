@@ -21,6 +21,13 @@
  */
 package org.matsim.prepare.networkCounts;
 
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -241,12 +248,12 @@ public class CreateNetworkAndKeepCountLinks {
 	}
 	
 	private void initLogger(){
-		throw new RuntimeException( "material below does no longer compile with matsim-snapshot.  kai, feb'20" );
 //		FileAppender fa = new FileAppender();
 //		fa.setFile(outputDir + prefix +"_LOG_" + CreateNetworkAndKeepCountLinks.class.getSimpleName() + outnetworkPrefix + ".txt");
 //		fa.setName("BerlinNetworkCreator");
 //		fa.activateOptions();
 //		fa.setLayout(new PatternLayout("%d{dd MMM yyyy HH:mm:ss,SSS} %-4r [%t] %-5p %c %x - %m%n"));
 //	    log.addAppender(fa);
+		throw new RuntimeException( "seems to have broken with update of log4j.  kai, mar'20" );
 	}
 }
