@@ -21,8 +21,6 @@ package org.matsim.run.drt;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.population.Leg;
-import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.drt.run.DrtControlerCreator;
 import org.matsim.contrib.otfvis.OTFVisLiveModule;
 import org.matsim.core.config.Config;
@@ -33,15 +31,16 @@ import org.matsim.core.config.groups.QSimConfigGroup.SnapshotStyle;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
-import org.matsim.core.population.PopulationUtils;
-import org.matsim.core.router.TripStructureUtils;
+import org.matsim.core.mobsim.qsim.AbstractQSimModule;
+import org.matsim.core.mobsim.qsim.components.QSimComponentsConfigGroup;
+import org.matsim.core.mobsim.qsim.pt.*;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.drtSpeedUp.DrtSpeedUpModule;
+import org.matsim.pt.ReconstructingUmlaufBuilder;
 import org.matsim.pt.UmlaufBuilder;
 import org.matsim.vis.otfvis.OTFVisConfigGroup;
 import playground.vsp.andreas.mzilske.pt.queuesim.GreedyUmlaufBuilderImpl;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -50,6 +49,7 @@ import java.util.List;
 
 public class KNVisInfection{
 	private static final Logger log = Logger.getLogger( KNVisInfection.class );
+	private static final String MODIFIED_TRANSIT_ENGINE_NAME = "modifiedTransitEngine";
 
 	public static void main(String[] args) {
 
@@ -101,6 +101,12 @@ public class KNVisInfection{
 
 		config.transit().setUsingTransitInMobsim( true );
 
+//		QSimComponentsConfigGroup qsimComponentsConfig = ConfigUtils.addOrGetModule( config, QSimComponentsConfigGroup.class );
+//		List<String> components = qsimComponentsConfig.getActiveComponents();
+//		components.remove( TransitEngineModule.TRANSIT_ENGINE_NAME );
+//		components.add( MODIFIED_TRANSIT_ENGINE_NAME );
+//		qsimComponentsConfig.setActiveComponents( components );
+
 		// ---
 		
 //		Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
@@ -143,9 +149,26 @@ public class KNVisInfection{
 		controler.addOverridingModule( new AbstractModule(){
 			@Override public void install(){
 				this.addEventHandlerBinding().to( InfectionEventHandler.class );
-				this.bind( UmlaufBuilder.class ).to( GreedyUmlaufBuilderImpl.class );
 			}
 		} );
+
+//		controler.addOverridingQSimModule( new AbstractQSimModule(){
+//			@Override protected void configureQSim(){
+//				bind( TransitQSimEngine.class ).asEagerSingleton();
+//
+//				this.addQSimComponentBinding( MODIFIED_TRANSIT_ENGINE_NAME ).to(  TransitQSimEngine.class );
+//
+//				if ( this.getConfig().transit().isUseTransit() && this.getConfig().transit().isUsingTransitInMobsim() ) {
+//					bind( TransitStopHandlerFactory.class ).to( ComplexTransitStopHandlerFactory.class ) ;
+//				} else {
+//					// Explicit bindings are required, so although it may not be used, we need provide something.
+//					bind( TransitStopHandlerFactory.class ).to( SimpleTransitStopHandlerFactory.class );
+//				}
+//
+//				bind( UmlaufBuilder.class ).to( GreedyUmlaufBuilderImpl.class );
+//
+//			}
+//		} );
 		
 		controler.addOverridingModule( new OTFVisLiveModule() ) ;
 //		controler.addOverridingModule(new DrtSpeedUpModule());
