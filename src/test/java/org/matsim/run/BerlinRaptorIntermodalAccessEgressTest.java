@@ -128,8 +128,7 @@ public class BerlinRaptorIntermodalAccessEgressTest {
 		walkLeg2.setRoute(walkRoute2);
 		legs.add(walkLeg2);
 		
-		RIntermodalAccessEgress result = raptorIntermodalAccessEgress.calcIntermodalAccessEgress(legs, params, person,
-				RaptorStopFinder.Direction.ACCESS );
+		RIntermodalAccessEgress result = raptorIntermodalAccessEgress.calcIntermodalAccessEgress(legs, params, person, RaptorStopFinder.Direction.ACCESS );
 		
 		//Asserts
 		Assert.assertEquals("Total travel time is wrong!", 1000.0, result.travelTime, MatsimTestUtils.EPSILON);
@@ -182,8 +181,7 @@ public class BerlinRaptorIntermodalAccessEgressTest {
 		walkLeg1.setRoute(walkRoute1);
 		legs.add(walkLeg1);
 		
-		RIntermodalAccessEgress result = raptorIntermodalAccessEgress.calcIntermodalAccessEgress(legs, params, person,
-				RaptorStopFinder.Direction.ACCESS );
+		RIntermodalAccessEgress result = raptorIntermodalAccessEgress.calcIntermodalAccessEgress(legs, params, person, RaptorStopFinder.Direction.ACCESS );
 		
 		//Asserts
 		Assert.assertEquals("Total travel time is wrong!", 100.0, result.travelTime, MatsimTestUtils.EPSILON);
