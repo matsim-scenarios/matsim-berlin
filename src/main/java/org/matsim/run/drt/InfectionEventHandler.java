@@ -166,12 +166,16 @@ class InfectionEventHandler implements BasicEventHandler {
         private void handleInitialInfections( PersonWrapper personWrapper ){
                 // initial infections:
                 if( cnt > 0 ){
-                        final Person person = PopulationUtils.findPerson( personWrapper.personId, scenario );
-                        if( person != null ){
-                                person.getAttributes().putAttribute( AgentSnapshotInfo.marker, true );
-                                cnt--;
+                        if ( !personWrapper.getPersonId().toString().startsWith( "pt_pt" ) ) {
                                 personWrapper.setStatus( Status.infected );
                                 log.warn(" person " + personWrapper.personId +" has initial infection");
+                                cnt--;
+                        }
+                        if ( scenario!=null ){
+                                final Person person = PopulationUtils.findPerson( personWrapper.personId, scenario );
+                                if( person != null ){
+                                        person.getAttributes().putAttribute( AgentSnapshotInfo.marker, true );
+                                }
                         }
                 }
         }
@@ -196,9 +200,11 @@ class InfectionEventHandler implements BasicEventHandler {
                 }
                 Status prevStatus = personWrapper.getStatus();
                 personWrapper.setStatus( Status.infected );
-                final Person person = PopulationUtils.findPerson( personWrapper.getPersonId(), scenario );
-                if ( person!=null ){
-                        person.getAttributes().putAttribute( AgentSnapshotInfo.marker, true );
+                if ( scenario!=null ){
+                        final Person person = PopulationUtils.findPerson( personWrapper.getPersonId(), scenario );
+                        if( person != null ){
+                                person.getAttributes().putAttribute( AgentSnapshotInfo.marker, true );
+                        }
                 }
                 if ( prevStatus!= Status.infected ) {
                         if (personWrapper.getPersonId().toString().startsWith("pt_pt")) {
