@@ -3,244 +3,323 @@
 
 <population>
 
-<person id="100024301">
 	<attributes>
-		<attribute name="subpopulation" class="java.lang.String" >person</attribute>
+		<attribute name="coordinateReferenceSystem" class="java.lang.String">EPSG:31468</attribute>
 	</attributes>
-                <plan score="135.48909078721348" selected="yes">
-                        <activity type="home_93600.0" link="117737" x="4626119.172329882" y="5825228.028849992" end_time="11:34:40" >
-                                <attributes>
-                                        <attribute name="zoneId" class="java.lang.String" >12064472</attribute>
-                                </attributes>
-                        </activity>
-                        <leg mode="non_network_walk" dep_time="11:34:40">
-                                <route type="generic" start_link="117737" end_link="pt_42801" trav_time="00:15:06" distance="955.297670663048"></route>
-                        </leg>
-                        <activity type="pt interaction" link="pt_42801" x="4626731.422625715" y="5825634.410212369" max_dur="00:00:00" >
-                        </activity>
-                        <leg mode="pt" dep_time="11:49:46">
-                                <route type="experimentalPt1" start_link="pt_42801" end_link="pt_42802" trav_time="00:12:32" distance="3481.19291722263">PT1===060320003001===S5---10157_109===S5---10157_109_6===060320002001</route>
-                        </leg>
-                        <activity type="pt interaction" link="pt_42802" x="4628104.442420426" y="5828833.3976725275" max_dur="00:00:00" >
-                        </activity>
-                        <leg mode="non_network_walk" dep_time="12:02:18">
-                                <route type="generic" start_link="pt_42802" end_link="71096" trav_time="00:00:35" distance="36.79777945598352"></route>
-                        </leg>
-                        <activity type="leisure_1200.0" link="71096" x="4628089.674090119" y="5828809.249687905" max_dur="00:26:21" >
-                                <attributes>
-                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer" >1020</attribute>
-                                        <attribute name="zoneId" class="java.lang.String" >12064472</attribute>
-                                </attributes>
-                        </activity>
-                        <leg mode="non_network_walk" dep_time="12:29:14">
-                                <route type="generic" start_link="71096" end_link="pt_42825" trav_time="00:00:35" distance="36.79777945598352"></route>
-                        </leg>
-                        <activity type="pt interaction" link="pt_42825" x="4628104.442420426" y="5828833.3976725275" max_dur="00:00:00" >
-                        </activity>
-                        <leg mode="pt" dep_time="12:29:49">
-                                <route type="experimentalPt1" start_link="pt_42825" end_link="pt_42821" trav_time="00:05:59" distance="3481.192917222633">PT1===060320002001.2===S5---10157_109===S5---10157_109_12===060320003001.1</route>
-                        </leg>
-                        <activity type="pt interaction" link="pt_42821" x="4626731.422625715" y="5825634.410212369" max_dur="00:00:00" >
-                        </activity>
-                        <leg mode="non_network_walk" dep_time="12:35:48">
-                                <route type="generic" start_link="pt_42821" end_link="117737" trav_time="00:15:06" distance="955.297670663048"></route>
-                        </leg>
-                        <activity type="home_93600.0" link="117737" x="4626119.172329882" y="5825228.028849992" >
-                                <attributes>
-                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer" >54600</attribute>
-                                        <attribute name="zoneId" class="java.lang.String" >12064472</attribute>
-                                </attributes>
-                        </activity>
-                </plan>
-
-        </person>
 
 
-  <person id="100200201">
-  <attributes>
-		<attribute name="subpopulation" class="java.lang.String" >person</attribute>
-	</attributes>
-                <plan score="129.80394930541985" selected="yes">
-                        <activity type="home_94200.0" link="105509" x="4628278.146699034" y="5829113.277546146" end_time="10:59:26" >
-                                <attributes>
-                                        <attribute name="zoneId" class="java.lang.String" >12064472</attribute>
-                                </attributes>
-                        </activity>
-                        <leg mode="bicycle" dep_time="10:59:26">
-                                <route type="generic" start_link="105509" end_link="135480" trav_time="00:42:55" distance="8084.5433123283365"></route>
-                        </leg>
-                        <activity type="other_600.0" link="135480" x="4630981.663164896" y="5823512.790014341" max_dur="00:10:41" >
-                                <attributes>
-                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer" >180</attribute>
-                                        <attribute name="zoneId" class="java.lang.String" >12064408</attribute>
-                                </attributes>
-                        </activity>
-                        <leg mode="bicycle" dep_time="11:53:02">
-                                <route type="generic" start_link="135480" end_link="105509" trav_time="00:42:55" distance="8084.5433123283365"></route>
-                        </leg>
-                        <activity type="home_94200.0" link="105509" x="4628278.146699034" y="5829113.277546146" >
-                                <attributes>
-                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer" >53580</attribute>
-                                        <attribute name="zoneId" class="java.lang.String" >12064472</attribute>
-                                </attributes>
-                        </activity>
-                </plan>
+<!-- ====================================================================== -->
 
-        </person>
+	<person id="100024301">
+		<attributes>
+			<attribute name="subpopulation" class="java.lang.String">person</attribute>
+		</attributes>
+		<plan score="135.48909078721348" selected="yes">
+			<activity type="home_93600.0" link="117737" x="4626119.172329882" y="5825228.028849992" end_time="11:34:40" >
+				<attributes>
+					<attribute name="zoneId" class="java.lang.String">12064472</attribute>
+				</attributes>
+			</activity>
+			<leg mode="walk" dep_time="11:34:40">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">pt</attribute>
+				</attributes>
+				<route type="generic" start_link="117737" end_link="pt_42801" trav_time="00:15:06" distance="955.297670663048"></route>
+			</leg>
+			<activity type="pt interaction" link="pt_42801" x="4626731.422625715" y="5825634.410212369" max_dur="00:00:00" >
+			</activity>
+			<leg mode="pt" dep_time="11:49:46">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">pt</attribute>
+				</attributes>
+				<route type="experimentalPt1" start_link="pt_42801" end_link="pt_42802" trav_time="00:12:32" distance="3481.19291722263">PT1===060320003001===S5---10157_109===S5---10157_109_6===060320002001</route>
+			</leg>
+			<activity type="pt interaction" link="pt_42802" x="4628104.442420426" y="5828833.3976725275" max_dur="00:00:00" >
+			</activity>
+			<leg mode="walk" dep_time="12:02:18">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">pt</attribute>
+				</attributes>
+				<route type="generic" start_link="pt_42802" end_link="71096" trav_time="00:00:35" distance="36.79777945598352"></route>
+			</leg>
+			<activity type="leisure_1200.0" link="71096" x="4628089.674090119" y="5828809.249687905" max_dur="00:26:21" >
+				<attributes>
+					<attribute name="cemdapStopDuration_s" class="java.lang.Integer">1020</attribute>
+					<attribute name="zoneId" class="java.lang.String">12064472</attribute>
+				</attributes>
+			</activity>
+			<leg mode="walk" dep_time="12:29:14">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">pt</attribute>
+				</attributes>
+				<route type="generic" start_link="71096" end_link="pt_42825" trav_time="00:00:35" distance="36.79777945598352"></route>
+			</leg>
+			<activity type="pt interaction" link="pt_42825" x="4628104.442420426" y="5828833.3976725275" max_dur="00:00:00" >
+			</activity>
+			<leg mode="pt" dep_time="12:29:49">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">pt</attribute>
+				</attributes>
+				<route type="experimentalPt1" start_link="pt_42825" end_link="pt_42821" trav_time="00:05:59" distance="3481.192917222633">PT1===060320002001.2===S5---10157_109===S5---10157_109_12===060320003001.1</route>
+			</leg>
+			<activity type="pt interaction" link="pt_42821" x="4626731.422625715" y="5825634.410212369" max_dur="00:00:00" >
+			</activity>
+			<leg mode="walk" dep_time="12:35:48">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">pt</attribute>
+				</attributes>
+				<route type="generic" start_link="pt_42821" end_link="117737" trav_time="00:15:06" distance="955.297670663048"></route>
+			</leg>
+			<activity type="home_93600.0" link="117737" x="4626119.172329882" y="5825228.028849992" >
+				<attributes>
+					<attribute name="cemdapStopDuration_s" class="java.lang.Integer">54600</attribute>
+					<attribute name="zoneId" class="java.lang.String">12064472</attribute>
+				</attributes>
+			</activity>
+		</plan>
 
-        
-         <person id="100087501">
-         <attributes>
-		<attribute name="subpopulation" class="java.lang.String" >person</attribute>
-	</attributes>
-                <plan score="128.2797261151769" selected="yes">
-                        <activity type="home_52800.0" link="88170" x="4628350.015051064" y="5828323.230259925" end_time="07:08:00" >
-                                <attributes>
-                                        <attribute name="zoneId" class="java.lang.String" >12064472</attribute>
-                                </attributes>
-                        </activity>
-                        <leg mode="ride">
-                                <route type="generic" start_link="88170" end_link="12482" trav_time="00:17:36" distance="7335.425245752984"></route>
-                        </leg>
-                        <activity type="work_27000.0" link="12482" x="4629797.582331978" y="5833777.024948336" end_time="15:16:00" >
-                                <attributes>
-                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer" >26880</attribute>
-                                        <attribute name="zoneId" class="java.lang.String" >12064029</attribute>
-                                </attributes>
-                        </activity>
-                        <leg mode="ride">
-                                <route type="generic" start_link="12482" end_link="88170" trav_time="00:17:36" distance="7335.425245752984"></route>
-                        </leg>
-                        <activity type="home_1800.0" link="88170" x="4628350.015051064" y="5828323.230259925" max_dur="00:29:00" >
-                                <attributes>
-                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer" >1740</attribute>
-                                        <attribute name="zoneId" class="java.lang.String" >12064472</attribute>
-                                </attributes>
-                        </activity>
-                        <leg mode="walk">
-                                <route type="generic" start_link="88170" end_link="652" trav_time="00:18:10" distance="1211.7039977247991"></route>
-                        </leg>
-                        <activity type="shopping_600.0" link="652" x="4627543.442952918" y="5828367.8015097985" max_dur="00:13:00" >
-                                <attributes>
-                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer" >780</attribute>
-                                        <attribute name="zoneId" class="java.lang.String" >12064472</attribute>
-                                </attributes>
-                        </activity>
-                        <leg mode="walk">
-                                <route type="generic" start_link="652" end_link="88170" trav_time="00:18:10" distance="1211.7039977247991"></route>
-                        </leg>
-                        <activity type="home_6000.0" link="88170" x="4628350.015051064" y="5828323.230259925" max_dur="01:38:00" >
-                                <attributes>
-                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer" >5880</attribute>
-                                        <attribute name="zoneId" class="java.lang.String" >12064472</attribute>
-                                </attributes>
-                        </activity>
-                        <leg mode="walk">
-                                <route type="generic" start_link="88170" end_link="41617" trav_time="00:16:31" distance="1102.0497691555977"></route>
-                        </leg>
-                        <activity type="shopping_1800.0" link="41617" x="4628747.124726116" y="5828941.362745599" max_dur="00:29:00" >
-                                <attributes>
-                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer" >1740</attribute>
-                                        <attribute name="zoneId" class="java.lang.String" >12064472</attribute>
-                                </attributes>
-                        </activity>
-                        <leg mode="walk">
-                                <route type="generic" start_link="41617" end_link="88170" trav_time="00:16:31" distance="1102.0497691555977"></route>
-                        </leg>
-                        <activity type="home_52800.0" link="88170" x="4628350.015051064" y="5828323.230259925" >
-                                <attributes>
-                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer" >26700</attribute>
-                                        <attribute name="zoneId" class="java.lang.String" >12064472</attribute>
-                                </attributes>
-                        </activity>
-                </plan>
+	</person>
 
-        </person>
+<!-- ====================================================================== -->
 
- <person id="10099501">
- <attributes>
-		<attribute name="subpopulation" class="java.lang.String" >person</attribute>
-	</attributes>
-                <plan score="131.71443152316658" selected="yes">
-                        <activity type="home_64800.0" link="99131" x="4609439.096790492" y="5804286.265642875" end_time="11:36:51" >
-                                <attributes>
-                                        <attribute name="zoneId" class="java.lang.String" >12061444</attribute>
-                                </attributes>
-                        </activity>
-                        <leg mode="ride">
-                                <route type="generic" start_link="99131" end_link="79268" trav_time="00:31:26" distance="13097.79693525798"></route>
-                        </leg>
-                        <activity type="work_26400.0" link="79268" x="4600917.184588418" y="5809660.95074703" end_time="18:32:10" >
-                                <attributes>
-                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer" >26160</attribute>
-                                        <attribute name="zoneId" class="java.lang.String" >908041036</attribute>
-                                </attributes>
-                        </activity>
-                        <leg mode="ride">
-                                <route type="generic" start_link="79268" end_link="99131" trav_time="00:31:26" distance="13097.79693525798"></route>
-                        </leg>
-                        <activity type="home_64800.0" link="99131" x="4609439.096790492" y="5804286.265642875" >
-                                <attributes>
-                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer" >36780</attribute>
-                                        <attribute name="zoneId" class="java.lang.String" >12061444</attribute>
-                                </attributes>
-                        </activity>
-                </plan>
+	<person id="100087501">
+		<attributes>
+			<attribute name="subpopulation" class="java.lang.String">person</attribute>
+		</attributes>
+		<plan score="128.2797261151769" selected="yes">
+			<activity type="home_52800.0" link="88170" x="4628350.015051064" y="5828323.230259925" end_time="07:08:00" >
+				<attributes>
+					<attribute name="zoneId" class="java.lang.String">12064472</attribute>
+				</attributes>
+			</activity>
+			<leg mode="ride">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">ride</attribute>
+				</attributes>
+				<route type="generic" start_link="88170" end_link="12482" trav_time="00:17:36" distance="7335.425245752984"></route>
+			</leg>
+			<activity type="work_27000.0" link="12482" x="4629797.582331978" y="5833777.024948336" end_time="15:16:00" >
+				<attributes>
+					<attribute name="cemdapStopDuration_s" class="java.lang.Integer">26880</attribute>
+					<attribute name="zoneId" class="java.lang.String">12064029</attribute>
+				</attributes>
+			</activity>
+			<leg mode="ride">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">ride</attribute>
+				</attributes>
+				<route type="generic" start_link="12482" end_link="88170" trav_time="00:17:36" distance="7335.425245752984"></route>
+			</leg>
+			<activity type="home_1800.0" link="88170" x="4628350.015051064" y="5828323.230259925" max_dur="00:29:00" >
+				<attributes>
+					<attribute name="cemdapStopDuration_s" class="java.lang.Integer">1740</attribute>
+					<attribute name="zoneId" class="java.lang.String">12064472</attribute>
+				</attributes>
+			</activity>
+			<leg mode="walk">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">walk</attribute>
+				</attributes>
+				<route type="generic" start_link="88170" end_link="652" trav_time="00:18:10" distance="1211.7039977247991"></route>
+			</leg>
+			<activity type="shopping_600.0" link="652" x="4627543.442952918" y="5828367.8015097985" max_dur="00:13:00" >
+				<attributes>
+					<attribute name="cemdapStopDuration_s" class="java.lang.Integer">780</attribute>
+					<attribute name="zoneId" class="java.lang.String">12064472</attribute>
+				</attributes>
+			</activity>
+			<leg mode="walk">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">walk</attribute>
+				</attributes>
+				<route type="generic" start_link="652" end_link="88170" trav_time="00:18:10" distance="1211.7039977247991"></route>
+			</leg>
+			<activity type="home_6000.0" link="88170" x="4628350.015051064" y="5828323.230259925" max_dur="01:38:00" >
+				<attributes>
+					<attribute name="cemdapStopDuration_s" class="java.lang.Integer">5880</attribute>
+					<attribute name="zoneId" class="java.lang.String">12064472</attribute>
+				</attributes>
+			</activity>
+			<leg mode="walk">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">walk</attribute>
+				</attributes>
+				<route type="generic" start_link="88170" end_link="41617" trav_time="00:16:31" distance="1102.0497691555977"></route>
+			</leg>
+			<activity type="shopping_1800.0" link="41617" x="4628747.124726116" y="5828941.362745599" max_dur="00:29:00" >
+				<attributes>
+					<attribute name="cemdapStopDuration_s" class="java.lang.Integer">1740</attribute>
+					<attribute name="zoneId" class="java.lang.String">12064472</attribute>
+				</attributes>
+			</activity>
+			<leg mode="walk">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">walk</attribute>
+				</attributes>
+				<route type="generic" start_link="41617" end_link="88170" trav_time="00:16:31" distance="1102.0497691555977"></route>
+			</leg>
+			<activity type="home_52800.0" link="88170" x="4628350.015051064" y="5828323.230259925" >
+				<attributes>
+					<attribute name="cemdapStopDuration_s" class="java.lang.Integer">26700</attribute>
+					<attribute name="zoneId" class="java.lang.String">12064472</attribute>
+				</attributes>
+			</activity>
+		</plan>
 
-        </person>
-        
-        <person id="100274201">
-        <attributes>
-		<attribute name="subpopulation" class="java.lang.String" >person</attribute>
-	</attributes>
-                <plan score="112.72205618728404" selected="yes">
-                        <activity type="home_45600.0" link="24781" x="4633734.28687133" y="5827828.145726077" end_time="06:19:21" >
-                                <attributes>
-                                        <attribute name="zoneId" class="java.lang.String" >12064472</attribute>
-                                </attributes>
-                        </activity>
-                        <leg mode="access_walk" dep_time="06:19:21">
-                                <route type="generic" start_link="24781" end_link="24781" trav_time="00:02:30" distance="301.4747626471193"></route>
-                        </leg>
-                        <activity type="car interaction" link="24781" x="4633934.200222137" y="5827945.678535745" max_dur="00:00:00" >
-                        </activity>
-                        <leg mode="car" dep_time="06:21:51">
-                                <route type="links" start_link="24781" end_link="80482" trav_time="00:46:13" distance="31143.672550509524" vehicleRefId="100274201">24781 24782 10720 10724 10726 47950 10728 41616 41352 41353 41350 41620 41618 71097 10104 79146 26688 79151 79155 105719 20964 85694 71145 71099 71142 653 59689 121588 76770 12478 75008 75011 75012 75009 12938 62232 86407 86411 117801 155521 117696 109112 104433 104429 119743 26264 104410 44802 44804 109109 44788 109108 138267 138265 107893 44799 44774 107897 45403 52465 135002 135004 45061 44779 45069 44813 44815 108369 25236 108371 116662 116644 44806 93782 151397 151398 151399 50181 116670 71027 71028 74712 56217 30398 137068 22225 149013 70544 106259 106267 73910 142310 144482 124430 138206 116867 116868 15081 123642 62994 122945 122944 122174 122088 5454 111817 85202 133976 90470 90471 103938 110659 110666 23365 20981 20959 80457 80455 80453 80483 80482</route>
-                        </leg>
-                        <activity type="car interaction" link="80482" x="4607098.5570353465" y="5825399.54820076" max_dur="00:00:00" >
-                        </activity>
-                        <leg mode="egress_walk" dep_time="07:08:04">
-                                <route type="generic" start_link="80482" end_link="80482" trav_time="00:00:15" distance="30.14672758773414"></route>
-                        </leg>
-                        <activity type="work_43200.0" link="80482" x="4607076.588387891" y="5825392.122238858" end_time="18:15:42" >
-                                <attributes>
-                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer" >43260</attribute>
-                                        <attribute name="zoneId" class="java.lang.String" >910010205</attribute>
-                                </attributes>
-                        </activity>
-                        <leg mode="access_walk" dep_time="18:15:42">
-                                <route type="generic" start_link="80482" end_link="80482" trav_time="00:00:15" distance="30.14672758773414"></route>
-                        </leg>
-                        <activity type="car interaction" link="80482" x="4607098.5570353465" y="5825399.54820076" max_dur="00:00:00" >
-                        </activity>
-                        <leg mode="car" dep_time="18:15:57">
-                                <route type="links" start_link="80482" end_link="24781" trav_time="00:52:49" distance="31121.235812314248" vehicleRefId="100274201">80482 80452 80454 80456 20958 20980 23364 157404 105416 102121 90469 90468 111818 142314 142315 102152 5450 5451 122966 122957 73880 62990 135610 15086 15087 138205 124429 144481 142311 73911 106268 106260 70545 155728 45902 155729 30399 28874 56214 28682 116638 50187 145137 101832 93781 116661 108370 25235 108368 44814 44812 45068 44778 45060 135003 135001 52464 45402 107896 44775 44798 107892 138264 138266 109107 44789 109110 44805 44803 104411 26265 119742 104428 104432 109111 117695 155520 117800 86410 64581 69342 62231 12937 75010 75007 12477 76769 121587 59688 652 71141 71098 71144 86826 105720 79156 79152 26687 79145 10105 71096 41617 41619 41351 41615 10727 47949 10725 10723 10719 24781</route>
-                        </leg>
-                        <activity type="car interaction" link="24781" x="4633934.200222137" y="5827945.678535745" max_dur="00:00:00" >
-                        </activity>
-                        <leg mode="egress_walk" dep_time="19:08:46">
-                                <route type="generic" start_link="24781" end_link="24781" trav_time="00:02:30" distance="301.4747626471193"></route>
-                        </leg>
-                        <activity type="home_45600.0" link="24781" x="4633734.28687133" y="5827828.145726077" >
-                                <attributes>
-                                        <attribute name="cemdapStopDuration_s" class="java.lang.Integer" >18780</attribute>
-                                        <attribute name="zoneId" class="java.lang.String" >12064472</attribute>
-                                </attributes>
-                        </activity>
-                </plan>
+	</person>
 
-        </person>
-        
+<!-- ====================================================================== -->
+
+	<person id="100200201">
+		<attributes>
+			<attribute name="subpopulation" class="java.lang.String">person</attribute>
+		</attributes>
+		<plan score="129.80394930541985" selected="yes">
+			<activity type="home_94200.0" link="105509" x="4628278.146699034" y="5829113.277546146" end_time="10:59:26" >
+				<attributes>
+					<attribute name="zoneId" class="java.lang.String">12064472</attribute>
+				</attributes>
+			</activity>
+			<leg mode="bicycle" dep_time="10:59:26">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">bicycle</attribute>
+				</attributes>
+				<route type="generic" start_link="105509" end_link="135480" trav_time="00:42:55" distance="8084.5433123283365"></route>
+			</leg>
+			<activity type="other_600.0" link="135480" x="4630981.663164896" y="5823512.790014341" max_dur="00:10:41" >
+				<attributes>
+					<attribute name="cemdapStopDuration_s" class="java.lang.Integer">180</attribute>
+					<attribute name="zoneId" class="java.lang.String">12064408</attribute>
+				</attributes>
+			</activity>
+			<leg mode="bicycle" dep_time="11:53:02">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">bicycle</attribute>
+				</attributes>
+				<route type="generic" start_link="135480" end_link="105509" trav_time="00:42:55" distance="8084.5433123283365"></route>
+			</leg>
+			<activity type="home_94200.0" link="105509" x="4628278.146699034" y="5829113.277546146" >
+				<attributes>
+					<attribute name="cemdapStopDuration_s" class="java.lang.Integer">53580</attribute>
+					<attribute name="zoneId" class="java.lang.String">12064472</attribute>
+				</attributes>
+			</activity>
+		</plan>
+
+	</person>
+
+<!-- ====================================================================== -->
+
+	<person id="100274201">
+		<attributes>
+			<attribute name="subpopulation" class="java.lang.String">person</attribute>
+		</attributes>
+		<plan score="112.72205618728404" selected="yes">
+			<activity type="home_45600.0" link="24781" x="4633734.28687133" y="5827828.145726077" end_time="06:19:21" >
+				<attributes>
+					<attribute name="zoneId" class="java.lang.String">12064472</attribute>
+				</attributes>
+			</activity>
+			<leg mode="walk" dep_time="06:19:21">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">car</attribute>
+				</attributes>
+				<route type="generic" start_link="24781" end_link="24781" trav_time="00:02:30" distance="301.4747626471193"></route>
+			</leg>
+			<activity type="car interaction" link="24781" x="4633934.200222137" y="5827945.678535745" max_dur="00:00:00" >
+			</activity>
+			<leg mode="car" dep_time="06:21:51">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">car</attribute>
+				</attributes>
+				<route type="links" start_link="24781" end_link="80482" trav_time="00:46:13" distance="31143.672550509524" vehicleRefId="100274201">24781 24782 10720 10724 10726 47950 10728 41616 41352 41353 41350 41620 41618 71097 10104 79146 26688 79151 79155 105719 20964 85694 71145 71099 71142 653 59689 121588 76770 12478 75008 75011 75012 75009 12938 62232 86407 86411 117801 155521 117696 109112 104433 104429 119743 26264 104410 44802 44804 109109 44788 109108 138267 138265 107893 44799 44774 107897 45403 52465 135002 135004 45061 44779 45069 44813 44815 108369 25236 108371 116662 116644 44806 93782 151397 151398 151399 50181 116670 71027 71028 74712 56217 30398 137068 22225 149013 70544 106259 106267 73910 142310 144482 124430 138206 116867 116868 15081 123642 62994 122945 122944 122174 122088 5454 111817 85202 133976 90470 90471 103938 110659 110666 23365 20981 20959 80457 80455 80453 80483 80482</route>
+			</leg>
+			<activity type="car interaction" link="80482" x="4607098.5570353465" y="5825399.54820076" max_dur="00:00:00" >
+			</activity>
+			<leg mode="walk" dep_time="07:08:04">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">car</attribute>
+				</attributes>
+				<route type="generic" start_link="80482" end_link="80482" trav_time="00:00:15" distance="30.14672758773414"></route>
+			</leg>
+			<activity type="work_43200.0" link="80482" x="4607076.588387891" y="5825392.122238858" end_time="18:15:42" >
+				<attributes>
+					<attribute name="cemdapStopDuration_s" class="java.lang.Integer">43260</attribute>
+					<attribute name="zoneId" class="java.lang.String">910010205</attribute>
+				</attributes>
+			</activity>
+			<leg mode="walk" dep_time="18:15:42">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">car</attribute>
+				</attributes>
+				<route type="generic" start_link="80482" end_link="80482" trav_time="00:00:15" distance="30.14672758773414"></route>
+			</leg>
+			<activity type="car interaction" link="80482" x="4607098.5570353465" y="5825399.54820076" max_dur="00:00:00" >
+			</activity>
+			<leg mode="car" dep_time="18:15:57">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">car</attribute>
+				</attributes>
+				<route type="links" start_link="80482" end_link="24781" trav_time="00:52:49" distance="31121.235812314248" vehicleRefId="100274201">80482 80452 80454 80456 20958 20980 23364 157404 105416 102121 90469 90468 111818 142314 142315 102152 5450 5451 122966 122957 73880 62990 135610 15086 15087 138205 124429 144481 142311 73911 106268 106260 70545 155728 45902 155729 30399 28874 56214 28682 116638 50187 145137 101832 93781 116661 108370 25235 108368 44814 44812 45068 44778 45060 135003 135001 52464 45402 107896 44775 44798 107892 138264 138266 109107 44789 109110 44805 44803 104411 26265 119742 104428 104432 109111 117695 155520 117800 86410 64581 69342 62231 12937 75010 75007 12477 76769 121587 59688 652 71141 71098 71144 86826 105720 79156 79152 26687 79145 10105 71096 41617 41619 41351 41615 10727 47949 10725 10723 10719 24781</route>
+			</leg>
+			<activity type="car interaction" link="24781" x="4633934.200222137" y="5827945.678535745" max_dur="00:00:00" >
+			</activity>
+			<leg mode="walk" dep_time="19:08:46">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">car</attribute>
+				</attributes>
+				<route type="generic" start_link="24781" end_link="24781" trav_time="00:02:30" distance="301.4747626471193"></route>
+			</leg>
+			<activity type="home_45600.0" link="24781" x="4633734.28687133" y="5827828.145726077" >
+				<attributes>
+					<attribute name="cemdapStopDuration_s" class="java.lang.Integer">18780</attribute>
+					<attribute name="zoneId" class="java.lang.String">12064472</attribute>
+				</attributes>
+			</activity>
+		</plan>
+
+	</person>
+
+<!-- ====================================================================== -->
+
+	<person id="10099501">
+		<attributes>
+			<attribute name="subpopulation" class="java.lang.String">person</attribute>
+		</attributes>
+		<plan score="131.71443152316658" selected="yes">
+			<activity type="home_64800.0" link="99131" x="4609439.096790492" y="5804286.265642875" end_time="11:36:51" >
+				<attributes>
+					<attribute name="zoneId" class="java.lang.String">12061444</attribute>
+				</attributes>
+			</activity>
+			<leg mode="ride">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">ride</attribute>
+				</attributes>
+				<route type="generic" start_link="99131" end_link="79268" trav_time="00:31:26" distance="13097.79693525798"></route>
+			</leg>
+			<activity type="work_26400.0" link="79268" x="4600917.184588418" y="5809660.95074703" end_time="18:32:10" >
+				<attributes>
+					<attribute name="cemdapStopDuration_s" class="java.lang.Integer">26160</attribute>
+					<attribute name="zoneId" class="java.lang.String">908041036</attribute>
+				</attributes>
+			</activity>
+			<leg mode="ride">
+				<attributes>
+					<attribute name="routingMode" class="java.lang.String">ride</attribute>
+				</attributes>
+				<route type="generic" start_link="79268" end_link="99131" trav_time="00:31:26" distance="13097.79693525798"></route>
+			</leg>
+			<activity type="home_64800.0" link="99131" x="4609439.096790492" y="5804286.265642875" >
+				<attributes>
+					<attribute name="cemdapStopDuration_s" class="java.lang.Integer">36780</attribute>
+					<attribute name="zoneId" class="java.lang.String">12061444</attribute>
+				</attributes>
+			</activity>
+		</plan>
+
+	</person>
+
+<!-- ====================================================================== -->
+
 </population>
-
-
