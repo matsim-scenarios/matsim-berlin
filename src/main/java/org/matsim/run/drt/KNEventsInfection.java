@@ -21,7 +21,7 @@ class KNEventsInfection{
                 
                 events.addHandler( new InfectionEventHandler() );
 
-                for ( int iteration=0 ; iteration<=200 ; iteration++ ){
+                for ( int iteration=0 ; iteration<=1000 ; iteration++ ){
                         events.resetHandlers( iteration );
                         EventsUtils.readEvents( events, filename );
                 }
