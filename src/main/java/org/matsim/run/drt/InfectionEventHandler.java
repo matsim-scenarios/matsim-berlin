@@ -19,6 +19,16 @@ import java.io.IOException;
 import java.util.*;
 
 class InfectionEventHandler implements BasicEventHandler {
+        // Some notes:
+
+        // * Especially if we repeat the same events file, then we do not have complete mixing.  So it may happen that only some subpopulation gets infected.
+
+        // * However, if with infection proba=1 almost everybody gets infected, then in our current setup (where infected people remain in the iterations),
+        // this will also happen with lower probabilities, albeit slower.  This is presumably the case that we want to investigate.
+
+        // * We seem to be getting two different exponential spreading rates.  With infection proba=1, the crossover is (currently) around 15h.
+
+
         private static final Logger log = Logger.getLogger( InfectionEventHandler.class );
 
         @Inject private Scenario scenario;
@@ -32,19 +42,25 @@ class InfectionEventHandler implements BasicEventHandler {
         private int noOfInfectedPersons = cnt;
         private int noOfInfectedDrivers = 0;
 
-        private BufferedWriter writer;
+        private BufferedWriter infectionsWriter;
+        private BufferedWriter infectionEventsWriter;
 
-        private enum Fields { time, nInfected, nInfectedDrivers, nInfectedPersons }
+        private enum InfectionsWriterFields{ time, nInfected, nInfectedDrivers, nInfectedPersons }
+        private enum InfectionEventsWriterFields{ time, infector, infected }
 
         private int iteration=0;
 
         private Random rnd = MatsimRandom.getLocalInstance();
 
         @Inject InfectionEventHandler() {
-                writer = IOUtils.getBufferedWriter( "infection.txt" );
+                infectionsWriter = prepareWriter( "infections.txt", InfectionsWriterFields.class );
+                infectionEventsWriter = prepareWriter( "infectionEvents.txt" , InfectionEventsWriterFields.class );
+        }
+        private BufferedWriter prepareWriter( String filename, Class<? extends Enum<?>> enumClass ){
+                BufferedWriter writer = IOUtils.getBufferedWriter( filename );
                 StringBuilder line = new StringBuilder();
-                for( Fields field : Fields.values() ){
-                        line.append( field.name() ).append( "\t" );
+                for( Enum<?> enumConstant : enumClass.getEnumConstants() ){
+                        line.append( enumConstant.name() ).append( "\t" );
                 }
                 try{
                         writer.write( line.toString() );
@@ -52,6 +68,7 @@ class InfectionEventHandler implements BasicEventHandler {
                 } catch( IOException e ){
                         throw new RuntimeException( e );
                 }
+                return writer;
         }
 
         @Override public void handleEvent( Event event ){
@@ -163,7 +180,7 @@ class InfectionEventHandler implements BasicEventHandler {
                 for( PersonWrapper infector : persons.values() ){
                         if( infector.getStatus() == Status.infected ){
                                 for( PersonWrapper person : persons.values() ){
-                                        if ( rnd.nextDouble() < 1. ){
+                                        if ( rnd.nextDouble() < 0.01 ){
                                                 infectPerson( person, infector, now );
                                         }
                                 }
@@ -172,6 +189,7 @@ class InfectionEventHandler implements BasicEventHandler {
 
         }
         private double lastTimeStep = 0 ;
+        private int specificInfectionsCnt = 300;
         private void infectPerson( PersonWrapper personWrapper, PersonWrapper infector, double now ){
                 if ( personWrapper.getPersonId().toString().startsWith( "pt_pt" ) ) {
                         return;
@@ -189,35 +207,50 @@ class InfectionEventHandler implements BasicEventHandler {
                         else {
                                 noOfInfectedPersons++;
                         }
-                        log.warn( "infection of personId=" + personWrapper.getPersonId() + " by person=" + infector.getPersonId() );
+                        if ( specificInfectionsCnt-- > 0 ){
+                                log.warn( "infection of personId=" + personWrapper.getPersonId() + " by person=" + infector.getPersonId() );
+                        }
+                        {
+                                String[] array = new String[InfectionEventsWriterFields.values().length];
+                                array[InfectionEventsWriterFields.time.ordinal()] = Double.toString( now + iteration * 3600. * 24. );
+                                array[InfectionEventsWriterFields.infector.ordinal()] = infector.getPersonId().toString();
+                                array[InfectionEventsWriterFields.infected.ordinal()] = personWrapper.getPersonId().toString();
+
+                                write( array, infectionEventsWriter );
+
+                        }
                         if ( now - lastTimeStep>=300 ){
                                 lastTimeStep = now;
                                 log.warn( "No of infected persons=" + noOfInfectedPersons );
                                 log.warn( "No of infected drivers=" + noOfInfectedDrivers );
 
-                                String[] array = new String[Fields.values().length];
+                                String[] array = new String[InfectionsWriterFields.values().length];
 
-                                array[Fields.time.ordinal()] = Double.toString( now + iteration * 3600. * 24. );
-                                array[Fields.nInfectedDrivers.ordinal()] = Double.toString( noOfInfectedDrivers );
-                                array[Fields.nInfectedPersons.ordinal()] = Double.toString( noOfInfectedPersons );
-                                array[Fields.nInfected.ordinal()] = Double.toString( noOfInfectedDrivers + noOfInfectedPersons );
+                                array[InfectionsWriterFields.time.ordinal()] = Double.toString( now + iteration * 3600. * 24. );
+                                array[InfectionsWriterFields.nInfectedDrivers.ordinal()] = Double.toString( noOfInfectedDrivers );
+                                array[InfectionsWriterFields.nInfectedPersons.ordinal()] = Double.toString( noOfInfectedPersons );
+                                array[InfectionsWriterFields.nInfected.ordinal()] = Double.toString( noOfInfectedDrivers + noOfInfectedPersons );
 
-                                StringBuilder line = new StringBuilder();
-                                for( String str : array ){
-                                        line.append( str ).append( "\t" );
-                                }
-                                try{
-                                        writer.write( line.toString() );
-                                        writer.newLine();
-                                        writer.flush();
-                                } catch( IOException e ){
-                                        throw new RuntimeException( e );
-                                }
+                                write( array, infectionsWriter );
                         }
+                }
+        }
+        private static void write( String[] array, BufferedWriter writer ){
+                StringBuilder line = new StringBuilder();
+                for( String str : array ){
+                        line.append( str ).append( "\t" );
+                }
+                try{
+                        writer.write( line.toString() );
+                        writer.newLine();
+                        writer.flush();
+                } catch( IOException e ){
+                        throw new RuntimeException( e );
                 }
         }
         @Override public void reset( int iteration ){
                 this.iteration = iteration;
+                lastTimeStep = 0;
         }
         private static class LinkWrapper {
                 private final Id<Link> linkId;

@@ -28,6 +28,7 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.QSimConfigGroup;
 import org.matsim.core.config.groups.QSimConfigGroup.SnapshotStyle;
+import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.config.groups.StrategyConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
@@ -71,13 +72,14 @@ public class KNVisInfection{
 		Config config = RunBerlinScenario.prepareConfig( args ) ;
 
 		config.global().setNumberOfThreads( 4 );
-		
+		config.qsim().setNumberOfThreads( 6 );
+
 		config.controler().setOverwriteFileSetting( OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
 
-		config.controler().setFirstIteration( 9 );
-		log.warn( "starting with iteration=" + config.controler().getFirstIteration() + " to possibly speed up initialization." );
+		config.controler().setFirstIteration( 0 );
+		config.controler().setLastIteration( 1000 );
 
-		config.controler().setLastIteration( 100 );
+		config.controler().setWritePlansUntilIteration( -1 ); // accelerate startup
 
 		final OTFVisConfigGroup otfVisConfigGroup = ConfigUtils.addOrGetModule( config, OTFVisConfigGroup.class );
 		otfVisConfigGroup.setDrawTransitFacilityIds( false );
@@ -93,12 +95,13 @@ public class KNVisInfection{
 		// yyyyyy why is this needed at all?  bug?  kai, mar'20
 
 		config.qsim().setSnapshotStyle( SnapshotStyle.kinematicWaves );
-		config.qsim().setTrafficDynamics( QSimConfigGroup.TrafficDynamics.kinematicWaves );
+		config.qsim().setTrafficDynamics( TrafficDynamics.kinematicWaves );
 
 		config.transit().setUsingTransitInMobsim( true );
 
 		config.strategy().clearStrategySettings();
-		config.strategy().addStrategySettings( new StrategySettings().setStrategyName( DefaultSelector.KeepLastSelected ).setWeight( 1. ) );
+		config.strategy().addStrategySettings( new StrategySettings().setStrategyName( DefaultSelector.KeepLastSelected ).setSubpopulation( "person" ).setWeight( 1. ) );
+		config.strategy().addStrategySettings( new StrategySettings().setStrategyName( DefaultSelector.KeepLastSelected ).setSubpopulation( "freight" ).setWeight( 1. ) );
 
 //		QSimComponentsConfigGroup qsimComponentsConfig = ConfigUtils.addOrGetModule( config, QSimComponentsConfigGroup.class );
 //		List<String> components = qsimComponentsConfig.getActiveComponents();
@@ -138,7 +141,7 @@ public class KNVisInfection{
 //			}
 //		} );
 		
-		controler.addOverridingModule( new OTFVisLiveModule() ) ;
+//		controler.addOverridingModule( new OTFVisLiveModule() ) ;
 //		controler.addOverridingModule(new DrtSpeedUpModule());
 		
 		// ---
