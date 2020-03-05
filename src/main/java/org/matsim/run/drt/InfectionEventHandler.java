@@ -70,21 +70,28 @@ class InfectionEventHandler implements BasicEventHandler {
                         // it should, in principle, be possible to use the AcitivityEndEvent, and to remove the person directly from the activity.  However,
                         // we cannot rely on the activity having a facilityId.  kai, mar'20
 
+                        // find the link ...
                         LinkWrapper link = this.linkMap.computeIfAbsent( ((PersonDepartureEvent) event).getLinkId() , LinkWrapper::new );
+
+                        // ... and go through all facilities on link to eventually find the person and remove it:
                         for( PseudoFacilityWrapper facilityWrapper : link.getPseudoFacilities() ){
                                 PersonWrapper result = facilityWrapper.removePerson( ((PersonDepartureEvent) event).getPersonId() );
                                 if( result != null ){
                                         break;
                                 }
                         }
+
                         // note that persons are not found on those facilities where they started.  Maybe fix. kai, mar'20
 
                 } else if ( event instanceof PersonEntersVehicleEvent ) {
 
+                        // find the vehicle:
                         VehicleWrapper vehicleWrapper = this.vehicleMap.computeIfAbsent( ((PersonEntersVehicleEvent) event).getVehicleId(), VehicleWrapper::new );
 
+                        // find the person:
                         PersonWrapper personWrapper = this.personMap.computeIfAbsent( ((PersonEntersVehicleEvent) event).getPersonId(), PersonWrapper::new );
 
+                        // add person to vehicle:
                         vehicleWrapper.addPerson( personWrapper );
 
                         handleInitialInfections( personWrapper );
@@ -171,7 +178,7 @@ class InfectionEventHandler implements BasicEventHandler {
                 }
                 Status prevStatus = personWrapper.getStatus();
                 personWrapper.setStatus( Status.infected );
-                final Person person = PopulationUtils.findPerson( personWrapper.personId, scenario );
+                final Person person = PopulationUtils.findPerson( personWrapper.getPersonId(), scenario );
                 if ( person!=null ){
                         person.getAttributes().putAttribute( AgentSnapshotInfo.marker, true );
                 }
@@ -187,7 +194,6 @@ class InfectionEventHandler implements BasicEventHandler {
                                 lastTimeStep = now;
                                 log.warn( "No of infected persons=" + noOfInfectedPersons );
                                 log.warn( "No of infected drivers=" + noOfInfectedDrivers );
-
 
                                 String[] array = new String[Fields.values().length];
 
@@ -241,10 +247,10 @@ class InfectionEventHandler implements BasicEventHandler {
                 void removePerson( Id<Person> personId ) {
                         persons.remove( personId );
                 }
-                public Id<Vehicle> getVehicleId(){
+                Id<Vehicle> getVehicleId(){
                         return vehicleId;
                 }
-                public Map<Id<Person>,PersonWrapper> getPersons(){
+                Map<Id<Person>,PersonWrapper> getPersons(){
                         return Collections.unmodifiableMap( persons );
                 }
         }
@@ -259,7 +265,7 @@ class InfectionEventHandler implements BasicEventHandler {
                 void setStatus( Status status ) {
                         this.status = status;
                 }
-                public Id<Person> getPersonId(){
+                Id<Person> getPersonId(){
                         return personId;
                 }
                 Status getStatus(){
@@ -284,7 +290,7 @@ class InfectionEventHandler implements BasicEventHandler {
                 PersonWrapper removePerson( Id<Person> personId ) {
                         return persons.remove( personId );
                 }
-                public Map<Id<Person>,PersonWrapper> getPersons(){
+                Map<Id<Person>,PersonWrapper> getPersons(){
                         return Collections.unmodifiableMap( persons );
                 }
         }

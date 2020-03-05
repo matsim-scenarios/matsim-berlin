@@ -28,12 +28,15 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.QSimConfigGroup;
 import org.matsim.core.config.groups.QSimConfigGroup.SnapshotStyle;
+import org.matsim.core.config.groups.StrategyConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.mobsim.qsim.AbstractQSimModule;
 import org.matsim.core.mobsim.qsim.components.QSimComponentsConfigGroup;
 import org.matsim.core.mobsim.qsim.pt.*;
+import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
+import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule.DefaultSelector;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.drtSpeedUp.DrtSpeedUpModule;
 import org.matsim.pt.ReconstructingUmlaufBuilder;
@@ -43,6 +46,8 @@ import org.matsim.vis.otfvis.OTFVisConfigGroup;
 import playground.vsp.andreas.mzilske.pt.queuesim.GreedyUmlaufBuilderImpl;
 
 import java.util.List;
+
+import static org.matsim.core.config.groups.StrategyConfigGroup.*;
 
 /**
 * @author knagel
@@ -68,7 +73,10 @@ public class KNVisInfection{
 		config.global().setNumberOfThreads( 4 );
 		
 		config.controler().setOverwriteFileSetting( OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
-		config.controler().setFirstIteration( 9 ); // improves startup speed since some things are not dumped to file!
+
+		config.controler().setFirstIteration( 9 );
+		log.warn( "starting with iteration=" + config.controler().getFirstIteration() + " to possibly speed up initialization." );
+
 		config.controler().setLastIteration( 100 );
 
 		final OTFVisConfigGroup otfVisConfigGroup = ConfigUtils.addOrGetModule( config, OTFVisConfigGroup.class );
@@ -88,6 +96,9 @@ public class KNVisInfection{
 		config.qsim().setTrafficDynamics( QSimConfigGroup.TrafficDynamics.kinematicWaves );
 
 		config.transit().setUsingTransitInMobsim( true );
+
+		config.strategy().clearStrategySettings();
+		config.strategy().addStrategySettings( new StrategySettings().setStrategyName( DefaultSelector.KeepLastSelected ).setWeight( 1. ) );
 
 //		QSimComponentsConfigGroup qsimComponentsConfig = ConfigUtils.addOrGetModule( config, QSimComponentsConfigGroup.class );
 //		List<String> components = qsimComponentsConfig.getActiveComponents();
