@@ -40,12 +40,14 @@ class InfectionEventHandler implements BasicEventHandler {
 
         private int cnt = 10 ;
         private int noOfInfectedPersons = cnt;
+        private int noOfPersonsInQuarantine = 0;
+        private int noOfImmunePersons = 0;
         private int noOfInfectedDrivers = 0;
 
         private BufferedWriter infectionsWriter;
         private BufferedWriter infectionEventsWriter;
 
-        private enum InfectionsWriterFields{ time, nInfected, nInfectedDrivers, nInfectedPersons }
+        private enum InfectionsWriterFields{ time, nInfected, nInfectedDrivers, nInfectedPersons, nPersonsInQuarantine, nImmunePersons }
         private enum InfectionEventsWriterFields{ time, infector, infected }
 
         private int iteration=0;
@@ -107,7 +109,7 @@ class InfectionEventHandler implements BasicEventHandler {
 
                         infectionDynamics( vehicleWrapper.getPersons(), event.getTime() );
 
-                } else if (event instanceof PersonLeavesVehicleEvent ) {
+                }  else if (event instanceof PersonLeavesVehicleEvent ) {
 
                         VehicleWrapper vehicle = this.vehicleMap.get( ((PersonLeavesVehicleEvent) event).getVehicleId() );
                         vehicle.removePerson( ((PersonLeavesVehicleEvent) event).getPersonId() );
@@ -132,7 +134,6 @@ class InfectionEventHandler implements BasicEventHandler {
 
                         linkWrapper.addPseudoFacility(pseudoFacilityWrapper);
 
-
                         infectionDynamics( pseudoFacilityWrapper.getPersons(), event.getTime());
 
                 }
@@ -146,6 +147,7 @@ class InfectionEventHandler implements BasicEventHandler {
                 if( cnt > 0 ){
                         if ( !personWrapper.getPersonId().toString().startsWith( "pt_pt" ) && !personWrapper.getPersonId().toString().startsWith( "pt_tr" ) ) {
                                 personWrapper.setStatus( Status.infected );
+                                personWrapper.setInfectionDate(iteration);
                                 log.warn(" person " + personWrapper.personId +" has initial infection");
                                 cnt--;
                         }
@@ -162,7 +164,7 @@ class InfectionEventHandler implements BasicEventHandler {
                 for( PersonWrapper infector : persons.values() ){
                         if( infector.getStatus() == Status.infected ){
                                 for( PersonWrapper person : persons.values() ){
-                                        if ( rnd.nextDouble() < 0.01 ){
+                                        if ( rnd.nextDouble() < 0.01 && person.getStatus().equals(Status.susceptible)){
                                                 infectPerson( person, infector, now );
                                         }
                                 }
@@ -173,7 +175,7 @@ class InfectionEventHandler implements BasicEventHandler {
         private double lastTimeStep = 0 ;
         private int specificInfectionsCnt = 300;
         private void infectPerson( PersonWrapper personWrapper, PersonWrapper infector, double now ){
-                if ( personWrapper.getPersonId().toString().startsWith( "pt_pt" ) ) {
+                if ( personWrapper.getPersonId().toString().startsWith( "pt_pt" ) || personWrapper.getPersonId().toString().startsWith( "pt_tr" ) ) {
                         return;
                 }
                 Status prevStatus = personWrapper.getStatus();
@@ -185,6 +187,7 @@ class InfectionEventHandler implements BasicEventHandler {
                         }
                 }
                 if ( prevStatus!= Status.infected ) {
+                		personWrapper.setInfectionDate(iteration);
                         if (personWrapper.getPersonId().toString().startsWith("pt_pt")) {
                                 noOfInfectedDrivers++;
                         }
@@ -214,6 +217,8 @@ class InfectionEventHandler implements BasicEventHandler {
                                 array[InfectionsWriterFields.nInfectedDrivers.ordinal()] = Double.toString( noOfInfectedDrivers );
                                 array[InfectionsWriterFields.nInfectedPersons.ordinal()] = Double.toString( noOfInfectedPersons );
                                 array[InfectionsWriterFields.nInfected.ordinal()] = Double.toString( noOfInfectedDrivers + noOfInfectedPersons );
+                                array[InfectionsWriterFields.nPersonsInQuarantine.ordinal()] = Double.toString( noOfPersonsInQuarantine );
+                                array[InfectionsWriterFields.nImmunePersons.ordinal()] = Double.toString( noOfImmunePersons );
 
                                 write( array, infectionsWriter );
                         }
@@ -233,10 +238,34 @@ class InfectionEventHandler implements BasicEventHandler {
                 }
         }
         @Override public void reset( int iteration ){
+                
+                for (PersonWrapper person : personMap.values()) {
+                	if (!person.getStatus().equals(Status.susceptible)) {
+                		if (iteration - person.getInfectionDate()  == 2 && rnd.nextBoolean() == true ) {
+                    		person.setStatus(Status.quarantine);
+                    		noOfPersonsInQuarantine++;
+                    		noOfInfectedPersons--;
+                    	}
+                    	if (iteration - person.getInfectionDate()  == 4 ) {
+                    		if (person.getStatus().equals(Status.quarantine)) {
+                    			noOfPersonsInQuarantine--;
+                    		}
+                    		if (person.getStatus().equals(Status.infected)) {
+                    			noOfInfectedPersons--;
+                    		}
+                    		person.setStatus(Status.immune);
+                    		noOfImmunePersons++;
+                    	}
+                	}
+                	
+                }
+                
                 this.iteration = iteration;
                 log.warn("===============================");
                 log.warn("Beginning iteration " + this.iteration);
                 log.warn( "No of infected persons=" + noOfInfectedPersons );
+                log.warn( "No of persons in quarantine=" + noOfPersonsInQuarantine );
+                log.warn( "No of immune persons=" + noOfImmunePersons );
                 log.warn("===============================");
                 lastTimeStep = 0;
         }
@@ -279,6 +308,7 @@ class InfectionEventHandler implements BasicEventHandler {
                 private final Id<Person> personId;
                 private Id<Link> lastLink;
                 private Status status = Status.susceptible;
+                private int infectionDate;
                 PersonWrapper( Id<Person> personId ) {
                         this.personId = personId;
                         this.lastLink = null;
@@ -298,6 +328,12 @@ class InfectionEventHandler implements BasicEventHandler {
                 void setLinkId( Id<Link> lastLink ){
                         this.lastLink = lastLink;
                 }
+                void setInfectionDate (int date) {
+                	this.infectionDate = date;
+                }
+                int getInfectionDate () {
+                	return this.infectionDate;
+                }
         }
         private static class PseudoFacilityWrapper {
                 private final String pseudoFacilityId;
@@ -315,7 +351,7 @@ class InfectionEventHandler implements BasicEventHandler {
                         return Collections.unmodifiableMap( persons );
                 }
         }
-        enum Status {susceptible, infected, immune};
+        enum Status {susceptible, infected, quarantine, immune};
 
 }
 
