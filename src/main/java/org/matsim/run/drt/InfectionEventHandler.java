@@ -165,7 +165,7 @@ class InfectionEventHandler implements BasicEventHandler {
                 for( PersonWrapper infector : persons.values() ){
                         if( infector.getStatus() == Status.infected ){
                                 for( PersonWrapper person : persons.values() ){
-                                        if ( rnd.nextDouble() < 0.01 && person.getStatus().equals(Status.susceptible)){
+                                        if ( rnd.nextDouble() < 0.0001 && person.getStatus().equals(Status.susceptible)){
                                                 infectPerson( person, infector, now );
                                         }
                                 }
