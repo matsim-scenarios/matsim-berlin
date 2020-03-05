@@ -241,12 +241,12 @@ class InfectionEventHandler implements BasicEventHandler {
                 
                 for (PersonWrapper person : personMap.values()) {
                 	if (!person.getStatus().equals(Status.susceptible)) {
-                		if (iteration - person.getInfectionDate()  == 2 && rnd.nextBoolean() == true ) {
+                		if (iteration - person.getInfectionDate()  == 7 && rnd.nextBoolean() == true ) {
                     		person.setStatus(Status.quarantine);
                     		noOfPersonsInQuarantine++;
                     		noOfInfectedPersons--;
                     	}
-                    	if (iteration - person.getInfectionDate()  == 4 ) {
+                    	if (iteration - person.getInfectionDate()  == 14 ) {
                     		if (person.getStatus().equals(Status.quarantine)) {
                     			noOfPersonsInQuarantine--;
                     		}
