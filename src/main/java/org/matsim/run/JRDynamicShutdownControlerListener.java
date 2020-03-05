@@ -8,27 +8,20 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.core.config.groups.ControlerConfigGroup;
 import org.matsim.core.config.groups.StrategyConfigGroup;
-import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.events.IterationStartsEvent;
-import org.matsim.core.controler.events.ShutdownEvent;
 import org.matsim.core.controler.events.StartupEvent;
 import org.matsim.core.controler.listener.IterationStartsListener;
-import org.matsim.core.controler.listener.ShutdownListener;
 import org.matsim.core.controler.listener.StartupListener;
 import org.matsim.core.replanning.*;
-import org.matsim.core.utils.io.IOUtils;
 
 import javax.inject.Inject;
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.*;
 
-public class JRDynamicShutdownControlerListener implements IterationStartsListener, StartupListener, ShutdownListener {
+public class JRDynamicShutdownControlerListener implements IterationStartsListener, StartupListener {
     private static final double SHUTDOWN_CONDITION_SCORE = 0.5;
     private static final double SHUTDOWN_CONDITION_MODECHOICECOVERAGE = 0.5;
-    private static final int MINIMUM_ITERATION = 600;
+    private static final int MINIMUM_ITERATION = 3;
     private final ControlerConfigGroup controlerConfigGroup;
-    private final OutputDirectoryHierarchy controlerIO;
     private Scenario scenario;
     private ScoreStats scoreStats;
     private StrategyManager strategyManager;
@@ -43,14 +36,13 @@ public class JRDynamicShutdownControlerListener implements IterationStartsListen
 
     @Inject
     JRDynamicShutdownControlerListener(ControlerConfigGroup controlerConfigGroup, ScoreStats scoreStats, StrategyManager strategyManager,
-                                       StrategyConfigGroup strategyConfigGroup, Scenario scenario,  OutputDirectoryHierarchy controlerIO) {
+                                       StrategyConfigGroup strategyConfigGroup, Scenario scenario) {
 
         this.scenario = scenario;
         this.scoreStats = scoreStats;
         this.strategyManager = strategyManager;
         this.strategyConfigGroup = strategyConfigGroup;
         this.controlerConfigGroup = controlerConfigGroup ;
-        this.controlerIO = controlerIO ;
 
 
     }
@@ -253,29 +245,5 @@ public class JRDynamicShutdownControlerListener implements IterationStartsListen
         return !(ReplanningUtils.isOnlySelector(strategy));
     }
 
-    @Override
-    public void notifyShutdown(ShutdownEvent shutdownEvent) {
-        BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("PercentDifferences") +".txt"); //jr
-        try {
-            for (String mode : pctChangesForModeShare.keySet()) {
-                bw.write("\n\n***********"+mode+"\n");
-                for (Double pct : pctChangesForModeShare.get(mode)) {
-                    bw.write(pct + "\n");
-                }
-            }
-
-            for (String scoreStat : pctChangesForScore.keySet()) {
-                bw.write("\n\n***********"+scoreStat+"\n");
-                for (Double pct : pctChangesForScore.get(scoreStat)) {
-                    bw.write(pct + "\n");
-                }
-            }
-            bw.write("\n");
-            bw.flush();
-            bw.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }
 
