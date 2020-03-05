@@ -81,26 +81,18 @@ class InfectionEventHandler implements BasicEventHandler {
 
                 if ( event instanceof ActivityEndEvent ) {
 
-                       // nothing to do
+                    // find the link ...
+                    LinkWrapper link = this.linkMap.computeIfAbsent( ((ActivityEndEvent) event).getLinkId() , LinkWrapper::new );
 
-                } else if ( event instanceof PersonDepartureEvent ) {
-                        // it should, in principle, be possible to use the AcitivityEndEvent, and to remove the person directly from the activity.  However,
-                        // we cannot rely on the activity having a facilityId.  kai, mar'20
+                    // ... and go through all facilities on link to eventually find the person and remove it:
+                    for( PseudoFacilityWrapper facilityWrapper : link.getPseudoFacilities() ){
+                            PersonWrapper result = facilityWrapper.removePerson( ((ActivityEndEvent) event).getPersonId() );
+                            if( result != null ){
+                                    break;
+                            }
+                    }
 
-                        // find the link ...
-                        LinkWrapper link = this.linkMap.computeIfAbsent( ((PersonDepartureEvent) event).getLinkId() , LinkWrapper::new );
-
-                        // ... and go through all facilities on link to eventually find the person and remove it:
-                        for( PseudoFacilityWrapper facilityWrapper : link.getPseudoFacilities() ){
-                                PersonWrapper result = facilityWrapper.removePerson( ((PersonDepartureEvent) event).getPersonId() );
-                                if( result != null ){
-                                        break;
-                                }
-                        }
-
-                        // note that persons are not found on those facilities where they started.  Maybe fix. kai, mar'20
-
-                } else if ( event instanceof PersonEntersVehicleEvent ) {
+                }  else if ( event instanceof PersonEntersVehicleEvent ) {
 
                         // find the vehicle:
                         VehicleWrapper vehicleWrapper = this.vehicleMap.computeIfAbsent( ((PersonEntersVehicleEvent) event).getVehicleId(), VehicleWrapper::new );
@@ -120,29 +112,15 @@ class InfectionEventHandler implements BasicEventHandler {
                         VehicleWrapper vehicle = this.vehicleMap.get( ((PersonLeavesVehicleEvent) event).getVehicleId() );
                         vehicle.removePerson( ((PersonLeavesVehicleEvent) event).getPersonId() );
 
-                } else if ( event instanceof PersonArrivalEvent ) {
-                        // it should, in principle, be possible to only look at the ActivityStartEvent.  Unfortunately, we cannot rely on the
-                        // ActivityStartEvent always having linkId.  (Is that statement really correct?)  kai, mar'20
-
-//                        this.linkMap.computeIfAbsent( ((PersonArrivalEvent) event).getLinkId(), LinkWrapper::new );
-
-                        PersonWrapper personWrapper = this.personMap.computeIfAbsent( ((PersonArrivalEvent) event).getPersonId(), PersonWrapper::new );
-
-                        personWrapper.setLinkId(((PersonArrivalEvent) event).getLinkId() );
-
-//                        linkWrapper.addPerson( personWrapper );
-//                       
-//                        infectionDynamics( linkWrapper.getPersons() );
-
-                } else if (event instanceof ActivityStartEvent) {
-                        // it should, in principle, be possible to only look at the ActivityStartEvent.  Unfortunately, we cannot rely on the
-                        // ActivityStartEvent always having linkId.  (Is that statement really correct?)  kai, mar'20
+                }  else if (event instanceof ActivityStartEvent) {
 
                         if(((ActivityStartEvent) event).getPersonId().toString().startsWith("drt")){
                                 return;
                         }
+                        
+                        PersonWrapper personWrapper = this.personMap.computeIfAbsent( ((ActivityStartEvent) event).getPersonId(), PersonWrapper::new );
 
-                        PersonWrapper personWrapper = this.personMap.get(((ActivityStartEvent) event).getPersonId());
+                        personWrapper.setLinkId(((ActivityStartEvent) event).getLinkId() );
 
                         LinkWrapper linkWrapper = this.linkMap.computeIfAbsent(personWrapper.getLastLink(), LinkWrapper::new );
 
@@ -166,7 +144,7 @@ class InfectionEventHandler implements BasicEventHandler {
         private void handleInitialInfections( PersonWrapper personWrapper ){
                 // initial infections:
                 if( cnt > 0 ){
-                        if ( !personWrapper.getPersonId().toString().startsWith( "pt_pt" ) ) {
+                        if ( !personWrapper.getPersonId().toString().startsWith( "pt_pt" ) && !personWrapper.getPersonId().toString().startsWith( "pt_tr" ) ) {
                                 personWrapper.setStatus( Status.infected );
                                 log.warn(" person " + personWrapper.personId +" has initial infection");
                                 cnt--;
@@ -227,8 +205,8 @@ class InfectionEventHandler implements BasicEventHandler {
                         }
                         if ( now - lastTimeStep>=300 ){
                                 lastTimeStep = now;
-                                log.warn( "No of infected persons=" + noOfInfectedPersons );
-                                log.warn( "No of infected drivers=" + noOfInfectedDrivers );
+//                                log.warn( "No of infected persons=" + noOfInfectedPersons );
+//                                log.warn( "No of infected drivers=" + noOfInfectedDrivers );
 
                                 String[] array = new String[InfectionsWriterFields.values().length];
 
@@ -256,6 +234,10 @@ class InfectionEventHandler implements BasicEventHandler {
         }
         @Override public void reset( int iteration ){
                 this.iteration = iteration;
+                log.warn("===============================");
+                log.warn("Beginning iteration " + this.iteration);
+                log.warn( "No of infected persons=" + noOfInfectedPersons );
+                log.warn("===============================");
                 lastTimeStep = 0;
         }
         private static class LinkWrapper {
