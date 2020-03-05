@@ -79,7 +79,7 @@ public class RunOfflineNoiseAnalysis {
 		
 		// ################################
 		
-		noiseParameters.setUseActualSpeedLevel(true);
+		noiseParameters.setUseActualSpeedLevel(false);
 		noiseParameters.setAllowForSpeedsOutsideTheValidRange(false);
 		noiseParameters.setScaleFactor(100.);
 		noiseParameters.setComputePopulationUnits(true);
@@ -95,7 +95,7 @@ public class RunOfflineNoiseAnalysis {
 		noiseParameters.setTunnelLinkIdFile(tunnelLinkIdFile);
 		noiseParameters.setTimeBinSizeNoiseComputation(timeBinSize);
 
-		noiseParameters.setConsiderNoiseBarriers(true);
+		noiseParameters.setConsiderNoiseBarriers(false);
 		noiseParameters.setNoiseBarriersFilePath("/Users/ihab/Documents/workspace/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-buildings/osm-buildings-dissolved.geojson");
 //		noiseParameters.setNoiseBarriersFilePath("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-buildings/osm-buildings-dissolved.geojson");
 		noiseParameters.setNoiseBarriersSourceCRS("EPSG:31468");
