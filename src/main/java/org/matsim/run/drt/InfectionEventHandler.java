@@ -43,11 +43,12 @@ class InfectionEventHandler implements BasicEventHandler {
         private int noOfPersonsInQuarantine = 0;
         private int noOfImmunePersons = 0;
         private int noOfInfectedDrivers = 0;
+        private int populationSize = 0;
 
         private BufferedWriter infectionsWriter;
         private BufferedWriter infectionEventsWriter;
 
-        private enum InfectionsWriterFields{ time, nInfected, nInfectedDrivers, nInfectedPersons, nPersonsInQuarantine, nImmunePersons }
+        private enum InfectionsWriterFields{ time, nInfected, nInfectedDrivers, nInfectedPersons, nPersonsInQuarantine, nImmunePersons, nSusceptiblePersons }
         private enum InfectionEventsWriterFields{ time, infector, infected }
 
         private int iteration=0;
@@ -219,6 +220,7 @@ class InfectionEventHandler implements BasicEventHandler {
                                 array[InfectionsWriterFields.nInfected.ordinal()] = Double.toString( noOfInfectedDrivers + noOfInfectedPersons );
                                 array[InfectionsWriterFields.nPersonsInQuarantine.ordinal()] = Double.toString( noOfPersonsInQuarantine );
                                 array[InfectionsWriterFields.nImmunePersons.ordinal()] = Double.toString( noOfImmunePersons );
+                                array[InfectionsWriterFields.nSusceptiblePersons.ordinal()] = Double.toString( populationSize - noOfInfectedPersons - noOfPersonsInQuarantine - noOfImmunePersons );
 
                                 write( array, infectionsWriter );
                         }
@@ -238,7 +240,7 @@ class InfectionEventHandler implements BasicEventHandler {
                 }
         }
         @Override public void reset( int iteration ){
-                
+        		populationSize = 0;
                 for (PersonWrapper person : personMap.values()) {
                 	if (!person.getStatus().equals(Status.susceptible)) {
                 		if (iteration - person.getInfectionDate()  == 7 && rnd.nextBoolean() == true ) {
@@ -257,12 +259,17 @@ class InfectionEventHandler implements BasicEventHandler {
                     		noOfImmunePersons++;
                     	}
                 	}
+            		if (!person.getPersonId().toString().startsWith("pt_pt") && !person.getPersonId().toString().startsWith("pt_tr")) {
+            			populationSize++;
+            		}
                 	
                 }
                 
                 this.iteration = iteration;
+                
                 log.warn("===============================");
                 log.warn("Beginning iteration " + this.iteration);
+                log.warn("No of susceptible persons=" + (populationSize - noOfInfectedPersons - noOfPersonsInQuarantine - noOfImmunePersons));
                 log.warn( "No of infected persons=" + noOfInfectedPersons );
                 log.warn( "No of persons in quarantine=" + noOfPersonsInQuarantine );
                 log.warn( "No of immune persons=" + noOfImmunePersons );
