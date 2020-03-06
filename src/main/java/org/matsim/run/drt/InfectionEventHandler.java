@@ -105,15 +105,23 @@ class InfectionEventHandler implements BasicEventHandler {
 
                         // add person to vehicle:
                         vehicleWrapper.addPerson( personWrapper );
+                        
+                        vehicleWrapper.addEntry(personWrapper.getPersonId(), event.getTime());
 
                         handleInitialInfections( personWrapper );
 
-                        infectionDynamics( vehicleWrapper.getPersons(), event.getTime() );
+//                        vehicleInfectionDynamics( personWrapper, vehicleWrapper, event.getTime() );
 
                 }  else if (event instanceof PersonLeavesVehicleEvent ) {
 
                         VehicleWrapper vehicle = this.vehicleMap.get( ((PersonLeavesVehicleEvent) event).getVehicleId() );
                         vehicle.removePerson( ((PersonLeavesVehicleEvent) event).getPersonId() );
+                        
+                        PersonWrapper personWrapper = personMap.get(((PersonLeavesVehicleEvent) event).getPersonId());
+                        
+                        vehicleInfectionDynamics( personWrapper, vehicle, event.getTime() );
+                        
+                        vehicle.removeEntry(personWrapper.getPersonId());
 
                 }  else if (event instanceof ActivityStartEvent) {
 
@@ -160,19 +168,62 @@ class InfectionEventHandler implements BasicEventHandler {
                         }
                 }
         }
-        private void infectionDynamics( Map<Id<Person>,PersonWrapper> persons, double now ){
-
-                for( PersonWrapper infector : persons.values() ){
-                        if( infector.getStatus() == Status.infected ){
-                                for( PersonWrapper person : persons.values() ){
-                                        if ( rnd.nextDouble() < 0.0001 && person.getStatus().equals(Status.susceptible)){
-                                                infectPerson( person, infector, now );
-                                        }
-                                }
-                        }
-                }
+        private void vehicleInfectionDynamics( PersonWrapper person, VehicleWrapper vehicle, double now ){
+//        	Every time an agent leaves a vehicle, a group of contact persons is determined. The more time agents spend together in a vehicle the higher the proba that they become contact persons.
+//        	If the agent is infected, it can infect susceptible agents in its contact group.
+//        	If the agent is susceptible, it can be infected by agents in its contact group. SM, mar'20
+        	
+        	Map<Id<Person>, PersonWrapper> persons = vehicle.getPersons();
+        	if (person.getStatus().equals(Status.infected)) {
+        		int contactPersons = 0;
+        		for (PersonWrapper contactPerson : persons.values()) {
+        			double jointTimeInVeh = now - Math.max(vehicle.getEntries().get(person.getPersonId()), vehicle.getEntries().get(contactPerson.getPersonId()));
+        			double contactProba = jointTimeInVeh / (2 * 3600);
+        			if (rnd.nextDouble() < contactProba) {
+        				contactPersons++;
+        				if (contactPerson.getStatus().equals(Status.susceptible) && rnd.nextDouble() < 0.1) {
+        					infectPerson(contactPerson, person, now);
+        				}
+        			}
+        			if (contactPersons == 10) {
+        				break;
+        			}
+        			
+        		}
+        		
+        	}
+        	if (person.getStatus().equals(Status.susceptible)) {
+        		int contactPersons = 0;
+        		for (PersonWrapper contactPerson : persons.values()) {
+        			double jointTimeInVeh = now - Math.max(vehicle.getEntries().get(person.getPersonId()), vehicle.getEntries().get(contactPerson.getPersonId()));
+        			double contactProba = jointTimeInVeh / (2 * 3600);
+        			if (rnd.nextDouble() < contactProba) {
+        				contactPersons++;
+        				if (contactPerson.getStatus().equals(Status.infected) && rnd.nextDouble() < 0.1) {
+        					infectPerson(person, contactPerson, now);
+        				}
+        			}
+        			if (contactPersons == 10) {
+        				break;
+        			}
+        		}
+        	
+        	}
 
         }
+        private void infectionDynamics( Map<Id<Person>,PersonWrapper> persons, double now ){
+
+            for( PersonWrapper infector : persons.values() ){
+                    if( infector.getStatus() == Status.infected ){
+                            for( PersonWrapper person : persons.values() ){
+                                    if ( rnd.nextDouble() < 0.0001 && person.getStatus().equals(Status.susceptible)){
+                                            infectPerson( person, infector, now );
+                                    }
+                            }
+                    }
+            }
+
+    }
         private double lastTimeStep = 0 ;
         private int specificInfectionsCnt = 300;
         private void infectPerson( PersonWrapper personWrapper, PersonWrapper infector, double now ){
@@ -295,6 +346,8 @@ class InfectionEventHandler implements BasicEventHandler {
         private static class VehicleWrapper {
                 private final Id<Vehicle> vehicleId;
                 private Map<Id<Person>,PersonWrapper> persons = new LinkedHashMap<>();
+                private Map<Id<Person>,Double> entries = new LinkedHashMap<>();
+                
                 VehicleWrapper( Id<Vehicle> vehicleId ) {
                         this.vehicleId = vehicleId;
                 }
@@ -304,11 +357,20 @@ class InfectionEventHandler implements BasicEventHandler {
                 void removePerson( Id<Person> personId ) {
                         persons.remove( personId );
                 }
+                void addEntry( Id<Person> personId, double entryTime ) {
+                    	entries.put( personId, entryTime );
+                }
+                void removeEntry( Id<Person> personId ) {
+                		entries.remove( personId );
+                }
                 Id<Vehicle> getVehicleId(){
                         return vehicleId;
                 }
                 Map<Id<Person>,PersonWrapper> getPersons(){
                         return Collections.unmodifiableMap( persons );
+                }
+                Map<Id<Person>,Double> getEntries(){
+                    return Collections.unmodifiableMap( entries );
                 }
         }
         private static class PersonWrapper {
