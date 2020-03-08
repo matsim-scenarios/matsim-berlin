@@ -11,6 +11,7 @@ import org.matsim.core.events.handler.BasicEventHandler;
 import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.utils.io.IOUtils;
+import org.matsim.facilities.Facility;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vis.snapshotwriters.AgentSnapshotInfo;
 
@@ -21,7 +22,7 @@ import java.util.*;
 class InfectionEventHandler implements BasicEventHandler {
         // Some notes:
 
-        // * Especially if we repeat the same events file, then we do not have complete mixing.  So it may happen that only some subpopulation gets infected.
+        // * Especially if we repeat the same events file, then we do not have complete mixing.  So it may happen that only some subpopulations gets infected.
 
         // * However, if with infection proba=1 almost everybody gets infected, then in our current setup (where infected people remain in the iterations),
         // this will also happen with lower probabilities, albeit slower.  This is presumably the case that we want to investigate.
@@ -35,7 +36,7 @@ class InfectionEventHandler implements BasicEventHandler {
 
         private Map<Id<Person>,PersonWrapper> personMap = new HashMap<>();
         private Map<Id<Vehicle>,VehicleWrapper> vehicleMap = new HashMap<>();
-        private Map<String,PseudoFacilityWrapper> pseudoFacilityMap = new HashMap<>();
+        private Map<Id<Facility>,PseudoFacilityWrapper> pseudoFacilityMap = new HashMap<>();
         private Map<Id<Link>,LinkWrapper> linkMap = new HashMap<>();
 
         private int cnt = 10 ;
@@ -75,87 +76,87 @@ class InfectionEventHandler implements BasicEventHandler {
         }
 
         @Override public void handleEvent( Event event ){
-                // @Sebatian: Es gibt in PopulationUtils, FaciitiesUtils einige helper methods, die mit diesen Unklarheiten bzgl. linkIds, facilityIds
+                // @Sebastian: Es gibt in PopulationUtils, FaciitiesUtils einige helper methods, die mit diesen Unklarheiten bzgl. linkIds, facilityIds
                 // umgehen.  Schaust Du bitte mal rein?  Im Grunde muesste es reichen, sich fuer die Dynamik in Gebaeuden nur die Activity events
                 // anzuschauen, und fuer die Dynamik in Vehicles nur die Vehicle enter/leave events.  Danke.  kai, mar'20
-
 
                 // the events follow the matsim sequence, i.e. all agents start at activities.  kai, mar'20
 
                 if ( event instanceof ActivityEndEvent ) {
 
-                    // find the link ...
-                    LinkWrapper link = this.linkMap.computeIfAbsent( ((ActivityEndEvent) event).getLinkId() , LinkWrapper::new );
+                        // find the link
+                        LinkWrapper link = this.linkMap.computeIfAbsent( ((ActivityEndEvent) event).getLinkId() , LinkWrapper::new );
 
-                    // ... and go through all facilities on link to eventually find the person and remove it:
-                    for( PseudoFacilityWrapper facilityWrapper : link.getPseudoFacilities() ){
-                            PersonWrapper result = facilityWrapper.removePerson( ((ActivityEndEvent) event).getPersonId() );
-                            if( result != null ){
-                                    break;
-                            }
-                    }
+                        // go through all facilities on link to eventually find the person and remove it:
+                        for( PseudoFacilityWrapper facilityWrapper : link.getPseudoFacilities() ){
+                                PersonWrapper person = facilityWrapper.removePerson( ((ActivityEndEvent) event).getPersonId() );
+                                if( person != null ){
+
+                                        // run infection dynamics for this person and facility:
+                                        infectionDynamicsFacility( person, facilityWrapper, event.getTime() );
+
+                                        break;
+                                }
+                        }
 
                 }  else if ( event instanceof PersonEntersVehicleEvent ) {
-
-                        // find the vehicle:
-                        VehicleWrapper vehicleWrapper = this.vehicleMap.computeIfAbsent( ((PersonEntersVehicleEvent) event).getVehicleId(), VehicleWrapper::new );
 
                         // find the person:
                         PersonWrapper personWrapper = this.personMap.computeIfAbsent( ((PersonEntersVehicleEvent) event).getPersonId(), PersonWrapper::new );
 
-                        // add person to vehicle:
-                        vehicleWrapper.addPerson( personWrapper );
-                        
-                        vehicleWrapper.addEntry(personWrapper.getPersonId(), event.getTime());
+                        // find the vehicle:
+                        VehicleWrapper vehicleWrapper = this.vehicleMap.computeIfAbsent( ((PersonEntersVehicleEvent) event).getVehicleId(), VehicleWrapper::new );
+
+                        // add person to vehicle and memorize entering time (yy this should rather be one method so):
+                        vehicleWrapper.addPerson( personWrapper, event.getTime() );
 
                         handleInitialInfections( personWrapper );
 
-//                        vehicleInfectionDynamics( personWrapper, vehicleWrapper, event.getTime() );
-
                 }  else if (event instanceof PersonLeavesVehicleEvent ) {
 
+                        // find vehicle:
                         VehicleWrapper vehicle = this.vehicleMap.get( ((PersonLeavesVehicleEvent) event).getVehicleId() );
-                        vehicle.removePerson( ((PersonLeavesVehicleEvent) event).getPersonId() );
-                        
-                        PersonWrapper personWrapper = personMap.get(((PersonLeavesVehicleEvent) event).getPersonId());
-                        
-                        vehicleInfectionDynamics( personWrapper, vehicle, event.getTime() );
-                        
-                        vehicle.removeEntry(personWrapper.getPersonId());
+
+                        // remove person from vehicle:
+                        PersonWrapper personWrapper = vehicle.removePerson( ((PersonLeavesVehicleEvent) event).getPersonId() );
+
+                        infectionDynamicsVehicle( personWrapper, vehicle, event.getTime() );
 
                 }  else if (event instanceof ActivityStartEvent) {
 
                         if(((ActivityStartEvent) event).getPersonId().toString().startsWith("drt")){
                                 return;
                         }
-                        
+
+                        // find the person:
                         PersonWrapper personWrapper = this.personMap.computeIfAbsent( ((ActivityStartEvent) event).getPersonId(), PersonWrapper::new );
 
-                        personWrapper.setLinkId(((ActivityStartEvent) event).getLinkId() );
+                        // find the link:
+                        LinkWrapper linkWrapper = this.linkMap.computeIfAbsent( ((ActivityStartEvent) event).getLinkId(), LinkWrapper::new );
 
-                        LinkWrapper linkWrapper = this.linkMap.computeIfAbsent(personWrapper.getLastLink(), LinkWrapper::new );
+                        // create pseudo facility id that includes the activity type:
+                        Id<Facility> pseudoFacilityId = createPseudoFacilityId( ((ActivityStartEvent) event).getActType(), linkWrapper.getLinkId() );
 
-                        String pseudoFacilityId = getPseudoFacilityId( ((ActivityStartEvent) event).getActType(), linkWrapper.getLinkId() );
-
+                        // find the facility
                         PseudoFacilityWrapper pseudoFacilityWrapper = this.pseudoFacilityMap.computeIfAbsent(pseudoFacilityId, PseudoFacilityWrapper::new);
 
-                        pseudoFacilityWrapper.addPerson(personWrapper);
-
+                        // add facility to link
                         linkWrapper.addPseudoFacility(pseudoFacilityWrapper);
 
-                        infectionDynamics( pseudoFacilityWrapper.getPersons(), event.getTime());
+                        // add person to facility
+                        pseudoFacilityWrapper.addPerson(personWrapper, event.getTime() );
 
                 }
 
         }
-        private String getPseudoFacilityId( String activityType, Id<Link> linkId) {
-                return activityType.split("_" )[0] + "_" + linkId.toString();
+        private Id<Facility> createPseudoFacilityId( String activityType, Id<Link> linkId ) {
+                return Id.create( activityType.split("_" )[0] + "_" + linkId.toString(), Facility.class );
         }
         private void handleInitialInfections( PersonWrapper personWrapper ){
                 // initial infections:
                 if( cnt > 0 ){
                         if ( !personWrapper.getPersonId().toString().startsWith( "pt_pt" ) && !personWrapper.getPersonId().toString().startsWith( "pt_tr" ) ) {
-                                personWrapper.setStatus( Status.infected );
+                                personWrapper.setStatus( Status.infectedButNotContagious );
                                 personWrapper.setInfectionDate(iteration);
                                 log.warn(" person " + personWrapper.personId +" has initial infection");
                                 cnt--;
@@ -168,62 +169,107 @@ class InfectionEventHandler implements BasicEventHandler {
                         }
                 }
         }
-        private void vehicleInfectionDynamics( PersonWrapper person, VehicleWrapper vehicle, double now ){
-//        	Every time an agent leaves a vehicle, a group of contact persons is determined. The more time agents spend together in a vehicle the higher the proba that they become contact persons.
+        private void infectionDynamicsVehicle( PersonWrapper personLeavingVehicle, VehicleWrapper vehicle, double now ){
+                final double infectionProbaPerHour = 0.1;
+                infectionDynamicsGeneralized( personLeavingVehicle, vehicle, infectionProbaPerHour, now );
+        }
+        private void infectionDynamicsFacility( PersonWrapper personLeavingFacility, PseudoFacilityWrapper facility,  double now ) {
+                final double infectionProbaPerHour = 0.01;
+                infectionDynamicsGeneralized( personLeavingFacility, facility, infectionProbaPerHour, now );
+        }
+        private void infectionDynamicsGeneralized( PersonWrapper personLeavingContainer, ContainerWrapper<?> container, double infectionProbaPerHour, double now ) {
+
+//        	Every time an agent leaves a container, a group of contact persons is determined. The more time agents spend together in a container the higher the proba that they become contact persons.
 //        	If the agent is infected, it can infect susceptible agents in its contact group.
 //        	If the agent is susceptible, it can be infected by agents in its contact group. SM, mar'20
-        	
-        	Map<Id<Person>, PersonWrapper> persons = vehicle.getPersons();
-        	if (person.getStatus().equals(Status.infected)) {
-        		int contactPersons = 0;
-        		for (PersonWrapper contactPerson : persons.values()) {
-        			double jointTimeInVeh = now - Math.max(vehicle.getEntries().get(person.getPersonId()), vehicle.getEntries().get(contactPerson.getPersonId()));
-        			double contactProba = jointTimeInVeh / (2 * 3600);
-        			if (rnd.nextDouble() < contactProba) {
-        				contactPersons++;
-        				if (contactPerson.getStatus().equals(Status.susceptible) && rnd.nextDouble() < 0.1) {
-        					infectPerson(contactPerson, person, now);
-        				}
-        			}
-        			if (contactPersons == 10) {
-        				break;
-        			}
-        			
-        		}
-        		
-        	}
-        	if (person.getStatus().equals(Status.susceptible)) {
-        		int contactPersons = 0;
-        		for (PersonWrapper contactPerson : persons.values()) {
-        			double jointTimeInVeh = now - Math.max(vehicle.getEntries().get(person.getPersonId()), vehicle.getEntries().get(contactPerson.getPersonId()));
-        			double contactProba = jointTimeInVeh / (2 * 3600);
-        			if (rnd.nextDouble() < contactProba) {
-        				contactPersons++;
-        				if (contactPerson.getStatus().equals(Status.infected) && rnd.nextDouble() < 0.1) {
-        					infectPerson(person, contactPerson, now);
-        				}
-        			}
-        			if (contactPersons == 10) {
-        				break;
-        			}
-        		}
-        	
-        	}
+
+                if ( !hasStatusRelevantForInfectionDynamics( personLeavingContainer ) ) {
+                        return ;
+                }
+
+                List<PersonWrapper> persons = new ArrayList<>( container.getPersons().values() ) ;
+                Collections.shuffle( persons, rnd ); // so we do not always see the persons in the same sequence in each iteration
+
+                final Map<Id<Person>, Double> containerEnteringTimes = container.getContainerEnteringTimes();
+
+                int contactPersons = 0 ;
+                for (PersonWrapper otherPerson : persons) {
+                        // we are essentially looking at the situation when the person leaves the container.  Interactions with other persons who have
+                        // already left the container were treated then.  In consequence, we have some "circle of persons around us" (yyyy which should
+                        //  depend on the density), and then a probability of infection in either direction.
+
+                        // For the time being, will just assume that the first 10 persons are the ones we interact with.  Note that because of
+                        // shuffle, those are 10 different persons every day.
+
+                        contactPersons++ ;
+                        // (we count "quarantine" as well since they essentially represent "holes", i.e. persons who are no longer there and thus the
+                        // density in the transit container goes down.  kai, mar'20)
+
+                        if ( !hasStatusRelevantForInfectionDynamics( otherPerson ) ) {
+                                continue;
+                        }
+
+                        if ( personLeavingContainer.getStatus()==otherPerson.getStatus() ) {
+                                // (if they have the same status, then nothing can happen between them)
+                                continue;
+                        }
+
+                        Double containerEnterTimeOfPersonLeaving = containerEnteringTimes.get( personLeavingContainer.getPersonId() );
+                        Double containerEnterTimeOfOtherPerson = containerEnteringTimes.get( otherPerson.getPersonId() );
+
+                        // persons leaving their first-ever activity have no starting time for that activity.  Need to hedge against that.  Since all persons
+                        // start healthy (the first seeds are set at enterVehicle), we can make some assumptions.
+                        if ( containerEnterTimeOfPersonLeaving==null && containerEnterTimeOfOtherPerson==null ) {
+                                throw new RuntimeException( "should not happen" );
+                                // null should only happen at first activity.  However, at first activity all persons are susceptible.  So the only way we
+                                // can get here if an infected person entered the container and is now leaving again, while the other person has been in the
+                                // container from the beginning.  ????  kai, mar'20
+                        }
+                        if ( containerEnterTimeOfPersonLeaving==null ) {
+                                containerEnterTimeOfPersonLeaving = Double.NEGATIVE_INFINITY;
+                        }
+                        if ( containerEnterTimeOfOtherPerson==null ) {
+                                containerEnterTimeOfOtherPerson = Double.NEGATIVE_INFINITY;
+                        }
+
+                        double jointTimeInVeh = now - Math.max( containerEnterTimeOfPersonLeaving, containerEnterTimeOfOtherPerson );
+
+                        // yyyyyy replace with exponential model by Smieszek.  Note that the equation below is an approximation, which is acceptable for
+                        // small probabilities.  For large probabilities, the equation below results in values that are too high: even with high infection
+                        // probabilities, there is always _some_ proba that one does not get infected.
+
+                        if ( rnd.nextDouble() < jointTimeInVeh/3600. * infectionProbaPerHour ) {
+                                if ( personLeavingContainer.getStatus()==Status.susceptible ) {
+                                        infectPerson( personLeavingContainer, otherPerson, now );
+                                } else {
+                                        infectPerson( otherPerson, personLeavingContainer, now );
+                                }
+                        }
+
+                        if (contactPersons == 10) {
+                                break;
+                        }
+
+                }
 
         }
-        private void infectionDynamics( Map<Id<Person>,PersonWrapper> persons, double now ){
-
-            for( PersonWrapper infector : persons.values() ){
-                    if( infector.getStatus() == Status.infected ){
-                            for( PersonWrapper person : persons.values() ){
-                                    if ( rnd.nextDouble() < 0.0001 && person.getStatus().equals(Status.susceptible)){
-                                            infectPerson( person, infector, now );
-                                    }
-                            }
-                    }
-            }
-
-    }
+        /** @noinspection BooleanMethodIsAlwaysInverted*/
+        private boolean hasStatusRelevantForInfectionDynamics( PersonWrapper personWrapper ){
+                switch( personWrapper.getStatus() ) {
+                        case susceptible:
+                                return true;
+                        case infectedButNotContagious:
+                                return false;
+                        case contagious:
+                                return true;
+                        case quarantine:
+                                return false;
+                        case immune:
+                                return false;
+                        default:
+                                throw new IllegalStateException( "Unexpected value: " + personWrapper.getStatus() );
+                }
+        }
         private double lastTimeStep = 0 ;
         private int specificInfectionsCnt = 300;
         private void infectPerson( PersonWrapper personWrapper, PersonWrapper infector, double now ){
@@ -231,15 +277,15 @@ class InfectionEventHandler implements BasicEventHandler {
                         return;
                 }
                 Status prevStatus = personWrapper.getStatus();
-                personWrapper.setStatus( Status.infected );
+                personWrapper.setStatus( Status.infectedButNotContagious );
                 if ( scenario!=null ){
                         final Person person = PopulationUtils.findPerson( personWrapper.getPersonId(), scenario );
                         if( person != null ){
                                 person.getAttributes().putAttribute( AgentSnapshotInfo.marker, true );
                         }
                 }
-                if ( prevStatus!= Status.infected ) {
-                		personWrapper.setInfectionDate(iteration);
+                if ( prevStatus!= Status.infectedButNotContagious ) {
+                        personWrapper.setInfectionDate(iteration);
                         if (personWrapper.getPersonId().toString().startsWith("pt_pt")) {
                                 noOfInfectedDrivers++;
                         }
@@ -291,35 +337,49 @@ class InfectionEventHandler implements BasicEventHandler {
                 }
         }
         @Override public void reset( int iteration ){
-        		populationSize = 0;
+                populationSize = 0;
                 for (PersonWrapper person : personMap.values()) {
-                	if (!person.getStatus().equals(Status.susceptible)) {
-                		if (iteration - person.getInfectionDate()  == 7 && rnd.nextBoolean() == true ) {
-                    		person.setStatus(Status.quarantine);
-                    		noOfPersonsInQuarantine++;
-                    		noOfInfectedPersons--;
-                    	}
-                    	if (iteration - person.getInfectionDate()  == 14 ) {
-                    		if (person.getStatus().equals(Status.quarantine)) {
-                    			noOfPersonsInQuarantine--;
-                    		}
-                    		if (person.getStatus().equals(Status.infected)) {
-                    			noOfInfectedPersons--;
-                    		}
-                    		person.setStatus(Status.immune);
-                    		noOfImmunePersons++;
-                    	}
-                	}
-            		if (!person.getPersonId().toString().startsWith("pt_pt") && !person.getPersonId().toString().startsWith("pt_tr")) {
-            			populationSize++;
-            		}
-                	
+                        if (!person.getPersonId().toString().startsWith("pt_pt") && !person.getPersonId().toString().startsWith("pt_tr")) {
+                                populationSize++;
+                        }
+                        switch ( person.getStatus() ) {
+                                case susceptible:
+                                        break;
+                                case infectedButNotContagious:
+                                        if ( iteration - person.getInfectionDate() ==1 ) {
+                                                person.setStatus( Status.contagious );
+                                        }
+                                        break;
+                                case contagious:
+                                        if (iteration - person.getInfectionDate()  >= 7 && rnd.nextDouble() < 0.5 ) {
+                                                noOfInfectedPersons--;
+                                                person.setStatus(Status.quarantine);
+                                                noOfPersonsInQuarantine++;
+                                        }
+                                        if ( iteration - person.getInfectionDate() >= 14 ) {
+                                                noOfInfectedPersons--;
+                                                person.setStatus( Status.immune);
+                                                noOfImmunePersons++;
+                                        }
+                                        break;
+                                case quarantine:
+                                        if (iteration - person.getInfectionDate()  >= 14 ) {
+                                                noOfPersonsInQuarantine--;
+                                                person.setStatus(Status.immune);
+                                                noOfImmunePersons++;
+                                        }
+                                        break;
+                                case immune:
+                                        break;
+                                default:
+                                        throw new IllegalStateException( "Unexpected value: " + person.getStatus() );
+                        }
                 }
-                
+
                 this.iteration = iteration;
-                
+
                 log.warn("===============================");
-                log.warn("Beginning iteration " + this.iteration);
+                log.warn("Beginning day " + this.iteration);
                 log.warn("No of susceptible persons=" + (populationSize - noOfInfectedPersons - noOfPersonsInQuarantine - noOfImmunePersons));
                 log.warn( "No of infected persons=" + noOfInfectedPersons );
                 log.warn( "No of persons in quarantine=" + noOfPersonsInQuarantine );
@@ -343,44 +403,12 @@ class InfectionEventHandler implements BasicEventHandler {
                         return pseudoFacilites;
                 }
         }
-        private static class VehicleWrapper {
-                private final Id<Vehicle> vehicleId;
-                private Map<Id<Person>,PersonWrapper> persons = new LinkedHashMap<>();
-                private Map<Id<Person>,Double> entries = new LinkedHashMap<>();
-                
-                VehicleWrapper( Id<Vehicle> vehicleId ) {
-                        this.vehicleId = vehicleId;
-                }
-                void addPerson( PersonWrapper person ) {
-                        persons.put( person.getPersonId(), person );
-                }
-                void removePerson( Id<Person> personId ) {
-                        persons.remove( personId );
-                }
-                void addEntry( Id<Person> personId, double entryTime ) {
-                    	entries.put( personId, entryTime );
-                }
-                void removeEntry( Id<Person> personId ) {
-                		entries.remove( personId );
-                }
-                Id<Vehicle> getVehicleId(){
-                        return vehicleId;
-                }
-                Map<Id<Person>,PersonWrapper> getPersons(){
-                        return Collections.unmodifiableMap( persons );
-                }
-                Map<Id<Person>,Double> getEntries(){
-                    return Collections.unmodifiableMap( entries );
-                }
-        }
         private static class PersonWrapper {
                 private final Id<Person> personId;
-                private Id<Link> lastLink;
                 private Status status = Status.susceptible;
                 private int infectionDate;
                 PersonWrapper( Id<Person> personId ) {
                         this.personId = personId;
-                        this.lastLink = null;
                 }
                 void setStatus( Status status ) {
                         this.status = status;
@@ -391,36 +419,50 @@ class InfectionEventHandler implements BasicEventHandler {
                 Status getStatus(){
                         return status;
                 }
-                Id<Link> getLastLink(){
-                        return lastLink;
-                }
-                void setLinkId( Id<Link> lastLink ){
-                        this.lastLink = lastLink;
-                }
                 void setInfectionDate (int date) {
-                	this.infectionDate = date;
+                        this.infectionDate = date;
                 }
                 int getInfectionDate () {
-                	return this.infectionDate;
+                        return this.infectionDate;
                 }
         }
-        private static class PseudoFacilityWrapper {
-                private final String pseudoFacilityId;
+        private static class ContainerWrapper<T> {
+                private final Id<T> containerId;
                 private Map<Id<Person>,PersonWrapper> persons = new LinkedHashMap<>();
-                PseudoFacilityWrapper(String pseudoFacilityId) {
-                        this.pseudoFacilityId = pseudoFacilityId;
+                private Map<Id<Person>,Double> entries = new LinkedHashMap<>();
+
+                ContainerWrapper( Id<T> containerId ) {
+                        this.containerId = containerId;
                 }
-                void addPerson( PersonWrapper person ) {
+                void addPerson( PersonWrapper person, double now ) {
                         persons.put( person.getPersonId(), person );
+                        entries.put(  person.getPersonId(), now );
                 }
                 PersonWrapper removePerson( Id<Person> personId ) {
+                        entries.remove( personId );
                         return persons.remove( personId );
+                }
+                Id<T> getContainerId(){
+                        return containerId;
                 }
                 Map<Id<Person>,PersonWrapper> getPersons(){
                         return Collections.unmodifiableMap( persons );
                 }
+                Map<Id<Person>,Double> getContainerEnteringTimes(){
+                        return Collections.unmodifiableMap( entries );
+                }
         }
-        enum Status {susceptible, infected, quarantine, immune};
+        private static class VehicleWrapper extends ContainerWrapper<Vehicle>{
+                VehicleWrapper( Id<Vehicle> vehicleId ){
+                        super( vehicleId );
+                }
+        }
+        private static class PseudoFacilityWrapper extends ContainerWrapper<Facility>{
+                PseudoFacilityWrapper( Id<Facility> facilityId ){
+                        super( facilityId );
+                }
+        }
+        enum Status {susceptible, infectedButNotContagious, contagious, quarantine, immune};
 
 }
 
