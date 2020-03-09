@@ -24,7 +24,8 @@ class KNEventsInfection{
 
                 Config config = ConfigUtils.createConfig( new EpisimConfigGroup() );
                 EpisimConfigGroup episimConfig = ConfigUtils.addOrGetModule( config, EpisimConfigGroup.class );
-                episimConfig.setCase( EpisimConfigGroup.Case.berlin1pct );
+                episimConfig.setCase( EpisimConfigGroup.Case.snz25pct );
+                episimConfig.setSample(0.25);
 
                 
         	String filename;
@@ -35,6 +36,9 @@ class KNEventsInfection{
                         case berlin10pct:
                                 filename = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/output-berlin-v5.4-10pct/berlin-v5.4-10pct.output_events_reduced.xml.gz";
                                 break;
+                        case snz25pct:
+                            	filename = "../epidemic/snzDrt220.0.events.reduced.xml.gz";
+                            	break;
                         default:
                                 throw new IllegalStateException( "Unexpected value: " + episimConfig.getCase() );
                 }

@@ -31,7 +31,8 @@ class InfectionEventHandler implements BasicEventHandler {
 
 
         private static final Logger log = Logger.getLogger( InfectionEventHandler.class );
-        private static final double calibrationParameter = 0.0002;
+        private static final double calibrationParameter = 0.000002;
+        private static final boolean scenarioWithFacilites = true;
 
         @Inject private Scenario scenario;
 
@@ -51,7 +52,7 @@ class InfectionEventHandler implements BasicEventHandler {
         private BufferedWriter infectionEventsWriter;
 
         private enum InfectionsWriterFields{ time, nInfected, nInfectedDrivers, nInfectedPersons, nPersonsInQuarantine, nImmunePersons, nSusceptiblePersons }
-        private enum InfectionEventsWriterFields{ time, infector, infected }
+        private enum InfectionEventsWriterFields{ time, infector, infected, infectionType }
 
         private int iteration=0;
 
@@ -127,7 +128,7 @@ class InfectionEventHandler implements BasicEventHandler {
 
                 }  else if (event instanceof ActivityStartEvent) {
 
-                        if(((ActivityStartEvent) event).getPersonId().toString().startsWith("drt")){
+                        if(((ActivityStartEvent) event).getPersonId().toString().startsWith("drt") || ((ActivityStartEvent) event).getActType().endsWith("interaction")){
                                 return;
                         }
 
@@ -138,7 +139,7 @@ class InfectionEventHandler implements BasicEventHandler {
                         LinkWrapper linkWrapper = this.linkMap.computeIfAbsent( ((ActivityStartEvent) event).getLinkId(), LinkWrapper::new );
 
                         // create pseudo facility id that includes the activity type:
-                        Id<Facility> pseudoFacilityId = createPseudoFacilityId( ((ActivityStartEvent) event).getActType(), linkWrapper.getLinkId() );
+                        Id<Facility> pseudoFacilityId = createPseudoFacilityId( ((ActivityStartEvent) event), linkWrapper.getLinkId() );
 
                         // find the facility
                         PseudoFacilityWrapper pseudoFacilityWrapper = this.pseudoFacilityMap.computeIfAbsent(pseudoFacilityId, PseudoFacilityWrapper::new);
@@ -152,8 +153,14 @@ class InfectionEventHandler implements BasicEventHandler {
                 }
 
         }
-        private Id<Facility> createPseudoFacilityId( String activityType, Id<Link> linkId ) {
-                return Id.create( activityType.split("_" )[0] + "_" + linkId.toString(), Facility.class );
+        private Id<Facility> createPseudoFacilityId( ActivityStartEvent event, Id<Link> linkId ) {
+        		if (scenarioWithFacilites ) {
+        			return Id.create( event.getFacilityId(), Facility.class );
+        		}
+        		else {
+        			return Id.create( event.getActType().split("_" )[0] + "_" + linkId.toString(), Facility.class );
+        		}
+                
         }
         private void handleInitialInfections( PersonWrapper personWrapper ){
                 // initial infections:
@@ -174,13 +181,13 @@ class InfectionEventHandler implements BasicEventHandler {
         }
         private void infectionDynamicsVehicle( PersonWrapper personLeavingVehicle, VehicleWrapper vehicle, double now ){
                 final double infectionProbaPerHour = 0.1;
-                infectionDynamicsGeneralized( personLeavingVehicle, vehicle, infectionProbaPerHour, now );
+                infectionDynamicsGeneralized( personLeavingVehicle, vehicle, infectionProbaPerHour, now, "Vehicle" );
         }
         private void infectionDynamicsFacility( PersonWrapper personLeavingFacility, PseudoFacilityWrapper facility,  double now ) {
                 final double infectionProbaPerHour = 0.01;
-                infectionDynamicsGeneralized( personLeavingFacility, facility, infectionProbaPerHour, now );
+                infectionDynamicsGeneralized( personLeavingFacility, facility, infectionProbaPerHour, now, "Activity" );
         }
-        private void infectionDynamicsGeneralized( PersonWrapper personLeavingContainer, ContainerWrapper<?> container, double infectionProbaPerHour, double now ) {
+        private void infectionDynamicsGeneralized( PersonWrapper personLeavingContainer, ContainerWrapper<?> container, double infectionProbaPerHour, double now, String infectionType ) {
 
 //        	Every time an agent leaves a container, a group of contact persons is determined. The more time agents spend together in a container the higher the proba that they become contact persons.
 //        	If the agent is infected, it can infect susceptible agents in its contact group.
@@ -245,9 +252,9 @@ class InfectionEventHandler implements BasicEventHandler {
                         double infectionProba = 1 - Math.exp( - calibrationParameter * jointTimeInContainer);
                         if ( rnd.nextDouble() < infectionProba ) {
                             if ( personLeavingContainer.getStatus()==Status.susceptible ) {
-                                    infectPerson( personLeavingContainer, otherPerson, now );
+                                    infectPerson( personLeavingContainer, otherPerson, now, infectionType );
                             } else {
-                                    infectPerson( otherPerson, personLeavingContainer, now );
+                                    infectPerson( otherPerson, personLeavingContainer, now, infectionType );
                             }
                         }	
 
@@ -289,7 +296,7 @@ class InfectionEventHandler implements BasicEventHandler {
         }
         private double lastTimeStep = 0 ;
         private int specificInfectionsCnt = 300;
-        private void infectPerson( PersonWrapper personWrapper, PersonWrapper infector, double now ){
+        private void infectPerson( PersonWrapper personWrapper, PersonWrapper infector, double now, String infectionType ){
                 if ( personWrapper.getPersonId().toString().startsWith( "pt_pt" ) || personWrapper.getPersonId().toString().startsWith( "pt_tr" ) ) {
                         return;
                 }
@@ -310,13 +317,14 @@ class InfectionEventHandler implements BasicEventHandler {
                                 noOfInfectedPersons++;
                         }
                         if ( specificInfectionsCnt-- > 0 ){
-                                log.warn( "infection of personId=" + personWrapper.getPersonId() + " by person=" + infector.getPersonId() );
+                                log.warn( "infection of personId=" + personWrapper.getPersonId() + " by person=" + infector.getPersonId() + " at/in " + infectionType );
                         }
                         {
                                 String[] array = new String[InfectionEventsWriterFields.values().length];
                                 array[InfectionEventsWriterFields.time.ordinal()] = Double.toString( now + iteration * 3600. * 24. );
                                 array[InfectionEventsWriterFields.infector.ordinal()] = infector.getPersonId().toString();
                                 array[InfectionEventsWriterFields.infected.ordinal()] = personWrapper.getPersonId().toString();
+                                array[InfectionEventsWriterFields.infectionType.ordinal()] = infectionType;
 
                                 write( array, infectionEventsWriter );
 
