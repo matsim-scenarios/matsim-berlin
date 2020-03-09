@@ -31,7 +31,7 @@ class InfectionEventHandler implements BasicEventHandler {
 
 
         private static final Logger log = Logger.getLogger( InfectionEventHandler.class );
-        private static final double calibrationParameter = 0.000002;
+        private static final double calibrationParameter = 0.000005;
         private static final boolean scenarioWithFacilites = true;
 
         @Inject private Scenario scenario;
@@ -379,19 +379,19 @@ class InfectionEventHandler implements BasicEventHandler {
                                         }
                                         break;
                                 case contagious:
-                                        if (iteration - person.getInfectionDate()  >= 7 && rnd.nextDouble() < 0.5 ) {
+                                        if (iteration - person.getInfectionDate()  == 7 && rnd.nextDouble() < 0.5 ) {
                                                 noOfInfectedPersons--;
                                                 person.setStatus(Status.quarantine);
                                                 noOfPersonsInQuarantine++;
                                         }
-                                        if ( iteration - person.getInfectionDate() >= 14 ) {
+                                        if ( iteration - person.getInfectionDate() == 14 ) {
                                                 noOfInfectedPersons--;
                                                 person.setStatus( Status.immune);
                                                 noOfImmunePersons++;
                                         }
                                         break;
                                 case quarantine:
-                                        if (iteration - person.getInfectionDate()  >= 14 ) {
+                                        if (iteration - person.getInfectionDate()  == 14 ) {
                                                 noOfPersonsInQuarantine--;
                                                 person.setStatus(Status.immune);
                                                 noOfImmunePersons++;
