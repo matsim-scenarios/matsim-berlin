@@ -31,7 +31,7 @@ class InfectionEventHandler implements BasicEventHandler {
 
 
         private static final Logger log = Logger.getLogger( InfectionEventHandler.class );
-        private static final double calibrationParameter = 0.000005;
+        private static final double calibrationParameter = 0.0000005;
         private static final boolean scenarioWithFacilites = true;
 
         @Inject private Scenario scenario;
@@ -102,6 +102,10 @@ class InfectionEventHandler implements BasicEventHandler {
                         }
 
                 }  else if ( event instanceof PersonEntersVehicleEvent ) {
+                		
+                		if (((PersonEntersVehicleEvent) event).getPersonId().toString().startsWith("pt_pt") || ((PersonEntersVehicleEvent) event).getPersonId().toString().startsWith("pt_tr")) {
+            				return;
+            			}
 
                         // find the person:
                         PersonWrapper personWrapper = this.personMap.computeIfAbsent( ((PersonEntersVehicleEvent) event).getPersonId(), PersonWrapper::new );
@@ -115,6 +119,10 @@ class InfectionEventHandler implements BasicEventHandler {
                         handleInitialInfections( personWrapper );
 
                 }  else if (event instanceof PersonLeavesVehicleEvent ) {
+                		
+                		if (((PersonLeavesVehicleEvent) event).getPersonId().toString().startsWith("pt_pt") || ((PersonLeavesVehicleEvent) event).getPersonId().toString().startsWith("pt_tr")) {
+            				return;
+            			}
 
                         // find vehicle:
                         VehicleWrapper vehicle = this.vehicleMap.get( ((PersonLeavesVehicleEvent) event).getVehicleId() );
