@@ -26,7 +26,7 @@ import org.matsim.core.controler.TerminationCriterion;
 
 import javax.inject.Inject;
 
-class JRTerminateDynamically implements TerminationCriterion {
+public class JRTerminateDynamically implements TerminationCriterion {
 
 	private final int lastIteration;
 

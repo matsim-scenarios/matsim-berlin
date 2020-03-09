@@ -239,6 +239,7 @@ public class JRDynamicShutdownControlerListener implements IterationStartsListen
 //                        log.info("Setting weight for " + planStrategyImpl.toString() + " (subpopulation " + subpopulation + ") to 0.");
                     strategyManager.addChangeRequest(nextDisableInnovativeStrategiesIteration, planStrategyImpl, subpopulation, 0.);
 
+
                 }
             }
         }

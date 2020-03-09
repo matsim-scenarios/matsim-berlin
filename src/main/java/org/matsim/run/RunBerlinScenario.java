@@ -78,14 +78,22 @@ public final class RunBerlinScenario {
 //		config.plans().setInputFile("C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\run\\berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");//src/main/java/org/matsim/run/berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");
 		config.plans().setInputFile("berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");//src/main/java/org/matsim/run/berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");
 
-		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists); //jr
-//		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.failIfDirectoryExists);
+//		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists); //jr
+		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.failIfDirectoryExists);
 //		config.qsim().setFlowCapFactor(0.015);
 //		config.qsim().setStorageCapFactor(0.015);
 
-		config.controler().setLastIteration(1250);
 
-		config.transit().setUsingTransitInMobsim(false); //jr
+		//jr start
+		config.plans().setInputFile("berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");
+		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.failIfDirectoryExists);
+		config.qsim().setNumberOfThreads(8);
+		config.global().setNumberOfThreads(8);
+		config.controler().setLastIteration(1250);
+		config.controler().setWriteEventsInterval(500);
+		config.controler().setWritePlansInterval(500);
+		config.transit().setUsingTransitInMobsim(false); //jr end
+
 
 
 
@@ -94,6 +102,7 @@ public final class RunBerlinScenario {
 
 		Controler controler = prepareControler( scenario ) ;
 		controler.run() ;
+
 
 	}
 
@@ -136,28 +145,13 @@ public final class RunBerlinScenario {
 		} );
 
 
-//		jr
+		// jr start
 		 controler.addOverridingModule(new AbstractModule() {
 					@Override
 					public void install() {
 						this.addControlerListenerBinding().to(JRModeChoiceCoverageControlerListener.class);
 					}
 				});
-//
-//		 // jr2
-//		controler.addOverridingModule(new AbstractModule() {
-//			@Override
-//			public void install() {
-//				this.addControlerListenerBinding().to(JRDynamicShutdownControlerListener.class);
-//			}
-//		});
-
-//		controler.addOverridingModule(new AbstractModule() {
-//			@Override
-//			public void install() {
-//				bind(TerminationCriterion.class).to(JRTerminateScoreConverganceWithInnovation.class);
-//			}
-//		});
 
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
@@ -172,6 +166,9 @@ public final class RunBerlinScenario {
 				bind(TerminationCriterion.class).to(JRTerminateDynamically.class);
 			}
 		});
+
+		// jr end
+
 
 		return controler;
 	}

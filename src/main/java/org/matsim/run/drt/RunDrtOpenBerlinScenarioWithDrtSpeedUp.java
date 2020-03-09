@@ -23,9 +23,15 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.config.Config;
+import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.controler.OutputDirectoryHierarchy;
+import org.matsim.core.controler.TerminationCriterion;
 import org.matsim.drtSpeedUp.DrtSpeedUpConfigGroup;
 import org.matsim.drtSpeedUp.DrtSpeedUpModule;
+import org.matsim.run.JRDynamicShutdownControlerListener;
+import org.matsim.run.JRModeChoiceCoverageControlerListener;
+import org.matsim.run.JRTerminateDynamically;
 import org.matsim.run.RunBerlinScenario;
 
 /**
@@ -46,6 +52,18 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 		
 		Config config = RunDrtOpenBerlinScenario.prepareConfig( args , new DrtSpeedUpConfigGroup() ) ;
 		DrtSpeedUpModule.adjustConfig(config);
+
+		//jr start
+		config.plans().setInputFile("./berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");
+		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.failIfDirectoryExists);
+//		config.qsim().setNumberOfThreads(8);
+//		config.global().setNumberOfThreads(8);
+		config.controler().setLastIteration(1250);
+		config.controler().setWriteEventsInterval(500);
+		config.controler().setWritePlansInterval(500);
+		config.transit().setUsingTransitInMobsim(false); //jr end
+
+
 		
 		Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 		for( Person person : scenario.getPopulation().getPersons().values() ){
@@ -55,6 +73,30 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 		Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
 		
 		controler.addOverridingModule(new DrtSpeedUpModule());
+
+		// jr start
+		controler.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				this.addControlerListenerBinding().to(JRModeChoiceCoverageControlerListener.class);
+			}
+		});
+
+		controler.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				this.addControlerListenerBinding().to(JRDynamicShutdownControlerListener.class);
+			}
+		});
+
+		controler.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				bind(TerminationCriterion.class).to(JRTerminateDynamically.class);
+			}
+		});
+
+		// jr end
 		
 		controler.run() ;
 		
