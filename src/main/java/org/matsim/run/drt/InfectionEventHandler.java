@@ -31,6 +31,7 @@ class InfectionEventHandler implements BasicEventHandler {
 
 
         private static final Logger log = Logger.getLogger( InfectionEventHandler.class );
+        private static final double calibrationParameter = 0.0002;
 
         @Inject private Scenario scenario;
 
@@ -38,7 +39,7 @@ class InfectionEventHandler implements BasicEventHandler {
         private Map<Id<Vehicle>,VehicleWrapper> vehicleMap = new HashMap<>();
         private Map<Id<Facility>,PseudoFacilityWrapper> pseudoFacilityMap = new HashMap<>();
         private Map<Id<Link>,LinkWrapper> linkMap = new HashMap<>();
-
+        
         private int cnt = 10 ;
         private int noOfInfectedPersons = cnt;
         private int noOfPersonsInQuarantine = 0;
@@ -89,12 +90,12 @@ class InfectionEventHandler implements BasicEventHandler {
 
                         // go through all facilities on link to eventually find the person and remove it:
                         for( PseudoFacilityWrapper facilityWrapper : link.getPseudoFacilities() ){
-                                PersonWrapper person = facilityWrapper.removePerson( ((ActivityEndEvent) event).getPersonId() );
+                                PersonWrapper person = facilityWrapper.getPersons().get( ((ActivityEndEvent) event).getPersonId() );
                                 if( person != null ){
 
                                         // run infection dynamics for this person and facility:
                                         infectionDynamicsFacility( person, facilityWrapper, event.getTime() );
-
+                                        facilityWrapper.removePerson( person.getPersonId() );
                                         break;
                                 }
                         }
@@ -118,9 +119,11 @@ class InfectionEventHandler implements BasicEventHandler {
                         VehicleWrapper vehicle = this.vehicleMap.get( ((PersonLeavesVehicleEvent) event).getVehicleId() );
 
                         // remove person from vehicle:
-                        PersonWrapper personWrapper = vehicle.removePerson( ((PersonLeavesVehicleEvent) event).getPersonId() );
+                        PersonWrapper personWrapper = vehicle.getPersons().get( ((PersonLeavesVehicleEvent) event).getPersonId() );
 
                         infectionDynamicsVehicle( personWrapper, vehicle, event.getTime() );
+                        
+                        vehicle.removePerson( personWrapper.getPersonId() );
 
                 }  else if (event instanceof ActivityStartEvent) {
 
@@ -200,8 +203,11 @@ class InfectionEventHandler implements BasicEventHandler {
 
                         // For the time being, will just assume that the first 10 persons are the ones we interact with.  Note that because of
                         // shuffle, those are 10 different persons every day.
-
-                        contactPersons++ ;
+                		if ( personLeavingContainer.getPersonId()==otherPerson.getPersonId() ) {
+                			continue;
+                		}
+                		contactPersons++;
+ 
                         // (we count "quarantine" as well since they essentially represent "holes", i.e. persons who are no longer there and thus the
                         // density in the transit container goes down.  kai, mar'20)
 
@@ -232,19 +238,30 @@ class InfectionEventHandler implements BasicEventHandler {
                                 containerEnterTimeOfOtherPerson = Double.NEGATIVE_INFINITY;
                         }
 
-                        double jointTimeInVeh = now - Math.max( containerEnterTimeOfPersonLeaving, containerEnterTimeOfOtherPerson );
+                        double jointTimeInContainer = now - Math.max( containerEnterTimeOfPersonLeaving, containerEnterTimeOfOtherPerson );
+                        
+//                      exponential model by Smieszek. 
+//                      equation 3.2 is used (simplified equation 3.1 which includes the shedding rate and contact intensity into the calibrationParameter
+                        double infectionProba = 1 - Math.exp( - calibrationParameter * jointTimeInContainer);
+                        if ( rnd.nextDouble() < infectionProba ) {
+                            if ( personLeavingContainer.getStatus()==Status.susceptible ) {
+                                    infectPerson( personLeavingContainer, otherPerson, now );
+                            } else {
+                                    infectPerson( otherPerson, personLeavingContainer, now );
+                            }
+                        }	
 
                         // yyyyyy replace with exponential model by Smieszek.  Note that the equation below is an approximation, which is acceptable for
                         // small probabilities.  For large probabilities, the equation below results in values that are too high: even with high infection
                         // probabilities, there is always _some_ proba that one does not get infected.
 
-                        if ( rnd.nextDouble() < jointTimeInVeh/3600. * infectionProbaPerHour ) {
-                                if ( personLeavingContainer.getStatus()==Status.susceptible ) {
-                                        infectPerson( personLeavingContainer, otherPerson, now );
-                                } else {
-                                        infectPerson( otherPerson, personLeavingContainer, now );
-                                }
-                        }
+//                        if ( rnd.nextDouble() < jointTimeInVeh/3600. * infectionProbaPerHour ) {
+//                                if ( personLeavingContainer.getStatus()==Status.susceptible ) {
+//                                        infectPerson( personLeavingContainer, otherPerson, now );
+//                                } else {
+//                                        infectPerson( otherPerson, personLeavingContainer, now );
+//                                }
+//                        }
 
                         if (contactPersons == 10) {
                                 break;
@@ -337,6 +354,9 @@ class InfectionEventHandler implements BasicEventHandler {
                 }
         }
         @Override public void reset( int iteration ){
+        	for (PseudoFacilityWrapper facility : this.pseudoFacilityMap.values()) {
+        		facility.clearPersons();
+        	}
                 populationSize = 0;
                 for (PersonWrapper person : personMap.values()) {
                         if (!person.getPersonId().toString().startsWith("pt_pt") && !person.getPersonId().toString().startsWith("pt_tr")) {
@@ -450,6 +470,9 @@ class InfectionEventHandler implements BasicEventHandler {
                 }
                 Map<Id<Person>,Double> getContainerEnteringTimes(){
                         return Collections.unmodifiableMap( entries );
+                }
+                void clearPersons() {
+                	this.persons.clear();
                 }
         }
         private static class VehicleWrapper extends ContainerWrapper<Vehicle>{
