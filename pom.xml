@@ -194,6 +194,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-eclipse-plugin</artifactId>
+				<version>2.4</version>
 				<configuration>
 					<downloadSources>true</downloadSources>
 					<downloadJavadocs>true</downloadJavadocs>
@@ -249,6 +250,7 @@
 			<plugin>  <!-- Create sources.jar -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
+				<version>3.2.0</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
