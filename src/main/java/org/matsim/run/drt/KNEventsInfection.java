@@ -3,6 +3,7 @@ package org.matsim.run.drt;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.controler.ControlerUtils;
 import org.matsim.core.events.EventsUtils;
 
 class KNEventsInfection{
@@ -46,7 +47,7 @@ class KNEventsInfection{
                 EventsManager events = EventsUtils.createEventsManager();
                 
                 events.addHandler( new InfectionEventHandler() );
-
+                ControlerUtils.checkConfigConsistencyAndWriteToLog(config, "Just before starting iterations");
                 for ( int iteration=0 ; iteration<=1000 ; iteration++ ){
                         events.resetHandlers( iteration );
                         EventsUtils.readEvents( events, filename );
