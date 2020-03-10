@@ -260,7 +260,11 @@ class InfectionEventHandler implements BasicEventHandler {
                         
 //                      exponential model by Smieszek. 
 //                      equation 3.2 is used (simplified equation 3.1 which includes the shedding rate and contact intensity into the calibrationParameter
-                        double infectionProba = 1 - Math.exp( - calibrationParameter * jointTimeInContainer);
+                        int contactIntensity = 1;
+                        if (container instanceof VehicleWrapper) {
+                        	contactIntensity = 10;
+                        }
+                        double infectionProba = 1 - Math.exp( - calibrationParameter * contactIntensity * jointTimeInContainer);
                         if ( rnd.nextDouble() < infectionProba ) {
                             if ( personLeavingContainer.getStatus()==Status.susceptible ) {
                                     infectPerson( personLeavingContainer, otherPerson, now, infectionType );
