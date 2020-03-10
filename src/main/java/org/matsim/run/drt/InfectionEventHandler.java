@@ -78,9 +78,6 @@ class InfectionEventHandler implements BasicEventHandler {
         }
 
         @Override public void handleEvent( Event event ){
-                // @Sebastian: Es gibt in PopulationUtils, FaciitiesUtils einige helper methods, die mit diesen Unklarheiten bzgl. linkIds, facilityIds
-                // umgehen.  Schaust Du bitte mal rein?  Im Grunde muesste es reichen, sich fuer die Dynamik in Gebaeuden nur die Activity events
-                // anzuschauen, und fuer die Dynamik in Vehicles nur die Vehicle enter/leave events.  Danke.  kai, mar'20
 
                 // the events follow the matsim sequence, i.e. all agents start at activities.  kai, mar'20
 
@@ -103,6 +100,7 @@ class InfectionEventHandler implements BasicEventHandler {
 
                 }  else if ( event instanceof PersonEntersVehicleEvent ) {
                 		
+                		// ignore pt drivers
                 		if (((PersonEntersVehicleEvent) event).getPersonId().toString().startsWith("pt_pt") || ((PersonEntersVehicleEvent) event).getPersonId().toString().startsWith("pt_tr")) {
             				return;
             			}
@@ -120,6 +118,7 @@ class InfectionEventHandler implements BasicEventHandler {
 
                 }  else if (event instanceof PersonLeavesVehicleEvent ) {
                 		
+                		// ignore pt drivers
                 		if (((PersonLeavesVehicleEvent) event).getPersonId().toString().startsWith("pt_pt") || ((PersonLeavesVehicleEvent) event).getPersonId().toString().startsWith("pt_tr")) {
             				return;
             			}
@@ -135,7 +134,8 @@ class InfectionEventHandler implements BasicEventHandler {
                         vehicle.removePerson( personWrapper.getPersonId() );
 
                 }  else if (event instanceof ActivityStartEvent) {
-
+                		
+                		//ignore drt and stage activities
                         if(((ActivityStartEvent) event).getPersonId().toString().startsWith("drt") || ((ActivityStartEvent) event).getActType().endsWith("interaction")){
                                 return;
                         }
@@ -173,12 +173,10 @@ class InfectionEventHandler implements BasicEventHandler {
         private void handleInitialInfections( PersonWrapper personWrapper ){
                 // initial infections:
                 if( cnt > 0 ){
-                        if ( !personWrapper.getPersonId().toString().startsWith( "pt_pt" ) && !personWrapper.getPersonId().toString().startsWith( "pt_tr" ) ) {
-                                personWrapper.setStatus( Status.infectedButNotContagious );
-                                personWrapper.setInfectionDate(iteration);
-                                log.warn(" person " + personWrapper.personId +" has initial infection");
-                                cnt--;
-                        }
+                		personWrapper.setStatus( Status.infectedButNotContagious );
+                		personWrapper.setInfectionDate(iteration);
+                		log.warn(" person " + personWrapper.personId +" has initial infection");
+                		cnt--;
                         if ( scenario!=null ){
                                 final Person person = PopulationUtils.findPerson( personWrapper.personId, scenario );
                                 if( person != null ){
@@ -188,18 +186,12 @@ class InfectionEventHandler implements BasicEventHandler {
                 }
         }
         private void infectionDynamicsVehicle( PersonWrapper personLeavingVehicle, VehicleWrapper vehicle, double now ){
-                final double infectionProbaPerHour = 0.1;
-                infectionDynamicsGeneralized( personLeavingVehicle, vehicle, infectionProbaPerHour, now, "Vehicle" );
+                infectionDynamicsGeneralized( personLeavingVehicle, vehicle, now, "Vehicle" );
         }
         private void infectionDynamicsFacility( PersonWrapper personLeavingFacility, PseudoFacilityWrapper facility,  double now ) {
-                final double infectionProbaPerHour = 0.01;
-                infectionDynamicsGeneralized( personLeavingFacility, facility, infectionProbaPerHour, now, "Activity" );
+                infectionDynamicsGeneralized( personLeavingFacility, facility, now, "Activity" );
         }
-        private void infectionDynamicsGeneralized( PersonWrapper personLeavingContainer, ContainerWrapper<?> container, double infectionProbaPerHour, double now, String infectionType ) {
-
-//        	Every time an agent leaves a container, a group of contact persons is determined. The more time agents spend together in a container the higher the proba that they become contact persons.
-//        	If the agent is infected, it can infect susceptible agents in its contact group.
-//        	If the agent is susceptible, it can be infected by agents in its contact group. SM, mar'20
+        private void infectionDynamicsGeneralized( PersonWrapper personLeavingContainer, ContainerWrapper<?> container, double now, String infectionType ) {
 
                 if ( !hasStatusRelevantForInfectionDynamics( personLeavingContainer ) ) {
                         return ;
@@ -219,6 +211,7 @@ class InfectionEventHandler implements BasicEventHandler {
                         // For the time being, will just assume that the first 10 persons are the ones we interact with.  Note that because of
                         // shuffle, those are 10 different persons every day.
                 		if ( personLeavingContainer.getPersonId()==otherPerson.getPersonId() ) {
+                			// if person find itself nothing happens
                 			continue;
                 		}
                 		contactPersons++;
@@ -254,6 +247,11 @@ class InfectionEventHandler implements BasicEventHandler {
                         }
 
                         double jointTimeInContainer = now - Math.max( containerEnterTimeOfPersonLeaving, containerEnterTimeOfOtherPerson );
+                        if ( jointTimeInContainer  < 0) {
+                        	log.warn(containerEnterTimeOfPersonLeaving);
+                        	log.warn(containerEnterTimeOfOtherPerson);
+                        	throw new RuntimeException("joint time in cointainer is negative for personLeavingContainer=" + personLeavingContainer.getPersonId() + " and otherPerson=" + otherPerson.getPersonId() + ". Joint time is=" + jointTimeInContainer);
+                        }
                         
 //                      exponential model by Smieszek. 
 //                      equation 3.2 is used (simplified equation 3.1 which includes the shedding rate and contact intensity into the calibrationParameter
@@ -266,18 +264,6 @@ class InfectionEventHandler implements BasicEventHandler {
                                     infectPerson( otherPerson, personLeavingContainer, now, infectionType );
                             }
                         }	
-
-                        // yyyyyy replace with exponential model by Smieszek.  Note that the equation below is an approximation, which is acceptable for
-                        // small probabilities.  For large probabilities, the equation below results in values that are too high: even with high infection
-                        // probabilities, there is always _some_ proba that one does not get infected.
-
-//                        if ( rnd.nextDouble() < jointTimeInVeh/3600. * infectionProbaPerHour ) {
-//                                if ( personLeavingContainer.getStatus()==Status.susceptible ) {
-//                                        infectPerson( personLeavingContainer, otherPerson, now );
-//                                } else {
-//                                        infectPerson( otherPerson, personLeavingContainer, now );
-//                                }
-//                        }
 
                         if (contactPersons == 10) {
                                 break;
@@ -303,13 +289,18 @@ class InfectionEventHandler implements BasicEventHandler {
                                 throw new IllegalStateException( "Unexpected value: " + personWrapper.getStatus() );
                 }
         }
+        
         private double lastTimeStep = 0 ;
         private int specificInfectionsCnt = 300;
+        
         private void infectPerson( PersonWrapper personWrapper, PersonWrapper infector, double now, String infectionType ){
-                if ( personWrapper.getPersonId().toString().startsWith( "pt_pt" ) || personWrapper.getPersonId().toString().startsWith( "pt_tr" ) ) {
-                        return;
-                }
-                Status prevStatus = personWrapper.getStatus();
+
+        		if (personWrapper.getStatus() != Status.susceptible) {
+        			throw new RuntimeException("Person to be infected is not susceptible. Status is=" + personWrapper.getStatus());
+        		}
+        		if (infector.getStatus() != Status.contagious) {
+        			throw new RuntimeException("Infector is not contagious. Status is=" + infector.getStatus());
+        		}
                 personWrapper.setStatus( Status.infectedButNotContagious );
                 if ( scenario!=null ){
                         final Person person = PopulationUtils.findPerson( personWrapper.getPersonId(), scenario );
@@ -317,45 +308,41 @@ class InfectionEventHandler implements BasicEventHandler {
                                 person.getAttributes().putAttribute( AgentSnapshotInfo.marker, true );
                         }
                 }
-                if ( prevStatus!= Status.infectedButNotContagious ) {
-                        personWrapper.setInfectionDate(iteration);
-                        if (personWrapper.getPersonId().toString().startsWith("pt_pt")) {
-                                noOfInfectedDrivers++;
+               
+                personWrapper.setInfectionDate(iteration);
+                if (personWrapper.getPersonId().toString().startsWith("pt_pt")) {
+                		noOfInfectedDrivers++;
                         }
-                        else {
-                                noOfInfectedPersons++;
-                        }
-                        if ( specificInfectionsCnt-- > 0 ){
-                                log.warn( "infection of personId=" + personWrapper.getPersonId() + " by person=" + infector.getPersonId() + " at/in " + infectionType );
-                        }
-                        {
-                                String[] array = new String[InfectionEventsWriterFields.values().length];
-                                array[InfectionEventsWriterFields.time.ordinal()] = Double.toString( now + iteration * 3600. * 24. );
-                                array[InfectionEventsWriterFields.infector.ordinal()] = infector.getPersonId().toString();
-                                array[InfectionEventsWriterFields.infected.ordinal()] = personWrapper.getPersonId().toString();
-                                array[InfectionEventsWriterFields.infectionType.ordinal()] = infectionType;
-
-                                write( array, infectionEventsWriter );
-
-                        }
-                        if ( now - lastTimeStep>=300 ){
-                                lastTimeStep = now;
-//                                log.warn( "No of infected persons=" + noOfInfectedPersons );
-//                                log.warn( "No of infected drivers=" + noOfInfectedDrivers );
-
-                                String[] array = new String[InfectionsWriterFields.values().length];
-
-                                array[InfectionsWriterFields.time.ordinal()] = Double.toString( now + iteration * 3600. * 24. );
-                                array[InfectionsWriterFields.nInfectedDrivers.ordinal()] = Double.toString( noOfInfectedDrivers );
-                                array[InfectionsWriterFields.nInfectedPersons.ordinal()] = Double.toString( noOfInfectedPersons );
-                                array[InfectionsWriterFields.nInfected.ordinal()] = Double.toString( noOfInfectedDrivers + noOfInfectedPersons );
-                                array[InfectionsWriterFields.nPersonsInQuarantine.ordinal()] = Double.toString( noOfPersonsInQuarantine );
-                                array[InfectionsWriterFields.nImmunePersons.ordinal()] = Double.toString( noOfImmunePersons );
-                                array[InfectionsWriterFields.nSusceptiblePersons.ordinal()] = Double.toString( populationSize - noOfInfectedPersons - noOfPersonsInQuarantine - noOfImmunePersons );
-
-                                write( array, infectionsWriter );
-                        }
+                else {
+                		noOfInfectedPersons++;
                 }
+                if ( specificInfectionsCnt-- > 0 ){
+                		log.warn( "infection of personId=" + personWrapper.getPersonId() + " by person=" + infector.getPersonId() + " at/in " + infectionType );
+                }
+                {
+                		String[] array = new String[InfectionEventsWriterFields.values().length];
+                		array[InfectionEventsWriterFields.time.ordinal()] = Double.toString( now + iteration * 3600. * 24. );
+                		array[InfectionEventsWriterFields.infector.ordinal()] = infector.getPersonId().toString();
+                		array[InfectionEventsWriterFields.infected.ordinal()] = personWrapper.getPersonId().toString();
+                		array[InfectionEventsWriterFields.infectionType.ordinal()] = infectionType;
+
+                		write( array, infectionEventsWriter );
+                }
+                if ( now - lastTimeStep>=300 ){
+                		lastTimeStep = now;
+
+                		String[] array = new String[InfectionsWriterFields.values().length];
+
+                		array[InfectionsWriterFields.time.ordinal()] = Double.toString( now + iteration * 3600. * 24. );
+                		array[InfectionsWriterFields.nInfectedDrivers.ordinal()] = Double.toString( noOfInfectedDrivers );
+                		array[InfectionsWriterFields.nInfectedPersons.ordinal()] = Double.toString( noOfInfectedPersons );
+                		array[InfectionsWriterFields.nInfected.ordinal()] = Double.toString( noOfInfectedDrivers + noOfInfectedPersons );
+                		array[InfectionsWriterFields.nPersonsInQuarantine.ordinal()] = Double.toString( noOfPersonsInQuarantine );
+                		array[InfectionsWriterFields.nImmunePersons.ordinal()] = Double.toString( noOfImmunePersons );
+                		array[InfectionsWriterFields.nSusceptiblePersons.ordinal()] = Double.toString( populationSize - noOfInfectedPersons - noOfPersonsInQuarantine - noOfImmunePersons );
+
+                		write( array, infectionsWriter );
+                } 
         }
         private static void write( String[] array, BufferedWriter writer ){
                 StringBuilder line = new StringBuilder();
@@ -376,9 +363,7 @@ class InfectionEventHandler implements BasicEventHandler {
         	}
                 populationSize = 0;
                 for (PersonWrapper person : personMap.values()) {
-                        if (!person.getPersonId().toString().startsWith("pt_pt") && !person.getPersonId().toString().startsWith("pt_tr")) {
-                                populationSize++;
-                        }
+                		populationSize++;
                         switch ( person.getStatus() ) {
                                 case susceptible:
                                         break;
