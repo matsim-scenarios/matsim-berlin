@@ -18,9 +18,11 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
         // ---
         public enum Case { berlin1pct, berlin10pct, snz25pct }
         private Case theCase = Case.berlin1pct;
+        @StringGetter("case")
         public Case getCase(){
                 return theCase;
         }
+        @StringSetter("case")
         public void setCase( Case theCase ){
                 this.theCase = theCase;
         }
