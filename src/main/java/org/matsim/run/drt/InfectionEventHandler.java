@@ -78,10 +78,18 @@ class InfectionEventHandler implements BasicEventHandler {
         }
 
         @Override public void handleEvent( Event event ){
+        	
+        		if (event.getTime() >= 86400) {
+        			return;
+        		}
 
                 // the events follow the matsim sequence, i.e. all agents start at activities.  kai, mar'20
 
                 if ( event instanceof ActivityEndEvent ) {
+            			//ignore drt and stage activities
+                    	if(((ActivityEndEvent) event).getPersonId().toString().startsWith("drt") || ((ActivityEndEvent) event).getActType().endsWith("interaction")){
+                    		return;
+                    	}
 
                         // find the link
                         LinkWrapper link = this.linkMap.computeIfAbsent( ((ActivityEndEvent) event).getLinkId() , LinkWrapper::new );
@@ -90,9 +98,8 @@ class InfectionEventHandler implements BasicEventHandler {
                         for( PseudoFacilityWrapper facilityWrapper : link.getPseudoFacilities() ){
                                 PersonWrapper person = facilityWrapper.getPersons().get( ((ActivityEndEvent) event).getPersonId() );
                                 if( person != null ){
-
                                         // run infection dynamics for this person and facility:
-                                        infectionDynamicsFacility( person, facilityWrapper, event.getTime() );
+                                        infectionDynamicsFacility( person, facilityWrapper, event.getTime() + iteration * 3600. * 24., ((ActivityEndEvent) event).getActType() );
                                         facilityWrapper.removePerson( person.getPersonId() );
                                         break;
                                 }
@@ -112,7 +119,7 @@ class InfectionEventHandler implements BasicEventHandler {
                         VehicleWrapper vehicleWrapper = this.vehicleMap.computeIfAbsent( ((PersonEntersVehicleEvent) event).getVehicleId(), VehicleWrapper::new );
 
                         // add person to vehicle and memorize entering time (yy this should rather be one method so):
-                        vehicleWrapper.addPerson( personWrapper, event.getTime() );
+                        vehicleWrapper.addPerson( personWrapper, event.getTime() + iteration * 3600. * 24. );
 
                         handleInitialInfections( personWrapper );
 
@@ -129,7 +136,7 @@ class InfectionEventHandler implements BasicEventHandler {
                         // remove person from vehicle:
                         PersonWrapper personWrapper = vehicle.getPersons().get( ((PersonLeavesVehicleEvent) event).getPersonId() );
 
-                        infectionDynamicsVehicle( personWrapper, vehicle, event.getTime() );
+                        infectionDynamicsVehicle( personWrapper, vehicle, event.getTime() + iteration * 3600. * 24.);
                         
                         vehicle.removePerson( personWrapper.getPersonId() );
 
@@ -156,7 +163,7 @@ class InfectionEventHandler implements BasicEventHandler {
                         linkWrapper.addPseudoFacility(pseudoFacilityWrapper);
 
                         // add person to facility
-                        pseudoFacilityWrapper.addPerson(personWrapper, event.getTime() );
+                        pseudoFacilityWrapper.addPerson(personWrapper, event.getTime() + iteration * 3600. * 24.);
 
                 }
 
@@ -186,10 +193,10 @@ class InfectionEventHandler implements BasicEventHandler {
                 }
         }
         private void infectionDynamicsVehicle( PersonWrapper personLeavingVehicle, VehicleWrapper vehicle, double now ){
-                infectionDynamicsGeneralized( personLeavingVehicle, vehicle, now, "Vehicle" );
+                infectionDynamicsGeneralized( personLeavingVehicle, vehicle, now, vehicle.getContainerId().toString() );
         }
-        private void infectionDynamicsFacility( PersonWrapper personLeavingFacility, PseudoFacilityWrapper facility,  double now ) {
-                infectionDynamicsGeneralized( personLeavingFacility, facility, now, "Activity" );
+        private void infectionDynamicsFacility( PersonWrapper personLeavingFacility, PseudoFacilityWrapper facility,  double now, String actType ) {
+                infectionDynamicsGeneralized( personLeavingFacility, facility, now, actType );
         }
         private void infectionDynamicsGeneralized( PersonWrapper personLeavingContainer, ContainerWrapper<?> container, double now, String infectionType ) {
 
@@ -247,10 +254,8 @@ class InfectionEventHandler implements BasicEventHandler {
                         }
 
                         double jointTimeInContainer = now - Math.max( containerEnterTimeOfPersonLeaving, containerEnterTimeOfOtherPerson );
-                        if ( jointTimeInContainer  < 0) {
-                        	log.warn(containerEnterTimeOfPersonLeaving);
-                        	log.warn(containerEnterTimeOfOtherPerson);
-                        	throw new RuntimeException("joint time in cointainer is negative for personLeavingContainer=" + personLeavingContainer.getPersonId() + " and otherPerson=" + otherPerson.getPersonId() + ". Joint time is=" + jointTimeInContainer);
+                        if ( jointTimeInContainer  < 0 || jointTimeInContainer > 86400) {
+                        	throw new RuntimeException("joint time in cointainer is not plausible for personLeavingContainer=" + personLeavingContainer.getPersonId() + " and otherPerson=" + otherPerson.getPersonId() + ". Joint time is=" + jointTimeInContainer);
                         }
                         
 //                      exponential model by Smieszek. 
@@ -321,7 +326,7 @@ class InfectionEventHandler implements BasicEventHandler {
                 }
                 {
                 		String[] array = new String[InfectionEventsWriterFields.values().length];
-                		array[InfectionEventsWriterFields.time.ordinal()] = Double.toString( now + iteration * 3600. * 24. );
+                		array[InfectionEventsWriterFields.time.ordinal()] = Double.toString( now );
                 		array[InfectionEventsWriterFields.infector.ordinal()] = infector.getPersonId().toString();
                 		array[InfectionEventsWriterFields.infected.ordinal()] = personWrapper.getPersonId().toString();
                 		array[InfectionEventsWriterFields.infectionType.ordinal()] = infectionType;
@@ -333,7 +338,7 @@ class InfectionEventHandler implements BasicEventHandler {
 
                 		String[] array = new String[InfectionsWriterFields.values().length];
 
-                		array[InfectionsWriterFields.time.ordinal()] = Double.toString( now + iteration * 3600. * 24. );
+                		array[InfectionsWriterFields.time.ordinal()] = Double.toString( now );
                 		array[InfectionsWriterFields.nInfectedDrivers.ordinal()] = Double.toString( noOfInfectedDrivers );
                 		array[InfectionsWriterFields.nInfectedPersons.ordinal()] = Double.toString( noOfInfectedPersons );
                 		array[InfectionsWriterFields.nInfected.ordinal()] = Double.toString( noOfInfectedDrivers + noOfInfectedPersons );
@@ -358,8 +363,8 @@ class InfectionEventHandler implements BasicEventHandler {
                 }
         }
         @Override public void reset( int iteration ){
-        	for (PseudoFacilityWrapper facility : this.pseudoFacilityMap.values()) {
-        		facility.clearPersons();
+        	for (VehicleWrapper vehicleWrapper : this.vehicleMap.values()) {
+        		vehicleWrapper.clearPersons();
         	}
                 populationSize = 0;
                 for (PersonWrapper person : personMap.values()) {
