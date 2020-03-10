@@ -261,6 +261,7 @@ class InfectionEventHandler implements BasicEventHandler {
                         if ( rnd.nextDouble() < infectionProba ) {
                             if ( personLeavingContainer.getStatus()==Status.susceptible ) {
                                     infectPerson( personLeavingContainer, otherPerson, now, infectionType );
+                                    return;
                             } else {
                                     infectPerson( otherPerson, personLeavingContainer, now, infectionType );
                             }
