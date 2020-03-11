@@ -108,9 +108,11 @@ class InfectionEventHandler implements BasicEventHandler {
                         for( PseudoFacilityWrapper facilityWrapper : link.getPseudoFacilities() ){
                                 PersonWrapper person = facilityWrapper.getPersons().get( ((ActivityEndEvent) event).getPersonId() );
                                 if( person != null ){
+                                		
                                         // run infection dynamics for this person and facility:
                                         infectionDynamicsFacility( person, facilityWrapper, event.getTime() + iteration * 3600. * 24., ((ActivityEndEvent) event).getActType() );
                                         facilityWrapper.removePerson( person.getPersonId() );
+                                        handleInitialInfections( person );
                                         break;
                                 }
                         }
@@ -134,7 +136,7 @@ class InfectionEventHandler implements BasicEventHandler {
                         // add person to vehicle and memorize entering time (yy this should rather be one method so):
                         vehicleWrapper.addPerson( personWrapper, event.getTime() + iteration * 3600. * 24. );
 
-                        handleInitialInfections( personWrapper );
+//                        handleInitialInfections( personWrapper );
 
                 }  else if (event instanceof PersonLeavesVehicleEvent ) {
                 		// if pt is shut down nothing happens here
