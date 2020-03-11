@@ -11,27 +11,27 @@ import org.matsim.core.events.EventsUtils;
 class KNEventsInfection{
 
         public static void main( String[] args ){
-                boolean hasCommandLineArgs = true ;
-                if ( args==null ){
-                        hasCommandLineArgs = false;
-                } else if ( args.length==0 ) {
-                        hasCommandLineArgs=false;
-                } else if ( args[0]==null ) {
-                        hasCommandLineArgs=false;
-                } else if ( args[0].equals( "" ) ) {
-                        hasCommandLineArgs=false;
-                }
-                if ( hasCommandLineArgs ) {
+//                boolean hasCommandLineArgs = true ;
+//                if ( args==null ){
+//                        hasCommandLineArgs = false;
+//                } else if ( args.length==0 ) {
+//                        hasCommandLineArgs=false;
+//                } else if ( args[0]==null ) {
+//                        hasCommandLineArgs=false;
+//                } else if ( args[0].equals( "" ) ) {
+//                        hasCommandLineArgs=false;
+//                }
+//                if ( hasCommandLineArgs ) {
 //                        throw new RuntimeException( "cannot deal with command line args for time being." );
-                }
+//                }
                 Config config = ConfigUtils.createConfig( new EpisimConfigGroup() );
                 EpisimConfigGroup episimConfig = ConfigUtils.addOrGetModule( config, EpisimConfigGroup.class );
-//                episimConfig.setCase( EpisimConfigGroup.Case.snz25pct );
+
                 episimConfig.setInputEventsFile("../snzDrt220.0.events.reduced.xml.gz");
                 episimConfig.setSample(0.25);
-                episimConfig.setUsePt(EpisimConfigGroup.UsePt.yes);
-                episimConfig.setCalibrationParameter(0.5);
+                episimConfig.setCalibrationParameter(0.0000005);
                 episimConfig.setRunId("runId");
+
                 ConfigUtils.applyCommandline( config, Arrays.copyOfRange( args, 0, args.length ) ) ;
                 
                 
@@ -55,7 +55,7 @@ class KNEventsInfection{
                 
                 events.addHandler( new InfectionEventHandler( episimConfig ) );
                 ControlerUtils.checkConfigConsistencyAndWriteToLog(config, "Just before starting iterations");
-                for ( int iteration=0 ; iteration<=1000 ; iteration++ ){
+                for ( int iteration=0 ; iteration<=300 ; iteration++ ){
                         events.resetHandlers( iteration );
                         EventsUtils.readEvents( events, episimConfig.getInputEventsFile() );
                 }
