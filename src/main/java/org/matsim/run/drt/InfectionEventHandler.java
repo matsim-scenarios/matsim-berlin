@@ -53,14 +53,17 @@ class InfectionEventHandler implements BasicEventHandler {
 
         private enum InfectionsWriterFields{ time, nInfected, nInfectedDrivers, nInfectedPersons, nPersonsInQuarantine, nImmunePersons, nSusceptiblePersons }
         private enum InfectionEventsWriterFields{ time, infector, infected, infectionType }
-
+        
+        private EpisimConfigGroup episimConfig;
+        
         private int iteration=0;
 
         private Random rnd = MatsimRandom.getLocalInstance();
 
-        @Inject InfectionEventHandler() {
+        @Inject InfectionEventHandler(EpisimConfigGroup episimConfig) {
                 infectionsWriter = prepareWriter( "infections.txt", InfectionsWriterFields.class );
                 infectionEventsWriter = prepareWriter( "infectionEvents.txt" , InfectionEventsWriterFields.class );
+                this.episimConfig = episimConfig;
         }
         private BufferedWriter prepareWriter( String filename, Class<? extends Enum<?>> enumClass ){
                 BufferedWriter writer = IOUtils.getBufferedWriter( filename );
@@ -106,7 +109,10 @@ class InfectionEventHandler implements BasicEventHandler {
                         }
 
                 }  else if ( event instanceof PersonEntersVehicleEvent ) {
-                		
+                		// if pt is shut down nothing happens here
+                		if (episimConfig.getUsePt() == EpisimConfigGroup.UsePt.no) {
+                			return;
+                		}
                 		// ignore pt drivers
                 		if (((PersonEntersVehicleEvent) event).getPersonId().toString().startsWith("pt_pt") || ((PersonEntersVehicleEvent) event).getPersonId().toString().startsWith("pt_tr")) {
             				return;
@@ -124,6 +130,10 @@ class InfectionEventHandler implements BasicEventHandler {
                         handleInitialInfections( personWrapper );
 
                 }  else if (event instanceof PersonLeavesVehicleEvent ) {
+                		// if pt is shut down nothing happens here
+                		if (episimConfig.getUsePt() == EpisimConfigGroup.UsePt.no) {
+            				return;
+            			}
                 		
                 		// ignore pt drivers
                 		if (((PersonLeavesVehicleEvent) event).getPersonId().toString().startsWith("pt_pt") || ((PersonLeavesVehicleEvent) event).getPersonId().toString().startsWith("pt_tr")) {
