@@ -59,8 +59,8 @@ class InfectionEventHandler implements BasicEventHandler {
         private Random rnd = MatsimRandom.getLocalInstance();
 
         @Inject InfectionEventHandler(EpisimConfigGroup episimConfig) {
-                infectionsWriter = prepareWriter( "infections.txt", InfectionsWriterFields.class );
-                infectionEventsWriter = prepareWriter( "infectionEvents.txt" , InfectionEventsWriterFields.class );
+                infectionsWriter = prepareWriter( episimConfig.getRunId() + "-infections.txt", InfectionsWriterFields.class );
+                infectionEventsWriter = prepareWriter( episimConfig.getRunId() + "-infectionEvents.txt" , InfectionEventsWriterFields.class );
                 this.episimConfig = episimConfig;
         }
         private BufferedWriter prepareWriter( String filename, Class<? extends Enum<?>> enumClass ){

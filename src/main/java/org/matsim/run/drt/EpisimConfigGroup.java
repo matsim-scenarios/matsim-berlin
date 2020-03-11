@@ -99,6 +99,16 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
                 this.calibrationParameter = calibrationParameter;
         }
         // ---
+        private String runId = null;
+        @StringGetter("runId")
+        public String getRunId(){
+                return this.runId;
+        }
+        @StringSetter("runId")
+        public void setRunId( String runId ){
+                this.runId = runId;
+        }
+        // ---
         
         
 

@@ -30,6 +30,8 @@ class KNEventsInfection{
                 episimConfig.setInputEventsFile("../snzDrt220.0.events.reduced.xml.gz");
                 episimConfig.setSample(0.25);
                 episimConfig.setUsePt(EpisimConfigGroup.UsePt.yes);
+                episimConfig.setCalibrationParameter(0.5);
+                episimConfig.setRunId("runId");
                 ConfigUtils.applyCommandline( config, Arrays.copyOfRange( args, 0, args.length ) ) ;
                 
                 
