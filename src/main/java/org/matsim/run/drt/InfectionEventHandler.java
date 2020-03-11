@@ -31,7 +31,7 @@ class InfectionEventHandler implements BasicEventHandler {
 
 
         private static final Logger log = Logger.getLogger( InfectionEventHandler.class );
-        private static final double calibrationParameter = 0.0000005;
+//        private static final double calibrationParameter = 0.0000005;
         private static final boolean scenarioWithFacilites = true;
 
         @Inject private Scenario scenario;
@@ -210,7 +210,7 @@ class InfectionEventHandler implements BasicEventHandler {
         }
         private void infectionDynamicsGeneralized( PersonWrapper personLeavingContainer, ContainerWrapper<?> container, double now, String infectionType ) {
 
-                if ( !hasStatusRelevantForInfectionDynamics( personLeavingContainer ) ) {
+                if ( !hasStatusRelevantForInfectionDynamics( personLeavingContainer ) || personLeavingContainer.getQuarantineStatus() == QuarantineStatus.yes ) {
                         return ;
                 }
 
@@ -236,7 +236,7 @@ class InfectionEventHandler implements BasicEventHandler {
                         // (we count "quarantine" as well since they essentially represent "holes", i.e. persons who are no longer there and thus the
                         // density in the transit container goes down.  kai, mar'20)
 
-                        if ( !hasStatusRelevantForInfectionDynamics( otherPerson ) ) {
+                        if ( !hasStatusRelevantForInfectionDynamics( otherPerson ) || otherPerson.getQuarantineStatus() == QuarantineStatus.yes) {
                                 continue;
                         }
 
@@ -274,7 +274,7 @@ class InfectionEventHandler implements BasicEventHandler {
                         if (container instanceof VehicleWrapper) {
                         	contactIntensity = 10;
                         }
-                        double infectionProba = 1 - Math.exp( - calibrationParameter * contactIntensity * jointTimeInContainer);
+                        double infectionProba = 1 - Math.exp( - episimConfig.getCalibrationParameter() * contactIntensity * jointTimeInContainer);
                         if ( rnd.nextDouble() < infectionProba ) {
                             if ( personLeavingContainer.getStatus()==Status.susceptible ) {
                                     infectPerson( personLeavingContainer, otherPerson, now, infectionType );
@@ -300,8 +300,6 @@ class InfectionEventHandler implements BasicEventHandler {
                                 return false;
                         case contagious:
                                 return true;
-                        case quarantine:
-                                return false;
                         case immune:
                                 return false;
                         default:
@@ -358,7 +356,7 @@ class InfectionEventHandler implements BasicEventHandler {
                 		array[InfectionsWriterFields.nInfected.ordinal()] = Double.toString( noOfInfectedDrivers + noOfInfectedPersons );
                 		array[InfectionsWriterFields.nPersonsInQuarantine.ordinal()] = Double.toString( noOfPersonsInQuarantine );
                 		array[InfectionsWriterFields.nImmunePersons.ordinal()] = Double.toString( noOfImmunePersons );
-                		array[InfectionsWriterFields.nSusceptiblePersons.ordinal()] = Double.toString( populationSize - noOfInfectedPersons - noOfPersonsInQuarantine - noOfImmunePersons );
+                		array[InfectionsWriterFields.nSusceptiblePersons.ordinal()] = Double.toString( populationSize - noOfInfectedPersons - noOfImmunePersons );
 
                 		write( array, infectionsWriter );
                 } 
@@ -387,26 +385,18 @@ class InfectionEventHandler implements BasicEventHandler {
                                 case susceptible:
                                         break;
                                 case infectedButNotContagious:
-                                        if ( iteration - person.getInfectionDate() ==1 ) {
+                                        if ( iteration - person.getInfectionDate() == 4 ) {
                                                 person.setStatus( Status.contagious );
                                         }
                                         break;
                                 case contagious:
-                                        if (iteration - person.getInfectionDate()  == 7 && rnd.nextDouble() < 0.5 ) {
-                                                noOfInfectedPersons--;
-                                                person.setStatus(Status.quarantine);
+                                        if (iteration - person.getInfectionDate()  == 6 && rnd.nextDouble() < 0.2 ) {
+                                                person.setQuarantineStatus( QuarantineStatus.yes );
                                                 noOfPersonsInQuarantine++;
                                         }
-                                        if ( iteration - person.getInfectionDate() == 14 ) {
+                                        if ( iteration - person.getInfectionDate() == 16 ) {
                                                 noOfInfectedPersons--;
                                                 person.setStatus( Status.immune);
-                                                noOfImmunePersons++;
-                                        }
-                                        break;
-                                case quarantine:
-                                        if (iteration - person.getInfectionDate()  == 14 ) {
-                                                noOfPersonsInQuarantine--;
-                                                person.setStatus(Status.immune);
                                                 noOfImmunePersons++;
                                         }
                                         break;
@@ -447,6 +437,7 @@ class InfectionEventHandler implements BasicEventHandler {
         private static class PersonWrapper {
                 private final Id<Person> personId;
                 private Status status = Status.susceptible;
+                private QuarantineStatus quarantineStatus = QuarantineStatus.no;
                 private int infectionDate;
                 PersonWrapper( Id<Person> personId ) {
                         this.personId = personId;
@@ -454,11 +445,17 @@ class InfectionEventHandler implements BasicEventHandler {
                 void setStatus( Status status ) {
                         this.status = status;
                 }
+                void setQuarantineStatus( QuarantineStatus quarantineStatus ) {
+                    	this.quarantineStatus = quarantineStatus;
+                }
                 Id<Person> getPersonId(){
                         return personId;
                 }
                 Status getStatus(){
                         return status;
+                }
+                QuarantineStatus getQuarantineStatus(){
+                    	return quarantineStatus;
                 }
                 void setInfectionDate (int date) {
                         this.infectionDate = date;
@@ -506,7 +503,8 @@ class InfectionEventHandler implements BasicEventHandler {
                         super( facilityId );
                 }
         }
-        enum Status {susceptible, infectedButNotContagious, contagious, quarantine, immune};
+        enum Status {susceptible, infectedButNotContagious, contagious, immune};
+        enum QuarantineStatus {yes, no}
 
 }
 
