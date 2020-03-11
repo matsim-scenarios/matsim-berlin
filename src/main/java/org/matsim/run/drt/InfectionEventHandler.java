@@ -31,7 +31,6 @@ class InfectionEventHandler implements BasicEventHandler {
 
 
         private static final Logger log = Logger.getLogger( InfectionEventHandler.class );
-//        private static final double calibrationParameter = 0.0000005;
         private static final boolean scenarioWithFacilites = true;
 
         @Inject private Scenario scenario;
@@ -45,13 +44,12 @@ class InfectionEventHandler implements BasicEventHandler {
         private int noOfInfectedPersons = cnt;
         private int noOfPersonsInQuarantine = 0;
         private int noOfImmunePersons = 0;
-        private int noOfInfectedDrivers = 0;
         private int populationSize = 0;
 
         private BufferedWriter infectionsWriter;
         private BufferedWriter infectionEventsWriter;
 
-        private enum InfectionsWriterFields{ time, nInfected, nInfectedDrivers, nInfectedPersons, nPersonsInQuarantine, nImmunePersons, nSusceptiblePersons }
+        private enum InfectionsWriterFields{ time, nInfectedPersons, nPersonsInQuarantine, nImmunePersons, nSusceptiblePersons }
         private enum InfectionEventsWriterFields{ time, infector, infected, infectionType }
         
         private EpisimConfigGroup episimConfig;
@@ -327,12 +325,9 @@ class InfectionEventHandler implements BasicEventHandler {
                 }
                
                 personWrapper.setInfectionDate(iteration);
-                if (personWrapper.getPersonId().toString().startsWith("pt_pt")) {
-                		noOfInfectedDrivers++;
-                        }
-                else {
-                		noOfInfectedPersons++;
-                }
+
+                noOfInfectedPersons++;
+
                 if ( specificInfectionsCnt-- > 0 ){
                 		log.warn( "infection of personId=" + personWrapper.getPersonId() + " by person=" + infector.getPersonId() + " at/in " + infectionType );
                 }
@@ -351,9 +346,7 @@ class InfectionEventHandler implements BasicEventHandler {
                 		String[] array = new String[InfectionsWriterFields.values().length];
 
                 		array[InfectionsWriterFields.time.ordinal()] = Double.toString( now );
-                		array[InfectionsWriterFields.nInfectedDrivers.ordinal()] = Double.toString( noOfInfectedDrivers );
                 		array[InfectionsWriterFields.nInfectedPersons.ordinal()] = Double.toString( noOfInfectedPersons );
-                		array[InfectionsWriterFields.nInfected.ordinal()] = Double.toString( noOfInfectedDrivers + noOfInfectedPersons );
                 		array[InfectionsWriterFields.nPersonsInQuarantine.ordinal()] = Double.toString( noOfPersonsInQuarantine );
                 		array[InfectionsWriterFields.nImmunePersons.ordinal()] = Double.toString( noOfImmunePersons );
                 		array[InfectionsWriterFields.nSusceptiblePersons.ordinal()] = Double.toString( populationSize - noOfInfectedPersons - noOfImmunePersons );
