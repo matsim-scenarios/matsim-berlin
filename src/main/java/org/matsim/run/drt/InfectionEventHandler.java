@@ -91,6 +91,15 @@ class InfectionEventHandler implements BasicEventHandler {
                     	if(((ActivityEndEvent) event).getPersonId().toString().startsWith("drt") || ((ActivityEndEvent) event).getActType().endsWith("interaction")){
                     		return;
                     	}
+                    	// if configured, there will be no infections at activities of a certain type
+                    	// the probability that a there is no infection at a certain activity can be set via episimConfig.getClosedActivity1Sample()
+                    	// if closedActivity1() is set to "work" and activity1Sample() is set to "0.5" this essentially means that 50% of working people do home office 
+                    	// to do: also switch off infections in pt to / from closed activity.		SM, mar'20
+                    	if (episimConfig.getClosedActivity1() != null) {
+                    		if (rnd.nextDouble() < episimConfig.getClosedActivity1Sample() && episimConfig.getClosedActivity1().toString().equals(((ActivityEndEvent) event).getActType())) {
+                    			return;
+                    		}
+                    	}
 
                         // find the link
                         LinkWrapper link = this.linkMap.computeIfAbsent( ((ActivityEndEvent) event).getLinkId() , LinkWrapper::new );
@@ -149,7 +158,12 @@ class InfectionEventHandler implements BasicEventHandler {
                         vehicle.removePerson( personWrapper.getPersonId() );
 
                 }  else if (event instanceof ActivityStartEvent) {
-                		
+                		//see ActivityEndEvent for explanation
+                		if (episimConfig.getClosedActivity1() != null) {
+                				if (rnd.nextDouble() < episimConfig.getClosedActivity1Sample() && episimConfig.getClosedActivity1().toString().equals(((ActivityStartEvent) event).getActType())) {
+                					return;
+                				}
+                		}
                 		//ignore drt and stage activities
                         if(((ActivityStartEvent) event).getPersonId().toString().startsWith("drt") || ((ActivityStartEvent) event).getActType().endsWith("interaction")){
                                 return;
