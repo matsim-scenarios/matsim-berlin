@@ -43,6 +43,37 @@ public class RunBerlinScenarioIT{
 
 	// 10pct, testing the scores in iteration 0 and 1
 	@Test
+	public final void testEquil() {
+		try {
+			final String[] args = {"scenarios/equil/config.xml"};
+
+			Config config =  RunBerlinScenario.prepareConfig( args ) ;
+			config.controler().setLastIteration(1);
+			config.strategy().setFractionOfIterationsToDisableInnovation(1);
+			config.controler().setOverwriteFileSetting( OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
+			config.controler().setOutputDirectory( utils.getOutputDirectory() );
+
+			Scenario scenario = RunBerlinScenario.prepareScenario( config ) ;
+
+			Controler controler = RunBerlinScenario.prepareControler( scenario ) ;
+
+			controler.run() ;
+
+			// TODO: enable once we move towards a release
+//			Assert.assertEquals("Different scores in iteration 0.", 115.39990555612046, controler.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(0), MatsimTestUtils.EPSILON);
+//			Assert.assertEquals("Different scores in iteration 1.", 113.59365288084939, controler.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(1), 0.001);
+
+			// The differences in the scores compared to the run in the public-svn are probably related to the pt raptor router
+			// which seems to produce slightly different results (e.g. in case two routes are identical).
+			// Thus the large epsilon. ihab, dec'18
+
+		} catch ( Exception ee ) {
+			throw new RuntimeException(ee) ;
+		}
+	}
+
+	// 10pct, testing the scores in iteration 0 and 1
+	@Test
 	public final void test10pctUntilIteration1() {
 		try {
 			final String[] args = {"scenarios/berlin-v5.5-10pct/input/berlin-v5.5-10pct.config.xml"};
@@ -52,9 +83,9 @@ public class RunBerlinScenarioIT{
 			config.strategy().setFractionOfIterationsToDisableInnovation(1);
 			config.controler().setOverwriteFileSetting( OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
-			
+
 			Scenario scenario = RunBerlinScenario.prepareScenario( config ) ;
-			
+
 			Controler controler = RunBerlinScenario.prepareControler( scenario ) ;
 
 			controler.run() ;
