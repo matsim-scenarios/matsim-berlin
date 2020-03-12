@@ -401,6 +401,7 @@ class InfectionEventHandler implements BasicEventHandler {
                                 case contagious:
                                         if (iteration - person.getInfectionDate()  == 6 && rnd.nextDouble() < 0.2 ) {
                                                 person.setQuarantineStatus( QuarantineStatus.yes );
+                                                person.setQuarantineDate(iteration);
                                                 noOfPersonsInQuarantine++;
                                         }
                                         if ( iteration - person.getInfectionDate() == 16 ) {
@@ -414,13 +415,19 @@ class InfectionEventHandler implements BasicEventHandler {
                                 default:
                                         throw new IllegalStateException( "Unexpected value: " + person.getStatus() );
                         }
+                        if (person.getQuarantineStatus() == QuarantineStatus.yes) {
+                        	if (iteration - person.getQuarantineDate() == 14) {
+                        		person.setQuarantineStatus(QuarantineStatus.no);
+                        		noOfPersonsInQuarantine--;
+                        	}
+                        }
                 }
 
                 this.iteration = iteration;
 
                 log.warn("===============================");
                 log.warn("Beginning day " + this.iteration);
-                log.warn("No of susceptible persons=" + (populationSize - noOfInfectedPersons - noOfPersonsInQuarantine - noOfImmunePersons));
+                log.warn("No of susceptible persons=" + (populationSize - noOfInfectedPersons - noOfImmunePersons));
                 log.warn( "No of infected persons=" + noOfInfectedPersons );
                 log.warn( "No of persons in quarantine=" + noOfPersonsInQuarantine );
                 log.warn( "No of immune persons=" + noOfImmunePersons );
@@ -448,6 +455,7 @@ class InfectionEventHandler implements BasicEventHandler {
                 private Status status = Status.susceptible;
                 private QuarantineStatus quarantineStatus = QuarantineStatus.no;
                 private int infectionDate;
+                private int quarantineDate;
                 PersonWrapper( Id<Person> personId ) {
                         this.personId = personId;
                 }
@@ -471,6 +479,12 @@ class InfectionEventHandler implements BasicEventHandler {
                 }
                 int getInfectionDate () {
                         return this.infectionDate;
+                }
+                void setQuarantineDate (int date) {
+                    this.quarantineDate = date;
+                }
+                int getQuarantineDate () {
+                    return this.quarantineDate;
                 }
         }
         private static class ContainerWrapper<T> {
