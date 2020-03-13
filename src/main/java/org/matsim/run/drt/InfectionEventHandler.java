@@ -10,6 +10,7 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.events.handler.BasicEventHandler;
 import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.population.PopulationUtils;
+import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.facilities.Facility;
 import org.matsim.vehicles.Vehicle;
@@ -88,7 +89,7 @@ class InfectionEventHandler implements BasicEventHandler {
 
                 if ( event instanceof ActivityEndEvent ) {
             			//ignore drt and stage activities
-                    	if(((ActivityEndEvent) event).getPersonId().toString().startsWith("drt") || ((ActivityEndEvent) event).getActType().endsWith("interaction")){
+                    	if(((ActivityEndEvent) event).getPersonId().toString().startsWith("drt") || TripStructureUtils.isStageActivityType( ((ActivityEndEvent) event ).getActType() ) ) {
                     		return;
                     	}
                     	// if configured, there will be no infections at activities of a certain type
@@ -123,14 +124,14 @@ class InfectionEventHandler implements BasicEventHandler {
                         }
 
                 }  else if ( event instanceof PersonEntersVehicleEvent ) {
-                		// if pt is shut down nothing happens here
-                		if (episimConfig.getUsePt() == EpisimConfigGroup.UsePt.no) {
-                			return;
-                		}
-                		// ignore pt drivers
-                		if (((PersonEntersVehicleEvent) event).getPersonId().toString().startsWith("pt_pt") || ((PersonEntersVehicleEvent) event).getPersonId().toString().startsWith("pt_tr")) {
-            				return;
-            			}
+                        // if pt is shut down nothing happens here
+                        if (episimConfig.getUsePt() == EpisimConfigGroup.UsePt.no) {
+                                return;
+                        }
+                        // ignore pt drivers
+                        if (((PersonEntersVehicleEvent) event).getPersonId().toString().startsWith("pt_pt") || ((PersonEntersVehicleEvent) event).getPersonId().toString().startsWith("pt_tr")) {
+                                return;
+                        }
 
                         // find the person:
                         PersonWrapper personWrapper = this.personMap.computeIfAbsent( ((PersonEntersVehicleEvent) event).getPersonId(), PersonWrapper::new );
@@ -138,21 +139,19 @@ class InfectionEventHandler implements BasicEventHandler {
                         // find the vehicle:
                         VehicleWrapper vehicleWrapper = this.vehicleMap.computeIfAbsent( ((PersonEntersVehicleEvent) event).getVehicleId(), VehicleWrapper::new );
 
-                        // add person to vehicle and memorize entering time (yy this should rather be one method so):
+                        // add person to vehicle and memorize entering time:
                         vehicleWrapper.addPerson( personWrapper, event.getTime() + iteration * 3600. * 24. );
 
-//                        handleInitialInfections( personWrapper );
-
                 }  else if (event instanceof PersonLeavesVehicleEvent ) {
-                		// if pt is shut down nothing happens here
-                		if (episimConfig.getUsePt() == EpisimConfigGroup.UsePt.no) {
-            				return;
-            			}
-                		
-                		// ignore pt drivers
-                		if (((PersonLeavesVehicleEvent) event).getPersonId().toString().startsWith("pt_pt") || ((PersonLeavesVehicleEvent) event).getPersonId().toString().startsWith("pt_tr")) {
-            				return;
-            			}
+                        // if pt is shut down nothing happens here
+                        if (episimConfig.getUsePt() == EpisimConfigGroup.UsePt.no) {
+                                return;
+                        }
+
+                        // ignore pt drivers
+                        if (((PersonLeavesVehicleEvent) event).getPersonId().toString().startsWith("pt_pt") || ((PersonLeavesVehicleEvent) event).getPersonId().toString().startsWith("pt_tr")) {
+                                return;
+                        }
 
                         // find vehicle:
                         VehicleWrapper vehicle = this.vehicleMap.get( ((PersonLeavesVehicleEvent) event).getVehicleId() );
@@ -165,30 +164,33 @@ class InfectionEventHandler implements BasicEventHandler {
                         vehicle.removePerson( personWrapper.getPersonId() );
 
                 }  else if (event instanceof ActivityStartEvent) {
-                		//see ActivityEndEvent for explanation
-                		if (episimConfig.getClosedActivity1() != null) {
-                				if (rnd.nextDouble() < episimConfig.getClosedActivity1Sample() && episimConfig.getClosedActivity1().toString().equals(((ActivityStartEvent) event).getActType())) {
-                					return;
-                				}
-                		}
-                		if (episimConfig.getClosedActivity2() != null) {
-                    		if (rnd.nextDouble() < episimConfig.getClosedActivity2Sample() && episimConfig.getClosedActivity2().toString().equals(((ActivityStartEvent) event).getActType())) {
-                    			return;
-                    		}
-                    	}
-                		//ignore drt and stage activities
-                        if(((ActivityStartEvent) event).getPersonId().toString().startsWith("drt") || ((ActivityStartEvent) event).getActType().endsWith("interaction")){
+                        final ActivityStartEvent activityStartEvent = (ActivityStartEvent) event;
+                        //see ActivityEndEvent for explanation
+                        if (episimConfig.getClosedActivity1() != null) {
+                                if (rnd.nextDouble() < episimConfig.getClosedActivity1Sample() && episimConfig.getClosedActivity1().toString().equals(
+                                                activityStartEvent.getActType() )) {
+                                        return;
+                                }
+                        }
+                        if (episimConfig.getClosedActivity2() != null) {
+                                if (rnd.nextDouble() < episimConfig.getClosedActivity2Sample() && episimConfig.getClosedActivity2().toString().equals(
+                                                activityStartEvent.getActType() )) {
+                                        return;
+                                }
+                        }
+                        //ignore drt and stage activities
+                        if( activityStartEvent.getPersonId().toString().startsWith("drt" ) || TripStructureUtils.isStageActivityType( activityStartEvent.getActType() ) ) {
                                 return;
                         }
 
                         // find the person:
-                        PersonWrapper personWrapper = this.personMap.computeIfAbsent( ((ActivityStartEvent) event).getPersonId(), PersonWrapper::new );
+                        PersonWrapper personWrapper = this.personMap.computeIfAbsent( activityStartEvent.getPersonId(), PersonWrapper::new );
 
                         // find the link:
-                        LinkWrapper linkWrapper = this.linkMap.computeIfAbsent( ((ActivityStartEvent) event).getLinkId(), LinkWrapper::new );
+                        LinkWrapper linkWrapper = this.linkMap.computeIfAbsent( activityStartEvent.getLinkId(), LinkWrapper::new );
 
                         // create pseudo facility id that includes the activity type:
-                        Id<Facility> pseudoFacilityId = createPseudoFacilityId( ((ActivityStartEvent) event), linkWrapper.getLinkId() );
+                        Id<Facility> pseudoFacilityId = createPseudoFacilityId( activityStartEvent, linkWrapper.getLinkId() );
 
                         // find the facility
                         PseudoFacilityWrapper pseudoFacilityWrapper = this.pseudoFacilityMap.computeIfAbsent(pseudoFacilityId, PseudoFacilityWrapper::new);
@@ -254,11 +256,11 @@ class InfectionEventHandler implements BasicEventHandler {
 
                         // For the time being, will just assume that the first 10 persons are the ones we interact with.  Note that because of
                         // shuffle, those are 10 different persons every day.
-                		if ( personLeavingContainer.getPersonId()==otherPerson.getPersonId() ) {
-                			// if person find itself nothing happens
-                			continue;
-                		}
-                		contactPersons++;
+                        if ( personLeavingContainer.getPersonId()==otherPerson.getPersonId() ) {
+                                // if person find itself nothing happens
+                                continue;
+                        }
+                        contactPersons++;
  
                         // (we count "quarantine" as well since they essentially represent "holes", i.e. persons who are no longer there and thus the
                         // density in the transit container goes down.  kai, mar'20)
@@ -266,15 +268,15 @@ class InfectionEventHandler implements BasicEventHandler {
                         if ( !hasStatusRelevantForInfectionDynamics( otherPerson ) || otherPerson.getQuarantineStatus() == QuarantineStatus.yes) {
                                 continue;
                         }
-                        
+
                         if(infectionType.equals("home") || infectionType.equals("work") || (infectionType.equals("leisure") && rnd.nextDouble() < 0.8)) {
-                			if (!personLeavingContainer.getTracableContactPersons().contains(otherPerson)) {
-                				personLeavingContainer.addTracableContactPerson(otherPerson);
-                			}
-                			if (!otherPerson.getTracableContactPersons().contains(personLeavingContainer)) {
-                				otherPerson.addTracableContactPerson(personLeavingContainer);
-                			}
-                		}
+                                if (!personLeavingContainer.getTracableContactPersons().contains(otherPerson)) {
+                                        personLeavingContainer.addTracableContactPerson(otherPerson);
+                                }
+                                if (!otherPerson.getTracableContactPersons().contains(personLeavingContainer)) {
+                                        otherPerson.addTracableContactPerson(personLeavingContainer);
+                                }
+                        }
 
                         if ( personLeavingContainer.getStatus()==otherPerson.getStatus() ) {
                                 // (if they have the same status, then nothing can happen between them)
@@ -289,7 +291,7 @@ class InfectionEventHandler implements BasicEventHandler {
                         if ( containerEnterTimeOfPersonLeaving==null && containerEnterTimeOfOtherPerson==null ) {
                                 throw new RuntimeException( "should not happen" );
                                 // null should only happen at first activity.  However, at first activity all persons are susceptible.  So the only way we
-                                // can get here if an infected person entered the container and is now leaving again, while the other person has been in the
+                                // can get here is if an infected person entered the container and is now leaving again, while the other person has been in the
                                 // container from the beginning.  ????  kai, mar'20
                         }
                         if ( containerEnterTimeOfPersonLeaving==null ) {
