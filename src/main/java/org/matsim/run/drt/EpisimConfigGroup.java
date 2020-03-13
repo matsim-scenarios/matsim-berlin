@@ -109,6 +109,17 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
                 this.runId = runId;
         }
         // ---
+        // ---
+        public enum PutTracablePersonsInQuarantine { yes, no }
+        private PutTracablePersonsInQuarantine putTracablePersonsInQuarantine = PutTracablePersonsInQuarantine.no;
+        @StringGetter("putTracablePersonsInQuarantine")
+        public PutTracablePersonsInQuarantine getPutTracablePersonsInQuarantine(){
+                return this.putTracablePersonsInQuarantine;
+        }
+        @StringSetter("putTracablePersonsInQuarantine")
+        public void setUsePt( PutTracablePersonsInQuarantine putTracablePersonsInQuarantine ){
+                this.putTracablePersonsInQuarantine = putTracablePersonsInQuarantine;
+        }
         
         
 

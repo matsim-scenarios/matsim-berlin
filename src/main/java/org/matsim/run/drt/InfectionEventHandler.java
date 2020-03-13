@@ -100,6 +100,11 @@ class InfectionEventHandler implements BasicEventHandler {
                     			return;
                     		}
                     	}
+                    	if (episimConfig.getClosedActivity2() != null) {
+                    		if (rnd.nextDouble() < episimConfig.getClosedActivity2Sample() && episimConfig.getClosedActivity2().toString().equals(((ActivityEndEvent) event).getActType())) {
+                    			return;
+                    		}
+                    	}
 
                         // find the link
                         LinkWrapper link = this.linkMap.computeIfAbsent( ((ActivityEndEvent) event).getLinkId() , LinkWrapper::new );
@@ -166,6 +171,11 @@ class InfectionEventHandler implements BasicEventHandler {
                 					return;
                 				}
                 		}
+                		if (episimConfig.getClosedActivity2() != null) {
+                    		if (rnd.nextDouble() < episimConfig.getClosedActivity2Sample() && episimConfig.getClosedActivity2().toString().equals(((ActivityStartEvent) event).getActType())) {
+                    			return;
+                    		}
+                    	}
                 		//ignore drt and stage activities
                         if(((ActivityStartEvent) event).getPersonId().toString().startsWith("drt") || ((ActivityStartEvent) event).getActType().endsWith("interaction")){
                                 return;
@@ -235,6 +245,9 @@ class InfectionEventHandler implements BasicEventHandler {
 
                 int contactPersons = 0 ;
                 for (PersonWrapper otherPerson : persons) {
+                    	if (contactPersons == 10) {
+                    		break;
+                    	}
                         // we are essentially looking at the situation when the person leaves the container.  Interactions with other persons who have
                         // already left the container were treated then.  In consequence, we have some "circle of persons around us" (yyyy which should
                         //  depend on the density), and then a probability of infection in either direction.
@@ -253,6 +266,15 @@ class InfectionEventHandler implements BasicEventHandler {
                         if ( !hasStatusRelevantForInfectionDynamics( otherPerson ) || otherPerson.getQuarantineStatus() == QuarantineStatus.yes) {
                                 continue;
                         }
+                        
+                        if(infectionType.equals("home") || infectionType.equals("work") || (infectionType.equals("leisure") && rnd.nextDouble() < 0.8)) {
+                			if (!personLeavingContainer.getTracableContactPersons().contains(otherPerson)) {
+                				personLeavingContainer.addTracableContactPerson(otherPerson);
+                			}
+                			if (!otherPerson.getTracableContactPersons().contains(personLeavingContainer)) {
+                				otherPerson.addTracableContactPerson(personLeavingContainer);
+                			}
+                		}
 
                         if ( personLeavingContainer.getStatus()==otherPerson.getStatus() ) {
                                 // (if they have the same status, then nothing can happen between them)
@@ -298,10 +320,6 @@ class InfectionEventHandler implements BasicEventHandler {
                             }
                         }	
 
-                        if (contactPersons == 10) {
-                                break;
-                        }
-
                 }
 
         }
@@ -331,6 +349,12 @@ class InfectionEventHandler implements BasicEventHandler {
         		}
         		if (infector.getStatus() != Status.contagious) {
         			throw new RuntimeException("Infector is not contagious. Status is=" + infector.getStatus());
+        		}
+        		if (personWrapper.getQuarantineStatus() == QuarantineStatus.yes) {
+        			throw new RuntimeException("Person to be infected is in quarantine.");
+        		}
+        		if (infector.getQuarantineStatus() == QuarantineStatus.yes) {
+        			throw new RuntimeException("Infector is in quarantine.");
         		}
                 personWrapper.setStatus( Status.infectedButNotContagious );
                 if ( scenario!=null ){
@@ -400,9 +424,20 @@ class InfectionEventHandler implements BasicEventHandler {
                                         break;
                                 case contagious:
                                         if (iteration - person.getInfectionDate()  == 6 && rnd.nextDouble() < 0.2 ) {
+                                        		if (person.getQuarantineStatus() == QuarantineStatus.no) {
+                                        			noOfPersonsInQuarantine++;
+                                        		}
                                                 person.setQuarantineStatus( QuarantineStatus.yes );
                                                 person.setQuarantineDate(iteration);
-                                                noOfPersonsInQuarantine++;
+                                                if (episimConfig.getPutTracablePersonsInQuarantine()==EpisimConfigGroup.PutTracablePersonsInQuarantine.yes) {
+                                                	for (PersonWrapper pw : person.getTracableContactPersons()) {
+                                                		if (pw.getQuarantineStatus() == QuarantineStatus.no) {
+                                                			pw.setQuarantineStatus(QuarantineStatus.yes);
+                                                			pw.setQuarantineDate(iteration);
+                                                			noOfPersonsInQuarantine++;
+                                                		}
+                                                	}
+                                                }
                                         }
                                         if ( iteration - person.getInfectionDate() == 16 ) {
                                                 noOfInfectedPersons--;
@@ -421,6 +456,7 @@ class InfectionEventHandler implements BasicEventHandler {
                         		noOfPersonsInQuarantine--;
                         	}
                         }
+                        person.getTracableContactPersons().clear();
                 }
 
                 this.iteration = iteration;
@@ -433,6 +469,8 @@ class InfectionEventHandler implements BasicEventHandler {
                 log.warn( "No of immune persons=" + noOfImmunePersons );
                 log.warn("===============================");
                 lastTimeStep = 0;
+                
+                
         }
         private static class LinkWrapper {
                 private final Id<Link> linkId;
@@ -456,6 +494,7 @@ class InfectionEventHandler implements BasicEventHandler {
                 private QuarantineStatus quarantineStatus = QuarantineStatus.no;
                 private int infectionDate;
                 private int quarantineDate;
+                private Set<PersonWrapper> tracableContactPersons = new HashSet<>();
                 PersonWrapper( Id<Person> personId ) {
                         this.personId = personId;
                 }
@@ -485,6 +524,12 @@ class InfectionEventHandler implements BasicEventHandler {
                 }
                 int getQuarantineDate () {
                     return this.quarantineDate;
+                }
+                void addTracableContactPerson( PersonWrapper personWrapper ) {
+                	tracableContactPersons.add( personWrapper );
+                }
+                Set<PersonWrapper> getTracableContactPersons() {
+                    return tracableContactPersons;
                 }
         }
         private static class ContainerWrapper<T> {
