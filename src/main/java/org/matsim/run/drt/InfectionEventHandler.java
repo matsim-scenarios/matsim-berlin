@@ -232,8 +232,11 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                 }
 
                 int contactPersons = 0 ;
-                List<EpisimPerson> personsAlreadySeen = new ArrayList<>( Collections.singletonList( personLeavingContainer ));
-                for ( int ii = 0 ; ii< container.getPersons().size()-1; ii++ ) {
+
+                ArrayList<EpisimPerson> personsToInteractWith = new ArrayList<>( container.getPersons() );
+                personsToInteractWith.remove( personLeavingContainer );
+
+                for ( int ii = 0 ; ii<personsToInteractWith.size(); ii++ ) {
                         // (this is "-1" because we can't interact with "self")
 
                         // we are essentially looking at the situation when the person leaves the container.  Interactions with other persons who have
@@ -247,17 +250,8 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                         // For the time being, will just assume that the first 10 persons are the ones we interact with.  Note that because of
                         // shuffle, those are 10 different persons every day.
 
-                        EpisimPerson otherPerson;
-                        if ( personsAlreadySeen.size() == container.getPersons().size() ) {
-                                return ;
-                                // in principle, should be possible to hedge against this otherwise, but because of "self" it is not totally
-                                // straightforward.  kai, mar'20
-                        }
-                        do{
-                                int idx = rnd.nextInt( container.getPersons().size() );
-                                otherPerson = container.getPersons().get( idx );
-                        } while( personsAlreadySeen.contains( otherPerson ) );
-                        personsAlreadySeen.add( otherPerson );
+                        int idx = rnd.nextInt( container.getPersons().size() );
+                        EpisimPerson otherPerson = container.getPersons().get( idx );
 
                         contactPersons++;
 
