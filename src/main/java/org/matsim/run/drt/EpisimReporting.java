@@ -22,9 +22,14 @@ class EpisimReporting{
         private final BufferedWriter infectionsWriter;
         private final BufferedWriter infectionEventsWriter;
         EpisimReporting( Config config ){
-                EpisimConfigGroup episimConfig = ConfigUtils.addOrGetModule( config, EpisimConfigGroup.class );
-                infectionsWriter = prepareWriter( episimConfig.getRunId() + "-infections.txt", InfectionsWriterFields.class );
-                infectionEventsWriter = prepareWriter( episimConfig.getRunId() + "-infectionEvents.txt" , InfectionEventsWriterFields.class );
+                String base ;
+                if ( config.controler().getRunId()!=null ) {
+                        base = config.controler().getOutputDirectory() + "/" + config.controler().getRunId() + "." ;
+                } else {
+                        base = config.controler().getOutputDirectory() + "/" ;
+                }
+                infectionsWriter = prepareWriter( base + "infections.txt", InfectionsWriterFields.class );
+                infectionEventsWriter = prepareWriter( base + "infectionEvents.txt" , InfectionEventsWriterFields.class );
         }
 
         void reporting( Map<Id<Person>, EpisimPerson> personMap, int iteration ){
