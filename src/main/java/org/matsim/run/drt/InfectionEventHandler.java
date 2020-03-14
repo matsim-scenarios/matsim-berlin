@@ -81,11 +81,13 @@ class InfectionEventHandler implements BasicEventHandler {
 
         @Override public void handleEvent( Event event ){
 
-                if (event.getTime() >= 86400) {
-                        // yyyyyy I am still not convinced that this is a good idea.  Persons who return later will now not return at all, i.e. they are also
-                        // not able to participate in the overnight infection dynamics.
-                        return;
-                }
+//                if (event.getTime() >= 86400) {
+//                        // yyyyyy I am still not convinced that this is a good idea.  Persons who return later will now not return at all, i.e. they are also
+//                        // not able to participate in the overnight infection dynamics.
+//                        return;
+//                }
+
+                double now = getCorrectedTime( event.getTime(), iteration  );
 
                 // the events follow the matsim sequence, i.e. all agents start at activities.  kai, mar'20
 
@@ -96,6 +98,7 @@ class InfectionEventHandler implements BasicEventHandler {
                         if( activityEndEvent.getPersonId().toString().startsWith("drt" ) || TripStructureUtils.isStageActivityType( activityEndEvent.getActType() ) ) {
                                 return;
                         }
+
                         // if configured, there will be no infections at activities of a certain type
                         // the probability that a there is no infection at a certain activity can be set via episimConfig.getClosedActivity1Sample()
                         // if closedActivity1() is set to "work" and activity1Sample() is set to "0.5" this essentially means that 50% of working people do home office
@@ -120,7 +123,7 @@ class InfectionEventHandler implements BasicEventHandler {
                                 if( person != null ){
 
                                         // run infection dynamics for this person and facility:
-                                        infectionDynamicsFacility( person, facilityWrapper, event.getTime() + iteration * 3600. * 24., activityEndEvent.getActType() );
+                                        infectionDynamicsFacility( person, facilityWrapper, now, activityEndEvent.getActType() );
                                         facilityWrapper.removePerson( person.getPersonId() );
                                         handleInitialInfections( person );
                                         break;
@@ -146,7 +149,7 @@ class InfectionEventHandler implements BasicEventHandler {
                         VehicleWrapper vehicleWrapper = this.vehicleMap.computeIfAbsent( entersVehicleEvent.getVehicleId(), VehicleWrapper::new );
 
                         // add person to vehicle and memorize entering time:
-                        vehicleWrapper.addPerson( personWrapper, event.getTime() + iteration * 3600. * 24. );
+                        vehicleWrapper.addPerson( personWrapper, now );
 
                 }  else if (event instanceof PersonLeavesVehicleEvent ) {
                         final PersonLeavesVehicleEvent leavesVehicleEvent = (PersonLeavesVehicleEvent) event;
@@ -167,7 +170,7 @@ class InfectionEventHandler implements BasicEventHandler {
                         // remove person from vehicle:
                         PersonWrapper personWrapper = vehicle.getPersons().get( leavesVehicleEvent.getPersonId() );
 
-                        infectionDynamicsVehicle( personWrapper, vehicle, event.getTime() + iteration * 3600. * 24.);
+                        infectionDynamicsVehicle( personWrapper, vehicle, now );
 
                         vehicle.removePerson( personWrapper.getPersonId() );
 
@@ -176,14 +179,12 @@ class InfectionEventHandler implements BasicEventHandler {
 
                         //see ActivityEndEvent for explanation
                         if (episimConfig.getClosedActivity1() != null) {
-                                if (rnd.nextDouble() < episimConfig.getClosedActivity1Sample() && episimConfig.getClosedActivity1().toString().equals(
-                                                activityStartEvent.getActType() )) {
+                                if (rnd.nextDouble() < episimConfig.getClosedActivity1Sample() && episimConfig.getClosedActivity1().toString().equals( activityStartEvent.getActType() )) {
                                         return;
                                 }
                         }
                         if (episimConfig.getClosedActivity2() != null) {
-                                if (rnd.nextDouble() < episimConfig.getClosedActivity2Sample() && episimConfig.getClosedActivity2().toString().equals(
-                                                activityStartEvent.getActType() )) {
+                                if (rnd.nextDouble() < episimConfig.getClosedActivity2Sample() && episimConfig.getClosedActivity2().toString().equals( activityStartEvent.getActType() )) {
                                         return;
                                 }
                         }
@@ -208,17 +209,25 @@ class InfectionEventHandler implements BasicEventHandler {
                         linkWrapper.addPseudoFacility(pseudoFacilityWrapper);
 
                         // add person to facility
-                        pseudoFacilityWrapper.addPerson(personWrapper, event.getTime() + iteration * 3600. * 24.);
+                        pseudoFacilityWrapper.addPerson(personWrapper, now );
 
                 }
 
         }
-        private Id<Facility> createPseudoFacilityId( ActivityStartEvent event ) {
+        private Id<Facility> createPseudoFacilityId( HasFacilityId event ) {
                 if (scenarioWithFacilites ) {
                         return Id.create( event.getFacilityId(), Facility.class );
                 }
                 else {
-                        return Id.create( event.getActType().split("_" )[0] + "_" + event.getLinkId().toString(), Facility.class );
+                        if ( event instanceof ActivityStartEvent ){
+                                ActivityStartEvent theEvent = (ActivityStartEvent) event;
+                                return Id.create( theEvent.getActType().split( "_" )[0] + "_" + theEvent.getLinkId().toString(), Facility.class );
+                        } else if ( event instanceof ActivityEndEvent ) {
+                                ActivityEndEvent theEvent = (ActivityEndEvent) event;
+                                return Id.create( theEvent.getActType().split( "_" )[0] + "_" + theEvent.getLinkId().toString(), Facility.class );
+                        } else {
+                                throw new RuntimeException( "unexpected event type=" + ((Event)event).getEventType() ) ;
+                        }
                 }
 
         }
@@ -256,7 +265,7 @@ class InfectionEventHandler implements BasicEventHandler {
 
                 int contactPersons = 0 ;
                 for (PersonWrapper otherPerson : persons) {
-                        if (contactPersons == 10) {
+                        if (contactPersons >= 10) {
                                 break;
                         }
                         // we are essentially looking at the situation when the person leaves the container.  Interactions with other persons who have
@@ -419,9 +428,13 @@ class InfectionEventHandler implements BasicEventHandler {
                 }
         }
         @Override public void reset( int iteration ){
+
                 for (VehicleWrapper vehicleWrapper : this.vehicleMap.values()) {
                         vehicleWrapper.clearPersons();
                 }
+                // why not just vehicleMap.clear()? kai, mar'20
+
+
                 populationSize = 0;
                 for (PersonWrapper person : personMap.values()) {
                         populationSize++;
@@ -482,6 +495,14 @@ class InfectionEventHandler implements BasicEventHandler {
                 lastTimeStep = 0;
 
 
+        }
+        private static double lastNow = -1 ;
+        private double getCorrectedTime( double time, long iteration ) {
+                final double now = Math.min( time, 3600. * 24 ) + iteration * 24. * 3600;
+                if ( now < lastNow ) {
+                        throw new RuntimeException( "we are going backwards in time; something is wrong" );
+                }
+                return now;
         }
         private static class LinkWrapper {
                 private final Id<Link> linkId;
@@ -584,6 +605,5 @@ class InfectionEventHandler implements BasicEventHandler {
         }
         enum Status {susceptible, infectedButNotContagious, contagious, immune};
         enum QuarantineStatus {yes, no}
-
 }
 

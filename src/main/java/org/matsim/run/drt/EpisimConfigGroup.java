@@ -26,6 +26,8 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
 //        public void setCase( Case theCase ){
 //                this.theCase = theCase;
 //        }
+        // yyyyyy I would actually like to have the "cases" back.  Reason is that I would expect that "optimal" calibration parameters to not only depend on
+        // the sample sizes.  kai, mar'20
         // ---
         public enum ClosedActivity { business, educ_higher, educ_secondary, errands, home, leisure, shopping, work }
         private ClosedActivity closedActivity1 = null;
