@@ -1,16 +1,21 @@
 package org.matsim.run.drt;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.ControlerUtils;
+import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.events.EventsUtils;
 
 class KNEventsInfection{
 
-        public static void main( String[] args ){
+        public static void main( String[] args ) throws IOException{
+                OutputDirectoryLogging.catchLogEntries();
+
+
 //                boolean hasCommandLineArgs = true ;
 //                if ( args==null ){
 //                        hasCommandLineArgs = false;
@@ -52,6 +57,8 @@ class KNEventsInfection{
 //                                throw new IllegalStateException( "Unexpected value: " + episimConfig.getCase() );
 //                }
 
+                OutputDirectoryLogging.initLoggingWithOutputDirectory( config.controler().getOutputDirectory() );
+
                 EventsManager events = EventsUtils.createEventsManager();
                 
                 events.addHandler( new InfectionEventHandler( config ) );
@@ -61,6 +68,7 @@ class KNEventsInfection{
                         EventsUtils.readEvents( events, episimConfig.getInputEventsFile() );
                 }
 
+                OutputDirectoryLogging.closeOutputDirLogging();
         }
 
 }
