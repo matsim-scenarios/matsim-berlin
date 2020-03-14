@@ -71,7 +71,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                 // if closedActivity1() is set to "work" and activity1Sample() is set to "0.5" this essentially means that 50% of working people do home office
                 // to do: also switch off infections in pt to / from closed activity.		SM, mar'20
                 if (episimConfig.getClosedActivity1() != null) {
-                        if (rnd.nextDouble() < episimConfig.getClosedActivity1Sample() && episimConfig.getClosedActivity1().toString().equals( activityEndEvent.getActType() )) {
+                	if (rnd.nextDouble() < episimConfig.getClosedActivity1Sample() && episimConfig.getClosedActivity1().toString().equals( activityEndEvent.getActType()) && episimConfig.getClosedActivity1Date() <= iteration) {
                                 return;
                         }
                 }
@@ -103,7 +103,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                 double now = EpisimUtils.getCorrectedTime( entersVehicleEvent.getTime(), iteration );
 
                 // if pt is shut down nothing happens here
-                if (episimConfig.getUsePt() == EpisimConfigGroup.UsePt.no) {
+                if (episimConfig.getUsePt() == EpisimConfigGroup.UsePt.no && episimConfig.getUsePtDate() <= iteration) {
                         return;
                 }
                 // ignore pt drivers
@@ -126,7 +126,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                 double now = EpisimUtils.getCorrectedTime( leavesVehicleEvent.getTime(), iteration );
 
                 // if pt is shut down nothing happens here
-                if (episimConfig.getUsePt() == EpisimConfigGroup.UsePt.no) {
+                if (episimConfig.getUsePt() == EpisimConfigGroup.UsePt.no && episimConfig.getUsePtDate() <= iteration) {
                         return;
                 }
 
@@ -153,7 +153,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 
                 //see ActivityEndEvent for explanation
                 if (episimConfig.getClosedActivity1() != null) {
-                        if (rnd.nextDouble() < episimConfig.getClosedActivity1Sample() && episimConfig.getClosedActivity1().toString().equals( activityStartEvent.getActType() )) {
+                	if (rnd.nextDouble() < episimConfig.getClosedActivity1Sample() && episimConfig.getClosedActivity1().toString().equals(activityStartEvent.getActType()) && episimConfig.getClosedActivity1Date() <= iteration) {
                                 return;
                         }
                 }
@@ -241,7 +241,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                         //  depend on the density), and then a probability of infection in either direction.
 
                         // if we have seen enough, then break, no matter what:
-                        if (contactPersons >= 10) {
+                        if (contactPersons >= 3) {
                                 break;
                         }
                         // For the time being, will just assume that the first 10 persons are the ones we interact with.  Note that because of

@@ -50,6 +50,16 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
                 this.closedActivity1Sample = closedActivity1Sample;
         }
         // ---
+        private double closedActivity1Date = 0;
+        @StringGetter("closedActivity1Date")
+        public double getClosedActivity1Date(){
+                return this.closedActivity1Date;
+        }
+        @StringSetter("closedActivity1Date")
+        public void setClosedActivity1Date( double closedActivity1Date ){
+                this.closedActivity1Date = closedActivity1Date;
+        }
+        // ---
         private ClosedActivity closedActivity2 = null;
         @StringGetter("closedActivity2")
         public ClosedActivity getClosedActivity2(){
@@ -81,6 +91,16 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
                 this.usePt = usePt;
         }
         // ---
+        private double usePtDate = 0;
+        @StringGetter("usePtDate")
+        public double getUsePtDate(){
+                return this.usePtDate;
+        }
+        @StringSetter("usePtDate")
+        public void setUsePtDate( double usePtDate ){
+                this.usePtDate = usePtDate;
+        }
+        // ---
         private String inputEventsFile = null;
         @StringGetter("inputEventsFile")
         public String getInputEventsFile(){
@@ -91,7 +111,7 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
                 this.inputEventsFile = inputEventsFile;
         }
         // ---
-        private double calibrationParameter = 0.0000005;
+        private double calibrationParameter = 0.0000015;
         @StringGetter("calibrationParameter")
         public double getCalibrationParameter(){
                 return this.calibrationParameter;
