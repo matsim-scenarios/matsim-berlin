@@ -12,6 +12,7 @@ class EpisimPerson{
         private InfectionEventHandler.QuarantineStatus quarantineStatus = InfectionEventHandler.QuarantineStatus.no;
         private int infectionDate;
         private int quarantineDate;
+        private String lastFacilityId;
         private Set<EpisimPerson> tracableContactPersons = new HashSet<>();
         EpisimPerson( Id<Person> personId ) {
                 this.personId = personId;
@@ -42,6 +43,12 @@ class EpisimPerson{
         }
         int getQuarantineDate () {
                 return this.quarantineDate;
+        }
+        void setLastFacilityId (String lastFacilityId) {
+            this.lastFacilityId = lastFacilityId;
+        }
+        String getLastFacilityId () {
+            return this.lastFacilityId;
         }
         void addTracableContactPerson( EpisimPerson personWrapper ) {
                 tracableContactPersons.add( personWrapper );
