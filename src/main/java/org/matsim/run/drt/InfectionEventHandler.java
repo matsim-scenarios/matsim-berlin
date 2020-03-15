@@ -67,17 +67,16 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                 }
 
                 // if configured, there will be no infections at activities of a certain type
+                // this includes pt journeys to / from the closed activity
                 // the probability that a there is no infection at a certain activity can be set via episimConfig.getClosedActivity1Sample()
-                // if closedActivity1() is set to "work" and activity1Sample() is set to "0.5" this essentially means that 50% of working people do home office
-                // to do: also switch off infections in pt to / from closed activity.		SM, mar'20
                 if (episimConfig.getClosedActivity1() != null && iteration > 0) {
-                	if (rnd.nextDouble() < episimConfig.getClosedActivity1Sample() && episimConfig.getClosedActivity1().toString().equals( activityEndEvent.getActType()) && episimConfig.getClosedActivity1Date() <= iteration) {
+                	if (episimConfig.getClosedActivity1().toString().equals( activityEndEvent.getActType()) && episimConfig.getClosedActivity1Date() <= iteration) {
                         		handelPersonTrajectory(activityEndEvent.getPersonId(), activityEndEvent.getActType().toString());
                         		return;
                         }
                 }
                 if (episimConfig.getClosedActivity2() != null && iteration > 0) {
-                        if (rnd.nextDouble() < episimConfig.getClosedActivity2Sample() && episimConfig.getClosedActivity2().toString().equals( activityEndEvent.getActType() )) {
+                        if (episimConfig.getClosedActivity2().toString().equals( activityEndEvent.getActType()) && episimConfig.getClosedActivity2Date() <= iteration) {
                         		handelPersonTrajectory(activityEndEvent.getPersonId(), activityEndEvent.getActType().toString());
                         		return;
                         }
@@ -172,7 +171,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                 boolean doInfectionDynamics = true;
                 // check wether pt journey is done to go to / come from closed activity
                 // if so, there will be no infections
-                if (iteration > 0 && episimConfig.getClosedActivity1() != null && episimConfig.getClosedActivity1Date() <= iteration) {
+                if (iteration > 0 && ((episimConfig.getClosedActivity1() != null && episimConfig.getClosedActivity1Date() <= iteration) || (episimConfig.getClosedActivity2() != null && episimConfig.getClosedActivity2Date() <= iteration))) {
                 	String lastActivityType = null;
                     {
                     	int ii = 0;
@@ -181,8 +180,15 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                     		ii++;
                     	}while(lastActivityType.equals("pt") && (personWrapper.getCurrentPositionInTrajectory() - ii) > 0);
                     }
-                    if (lastActivityType.equals(episimConfig.getClosedActivity1().toString())) {
+                    if (episimConfig.getClosedActivity1() != null) {
+                    	if (lastActivityType.equals(episimConfig.getClosedActivity1().toString())) {
                     	doInfectionDynamics = false;
+                    	}
+                    }
+                    if (episimConfig.getClosedActivity2() != null) {
+                    	if (lastActivityType.equals(episimConfig.getClosedActivity2().toString())) {
+                    	doInfectionDynamics = false;
+                    	}
                     }
                     String nextActivityType = null;
                     {
@@ -192,8 +198,15 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                     		ii++;
                     	}while(nextActivityType.equals("pt") && (personWrapper.getCurrentPositionInTrajectory() + ii) < personWrapper.getTrajectory().size() - 1);
                     }
-                    if (nextActivityType.equals(episimConfig.getClosedActivity1().toString())) {
-                    	doInfectionDynamics = false;;
+                    if (episimConfig.getClosedActivity1() != null) {
+                    	if (nextActivityType.equals(episimConfig.getClosedActivity1().toString())) {
+                    	doInfectionDynamics = false;
+                    	}
+                    }
+                    if (episimConfig.getClosedActivity2() != null) {
+                    	if (nextActivityType.equals(episimConfig.getClosedActivity2().toString())) {
+                    	doInfectionDynamics = false;
+                    	}
                     }
                 }
                 
@@ -218,13 +231,13 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 
                 //see ActivityEndEvent for explanation
                 if (episimConfig.getClosedActivity1() != null && iteration > 0) {
-                	if (rnd.nextDouble() < episimConfig.getClosedActivity1Sample() && episimConfig.getClosedActivity1().toString().equals(activityStartEvent.getActType()) && episimConfig.getClosedActivity1Date() <= iteration) {
+                	if (episimConfig.getClosedActivity1().toString().equals(activityStartEvent.getActType()) && episimConfig.getClosedActivity1Date() <= iteration) {
                         	handelPersonTrajectory(activityStartEvent.getPersonId(), activityStartEvent.getActType().toString());    
                 			return;
                         }
                 }
                 if (episimConfig.getClosedActivity2() != null && iteration > 0) {
-                        if (rnd.nextDouble() < episimConfig.getClosedActivity2Sample() && episimConfig.getClosedActivity2().toString().equals( activityStartEvent.getActType() )) {
+                        if (episimConfig.getClosedActivity2().toString().equals( activityStartEvent.getActType()) && episimConfig.getClosedActivity2Date() <= iteration) {
                             handelPersonTrajectory(activityStartEvent.getPersonId(), activityStartEvent.getActType().toString());
                         	return;
                         }
