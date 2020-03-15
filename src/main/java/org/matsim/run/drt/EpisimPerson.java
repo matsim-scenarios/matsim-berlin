@@ -3,7 +3,9 @@ package org.matsim.run.drt;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.population.Person;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 class EpisimPerson{
@@ -12,8 +14,10 @@ class EpisimPerson{
         private InfectionEventHandler.QuarantineStatus quarantineStatus = InfectionEventHandler.QuarantineStatus.no;
         private int infectionDate;
         private int quarantineDate;
+        private int currentPositionInTrajectory;
         private String lastFacilityId;
         private Set<EpisimPerson> tracableContactPersons = new HashSet<>();
+        private List<String> trajectory = new ArrayList<>();
         EpisimPerson( Id<Person> personId ) {
                 this.personId = personId;
         }
@@ -55,5 +59,17 @@ class EpisimPerson{
         }
         Set<EpisimPerson> getTracableContactPersons() {
                 return tracableContactPersons;
+        }
+        void addToTrajectory( String trajectoryElement ) {
+        	trajectory.add( trajectoryElement );
+        }
+        List<String> getTrajectory() {
+            return trajectory;
+        }
+        int getCurrentPositionInTrajectory () {
+            return this.currentPositionInTrajectory;
+        }
+        void setCurrentPositionInTrajectory (int currentPositionInTrajectory) {
+        	this.currentPositionInTrajectory = currentPositionInTrajectory;
         }
 }
