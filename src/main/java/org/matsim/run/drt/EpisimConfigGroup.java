@@ -40,15 +40,15 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
                 this.closedActivity1 = closedActivity1;
         }
         // ---
-        private double closedActivity1Sample = 1;
-        @StringGetter("closedActivity1Sample")
-        public double getClosedActivity1Sample(){
-                return this.closedActivity1Sample;
-        }
-        @StringSetter("closedActivity1Sample")
-        public void setClosedActivity1Sample( double closedActivity1Sample ){
-                this.closedActivity1Sample = closedActivity1Sample;
-        }
+//        private double closedActivity1Sample = 1;
+//        @StringGetter("closedActivity1Sample")
+//        public double getClosedActivity1Sample(){
+//                return this.closedActivity1Sample;
+//        }
+//        @StringSetter("closedActivity1Sample")
+//        public void setClosedActivity1Sample( double closedActivity1Sample ){
+//                this.closedActivity1Sample = closedActivity1Sample;
+//        }
         // ---
         private double closedActivity1Date = 0;
         @StringGetter("closedActivity1Date")
@@ -70,15 +70,25 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
                 this.closedActivity2 = closedActivity2;
         }
         // ---
-        private double closedActivity2Sample = 1;
-        @StringGetter("closedActivity2Sample")
-        public double getClosedActivity2Sample(){
-                return this.closedActivity2Sample;
+        private double closedActivity2Date = 0;
+        @StringGetter("closedActivity2Date")
+        public double getClosedActivity2Date(){
+                return this.closedActivity2Date;
         }
-        @StringSetter("closedActivity2Sample")
-        public void setClosedActivity2Sample( double closedActivity2Sample ){
-                this.closedActivity2Sample = closedActivity2Sample;
+        @StringSetter("closedActivity2Date")
+        public void setClosedActivity2Date( double closedActivity2Date ){
+                this.closedActivity2Date = closedActivity2Date;
         }
+        // ---
+//        private double closedActivity2Sample = 1;
+//        @StringGetter("closedActivity2Sample")
+//        public double getClosedActivity2Sample(){
+//                return this.closedActivity2Sample;
+//        }
+//        @StringSetter("closedActivity2Sample")
+//        public void setClosedActivity2Sample( double closedActivity2Sample ){
+//                this.closedActivity2Sample = closedActivity2Sample;
+//        }
         // ---
         public enum UsePt { yes, no }
         private UsePt usePt = UsePt.yes;
@@ -120,18 +130,6 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
         public void setCalibrationParameter( double calibrationParameter ){
                 this.calibrationParameter = calibrationParameter;
         }
-        // ---
-//        private String runId = null;
-//        @StringGetter("runId")
-//        public String getRunId(){
-//                return this.runId;
-//        }
-//        @StringSetter("runId")
-//        public void setRunId( String runId ){
-//                this.runId = runId;
-//        }
-        // (use runId from regular matsim config.  kai, mar'20)
-        // ---
         // ---
         public enum PutTracablePersonsInQuarantine { yes, no }
         private PutTracablePersonsInQuarantine putTracablePersonsInQuarantine = PutTracablePersonsInQuarantine.no;
