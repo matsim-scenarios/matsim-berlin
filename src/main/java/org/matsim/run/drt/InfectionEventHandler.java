@@ -62,7 +62,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                 double now = EpisimUtils.getCorrectedTime( activityEndEvent.getTime(), iteration );
 
                 //ignore drt and stage activities
-                if( activityEndEvent.getPersonId().toString().startsWith("drt" ) || TripStructureUtils.isStageActivityType( activityEndEvent.getActType() ) ) {
+                if( activityEndEvent.getPersonId().toString().startsWith("drt" ) || activityEndEvent.getPersonId().toString().startsWith("rt" ) || TripStructureUtils.isStageActivityType( activityEndEvent.getActType() ) ) {
                         return;
                 }
 
@@ -83,19 +83,42 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 
                 // find the link
                 EpisimLink link = this.linkMap.computeIfAbsent( activityEndEvent.getLinkId() , EpisimLink::new );
-
+                boolean didInfectionDynamics = false;
                 // go through all facilities on link to eventually find the person and remove it:
                 for( EpisimFacility facilityWrapper : link.getPseudoFacilities() ){
                         EpisimPerson person = facilityWrapper.getPerson( activityEndEvent.getPersonId() );
                         if( person != null ){
-
                                 // run infection dynamics for this person and facility:
                                 infectionDynamicsFacility( person, facilityWrapper, now, activityEndEvent.getActType() );
                                 facilityWrapper.removePerson( person.getPersonId() );
+                                if (person.getLastFacilityId() != null) {
+                                	// if person is still in a container from the day before, remove it
+	                                if (!person.getLastFacilityId().equals(facilityWrapper.getContainerId().toString())) {
+	                                	Id<Facility> id = Id.create(person.getLastFacilityId(), Facility.class);
+	                                	pseudoFacilityMap.get(id).removePerson(person.getPersonId());
+	                                }
+                                }
                                 handleInitialInfections( person );
+                                didInfectionDynamics = true;
                                 break;
                         }
                 }
+                // quick fix for persons that cannot be found above
+                if (!didInfectionDynamics) {
+                	EpisimPerson personWrapper = this.personMap.computeIfAbsent( activityEndEvent.getPersonId(), EpisimPerson::new );
+                	
+                	// create pseudo facility id that includes the activity type:
+                    Id<Facility> pseudoFacilityId = createPseudoFacilityId( activityEndEvent );
+
+                    // find the facility
+                    EpisimFacility pseudoFacilityWrapper = this.pseudoFacilityMap.computeIfAbsent(pseudoFacilityId, EpisimFacility::new );
+                    // it is assumed that these persons start their activity at 00:00
+                    pseudoFacilityWrapper.addPerson(personWrapper, iteration * 86400 );
+                    infectionDynamicsFacility( personWrapper, pseudoFacilityWrapper, now, activityEndEvent.getActType() );
+                    pseudoFacilityWrapper.removePerson(personWrapper.getPersonId());
+                	
+                }
+               
 
         }
 
@@ -138,11 +161,12 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                 // find vehicle:
                 EpisimVehicle vehicle = this.vehicleMap.get( leavesVehicleEvent.getVehicleId() );
 
-                // remove person from vehicle:
+                
                 EpisimPerson personWrapper = vehicle.getPerson( leavesVehicleEvent.getPersonId() );
 
                 infectionDynamicsVehicle( personWrapper, vehicle, now );
-
+                
+                // remove person from vehicle:
                 vehicle.removePerson( personWrapper.getPersonId() );
 
 
@@ -163,7 +187,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                         }
                 }
                 //ignore drt and stage activities
-                if( activityStartEvent.getPersonId().toString().startsWith("drt" ) || TripStructureUtils.isStageActivityType( activityStartEvent.getActType() ) ) {
+                if( activityStartEvent.getPersonId().toString().startsWith("drt" ) || activityStartEvent.getPersonId().toString().startsWith("rt" ) || TripStructureUtils.isStageActivityType( activityStartEvent.getActType() ) ) {
                         return;
                 }
 
@@ -184,6 +208,8 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 
                 // add person to facility
                 pseudoFacilityWrapper.addPerson(personWrapper, now );
+                
+                personWrapper.setLastFacilityId(pseudoFacilityId.toString());
 
         }
 
