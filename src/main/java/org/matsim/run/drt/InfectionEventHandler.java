@@ -73,28 +73,6 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                         return;
                 }
 
-                // if configured, there will be no infections at activities of a certain type
-                // this includes pt journeys to / from the closed activity
-                // the probability that a there is no infection at a certain activity can be set via episimConfig.getClosedActivity1Sample()
-                if (episimConfig.getClosedActivity1() != null && iteration > 0) {
-                	if ( activityEndEvent.getActType().contains( episimConfig.getClosedActivity1() )
-                                             && episimConfig.getClosedActivity1Date() <= iteration) {
-                        		handelPersonTrajectory(activityEndEvent.getPersonId(), activityEndEvent.getActType() );
-                        		return;
-                        }
-                }
-                if (episimConfig.getClosedActivity2() != null && iteration > 0) {
-                        if ( activityEndEvent.getActType().contains( episimConfig.getClosedActivity2() )
-                                             && episimConfig.getClosedActivity2Date() <= iteration) {
-                        		handelPersonTrajectory(activityEndEvent.getPersonId(), activityEndEvent.getActType() );
-                        		return;
-                        }
-                }
-
-//                if ( iteration >= 40 && ! activityEndEvent.getActType().contains( "home" ) ) {
-//                        return;
-//                }
-
                 // find the link
                 EpisimLink link = this.linkMap.computeIfAbsent( activityEndEvent.getLinkId() , EpisimLink::new );
                 boolean didInfectionDynamics = false;
@@ -133,7 +111,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 
                 }
 
-                handelPersonTrajectory(activityEndEvent.getPersonId(), activityEndEvent.getActType().toString());
+                handlePersonTrajectory(activityEndEvent.getPersonId(), activityEndEvent.getActType().toString());
 
         }
 
@@ -147,7 +125,6 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 
                 // if pt is shut down nothing happens here
                 if (episimConfig.getUsePt() == EpisimConfigGroup.UsePt.no && episimConfig.getUsePtDate() <= iteration) {
-                		handelPersonTrajectory(entersVehicleEvent.getPersonId(), "pt");
                 		return;
                 }
 
@@ -172,7 +149,6 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 
                 // if pt is shut down nothing happens here
                 if (episimConfig.getUsePt() == EpisimConfigGroup.UsePt.no && episimConfig.getUsePtDate() <= iteration) {
-                    	handelPersonTrajectory(leavesVehicleEvent.getPersonId(), "pt");
                 		return;
                 }
                 // find vehicle:
@@ -181,57 +157,11 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 
                 EpisimPerson personWrapper = vehicle.getPerson( leavesVehicleEvent.getPersonId() );
 
-                boolean doInfectionDynamics = true;
-                // check wether pt journey is done to go to / come from closed activity
-                // if so, there will be no infections
-                if (iteration > 0 && ((episimConfig.getClosedActivity1() != null && episimConfig.getClosedActivity1Date() <= iteration) || (episimConfig.getClosedActivity2() != null && episimConfig.getClosedActivity2Date() <= iteration))) {
-                	String lastActivityType = null;
-                    {
-                    	int ii = 0;
-                    	do {
-                    		lastActivityType = personWrapper.getTrajectory().get(personWrapper.getCurrentPositionInTrajectory() - ii);
-                    		ii++;
-                    	}while(lastActivityType.equals("pt") && (personWrapper.getCurrentPositionInTrajectory() - ii) > 0);
-                    }
-                    if (episimConfig.getClosedActivity1() != null) {
-                    	if (lastActivityType.equals(episimConfig.getClosedActivity1().toString())) {
-                    	doInfectionDynamics = false;
-                    	}
-                    }
-                    if (episimConfig.getClosedActivity2() != null) {
-                    	if (lastActivityType.equals(episimConfig.getClosedActivity2().toString())) {
-                    	doInfectionDynamics = false;
-                    	}
-                    }
-                    String nextActivityType = null;
-                    {
-                    	int ii = 0;
-                    	do {
-                    		nextActivityType = personWrapper.getTrajectory().get(personWrapper.getCurrentPositionInTrajectory() + ii);
-                    		ii++;
-                    	}while(nextActivityType.equals("pt") && (personWrapper.getCurrentPositionInTrajectory() + ii) < personWrapper.getTrajectory().size() - 1);
-                    }
-                    if (episimConfig.getClosedActivity1() != null) {
-                    	if (nextActivityType.equals(episimConfig.getClosedActivity1().toString())) {
-                    	doInfectionDynamics = false;
-                    	}
-                    }
-                    if (episimConfig.getClosedActivity2() != null) {
-                    	if (nextActivityType.equals(episimConfig.getClosedActivity2().toString())) {
-                    	doInfectionDynamics = false;
-                    	}
-                    }
-                }
+                infectionDynamicsVehicle( personWrapper, vehicle, now );
 
-                if (doInfectionDynamics) {
-                	infectionDynamicsVehicle( personWrapper, vehicle, now );
-                }
 
                 // remove person from vehicle:
                 vehicle.removePerson( personWrapper.getPersonId() );
-
-                handelPersonTrajectory(leavesVehicleEvent.getPersonId(), "pt");
-
         }
 
         @Override public void handleEvent( ActivityStartEvent activityStartEvent ) {
@@ -241,24 +171,6 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                 if( activityStartEvent.getPersonId().toString().startsWith("drt" ) || activityStartEvent.getPersonId().toString().startsWith("rt" ) || TripStructureUtils.isStageActivityType( activityStartEvent.getActType() ) ) {
                         return;
                 }
-
-                //see ActivityEndEvent for explanation
-                if (episimConfig.getClosedActivity1() != null && iteration > 0) {
-                	if (episimConfig.getClosedActivity1().toString().equals(activityStartEvent.getActType()) && episimConfig.getClosedActivity1Date() <= iteration) {
-                        	handelPersonTrajectory(activityStartEvent.getPersonId(), activityStartEvent.getActType().toString());
-                			return;
-                        }
-                }
-                if (episimConfig.getClosedActivity2() != null && iteration > 0) {
-                        if (episimConfig.getClosedActivity2().toString().equals( activityStartEvent.getActType()) && episimConfig.getClosedActivity2Date() <= iteration) {
-                            handelPersonTrajectory(activityStartEvent.getPersonId(), activityStartEvent.getActType().toString());
-                        	return;
-                        }
-                }
-
-//                if ( iteration >= 40 && ! activityStartEvent.getActType().contains( "home" ) ) {
-//                        return;
-//                }
 
                 // find the person:
                 EpisimPerson personWrapper = this.personMap.computeIfAbsent( activityStartEvent.getPersonId(), EpisimPerson::new );
@@ -280,7 +192,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 
                 personWrapper.setLastFacilityId(pseudoFacilityId.toString());
 
-                handelPersonTrajectory(activityStartEvent.getPersonId(), activityStartEvent.getActType().toString());
+                handlePersonTrajectory(activityStartEvent.getPersonId(), activityStartEvent.getActType().toString());
 
         }
 
@@ -301,8 +213,11 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                 }
 
         }
-		private void handelPersonTrajectory(Id<Person> personId, String trajectoryElement) {
+		private void handlePersonTrajectory(Id<Person> personId, String trajectoryElement) {
 			EpisimPerson person = personMap.get(personId);
+			if (person.getCurrentPositionInTrajectory() + 1 == person.getTrajectory().size()) {
+				return;
+			}
 			person.setCurrentPositionInTrajectory(person.getCurrentPositionInTrajectory() + 1);
 			if (iteration > 0) {
 				return;
@@ -331,11 +246,20 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                 infectionDynamicsGeneralized( personLeavingFacility, facility, now, actType );
         }
         private void infectionDynamicsGeneralized( EpisimPerson personLeavingContainer, EpisimContainer<?> container, double now, String infectionType ) {
+        		
+        		if (iteration == 0) {
+        			return;
+        		}
 
                 if ( !EpisimUtils.hasStatusRelevantForInfectionDynamics( personLeavingContainer ) || personLeavingContainer.getQuarantineStatus() == QuarantineStatus.yes ) {
                         return ;
                 }
-
+                if (container instanceof EpisimFacility && !EpisimUtils.activityRelevantForInfectionDynamics(personLeavingContainer, episimConfig, iteration)) {
+                		return;
+                }
+                if (container instanceof EpisimVehicle && !EpisimUtils.tripRelevantForInfectionDynamics(personLeavingContainer, episimConfig, iteration)) {
+                	return;
+                }
                 int contactPersons = 0 ;
 
                 ArrayList<EpisimPerson> personsToInteractWith = new ArrayList<>( container.getPersons() );
@@ -366,7 +290,12 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                         if ( !EpisimUtils.hasStatusRelevantForInfectionDynamics( otherPerson ) || otherPerson.getQuarantineStatus() == QuarantineStatus.yes) {
                                 continue;
                         }
-
+                        if (container instanceof EpisimFacility && !EpisimUtils.activityRelevantForInfectionDynamics(otherPerson, episimConfig, iteration)) {
+                    			continue;
+                        }
+                        if (container instanceof EpisimVehicle && !EpisimUtils.tripRelevantForInfectionDynamics(otherPerson, episimConfig, iteration)) {
+                        		continue;
+                        }
                         if ( personLeavingContainer.getStatus()==otherPerson.getStatus() ) {
                                 // (if they have the same status, then nothing can happen between them)
                                 continue;
