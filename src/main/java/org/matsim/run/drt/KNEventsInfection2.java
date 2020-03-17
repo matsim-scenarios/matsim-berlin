@@ -23,19 +23,13 @@ class KNEventsInfection2{
                 episimConfig.setSample(0.01);
                 episimConfig.setCalibrationParameter(2);
 
-                //                                filename = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/output-berlin-v5.4-10pct/berlin-v5.4-10pct.output_events_reduced.xml.gz";
-
-//                episimConfig.setInputEventsFile( "../snzDrt220.0.events.reduced.xml.gz" );
-//                episimConfig.setSample(0.25);
-//                episimConfig.setCalibrationParameter(0.000_000_5);
-
-                config.controler().setOutputDirectory( "output-2-wo-pt-no-work-no-leisure" );
-
                 episimConfig.setUsePt( EpisimConfigGroup.UsePt.no );
-                episimConfig.setClosedActivity1( "work" );
-//                episimConfig.setClosedActivity1Sample( 1. );
-                episimConfig.setClosedActivity2( "leisure" );
-//                episimConfig.setClosedActivity2Sample( 1. );
+                episimConfig.setUsePtDate( 10. );
+                config.controler().setOutputDirectory( "output-wo-pt-from-it10" );
+
+//                episimConfig.setShutdownEverythingExceptContaining( "home" );
+//                episimConfig.setShutdownDate( 10 );
+//                config.controler().setOutputDirectory( "output-shutdown-everything-except-home-from-it10" );
 
                 ConfigUtils.applyCommandline( config, Arrays.copyOfRange( args, 0, args.length ) ) ;
 
