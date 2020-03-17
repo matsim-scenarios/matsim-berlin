@@ -145,7 +145,12 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                             lastModes2Randomization.put(mode, additiveRandomization);
                         }
 //                        System.err.println(person.getId().toString() + ";" + direction.toString() + ";" + additiveRandomization);
+//                        utility *= modeRandom; // analogue beta factor (taste variations)
+
                         utility += additiveRandomization;
+                        if (utility > 0) {
+                            utility = 0;
+                        }
                     }
                 }
             }
