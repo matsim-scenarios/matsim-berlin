@@ -26,17 +26,19 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
 //        public void setCase( Case theCase ){
 //                this.theCase = theCase;
 //        }
-        // yyyyyy I would actually like to have the "cases" back.  Reason is that I would expect that "optimal" calibration parameters to not only depend on
+        // yyyyyy I woud actually like to have the "cases" back.  Reason is that I would expect that "optimal" calibration parameters to not only depend on
         // the sample sizes.  kai, mar'20
         // ---
-        public enum ClosedActivity { business, educ_higher, educ_secondary, errands, home, leisure, shopping, work }
-        private ClosedActivity closedActivity1 = null;
+//        public enum ClosedActivity { business, educ_higher, educ_secondary, errands, home, leisure, shopping, work }
+        // these are better Strings.  Let's discussion in person.  kai, mar'20
+
+        private String closedActivity1 = null;
         @StringGetter("closedActivity1")
-        public ClosedActivity getClosedActivity1(){
+        public String getClosedActivity1(){
                 return this.closedActivity1;
         }
         @StringSetter("closedActivity1")
-        public void setClosedActivity1( ClosedActivity closedActivity1 ){
+        public void setClosedActivity1( String closedActivity1 ){
                 this.closedActivity1 = closedActivity1;
         }
         // ---
@@ -60,13 +62,13 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
                 this.closedActivity1Date = closedActivity1Date;
         }
         // ---
-        private ClosedActivity closedActivity2 = null;
+        private String closedActivity2 = null;
         @StringGetter("closedActivity2")
-        public ClosedActivity getClosedActivity2(){
+        public String getClosedActivity2(){
                 return this.closedActivity2;
         }
         @StringSetter("closedActivity2")
-        public void setClosedActivity2( ClosedActivity closedActivity2 ){
+        public void setClosedActivity2( String closedActivity2 ){
                 this.closedActivity2 = closedActivity2;
         }
         // ---
