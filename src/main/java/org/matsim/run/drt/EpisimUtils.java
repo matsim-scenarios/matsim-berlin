@@ -1,6 +1,8 @@
 package org.matsim.run.drt;
 
 import org.jfree.util.Log;
+import org.matsim.run.drt.InfectionEventHandler.EpisimFacility;
+import org.matsim.run.drt.InfectionEventHandler.EpisimVehicle;
 
 class EpisimUtils{
         private static double lastNow = -1 ;
@@ -63,5 +65,30 @@ class EpisimUtils{
 			}
 
 			return tripRelevant;
+		}
+		public static boolean isRelevantForShutdown(EpisimPerson person, EpisimConfigGroup episimConfig, EpisimContainer<?> container) {
+			boolean shutDownRelevant = false;
+			if (container instanceof EpisimFacility) {
+				String act = person.getTrajectory().get(person.getCurrentPositionInTrajectory());
+				if (!act.contains("home")) {
+					shutDownRelevant = true;
+				}
+			}
+			else if (container instanceof EpisimVehicle) {
+				String lastAct = "";
+				if (person.getCurrentPositionInTrajectory() != 0) {
+					lastAct = person.getTrajectory().get(person.getCurrentPositionInTrajectory()-1); 
+					 
+				} 
+				String nextAct = person.getTrajectory().get(person.getCurrentPositionInTrajectory());
+				if (!nextAct.contains("home") || !lastAct.contains("home")) {
+					shutDownRelevant = true;
+				}
+				
+			}
+			else {
+				throw new RuntimeException("something went wrong");
+			}
+			return shutDownRelevant;
 		}
 }

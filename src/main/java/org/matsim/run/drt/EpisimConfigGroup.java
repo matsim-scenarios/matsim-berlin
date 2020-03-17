@@ -113,6 +113,16 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
                 this.usePtDate = usePtDate;
         }
         // ---
+        private double shutdownDate = 1000;
+        @StringGetter("shutdownDate")
+        public double getShutdownDate(){
+                return this.shutdownDate;
+        }
+        @StringSetter("shutdownDate")
+        public void setShutdownDate( double shutdownDate ){
+                this.shutdownDate = shutdownDate;
+        }
+        // ---
         private String inputEventsFile = null;
         @StringGetter("inputEventsFile")
         public String getInputEventsFile(){

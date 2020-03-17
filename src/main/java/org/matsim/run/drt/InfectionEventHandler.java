@@ -258,7 +258,10 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                 		return;
                 }
                 if (container instanceof EpisimVehicle && !EpisimUtils.tripRelevantForInfectionDynamics(personLeavingContainer, episimConfig, iteration)) {
-                	return;
+                		return;
+                }
+                if (iteration >= episimConfig.getShutdownDate() && EpisimUtils.isRelevantForShutdown(personLeavingContainer, episimConfig, container)) {
+                		return;
                 }
                 int contactPersons = 0 ;
 
@@ -299,6 +302,9 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                         if ( personLeavingContainer.getStatus()==otherPerson.getStatus() ) {
                                 // (if they have the same status, then nothing can happen between them)
                                 continue;
+                        }
+                        if (iteration >= episimConfig.getShutdownDate() && EpisimUtils.isRelevantForShutdown(otherPerson, episimConfig, container)) {
+                    			continue;
                         }
 
                         // keep track of contacts:
@@ -450,12 +456,12 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                 }
         }
 
-        private static class EpisimVehicle extends EpisimContainer<Vehicle>{
+        static class EpisimVehicle extends EpisimContainer<Vehicle>{
                 EpisimVehicle( Id<Vehicle> vehicleId ){
                         super( vehicleId );
                 }
         }
-        private static class EpisimFacility extends EpisimContainer<Facility>{
+        static class EpisimFacility extends EpisimContainer<Facility>{
                 EpisimFacility( Id<Facility> facilityId ){
                         super( facilityId );
                 }
