@@ -442,7 +442,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
         }
         private static class EpisimLink{
                 private final Id<Link> linkId;
-                private Set<EpisimFacility> pseudoFacilites = new HashSet<>();
+                private Set<EpisimFacility> pseudoFacilites = new LinkedHashSet<>();
                 EpisimLink( Id<Link> vehicleId ) {
                         this.linkId = vehicleId;
                 }

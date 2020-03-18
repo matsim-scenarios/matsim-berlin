@@ -4,7 +4,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.population.Person;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -16,7 +16,7 @@ class EpisimPerson{
         private int quarantineDate;
         private int currentPositionInTrajectory;
         private String lastFacilityId;
-        private Set<EpisimPerson> tracableContactPersons = new HashSet<>();
+        private Set<EpisimPerson> tracableContactPersons = new LinkedHashSet<>();
         private List<String> trajectory = new ArrayList<>();
         EpisimPerson( Id<Person> personId ) {
                 this.personId = personId;
