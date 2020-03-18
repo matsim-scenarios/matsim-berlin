@@ -56,7 +56,8 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 
         private int iteration=0;
 
-        private Random rnd = MatsimRandom.getLocalInstance();
+//        private Random rnd = MatsimRandom.getLocalInstance();
+        private Random rnd = new Random(1);
 
         private EpisimReporting reporting ;
 

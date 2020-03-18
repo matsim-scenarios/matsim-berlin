@@ -1,6 +1,5 @@
 package org.matsim.run.drt;
 
-import org.jfree.util.Log;
 import org.matsim.run.drt.InfectionEventHandler.EpisimFacility;
 import org.matsim.run.drt.InfectionEventHandler.EpisimVehicle;
 
@@ -30,65 +29,65 @@ class EpisimUtils{
                 }
         }
         static boolean activityRelevantForInfectionDynamics( EpisimPerson person, EpisimConfigGroup episimConfig, int iteration) {
-        	boolean actRelevant = true;
-        	String act = person.getTrajectory().get(person.getCurrentPositionInTrajectory());
-        	if (episimConfig.getClosedActivity1() != null) {
-            	if ( act.contains( episimConfig.getClosedActivity1() )&& episimConfig.getClosedActivity1Date() <= iteration) {
-            			actRelevant = false;
-                    }
-            }
-        	if (episimConfig.getClosedActivity2() != null ) {
-            	if ( act.contains( episimConfig.getClosedActivity2() ) && episimConfig.getClosedActivity2Date() <= iteration) {
-            			actRelevant = false;
-                    }
-            }
-        	return actRelevant;
+                boolean actRelevant = true;
+                String act = person.getTrajectory().get(person.getCurrentPositionInTrajectory());
+                if (episimConfig.getClosedActivity1() != null) {
+                        if ( act.contains( episimConfig.getClosedActivity1() )&& episimConfig.getClosedActivity1Date() <= iteration) {
+                                actRelevant = false;
+                        }
+                }
+                if (episimConfig.getClosedActivity2() != null ) {
+                        if ( act.contains( episimConfig.getClosedActivity2() ) && episimConfig.getClosedActivity2Date() <= iteration) {
+                                actRelevant = false;
+                        }
+                }
+                return actRelevant;
         }
-		public static boolean tripRelevantForInfectionDynamics(EpisimPerson person, EpisimConfigGroup episimConfig, int iteration) {
-			boolean tripRelevant = true;
-			String lastAct = "";
-			if (person.getCurrentPositionInTrajectory() != 0) {
-				lastAct = person.getTrajectory().get(person.getCurrentPositionInTrajectory()-1); 
-				 
-			} 
-			String nextAct = person.getTrajectory().get(person.getCurrentPositionInTrajectory());
-			
-			if (episimConfig.getClosedActivity1() != null && episimConfig.getClosedActivity1Date() <= iteration) {
-	            if (lastAct.contains(episimConfig.getClosedActivity1()) || nextAct.contains(episimConfig.getClosedActivity1())) {
-	            	tripRelevant = false;
-	            }
-			}
-			if (episimConfig.getClosedActivity2() != null && episimConfig.getClosedActivity2Date() <= iteration) {
-	            if (lastAct.contains(episimConfig.getClosedActivity2()) || nextAct.contains(episimConfig.getClosedActivity2())) {
-	            	tripRelevant = false;
-	            }
-			}
+        static boolean tripRelevantForInfectionDynamics( EpisimPerson person, EpisimConfigGroup episimConfig, int iteration ) {
+                boolean tripRelevant = true;
+                String lastAct = "";
+                if (person.getCurrentPositionInTrajectory() != 0) {
+                        lastAct = person.getTrajectory().get(person.getCurrentPositionInTrajectory()-1);
 
-			return tripRelevant;
-		}
-		public static boolean isRelevantForShutdown(EpisimPerson person, EpisimConfigGroup episimConfig, EpisimContainer<?> container) {
-			boolean shutDownRelevant = false;
-			if (container instanceof EpisimFacility) {
-				String act = person.getTrajectory().get(person.getCurrentPositionInTrajectory());
-				if (!act.contains("home")) {
-					shutDownRelevant = true;
-				}
-			}
-			else if (container instanceof EpisimVehicle) {
-				String lastAct = "";
-				if (person.getCurrentPositionInTrajectory() != 0) {
-					lastAct = person.getTrajectory().get(person.getCurrentPositionInTrajectory()-1); 
-					 
-				} 
-				String nextAct = person.getTrajectory().get(person.getCurrentPositionInTrajectory());
-				if (!nextAct.contains("home") || !lastAct.contains("home")) {
-					shutDownRelevant = true;
-				}
-				
-			}
-			else {
-				throw new RuntimeException("something went wrong");
-			}
-			return shutDownRelevant;
-		}
+                }
+                String nextAct = person.getTrajectory().get(person.getCurrentPositionInTrajectory());
+
+                if (episimConfig.getClosedActivity1() != null && episimConfig.getClosedActivity1Date() <= iteration) {
+                        if (lastAct.contains(episimConfig.getClosedActivity1()) || nextAct.contains(episimConfig.getClosedActivity1())) {
+                                tripRelevant = false;
+                        }
+                }
+                if (episimConfig.getClosedActivity2() != null && episimConfig.getClosedActivity2Date() <= iteration) {
+                        if (lastAct.contains(episimConfig.getClosedActivity2()) || nextAct.contains(episimConfig.getClosedActivity2())) {
+                                tripRelevant = false;
+                        }
+                }
+
+                return tripRelevant;
+        }
+        static boolean isRelevantForShutdown( EpisimPerson person, EpisimConfigGroup episimConfig, EpisimContainer<?> container ) {
+                boolean shutDownRelevant = false;
+                if (container instanceof EpisimFacility) {
+                        String act = person.getTrajectory().get(person.getCurrentPositionInTrajectory());
+                        if (!act.contains("home")) {
+                                shutDownRelevant = true;
+                        }
+                }
+                else if (container instanceof EpisimVehicle) {
+                        String lastAct = "";
+                        if (person.getCurrentPositionInTrajectory() != 0) {
+                                lastAct = person.getTrajectory().get(person.getCurrentPositionInTrajectory()-1);
+
+                        }
+                        String nextAct = person.getTrajectory().get(person.getCurrentPositionInTrajectory());
+                        if (!nextAct.contains("home") || !lastAct.contains("home")) {
+                                shutDownRelevant = true;
+                        }
+
+                }
+                else {
+                        throw new RuntimeException("something went wrong");
+                }
+                return shutDownRelevant;
+        }
 }
