@@ -405,7 +405,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                                         }
                                         break;
                                 case contagious:
-                                        if (iteration - person.getInfectionDate()  == 6 && rnd.nextDouble() < 0.2 ) {
+                                        if (iteration - person.getInfectionDate()  == 6 && rnd.nextDouble() < episimConfig.getQuarantineSample() ) {
                                                 person.setQuarantineStatus( QuarantineStatus.yes );
                                                 person.setQuarantineDate(iteration);
                                                 if (episimConfig.getPutTracablePersonsInQuarantine()==EpisimConfigGroup.PutTracablePersonsInQuarantine.yes) {

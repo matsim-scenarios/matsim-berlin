@@ -123,6 +123,16 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
                 this.shutdownDate = shutdownDate;
         }
         // ---
+        private double quarantineSample = 0.2;
+        @StringGetter("quarantineSample")
+        public double getQuarantineSample(){
+                return this.quarantineSample;
+        }
+        @StringSetter("quarantineSample")
+        public void setQuarantineSample( double quarantineSample ){
+                this.quarantineSample = quarantineSample;
+        }
+        // ---
         private String inputEventsFile = null;
         @StringGetter("inputEventsFile")
         public String getInputEventsFile(){
@@ -133,7 +143,7 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
                 this.inputEventsFile = inputEventsFile;
         }
         // ---
-        private double calibrationParameter = 0.0000015;
+        private double calibrationParameter = 0.0000012;
         @StringGetter("calibrationParameter")
         public double getCalibrationParameter(){
                 return this.calibrationParameter;
