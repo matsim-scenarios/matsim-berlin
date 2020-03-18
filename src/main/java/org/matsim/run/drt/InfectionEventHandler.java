@@ -45,10 +45,10 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 
         @Inject private Scenario scenario;
 
-        private Map<Id<Person>, EpisimPerson> personMap = new HashMap<>();
-        private Map<Id<Vehicle>, EpisimVehicle> vehicleMap = new HashMap<>();
-        private Map<Id<Facility>, EpisimFacility> pseudoFacilityMap = new HashMap<>();
-        private Map<Id<Link>, EpisimLink> linkMap = new HashMap<>();
+        private Map<Id<Person>, EpisimPerson> personMap = new LinkedHashMap<>();
+        private Map<Id<Vehicle>, EpisimVehicle> vehicleMap = new LinkedHashMap<>();
+        private Map<Id<Facility>, EpisimFacility> pseudoFacilityMap = new LinkedHashMap<>();
+        private Map<Id<Link>, EpisimLink> linkMap = new LinkedHashMap<>();
 
         private int cnt = 10 ;
 
