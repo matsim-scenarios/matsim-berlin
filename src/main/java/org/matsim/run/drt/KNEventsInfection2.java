@@ -30,8 +30,9 @@ class KNEventsInfection2{
 //                episimConfig.setUsePtDate( 10. );
 //                config.controler().setOutputDirectory( "output-wo-pt-from-it10" );
 
-//                episimConfig.setShutdownDate( 30 );
-//                config.controler().setOutputDirectory( "output-shutdown-everything-except-home-from-it30" );
+                int closingIteration = 10;
+                episimConfig.setShutdownDate( closingIteration );
+                config.controler().setOutputDirectory( "output-shutdown-everything-except-home-and-work-from-it" + closingIteration );
 
 //                int closingIteration = 30 ;
 //                episimConfig.setClosedActivity1( "work" );
@@ -40,14 +41,14 @@ class KNEventsInfection2{
 //                episimConfig.setClosedActivity2Date( closingIteration );
 //                config.controler().setOutputDirectory( "output-shutdown-work-leisure-from-it" + closingIteration );
 
-                int closingIteration = 30 ;
-                episimConfig.setClosedActivity1( "work" );
-                episimConfig.setClosedActivity2( "leisure" );
-                episimConfig.setClosedActivity1Date( closingIteration );
-                episimConfig.setClosedActivity2Date( closingIteration );
-                episimConfig.setUsePt( EpisimConfigGroup.UsePt.no );
-                episimConfig.setUsePtDate( closingIteration );
-                config.controler().setOutputDirectory( "output-shutdown-work-leisure-pt-from-it" + closingIteration );
+//                int closingIteration = 30 ;
+//                episimConfig.setClosedActivity1( "work" );
+//                episimConfig.setClosedActivity2( "leisure" );
+//                episimConfig.setClosedActivity1Date( closingIteration );
+//                episimConfig.setClosedActivity2Date( closingIteration );
+//                episimConfig.setUsePt( EpisimConfigGroup.UsePt.no );
+//                episimConfig.setUsePtDate( closingIteration );
+//                config.controler().setOutputDirectory( "output-shutdown-work-leisure-pt-from-it" + closingIteration );
 
                 ConfigUtils.applyCommandline( config, Arrays.copyOfRange( args, 0, args.length ) ) ;
 
