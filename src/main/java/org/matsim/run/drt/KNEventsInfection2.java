@@ -6,7 +6,7 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.ControlerUtils;
 import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.events.EventsUtils;
-import org.matsim.run.drt.EpisimConfigGroup.FacilitiesHandling;
+import scala.Int;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -21,8 +21,7 @@ class KNEventsInfection2{
 
 //                episimConfig.setInputEventsFile( "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/berlin-v5.4-1pct.output_events_wo_linkEnterLeave.xml.gz" );
                 episimConfig.setInputEventsFile( "../public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/berlin-v5.4-1pct.output_events_for_episim.xml.gz" );
-                episimConfig.setFacilitiesHandling( FacilitiesHandling.bln );
-//                episimConfig.setSample(0.01);
+                episimConfig.setSample(0.01);
                 episimConfig.setCalibrationParameter(2);
 
 //                config.controler().setOutputDirectory( "output-base" );
@@ -32,10 +31,8 @@ class KNEventsInfection2{
 //                config.controler().setOutputDirectory( "output-wo-pt-from-it10" );
 
                 int closingIteration = 10;
-//                episimConfig.setUsePtDate( closingIteration );
-//                episimConfig.setUsePt( EpisimConfigGroup.UsePt.no );
                 episimConfig.setShutdownDate( closingIteration );
-                config.controler().setOutputDirectory( "output-wpti2-w20pct-leisure00pct-it" + closingIteration );
+                config.controler().setOutputDirectory( "output-shutdown-everything-except-home-and-work-from-it" + closingIteration );
 
 //                int closingIteration = 30 ;
 //                episimConfig.setClosedActivity1( "work" );
@@ -60,6 +57,7 @@ class KNEventsInfection2{
                 EventsManager events = EventsUtils.createEventsManager();
 
                 events.addHandler( new InfectionEventHandler( config ) );
+                InfectionEventHandler.scenarioWithFacilites = false ;
 
                 ControlerUtils.checkConfigConsistencyAndWriteToLog(config, "Just before starting iterations");
                 for ( int iteration=0 ; iteration<=100 ; iteration++ ){

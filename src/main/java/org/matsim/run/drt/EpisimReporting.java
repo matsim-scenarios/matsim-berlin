@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.utils.io.IOUtils;
 
 import java.io.BufferedWriter;
@@ -12,7 +13,7 @@ import java.util.Map;
 
 class EpisimReporting{
         enum InfectionsWriterFields{ time, nInfected, nInQuarantine, nRecovered, nSusceptible, nContagious, nInfectedButNotContagious,
-                nInfectedCumulative, nSeriouslySick, nCritical }
+                nInfectedCumulative }
 
         enum InfectionEventsWriterFields{ time, infector, infected, infectionType }
 
@@ -37,10 +38,8 @@ class EpisimReporting{
                 long nContagious = 0;
                 long nRecovered = 0;
                 long nQuarantined = 0;
-                long nSeriouslySick = 0;
-                long nCritical = 0;
                 for( EpisimPerson person : personMap.values() ){
-                        switch( person.getDiseaseStatus() ) {
+                        switch( person.getStatus() ) {
                                 case susceptible:
                                         nSusceptible++;
                                         break;
@@ -50,20 +49,14 @@ class EpisimReporting{
                                 case contagious:
                                         nContagious++;
                                         break;
-                                case seriouslySick:
-                                        nSeriouslySick++;
-                                        break;
-                                case critical:
-                                        nCritical++;
-                                        break;
                                 case recovered:
                                         nRecovered++;
                                         break;
                                 default:
-                                        throw new IllegalStateException( "Unexpected value: " + person.getDiseaseStatus() );
+                                        throw new IllegalStateException( "Unexpected value: " + person.getStatus() );
                         }
                         switch( person.getQuarantineStatus() ) {
-                                case full:
+                                case yes:
                                         nQuarantined++;
                                         break;
                                 case no:
@@ -95,9 +88,6 @@ class EpisimReporting{
                 array[InfectionsWriterFields.nInfectedCumulative.ordinal()] = Long.toString( (nInfectedButNotContagious + nContagious + nRecovered) );
 
                 array[InfectionsWriterFields.nInQuarantine.ordinal()] = Long.toString( nQuarantined );
-
-                array[InfectionsWriterFields.nSeriouslySick.ordinal()] = Long.toString( nSeriouslySick );
-                array[InfectionsWriterFields.nCritical.ordinal()] = Long.toString( nCritical );
 
                 write( array, infectionsWriter );
         }
