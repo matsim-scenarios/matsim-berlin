@@ -1,8 +1,16 @@
 package org.matsim.run.drt;
 
+import org.apache.log4j.Logger;
+import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ReflectiveConfigGroup;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 public final class EpisimConfigGroup extends ReflectiveConfigGroup {
+        private static final Logger log = Logger.getLogger( EpisimConfigGroup.class );
         private static final String GROUPNAME = "episim";
         public EpisimConfigGroup( ){
                 super( GROUPNAME );
@@ -114,15 +122,15 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
                 this.usePtDate = usePtDate;
         }
         // ---
-        private double shutdownDate = 1000;
-        @StringGetter("shutdownDate")
-        public double getShutdownDate(){
-                return this.shutdownDate;
-        }
-        @StringSetter("shutdownDate")
-        public void setShutdownDate( double shutdownDate ){
-                this.shutdownDate = shutdownDate;
-        }
+//        private double shutdownDate = 1000;
+//        @StringGetter("shutdownDate")
+//        public double getShutdownDate(){
+//                return this.shutdownDate;
+//        }
+//        @StringSetter("shutdownDate")
+//        public void setShutdownDate( double shutdownDate ){
+//                this.shutdownDate = shutdownDate;
+//        }
         // ---
 //        private double quarantineSample = 0.2;
 //        @StringGetter("quarantineSample")
@@ -176,4 +184,104 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
         public void setFacilitiesHandling( FacilitiesHandling facilitiesHandling ){
                 this.facilitiesHandling = facilitiesHandling;
         }
+        public static class InfectionParams extends ReflectiveConfigGroup {
+                static final String SET_TYPE = "xyz";
+                private String containerName;
+
+                InfectionParams( final String containerName ) {
+                        this();
+                        this.containerName = containerName;
+                }
+
+                private InfectionParams() {
+                        super(SET_TYPE);
+                }
+                //                @StringGetter( "activityType" )
+                String getContainerName(){
+                        return containerName;
+                }
+                //                @StringSetter( "activityType" )
+//                public void setContainerName( String actType ){
+//                        this.containerName = actType;
+//                }
+                // ---
+                private long shutdownDay = Long.MAX_VALUE;
+                /** @noinspection WeakerAccess*/
+                public long getShutdownDay(){
+                        return shutdownDay;
+                }
+                /** @noinspection WeakerAccess
+                 * @return*/
+                public InfectionParams setShutdownDay( long shutdownDay ){
+                        this.shutdownDay = shutdownDay;
+                        return this;
+                }
+                // ---
+                private double remainingFraction = 0.;
+                /** @noinspection WeakerAccess*/
+                public double getRemainingFraction(){
+                        return remainingFraction;
+                }
+                /** @noinspection WeakerAccess
+                 * @return*/
+                public InfectionParams setRemainingFraction( double remainingFraction ){
+                        this.remainingFraction = remainingFraction;
+                        return this;
+                }
+                // ---
+                private double contactIntensity = 1.;
+                /**
+                 * this is from iteration 0!
+                 */
+                public double getContactIntensity(){
+                        return contactIntensity;
+                }
+                /**
+                 * this is from iteration 0!
+                 */
+                public void setContactIntensity( double contactIntensity ){
+                        this.contactIntensity = contactIntensity;
+                }
+        }
+        @Override
+        public void addParameterSet(final ConfigGroup set ) {
+                // this is, I think, necessary for the automatic reading from file, and possibly for the commandline stuff.
+                switch (set.getName()) {
+                        case InfectionParams.SET_TYPE:
+                                addContainerParams( (InfectionParams) set );
+                                break;
+                        default:
+                                throw new IllegalArgumentException(set.getName());
+                }
+        }
+        void addContainerParams( final InfectionParams params ) {
+                final InfectionParams previous = this.getContainerParams().get( params.getContainerName() );
+
+                if (previous != null) {
+                        log.info("scoring parameters for activityType=" + previous.getContainerName() + " were just replaced." );
+
+                        final boolean removed = removeParameterSet(previous);
+                        if (!removed)
+                                throw new RuntimeException("problem replacing params ");
+                }
+
+                super.addParameterSet(params);
+        }
+
+        Map<String, InfectionParams> getContainerParams() {
+                @SuppressWarnings("unchecked")
+                final Collection<InfectionParams> parameters = (Collection<InfectionParams>) getParameterSets( InfectionParams.SET_TYPE );
+                final Map<String, InfectionParams> map = new LinkedHashMap<>();
+
+                for ( InfectionParams pars : parameters) {
+                        if (this.isLocked()) {
+                                pars.setLocked();
+                        }
+                        map.put(pars.getContainerName(), pars );
+                }
+
+                return Collections.unmodifiableMap( map );
+        }
+
+
 }

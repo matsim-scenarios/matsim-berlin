@@ -292,7 +292,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                         }
 
                         // keep track of contacts:
-                        if(infectionType.equals("home") || infectionType.equals("work") || (infectionType.equals("leisure") && rnd.nextDouble() < 0.8)) {
+                        if(infectionType.contains("home") || infectionType.contains("work") || (infectionType.contains("leisure") && rnd.nextDouble() < 0.8)) {
                                 if (!personLeavingContainer.getTracableContactPersons().contains(otherPerson)) {
                                         personLeavingContainer.addTracableContactPerson(otherPerson);
                                 }
@@ -326,10 +326,23 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 
 //                      exponential model by Smieszek. 
 //                      equation 3.2 is used (simplified equation 3.1 which includes the shedding rate and contact intensity into the calibrationParameter
-                        int contactIntensity = 1;
-                        if (container instanceof EpisimVehicle ) {
-                                contactIntensity = 2;
+//                        int contactIntensity = 1;
+//                        if (container instanceof EpisimVehicle ) {
+//                                contactIntensity = 0;
+//                        }
+
+                        double contactIntensity = -1 ;
+                        for( EpisimConfigGroup.InfectionParams infectionParams : episimConfig.getContainerParams().values() ){
+                                if ( infectionType.contains( infectionParams.getContainerName() ) ) {
+                                        contactIntensity = infectionParams.getContactIntensity();
+                                }
                         }
+                        if ( contactIntensity < 0. ) {
+                                log.warn( "infectionType=" + infectionType + "; contactIntensity=" + contactIntensity );
+                        }
+                        Gbl.assertIf( contactIntensity>=0. );
+
+
                         double infectionProba = 1 - Math.exp( - episimConfig.getCalibrationParameter() * contactIntensity * jointTimeInContainer);
                         if ( rnd.nextDouble() < infectionProba ) {
                                 if ( personLeavingContainer.getDiseaseStatus()== DiseaseStatus.susceptible ) {
