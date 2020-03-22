@@ -33,7 +33,7 @@ class KNEventsInfection{
                 EpisimConfigGroup episimConfig = ConfigUtils.addOrGetModule( config, EpisimConfigGroup.class );
 
                 episimConfig.setInputEventsFile("../snzDrt220.0.events.reduced.xml.gz");
-                episimConfig.setSample(0.25);
+//                episimConfig.setSample(0.25);
 
                 config.controler().setRunId("runId");
 

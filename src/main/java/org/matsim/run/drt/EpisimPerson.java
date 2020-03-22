@@ -10,7 +10,7 @@ import java.util.Set;
 
 class EpisimPerson{
         private final Id<Person> personId;
-        private InfectionEventHandler.Status status = InfectionEventHandler.Status.susceptible;
+        private InfectionEventHandler.DiseaseStatus status = InfectionEventHandler.DiseaseStatus.susceptible;
         private InfectionEventHandler.QuarantineStatus quarantineStatus = InfectionEventHandler.QuarantineStatus.no;
         private int infectionDate;
         private int quarantineDate;
@@ -21,7 +21,7 @@ class EpisimPerson{
         EpisimPerson( Id<Person> personId ) {
                 this.personId = personId;
         }
-        void setStatus( InfectionEventHandler.Status status ) {
+        void setDiseaseStatus( InfectionEventHandler.DiseaseStatus status ) {
                 this.status = status;
         }
         void setQuarantineStatus( InfectionEventHandler.QuarantineStatus quarantineStatus ) {
@@ -30,7 +30,7 @@ class EpisimPerson{
         Id<Person> getPersonId(){
                 return personId;
         }
-        InfectionEventHandler.Status getStatus(){
+        InfectionEventHandler.DiseaseStatus getDiseaseStatus(){
                 return status;
         }
         InfectionEventHandler.QuarantineStatus getQuarantineStatus(){
