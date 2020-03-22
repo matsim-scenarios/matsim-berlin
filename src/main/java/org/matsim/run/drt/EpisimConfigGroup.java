@@ -8,13 +8,14 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
                 super( GROUPNAME );
         }
         // ---
-        private double sample = 0.01;
-        public double getSample(){
-                return this.sample;
-        }
-        public void setSample( double sample ){
-                this.sample = sample;
-        }
+//        private double sample = 0.01;
+//        public double getSample(){
+//                return this.sample;
+//        }
+//        public void setSample( double sample ){
+//                this.sample = sample;
+//        }
+        // currently nowhere used.  kai, mar'20
         // ---
 //        public enum Case { berlin1pct, berlin10pct, snz25pct }
 //        private Case theCase = Case.berlin1pct;
@@ -32,15 +33,15 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
 //        public enum ClosedActivity { business, educ_higher, educ_secondary, errands, home, leisure, shopping, work }
         // these are better Strings.  Let's discussion in person.  kai, mar'20
 
-        private String closedActivity1 = null;
-        @StringGetter("closedActivity1")
-        public String getClosedActivity1(){
-                return this.closedActivity1;
-        }
-        @StringSetter("closedActivity1")
-        public void setClosedActivity1( String closedActivity1 ){
-                this.closedActivity1 = closedActivity1;
-        }
+//        private String closedActivity1 = null;
+//        @StringGetter("closedActivity1")
+//        public String getClosedActivity1(){
+//                return this.closedActivity1;
+//        }
+//        @StringSetter("closedActivity1")
+//        public void setClosedActivity1( String closedActivity1 ){
+//                this.closedActivity1 = closedActivity1;
+//        }
         // ---
 //        private double closedActivity1Sample = 1;
 //        @StringGetter("closedActivity1Sample")
@@ -52,35 +53,35 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
 //                this.closedActivity1Sample = closedActivity1Sample;
 //        }
         // ---
-        private double closedActivity1Date = 0;
-        @StringGetter("closedActivity1Date")
-        public double getClosedActivity1Date(){
-                return this.closedActivity1Date;
-        }
-        @StringSetter("closedActivity1Date")
-        public void setClosedActivity1Date( double closedActivity1Date ){
-                this.closedActivity1Date = closedActivity1Date;
-        }
-        // ---
-        private String closedActivity2 = null;
-        @StringGetter("closedActivity2")
-        public String getClosedActivity2(){
-                return this.closedActivity2;
-        }
-        @StringSetter("closedActivity2")
-        public void setClosedActivity2( String closedActivity2 ){
-                this.closedActivity2 = closedActivity2;
-        }
-        // ---
-        private double closedActivity2Date = 0;
-        @StringGetter("closedActivity2Date")
-        public double getClosedActivity2Date(){
-                return this.closedActivity2Date;
-        }
-        @StringSetter("closedActivity2Date")
-        public void setClosedActivity2Date( double closedActivity2Date ){
-                this.closedActivity2Date = closedActivity2Date;
-        }
+//        private double closedActivity1Date = 0;
+//        @StringGetter("closedActivity1Date")
+//        public double getClosedActivity1Date(){
+//                return this.closedActivity1Date;
+//        }
+//        @StringSetter("closedActivity1Date")
+//        public void setClosedActivity1Date( double closedActivity1Date ){
+//                this.closedActivity1Date = closedActivity1Date;
+//        }
+//        // ---
+//        private String closedActivity2 = null;
+//        @StringGetter("closedActivity2")
+//        public String getClosedActivity2(){
+//                return this.closedActivity2;
+//        }
+//        @StringSetter("closedActivity2")
+//        public void setClosedActivity2( String closedActivity2 ){
+//                this.closedActivity2 = closedActivity2;
+//        }
+//        // ---
+//        private double closedActivity2Date = 0;
+//        @StringGetter("closedActivity2Date")
+//        public double getClosedActivity2Date(){
+//                return this.closedActivity2Date;
+//        }
+//        @StringSetter("closedActivity2Date")
+//        public void setClosedActivity2Date( double closedActivity2Date ){
+//                this.closedActivity2Date = closedActivity2Date;
+//        }
         // ---
 //        private double closedActivity2Sample = 1;
 //        @StringGetter("closedActivity2Sample")
@@ -123,15 +124,16 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
                 this.shutdownDate = shutdownDate;
         }
         // ---
-        private double quarantineSample = 0.2;
-        @StringGetter("quarantineSample")
-        public double getQuarantineSample(){
-                return this.quarantineSample;
-        }
-        @StringSetter("quarantineSample")
-        public void setQuarantineSample( double quarantineSample ){
-                this.quarantineSample = quarantineSample;
-        }
+//        private double quarantineSample = 0.2;
+//        @StringGetter("quarantineSample")
+//        public double getQuarantineSample(){
+//                return this.quarantineSample;
+//        }
+//        @StringSetter("quarantineSample")
+//        public void setQuarantineSample( double quarantineSample ){
+//                this.quarantineSample = quarantineSample;
+//        }
+        // alle anderen Bestandteile des "disease progression models" sind auch "in code"!  kai, mar'20
         // ---
         private String inputEventsFile = null;
         @StringGetter("inputEventsFile")
@@ -163,7 +165,15 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
         public void setUsePt( PutTracablePersonsInQuarantine putTracablePersonsInQuarantine ){
                 this.putTracablePersonsInQuarantine = putTracablePersonsInQuarantine;
         }
-        
-        
-
+        // ---
+        public enum FacilitiesHandling {bln, snz}
+        private FacilitiesHandling facilitiesHandling = FacilitiesHandling.snz;
+        @StringGetter( "facilitiesHandling" )
+        public FacilitiesHandling getFacilitiesHandling(){
+                return facilitiesHandling;
+        }
+        @StringSetter( "facilitiesHandling" )
+        public void setFacilitiesHandling( FacilitiesHandling facilitiesHandling ){
+                this.facilitiesHandling = facilitiesHandling;
+        }
 }

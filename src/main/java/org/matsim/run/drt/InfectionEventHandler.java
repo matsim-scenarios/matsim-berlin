@@ -13,10 +13,11 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.gbl.MatsimRandom;
+import org.matsim.core.gbl.Gbl;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.facilities.Facility;
+import org.matsim.run.drt.EpisimConfigGroup.PutTracablePersonsInQuarantine;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vis.snapshotwriters.AgentSnapshotInfo;
 
@@ -39,9 +40,6 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 
 
         private static final Logger log = Logger.getLogger( InfectionEventHandler.class );
-
-        static boolean scenarioWithFacilites = true;
-        // yyyyyy not good to have a static variable non-final, but I do not want to cause merge conflicts.  kai, mar'20
 
         @Inject private Scenario scenario;
 
@@ -198,10 +196,9 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
         }
 
         private Id<Facility> createPseudoFacilityId( HasFacilityId event ) {
-                if (scenarioWithFacilites ) {
+                if (episimConfig.getFacilitiesHandling()== EpisimConfigGroup.FacilitiesHandling.snz ) {
                         return Id.create( event.getFacilityId(), Facility.class );
-                }
-                else {
+                } else if ( episimConfig.getFacilitiesHandling() == EpisimConfigGroup.FacilitiesHandling.bln ){
                         if ( event instanceof ActivityStartEvent ){
                                 ActivityStartEvent theEvent = (ActivityStartEvent) event;
                                 return Id.create( theEvent.getActType().split( "_" )[0] + "_" + theEvent.getLinkId().toString(), Facility.class );
@@ -211,6 +208,8 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                         } else {
                                 throw new RuntimeException( "unexpected event type=" + ((Event)event).getEventType() ) ;
                         }
+                } else {
+                        throw new RuntimeException( Gbl.NOT_IMPLEMENTED );
                 }
 
         }
@@ -228,7 +227,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
         private void handleInitialInfections( EpisimPerson personWrapper ){
                 // initial infections:
                 if( cnt > 0 ){
-                        personWrapper.setStatus( Status.infectedButNotContagious );
+                        personWrapper.setDiseaseStatus( DiseaseStatus.infectedButNotContagious );
                         personWrapper.setInfectionDate(iteration);
                         log.warn(" person " + personWrapper.getPersonId() +" has initial infection");
                         cnt--;
@@ -248,22 +247,14 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
         }
         private void infectionDynamicsGeneralized( EpisimPerson personLeavingContainer, EpisimContainer<?> container, double now, String infectionType ) {
         		
-        		if (iteration == 0) {
-        			return;
-        		}
+                if (iteration == 0) {
+                        return;
+                }
 
-                if ( !EpisimUtils.hasStatusRelevantForInfectionDynamics( personLeavingContainer ) || personLeavingContainer.getQuarantineStatus() == QuarantineStatus.yes ) {
-                        return ;
+                if( EpisimUtils.isRelevantForInfectionDynamics( personLeavingContainer, container, episimConfig, iteration, rnd ) ) {
+                        return;
                 }
-                if (container instanceof EpisimFacility && !EpisimUtils.activityRelevantForInfectionDynamics(personLeavingContainer, episimConfig, iteration)) {
-                		return;
-                }
-                if (container instanceof EpisimVehicle && !EpisimUtils.tripRelevantForInfectionDynamics(personLeavingContainer, episimConfig, iteration)) {
-                		return;
-                }
-                if (iteration >= episimConfig.getShutdownDate() && EpisimUtils.isRelevantForShutdown(personLeavingContainer, episimConfig, container)) {
-                		return;
-                }
+
                 int contactPersons = 0 ;
 
                 ArrayList<EpisimPerson> personsToInteractWith = new ArrayList<>( container.getPersons() );
@@ -291,21 +282,13 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                         // (we count "quarantine" as well since they essentially represent "holes", i.e. persons who are no longer there and thus the
                         // density in the transit container goes down.  kai, mar'20)
 
-                        if ( !EpisimUtils.hasStatusRelevantForInfectionDynamics( otherPerson ) || otherPerson.getQuarantineStatus() == QuarantineStatus.yes) {
-                                continue;
-                        }
-                        if (container instanceof EpisimFacility && !EpisimUtils.activityRelevantForInfectionDynamics(otherPerson, episimConfig, iteration)) {
-                    			continue;
-                        }
-                        if (container instanceof EpisimVehicle && !EpisimUtils.tripRelevantForInfectionDynamics(otherPerson, episimConfig, iteration)) {
-                        		continue;
-                        }
-                        if ( personLeavingContainer.getStatus()==otherPerson.getStatus() ) {
+                        if ( personLeavingContainer.getDiseaseStatus()==otherPerson.getDiseaseStatus() ) {
                                 // (if they have the same status, then nothing can happen between them)
                                 continue;
                         }
-                        if (iteration >= episimConfig.getShutdownDate() && EpisimUtils.isRelevantForShutdown(otherPerson, episimConfig, container)) {
-                    			continue;
+
+                        if( EpisimUtils.isRelevantForInfectionDynamics( personLeavingContainer, container, episimConfig, iteration, rnd ) ) {
+                                return;
                         }
 
                         // keep track of contacts:
@@ -345,11 +328,11 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 //                      equation 3.2 is used (simplified equation 3.1 which includes the shedding rate and contact intensity into the calibrationParameter
                         int contactIntensity = 1;
                         if (container instanceof EpisimVehicle ) {
-                                contactIntensity = 10;
+                                contactIntensity = 2;
                         }
                         double infectionProba = 1 - Math.exp( - episimConfig.getCalibrationParameter() * contactIntensity * jointTimeInContainer);
                         if ( rnd.nextDouble() < infectionProba ) {
-                                if ( personLeavingContainer.getStatus()==Status.susceptible ) {
+                                if ( personLeavingContainer.getDiseaseStatus()== DiseaseStatus.susceptible ) {
                                         infectPerson( personLeavingContainer, otherPerson, now, infectionType );
                                         return;
                                 } else {
@@ -363,19 +346,19 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 
         private void infectPerson( EpisimPerson personWrapper, EpisimPerson infector, double now, String infectionType ){
 
-                if (personWrapper.getStatus() != Status.susceptible) {
-                        throw new RuntimeException("Person to be infected is not susceptible. Status is=" + personWrapper.getStatus());
+                if (personWrapper.getDiseaseStatus() != DiseaseStatus.susceptible) {
+                        throw new RuntimeException("Person to be infected is not susceptible. Status is=" + personWrapper.getDiseaseStatus());
                 }
-                if (infector.getStatus() != Status.contagious) {
-                        throw new RuntimeException("Infector is not contagious. Status is=" + infector.getStatus());
+                if (infector.getDiseaseStatus() != DiseaseStatus.contagious) {
+                        throw new RuntimeException("Infector is not contagious. Status is=" + infector.getDiseaseStatus());
                 }
-                if (personWrapper.getQuarantineStatus() == QuarantineStatus.yes) {
+                if (personWrapper.getQuarantineStatus() == QuarantineStatus.full ) {
                         throw new RuntimeException("Person to be infected is in quarantine.");
                 }
-                if (infector.getQuarantineStatus() == QuarantineStatus.yes) {
+                if (infector.getQuarantineStatus() == QuarantineStatus.full ) {
                         throw new RuntimeException("Infector is in quarantine.");
                 }
-                personWrapper.setStatus( Status.infectedButNotContagious );
+                personWrapper.setDiseaseStatus( DiseaseStatus.infectedButNotContagious );
                 if ( scenario!=null ){
                         final Person person = PopulationUtils.findPerson( personWrapper.getPersonId(), scenario );
                         if( person != null ){
@@ -397,37 +380,70 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 
                 for ( EpisimPerson person : personMap.values()) {
                 	person.setCurrentPositionInTrajectory(0);
-                        switch ( person.getStatus() ) {
+                        switch ( person.getDiseaseStatus() ) {
                                 case susceptible:
                                         break;
                                 case infectedButNotContagious:
                                         if ( iteration - person.getInfectionDate() >= 4 ) {
-                                                person.setStatus( Status.contagious );
+                                                person.setDiseaseStatus( DiseaseStatus.contagious );
                                         }
                                         break;
                                 case contagious:
-                                        if (iteration - person.getInfectionDate()  == 6 && rnd.nextDouble() < episimConfig.getQuarantineSample() ) {
-                                                person.setQuarantineStatus( QuarantineStatus.yes );
-                                                person.setQuarantineDate(iteration);
-                                                if (episimConfig.getPutTracablePersonsInQuarantine()==EpisimConfigGroup.PutTracablePersonsInQuarantine.yes) {
-                                                        for ( EpisimPerson pw : person.getTracableContactPersons()) {
-                                                                if (pw.getQuarantineStatus() == QuarantineStatus.no) {
-                                                                        pw.setQuarantineStatus( QuarantineStatus.yes );
-                                                                        pw.setQuarantineDate(iteration);
+                                        if (iteration - person.getInfectionDate() == 6 ){
+                                                final double nextDouble = rnd.nextDouble();
+                                                if( nextDouble < 0.2 ){
+                                                        // 20% recognize that they are sick and go into quarantaine:
+
+                                                        person.setQuarantineDate( iteration );
+                                                        // yyyy date needs to be qualified by status (or better, add iteration into quarantine status setter)
+
+                                                        person.setQuarantineStatus( QuarantineStatus.full );
+                                                        // yyyy this should become "home"!  kai, mar'20
+
+                                                        if( episimConfig.getPutTracablePersonsInQuarantine() == PutTracablePersonsInQuarantine.yes ){
+                                                                for( EpisimPerson pw : person.getTracableContactPersons() ){
+                                                                        if( pw.getQuarantineStatus() == QuarantineStatus.no ){
+
+                                                                                pw.setQuarantineStatus( QuarantineStatus.full );
+                                                                                // yyyy this should become "home"!  kai, mar'20
+
+                                                                                pw.setQuarantineDate( iteration );
+                                                                                // yyyy date needs to be qualified by status (or better, add iteration into
+                                                                                // quarantine status setter)
+
+                                                                        }
                                                                 }
                                                         }
+
                                                 }
+                                        } else if ( iteration - person.getInfectionDate() == 10 ) {
+                                                if ( rnd.nextDouble() < 0.045 ){
+                                                        person.setDiseaseStatus( DiseaseStatus.seriouslySick );
+                                                }
+                                        } else if ( iteration - person.getInfectionDate() >= 16 ) {
+                                                person.setDiseaseStatus( DiseaseStatus.recovered );
                                         }
-                                        if ( iteration - person.getInfectionDate() >= 16 ) {
-                                                person.setStatus( Status.recovered );
+                                        break;
+                                case seriouslySick:
+                                        if ( iteration - person.getInfectionDate() == 11 ) {
+                                                if ( rnd.nextDouble() < 0.25 ){
+                                                        person.setDiseaseStatus( DiseaseStatus.critical );
+                                                }
+                                        } else if ( iteration - person.getInfectionDate() >= 23 ) {
+                                                person.setDiseaseStatus( DiseaseStatus.recovered );
+                                        }
+                                        break;
+                                case critical:
+                                        if ( iteration - person.getInfectionDate() == 20 ) {
+                                                person.setDiseaseStatus( DiseaseStatus.seriouslySick );
                                         }
                                         break;
                                 case recovered:
                                         break;
                                 default:
-                                        throw new IllegalStateException( "Unexpected value: " + person.getStatus() );
+                                        throw new IllegalStateException( "Unexpected value: " + person.getDiseaseStatus() );
                         }
-                        if (person.getQuarantineStatus() == QuarantineStatus.yes) {
+                        if (person.getQuarantineStatus() == QuarantineStatus.full ) {
                                 if (iteration - person.getQuarantineDate() >= 14) {
                                         person.setQuarantineStatus( QuarantineStatus.no );
                                 }
@@ -467,7 +483,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                         super( facilityId );
                 }
         }
-        enum Status {susceptible, infectedButNotContagious, contagious, recovered};
-        enum QuarantineStatus {yes, no}
+        enum DiseaseStatus{susceptible, infectedButNotContagious, contagious, seriouslySick, critical, recovered};
+        enum QuarantineStatus {full, atHome, no}
 }
 
