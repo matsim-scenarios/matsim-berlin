@@ -35,7 +35,8 @@ class KNEventsInfection2{
 //                episimConfig.setUsePtDate( closingIteration );
 //                episimConfig.setUsePt( EpisimConfigGroup.UsePt.no );
                 episimConfig.setShutdownDate( closingIteration );
-                config.controler().setOutputDirectory( "output-wpti2-w20pct-leisure00pct-it" + closingIteration );
+//                config.controler().setOutputDirectory( "output-wpti2-w20pct-leisure00pct-it" + closingIteration );
+                config.controler().setOutputDirectory( "abc" + closingIteration );
 
 //                int closingIteration = 30 ;
 //                episimConfig.setClosedActivity1( "work" );

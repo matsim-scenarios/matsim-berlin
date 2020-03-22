@@ -110,7 +110,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 
                 }
 
-                handlePersonTrajectory(activityEndEvent.getPersonId(), activityEndEvent.getActType().toString());
+                handlePersonTrajectory(activityEndEvent.getPersonId(), activityEndEvent.getActType() );
 
         }
 
@@ -251,7 +251,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                         return;
                 }
 
-                if( EpisimUtils.isRelevantForInfectionDynamics( personLeavingContainer, container, episimConfig, iteration, rnd ) ) {
+                if( !EpisimUtils.isRelevantForInfectionDynamics( personLeavingContainer, container, episimConfig, iteration, rnd ) ) {
                         return;
                 }
 
@@ -287,8 +287,8 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                                 continue;
                         }
 
-                        if( EpisimUtils.isRelevantForInfectionDynamics( personLeavingContainer, container, episimConfig, iteration, rnd ) ) {
-                                return;
+                        if( !EpisimUtils.isRelevantForInfectionDynamics( otherPerson, container, episimConfig, iteration, rnd ) ) {
+                                continue;
                         }
 
                         // keep track of contacts:
