@@ -114,7 +114,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 
         }
 
-		@Override public void handleEvent( PersonEntersVehicleEvent entersVehicleEvent ) {
+        @Override public void handleEvent( PersonEntersVehicleEvent entersVehicleEvent ) {
                 double now = EpisimUtils.getCorrectedTime( entersVehicleEvent.getTime(), iteration );
 
                 // ignore pt drivers and drt
@@ -213,17 +213,17 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                 }
 
         }
-		private void handlePersonTrajectory(Id<Person> personId, String trajectoryElement) {
-			EpisimPerson person = personMap.get(personId);
-			if (person.getCurrentPositionInTrajectory() + 1 == person.getTrajectory().size()) {
-				return;
-			}
-			person.setCurrentPositionInTrajectory(person.getCurrentPositionInTrajectory() + 1);
-			if (iteration > 0) {
-				return;
-			}
-			person.addToTrajectory(trajectoryElement);
-		}
+        private void handlePersonTrajectory(Id<Person> personId, String trajectoryElement) {
+                EpisimPerson person = personMap.get(personId);
+                if (person.getCurrentPositionInTrajectory() + 1 == person.getTrajectory().size()) {
+                        return;
+                }
+                person.setCurrentPositionInTrajectory(person.getCurrentPositionInTrajectory() + 1);
+                if (iteration > 0) {
+                        return;
+                }
+                person.addToTrajectory(trajectoryElement);
+        }
         private void handleInitialInfections( EpisimPerson personWrapper ){
                 // initial infections:
                 if( cnt > 0 ){
@@ -245,6 +245,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
         private void infectionDynamicsFacility( EpisimPerson personLeavingFacility, EpisimFacility facility, double now, String actType ) {
                 infectionDynamicsGeneralized( personLeavingFacility, facility, now, actType );
         }
+        private static int cnt2 = 0 ;
         private void infectionDynamicsGeneralized( EpisimPerson personLeavingContainer, EpisimContainer<?> container, double now, String infectionType ) {
         		
                 if (iteration == 0) {
@@ -261,6 +262,8 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                 personsToInteractWith.remove( personLeavingContainer );
 
                 for ( int ii = 0 ; ii<personsToInteractWith.size(); ii++ ) {
+                        // yy Shouldn't we be able to just count up to min( ...size(), 3 ) and get rid of the separate contactPersons counter?  kai, mar'20
+
                         // (this is "-1" because we can't interact with "self")
 
                         // we are essentially looking at the situation when the person leaves the container.  Interactions with other persons who have
@@ -321,7 +324,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
 
                         double jointTimeInContainer = now - Math.max( containerEnterTimeOfPersonLeaving, containerEnterTimeOfOtherPerson );
                         if ( jointTimeInContainer  < 0 || jointTimeInContainer > 86400) {
-                                throw new RuntimeException("joint time in cointainer is not plausible for personLeavingContainer=" + personLeavingContainer.getPersonId() + " and otherPerson=" + otherPerson.getPersonId() + ". Joint time is=" + jointTimeInContainer);
+                                throw new RuntimeException("joint time in container is not plausible for personLeavingContainer=" + personLeavingContainer.getPersonId() + " and otherPerson=" + otherPerson.getPersonId() + ". Joint time is=" + jointTimeInContainer);
                         }
 
 //                      exponential model by Smieszek. 
@@ -342,8 +345,11 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                         }
                         Gbl.assertIf( contactIntensity>=0. );
 
+                        double infectionProba = 1 - Math.exp( -episimConfig.getCalibrationParameter() * contactIntensity * jointTimeInContainer );
+                        // note that for 1pct runs, calibParam is of the order of one, which means that for typical times of 100sec or more,
+                        // exp( - 1 * 1 * 100 ) \approx 0, and thus the infection proba becomes 1.  Which also means that changes in contactIntensity has
+                        // no effect.  kai, mar'20
 
-                        double infectionProba = 1 - Math.exp( - episimConfig.getCalibrationParameter() * contactIntensity * jointTimeInContainer);
                         if ( rnd.nextDouble() < infectionProba ) {
                                 if ( personLeavingContainer.getDiseaseStatus()== DiseaseStatus.susceptible ) {
                                         infectPerson( personLeavingContainer, otherPerson, now, infectionType );
@@ -431,6 +437,8 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                                                 }
                                         } else if ( iteration - person.getInfectionDate() == 10 ) {
                                                 if ( rnd.nextDouble() < 0.045 ){
+                                                        // (4.5% get seriously sick.  This is taken from all infected persons, not just those the have shown
+                                                        // symptoms before)
                                                         person.setDiseaseStatus( DiseaseStatus.seriouslySick );
                                                 }
                                         } else if ( iteration - person.getInfectionDate() >= 16 ) {
@@ -440,6 +448,7 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                                 case seriouslySick:
                                         if ( iteration - person.getInfectionDate() == 11 ) {
                                                 if ( rnd.nextDouble() < 0.25 ){
+                                                        // (25% of persons who are seriously sick transition to critical)
                                                         person.setDiseaseStatus( DiseaseStatus.critical );
                                                 }
                                         } else if ( iteration - person.getInfectionDate() >= 23 ) {
@@ -448,6 +457,9 @@ class InfectionEventHandler implements ActivityEndEventHandler, PersonEntersVehi
                                         break;
                                 case critical:
                                         if ( iteration - person.getInfectionDate() == 20 ) {
+                                                // (transition back to seriouslySick.  Note that this needs to be earlier than sSick->recovered, otherwise
+                                                // they stay in sSick.  Problem is that we need differentiation between intensive care beds and normal
+                                                // hospital beds.)
                                                 person.setDiseaseStatus( DiseaseStatus.seriouslySick );
                                         }
                                         break;

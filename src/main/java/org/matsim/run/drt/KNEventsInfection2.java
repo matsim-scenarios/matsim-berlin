@@ -29,9 +29,9 @@ class KNEventsInfection2{
                 // yyyyyy I think that there should be better type matching; we should not use "contains" but match everything before the underscore exactly.
                 // kai, mar'20
 
-                int closingIteration = 10;
+                long closingIteration = Long.MAX_VALUE;
                 // pt:
-                episimConfig.addContainerParams( new InfectionParams( "tr" ).setContactIntensity( 0. ) );
+                episimConfig.addContainerParams( new InfectionParams( "tr" ).setContactIntensity( 1. ) );
                 // regular out-of-home acts:
                 episimConfig.addContainerParams( new InfectionParams( "work" ).setShutdownDay( closingIteration ).setRemainingFraction( 0.2 ) );
                 episimConfig.addContainerParams( new InfectionParams( "leis" ).setShutdownDay( closingIteration ).setRemainingFraction( 0. ) );
