@@ -238,9 +238,11 @@ public final class EpisimConfigGroup extends ReflectiveConfigGroup {
                 }
                 /**
                  * this is from iteration 0!
+                 * @return
                  */
-                public void setContactIntensity( double contactIntensity ){
+                public InfectionParams setContactIntensity( double contactIntensity ){
                         this.contactIntensity = contactIntensity;
+                        return this;
                 }
         }
         @Override

@@ -1,6 +1,5 @@
 package org.matsim.run.drt;
 
-import org.matsim.api.core.v01.TransportMode;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -27,88 +26,31 @@ class KNEventsInfection2{
 //                episimConfig.setSample(0.01);
                 episimConfig.setCalibrationParameter(2);
 
-//                config.controler().setOutputDirectory( "output-base" );
-
-//                episimConfig.setUsePt( EpisimConfigGroup.UsePt.no );
-//                episimConfig.setUsePtDate( 10. );
-//                config.controler().setOutputDirectory( "output-wo-pt-from-it10" );
-
-//                int closingIteration = 10;
-//                episimConfig.setUsePtDate( closingIteration );
-//                episimConfig.setUsePt( EpisimConfigGroup.UsePt.no );
-//                episimConfig.setShutdownDate( closingIteration );
-//                config.controler().setOutputDirectory( "output-wpti2-w20pct-leisure00pct-it" + closingIteration );
-//                config.controler().setOutputDirectory( "abc" + closingIteration );
-
                 // yyyyyy I think that there should be better type matching; we should not use "contains" but match everything before the underscore exactly.
                 // kai, mar'20
 
                 int closingIteration = 10;
-                {
-                        InfectionParams params = new InfectionParams( "tr" ); // :-(
-//                        params.setShutdownDay(closingIteration );
-//                        params.setRemainingFraction( 0.0 );
-                        params.setContactIntensity( 2. );
-                        episimConfig.addContainerParams( params );
-                }
-                {
-                        InfectionParams params = new InfectionParams( "work" );
-                        params.setShutdownDay( closingIteration );
-                        params.setRemainingFraction( 0.2 );
-                        episimConfig.addContainerParams( params );
-                }
-                {
-                        InfectionParams params = new InfectionParams( "leis" );
-                        params.setShutdownDay( closingIteration );
-                        params.setRemainingFraction( 0. );
-                        episimConfig.addContainerParams( params );
-                }
-                {
-                        InfectionParams params = new InfectionParams( "edu" );
-                        params.setShutdownDay( closingIteration );
-                        params.setRemainingFraction( 0. );
-                        episimConfig.addContainerParams( params );
-                }
-                {
-                        InfectionParams params = new InfectionParams( "shop" );
-                        params.setShutdownDay( closingIteration );
-                        params.setRemainingFraction( 0.3 );
-                        episimConfig.addContainerParams( params );
-                }
-                {
-                        InfectionParams params = new InfectionParams( "errands" );
-                        params.setShutdownDay( closingIteration );
-                        params.setRemainingFraction( 0.3 );
-                        episimConfig.addContainerParams( params );
-                }
-                {
-                        InfectionParams params = new InfectionParams( "business" );
-                        params.setShutdownDay( closingIteration );
-                        params.setRemainingFraction( 0. );
-                        episimConfig.addContainerParams( params );
-                }
-                {
-                        InfectionParams params = new InfectionParams( "other" );
-                        params.setShutdownDay( closingIteration );
-                        params.setRemainingFraction( 0.2 );
-                        episimConfig.addContainerParams( params );
-                }
-                {
-                        InfectionParams params = new InfectionParams( "freight" );
-                        params.setShutdownDay( 0 );
-                        params.setRemainingFraction( 0.0 );
-                        episimConfig.addContainerParams( params );
-                }
-                {
-                        InfectionParams params = new InfectionParams( "home" );
-                        episimConfig.addContainerParams( params );
-                }
+                // pt:
+                episimConfig.addContainerParams( new InfectionParams( "tr" ).setContactIntensity( 0. ) );
+                // regular out-of-home acts:
+                episimConfig.addContainerParams( new InfectionParams( "work" ).setShutdownDay( closingIteration ).setRemainingFraction( 0.2 ) );
+                episimConfig.addContainerParams( new InfectionParams( "leis" ).setShutdownDay( closingIteration ).setRemainingFraction( 0. ) );
+                episimConfig.addContainerParams( new InfectionParams( "edu" ).setShutdownDay( closingIteration ).setRemainingFraction( 0. ) );
+                episimConfig.addContainerParams( new InfectionParams( "shop" ).setShutdownDay( closingIteration ).setRemainingFraction( 0.3 ) );
+                episimConfig.addContainerParams( new InfectionParams( "errands" ).setShutdownDay( closingIteration ).setRemainingFraction( 0.3 ) );
+                episimConfig.addContainerParams( new InfectionParams( "business" ).setShutdownDay( closingIteration ).setRemainingFraction( 0. ) );
+                episimConfig.addContainerParams( new InfectionParams( "other" ).setShutdownDay( closingIteration ).setRemainingFraction( 0.2 ) );
+                // freight act:
+                episimConfig.addContainerParams( new InfectionParams( "freight" ).setShutdownDay( 0 ).setRemainingFraction( 0.0 ) );
+                // home act:
+                episimConfig.addContainerParams( new InfectionParams( "home" ) );
+
                 StringBuilder outdir = new StringBuilder( "output" );
                 for( InfectionParams infectionParams : episimConfig.getContainerParams().values() ){
                         outdir.append( "-" );
                         outdir.append( infectionParams.getContainerName() );
-                        outdir.append( infectionParams.getRemainingFraction() );
                         if ( infectionParams.getShutdownDay() < Long.MAX_VALUE ){
+                                outdir.append( infectionParams.getRemainingFraction() );
                                 outdir.append( "it" ).append( infectionParams.getShutdownDay() );
                         }
                         if ( infectionParams.getContactIntensity()!=1. ) {
@@ -116,22 +58,6 @@ class KNEventsInfection2{
                         }
                 }
                 config.controler().setOutputDirectory( outdir.toString() );
-
-//                int closingIteration = 30 ;
-//                episimConfig.setClosedActivity1( "work" );
-//                episimConfig.setClosedActivity2( "leisure" );
-//                episimConfig.setClosedActivity1Date( closingIteration );
-//                episimConfig.setClosedActivity2Date( closingIteration );
-//                config.controler().setOutputDirectory( "output-shutdown-work-leisure-from-it" + closingIteration );
-
-//                int closingIteration = 30 ;
-//                episimConfig.setClosedActivity1( "work" );
-//                episimConfig.setClosedActivity2( "leisure" );
-//                episimConfig.setClosedActivity1Date( closingIteration );
-//                episimConfig.setClosedActivity2Date( closingIteration );
-//                episimConfig.setUsePt( EpisimConfigGroup.UsePt.no );
-//                episimConfig.setUsePtDate( closingIteration );
-//                config.controler().setOutputDirectory( "output-shutdown-work-leisure-pt-from-it" + closingIteration );
 
                 ConfigUtils.applyCommandline( config, Arrays.copyOfRange( args, 0, args.length ) ) ;
 
