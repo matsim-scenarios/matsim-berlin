@@ -145,7 +145,13 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                             lastModes2Randomization.put(mode, additiveRandomization);
                         }
 //                        System.err.println(person.getId().toString() + ";" + direction.toString() + ";" + additiveRandomization);
+//                        utility *= modeRandom; // analogue beta factor (taste variations)
+
                         utility += additiveRandomization;
+//                        positive utility for a leg is hard to interpret and inh theory should not happen, but it can happen with high intermodal compensations. So do not exclude it.
+//                        if (utility > 0) {
+//                            utility = 0;
+//                        }
                     }
                 }
             }
