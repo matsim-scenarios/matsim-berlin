@@ -148,9 +148,10 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
 //                        utility *= modeRandom; // analogue beta factor (taste variations)
 
                         utility += additiveRandomization;
-                        if (utility > 0) {
-                            utility = 0;
-                        }
+//                        positive utility for a leg is hard to interpret and inh theory should not happen, but it can happen with high intermodal compensations. So do not exclude it.
+//                        if (utility > 0) {
+//                            utility = 0;
+//                        }
                     }
                 }
             }
