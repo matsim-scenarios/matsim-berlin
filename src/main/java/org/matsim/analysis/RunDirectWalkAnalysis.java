@@ -15,10 +15,10 @@ public class RunDirectWalkAnalysis {
 
     public static void main(String[] args) {
 
-//        String runDirectory = "/home/gregor/tmp/open-berlin-intermodal/Z127e";
-//        String runId = "Z127e"; // 15979 direct walk trips of total 39225 pt trips.
-        String runDirectory = "/home/gregor/tmp/open-berlin-intermodal/Z148e";
-        String runId = "Z148e"; // 20642 direct walk trips of total 39310 pt trips
+        String runDirectory = "/home/gregor/tmp/open-berlin-intermodal/Z127e";
+        String runId = "Z127e"; // 15979 direct walk trips of total 55204 trips.
+//        String runDirectory = "/home/gregor/tmp/open-berlin-intermodal/Z148e";
+//        String runId = "Z148e"; // 20642 direct walk trips of total 59952 trips.
         run(runDirectory, runId);
     }
 
@@ -30,9 +30,7 @@ public class RunDirectWalkAnalysis {
                 map(person -> person.getSelectedPlan()).
                 map(plan -> TripStructureUtils.getTrips(plan)).
                 flatMap(trips -> trips.stream()).
-                filter(trip ->
-                                mainModeIdentifier.identifyMainMode(trip.getTripElements()).equals(TransportMode.pt) ||
-                                        mainModeIdentifier.identifyMainMode(trip.getTripElements()).equals(OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier.ANALYSIS_MAIN_MODE_PT_WITH_DRT_USED_FOR_ACCESS_OR_EGRESS)).
+                filter(trip -> TripStructureUtils.getRoutingMode(trip.getLegsOnly().get(0)).equals(TransportMode.pt)).
                 count();
 
         long counterDirectWalkTrips = scenario.getPopulation().getPersons().values().stream().
