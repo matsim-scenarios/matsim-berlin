@@ -26,16 +26,16 @@ import java.util.*;
 public class JRDynamicShutdownControlerListener implements IterationStartsListener, StartupListener, ShutdownListener {
 
     // Dynamic Shutdown Config Group
-    private static final int MINIMUM_ITERATION = 200;
+    private static final int MINIMUM_ITERATION = 1500;
 
     // Score Config Group
-    private static final boolean SCORE_CONDITION_ACTIVE = false;
-    private static final double SCORE_CONDITION_THRESHHOLD = 0.5;
+    private static final boolean SCORE_CONDITION_ACTIVE = true;
+    private static final double SCORE_CONDITION_THRESHOLD = 0.5;
     private static final int SCORE_CONDITION_SMOOTHING_INTERVAL = 50 ;
 
     // Mode Choice Coverage Config Group
     private static final boolean MODECHOICECOVERAGE_CONDITION_ACTIVE = true;
-    private static final double MODECHOICECOVERAGE_CONDITION_THRESHHOLD = 0.0005;
+    private static final double MODECHOICECOVERAGE_CONDITION_THRESHOLD = 0.0005;
     private static final int MODECHOICECOVERAGE_CONDITION_SMOOTHING_INTERVAL = 50 ;
 
 
@@ -175,14 +175,14 @@ public class JRDynamicShutdownControlerListener implements IterationStartsListen
             }
             double avgPctChng = averagePercentChange(pctChangesForMode, dx);
             averageModeChoiceCoveragePctChanges.put(mode, avgPctChng);
-            System.out.println("average percent change (dx=1) for mode " + mode + " = " + avgPctChng + ", satisfies precision threshhold: " + (avgPctChng <= MODECHOICECOVERAGE_CONDITION_THRESHHOLD));
+            System.out.println("average percent change (dx=1) for mode " + mode + " = " + avgPctChng + ", satisfies precision threshhold: " + (avgPctChng <= MODECHOICECOVERAGE_CONDITION_THRESHOLD));
 
         }
 
 
         // Returns false if at least one mode is above threshhold
         for (Double pc : averageModeChoiceCoveragePctChanges.values()) {
-            if (pc > MODECHOICECOVERAGE_CONDITION_THRESHHOLD) {
+            if (pc > MODECHOICECOVERAGE_CONDITION_THRESHOLD) {
                 return false;
             }
         }
@@ -227,14 +227,14 @@ public class JRDynamicShutdownControlerListener implements IterationStartsListen
             averageScorePctChanges.put(scoreItem, avgPctChng);
             System.out.println("average percent change (dx= "+ SCORE_CONDITION_SMOOTHING_INTERVAL
                     + ") for score item " + scoreItem + " = " + avgPctChng + ", satisfies precision threshhold: "
-                    + (avgPctChng <= SCORE_CONDITION_THRESHHOLD));
+                    + (avgPctChng <= SCORE_CONDITION_THRESHOLD));
 
         }
 
 
         // Returns false if at least one mode is above threshhold
         for (Double pc : averageScorePctChanges.values()) {
-            if (pc > SCORE_CONDITION_THRESHHOLD) {
+            if (pc > SCORE_CONDITION_THRESHOLD) {
                 return false;
             }
         }

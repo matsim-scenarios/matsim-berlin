@@ -98,7 +98,7 @@ public class JRModeChoiceCoverageControlerListener implements StartupListener, I
 		this.modes = new TreeSet<>();
 		this.modes.addAll(scoreConfig.getAllModes());
 		for (Integer limit : limits){
-			BufferedWriter modeOut = IOUtils.getBufferedWriter(this.modeFileName + "(" + limit + "x).txt"); //jr
+			BufferedWriter modeOut = IOUtils.getBufferedWriter(this.modeFileName  + limit + "x.txt"); //jr
 			try {
 				modeOut.write("Iteration");
 

@@ -45,17 +45,19 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 		for (String arg : args) {
 			log.info( arg );
 		}
-		
+//
 		if ( args.length==0 ) {
 			args = new String[] {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-v5.5-1pct.config.xml"}  ;
 		}
-		
+
 		Config config = RunDrtOpenBerlinScenario.prepareConfig( args , new DrtSpeedUpConfigGroup() ) ;
 		DrtSpeedUpModule.adjustConfig(config);
 
 		//jr start
-		config.plans().setInputFile("./berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");
-		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.failIfDirectoryExists);
+		//
+//		config.plans().setInputFile("./berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");
+//		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.failIfDirectoryExists);
+		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
 //		config.qsim().setNumberOfThreads(8);
 //		config.global().setNumberOfThreads(8);
 		config.controler().setLastIteration(1250);
@@ -64,14 +66,14 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 		config.transit().setUsingTransitInMobsim(false); //jr end
 
 
-		
+
 		Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 		for( Person person : scenario.getPopulation().getPersons().values() ){
 			person.getPlans().removeIf( (plan) -> plan!=person.getSelectedPlan() ) ;
 		}
-		
+
 		Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
-		
+
 		controler.addOverridingModule(new DrtSpeedUpModule());
 
 		// jr start
@@ -97,9 +99,9 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 		});
 
 		// jr end
-		
+
 		controler.run() ;
-		
+
 		RunBerlinScenario.runAnalysis(controler);
 	}
 
