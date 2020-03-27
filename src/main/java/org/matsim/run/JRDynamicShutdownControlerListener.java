@@ -24,9 +24,23 @@ import java.io.IOException;
 import java.util.*;
 
 public class JRDynamicShutdownControlerListener implements IterationStartsListener, StartupListener, ShutdownListener {
-    private static final double SHUTDOWN_CONDITION_SCORE = 0.5;
-    private static final double SHUTDOWN_CONDITION_MODECHOICECOVERAGE = 0.5;
-    private static final int MINIMUM_ITERATION = 1500;
+
+    // Dynamic Shutdown Config Group
+    private static final int MINIMUM_ITERATION = 200;
+
+    // Score Config Group
+    private static final boolean SCORE_CONDITION_ACTIVE = false;
+    private static final double SCORE_CONDITION_THRESHHOLD = 0.5;
+    private static final int SCORE_CONDITION_SMOOTHING_INTERVAL = 50 ;
+
+    // Mode Choice Coverage Config Group
+    private static final boolean MODECHOICECOVERAGE_CONDITION_ACTIVE = true;
+    private static final double MODECHOICECOVERAGE_CONDITION_THRESHHOLD = 0.0005;
+    private static final int MODECHOICECOVERAGE_CONDITION_SMOOTHING_INTERVAL = 50 ;
+
+
+
+
     private final ControlerConfigGroup controlerConfigGroup;
     private final OutputDirectoryHierarchy controlerIO;
     private Scenario scenario;
@@ -53,6 +67,7 @@ public class JRDynamicShutdownControlerListener implements IterationStartsListen
         this.controlerIO = controlerIO ;
 
 
+
     }
 
     static int getDynamicShutdownIteration() {
@@ -72,33 +87,48 @@ public class JRDynamicShutdownControlerListener implements IterationStartsListen
 
     @Override
     public void notifyIterationStarts(IterationStartsEvent iterationStartsEvent) {
+        int iteration = iterationStartsEvent.getIteration();
 
-        if (dynamicShutdownInitiated) {
-            log.info("dynamic shutdown was already initiated; therefore, the shutdown conditions no longer need to be evaluated");
+        // Checks 1:  at least one shutdown criteria is being active. Otherwise this module is superfluous.
+        if (!MODECHOICECOVERAGE_CONDITION_ACTIVE && !SCORE_CONDITION_ACTIVE) {
+            log.warn("dynamic shutdown should not be used if no criteria are specified. " +
+                    "Therefore, the standard shutdown iteration will be used");
             return;
         }
 
-        int iteration = iterationStartsEvent.getIteration();
-
-        // Step 1: Add newest percent difference to the pctDifference ArrayList
-        pctChangeForModeChoice(iteration);
-        pctChangeForScore(iteration);
-
-        // Step 2: Check Last x percent changes, to see if innovation shutdown should be initiated
-
-        boolean modeChoiceCriteriaSatisfied = checkModeChoiceCriteria(2);
-
-        boolean scoreCoverageCriteriaSatisfied = checkScoreCriteria(2);
-
-
-        // Step 3: turn off innovation and set new shutdown iteration if all criteria are met
-
-        if (iteration > MINIMUM_ITERATION && modeChoiceCriteriaSatisfied && scoreCoverageCriteriaSatisfied) {
-
-            shutdownInnovation(iteration);
-
+        // Check 2: checks whether dynamic shutdown was already initiated.
+        if (dynamicShutdownInitiated) {
+            log.info("dynamic shutdown was previously initiated");
+            return;
         }
+
+        // Check 3: checks whether the minimum iteration was reached ;
+        if (iteration < MINIMUM_ITERATION) {
+            return ;
+        }
+
+        // Check 4: returns if the mode choice coverage criteria has not yet been met (assuming the criteria is active)
+        //     step A: Add newest percent difference to the pctDifference ArrayList
+        //     step B: Check Last x percent changes, to see if innovation shutdown should be initiated
+        if (MODECHOICECOVERAGE_CONDITION_ACTIVE) {
+            pctChangeForModeChoice(iteration);
+            if (!checkModeChoiceCriteria(MODECHOICECOVERAGE_CONDITION_SMOOTHING_INTERVAL)) {
+                return;
+            }
+        }
+
+        // Check 5: returns if the score criteria has not yet been met (assuming the criteria is active)
+        if (SCORE_CONDITION_ACTIVE) {
+            pctChangeForScore(iteration);
+            if (!checkScoreCriteria(SCORE_CONDITION_SMOOTHING_INTERVAL)) {
+                return;
+            }
+        }
+
+        // FINALLY: if none of the previous checks terminated the process, then dynamic shutdown can be initiated.
+        shutdownInnovation(iteration);
     }
+
 
 
     private void pctChangeForModeChoice(int iteration) {
@@ -145,14 +175,14 @@ public class JRDynamicShutdownControlerListener implements IterationStartsListen
             }
             double avgPctChng = averagePercentChange(pctChangesForMode, dx);
             averageModeChoiceCoveragePctChanges.put(mode, avgPctChng);
-            System.out.println("average percent change (dx=1) for mode " + mode + " = " + avgPctChng + ", satisfies precision threshhold: " + (avgPctChng <= SHUTDOWN_CONDITION_MODECHOICECOVERAGE));
+            System.out.println("average percent change (dx=1) for mode " + mode + " = " + avgPctChng + ", satisfies precision threshhold: " + (avgPctChng <= MODECHOICECOVERAGE_CONDITION_THRESHHOLD));
 
         }
 
 
         // Returns false if at least one mode is above threshhold
         for (Double pc : averageModeChoiceCoveragePctChanges.values()) {
-            if (pc > SHUTDOWN_CONDITION_MODECHOICECOVERAGE) {
+            if (pc > MODECHOICECOVERAGE_CONDITION_THRESHHOLD) {
                 return false;
             }
         }
@@ -188,16 +218,23 @@ public class JRDynamicShutdownControlerListener implements IterationStartsListen
         Map<String, Double> averageScorePctChanges = new HashMap<>();
         for (String scoreItem : pctChangesForScore.keySet()) {
 
+            if (dx > pctChangesForScore.get(scoreItem).size()){
+                log.warn("An average percent change over cannot yet be found, since dx is too high.");
+                return false;
+            }
+
             double avgPctChng = averagePercentChange(pctChangesForScore.get(scoreItem), dx);
             averageScorePctChanges.put(scoreItem, avgPctChng);
-            System.out.println("average percent change (dx=1) for score item " + scoreItem + " = " + avgPctChng + ", satisfies precision threshhold: " + (avgPctChng <= SHUTDOWN_CONDITION_SCORE));
+            System.out.println("average percent change (dx= "+ SCORE_CONDITION_SMOOTHING_INTERVAL
+                    + ") for score item " + scoreItem + " = " + avgPctChng + ", satisfies precision threshhold: "
+                    + (avgPctChng <= SCORE_CONDITION_THRESHHOLD));
 
         }
 
 
         // Returns false if at least one mode is above threshhold
         for (Double pc : averageScorePctChanges.values()) {
-            if (pc > SHUTDOWN_CONDITION_SCORE) {
+            if (pc > SCORE_CONDITION_THRESHHOLD) {
                 return false;
             }
         }
@@ -207,9 +244,9 @@ public class JRDynamicShutdownControlerListener implements IterationStartsListen
 
     private double averagePercentChange(List<Double> list, int dx) {
 
-        if (dx > list.size()) { // jr: should no longer be necessary.
-            return 1000.00; // big number
-        }
+//        if (dx > list.size()) { // jr: should no longer be necessary.
+//            return 1000.00; // big number
+//        }
 
         double avgPctChange = 0.;
 

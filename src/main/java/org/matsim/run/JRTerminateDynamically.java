@@ -44,7 +44,6 @@ public class JRTerminateDynamically implements TerminationCriterion {
 
 		return iteration <= lastIteration ;
 
-		// mini edit2
 	}
 
 }
