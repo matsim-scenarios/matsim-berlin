@@ -19,26 +19,26 @@
  *                                                                         *
  * *********************************************************************** */
 
- package org.matsim.run;
+ package org.matsim.run.dynamicShutdown;
 
 import org.matsim.core.config.groups.ControlerConfigGroup;
 import org.matsim.core.controler.TerminationCriterion;
 
 import javax.inject.Inject;
 
-public class JRTerminateDynamically implements TerminationCriterion {
+public class TerminateDynamically implements TerminationCriterion {
 
 	private final int lastIteration;
 
 	@Inject
-    JRTerminateDynamically(ControlerConfigGroup controlerConfigGroup) {
+	TerminateDynamically(ControlerConfigGroup controlerConfigGroup) {
 		this.lastIteration = controlerConfigGroup.getLastIteration();
 	}
 
 	@Override
 	public boolean continueIterations(int iteration) {
-		if (JRDynamicShutdownControlerListener.isDynamicShutdownInitiated()) {
-			int lastIterationDynamic = JRDynamicShutdownControlerListener.getDynamicShutdownIteration();
+		if (DynamicShutdownControlerListener.isDynamicShutdownInitiated()) {
+			int lastIterationDynamic = DynamicShutdownControlerListener.getDynamicShutdownIteration();
 			return (iteration <= lastIteration && iteration <= lastIterationDynamic);
 		}
 

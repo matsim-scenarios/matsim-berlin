@@ -1,4 +1,4 @@
-package org.matsim.run;
+package org.matsim.run.dynamicShutdown;
 
 import org.apache.log4j.Logger;
 import org.matsim.analysis.ScoreStats;
@@ -23,7 +23,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.*;
 
-public class JRDynamicShutdownControlerListener implements IterationStartsListener, StartupListener, ShutdownListener {
+public class DynamicShutdownControlerListener implements IterationStartsListener, StartupListener, ShutdownListener {
 
     // Dynamic Shutdown Config Group
     private static final int MINIMUM_ITERATION = 1500;
@@ -56,8 +56,8 @@ public class JRDynamicShutdownControlerListener implements IterationStartsListen
 
 
     @Inject
-    JRDynamicShutdownControlerListener(ControlerConfigGroup controlerConfigGroup, ScoreStats scoreStats, StrategyManager strategyManager,
-                                       StrategyConfigGroup strategyConfigGroup, Scenario scenario,  OutputDirectoryHierarchy controlerIO) {
+    DynamicShutdownControlerListener(ControlerConfigGroup controlerConfigGroup, ScoreStats scoreStats, StrategyManager strategyManager,
+                                     StrategyConfigGroup strategyConfigGroup, Scenario scenario, OutputDirectoryHierarchy controlerIO) {
 
         this.scenario = scenario;
         this.scoreStats = scoreStats;
@@ -135,7 +135,7 @@ public class JRDynamicShutdownControlerListener implements IterationStartsListen
         Map<Integer, Map<String, Map<Integer, Double>>> modeHistory;
         try {
 
-            modeHistory = JRModeChoiceCoverageControlerListener.getModeHistory();
+            modeHistory = ModeChoiceCoverageControlerListener.getModeHistory();
 
             Integer limit = 1;
 

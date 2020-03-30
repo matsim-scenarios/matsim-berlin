@@ -49,7 +49,7 @@ import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
-import org.matsim.run.JRModeChoiceCoverageControlerListener;
+import org.matsim.run.dynamicShutdown.ModeChoiceCoverageControlerListener;
 import org.matsim.run.RunBerlinScenario;
 import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesConfigGroup;
 import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesModule;
@@ -131,7 +131,7 @@ public final class RunDrtOpenBerlinScenario {
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
-				this.addControlerListenerBinding().to(JRModeChoiceCoverageControlerListener.class);
+				this.addControlerListenerBinding().to(ModeChoiceCoverageControlerListener.class);
 			}
 		});
 		//jr

@@ -50,8 +50,7 @@ import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
 import org.matsim.run.BerlinExperimentalConfigGroup;
 import org.matsim.run.BerlinExperimentalConfigGroup.IntermodalAccessEgressModeUtilityRandomization;
-import org.matsim.run.JRModeChoiceCoverageControlerListener;
-import org.matsim.run.RunBerlinScenario;
+import org.matsim.run.dynamicShutdown.ModeChoiceCoverageControlerListener;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup.CompensationCondition;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
@@ -343,7 +342,7 @@ public class RunDrtOpenBerlinScenarioTest {
             controler.addOverridingModule(new AbstractModule() {
                 @Override
                 public void install() {
-                    this.addControlerListenerBinding().to(JRModeChoiceCoverageControlerListener.class);
+                    this.addControlerListenerBinding().to(ModeChoiceCoverageControlerListener.class);
                 }
             });
             //jr

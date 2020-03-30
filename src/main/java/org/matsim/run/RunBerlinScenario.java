@@ -50,6 +50,9 @@ import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
+import org.matsim.run.dynamicShutdown.DynamicShutdownControlerListener;
+import org.matsim.run.dynamicShutdown.ModeChoiceCoverageControlerListener;
+import org.matsim.run.dynamicShutdown.TerminateDynamically;
 import org.matsim.run.singleTripStrategies.ChangeSingleTripModeAndRoute;
 import org.matsim.run.singleTripStrategies.RandomSingleTripReRoute;
 
@@ -149,21 +152,21 @@ public final class RunBerlinScenario {
 		 controler.addOverridingModule(new AbstractModule() {
 					@Override
 					public void install() {
-						this.addControlerListenerBinding().to(JRModeChoiceCoverageControlerListener.class);
+						this.addControlerListenerBinding().to(ModeChoiceCoverageControlerListener.class);
 					}
 				});
 
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
-				this.addControlerListenerBinding().to(JRDynamicShutdownControlerListener.class);
+				this.addControlerListenerBinding().to(DynamicShutdownControlerListener.class);
 			}
 		});
 
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
-				bind(TerminationCriterion.class).to(JRTerminateDynamically.class);
+				bind(TerminationCriterion.class).to(TerminateDynamically.class);
 			}
 		});
 
