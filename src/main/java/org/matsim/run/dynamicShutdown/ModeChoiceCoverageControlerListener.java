@@ -1,23 +1,3 @@
-/* *********************************************************************** *
- * project: org.matsim.*
- * ScoreStats.java
- *                                                                         *
- * *********************************************************************** *
- *                                                                         *
- * copyright       : (C) 2007 by the members listed in the COPYING,        *
- *                   LICENSE and WARRANTY file.                            *
- * email           : info at matsim dot org                                *
- *                                                                         *
- * *********************************************************************** *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *   See also COPYING, LICENSE and WARRANTY file                           *
- *                                                                         *
- * *********************************************************************** */
-
 package org.matsim.run.dynamicShutdown;
 
 import org.apache.log4j.Logger;
@@ -49,41 +29,34 @@ import java.util.*;
 import java.util.Map.Entry;
 
 /**
- * Calculates at the end of each iteration mode statistics, based on the main mode identifier of a trip chain.
- * For multi-modal trips, this is only as accurate as your main mode identifier.
- * The calculated values are written to a file, each iteration on
- * a separate line.
+ * Calculates mode choice coverage at the end of each iteration, based on the main mode identifier of a trip chain.
+ * Mode choice coverage percentage of trips have used a certain mode at least once (or 5x, 10x, …) in previous iterations.
  *
- * @author mrieser
+ * @author jakobrehmann
  */
 public class ModeChoiceCoverageControlerListener implements StartupListener, IterationEndsListener,
         ShutdownListener {
 
-	private static final String FILENAME_MODESTATS = "modeChoiceStats";
 
-	final private Population population;
-
-	final private Map<Integer, BufferedWriter> modeOutMap = new HashMap<>();
-	final private String modeFileName;
-
-	private final boolean createPNG;
-	private final ControlerConfigGroup controlerConfigGroup;
-
-
+	// Config Group:
 	private Integer[] limits = new Integer[]{1, 5, 10};
-	private static Map<Integer, Map<String, Map<Integer, Double>>> modeHistoryAll = new HashMap<>();
-	private Map<Id<Person>, Map<Integer, Map<String, Integer>>> megaMap = new LinkedHashMap<>();
-	// Map (      Person,    Map (Trip #,Map (Mode,  Count)))
 
-	private int minIteration = 0;
-	private MainModeIdentifier mainModeIdentifier;
 
 	private final Set<String> modes;
+	final private Map<Integer, BufferedWriter> modeOutMap = new HashMap<>();
+	private static Map<Integer, Map<String, Map<Integer, Double>>> modeHistoryAll = new HashMap<>();
+	private Map<Id<Person>, Map<Integer, Map<String, Integer>>> megaMap = new LinkedHashMap<>();
+	//      Map (Person,    Map (Trip #, Map (Mode,  Count)))
 
+
+	private static final String FILENAME_MODESTATS = "modeChoiceCoverage";
+	final private Population population;
+	final private String modeFileName;
+	private final boolean createPNG;
+	private final ControlerConfigGroup controlerConfigGroup;
+	private int minIteration = 0;
+	private MainModeIdentifier mainModeIdentifier;
 	private final static Logger log = Logger.getLogger(org.matsim.analysis.ModeStatsControlerListener.class);
-
-
-
 
 	@Inject
 	ModeChoiceCoverageControlerListener(ControlerConfigGroup controlerConfigGroup, Population population1, OutputDirectoryHierarchy controlerIO,
@@ -93,15 +66,14 @@ public class ModeChoiceCoverageControlerListener implements StartupListener, Ite
 		this.population = population1;
 		this.modeFileName = controlerIO.getOutputFilename(FILENAME_MODESTATS);
 //		this.createPNG = controlerConfigGroup.isCreateGraphs();
-		this.createPNG = true; //jr
+		this.createPNG = true;
 
 		this.modes = new TreeSet<>();
 		this.modes.addAll(scoreConfig.getAllModes());
 		for (Integer limit : limits){
-			BufferedWriter modeOut = IOUtils.getBufferedWriter(this.modeFileName  + limit + "x.txt"); //jr
+			BufferedWriter modeOut = IOUtils.getBufferedWriter(this.modeFileName  + limit + "x.txt");
 			try {
 				modeOut.write("Iteration");
-
 				for (String mode : modes) {
 					modeOut.write("\t" + mode);
 				}
@@ -111,8 +83,6 @@ public class ModeChoiceCoverageControlerListener implements StartupListener, Ite
 			}
 			this.modeOutMap.put(limit, modeOut);
 		}
-
-
 		this.mainModeIdentifier = mainModeIdentifier;
 	}
 
@@ -123,10 +93,6 @@ public class ModeChoiceCoverageControlerListener implements StartupListener, Ite
 
 	@Override
 	public void notifyIterationEnds(final IterationEndsEvent event) {
-		collectModeShareInfo(event);
-	}
-
-	private void collectModeShareInfo(final IterationEndsEvent event) {
 		/*
 		 *  megaMap: for each person-trip, how many times (iterations) was each mode used. The following code adds the
 		 * 	mode information from the current iteration to the megaMap.
@@ -136,8 +102,8 @@ public class ModeChoiceCoverageControlerListener implements StartupListener, Ite
 
 
 		/*
-		 * 		 Looks through megaMap at each person-trip. How many of those person trips have used the each mode more than the
-		 * 		 predefined limits.
+		 *	Looks through megaMap at each person-trip. How many of those person trips have used the each mode more than the
+		 *  predefined limits.
 		 */
 		int totalPersonTripCount = 0;
 		Map<Integer, Map<String, Double>> modeCountCurrentIteration = new TreeMap<>();
@@ -233,7 +199,6 @@ public class ModeChoiceCoverageControlerListener implements StartupListener, Ite
 		}
 	}
 
-
 	@Override
 	public void notifyShutdown(final ShutdownEvent controlerShudownEvent) {
 
@@ -247,8 +212,6 @@ public class ModeChoiceCoverageControlerListener implements StartupListener, Ite
 
 
 	}
-
-
 
 	public static Map<Integer, Map<String, Map<Integer, Double>>> getModeHistory() {
 		return modeHistoryAll;

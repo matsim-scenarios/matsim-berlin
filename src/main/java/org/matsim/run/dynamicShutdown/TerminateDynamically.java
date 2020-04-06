@@ -26,6 +26,13 @@ import org.matsim.core.controler.TerminationCriterion;
 
 import javax.inject.Inject;
 
+/**
+ * Shuts down MATSim, when one of two criteria are satisfied: a) the lastIteration specified in the config file is reached or b) dynamic lastIteration, which can be
+ * retrieved from the DynamicShutdownControlerListener is reached (if dynamic shutdown is even initiated).
+ *
+ * @author jakobrehmann
+ */
+
 public class TerminateDynamically implements TerminationCriterion {
 
 	private final int lastIteration;

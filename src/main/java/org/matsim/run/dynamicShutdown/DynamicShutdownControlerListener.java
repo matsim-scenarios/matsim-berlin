@@ -23,6 +23,16 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * When user-specified criteria are met, initiates dynamic shutdown: 1) Turns off innovation in next iteration and
+ * 2) informs TerminateDynamically Module of the iteration at which MATSim should shut down. \
+ *
+ * The criteria to used must be user specified (i.e. score convergence), as well as the smoothing method and associated
+ * parameters.
+ *
+ * @author jakobrehmann
+ */
+
 public class DynamicShutdownControlerListener implements IterationStartsListener, StartupListener, ShutdownListener {
 
     // Dynamic Shutdown Config Group
@@ -39,8 +49,8 @@ public class DynamicShutdownControlerListener implements IterationStartsListener
     private static final int MODECHOICECOVERAGE_CONDITION_SMOOTHING_INTERVAL = 50 ;
 
 
-
-
+    private int lastIteration;
+    private double fractionOfIterationsToDisableInnovation;
     private final ControlerConfigGroup controlerConfigGroup;
     private final OutputDirectoryHierarchy controlerIO;
     private Scenario scenario;
@@ -50,6 +60,7 @@ public class DynamicShutdownControlerListener implements IterationStartsListener
     private static boolean dynamicShutdownInitiated;
     private StrategyConfigGroup strategyConfigGroup;
     private static final Logger log = Logger.getLogger(StrategyManager.class);
+
 
     private static Map<String, List<Double>> pctChangesForModeShare = new HashMap<>();
     private static Map<String, List<Double>> pctChangesForScore = new HashMap<>();
@@ -83,6 +94,8 @@ public class DynamicShutdownControlerListener implements IterationStartsListener
         dynamicShutdownInitiated = false ;
         dynamicShutdownIteration = controlerConfigGroup.getLastIteration();
 
+        fractionOfIterationsToDisableInnovation = strategyConfigGroup.getFractionOfIterationsToDisableInnovation();
+        lastIteration = scenario.getConfig().controler().getLastIteration();
     }
 
     @Override
@@ -96,6 +109,7 @@ public class DynamicShutdownControlerListener implements IterationStartsListener
             return;
         }
 
+
         // Check 2: checks whether dynamic shutdown was already initiated.
         if (dynamicShutdownInitiated) {
             log.info("dynamic shutdown was previously initiated");
@@ -107,7 +121,12 @@ public class DynamicShutdownControlerListener implements IterationStartsListener
             return ;
         }
 
-        // Check 4: returns if the mode choice coverage criteria has not yet been met (assuming the criteria is active)
+        // Check 4: check whether innovation shutdown has already occured
+        if (iteration >= fractionOfIterationsToDisableInnovation * lastIteration) {
+            return;
+        }
+
+        // Check 5: returns if the mode choice coverage criteria has not yet been met (assuming the criteria is active)
         //     step A: Add newest percent difference to the pctDifference ArrayList
         //     step B: Check Last x percent changes, to see if innovation shutdown should be initiated
         if (MODECHOICECOVERAGE_CONDITION_ACTIVE) {
@@ -117,7 +136,7 @@ public class DynamicShutdownControlerListener implements IterationStartsListener
             }
         }
 
-        // Check 5: returns if the score criteria has not yet been met (assuming the criteria is active)
+        // Check 6: returns if the score criteria has not yet been met (assuming the criteria is active)
         if (SCORE_CONDITION_ACTIVE) {
             pctChangeForScore(iteration);
             if (!checkScoreCriteria(SCORE_CONDITION_SMOOTHING_INTERVAL)) {
@@ -244,10 +263,6 @@ public class DynamicShutdownControlerListener implements IterationStartsListener
 
     private double averagePercentChange(List<Double> list, int dx) {
 
-//        if (dx > list.size()) { // jr: should no longer be necessary.
-//            return 1000.00; // big number
-//        }
-
         double avgPctChange = 0.;
 
         for (int i = list.size() - 1; i >= list.size() - dx; i--) {
@@ -259,7 +274,7 @@ public class DynamicShutdownControlerListener implements IterationStartsListener
     }
 
     private void shutdownInnovation(int iteration) {
-        dynamicShutdownIteration = (int) (iteration / strategyConfigGroup.getFractionOfIterationsToDisableInnovation()) + 2; // jr review
+        dynamicShutdownIteration = (int) (iteration / fractionOfIterationsToDisableInnovation) + 2; // jr review
         int nextDisableInnovativeStrategiesIteration = iteration + 1; // jr review
 
 
