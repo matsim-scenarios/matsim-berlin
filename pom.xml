@@ -10,8 +10,8 @@
 	<description>MATSim Open Berlin scenario project</description>
 
 	<properties>
-		<!-- <matsim.version>12.0-SNAPSHOT</matsim.version> -->
-		<matsim.version>12.0-2020w02-SNAPSHOT</matsim.version>
+		<!-- <matsim.version>12.0-SNAPSHOT</matsim.version>-->
+		<matsim.version>12.0-2020w12-SNAPSHOT</matsim.version>
 	</properties>
 
 	<repositories>
@@ -143,7 +143,7 @@
 	    	<groupId>com.github.matsim-vsp</groupId>
 	    	<artifactId>matsim-analysis</artifactId>
 	    	<!-- <version>v2.5</version> -->
-	    	<version>eb419155c2</version>
+	    	<version>c0fd16d1ec</version>
 		</dependency>
 
 		<dependency>
@@ -175,8 +175,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.3.2</version>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+					<source>11</source>
+					<target>11</target>
 					<showWarnings>false</showWarnings>
 					<showDeprecation>false</showDeprecation>
 					<encoding>UTF-8</encoding>
@@ -194,6 +194,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-eclipse-plugin</artifactId>
+				<version>2.4</version>
 				<configuration>
 					<downloadSources>true</downloadSources>
 					<downloadJavadocs>true</downloadJavadocs>
@@ -249,6 +250,7 @@
 			<plugin>  <!-- Create sources.jar -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
+				<version>3.2.0</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>

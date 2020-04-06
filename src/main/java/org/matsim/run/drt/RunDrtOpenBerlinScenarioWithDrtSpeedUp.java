@@ -55,14 +55,14 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 
 		//jr start
 		//
-//		config.plans().setInputFile("./berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");
 //		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.failIfDirectoryExists);
 		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
 //		config.qsim().setNumberOfThreads(8);
 //		config.global().setNumberOfThreads(8);
 		config.controler().setLastIteration(1250);
-		config.controler().setWriteEventsInterval(500);
-		config.controler().setWritePlansInterval(500);
+		config.controler().setWriteEventsInterval(0);
+		config.controler().setWritePlansInterval(0);
+		config.controler().setWriteSnapshotsInterval(0);
 		config.transit().setUsingTransitInMobsim(false); //jr end
 
 

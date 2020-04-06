@@ -78,34 +78,24 @@ public final class RunBerlinScenario {
 		}
 
 		Config config = prepareConfig( args ) ;
-//		config.plans().setInputFile("C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\run\\berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");//src/main/java/org/matsim/run/berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");
-		config.plans().setInputFile("berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");//src/main/java/org/matsim/run/berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");
-
-//		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists); //jr
-		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.failIfDirectoryExists);
-//		config.qsim().setFlowCapFactor(0.015);
-//		config.qsim().setStorageCapFactor(0.015);
-
 
 		//jr start
-		config.plans().setInputFile("berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");
-		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.failIfDirectoryExists);
+//		config.plans().setInputFile("berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");
+		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists); //jr
+//		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.failIfDirectoryExists);
 		config.qsim().setNumberOfThreads(8);
 		config.global().setNumberOfThreads(8);
-		config.controler().setLastIteration(1250);
-		config.controler().setWriteEventsInterval(500);
-		config.controler().setWritePlansInterval(500);
-		config.transit().setUsingTransitInMobsim(false); //jr end
-
-
-
+		config.controler().setLastIteration(10);
+		config.controler().setWriteEventsInterval(0);
+		config.controler().setWritePlansInterval(0);
+		config.controler().setWriteSnapshotsInterval(5);
+		config.transit().setUsingTransitInMobsim(false);
+		//jr end
 
 		Scenario scenario = prepareScenario( config ) ;
 
-
 		Controler controler = prepareControler( scenario ) ;
 		controler.run() ;
-
 
 	}
 

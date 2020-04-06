@@ -87,10 +87,7 @@ public final class RunDrtOpenBerlinScenario {
 		
 		Config config = prepareConfig( args ) ;
 		//jr
-        config.plans().setInputFile("C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\run\\berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");//src/main/java/org/matsim/run/berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");
         config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists); //jr
-        config.qsim().setFlowCapFactor(0.00015);
-        config.qsim().setStorageCapFactor(0.00015);
         //jr
 
 
