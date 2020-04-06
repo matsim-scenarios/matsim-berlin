@@ -29,7 +29,7 @@ import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.TerminationCriterion;
 import org.matsim.drtSpeedUp.DrtSpeedUpConfigGroup;
 import org.matsim.drtSpeedUp.DrtSpeedUpModule;
-import org.matsim.run.dynamicShutdown.DynamicShutdownControlerListener;
+import org.matsim.run.dynamicShutdown.DynamicShutdownControlerListenerImpl;
 import org.matsim.run.dynamicShutdown.ModeChoiceCoverageControlerListener;
 import org.matsim.run.dynamicShutdown.TerminateDynamically;
 import org.matsim.run.RunBerlinScenario;
@@ -59,7 +59,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
 //		config.qsim().setNumberOfThreads(8);
 //		config.global().setNumberOfThreads(8);
-		config.controler().setLastIteration(1250);
+		config.controler().setLastIteration(10);
 		config.controler().setWriteEventsInterval(0);
 		config.controler().setWritePlansInterval(0);
 		config.controler().setWriteSnapshotsInterval(0);
@@ -87,7 +87,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
-				this.addControlerListenerBinding().to(DynamicShutdownControlerListener.class);
+				this.addControlerListenerBinding().to(DynamicShutdownControlerListenerImpl.class);
 			}
 		});
 
