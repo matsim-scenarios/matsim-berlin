@@ -2,7 +2,6 @@ package org.matsim.run.dynamicShutdown;
 
 import org.apache.log4j.Logger;
 import org.matsim.analysis.ModeStatsControlerListener;
-import org.matsim.analysis.ModeStatsModule;
 import org.matsim.analysis.ScoreStats;
 import org.matsim.analysis.ScoreStatsControlerListener;
 import org.matsim.api.core.v01.Scenario;
@@ -89,12 +88,6 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
         this.controlerConfigGroup = controlerConfigGroup ;
         this.controlerIO = controlerIO ;
         this.modeStatsControlerListener = modeStatsControlerListener ;
-//        modeStatsControlerListener.mode
-
-
-
-
-
     }
 
     public static int getDynamicShutdownIteration() {
@@ -132,21 +125,27 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
             return;
         }
 
+        // jr temporary:
+        pctChangeForModeChoiceCoverage(iteration);
+        pctChangeForScore(iteration);
+//        pctChangeForMode(iteration);
+//
         // Check 3: checks whether the minimum iteration was reached ;
         if (iteration < MINIMUM_ITERATION) {
             return ;
         }
 
-        // Check 4: check whether innovation shutdown has already occured
-        if (iteration >= fractionOfIterationsToDisableInnovation * lastIteration) {
-            return;
-        }
+
+//        // Check 4: check whether innovation shutdown has already occured
+//        if (iteration >= fractionOfIterationsToDisableInnovation * lastIteration) {
+//            return;
+//        }
 
         // Check 5: returns if the mode choice coverage criteria has not yet been met (assuming the criteria is active)
         //     step A: Add newest percent difference to the pctDifference ArrayList
         //     step B: Check Last x percent changes, to see if innovation shutdown should be initiated
         if (MODECHOICECOVERAGE_CONDITION_ACTIVE) {
-            pctChangeForModeChoice(iteration);
+//            pctChangeForModeChoiceCoverage(iteration);
             if (!checkModeChoiceCoverageCriteria(MODECHOICECOVERAGE_CONDITION_SMOOTHING_INTERVAL)) {
                 return;
             }
@@ -154,15 +153,18 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
 
         // Check 6: returns if the score criteria has not yet been met (assuming the criteria is active)
         if (SCORE_CONDITION_ACTIVE) {
-            pctChangeForScore(iteration);
+//            pctChangeForScore(iteration);
             if (!checkScoreCriteria(SCORE_CONDITION_SMOOTHING_INTERVAL)) {
                 return;
             }
         }
 
+        // Mode Convergence - work in progress
         if (MODE_CONDITION_ACTIVE) {
-            pctChangeForMode(iteration);
-
+//            pctChangeForMode(iteration);
+//            if (!checkModeCriteria(MODE_CONDITION_SMOOTHING_INTERVAL)) {
+//                return;
+//            }
         }
 
         // FINALLY: if none of the previous checks terminated the process, then dynamic shutdown can be initiated.
@@ -170,37 +172,36 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
     }
 
 
-    private void pctChangeForMode(int iteration) {
-        Map<Integer, Map<String, Map<Integer, Double>>> modeHistory;
-        try {
+//    private void pctChangeForMode(int iteration) {
+//        Map<String, Map<Integer, Double>> modeHistory;
+//        try {
+//
+////            modeHistory = modeStats.getModeHistories();
+//
+//
+//            for (Map.Entry<String, Map<Integer, Double>> entry : modeHistory.entrySet()) {
+//                String mode = entry.getKey();
+//                log.info("Mode checked for " + mode);
+//                Map<Integer, Double> map = entry.getValue();
+//
+//                Double val1 = map.get(iteration - 2);
+//                System.out.println(val1);
+//
+//                Double val2 = map.get(iteration - 1);
+//                System.out.println(val2);
+//
+//                Double pctChange = Math.abs((val1 - val2) / val2);
+//                List<Double> list = pctChangesForMode.computeIfAbsent(mode, v -> new ArrayList<>());
+//                list.add(pctChange);
+//            }
+//        } catch (NullPointerException e) {
+//            log.error("Too early to find percent change");
+//        }
+//
+//    }
 
-            modeHistory = ModeChoiceCoverageControlerListener.getModeHistory();
 
-            Integer limit = 1;
-
-            for (Map.Entry<String, Map<Integer, Double>> entry : modeHistory.get(limit).entrySet()) {
-                String mode = entry.getKey();
-                log.info("Mode choice coverage checked for " + mode);
-                Map<Integer, Double> map = entry.getValue();
-
-                Double val1 = map.get(iteration - 2);
-                System.out.println(val1);
-
-                Double val2 = map.get(iteration - 1);
-                System.out.println(val2);
-
-                Double pctChange = Math.abs((val1 - val2) / val2);
-                List<Double> pctChangeForMode = pctChangesForModeChoiceCoverage.computeIfAbsent(mode, v -> new ArrayList<>());
-                pctChangeForMode.add(pctChange);
-            }
-        } catch (NullPointerException e) {
-            log.error("Too early to find percent change");
-        }
-
-    }
-
-
-    private void pctChangeForModeChoice(int iteration) {
+    private void pctChangeForModeChoiceCoverage(int iteration) {
         Map<Integer, Map<String, Map<Integer, Double>>> modeChoiceCoverageHistory;
         try {
 
@@ -358,29 +359,43 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
 
     @Override
     public void notifyShutdown(ShutdownEvent shutdownEvent) {
-        BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("PercentDifferences") +".txt"); //jr
-        try {
+
+
+        // mode choice coverage
+        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("PercentDifferencesModeChoiceCoverage.txt"))){
             for (String mode : pctChangesForModeChoiceCoverage.keySet()) {
                 bw.write("\n" + mode+" ; ");
                 for (Double pct : pctChangesForModeChoiceCoverage.get(mode)) {
                     bw.write(pct + " ; ");
                 }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-            bw.write("\n");
-
+        // score
+        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("PercentDifferencesScore.txt"))){
             for (String scoreStat : pctChangesForScore.keySet()) {
                 bw.write("\n"+scoreStat+" ; ");
                 for (Double pct : pctChangesForScore.get(scoreStat)) {
                     bw.write(pct + " ; ");
                 }
             }
-            bw.write("\n");
-            bw.flush();
-            bw.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        // mode
+//        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("PercentDifferencesMode.txt"))){
+//            for (String mode : pctChangesForMode.keySet()) {
+//                bw.write("\n"+mode+" ; ");
+//                for (Double pct : pctChangesForMode.get(mode)) {
+//                    bw.write(pct + " ; ");
+//                }
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 }
 

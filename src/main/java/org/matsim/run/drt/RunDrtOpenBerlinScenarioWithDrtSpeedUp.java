@@ -56,10 +56,10 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 		//jr start
 		//
 //		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.failIfDirectoryExists);
-		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
+		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
 //		config.qsim().setNumberOfThreads(8);
 //		config.global().setNumberOfThreads(8);
-		config.controler().setLastIteration(10);
+		config.controler().setLastIteration(1250);
 		config.controler().setWriteEventsInterval(0);
 		config.controler().setWritePlansInterval(0);
 		config.controler().setWriteSnapshotsInterval(0);
