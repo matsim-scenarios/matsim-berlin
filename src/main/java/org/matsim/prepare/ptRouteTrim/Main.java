@@ -47,10 +47,54 @@ public class Main {
         for (TransitStopFacility stop : inTransitSchedule.getFacilities().values()){
             stop2LocationInZone.put(stop.getId(), ShpGeometryUtils.isCoordInPreparedGeometries(stop.getCoord(), geometries));
         }
+//        for (Id<TransitStopFacility> stopID : stop2LocationInZone.keySet()){
+//            System.out.println(stopID + " - " + stop2LocationInZone.get(stopID));
+//        }
 
-        for (Id<TransitStopFacility> stopID : stop2LocationInZone.keySet()){
-            System.out.println(stopID + " - " + stop2LocationInZone.get(stopID));
+        int inCount = 0;
+        int outCount = 0 ;
+        int wrongCount = 0;
+        int halfCount = 0 ;
+        int totalCount = 0 ;
+        ArrayList<Id<TransitRoute>> in = new ArrayList<>();
+        ArrayList<Id<TransitRoute>> out = new ArrayList<>();
+        ArrayList<Id<TransitRoute>> half = new ArrayList<>();
+
+
+        for (TransitLine line : inTransitSchedule.getTransitLines().values()) {
+            for (TransitRoute route : line.getRoutes().values()) {
+//                System.out.println("\n\nROUTE                 " + route.getId());
+                totalCount++ ;
+                ArrayList<Boolean> inOutList = new ArrayList<>();
+                for (TransitRouteStop stop : route.getStops()) {
+                    Id<TransitStopFacility> id = stop.getStopFacility().getId();
+                    inOutList.add(stop2LocationInZone.get(id));
+//                    System.out.println(id + "  :   " + stop2LocationInZone.get(id));
+                }
+                if (inOutList.contains(true) && inOutList.contains(false)) {
+                    halfCount++;
+                    half.add(route.getId());
+                } else if (inOutList.contains(true)) {
+                    inCount++ ;
+                    in.add(route.getId());
+                } else if (inOutList.contains(false)) {
+                    outCount++;
+                    out.add(route.getId());
+                } else {
+                    wrongCount++;
+                }
+            }
         }
+
+        System.out.printf("in: %d, out: %d, half: %d, wrong: %d", inCount, outCount,halfCount,wrongCount);
+        System.out.printf("%nin: %d, out: %d, half: %d, wrong: %d", in.size(), out.size(),half.size(),wrongCount);
+        for (Id<TransitRoute> id : half) {
+            System.out.println(id);
+        }
+
+
+
+
 //
 //        // ENTIRELY WITHIN ZONE -- remove
 //        Set<Id<TransitLine>> linesToRemove = inTransitSchedule.getTransitLines().values().stream().
