@@ -1,6 +1,8 @@
 package org.matsim.run.dynamicShutdown;
 
 import org.apache.log4j.Logger;
+import org.matsim.analysis.ModeStatsControlerListener;
+import org.matsim.analysis.ModeStatsModule;
 import org.matsim.analysis.ScoreStats;
 import org.matsim.analysis.ScoreStatsControlerListener;
 import org.matsim.api.core.v01.Scenario;
@@ -43,6 +45,11 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
     private static final double SCORE_CONDITION_THRESHOLD = 0.5;
     private static final int SCORE_CONDITION_SMOOTHING_INTERVAL = 50 ;
 
+    // Mode Convergence Config Group
+    private static final boolean MODE_CONDITION_ACTIVE = true;
+    private static final double MODE_CONDITION_THRESHOLD = 0.0005;
+    private static final int MODE_CONDITION_SMOOTHING_INTERVAL = 50 ;
+
     // Mode Choice Coverage Config Group
     private static final boolean MODECHOICECOVERAGE_CONDITION_ACTIVE = true;
     private static final double MODECHOICECOVERAGE_CONDITION_THRESHOLD = 0.0005;
@@ -55,6 +62,9 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
     private final OutputDirectoryHierarchy controlerIO;
     private Scenario scenario;
     private ScoreStats scoreStats;
+    private ModeStatsControlerListener modeStats;
+    ModeStatsControlerListener modeStatsControlerListener;
+
     private StrategyManager strategyManager;
     private static int dynamicShutdownIteration;
     private static boolean dynamicShutdownInitiated;
@@ -62,12 +72,14 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
     private static final Logger log = Logger.getLogger(StrategyManager.class);
 
 
-    private static Map<String, List<Double>> pctChangesForModeShare = new HashMap<>();
     private static Map<String, List<Double>> pctChangesForScore = new HashMap<>();
+    private static Map<String, List<Double>> pctChangesForMode = new HashMap<>();
+    private static Map<String, List<Double>> pctChangesForModeChoiceCoverage = new HashMap<>();
+
 
 
     @Inject
-    DynamicShutdownControlerListenerImpl(ControlerConfigGroup controlerConfigGroup, ScoreStats scoreStats, StrategyManager strategyManager,
+    DynamicShutdownControlerListenerImpl(ControlerConfigGroup controlerConfigGroup, ScoreStats scoreStats, ModeStatsControlerListener modeStatsControlerListener, StrategyManager strategyManager,
                                          StrategyConfigGroup strategyConfigGroup, Scenario scenario, OutputDirectoryHierarchy controlerIO) {
 
         this.scenario = scenario;
@@ -76,6 +88,10 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
         this.strategyConfigGroup = strategyConfigGroup;
         this.controlerConfigGroup = controlerConfigGroup ;
         this.controlerIO = controlerIO ;
+        this.modeStatsControlerListener = modeStatsControlerListener ;
+//        modeStatsControlerListener.mode
+
+
 
 
 
@@ -103,7 +119,7 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
         int iteration = iterationStartsEvent.getIteration();
 
         // Checks 1:  at least one shutdown criteria is being active. Otherwise this module is superfluous.
-        if (!MODECHOICECOVERAGE_CONDITION_ACTIVE && !SCORE_CONDITION_ACTIVE) {
+        if (!MODECHOICECOVERAGE_CONDITION_ACTIVE && !SCORE_CONDITION_ACTIVE && !MODE_CONDITION_ACTIVE) {
             log.warn("dynamic shutdown should not be used if no criteria are specified. " +
                     "Therefore, the standard shutdown iteration will be used");
             return;
@@ -131,7 +147,7 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
         //     step B: Check Last x percent changes, to see if innovation shutdown should be initiated
         if (MODECHOICECOVERAGE_CONDITION_ACTIVE) {
             pctChangeForModeChoice(iteration);
-            if (!checkModeChoiceCriteria(MODECHOICECOVERAGE_CONDITION_SMOOTHING_INTERVAL)) {
+            if (!checkModeChoiceCoverageCriteria(MODECHOICECOVERAGE_CONDITION_SMOOTHING_INTERVAL)) {
                 return;
             }
         }
@@ -144,13 +160,17 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
             }
         }
 
+        if (MODE_CONDITION_ACTIVE) {
+            pctChangeForMode(iteration);
+
+        }
+
         // FINALLY: if none of the previous checks terminated the process, then dynamic shutdown can be initiated.
         shutdownInnovation(iteration);
     }
 
 
-
-    private void pctChangeForModeChoice(int iteration) {
+    private void pctChangeForMode(int iteration) {
         Map<Integer, Map<String, Map<Integer, Double>>> modeHistory;
         try {
 
@@ -170,7 +190,7 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
                 System.out.println(val2);
 
                 Double pctChange = Math.abs((val1 - val2) / val2);
-                List<Double> pctChangeForMode = pctChangesForModeShare.computeIfAbsent(mode, v -> new ArrayList<>());
+                List<Double> pctChangeForMode = pctChangesForModeChoiceCoverage.computeIfAbsent(mode, v -> new ArrayList<>());
                 pctChangeForMode.add(pctChange);
             }
         } catch (NullPointerException e) {
@@ -180,14 +200,44 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
     }
 
 
-    private boolean checkModeChoiceCriteria(int dx) {
+    private void pctChangeForModeChoice(int iteration) {
+        Map<Integer, Map<String, Map<Integer, Double>>> modeChoiceCoverageHistory;
+        try {
+
+            modeChoiceCoverageHistory = ModeChoiceCoverageControlerListener.getModeHistory();
+
+            Integer limit = 1;
+
+            for (Map.Entry<String, Map<Integer, Double>> entry : modeChoiceCoverageHistory.get(limit).entrySet()) {
+                String mode = entry.getKey();
+                log.info("Mode choice coverage checked for " + mode);
+                Map<Integer, Double> map = entry.getValue();
+
+                Double val1 = map.get(iteration - 2);
+                System.out.println(val1);
+
+                Double val2 = map.get(iteration - 1);
+                System.out.println(val2);
+
+                Double pctChange = Math.abs((val1 - val2) / val2);
+                List<Double> pctChangeForMode = pctChangesForModeChoiceCoverage.computeIfAbsent(mode, v -> new ArrayList<>());
+                pctChangeForMode.add(pctChange);
+            }
+        } catch (NullPointerException e) {
+            log.error("Too early to find percent change");
+        }
+
+    }
+
+
+    private boolean checkModeChoiceCoverageCriteria(int dx) {
 
         // Calculates Average Percent Change for all modes
         Map<String, Double> averageModeChoiceCoveragePctChanges = new HashMap<>();
-        for (String mode : pctChangesForModeShare.keySet()) {
+        for (String mode : pctChangesForModeChoiceCoverage.keySet()) {
 
 
-            List<Double> pctChangesForMode = pctChangesForModeShare.get(mode);
+            List<Double> pctChangesForMode = pctChangesForModeChoiceCoverage.get(mode);
             if (dx > pctChangesForMode.size()) {
                 log.warn("An average percent change over cannot yet be found, since dx is too high.");
                 return false;
@@ -310,9 +360,9 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
     public void notifyShutdown(ShutdownEvent shutdownEvent) {
         BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("PercentDifferences") +".txt"); //jr
         try {
-            for (String mode : pctChangesForModeShare.keySet()) {
+            for (String mode : pctChangesForModeChoiceCoverage.keySet()) {
                 bw.write("\n" + mode+" ; ");
-                for (Double pct : pctChangesForModeShare.get(mode)) {
+                for (Double pct : pctChangesForModeChoiceCoverage.get(mode)) {
                     bw.write(pct + " ; ");
                 }
             }
