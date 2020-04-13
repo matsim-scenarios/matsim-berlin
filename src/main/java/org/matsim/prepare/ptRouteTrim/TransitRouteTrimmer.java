@@ -21,13 +21,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
-public class ptRouteTrim {
-    private static final Logger log = Logger.getLogger(ptRouteTrim.class);
+public class TransitRouteTrimmer {
+    private static final Logger log = Logger.getLogger(TransitRouteTrimmer.class);
 
     // Parameters
-    static boolean removeEmptyLines = true ;
+    static boolean removeEmptyLines = true;
     static double pctThresholdToKeepRouteEntirely = 0.0;
     static double pctThresholdToRemoveRouteEntirely = 1.0;
+
     enum modMethod {
         DeleteRoutesEntirelyInside,
         DeleteAllStopsWithin,
@@ -54,8 +55,8 @@ public class ptRouteTrim {
         List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new URL(zoneShpFile));
 
         Set<Id<TransitStopFacility>> stopsInArea = new HashSet<>(); //getStopIdsWithinArea(inTransitSchedule, geometries);
-        for (TransitStopFacility stop : inTransitSchedule.getFacilities().values()){
-            if(ShpGeometryUtils.isCoordInPreparedGeometries(stop.getCoord(), geometries)){
+        for (TransitStopFacility stop : inTransitSchedule.getFacilities().values()) {
+            if (ShpGeometryUtils.isCoordInPreparedGeometries(stop.getCoord(), geometries)) {
                 stopsInArea.add(stop.getId());
             }
         }
@@ -72,68 +73,55 @@ public class ptRouteTrim {
         countLinesInOut(outTransitSchedule, stopsInArea);
 
 
-        //Modify Routes: Trim Ends
+        // Modify Routes: Trim Ends
         outTransitSchedule = modifyTransitLinesFromTransitSchedule(outTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.TrimEnds);
 
         System.out.println("\n Modify Routes: Trim Ends");
         countLinesInOut(outTransitSchedule, stopsInArea);
 
-        //Modify Routes: ChooseLongerEnd
+        // Modify Routes: ChooseLongerEnd
         outTransitSchedule = modifyTransitLinesFromTransitSchedule(outTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.ChooseLongerEnd);
 
         System.out.println("\n Modify Routes: ChooseLongerEnd");
         countLinesInOut(outTransitSchedule, stopsInArea);
 
 
-        // Finish
+        // Schedule Cleaner and Writer
         TransitSchedule outTransitScheduleCleaned = TransitScheduleCleaner.removeStopsNotUsed(outTransitSchedule);
-//        TODO: There are a lot of Validation Warning!
         TransitScheduleValidator.ValidationResult validationResult = TransitScheduleValidator.validateAll(outTransitScheduleCleaned, scenario.getNetwork());
         log.warn(validationResult.getErrors());
-//
         new TransitScheduleWriter(outTransitScheduleCleaned).writeFile(outScheduleFile);
     }
 
-    private static double pctOfStopsInZone(TransitRoute route, Set<Id<TransitStopFacility>> stopsInArea) {
-        double inAreaCount = 0.;
-        for (TransitRouteStop stop : route.getStops()) {
-            if (stopsInArea.contains(stop.getStopFacility().getId())) {
-                inAreaCount++;
-            }
-        }
-        return inAreaCount / route.getStops().size();
-    }
 
-
-
-    public static TransitSchedule modifyTransitLinesFromTransitSchedule(TransitSchedule transitSchedule, Set<Id<TransitLine>> linesToModify,  Set<Id<TransitStopFacility>> stopsInArea, Scenario scenario, modMethod modifyMethod) {
+    public static TransitSchedule modifyTransitLinesFromTransitSchedule(TransitSchedule transitSchedule, Set<Id<TransitLine>> linesToModify, Set<Id<TransitStopFacility>> stopsInArea, Scenario scenario, modMethod modifyMethod) {
 //        log.info("modifying " + linesToModify + " lines from transit schedule...");
         TransitSchedule tS = (new TransitScheduleFactoryImpl()).createTransitSchedule();
         Iterator var3 = transitSchedule.getFacilities().values().iterator();
 
-        while(var3.hasNext()) {
-            TransitStopFacility stop = (TransitStopFacility)var3.next();
+        while (var3.hasNext()) {
+            TransitStopFacility stop = (TransitStopFacility) var3.next();
             tS.addStopFacility(stop);
         }
 
         var3 = transitSchedule.getTransitLines().values().iterator();
 
-        while(var3.hasNext()) {
-            TransitLine line = (TransitLine)var3.next();
+        while (var3.hasNext()) {
+            TransitLine line = (TransitLine) var3.next();
             if (!linesToModify.contains(line.getId())) {
                 tS.addTransitLine(line);
-                continue ;
+                continue;
             }
 
 
             TransitLine lineNew = transitSchedule.getFactory().createTransitLine(line.getId());
             for (TransitRoute route : line.getRoutes().values()) {
                 TransitRoute routeNew = null;
-                if(modifyMethod.equals(modMethod.DeleteRoutesEntirelyInside)) {
+                if (modifyMethod.equals(modMethod.DeleteRoutesEntirelyInside)) {
                     if (pctOfStopsInZone(route, stopsInArea) == 1.0) {
                         continue;
                     }
-                    routeNew = route ;
+                    routeNew = route;
                 } else if (modifyMethod.equals(modMethod.TrimEnds)) {
                     routeNew = modifyRouteTrimEnds(route, stopsInArea, scenario);
                 } else if (modifyMethod.equals(modMethod.ChooseLongerEnd)) {
@@ -151,7 +139,7 @@ public class ptRouteTrim {
             if (lineNew.getRoutes().size() == 0 && removeEmptyLines) {
                 log.info(lineNew.getId() + " does not contain routes. It will NOT be added to the schedule");
                 continue;
-                }
+            }
 
             tS.addTransitLine(lineNew);
 
@@ -163,7 +151,7 @@ public class ptRouteTrim {
     }
 
     private static TransitRoute modifyRouteDeleteAllStopsWithin(TransitRoute routeOld, Set<Id<TransitStopFacility>> stopsInArea, Scenario scenario) {
-        TransitRoute routeNew = null ;
+        TransitRoute routeNew = null;
 
         // Find which stops of route are within zone
         ArrayList<Boolean> inOutList = new ArrayList<>();
@@ -176,7 +164,7 @@ public class ptRouteTrim {
     }
 
     private static TransitRoute modifyRouteTrimEnds(TransitRoute routeOld, Set<Id<TransitStopFacility>> stopsInArea, Scenario scenario) {
-        TransitRoute routeNew = null ;
+        TransitRoute routeNew = null;
 
         // Find which stops of route are within zone
         ArrayList<Boolean> inOutList = new ArrayList<>();
@@ -192,17 +180,17 @@ public class ptRouteTrim {
 
         // from beginning of trip
         for (int i = 0; i < keepDiscardList.size(); i++) {
-            if (inOutList.get(i)==true) {
-                keepDiscardList.set(i, true) ;
+            if (inOutList.get(i) == true) {
+                keepDiscardList.set(i, true);
             } else {
                 break;
             }
         }
 
         // from end of trip
-        for (int i = keepDiscardList.size()-1; i >=0 ; i--) {
-            if (inOutList.get(i)==true) {
-                keepDiscardList.set(i, true) ;
+        for (int i = keepDiscardList.size() - 1; i >= 0; i--) {
+            if (inOutList.get(i) == true) {
+                keepDiscardList.set(i, true);
             } else {
                 break;
             }
@@ -211,8 +199,6 @@ public class ptRouteTrim {
     }
 
     private static TransitRoute modifyRouteChooseLongerEnd(TransitRoute routeOld, Set<Id<TransitStopFacility>> stopsInArea, Scenario scenario) {
-        TransitRoute routeNew = null ;
-
         // Find which stops of route are within zone
         ArrayList<Boolean> inOutList = new ArrayList<>();
         for (TransitRouteStop stop : routeOld.getStops()) {
@@ -220,21 +206,21 @@ public class ptRouteTrim {
             inOutList.add(stopsInArea.contains(id));
         }
 
-        int falseCountBeginning = 0 ;
+        int falseCountBeginning = 0;
         for (int i = 0; i < inOutList.size(); i++) {
             if (!inOutList.get(i)) {
                 falseCountBeginning++;
             } else {
-                break ;
+                break;
             }
         }
 
-        int falseCountEnd = 0 ;
-        for (int i = inOutList.size()-1; i >= 0 ; i--) {
+        int falseCountEnd = 0;
+        for (int i = inOutList.size() - 1; i >= 0; i--) {
             if (!inOutList.get(i)) {
                 falseCountEnd++;
             } else {
-                break ;
+                break;
             }
         }
 
@@ -243,12 +229,14 @@ public class ptRouteTrim {
             keepDiscardList.add(true);
         }
 
+
+        //TODO: Come up with better conditions, and a way to split one route into two
         if (falseCountBeginning >= falseCountEnd) {
             for (int i = 0; i < falseCountBeginning; i++) {
                 keepDiscardList.set(i, false);
             }
-        } else if (falseCountBeginning < falseCountEnd) {
-            for (int i = inOutList.size()-1; i >= inOutList.size()-falseCountEnd ; i--) {
+        } else {
+            for (int i = inOutList.size() - 1; i >= inOutList.size() - falseCountEnd; i--) {
                 keepDiscardList.set(i, false);
             }
         }
@@ -296,16 +284,26 @@ public class ptRouteTrim {
         return routeNew;
     }
 
-    private static void countLinesInOut(TransitSchedule tS,  Set<Id<TransitStopFacility>> stopsInArea){
+    private static double pctOfStopsInZone(TransitRoute route, Set<Id<TransitStopFacility>> stopsInArea) {
+        double inAreaCount = 0.;
+        for (TransitRouteStop stop : route.getStops()) {
+            if (stopsInArea.contains(stop.getStopFacility().getId())) {
+                inAreaCount++;
+            }
+        }
+        return inAreaCount / route.getStops().size();
+    }
+
+    private static void countLinesInOut(TransitSchedule tS, Set<Id<TransitStopFacility>> stopsInArea) {
         int inCount = 0;
-        int outCount = 0 ;
+        int outCount = 0;
         int wrongCount = 0;
-        int halfCount = 0 ;
-        int totalCount = 0 ;
+        int halfCount = 0;
+        int totalCount = 0;
 
         for (TransitLine line : tS.getTransitLines().values()) {
             for (TransitRoute route : line.getRoutes().values()) {
-                totalCount++ ;
+                totalCount++;
                 ArrayList<Boolean> inOutList = new ArrayList<>();
                 for (TransitRouteStop stop : route.getStops()) {
                     Id<TransitStopFacility> id = stop.getStopFacility().getId();
@@ -314,7 +312,7 @@ public class ptRouteTrim {
                 if (inOutList.contains(true) && inOutList.contains(false)) {
                     halfCount++;
                 } else if (inOutList.contains(true)) {
-                    inCount++ ;
+                    inCount++;
                 } else if (inOutList.contains(false)) {
                     outCount++;
                 } else {
@@ -323,30 +321,7 @@ public class ptRouteTrim {
             }
         }
 
-        System.out.printf("in: %d, out: %d, half: %d, wrong: %d%n", inCount, outCount,halfCount,wrongCount);
+        System.out.printf("in: %d, out: %d, half: %d, wrong: %d, total: %d %n", inCount, outCount, halfCount, wrongCount, totalCount);
 
     }
-
-
-
-
-    // Deprecated:
-    private static boolean completelyInZone(TransitLine line, List<PreparedGeometry> zones) {
-        Map<Id<TransitStopFacility>, Boolean> stop2LocationInZone = new HashMap<>();
-
-        line.getRoutes().values().forEach(route -> checkAndWriteLocationPerStop(stop2LocationInZone, route, zones));
-        return stop2LocationInZone.values().stream().allMatch(b -> b == true);
-    }
-
-    private static boolean touchesZone (TransitLine line, List<PreparedGeometry> zones) {
-        Map<Id<TransitStopFacility>, Boolean> stop2LocationInZone = new HashMap<>();
-
-        line.getRoutes().values().forEach(route -> checkAndWriteLocationPerStop(stop2LocationInZone, route, zones));
-        return stop2LocationInZone.values().stream().anyMatch(b -> b == true);
-    }
-
-    private static void checkAndWriteLocationPerStop(Map<Id<TransitStopFacility>, Boolean> stop2LocationInZone, TransitRoute route, List<PreparedGeometry> zones) {
-        route.getStops().forEach(stop -> stop2LocationInZone.put(stop.getStopFacility().getId(), ShpGeometryUtils.isCoordInPreparedGeometries(stop.getStopFacility().getCoord(), zones)));
-    }
-
 }
