@@ -66,12 +66,12 @@ public class ptRouteTrim {
 
 
         // Finish
-//        TransitSchedule outTransitScheduleCleaned = TransitScheduleCleaner.removeStopsNotUsed(outTransitSchedule);
-//        //TODO: There are a lot of Validation Warning!
-//        TransitScheduleValidator.ValidationResult validationResult = TransitScheduleValidator.validateAll(outTransitScheduleCleaned, scenario.getNetwork());
-//        log.warn(validationResult.getErrors());
-//
-//        new TransitScheduleWriter(outTransitScheduleCleaned).writeFile(outScheduleFile);
+        TransitSchedule outTransitScheduleCleaned = TransitScheduleCleaner.removeStopsNotUsed(outTransitSchedule);
+        //TODO: There are a lot of Validation Warning!
+        TransitScheduleValidator.ValidationResult validationResult = TransitScheduleValidator.validateAll(outTransitScheduleCleaned, scenario.getNetwork());
+        log.warn(validationResult.getErrors());
+
+        new TransitScheduleWriter(outTransitScheduleCleaned).writeFile(outScheduleFile);
     }
 
     private static double pctOfStopsInZone(TransitRoute route, Set<Id<TransitStopFacility>> stopsInArea) {
@@ -108,15 +108,19 @@ public class ptRouteTrim {
 
             TransitLine lineNew = transitSchedule.getFactory().createTransitLine(line.getId());
             for (TransitRoute route : line.getRoutes().values()) {
-                double pct = pctOfStopsInZone(route, stopsInArea);
-                if (pct <= pctThresholdToKeepRouteEntirely) { // If none of stops are within area, add entirely
-                    lineNew.addRoute(route);
-                } else if (pct < pctThresholdToRemoveRouteEntirely) {
-                    TransitRoute routeNew = modifyRouteDeleteAllStopsWithin(route, stopsInArea, scenario);
-                    if (routeNew != null) {
-                        lineNew.addRoute(routeNew);
-                    }
+                TransitRoute routeNew = modifyRouteTrimEnds(route, stopsInArea, scenario);
+                if (routeNew != null) {
+                    lineNew.addRoute(routeNew);
                 }
+//                double pct = pctOfStopsInZone(route, stopsInArea);
+//                if (pct <= pctThresholdToKeepRouteEntirely) { // If none of stops are within area, add entirely
+//                    lineNew.addRoute(route);
+//                } else if (pct < pctThresholdToRemoveRouteEntirely) {
+//                    TransitRoute routeNew = modifyRouteTrimEnds(route, stopsInArea, scenario);
+//                    if (routeNew != null) {
+//                        lineNew.addRoute(routeNew);
+//                    }
+//                }
             }
 
             if (lineNew.getRoutes().size() == 0 && removeEmptyLines) {
@@ -142,10 +146,47 @@ public class ptRouteTrim {
             Id<TransitStopFacility> id = stop.getStopFacility().getId();
             inOutList.add(stopsInArea.contains(id));
         }
-
-
-
         // Collect all stops and links from original route
+        return modifyRoute(routeOld, scenario, inOutList);
+    }
+
+    private static TransitRoute modifyRouteTrimEnds(TransitRoute routeOld, Set<Id<TransitStopFacility>> stopsInArea, Scenario scenario) {
+        TransitRoute routeNew = null ;
+
+        // Find which stops of route are within zone
+        ArrayList<Boolean> inOutList = new ArrayList<>();
+        for (TransitRouteStop stop : routeOld.getStops()) {
+            Id<TransitStopFacility> id = stop.getStopFacility().getId();
+            inOutList.add(stopsInArea.contains(id));
+        }
+
+        ArrayList<Boolean> keepDiscardList = new ArrayList<>();
+        for (int i = 0; i < inOutList.size(); i++) {
+            keepDiscardList.add(false);
+        }
+
+        // from beginning of trip
+        for (int i = 0; i < keepDiscardList.size(); i++) {
+            if (inOutList.get(i)==true) {
+                keepDiscardList.set(i, true) ;
+            } else {
+                break;
+            }
+        }
+
+        // from end of trip
+        for (int i = keepDiscardList.size()-1; i >=0 ; i--) {
+            if (inOutList.get(i)==true) {
+                keepDiscardList.set(i, true) ;
+            } else {
+                break;
+            }
+        }
+        return modifyRoute(routeOld, scenario, keepDiscardList);
+    }
+
+    private static TransitRoute modifyRoute(TransitRoute routeOld, Scenario scenario, ArrayList<Boolean> inOutList) {
+        TransitRoute routeNew;
         List<TransitRouteStop> stopsOld = new ArrayList<>(routeOld.getStops());
 
         List<Id<Link>> linksOld = new ArrayList<>();
