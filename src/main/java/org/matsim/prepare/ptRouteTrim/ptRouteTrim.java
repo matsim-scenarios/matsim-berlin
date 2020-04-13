@@ -28,6 +28,12 @@ public class ptRouteTrim {
     static boolean removeEmptyLines = true ;
     static double pctThresholdToKeepRouteEntirely = 0.0;
     static double pctThresholdToRemoveRouteEntirely = 1.0;
+    enum modMethod {
+        DeleteRoutesEntirelyInside,
+        DeleteAllStopsWithin,
+        TrimEnds,
+        ChooseLongerEnd
+    }
 
     public static void main(String[] args) throws MalformedURLException {
         final String inScheduleFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz";//"../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v0/optimizedSchedule.xml.gz";
@@ -54,23 +60,37 @@ public class ptRouteTrim {
             }
         }
 
-        // Modify Routes
+
+        // Modify Routes: Delete all routes entirely inside shp
         Set<Id<TransitLine>> linesToModify = inTransitSchedule.getTransitLines().keySet(); // all lines will be examined
-        TransitSchedule outTransitSchedule = modifyTransitLinesFromTransitSchedule(inTransitSchedule, linesToModify, stopsInArea, scenario);
+        TransitSchedule outTransitSchedule = modifyTransitLinesFromTransitSchedule(inTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.DeleteRoutesEntirelyInside);
 
         System.out.println("\n Before Modification of routes");
         countLinesInOut(inTransitSchedule, stopsInArea);
-        System.out.println("\n After modification of routes");
+
+        System.out.println("\n Modify Routes: Delete all routes entirely inside shp");
         countLinesInOut(outTransitSchedule, stopsInArea);
 
+
+        //Modify Routes: Trim Ends
+        outTransitSchedule = modifyTransitLinesFromTransitSchedule(outTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.TrimEnds);
+
+        System.out.println("\n Modify Routes: Trim Ends");
+        countLinesInOut(outTransitSchedule, stopsInArea);
+
+        //Modify Routes: ChooseLongerEnd
+        outTransitSchedule = modifyTransitLinesFromTransitSchedule(outTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.ChooseLongerEnd);
+
+        System.out.println("\n Modify Routes: ChooseLongerEnd");
+        countLinesInOut(outTransitSchedule, stopsInArea);
 
 
         // Finish
         TransitSchedule outTransitScheduleCleaned = TransitScheduleCleaner.removeStopsNotUsed(outTransitSchedule);
-        //TODO: There are a lot of Validation Warning!
+//        TODO: There are a lot of Validation Warning!
         TransitScheduleValidator.ValidationResult validationResult = TransitScheduleValidator.validateAll(outTransitScheduleCleaned, scenario.getNetwork());
         log.warn(validationResult.getErrors());
-
+//
         new TransitScheduleWriter(outTransitScheduleCleaned).writeFile(outScheduleFile);
     }
 
@@ -86,7 +106,7 @@ public class ptRouteTrim {
 
 
 
-    public static TransitSchedule modifyTransitLinesFromTransitSchedule(TransitSchedule transitSchedule, Set<Id<TransitLine>> linesToModify,  Set<Id<TransitStopFacility>> stopsInArea, Scenario scenario) {
+    public static TransitSchedule modifyTransitLinesFromTransitSchedule(TransitSchedule transitSchedule, Set<Id<TransitLine>> linesToModify,  Set<Id<TransitStopFacility>> stopsInArea, Scenario scenario, modMethod modifyMethod) {
 //        log.info("modifying " + linesToModify + " lines from transit schedule...");
         TransitSchedule tS = (new TransitScheduleFactoryImpl()).createTransitSchedule();
         Iterator var3 = transitSchedule.getFacilities().values().iterator();
@@ -108,19 +128,24 @@ public class ptRouteTrim {
 
             TransitLine lineNew = transitSchedule.getFactory().createTransitLine(line.getId());
             for (TransitRoute route : line.getRoutes().values()) {
-                TransitRoute routeNew = modifyRouteTrimEnds(route, stopsInArea, scenario);
+                TransitRoute routeNew = null;
+                if(modifyMethod.equals(modMethod.DeleteRoutesEntirelyInside)) {
+                    if (pctOfStopsInZone(route, stopsInArea) == 1.0) {
+                        continue;
+                    }
+                    routeNew = route ;
+                } else if (modifyMethod.equals(modMethod.TrimEnds)) {
+                    routeNew = modifyRouteTrimEnds(route, stopsInArea, scenario);
+                } else if (modifyMethod.equals(modMethod.ChooseLongerEnd)) {
+                    routeNew = modifyRouteChooseLongerEnd(route, stopsInArea, scenario);
+                } else if (modifyMethod.equals((modMethod.DeleteAllStopsWithin))) {
+                    routeNew = modifyRouteDeleteAllStopsWithin(route, stopsInArea, scenario);
+                }
+
                 if (routeNew != null) {
                     lineNew.addRoute(routeNew);
                 }
-//                double pct = pctOfStopsInZone(route, stopsInArea);
-//                if (pct <= pctThresholdToKeepRouteEntirely) { // If none of stops are within area, add entirely
-//                    lineNew.addRoute(route);
-//                } else if (pct < pctThresholdToRemoveRouteEntirely) {
-//                    TransitRoute routeNew = modifyRouteTrimEnds(route, stopsInArea, scenario);
-//                    if (routeNew != null) {
-//                        lineNew.addRoute(routeNew);
-//                    }
-//                }
+
             }
 
             if (lineNew.getRoutes().size() == 0 && removeEmptyLines) {
@@ -182,6 +207,52 @@ public class ptRouteTrim {
                 break;
             }
         }
+        return modifyRoute(routeOld, scenario, keepDiscardList);
+    }
+
+    private static TransitRoute modifyRouteChooseLongerEnd(TransitRoute routeOld, Set<Id<TransitStopFacility>> stopsInArea, Scenario scenario) {
+        TransitRoute routeNew = null ;
+
+        // Find which stops of route are within zone
+        ArrayList<Boolean> inOutList = new ArrayList<>();
+        for (TransitRouteStop stop : routeOld.getStops()) {
+            Id<TransitStopFacility> id = stop.getStopFacility().getId();
+            inOutList.add(stopsInArea.contains(id));
+        }
+
+        int falseCountBeginning = 0 ;
+        for (int i = 0; i < inOutList.size(); i++) {
+            if (!inOutList.get(i)) {
+                falseCountBeginning++;
+            } else {
+                break ;
+            }
+        }
+
+        int falseCountEnd = 0 ;
+        for (int i = inOutList.size()-1; i >= 0 ; i--) {
+            if (!inOutList.get(i)) {
+                falseCountEnd++;
+            } else {
+                break ;
+            }
+        }
+
+        ArrayList<Boolean> keepDiscardList = new ArrayList<>();
+        for (int i = 0; i < inOutList.size(); i++) {
+            keepDiscardList.add(true);
+        }
+
+        if (falseCountBeginning >= falseCountEnd) {
+            for (int i = 0; i < falseCountBeginning; i++) {
+                keepDiscardList.set(i, false);
+            }
+        } else if (falseCountBeginning < falseCountEnd) {
+            for (int i = inOutList.size()-1; i >= inOutList.size()-falseCountEnd ; i--) {
+                keepDiscardList.set(i, false);
+            }
+        }
+
         return modifyRoute(routeOld, scenario, keepDiscardList);
     }
 
@@ -252,7 +323,7 @@ public class ptRouteTrim {
             }
         }
 
-        System.out.printf("%nin: %d, out: %d, half: %d, wrong: %d", inCount, outCount,halfCount,wrongCount);
+        System.out.printf("in: %d, out: %d, half: %d, wrong: %d%n", inCount, outCount,halfCount,wrongCount);
 
     }
 
