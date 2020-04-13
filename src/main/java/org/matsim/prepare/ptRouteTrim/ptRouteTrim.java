@@ -102,36 +102,29 @@ public class ptRouteTrim {
             TransitLine line = (TransitLine)var3.next();
             if (!linesToModify.contains(line.getId())) {
                 tS.addTransitLine(line);
-            } else{
-                Id<TransitLine> transitLineId = line.getId();
-                TransitLine lineNew = transitSchedule.getFactory().createTransitLine(transitLineId);
-                for (TransitRoute route : line.getRoutes().values()) {
-                    double pct = pctOfStopsInZone(route, stopsInArea);
-                    if (pct <= pctThresholdToKeepRouteEntirely) { // If none of stops are within area, add entirely
-                        lineNew.addRoute(route);
-                        continue;
-                    } else if (pct < pctThresholdToRemoveRouteEntirely) {
-                        TransitRoute routeNew = modifyRouteDeleteAllStopsWithin(route, stopsInArea, scenario);
-                        if (routeNew != null) {
-                            lineNew.addRoute(routeNew);
-                        }
-                    } else { // If all stops are within area, do not add route
-                        continue;
-                    }
-                }
-
-                if (lineNew.getRoutes().size() == 0) {
-                    if (removeEmptyLines) {
-                        log.info(lineNew.getId() + " does not contain routes. It will NOT be added to the schedule");
-                        continue;
-                    } else{
-                        log.info(lineNew.getId() + " does not contain routes. It WILL be added to the schedule regardless");
-                    }
-                }
-                tS.addTransitLine(lineNew);
-
-
+                continue ;
             }
+
+
+            TransitLine lineNew = transitSchedule.getFactory().createTransitLine(line.getId());
+            for (TransitRoute route : line.getRoutes().values()) {
+                double pct = pctOfStopsInZone(route, stopsInArea);
+                if (pct <= pctThresholdToKeepRouteEntirely) { // If none of stops are within area, add entirely
+                    lineNew.addRoute(route);
+                } else if (pct < pctThresholdToRemoveRouteEntirely) {
+                    TransitRoute routeNew = modifyRouteDeleteAllStopsWithin(route, stopsInArea, scenario);
+                    if (routeNew != null) {
+                        lineNew.addRoute(routeNew);
+                    }
+                }
+            }
+
+            if (lineNew.getRoutes().size() == 0 && removeEmptyLines) {
+                log.info(lineNew.getId() + " does not contain routes. It will NOT be added to the schedule");
+                continue;
+                }
+
+            tS.addTransitLine(lineNew);
 
         }
 
@@ -142,7 +135,6 @@ public class ptRouteTrim {
 
     private static TransitRoute modifyRouteDeleteAllStopsWithin(TransitRoute routeOld, Set<Id<TransitStopFacility>> stopsInArea, Scenario scenario) {
         TransitRoute routeNew = null ;
-
 
         // Find which stops of route are within zone
         ArrayList<Boolean> inOutList = new ArrayList<>();
