@@ -24,6 +24,13 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
+/**
+ * This tool creates a trims TransitRoutes, so as not to enter a user-specified ESRI shape file.
+ * There are several modifier methods that can be used separately or in combination.
+ *
+ * @author jakobrehmann
+ */
+
 public class TransitRouteTrimmer {
     private static final Logger log = Logger.getLogger(TransitRouteTrimmer.class);
 
@@ -43,7 +50,6 @@ public class TransitRouteTrimmer {
         final String inScheduleFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz";//"../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v0/optimizedSchedule.xml.gz";
         final String inNetworkFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz";//"../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v0/optimizedNetwork.xml.gz";
         final String outScheduleFile = "C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\output-transit-schedule.xml.gz";//"../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v1/optimizedScheduleWoBusTouchingZone.xml.gz";
-//        final String zoneShpFile = "file:C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\input\\berlin_hundekopf.shp";// "file://../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v0/vulkaneifel.shp";
         final String zoneShpFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlin-hundekopf-areas/berlin_hundekopf.shp";
 
         final String outputRouteShapeRoot = "C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\routes";
@@ -59,7 +65,7 @@ public class TransitRouteTrimmer {
         // Get Stops within Area
         List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new URL(zoneShpFile));
 
-        Set<Id<TransitStopFacility>> stopsInArea = new HashSet<>(); //getStopIdsWithinArea(inTransitSchedule, geometries);
+        Set<Id<TransitStopFacility>> stopsInArea = new HashSet<>();
         for (TransitStopFacility stop : inTransitSchedule.getFacilities().values()) {
             if (ShpGeometryUtils.isCoordInPreparedGeometries(stop.getCoord(), geometries)) {
                 stopsInArea.add(stop.getId());
@@ -93,8 +99,6 @@ public class TransitRouteTrimmer {
         System.out.println("\n Modify Routes: ChooseLongerEnd");
         countLinesInOut(outTransitSchedule, stopsInArea);
         TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "afterChooseEnd.shp");
-
-
 
         // Schedule Cleaner and Writer
         TransitSchedule outTransitScheduleCleaned = TransitScheduleCleaner.removeStopsNotUsed(outTransitSchedule);
