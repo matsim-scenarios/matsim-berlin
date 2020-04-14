@@ -97,10 +97,10 @@ public class TransitRouteTrimmer {
 
 
         // Schedule Cleaner and Writer
-//        TransitSchedule outTransitScheduleCleaned = TransitScheduleCleaner.removeStopsNotUsed(outTransitSchedule);
-//        TransitScheduleValidator.ValidationResult validationResult = TransitScheduleValidator.validateAll(outTransitScheduleCleaned, scenario.getNetwork());
-//        log.warn(validationResult.getErrors());
-//        new TransitScheduleWriter(outTransitScheduleCleaned).writeFile(outScheduleFile);
+        TransitSchedule outTransitScheduleCleaned = TransitScheduleCleaner.removeStopsNotUsed(outTransitSchedule);
+        TransitScheduleValidator.ValidationResult validationResult = TransitScheduleValidator.validateAll(outTransitScheduleCleaned, scenario.getNetwork());
+        log.warn(validationResult.getErrors());
+        new TransitScheduleWriter(outTransitScheduleCleaned).writeFile(outScheduleFile);
 
 
     }
