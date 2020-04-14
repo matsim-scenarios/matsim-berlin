@@ -1,6 +1,7 @@
 package org.matsim.prepare.ptRouteTrim;
 
 import java.io.*;
+import java.net.MalformedURLException;
 import java.util.*;
 
 import org.geotools.data.*;
@@ -11,6 +12,7 @@ import org.geotools.data.shapefile.ShapefileDataStoreFactory;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
+import org.geotools.feature.SchemaException;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.GeometryBuilder;
 import org.geotools.geometry.jts.JTSFactoryFinder;
@@ -25,6 +27,7 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.pt.transitSchedule.TransitScheduleImpl;
 import org.matsim.pt.transitSchedule.api.TransitLine;
 import org.matsim.pt.transitSchedule.api.TransitRoute;
 import org.matsim.pt.transitSchedule.api.TransitRouteStop;
@@ -41,12 +44,14 @@ import org.opengis.feature.simple.SimpleFeatureType;
  */
 public class TransitSchedule2Shape {
 
+
+
     public static void main(String[] args) throws Exception {
 
         // Import stuff
         final String inScheduleFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz";//"../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v0/optimizedSchedule.xml.gz";
 //        final String inNetworkFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz";
-        File newFile = new File("C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\output.shp");
+        String newFile = "C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\output.shp";
 
 
 
@@ -57,7 +62,14 @@ public class TransitSchedule2Shape {
         Scenario scenario = ScenarioUtils.loadScenario(config);
         TransitSchedule tS = scenario.getTransitSchedule();
 
+        createShpFile(tS, newFile);
 
+    }
+
+
+    public static void createShpFile(TransitSchedule tS, String outputFilename) throws SchemaException, IOException {
+
+        File newFile = new File(outputFilename);
 
 //        /*
 //         * We use the DataUtilities class to create a FeatureType that will describe the data in our
@@ -68,7 +80,7 @@ public class TransitSchedule2Shape {
         final SimpleFeatureType TYPE =
                 DataUtilities.createType(
                         "Link",
-                        "the_geom:LineString:srid=4326,"
+                        "the_geom:LineString:srid=31468,"
                                 + // <- the geometry attribute: Point type
                                 "name:String,"
 //                                + // <- a String attribute
@@ -100,6 +112,9 @@ public class TransitSchedule2Shape {
                     Coord coord = stop.getStopFacility().getCoord();
                     Coordinate coordinate = new Coordinate(coord.getX(), coord.getY());
                     coordinates[i]=coordinate;
+                }
+                if (coordinates.length == 1) {
+                    continue;
                 }
                 LineString routeString = geometryFactory.createLineString(coordinates);
                 String routeName = route.getId().toString();
@@ -162,10 +177,10 @@ public class TransitSchedule2Shape {
             } finally {
                 transaction.close();
             }
-            System.exit(0); // success!
+//            System.exit(0); // success!
         } else {
-            System.out.println(typeName + " does not support read/write access");
-            System.exit(1);
+//            System.out.println(typeName + " does not support read/write access");
+//            System.exit(1);
         }
     }
 }

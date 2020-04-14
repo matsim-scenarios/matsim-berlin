@@ -1,6 +1,7 @@
 package org.matsim.prepare.ptRouteTrim;
 
 import org.apache.log4j.Logger;
+import org.geotools.feature.SchemaException;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -18,6 +19,7 @@ import org.matsim.pt.utils.TransitScheduleValidator;
 import org.matsim.utils.gis.shp2matsim.ShpGeometryUtils;
 import playground.vsp.andreas.utils.pt.TransitScheduleCleaner;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
@@ -37,13 +39,14 @@ public class TransitRouteTrimmer {
         ChooseLongerEnd
     }
 
-    public static void main(String[] args) throws MalformedURLException {
+    public static void main(String[] args) throws IOException, SchemaException {
         final String inScheduleFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz";//"../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v0/optimizedSchedule.xml.gz";
         final String inNetworkFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz";//"../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v0/optimizedNetwork.xml.gz";
         final String outScheduleFile = "C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\output-transit-schedule.xml.gz";//"../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v1/optimizedScheduleWoBusTouchingZone.xml.gz";
 //        final String zoneShpFile = "file:C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\input\\berlin_hundekopf.shp";// "file://../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v0/vulkaneifel.shp";
         final String zoneShpFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlin-hundekopf-areas/berlin_hundekopf.shp";
 
+        final String outputRouteShapeRoot = "C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\routes";
 
         // Prepare Scenario
         Config config = ConfigUtils.createConfig();
@@ -70,29 +73,34 @@ public class TransitRouteTrimmer {
 
         System.out.println("\n Before Modification of routes");
         countLinesInOut(inTransitSchedule, stopsInArea);
+        TransitSchedule2Shape.createShpFile(inTransitSchedule, outputRouteShapeRoot + "before.shp");
 
         System.out.println("\n Modify Routes: Delete all routes entirely inside shp");
         countLinesInOut(outTransitSchedule, stopsInArea);
-
+        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "afterDeleteInside.shp");
 
         // Modify Routes: Trim Ends
         outTransitSchedule = modifyTransitLinesFromTransitSchedule(outTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.TrimEnds);
 
         System.out.println("\n Modify Routes: Trim Ends");
         countLinesInOut(outTransitSchedule, stopsInArea);
+        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "afterTrimEnds.shp");
+
 
         // Modify Routes: ChooseLongerEnd
         outTransitSchedule = modifyTransitLinesFromTransitSchedule(outTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.ChooseLongerEnd);
 
         System.out.println("\n Modify Routes: ChooseLongerEnd");
         countLinesInOut(outTransitSchedule, stopsInArea);
+        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "afterChooseEnd.shp");
+
 
 
         // Schedule Cleaner and Writer
-        TransitSchedule outTransitScheduleCleaned = TransitScheduleCleaner.removeStopsNotUsed(outTransitSchedule);
-        TransitScheduleValidator.ValidationResult validationResult = TransitScheduleValidator.validateAll(outTransitScheduleCleaned, scenario.getNetwork());
-        log.warn(validationResult.getErrors());
-        new TransitScheduleWriter(outTransitScheduleCleaned).writeFile(outScheduleFile);
+//        TransitSchedule outTransitScheduleCleaned = TransitScheduleCleaner.removeStopsNotUsed(outTransitSchedule);
+//        TransitScheduleValidator.ValidationResult validationResult = TransitScheduleValidator.validateAll(outTransitScheduleCleaned, scenario.getNetwork());
+//        log.warn(validationResult.getErrors());
+//        new TransitScheduleWriter(outTransitScheduleCleaned).writeFile(outScheduleFile);
 
 
     }
