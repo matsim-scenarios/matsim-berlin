@@ -12,10 +12,12 @@ import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.population.routes.RouteUtils;
 import org.matsim.core.scenario.MutableScenario;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.pt.transitSchedule.DepartureImpl;
 import org.matsim.pt.transitSchedule.TransitScheduleFactoryImpl;
 import org.matsim.pt.transitSchedule.api.*;
 import org.matsim.pt.utils.TransitScheduleValidator;
 import org.matsim.utils.gis.shp2matsim.ShpGeometryUtils;
+import org.matsim.vehicles.Vehicle;
 import playground.vsp.andreas.utils.pt.TransitScheduleCleaner;
 
 import java.io.IOException;
@@ -321,15 +323,9 @@ public class TransitRouteTrimmer {
                     }
 
                     // creates route and clears stopsNew and linksNew
-                    NetworkRoute networkRouteNew = RouteUtils.createNetworkRoute(linksNew, scenario.getNetwork());
-                    String modeNew = routeOld.getTransportMode();
-                    TransitScheduleFactory tsf = scenario.getTransitSchedule().getFactory();
-                    Id<TransitRoute> routeIdNew = Id.create(routeOld.getId() + "_mod" + newRouteCnt, TransitRoute.class);
-                    newRouteCnt++;
-                    TransitRoute routeNew = tsf.createTransitRoute(routeIdNew, networkRouteNew, stopsNew, modeNew);
-                    routeNew.setTransportMode(routeOld.getTransportMode());
-                    routeNew.setDescription(routeOld.getDescription());
+                    TransitRoute routeNew = modifyRoute(routeOld, scenario, stopsNew, linksNew, newRouteCnt);
                     resultRoutes.add(routeNew);
+                    newRouteCnt++;
 
                     stopsNew.clear();
                     linksNew.clear();
@@ -338,16 +334,9 @@ public class TransitRouteTrimmer {
         }
 
         if (stopsNew.size() > 0) {
-            NetworkRoute networkRouteNew = RouteUtils.createNetworkRoute(linksNew, scenario.getNetwork());
-            String modeNew = routeOld.getTransportMode();
-            TransitScheduleFactory tsf = scenario.getTransitSchedule().getFactory();
-            Id<TransitRoute> routeIdNew = Id.create(routeOld.getId() + "_mod" + newRouteCnt, TransitRoute.class);
-            newRouteCnt++;
-            TransitRoute routeNew = tsf.createTransitRoute(routeIdNew, networkRouteNew, stopsNew, modeNew);
-            routeNew.setTransportMode(routeOld.getTransportMode());
-            routeNew.setDescription(routeOld.getDescription());
+            TransitRoute routeNew = modifyRoute(routeOld, scenario, stopsNew, linksNew, newRouteCnt);
             resultRoutes.add(routeNew);
-
+            newRouteCnt++;
         }
 
         return resultRoutes;
@@ -390,6 +379,32 @@ public class TransitRouteTrimmer {
         //TODO: Change Offsets
         for (Departure departure : routeOld.getDepartures().values()) {
             routeNew.addDeparture(departure);
+        }
+        return routeNew;
+    }
+
+    private static TransitRoute modifyRoute(TransitRoute routeOld, Scenario scenario, List<TransitRouteStop> stopsNew, List<Id<Link>> linksNew, int modNumber) {
+
+        TransitRoute routeNew;
+
+//        if (stopsNew.size() == 0) {
+//            return null;
+//        }
+
+        // make route
+        NetworkRoute networkRouteNew = RouteUtils.createNetworkRoute(linksNew, scenario.getNetwork());
+        TransitScheduleFactory tsf = scenario.getTransitSchedule().getFactory();
+        String routeIdOld = routeOld.getId().toString();
+        Id<TransitRoute> routeIdNew = Id.create( routeIdOld + "_mod" + modNumber, TransitRoute.class);
+        routeNew = tsf.createTransitRoute(routeIdNew, networkRouteNew, stopsNew, routeOld.getTransportMode());
+        routeNew.setDescription(routeOld.getDescription());
+
+        for (Departure departure : routeOld.getDepartures().values()) {
+            String vehIdOld = departure.getVehicleId().toString();
+            String depIdOld = departure.getId().toString();
+            Departure departureNew = tsf.createDeparture(Id.create(depIdOld + "_mod" + modNumber, Departure.class), departure.getDepartureTime());
+            departureNew.setVehicleId(Id.createVehicleId(vehIdOld + "_mod" + modNumber));
+            routeNew.addDeparture(departureNew);
         }
         return routeNew;
     }
