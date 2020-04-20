@@ -13,20 +13,21 @@ import org.matsim.core.population.routes.RouteUtils;
 import org.matsim.core.scenario.MutableScenario;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.pt.transitSchedule.TransitScheduleFactoryImpl;
-import org.matsim.pt.transitSchedule.TransitScheduleUtils;
 import org.matsim.pt.transitSchedule.api.*;
 import org.matsim.pt.utils.TransitScheduleValidator;
 import org.matsim.utils.gis.shp2matsim.ShpGeometryUtils;
 import playground.vsp.andreas.utils.pt.TransitScheduleCleaner;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
 /**
  * This tool creates a trims TransitRoutes, so as not to enter a user-specified ESRI shape file.
  * There are several modifier methods that can be used separately or in combination.
+ *
+ * TODO: Keep one TransitStop within the shapefile
+ * TODO: Change Offsets
  *
  * @author jakobrehmann
  */
@@ -35,7 +36,8 @@ public class TransitRouteTrimmer {
     private static final Logger log = Logger.getLogger(TransitRouteTrimmer.class);
 
     // Parameters
-    static boolean removeEmptyLines = true;
+    private static boolean removeEmptyLines = true;
+    private static boolean allowOneStopWithinZone = true ;
     static double pctThresholdToKeepRouteEntirely = 0.0;
     static double pctThresholdToRemoveRouteEntirely = 1.0;
 
@@ -43,7 +45,8 @@ public class TransitRouteTrimmer {
         DeleteRoutesEntirelyInside,
         DeleteAllStopsWithin,
         TrimEnds,
-        ChooseLongerEnd
+        ChooseLongerEnd,
+        SplitOldRouteIntoMultiplePieces
     }
 
     public static void main(String[] args) throws IOException, SchemaException {
@@ -74,31 +77,40 @@ public class TransitRouteTrimmer {
 
 
         // Modify Routes: Delete all routes entirely inside shp
-        Set<Id<TransitLine>> linesToModify = inTransitSchedule.getTransitLines().keySet(); // all lines will be examined
-        TransitSchedule outTransitSchedule = modifyTransitLinesFromTransitSchedule(inTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.DeleteRoutesEntirelyInside);
+//        Set<Id<TransitLine>> linesToModify = inTransitSchedule.getTransitLines().keySet(); // all lines will be examined
+//        TransitSchedule outTransitSchedule = modifyTransitLinesFromTransitSchedule(inTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.DeleteRoutesEntirelyInside);
 
         System.out.println("\n Before Modification of routes");
         countLinesInOut(inTransitSchedule, stopsInArea);
         TransitSchedule2Shape.createShpFile(inTransitSchedule, outputRouteShapeRoot + "before.shp");
 
-        System.out.println("\n Modify Routes: Delete all routes entirely inside shp");
+//        System.out.println("\n Modify Routes: Delete all routes entirely inside shp");
+//        countLinesInOut(outTransitSchedule, stopsInArea);
+//        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "afterDeleteInside.shp");
+//
+//        // Modify Routes: Trim Ends
+//        outTransitSchedule = modifyTransitLinesFromTransitSchedule(outTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.TrimEnds);
+//
+//        System.out.println("\n Modify Routes: Trim Ends");
+//        countLinesInOut(outTransitSchedule, stopsInArea);
+//        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "afterTrimEnds.shp");
+//
+//
+//        // Modify Routes: ChooseLongerEnd
+//        outTransitSchedule = modifyTransitLinesFromTransitSchedule(outTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.ChooseLongerEnd);
+//
+//        System.out.println("\n Modify Routes: ChooseLongerEnd");
+//        countLinesInOut(outTransitSchedule, stopsInArea);
+//        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "afterChooseEnd.shp");
+
+
+        //Modify Routes: Split Routes into shorter sections
+        Set<Id<TransitLine>> linesToModify = inTransitSchedule.getTransitLines().keySet(); // all lines will be examined
+        TransitSchedule outTransitSchedule = modifyTransitLinesFromTransitSchedule(inTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.SplitOldRouteIntoMultiplePieces);
+
+        System.out.println("\n Modify Routes: SplitOldRouteIntoMultiplePieces");
         countLinesInOut(outTransitSchedule, stopsInArea);
-        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "afterDeleteInside.shp");
-
-        // Modify Routes: Trim Ends
-        outTransitSchedule = modifyTransitLinesFromTransitSchedule(outTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.TrimEnds);
-
-        System.out.println("\n Modify Routes: Trim Ends");
-        countLinesInOut(outTransitSchedule, stopsInArea);
-        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "afterTrimEnds.shp");
-
-
-        // Modify Routes: ChooseLongerEnd
-        outTransitSchedule = modifyTransitLinesFromTransitSchedule(outTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.ChooseLongerEnd);
-
-        System.out.println("\n Modify Routes: ChooseLongerEnd");
-        countLinesInOut(outTransitSchedule, stopsInArea);
-        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "afterChooseEnd.shp");
+        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "SplitOldRouteIntoMultiplePieces.shp");
 
         // Schedule Cleaner and Writer
         TransitSchedule outTransitScheduleCleaned = TransitScheduleCleaner.removeStopsNotUsed(outTransitSchedule);
@@ -144,6 +156,11 @@ public class TransitRouteTrimmer {
                     routeNew = modifyRouteChooseLongerEnd(route, stopsInArea, scenario);
                 } else if (modifyMethod.equals((modMethod.DeleteAllStopsWithin))) {
                     routeNew = modifyRouteDeleteAllStopsWithin(route, stopsInArea, scenario);
+                } else if (modifyMethod.equals(modMethod.SplitOldRouteIntoMultiplePieces)) {
+                    ArrayList<TransitRoute> routesNew = modifyRouteCutIntoShorterRoutes(route, stopsInArea, scenario);
+                    for (TransitRoute rt : routesNew) {
+                        lineNew.addRoute(rt);
+                    }
                 }
 
                 if (routeNew != null) {
@@ -259,6 +276,73 @@ public class TransitRouteTrimmer {
 
         return modifyRoute(routeOld, scenario, keepDiscardList);
     }
+
+    private static ArrayList<TransitRoute> modifyRouteCutIntoShorterRoutes(TransitRoute routeOld, Set<Id<TransitStopFacility>> stopsInArea, Scenario scenario) {
+        // Find which stops of route are within zone
+        List<Boolean> inOutList = new ArrayList<>();
+        ArrayList<TransitRoute> resultRoutes = new ArrayList<>();
+        for (TransitRouteStop stop : routeOld.getStops()) {
+            Id<TransitStopFacility> id = stop.getStopFacility().getId();
+            inOutList.add(stopsInArea.contains(id));
+        }
+
+        List<TransitRouteStop> stopsOld = new ArrayList<>(routeOld.getStops());
+
+        List<Id<Link>> linksOld = new ArrayList<>();
+        linksOld.add(routeOld.getRoute().getStartLinkId());
+        linksOld.addAll(routeOld.getRoute().getLinkIds());
+        linksOld.add(routeOld.getRoute().getEndLinkId());
+
+
+        // Make new stops and links lists
+        List<TransitRouteStop> stopsNew = new ArrayList<>();
+        List<Id<Link>> linksNew = new ArrayList<>();
+
+        for (int i = 0; i < inOutList.size(); i++) {
+            if (inOutList.get(i) == false) {
+
+                // adds first stop that's within zone
+                if (stopsNew.size() == 0 && i > 0 && allowOneStopWithinZone) {
+                    stopsNew.add(stopsOld.get(i-1));
+                    linksNew.add(linksOld.get(i-1));
+                }
+
+                stopsNew.add(stopsOld.get(i));
+                linksNew.add(linksOld.get(i));
+            } else if (inOutList.get(i) == true) {
+
+                // The following is only done, if stop i is the first stop to enter the zone.
+                if (stopsNew.size() > 0) {
+                    //adds first stop in zone
+                    if (allowOneStopWithinZone) {
+                        stopsNew.add(stopsOld.get(i));
+                        linksNew.add(linksOld.get(i));
+                    }
+
+
+                    // creates route and clears stopsNew and linksNew
+                    TransitRoute routeNew = createTransitRoute(routeOld, scenario, stopsNew, linksNew);
+                    resultRoutes.add(routeNew);
+
+                    stopsNew.clear();
+                    linksNew.clear();
+                }
+            }
+        }
+
+        return resultRoutes;
+    }
+
+    private static TransitRoute createTransitRoute(TransitRoute routeOld, Scenario scenario, List<TransitRouteStop> stopsNew, List<Id<Link>> linksNew) {
+        NetworkRoute networkRouteNew = RouteUtils.createNetworkRoute(linksNew, scenario.getNetwork());
+        String modeNew = routeOld.getTransportMode();
+        TransitScheduleFactory tsf = scenario.getTransitSchedule().getFactory();
+        TransitRoute routeNew = tsf.createTransitRoute(routeOld.getId(), networkRouteNew, stopsNew, modeNew);
+        routeNew.setTransportMode(routeOld.getTransportMode());
+        routeNew.setDescription(routeOld.getDescription());
+        return routeNew;
+    }
+
 
     private static TransitRoute modifyRoute(TransitRoute routeOld, Scenario scenario, ArrayList<Boolean> inOutList) {
         TransitRoute routeNew;
