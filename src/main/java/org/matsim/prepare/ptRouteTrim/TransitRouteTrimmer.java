@@ -76,8 +76,9 @@ public class TransitRouteTrimmer {
         }
 
 
+        Set<Id<TransitLine>> linesToModify = inTransitSchedule.getTransitLines().keySet(); // all lines will be examined
+
         // Modify Routes: Delete all routes entirely inside shp
-//        Set<Id<TransitLine>> linesToModify = inTransitSchedule.getTransitLines().keySet(); // all lines will be examined
 //        TransitSchedule outTransitSchedule = modifyTransitLinesFromTransitSchedule(inTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.DeleteRoutesEntirelyInside);
 
         System.out.println("\n Before Modification of routes");
@@ -105,7 +106,6 @@ public class TransitRouteTrimmer {
 
 
         //Modify Routes: Split Routes into shorter sections
-        Set<Id<TransitLine>> linesToModify = inTransitSchedule.getTransitLines().keySet(); // all lines will be examined
         TransitSchedule outTransitSchedule = modifyTransitLinesFromTransitSchedule(inTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.SplitOldRouteIntoMultiplePieces);
 
         System.out.println("\n Modify Routes: SplitOldRouteIntoMultiplePieces");
@@ -298,6 +298,7 @@ public class TransitRouteTrimmer {
         List<TransitRouteStop> stopsNew = new ArrayList<>();
         List<Id<Link>> linksNew = new ArrayList<>();
 
+        int newRouteCnt = 0;
         for (int i = 0; i < inOutList.size(); i++) {
             if (inOutList.get(i) == false) {
 
@@ -319,9 +320,15 @@ public class TransitRouteTrimmer {
                         linksNew.add(linksOld.get(i));
                     }
 
-
                     // creates route and clears stopsNew and linksNew
-                    TransitRoute routeNew = createTransitRoute(routeOld, scenario, stopsNew, linksNew);
+                    NetworkRoute networkRouteNew = RouteUtils.createNetworkRoute(linksNew, scenario.getNetwork());
+                    String modeNew = routeOld.getTransportMode();
+                    TransitScheduleFactory tsf = scenario.getTransitSchedule().getFactory();
+                    Id<TransitRoute> routeIdNew = Id.create(routeOld.getId() + "_mod" + newRouteCnt, TransitRoute.class);
+                    newRouteCnt++;
+                    TransitRoute routeNew = tsf.createTransitRoute(routeIdNew, networkRouteNew, stopsNew, modeNew);
+                    routeNew.setTransportMode(routeOld.getTransportMode());
+                    routeNew.setDescription(routeOld.getDescription());
                     resultRoutes.add(routeNew);
 
                     stopsNew.clear();
@@ -330,17 +337,20 @@ public class TransitRouteTrimmer {
             }
         }
 
-        return resultRoutes;
-    }
+        if (stopsNew.size() > 0) {
+            NetworkRoute networkRouteNew = RouteUtils.createNetworkRoute(linksNew, scenario.getNetwork());
+            String modeNew = routeOld.getTransportMode();
+            TransitScheduleFactory tsf = scenario.getTransitSchedule().getFactory();
+            Id<TransitRoute> routeIdNew = Id.create(routeOld.getId() + "_mod" + newRouteCnt, TransitRoute.class);
+            newRouteCnt++;
+            TransitRoute routeNew = tsf.createTransitRoute(routeIdNew, networkRouteNew, stopsNew, modeNew);
+            routeNew.setTransportMode(routeOld.getTransportMode());
+            routeNew.setDescription(routeOld.getDescription());
+            resultRoutes.add(routeNew);
 
-    private static TransitRoute createTransitRoute(TransitRoute routeOld, Scenario scenario, List<TransitRouteStop> stopsNew, List<Id<Link>> linksNew) {
-        NetworkRoute networkRouteNew = RouteUtils.createNetworkRoute(linksNew, scenario.getNetwork());
-        String modeNew = routeOld.getTransportMode();
-        TransitScheduleFactory tsf = scenario.getTransitSchedule().getFactory();
-        TransitRoute routeNew = tsf.createTransitRoute(routeOld.getId(), networkRouteNew, stopsNew, modeNew);
-        routeNew.setTransportMode(routeOld.getTransportMode());
-        routeNew.setDescription(routeOld.getDescription());
-        return routeNew;
+        }
+
+        return resultRoutes;
     }
 
 
