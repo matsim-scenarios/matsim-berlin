@@ -279,7 +279,7 @@ public class TransitRouteTrimmer {
         return modifyRoute(routeOld, scenario, keepDiscardList);
     }
 
-    private static ArrayList<TransitRoute> modifyRouteCutIntoShorterRoutes(TransitRoute routeOld, Set<Id<TransitStopFacility>> stopsInArea, Scenario scenario) {
+    static ArrayList<TransitRoute> modifyRouteCutIntoShorterRoutes(TransitRoute routeOld, Set<Id<TransitStopFacility>> stopsInArea, Scenario scenario) {
         // Find which stops of route are within zone
         List<Boolean> inOutList = new ArrayList<>();
         ArrayList<TransitRoute> resultRoutes = new ArrayList<>();
@@ -419,7 +419,7 @@ public class TransitRouteTrimmer {
         return inAreaCount / route.getStops().size();
     }
 
-    private static void countLinesInOut(TransitSchedule tS, Set<Id<TransitStopFacility>> stopsInArea) {
+    static void countLinesInOut(TransitSchedule tS, Set<Id<TransitStopFacility>> stopsInArea) {
         int inCount = 0;
         int outCount = 0;
         int wrongCount = 0;
