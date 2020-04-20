@@ -24,15 +24,14 @@ import java.util.*;
 public class TransitRouteSplitter {
     private static boolean removeEmptyLines = true;
     private static boolean allowOneStopWithinZone = true ;
-    private static int minimumRouteLength = 3 ;
+    private static int minimumRouteLength = 1 ;
     private static final Logger log = Logger.getLogger(TransitRouteTrimmer.class);
 
     public static void main(String[] args) throws IOException, SchemaException {
         final String inScheduleFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz";//"../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v0/optimizedSchedule.xml.gz";
         final String inNetworkFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz";//"../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v0/optimizedNetwork.xml.gz";
-        final String outScheduleFile = "C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\output-transit-schedule.xml.gz";//"../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v1/optimizedScheduleWoBusTouchingZone.xml.gz";
         final String zoneShpFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlin-hundekopf-areas/berlin_hundekopf.shp";
-        final String outputRouteShapeRoot = "C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\routes";
+        final String outputPath = "src/main/java/org/matsim/prepare/ptRouteTrim/output/";
 
         // Prepare Scenario
         Config config = ConfigUtils.createConfig();
@@ -55,45 +54,56 @@ public class TransitRouteSplitter {
 
         Set<Id<TransitLine>> linesToModify = inTransitSchedule.getTransitLines().keySet(); // all lines will be examined
 
+
+        // Base Case
+        String caseName = "base";
+        TransitRouteTrimmer.countLinesInOut(inTransitSchedule, stopsInArea);
+        TransitSchedule2Shape.createShpFile(inTransitSchedule, outputPath + caseName + "Routes.shp");
+        writeTransitSchedule(outputPath + caseName + "Sched.xml.gz", scenario, inTransitSchedule);
+
         //Modify Routes: Split Routes into shorter sections (first stop not included)
+        caseName = "splitWithoutFirstStop";
         minimumRouteLength = 1 ;
         allowOneStopWithinZone = false ;
-        TransitSchedule outTransitSchedule = modifyTransitLinesFromTransitSchedule(inTransitSchedule, linesToModify, stopsInArea, scenario);
-        System.out.println("\n Modify Routes: SplitOldRouteIntoMultiplePiecesWithoutFirstStop");
+        TransitSchedule outTransitSchedule = modifyTransitLines(inTransitSchedule, linesToModify, stopsInArea, scenario);
+        System.out.println("\n Modify Routes: " + caseName);
         TransitRouteTrimmer.countLinesInOut(outTransitSchedule, stopsInArea);
-        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "SplitOldRouteIntoMultiplePiecesWithoutFirstStop.shp");
+        TransitSchedule2Shape.createShpFile(inTransitSchedule, outputPath + caseName + "Routes.shp");
+        writeTransitSchedule(outputPath + caseName + "Sched.xml.gz", scenario, outTransitSchedule);
 
         //Modify Routes: Split Routes into shorter sections (first stop included)
+        caseName = "splitWithFirstStop";
         minimumRouteLength=1;
         allowOneStopWithinZone = true ;
-        TransitSchedule outTransitSchedule2 = modifyTransitLinesFromTransitSchedule(inTransitSchedule, linesToModify, stopsInArea, scenario);
-        System.out.println("\n Modify Routes: SplitOldRouteIntoMultiplePiecesWithFirstStop");
+        TransitSchedule outTransitSchedule2 = modifyTransitLines(inTransitSchedule, linesToModify, stopsInArea, scenario);
+        System.out.println("\n Modify Routes: " + caseName);
         TransitRouteTrimmer.countLinesInOut(outTransitSchedule2, stopsInArea);
-        TransitSchedule2Shape.createShpFile(outTransitSchedule2, outputRouteShapeRoot + "SplitOldRouteIntoMultiplePiecesWithFirstStop.shp");
+        TransitSchedule2Shape.createShpFile(inTransitSchedule, outputPath + caseName + "Routes.shp");
+        writeTransitSchedule(outputPath + caseName + "Sched.xml.gz", scenario, outTransitSchedule2);
 
+    }
 
-        // Schedule Cleaner and Writer
+    private static void writeTransitSchedule(String outScheduleFile, Scenario scenario, TransitSchedule outTransitSchedule) {
         TransitSchedule outTransitScheduleCleaned = TransitScheduleCleaner.removeStopsNotUsed(outTransitSchedule);
         TransitScheduleValidator.ValidationResult validationResult = TransitScheduleValidator.validateAll(outTransitScheduleCleaned, scenario.getNetwork());
         log.warn(validationResult.getErrors());
         new TransitScheduleWriter(outTransitScheduleCleaned).writeFile(outScheduleFile);
-
     }
 
 
-    private static TransitSchedule modifyTransitLinesFromTransitSchedule(TransitSchedule transitSchedule, Set<Id<TransitLine>> linesToModify, Set<Id<TransitStopFacility>> stopsInArea, Scenario scenario) {
+    private static TransitSchedule modifyTransitLines(TransitSchedule transitSchedule, Set<Id<TransitLine>> linesToModify, Set<Id<TransitStopFacility>> stopsInArea, Scenario scenario) {
         TransitSchedule tS = (new TransitScheduleFactoryImpl()).createTransitSchedule();
-        Iterator var3 = transitSchedule.getFacilities().values().iterator();
+        Iterator iter = transitSchedule.getFacilities().values().iterator();
 
-        while (var3.hasNext()) {
-            TransitStopFacility stop = (TransitStopFacility) var3.next();
+        while (iter.hasNext()) {
+            TransitStopFacility stop = (TransitStopFacility) iter.next();
             tS.addStopFacility(stop);
         }
 
-        var3 = transitSchedule.getTransitLines().values().iterator();
+        iter = transitSchedule.getTransitLines().values().iterator();
 
-        while (var3.hasNext()) {
-            TransitLine line = (TransitLine) var3.next();
+        while (iter.hasNext()) {
+            TransitLine line = (TransitLine) iter.next();
             if (!linesToModify.contains(line.getId())) {
                 tS.addTransitLine(line);
                 continue;
@@ -102,7 +112,7 @@ public class TransitRouteSplitter {
 
             TransitLine lineNew = transitSchedule.getFactory().createTransitLine(line.getId());
             for (TransitRoute route : line.getRoutes().values()) {
-                ArrayList<TransitRoute> routesNew = modifyRouteCutIntoShorterRoutes(route, stopsInArea, scenario);
+                ArrayList<TransitRoute> routesNew = splitRoutes(route, stopsInArea, scenario);
                 for (TransitRoute rt : routesNew) {
                     lineNew.addRoute(rt);
                 }
@@ -122,7 +132,7 @@ public class TransitRouteSplitter {
         return tS;
     }
 
-    private static ArrayList<TransitRoute> modifyRouteCutIntoShorterRoutes(TransitRoute routeOld, Set<Id<TransitStopFacility>> stopsInArea, Scenario scenario) {
+    private static ArrayList<TransitRoute> splitRoutes(TransitRoute routeOld, Set<Id<TransitStopFacility>> stopsInArea, Scenario scenario) {
         // Find which stops of route are within zone
         List<Boolean> inOutList = new ArrayList<>();
         ArrayList<TransitRoute> resultRoutes = new ArrayList<>();
@@ -167,7 +177,7 @@ public class TransitRouteSplitter {
 
                     // creates route and clears stopsNew and linksNew
                     if (stopsNew.size() >= minimumRouteLength) {
-                        TransitRoute routeNew = modifyRoute(routeOld, scenario, stopsNew, linksNew, newRouteCnt);
+                        TransitRoute routeNew = createNewRoute(routeOld, scenario, stopsNew, linksNew, newRouteCnt);
                         resultRoutes.add(routeNew);
                         newRouteCnt++;
                     }
@@ -178,7 +188,7 @@ public class TransitRouteSplitter {
         }
 
         if (stopsNew.size() >= minimumRouteLength && stopsNew.size() > 0) {
-            TransitRoute routeNew = modifyRoute(routeOld, scenario, stopsNew, linksNew, newRouteCnt);
+            TransitRoute routeNew = createNewRoute(routeOld, scenario, stopsNew, linksNew, newRouteCnt);
             resultRoutes.add(routeNew);
         }
 
@@ -186,7 +196,7 @@ public class TransitRouteSplitter {
     }
 
 
-    private static TransitRoute modifyRoute(TransitRoute routeOld, Scenario scenario, List<TransitRouteStop> stopsNew, List<Id<Link>> linksNew, int modNumber) {
+    private static TransitRoute createNewRoute(TransitRoute routeOld, Scenario scenario, List<TransitRouteStop> stopsNew, List<Id<Link>> linksNew, int modNumber) {
 
         NetworkRoute networkRouteNew = RouteUtils.createNetworkRoute(linksNew, scenario.getNetwork());
         TransitScheduleFactory tsf = scenario.getTransitSchedule().getFactory();
