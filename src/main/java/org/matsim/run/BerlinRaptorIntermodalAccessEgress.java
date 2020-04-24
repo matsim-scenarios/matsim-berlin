@@ -76,8 +76,8 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
         for (PlanElement pe : legs) {
             if (pe instanceof Leg) {
                 String mode = ((Leg) pe).getMode();
-                double travelTime = ((Leg) pe).getTravelTime();
-                
+                double travelTime = ((Leg) pe).getTravelTime().seconds();
+
                 // overrides individual parameters per person; use default scoring parameters
                 if (Time.getUndefinedTime() != travelTime) {
                     tTime += travelTime;
