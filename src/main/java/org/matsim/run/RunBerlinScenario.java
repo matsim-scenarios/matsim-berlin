@@ -85,8 +85,9 @@ public final class RunBerlinScenario {
 		Config config = prepareConfig( args ) ;
 
 		//jr:
-		config.transit().setTransitScheduleFile("C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\output-trimmed-schedule.xml.gz");
-//		config.transit().setVehiclesFile("C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\Vehicles.xml.gz");
+//		config.transit().setTransitScheduleFile("C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\output-trimmed-schedule.xml.gz");
+		config.transit().setTransitScheduleFile("C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\splitWithFirstStopSched.xml.gz");
+		config.transit().setVehiclesFile("C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\Vehicles.xml.gz");
 		config.controler().setLastIteration(2);
 		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
 
@@ -97,7 +98,7 @@ public final class RunBerlinScenario {
 
 
 		//jr:
-//		new MatsimVehicleReader.VehicleReader(scenario.getVehicles()).readFile("C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\Vehicles.xml.gz");
+		new MatsimVehicleReader.VehicleReader(scenario.getVehicles()).readFile("C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\Vehicles.xml.gz");
 //		new TransitScheduleReader(scenario).readFile("C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\splitWithFirstStopSched.xml.gz");
 
 		Controler controler = prepareControler( scenario ) ;
