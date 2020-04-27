@@ -3,6 +3,7 @@ package org.matsim.prepare.ptRouteTrim;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.population.*;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.pt.transitSchedule.api.Departure;
@@ -53,4 +54,22 @@ public class TransitUtilsJR {
 
     }
 
+    public static void removeLinksAndRoutes(Plan plan) {
+        for (PlanElement pe : plan.getPlanElements()) {
+            if (pe instanceof Activity) {
+                ((Activity) pe).setLinkId(null); // Remove link
+            }
+            if (pe instanceof Leg) {
+                ((Leg) pe).setRoute(null); // Remove route
+            }
+        }
+    }
+
+    public static void removeLinksAndRoutes(Population pop) {
+        pop.getPersons().values().
+                forEach(person -> {
+                    person.getPlans().
+                            forEach(TransitUtilsJR::removeLinksAndRoutes);
+                });
+    }
 }

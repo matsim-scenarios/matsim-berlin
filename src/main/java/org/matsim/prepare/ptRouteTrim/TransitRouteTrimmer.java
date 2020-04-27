@@ -54,7 +54,7 @@ public class TransitRouteTrimmer {
     public static void main(String[] args) throws IOException, SchemaException {
         final String inScheduleFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz";//"../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v0/optimizedSchedule.xml.gz";
         final String inNetworkFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz";//"../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v0/optimizedNetwork.xml.gz";
-        final String outScheduleFile = "C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\output-transit-schedule.xml.gz";//"../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v1/optimizedScheduleWoBusTouchingZone.xml.gz";
+        final String outScheduleFile = "C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\output-trimmed-schedule.xml.gz";//"../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v1/optimizedScheduleWoBusTouchingZone.xml.gz";
         final String zoneShpFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlin-hundekopf-areas/berlin_hundekopf.shp";
 
         final String outputRouteShapeRoot = "C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\routes";
@@ -81,38 +81,38 @@ public class TransitRouteTrimmer {
         Set<Id<TransitLine>> linesToModify = inTransitSchedule.getTransitLines().keySet(); // all lines will be examined
 
         // Modify Routes: Delete all routes entirely inside shp
-//        TransitSchedule outTransitSchedule = modifyTransitLinesFromTransitSchedule(inTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.DeleteRoutesEntirelyInside);
+        TransitSchedule outTransitSchedule = modifyTransitLinesFromTransitSchedule(inTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.DeleteRoutesEntirelyInside);
 
         System.out.println("\n Before Modification of routes");
         countLinesInOut(inTransitSchedule, stopsInArea);
         TransitSchedule2Shape.createShpFile(inTransitSchedule, outputRouteShapeRoot + "before.shp");
 
-//        System.out.println("\n Modify Routes: Delete all routes entirely inside shp");
-//        countLinesInOut(outTransitSchedule, stopsInArea);
-//        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "afterDeleteInside.shp");
-//
-//        // Modify Routes: Trim Ends
-//        outTransitSchedule = modifyTransitLinesFromTransitSchedule(outTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.TrimEnds);
-//
-//        System.out.println("\n Modify Routes: Trim Ends");
-//        countLinesInOut(outTransitSchedule, stopsInArea);
-//        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "afterTrimEnds.shp");
-//
-//
-//        // Modify Routes: ChooseLongerEnd
-//        outTransitSchedule = modifyTransitLinesFromTransitSchedule(outTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.ChooseLongerEnd);
-//
-//        System.out.println("\n Modify Routes: ChooseLongerEnd");
-//        countLinesInOut(outTransitSchedule, stopsInArea);
-//        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "afterChooseEnd.shp");
+        System.out.println("\n Modify Routes: Delete all routes entirely inside shp");
+        countLinesInOut(outTransitSchedule, stopsInArea);
+        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "afterDeleteInside.shp");
+
+        // Modify Routes: Trim Ends
+        outTransitSchedule = modifyTransitLinesFromTransitSchedule(outTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.TrimEnds);
+
+        System.out.println("\n Modify Routes: Trim Ends");
+        countLinesInOut(outTransitSchedule, stopsInArea);
+        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "afterTrimEnds.shp");
+
+
+        // Modify Routes: ChooseLongerEnd
+        outTransitSchedule = modifyTransitLinesFromTransitSchedule(outTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.ChooseLongerEnd);
+
+        System.out.println("\n Modify Routes: ChooseLongerEnd");
+        countLinesInOut(outTransitSchedule, stopsInArea);
+        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "afterChooseEnd.shp");
 
 
         //Modify Routes: Split Routes into shorter sections
-        TransitSchedule outTransitSchedule = modifyTransitLinesFromTransitSchedule(inTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.SplitOldRouteIntoMultiplePieces);
-
-        System.out.println("\n Modify Routes: SplitOldRouteIntoMultiplePieces");
-        countLinesInOut(outTransitSchedule, stopsInArea);
-        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "SplitOldRouteIntoMultiplePieces.shp");
+//        TransitSchedule outTransitSchedule = modifyTransitLinesFromTransitSchedule(inTransitSchedule, linesToModify, stopsInArea, scenario, modMethod.SplitOldRouteIntoMultiplePieces);
+//
+//        System.out.println("\n Modify Routes: SplitOldRouteIntoMultiplePieces");
+//        countLinesInOut(outTransitSchedule, stopsInArea);
+//        TransitSchedule2Shape.createShpFile(outTransitSchedule, outputRouteShapeRoot + "SplitOldRouteIntoMultiplePieces.shp");
 
         // Schedule Cleaner and Writer
         TransitSchedule outTransitScheduleCleaned = TransitScheduleCleaner.removeStopsNotUsed(outTransitSchedule);

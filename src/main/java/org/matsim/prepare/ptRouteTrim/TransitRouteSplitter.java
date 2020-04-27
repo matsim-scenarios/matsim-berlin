@@ -12,6 +12,8 @@ import org.matsim.core.mobsim.qsim.agents.TransitAgentFactory;
 import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.population.routes.RouteUtils;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.pt.ReconstructingUmlaufBuilder;
+import org.matsim.pt.UmlaufBuilder;
 import org.matsim.pt.transitSchedule.TransitScheduleFactoryImpl;
 import org.matsim.pt.transitSchedule.api.*;
 import org.matsim.pt.utils.TransitScheduleValidator;
@@ -71,14 +73,14 @@ public class TransitRouteSplitter {
         writeTransitSchedule(outputPath + caseName + "Sched.xml.gz", scenario, inTransitSchedule);
 
         //Modify Routes: Split Routes into shorter sections (first stop not included)
-        caseName = "splitWithoutFirstStop";
-        minimumRouteLength = 1 ;
-        allowOneStopWithinZone = false ;
-        TransitSchedule outTransitSchedule = modifyTransitLines(inTransitSchedule, linesToModify, stopsInArea, scenario);
-        System.out.println("\n Modify Routes: " + caseName);
-        TransitRouteTrimmer.countLinesInOut(outTransitSchedule, stopsInArea);
-        TransitSchedule2Shape.createShpFile(inTransitSchedule, outputPath + caseName + "Routes.shp");
-        writeTransitSchedule(outputPath + caseName + "Sched.xml.gz", scenario, outTransitSchedule);
+//        caseName = "splitWithoutFirstStop";
+//        minimumRouteLength = 1 ;
+//        allowOneStopWithinZone = false ;
+//        TransitSchedule outTransitSchedule = modifyTransitLines(inTransitSchedule, linesToModify, stopsInArea, scenario);
+//        System.out.println("\n Modify Routes: " + caseName);
+//        TransitRouteTrimmer.countLinesInOut(outTransitSchedule, stopsInArea);
+//        TransitSchedule2Shape.createShpFile(inTransitSchedule, outputPath + caseName + "Routes.shp");
+//        writeTransitSchedule(outputPath + caseName + "Sched.xml.gz", scenario, outTransitSchedule);
 
         //Modify Routes: Split Routes into shorter sections (first stop included)
         caseName = "splitWithFirstStop";
@@ -90,8 +92,9 @@ public class TransitRouteSplitter {
         TransitSchedule2Shape.createShpFile(inTransitSchedule, outputPath + caseName + "Routes.shp");
         writeTransitSchedule(outputPath + caseName + "Sched.xml.gz", scenario, outTransitSchedule2);
 
-        Vehicles cleanedVehicles = TransitUtilsJR.removeUnusedVehicles(scenario.getVehicles(), scenario.getTransitSchedule());
-        new MatsimVehicleWriter(cleanedVehicles).writeFile(outputPath + "Vehicles.xml.gz");
+//        Vehicles cleanedVehicles = TransitUtilsJR.removeUnusedVehicles(scenario.getVehicles(), outTransitSchedule2);
+
+        new MatsimVehicleWriter(scenario.getVehicles()).writeFile(outputPath + "Vehicles.xml.gz");
 
     }
 
