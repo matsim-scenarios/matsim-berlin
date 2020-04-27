@@ -8,6 +8,7 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.mobsim.qsim.agents.TransitAgentFactory;
 import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.population.routes.RouteUtils;
 import org.matsim.core.scenario.ScenarioUtils;
@@ -15,6 +16,7 @@ import org.matsim.pt.transitSchedule.TransitScheduleFactoryImpl;
 import org.matsim.pt.transitSchedule.api.*;
 import org.matsim.pt.utils.TransitScheduleValidator;
 import org.matsim.utils.gis.shp2matsim.ShpGeometryUtils;
+import org.matsim.vehicles.*;
 import playground.vsp.andreas.utils.pt.TransitScheduleCleaner;
 
 import java.io.IOException;
@@ -25,21 +27,28 @@ public class TransitRouteSplitter {
     private static boolean removeEmptyLines = true;
     private static boolean allowOneStopWithinZone = true ;
     private static int minimumRouteLength = 1 ;
+    private static String modifiedRouteSuffix = "_mod";
     private static final Logger log = Logger.getLogger(TransitRouteTrimmer.class);
+    private static Scenario scenario ;
 
     public static void main(String[] args) throws IOException, SchemaException {
-        final String inScheduleFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz";//"../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v0/optimizedSchedule.xml.gz";
-        final String inNetworkFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz";//"../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v0/optimizedNetwork.xml.gz";
+        final String inScheduleFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz";
+        final String inVehiclesFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-transit-vehicles.xml.gz";
+        final String inNetworkFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz";
         final String zoneShpFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlin-hundekopf-areas/berlin_hundekopf.shp";
         final String outputPath = "src/main/java/org/matsim/prepare/ptRouteTrim/output/";
 
         // Prepare Scenario
         Config config = ConfigUtils.createConfig();
         config.transit().setTransitScheduleFile(inScheduleFile);
+        config.transit().setVehiclesFile(inVehiclesFile);
         config.network().setInputFile(inNetworkFile);
 
-        Scenario scenario =  ScenarioUtils.loadScenario(config);
+        scenario =  ScenarioUtils.loadScenario(config);
+
         TransitSchedule inTransitSchedule = scenario.getTransitSchedule();
+        new MatsimVehicleReader.VehicleReader(scenario.getVehicles()).readFile(inVehiclesFile);
+
 
         // Get Stops within Area
         List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new URL(zoneShpFile));
@@ -80,6 +89,9 @@ public class TransitRouteSplitter {
         TransitRouteTrimmer.countLinesInOut(outTransitSchedule2, stopsInArea);
         TransitSchedule2Shape.createShpFile(inTransitSchedule, outputPath + caseName + "Routes.shp");
         writeTransitSchedule(outputPath + caseName + "Sched.xml.gz", scenario, outTransitSchedule2);
+
+        Vehicles cleanedVehicles = TransitUtilsJR.removeUnusedVehicles(scenario.getVehicles(), scenario.getTransitSchedule());
+        new MatsimVehicleWriter(cleanedVehicles).writeFile(outputPath + "Vehicles.xml.gz");
 
     }
 
@@ -200,18 +212,31 @@ public class TransitRouteSplitter {
 
         NetworkRoute networkRouteNew = RouteUtils.createNetworkRoute(linksNew, scenario.getNetwork());
         TransitScheduleFactory tsf = scenario.getTransitSchedule().getFactory();
+        VehiclesFactory vf = scenario.getTransitVehicles().getFactory();
+
         String routeIdOld = routeOld.getId().toString();
-        Id<TransitRoute> routeIdNew = Id.create( routeIdOld + "_mod" + modNumber, TransitRoute.class);
+        Id<TransitRoute> routeIdNew = Id.create( routeIdOld + modifiedRouteSuffix + modNumber, TransitRoute.class);
         TransitRoute routeNew = tsf.createTransitRoute(routeIdNew, networkRouteNew, stopsNew, routeOld.getTransportMode());
         routeNew.setDescription(routeOld.getDescription());
 
         for (Departure departure : routeOld.getDepartures().values()) {
             String vehIdOld = departure.getVehicleId().toString();
+//            scenario.getVehicles().removeVehicle(departure.getVehicleId());
             String depIdOld = departure.getId().toString();
-            Departure departureNew = tsf.createDeparture(Id.create(depIdOld + "_mod" + modNumber, Departure.class), departure.getDepartureTime());
-            departureNew.setVehicleId(Id.createVehicleId(vehIdOld + "_mod" + modNumber));
+            Departure departureNew = tsf.createDeparture(Id.create(depIdOld + modifiedRouteSuffix + modNumber, Departure.class), departure.getDepartureTime());
+            departureNew.setVehicleId(Id.createVehicleId(vehIdOld + modifiedRouteSuffix + modNumber));
             routeNew.addDeparture(departureNew);
+
+            Map<Id<Vehicle>, Vehicle> vehicles = scenario.getVehicles().getVehicles();
+            Vehicle vehicle1 = vehicles.get(departure.getVehicleId());
+            VehicleType vehicleType = vehicle1.getType();
+            Vehicle vehicle = vf.createVehicle(Id.createVehicleId(vehIdOld + modifiedRouteSuffix + modNumber),vehicleType);
+            if (!scenario.getVehicles().getVehicles().containsKey(vehicle.getId())){
+                scenario.getVehicles().addVehicle(vehicle);
+            }
+
         }
+
         return routeNew;
     }
 }
