@@ -344,7 +344,7 @@ public class RunGTFS2MATSimOpenBerlin {
 					throw new RuntimeException("");
 				}
 				
-				double lastDepartureOffset = route.getStops().get(0).getDepartureOffset();
+				double lastDepartureOffset = route.getStops().get(0).getDepartureOffset().seconds();
 				// min. time spend at a stop, useful especially for stops whose arrival and departure offset is identical,
 				// so we need to add time for passengers to board and alight
 				double minStopTime = 30.0;
@@ -354,17 +354,17 @@ public class RunGTFS2MATSimOpenBerlin {
 					TransitRouteStop routeStop = routeStops.get(i);
 					// if there is no departure offset set (or infinity), it is the last stop of the line, 
 					// so we don't need to care about the stop duration
-					double stopDuration = Double.isFinite(routeStop.getDepartureOffset()) ? 
-							routeStop.getDepartureOffset() - routeStop.getArrivalOffset() : minStopTime;
+					double stopDuration = routeStop.getDepartureOffset().isDefined() ?
+							routeStop.getDepartureOffset().seconds() - routeStop.getArrivalOffset().seconds() : minStopTime;
 					// ensure arrival at next stop early enough to allow for 30s stop duration -> time for passengers to board / alight
 					// if link freespeed had been set such that the pt veh arrives exactly on time, but departure tiome is identical 
 					// with arrival time the pt vehicle would have been always delayed
 					// Math.max to avoid negative values of travelTime
-					double travelTime = Math.max(1, routeStop.getArrivalOffset() - lastDepartureOffset - 1.0 -
+					double travelTime = Math.max(1, routeStop.getArrivalOffset().seconds() - lastDepartureOffset - 1.0 -
 							(stopDuration >= minStopTime ? 0 : (minStopTime - stopDuration))) ;
 					Link link = network.getLinks().get(routeStop.getStopFacility().getLinkId());
 					increaseLinkFreespeedIfLower(link, link.getLength() / travelTime);
-					lastDepartureOffset = routeStop.getDepartureOffset();
+					lastDepartureOffset = routeStop.getDepartureOffset().seconds();
 				}
 				
 				// create vehicles for Departures
