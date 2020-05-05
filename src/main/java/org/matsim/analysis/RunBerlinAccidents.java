@@ -44,8 +44,8 @@ public class RunBerlinAccidents {
 	AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
 	accidentsSettings.setEnableAccidentsModule(true);
 	accidentsSettings.setScaleFactor(10);
-    config.network().setInputFile(BVWPNetwork);
-    config.planCalcScore().getModes().get("car").setMonetaryDistanceRate(-0.0004);
+  config.network().setInputFile(BVWPNetwork);
+  config.planCalcScore().getModes().get("car").setMonetaryDistanceRate(-0.0004);
 
 	Scenario scenario = RunBerlinScenario.prepareScenario(config);
 

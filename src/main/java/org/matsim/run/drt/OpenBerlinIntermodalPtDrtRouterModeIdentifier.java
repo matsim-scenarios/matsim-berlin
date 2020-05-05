@@ -29,7 +29,7 @@ import org.matsim.analysis.TransportPlanningMainModeIdentifier;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.PlanElement;
-import org.matsim.core.router.MainModeIdentifier;
+import org.matsim.core.router.AnalysisMainModeIdentifier;
 
 import com.google.inject.Inject;
 
@@ -39,7 +39,7 @@ import com.google.inject.Inject;
  * @author nagel / gleich
  *
  */
-public final class OpenBerlinIntermodalPtDrtRouterModeIdentifier implements MainModeIdentifier {
+public final class OpenBerlinIntermodalPtDrtRouterModeIdentifier implements AnalysisMainModeIdentifier {
 	private final List<String> modeHierarchy = new ArrayList<>() ;
 	private final List<String> drtModes;
 
@@ -96,7 +96,7 @@ public final class OpenBerlinIntermodalPtDrtRouterModeIdentifier implements Main
 			}
 		}
 		if (mainModeIndex == -1) {
-			throw new RuntimeException("know main mode found for trip " + planElements.toString() ) ;
+			throw new RuntimeException("no main mode found for trip " + planElements.toString() ) ;
 		}
 		return modeHierarchy.get( mainModeIndex ) ;
 	}

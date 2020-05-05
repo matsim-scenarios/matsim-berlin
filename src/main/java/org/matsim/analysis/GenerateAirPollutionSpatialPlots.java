@@ -34,6 +34,7 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.analysis.spatial.Grid;
 import org.matsim.contrib.analysis.time.TimeBinMap;
+import org.matsim.contrib.emissions.Pollutant;
 import org.matsim.contrib.emissions.analysis.EmissionGridAnalyzer;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -110,31 +111,31 @@ public class GenerateAirPollutionSpatialPlots {
                 .withGridType(EmissionGridAnalyzer.GridType.Square)
                 .build();
 
-		TimeBinMap<Grid<Map<String, Double>>> timeBins = analyzer.process(eventsPath);
+		TimeBinMap<Grid<Map<Pollutant, Double>>> timeBins = analyzer.process(eventsPath );
 		analyzer.processToJsonFile(eventsPath, runDir + runId + ".emissions.json");
 		
-		Set<String> pollutants = new HashSet<>();
-		for (TimeBinMap.TimeBin<Grid<Map<String, Double>>> bin : timeBins.getTimeBins()) {
-            for (Grid.Cell<Map<String, Double>> cell : bin.getValue().getCells()) {
-                for (String pollutentInCell : cell.getValue().keySet()) {
+		Set<Pollutant> pollutants = new HashSet<>();
+		for (TimeBinMap.TimeBin<Grid<Map<Pollutant, Double>>> bin : timeBins.getTimeBins()) {
+            for (Grid.Cell<Map<Pollutant, Double>> cell : bin.getValue().getCells()) {
+                for (Pollutant pollutentInCell : cell.getValue().keySet()) {
                 	if (!pollutants.contains(pollutentInCell)) pollutants.add(pollutentInCell);
                 }
 			}
 		}
-		for (String pollutant : pollutants) {
+		for (Pollutant pollutant : pollutants) {
 			log.info("Writing data to csv file: " + pollutant);
 	        writeGridToCSV(timeBins, pollutant, runDir + runId + ".emissions." + pollutant + ".csv");
 		}
     }
 
-    private void writeGridToCSV(TimeBinMap<Grid<Map<String, Double>>> bins, String pollutant, String outputPath) {
+    private void writeGridToCSV(TimeBinMap<Grid<Map<Pollutant, Double>>> bins, Pollutant pollutant, String outputPath) {
 
 		try (CSVPrinter printer = new CSVPrinter(new FileWriter(outputPath), CSVFormat.TDF)) {
             printer.printRecord("timeBinStartTime", "centroidX", "centroidY", "weight");
 
-            for (TimeBinMap.TimeBin<Grid<Map<String, Double>>> bin : bins.getTimeBins()) {
+            for (TimeBinMap.TimeBin<Grid<Map<Pollutant, Double>>> bin : bins.getTimeBins()) {
                 final double timeBinStartTime = bin.getStartTime();
-                for (Grid.Cell<Map<String, Double>> cell : bin.getValue().getCells()) {
+                for (Grid.Cell<Map<Pollutant, Double>> cell : bin.getValue().getCells()) {
                     double weight = cell.getValue().containsKey(pollutant) ? cell.getValue().get(pollutant) : 0;
                     printer.printRecord(timeBinStartTime, cell.getCoordinate().x, cell.getCoordinate().y, weight);
 				}

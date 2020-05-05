@@ -1,5 +1,7 @@
 language: java
 
+jdk: openjdk11
+
 # The trusty build environment allows for more memory, see https://docs.travis-ci.com/user/reference/overview/
 dist: trusty
 
@@ -12,6 +14,15 @@ env:
     - TEST=RunDrtOpenBerlinScenarioTest
     # - TEST=RunBerlinScenarioIT#test10pctUntilIteration1 # does not fit into travis.  kai, aug'18
     # - TEST=RunBerlinScenarioIT#test1pctManyIterations # does probably not fit into travis (not tested).  kai, aug'18
-
+    - TEST=AbfallUtilsTest
+    - TEST=IntermodalTripFareCompensatorsTest
+    - TEST=IntermodalTripFareCompensatorPerTripTest
+    - TEST=OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifierTest
+    - TEST=RunDrtOpenBerlinScenarioWithPtRoutingModesTest
+    - TEST=RunDrtOpenBerlinScenarioWithDrtSpeedUpTest
+    - TEST=ChangeSingleTripModeAndRoutePlanRouterTest
+    - TEST=RandomSingleTripPlanRouterTest
+    - TEST=BerlinRaptorIntermodalAccessEgressTest
+    - TEST=RunBerlinScenarioSingleTripStrategiesTest
 script:
   - mvn -Dtest=${TEST} test --batch-mode -Dmatsim.preferLocalDtds=true -Dmaven.javadoc.skip -e

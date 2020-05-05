@@ -1,30 +1,76 @@
+/* *********************************************************************** *
+ * project: org.matsim.*
+ *                                                                         *
+ * *********************************************************************** *
+ *                                                                         *
+ * copyright       : (C) 2020 by the members listed in the COPYING,        *
+ *                   LICENSE and WARRANTY file.                            *
+ * email           : info at matsim dot org                                *
+ *                                                                         *
+ * *********************************************************************** *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *   See also COPYING, LICENSE and WARRANTY file                           *
+ *                                                                         *
+ * *********************************************************************** */
+
 package org.matsim.run;
 
 import static org.matsim.run.RunBerlinScenarioTest.analyzeModeStats;
 
 import java.util.Map;
-import java.util.Random;
 
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.matsim.analysis.ScoreStatsControlerListener;
-import org.matsim.analysis.ScoreStatsControlerListener.ScoreItem;
-import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.gbl.Gbl;
-import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.testcases.MatsimTestUtils;
 
 public class RunBerlinScenarioIT{
 	private static final Logger log = Logger.getLogger( RunBerlinScenarioIT.class ) ;
 
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
+
+	// 10pct, testing the scores in iteration 0 and 1
+	@Test
+	public final void testEquil() {
+		try {
+			final String[] args = {"scenarios/equil/config.xml"};
+
+			Config config =  RunBerlinScenario.prepareConfig( args ) ;
+			config.controler().setLastIteration(1);
+			config.strategy().setFractionOfIterationsToDisableInnovation(1);
+			config.controler().setOverwriteFileSetting( OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
+			config.controler().setOutputDirectory( utils.getOutputDirectory() );
+
+			Scenario scenario = RunBerlinScenario.prepareScenario( config ) ;
+
+			Controler controler = RunBerlinScenario.prepareControler( scenario ) ;
+
+			controler.run() ;
+
+			// TODO: enable once we move towards a release
+//			Assert.assertEquals("Different scores in iteration 0.", 115.39990555612046, controler.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(0), MatsimTestUtils.EPSILON);
+//			Assert.assertEquals("Different scores in iteration 1.", 113.59365288084939, controler.getScoreStats().getScoreHistory().get(ScoreItem.executed).get(1), 0.001);
+
+			// The differences in the scores compared to the run in the public-svn are probably related to the pt raptor router
+			// which seems to produce slightly different results (e.g. in case two routes are identical).
+			// Thus the large epsilon. ihab, dec'18
+
+		} catch ( Exception ee ) {
+			throw new RuntimeException(ee) ;
+		}
+	}
 
 	// 10pct, testing the scores in iteration 0 and 1
 	@Test
@@ -37,9 +83,9 @@ public class RunBerlinScenarioIT{
 			config.strategy().setFractionOfIterationsToDisableInnovation(1);
 			config.controler().setOverwriteFileSetting( OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
 			config.controler().setOutputDirectory( utils.getOutputDirectory() );
-			
+
 			Scenario scenario = RunBerlinScenario.prepareScenario( config ) ;
-			
+
 			Controler controler = RunBerlinScenario.prepareControler( scenario ) ;
 
 			controler.run() ;
@@ -84,12 +130,13 @@ public class RunBerlinScenarioIT{
 			config.controler().setWritePlansUntilIteration( 0 );
 			config.controler().setWritePlansInterval( 0 );
 			
-			Scenario scenario = RunBerlinScenario.prepareScenario( config ) ;
-			
 			final double sample = 0.1;
-			downsample( scenario.getPopulation().getPersons(), sample ) ;
 			config.qsim().setFlowCapFactor( config.qsim().getFlowCapFactor()*sample );
 			config.qsim().setStorageCapFactor( config.qsim().getStorageCapFactor()*sample );
+			BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
+			berlinCfg.setPopulationDownsampleFactor(sample);
+			
+			Scenario scenario = RunBerlinScenario.prepareScenario( config ) ;
 
 			Controler controler = RunBerlinScenario.prepareControler( scenario ) ;
 			
@@ -120,13 +167,6 @@ public class RunBerlinScenarioIT{
 			ee.printStackTrace();
 			throw new RuntimeException(ee) ;
 		}
-	}
-	
-	private static void downsample( final Map<Id<Person>, ? extends Person> map, final double sample ) {
-		final Random rnd = MatsimRandom.getLocalInstance();
-		log.warn( "map size before=" + map.size() ) ;
-		map.values().removeIf( person -> rnd.nextDouble()>sample ) ;
-		log.warn( "map size after=" + map.size() ) ;
 	}
 
 }
