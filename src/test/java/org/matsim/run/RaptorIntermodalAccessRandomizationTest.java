@@ -66,9 +66,14 @@ public class RaptorIntermodalAccessRandomizationTest {
     @Test
     public void accessModeWithDifferentTravelTimeThanRoutedTest() {
         Config config = ConfigUtils.createConfig();
-        config.network().setInputFile(ExamplesUtils.getTestScenarioURL("pt-tutorial").getFile() + "multimodalnetwork.xml");
-        config.transit().setTransitScheduleFile(ExamplesUtils.getTestScenarioURL("pt-tutorial").getFile() + "transitschedule.xml");
-        config.transit().setVehiclesFile(ExamplesUtils.getTestScenarioURL("pt-tutorial").getFile() + "transitVehicles.xml");
+        // not working for IntelliJ stupdity
+//        config.network().setInputFile(ExamplesUtils.getTestScenarioURL("pt-tutorial").getFile() + "multimodalnetwork.xml");
+//        config.transit().setTransitScheduleFile(ExamplesUtils.getTestScenarioURL("pt-tutorial").getFile() + "transitschedule.xml");
+//        config.transit().setVehiclesFile(ExamplesUtils.getTestScenarioURL("pt-tutorial").getFile() + "transitVehicles.xml");
+
+        config.network().setInputFile("../matsim/examples/scenarios/pt-tutorial/multimodalnetwork.xml");
+        config.transit().setTransitScheduleFile("../matsim/examples/scenarios/pt-tutorial/transitschedule.xml");
+        config.transit().setVehiclesFile("../matsim/examples/scenarios/pt-tutorial/transitVehicles.xml");
         config.transit().setUseTransit(true);
 
         config.controler().setWritePlansInterval(1);
@@ -238,9 +243,9 @@ public class RaptorIntermodalAccessRandomizationTest {
         Assert.assertEquals(TransportMode.walk, ((Leg) agent2.getSelectedPlan().getPlanElements().get(8)).getMode());
     }
 
-    private void createAndAddPlan(PopulationFactory pf, Person agent1, Id<ActivityFacility> homeFacilityId, Id<ActivityFacility> workFacilityId) {
+    private void createAndAddPlan(PopulationFactory pf, Person agent, Id<ActivityFacility> homeFacilityId, Id<ActivityFacility> workFacilityId) {
         Plan plan = pf.createPlan();
-        agent1.addPlan(plan);
+        agent.addPlan(plan);
 
         Activity home = pf.createActivityFromActivityFacilityId("home", homeFacilityId);
         home.setEndTime(7. * 3600.);
@@ -275,9 +280,11 @@ public class RaptorIntermodalAccessRandomizationTest {
             for (Map.Entry<Id<Person>, Map<Integer, Double>> personId2TripChanges: person2AccessTripNr2AddedTravelTime.entrySet()) {
                 List<TripStructureUtils.Trip> trips = TripStructureUtils.getTrips(pop.getPersons().get(personId2TripChanges.getKey()).getSelectedPlan());
                 for (Map.Entry<Integer, Double> tripNr2Addition: personId2TripChanges.getValue().entrySet()) {
-                    trips.get(tripNr2Addition.getKey()).getLegsOnly().stream().
-                            filter(leg -> leg.getMode().equals(WEIRD_WALK)).
-                            forEach(leg -> leg.setTravelTime(leg.getTravelTime().seconds() + tripNr2Addition.getValue()));
+                    Leg firstLeg = trips.get(tripNr2Addition.getKey()).getLegsOnly().get(0);
+                    if (firstLeg.getMode().equals(WEIRD_WALK)) {
+                        firstLeg.setTravelTime(firstLeg.getTravelTime().seconds() + tripNr2Addition.getValue());
+                        firstLeg.getRoute().setTravelTime(firstLeg.getRoute().getTravelTime().seconds() + tripNr2Addition.getValue());
+                    }
                 }
             }
         }
@@ -289,9 +296,11 @@ public class RaptorIntermodalAccessRandomizationTest {
             for (Map.Entry<Id<Person>, Map<Integer, Double>> personId2TripChanges: person2AccessTripNr2AddedTravelTime.entrySet()) {
                 List<TripStructureUtils.Trip> trips = TripStructureUtils.getTrips(pop.getPersons().get(personId2TripChanges.getKey()).getSelectedPlan());
                 for (Map.Entry<Integer, Double> tripNr2Addition: personId2TripChanges.getValue().entrySet()) {
-                    trips.get(tripNr2Addition.getKey()).getLegsOnly().stream().
-                            filter(leg -> leg.getMode().equals(WEIRD_WALK)).
-                            forEach(leg -> leg.setTravelTime(leg.getTravelTime().seconds() - tripNr2Addition.getValue()));
+                    Leg firstLeg = trips.get(tripNr2Addition.getKey()).getLegsOnly().get(0);
+                    if (firstLeg.getMode().equals(WEIRD_WALK)) {
+                        firstLeg.setTravelTime(firstLeg.getTravelTime().seconds() - tripNr2Addition.getValue());
+                        firstLeg.getRoute().setTravelTime(firstLeg.getRoute().getTravelTime().seconds() - tripNr2Addition.getValue());
+                    }
                 }
             }
         }
