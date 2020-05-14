@@ -116,6 +116,8 @@ public final class OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier impleme
 					continue;
 				} else if (modeFound.equals(TransportMode.walk)) {
 					continue;
+				} else if (modeFound.equals("zoomer")){ // jr
+					continue; // jr
 				} else if (drtModes.contains(modeFound)) {
 					isDrtPt = true;
 				} else {

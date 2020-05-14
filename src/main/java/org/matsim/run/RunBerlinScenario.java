@@ -74,7 +74,8 @@ public final class RunBerlinScenario {
 		}
 		
 		if ( args.length==0 ) {
-			args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
+			//args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
+            args = new String[] {"scenarios/berlin-v5.5-1pct/input/08-Config-2500-ZoomerSlow.xml"}  ;
 		}
 
 		Config config = prepareConfig( args ) ;
