@@ -21,6 +21,7 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ScoringParameterSet;
 import org.matsim.core.gbl.MatsimRandom;
+import org.matsim.core.utils.misc.OptionalTime;
 import org.matsim.core.utils.misc.Time;
 import org.matsim.run.BerlinExperimentalConfigGroup.IntermodalAccessEgressModeUtilityRandomization;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup;
@@ -76,12 +77,12 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
         for (PlanElement pe : legs) {
             if (pe instanceof Leg) {
                 String mode = ((Leg) pe).getMode();
-                double travelTime = ((Leg) pe).getTravelTime();
-                
+				OptionalTime travelTime = ((Leg) pe).getTravelTime();
+
                 // overrides individual parameters per person; use default scoring parameters
-                if (Time.getUndefinedTime() != travelTime) {
-                    tTime += travelTime;
-                    utility += travelTime * (scoringParams.getModes().get(mode).getMarginalUtilityOfTraveling() + (-1) * scoringParams.getPerforming_utils_hr()) / 3600;
+                if (travelTime.isDefined()) {
+                    tTime += travelTime.seconds();
+                    utility += travelTime.seconds() * (scoringParams.getModes().get(mode).getMarginalUtilityOfTraveling() + (-1) * scoringParams.getPerforming_utils_hr()) / 3600;
                 }
                 Double distance = ((Leg) pe).getRoute().getDistance();
                 if (distance != null && distance != 0.) {
@@ -98,8 +99,8 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                         	fare += drtFareConfigGroup.getDistanceFare_m() * distance;
                         }
                                                 
-                        if (Time.getUndefinedTime() != travelTime) {
-                            fare += drtFareConfigGroup.getTimeFare_h() * travelTime / 3600.;
+                        if (travelTime.isDefined()) {
+                            fare += drtFareConfigGroup.getTimeFare_h() * travelTime.seconds() / 3600.;
 
                         }
                         

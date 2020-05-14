@@ -33,13 +33,23 @@
 			<!-- Geotools is not on Maven central -->
 			<id>osgeo</id>
 			<name>Geotools repository</name>
-			<url>http://download.osgeo.org/webdav/geotools</url>
+			<url>https://repo.osgeo.org/repository/release</url>
 		</repository>
 
 		<repository>
 			<!-- Required for MATSim snaphots -->
 			<id>ojo-snapshots</id>
 			<url>http://oss.jfrog.org/libs-snapshot</url>
+		</repository>
+
+		<repository>
+			<id>de.topobyte</id>
+			<url>https://mvn.topobyte.de</url>
+		</repository>
+
+		<repository>
+			<id>com.slimjars.trove4j</id>
+			<url>https://mvn.slimjars.com</url>
 		</repository>
 
 	</repositories>
@@ -73,6 +83,14 @@
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>noise</artifactId>
+			<version>${matsim.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
 
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
