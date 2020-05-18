@@ -37,7 +37,7 @@ import java.util.*;
 public class DynamicShutdownControlerListenerImpl implements IterationStartsListener, StartupListener, ShutdownListener {
 
     // Dynamic Shutdown Config Group
-    private static final int MINIMUM_ITERATION = 1500;
+    private static final int MINIMUM_ITERATION = 10000;
 
     // Score Config Group
     private static final boolean SCORE_CONDITION_ACTIVE = true;
