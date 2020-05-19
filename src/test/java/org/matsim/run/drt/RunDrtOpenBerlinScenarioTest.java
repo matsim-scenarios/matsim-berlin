@@ -1,3 +1,22 @@
+/* *********************************************************************** *
+ * project: org.matsim.*
+ *                                                                         *
+ * *********************************************************************** *
+ *                                                                         *
+ * copyright       : (C) 2020 by the members listed in the COPYING,        *
+ *                   LICENSE and WARRANTY file.                            *
+ * email           : info at matsim dot org                                *
+ *                                                                         *
+ * *********************************************************************** *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *   See also COPYING, LICENSE and WARRANTY file                           *
+ *                                                                         *
+ * *********************************************************************** */
+
 package org.matsim.run.drt;
 
 import java.util.ArrayList;
@@ -6,10 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.junit.Assert;
-import org.junit.FixMethodOrder;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.matsim.analysis.ScoreStatsControlerListener;
 import org.matsim.api.core.v01.Id;
@@ -22,7 +38,9 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
+import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.StrategyConfigGroup.StrategySettings;
 import org.matsim.core.controler.AbstractModule;
@@ -32,6 +50,7 @@ import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
 import org.matsim.run.BerlinExperimentalConfigGroup;
 import org.matsim.run.BerlinExperimentalConfigGroup.IntermodalAccessEgressModeUtilityRandomization;
+import org.matsim.run.RunBerlinScenario;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup.CompensationCondition;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
@@ -47,7 +66,7 @@ public class RunDrtOpenBerlinScenarioTest {
 		
 	private static final Logger log = Logger.getLogger(RunDrtOpenBerlinScenarioTest.class);
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
-	
+
 	// During debug some exceptions only occured at the replanning stage of the 3rd
 	// iteration, so we need at least 3 iterations.
 	// Have at least 0.1 pct of the population to have as many strange corner cases
@@ -118,7 +137,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			config.controler().setWritePlansInterval(1);
 			
 			// make pt more attractive to obtain less direct walks (routing mode pt) due to drt triangle walk being more attractive 
-			config.planCalcScore().setMarginalUtlOfWaitingPt_utils_hr(5);
+			config.planCalcScore().getScoringParameters("person").setMarginalUtlOfWaitingPt_utils_hr(5.0);
 			
 			BerlinExperimentalConfigGroup berlinExpConfigGroup = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 			

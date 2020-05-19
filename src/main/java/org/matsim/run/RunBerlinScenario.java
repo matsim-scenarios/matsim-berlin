@@ -50,6 +50,7 @@ import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
+import org.matsim.run.drt.RunDrtOpenBerlinScenario;
 import org.matsim.run.singleTripStrategies.ChangeSingleTripModeAndRoute;
 import org.matsim.run.singleTripStrategies.RandomSingleTripReRoute;
 
@@ -102,8 +103,8 @@ public final class RunBerlinScenario {
 					+ "Should only be used for testing or car-focused studies with a fixed modal split.  ");
 		}
 		
-
-
+		
+		
 		// use the (congested) car travel time for the teleported ride mode
 		controler.addOverridingModule( new AbstractModule() {
 			@Override
@@ -111,7 +112,7 @@ public final class RunBerlinScenario {
 				addTravelTimeBinding( TransportMode.ride ).to( networkTravelTime() );
 				addTravelDisutilityFactoryBinding( TransportMode.ride ).to( carTravelDisutilityFactoryKey() );
 				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifier.class);
-
+				
 				addPlanStrategyBinding("RandomSingleTripReRoute").toProvider(RandomSingleTripReRoute.class);
 				addPlanStrategyBinding("ChangeSingleTripModeAndRoute").toProvider(ChangeSingleTripModeAndRoute.class);
 
@@ -138,23 +139,32 @@ public final class RunBerlinScenario {
 
 		RouteFactories routeFactories = scenario.getPopulation().getFactory().getRouteFactories();
 		routeFactories.setRouteFactory(DrtRoute.class, new DrtRouteFactory());
-
+		
 		ScenarioUtils.loadScenario(scenario);
 
 		BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 		if (berlinCfg.getPopulationDownsampleFactor() != 1.0) {
 			downsample(scenario.getPopulation().getPersons(), berlinCfg.getPopulationDownsampleFactor());
 		}
-
+		
 		return scenario;
 	}
-	
-	public static Config prepareConfig( String [] args, ConfigGroup... customModules ) {
+
+	public static Config prepareConfig( String [] args, ConfigGroup... customModules ){
+		return prepareConfig( RunDrtOpenBerlinScenario.AdditionalInformation.none, args, customModules ) ;
+	}
+	public static Config prepareConfig( RunDrtOpenBerlinScenario.AdditionalInformation additionalInformation, String [] args,
+					    ConfigGroup... customModules ) {
 		OutputDirectoryLogging.catchLogEntries();
 		
 		String[] typedArgs = Arrays.copyOfRange( args, 1, args.length );
-
-		ConfigGroup[] customModulesToAdd = new ConfigGroup[]{ new BerlinExperimentalConfigGroup() };
+		
+		ConfigGroup[] customModulesToAdd = null ;
+		if ( additionalInformation== RunDrtOpenBerlinScenario.AdditionalInformation.acceptUnknownParamsBerlinConfig ) {
+			customModulesToAdd = new ConfigGroup[]{ new BerlinExperimentalConfigGroup(true) };
+		} else {
+			customModulesToAdd = new ConfigGroup[]{ new BerlinExperimentalConfigGroup(false) };
+		}
 		ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
 		
 		int counter = 0;
@@ -162,14 +172,14 @@ public final class RunBerlinScenario {
 			customModulesAll[counter] = customModule;
 			counter++;
 		}
-
+		
 		for (ConfigGroup customModule : customModulesToAdd) {
 			customModulesAll[counter] = customModule;
 			counter++;
 		}
-
+		
 		final Config config = ConfigUtils.loadConfig( args[ 0 ], customModulesAll );
-
+		
 		config.controler().setRoutingAlgorithmType( FastAStarLandmarks );
 		
 		config.subtourModeChoice().setProbaForRandomSingleTripMode( 0.5 );
@@ -179,7 +189,7 @@ public final class RunBerlinScenario {
 		config.plansCalcRoute().removeModeRoutingParams(TransportMode.pt);
 		config.plansCalcRoute().removeModeRoutingParams(TransportMode.bike);
 		config.plansCalcRoute().removeModeRoutingParams("undefined");
-
+		
 		config.qsim().setInsertingWaitingVehiclesBeforeDrivingVehicles( true );
 				
 		// vsp defaults
@@ -217,7 +227,7 @@ public final class RunBerlinScenario {
 		} else {
 			modesString = modesString.substring(0, modesString.length() - 1);
 		}
-
+		
 		String[] args = new String[] {
 				config.controler().getOutputDirectory(),
 				config.controler().getRunId(),
@@ -240,7 +250,7 @@ public final class RunBerlinScenario {
 			throw new RuntimeException(e.getMessage());
 		}
 	}
-
+	
 	private static void downsample( final Map<Id<Person>, ? extends Person> map, final double sample ) {
 		final Random rnd = MatsimRandom.getLocalInstance();
 		log.warn( "Population downsampled from " + map.size() + " agents." ) ;

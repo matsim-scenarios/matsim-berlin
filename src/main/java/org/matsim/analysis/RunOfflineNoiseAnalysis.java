@@ -37,22 +37,25 @@ import org.matsim.core.scenario.ScenarioUtils;
 public class RunOfflineNoiseAnalysis {
 	private static final Logger log = Logger.getLogger(RunOfflineNoiseAnalysis.class);
 
-	private final static String runDirectory = "path-to-run-directory/";
-	private final static String runId = "run-id";
+	private final static String runDirectory = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/";
+	private final static String runId = "berlin-v5.4-1pct";
 
 	public static void main(String[] args) {
 
-		String outputDirectory = runDirectory;
+		String outputDirectory = "./scenarios/";
 
 		String tunnelLinkIdFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/input/berlin-v5.10.tunnel-linkIDs.csv";
 		double receiverPointGap = 100.;
 		double timeBinSize = 3600.;
 		
 		Config config = ConfigUtils.createConfig(new NoiseConfigGroup());
-		config.global().setCoordinateSystem("GK4");
-		config.network().setInputCRS("GK4");
-		config.network().setInputFile(runDirectory + runId + ".output_network.xml.gz");
-		config.plans().setInputFile(runDirectory + runId + ".output_plans.xml.gz");
+		config.global().setCoordinateSystem("EPSG:31468");
+		config.network().setInputCRS("EPSG:31468");
+//		config.network().setInputFile(runDirectory + runId + ".output_network.xml.gz");
+		config.network().setInputFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz");
+//		config.plans().setInputFile(runDirectory + runId + ".output_plans.xml.gz");
+		config.plans().setInputFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/input/berlin-v5.5-1pct.plans.xml.gz");
+		config.plans().setInputCRS("EPSG:31468");
 		config.controler().setOutputDirectory(runDirectory);
 		config.controler().setRunId(runId);
 						
@@ -76,9 +79,9 @@ public class RunOfflineNoiseAnalysis {
 		
 		// ################################
 		
-		noiseParameters.setUseActualSpeedLevel(true);
+		noiseParameters.setUseActualSpeedLevel(false);
 		noiseParameters.setAllowForSpeedsOutsideTheValidRange(false);
-		noiseParameters.setScaleFactor(10.);
+		noiseParameters.setScaleFactor(100.);
 		noiseParameters.setComputePopulationUnits(true);
 		noiseParameters.setComputeNoiseDamages(true);
 		noiseParameters.setInternalizeNoiseDamages(false);
@@ -91,6 +94,11 @@ public class RunOfflineNoiseAnalysis {
 		
 		noiseParameters.setTunnelLinkIdFile(tunnelLinkIdFile);
 		noiseParameters.setTimeBinSizeNoiseComputation(timeBinSize);
+
+		noiseParameters.setConsiderNoiseBarriers(false);
+		noiseParameters.setNoiseBarriersFilePath("/Users/ihab/Documents/workspace/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-buildings/osm-buildings-dissolved.geojson");
+//		noiseParameters.setNoiseBarriersFilePath("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-buildings/osm-buildings-dissolved.geojson");
+		noiseParameters.setNoiseBarriersSourceCRS("EPSG:31468");
 		
 		Scenario scenario = ScenarioUtils.loadScenario(config);
 		NoiseOfflineCalculation noiseCalculation = new NoiseOfflineCalculation(scenario, outputDirectory);

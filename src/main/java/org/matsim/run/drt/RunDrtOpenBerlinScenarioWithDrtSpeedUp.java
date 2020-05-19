@@ -45,7 +45,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 		}
 		
 		Config config = RunDrtOpenBerlinScenario.prepareConfig( args , new DrtSpeedUpConfigGroup() ) ;
-		DrtSpeedUpModule.adjustConfig(config);
+		DrtSpeedUpModule.addTeleportedDrtMode(config);
 		
 		Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 		for( Person person : scenario.getPopulation().getPersons().values() ){

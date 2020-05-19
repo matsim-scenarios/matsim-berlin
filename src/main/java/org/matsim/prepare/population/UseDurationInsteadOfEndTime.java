@@ -86,7 +86,7 @@ public class UseDurationInsteadOfEndTime {
 						
 						Activity act = (Activity) pE;
 						
-						if (act.getEndTime() > 0. && act.getEndTime() <= 30 * 3600.) {
+						if (act.getEndTime().seconds() > 0. && act.getEndTime().seconds() <= 30 * 3600.) {
 							
 							if (act.getAttributes().getAttribute("cemdapStopDuration_s") != null) {
 								int cemdapDuration = (int) act.getAttributes().getAttribute("cemdapStopDuration_s");

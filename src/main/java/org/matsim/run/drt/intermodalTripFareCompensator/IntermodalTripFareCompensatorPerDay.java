@@ -49,13 +49,15 @@ public class IntermodalTripFareCompensatorPerDay implements PersonDepartureEvent
 	private QSimConfigGroup qSimConfigGroup;
 	private Set<Id<Person>> personsOnPtTrip = new HashSet<>();
 	private Map<Id<Person>, Integer> persons2DrtTrips = new HashMap<>();
-	private double compensation;
+	private double compensationPerDay;
+	private double compensationPerTrip;
 	private Set<String> drtModes;
 	private Set<String> ptModes;
 	private double compensationTime = Double.NaN;
 
 	IntermodalTripFareCompensatorPerDay(IntermodalTripFareCompensatorConfigGroup intermodalFareConfigGroup) {
-		this.compensation = intermodalFareConfigGroup.getCompensationPerTrip();
+		this.compensationPerDay = intermodalFareConfigGroup.getCompensationPerDay();
+		this.compensationPerTrip = intermodalFareConfigGroup.getCompensationPerTrip();
 		this.drtModes = intermodalFareConfigGroup.getDrtModes();
 		this.ptModes = intermodalFareConfigGroup.getPtModes();
 	}
@@ -84,7 +86,7 @@ public class IntermodalTripFareCompensatorPerDay implements PersonDepartureEvent
 
 		for (Entry<Id<Person>, Integer> person2DrtTrips : persons2DrtTrips.entrySet()) {
 			if (personsOnPtTrip.contains(person2DrtTrips.getKey())) {
-				compensate(time, person2DrtTrips.getKey(), compensation * person2DrtTrips.getValue());
+				compensate(time, person2DrtTrips.getKey(), compensationPerDay + compensationPerTrip * person2DrtTrips.getValue());
 			}
 		}
 	}
@@ -98,8 +100,8 @@ public class IntermodalTripFareCompensatorPerDay implements PersonDepartureEvent
 
 	private double getOrCalcCompensationTime() {
 		if (Double.isNaN(this.compensationTime)) {
-			this.compensationTime = (Double.isFinite(qSimConfigGroup.getEndTime()) && qSimConfigGroup.getEndTime() > 0)
-					? qSimConfigGroup.getEndTime()
+			this.compensationTime = (Double.isFinite(qSimConfigGroup.getEndTime().seconds()) && qSimConfigGroup.getEndTime().seconds() > 0)
+					? qSimConfigGroup.getEndTime().seconds()
 					: Double.MAX_VALUE;
 		}
 

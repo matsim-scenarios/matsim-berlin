@@ -10,8 +10,8 @@
 	<description>MATSim Open Berlin scenario project</description>
 
 	<properties>
-		<matsim.version>12.0-SNAPSHOT</matsim.version>
-		<!-- <matsim.version>12.0-2020w02-SNAPSHOT</matsim.version>  -->
+		<!-- <matsim.version>12.0-SNAPSHOT</matsim.version>-->
+		<matsim.version>12.0-2020w19-SNAPSHOT</matsim.version>
 	</properties>
 
 	<repositories>
@@ -31,13 +31,23 @@
 			<!-- Geotools is not on Maven central -->
 			<id>osgeo</id>
 			<name>Geotools repository</name>
-			<url>http://download.osgeo.org/webdav/geotools</url>
+			<url>https://repo.osgeo.org/repository/release</url>
 		</repository>
 
 		<repository>
 			<!-- Required for MATSim snaphots -->
 			<id>ojo-snapshots</id>
 			<url>http://oss.jfrog.org/libs-snapshot</url>
+		</repository>
+
+		<repository>
+			<id>de.topobyte</id>
+			<url>https://mvn.topobyte.de</url>
+		</repository>
+
+		<repository>
+			<id>com.slimjars.trove4j</id>
+			<url>https://mvn.slimjars.com</url>
 		</repository>
 
 	</repositories>
@@ -71,6 +81,14 @@
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>noise</artifactId>
+			<version>${matsim.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
 
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
@@ -143,14 +161,15 @@
 		<dependency>
 	    	<groupId>com.github.matsim-vsp</groupId>
 	    	<artifactId>drt-speed-up</artifactId>
-	    	<version>v0.0.1</version>
+	    	<!-- for some reason jitpack does not like release v0.0.2, but is happy with the commit id of the very same release -->
+	    	<version>c6c9c51f</version>
 		</dependency>
 		
 		<dependency>
 	    	<groupId>com.github.matsim-vsp</groupId>
 	    	<artifactId>matsim-analysis</artifactId>
 	    	<!-- <version>v2.5</version> -->
-	    	<version>c7d6cc112c</version>
+	    	<version>01c3a159</version>
 		</dependency>
 
 		<dependency>
@@ -182,8 +201,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.3.2</version>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+					<source>11</source>
+					<target>11</target>
 					<showWarnings>false</showWarnings>
 					<showDeprecation>false</showDeprecation>
 					<encoding>UTF-8</encoding>
@@ -201,6 +220,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-eclipse-plugin</artifactId>
+				<version>2.4</version>
 				<configuration>
 					<downloadSources>true</downloadSources>
 					<downloadJavadocs>true</downloadJavadocs>
@@ -256,6 +276,7 @@
 			<plugin>  <!-- Create sources.jar -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
+				<version>3.2.0</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>

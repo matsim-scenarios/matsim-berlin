@@ -1,16 +1,30 @@
-package org.matsim.run.drt;
+/* *********************************************************************** *
+ * project: org.matsim.*
+ *                                                                         *
+ * *********************************************************************** *
+ *                                                                         *
+ * copyright       : (C) 2020 by the members listed in the COPYING,        *
+ *                   LICENSE and WARRANTY file.                            *
+ * email           : info at matsim dot org                                *
+ *                                                                         *
+ * *********************************************************************** *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *   See also COPYING, LICENSE and WARRANTY file                           *
+ *                                                                         *
+ * *********************************************************************** */
 
-import java.util.Map;
-import java.util.Random;
+package org.matsim.run.drt;
 
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
-import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.core.config.Config;
@@ -55,7 +69,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 			BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 			berlinCfg.setPopulationDownsampleFactor(1.0);
 						
-			DrtSpeedUpModule.adjustConfig(config);
+			DrtSpeedUpModule.addTeleportedDrtMode(config);
 
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 			
@@ -91,7 +105,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 			BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 			berlinCfg.setPopulationDownsampleFactor(0.01);
 			
-			DrtSpeedUpModule.adjustConfig(config);
+			DrtSpeedUpModule.addTeleportedDrtMode(config);
 
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 			
