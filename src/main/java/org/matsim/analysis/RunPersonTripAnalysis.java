@@ -85,28 +85,49 @@ public class RunPersonTripAnalysis {
 			
 			if (!args[11].equals("null")) modesString = args[11];
 			log.info("modes: " + modesString);
-			
+
 		} else {
 			
-			runDirectory = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/";
-			runId = "berlin-v5.4-1pct";		
+//			runDirectory = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/";
+//			runId = "berlin-v5.4-1pct";
+//			runDirectoryToCompareWith = null;
+//			runIdToCompareWith = null;
+//
+//			visualizationScriptInputDirectory = null;
+//
+//			scenarioCRS = TransformationFactory.DHDN_GK4;
+//
+//			shapeFileZones = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-bezirke/bezirke_berlin.shp";
+//			zonesCRS = TransformationFactory.DHDN_GK4;
+//			zoneId = "SCHLUESSEL";
+//
+//			homeActivityPrefix = "home";
+//			scalingFactor = 100;
+//
+//			modesString = "car,pt,bicycle,walk,ride";
+//
+//			analysisOutputDirectory = "./scenarios/berlin-v5.5-1pct/";
+
+			runDirectory = "/Users/dominik/Workspace/runs-svn/open_berlin_scenario/v5.5-bicycle/bc-23/output";
+
+			runId = "berlin-v5.5-1pct-22b";
 			runDirectoryToCompareWith = null;
 			runIdToCompareWith = null;
-			
+
 			visualizationScriptInputDirectory = null;
-			
-			scenarioCRS = TransformationFactory.DHDN_GK4;	
-			
+
+			scenarioCRS = TransformationFactory.DHDN_GK4;
+
 			shapeFileZones = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-bezirke/bezirke_berlin.shp";
 			zonesCRS = TransformationFactory.DHDN_GK4;
 			zoneId = "SCHLUESSEL";
-			
+
 			homeActivityPrefix = "home";
 			scalingFactor = 100;
-			
+
 			modesString = "car,pt,bicycle,walk,ride";
-			
-			analysisOutputDirectory = "./scenarios/berlin-v5.5-1pct/";
+
+			analysisOutputDirectory = "/Users/dominik/Workspace/runs-svn/open_berlin_scenario/v5.5-bicycle/bc-23/output/analysis";
 		}
 		
 		Scenario scenario1 = loadScenario(runDirectory, runId, null);
