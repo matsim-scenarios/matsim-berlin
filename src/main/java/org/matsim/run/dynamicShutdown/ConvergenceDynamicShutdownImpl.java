@@ -59,6 +59,9 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private static final int MODECHOICECOVERAGE_CONDITION_SMOOTHING_INTERVAL = 50 ;
 
 
+    public static final int ITERATION_TO_START_FINDING_SLOPES = 50;
+
+
     private int lastIteration;
     private double fractionOfIterationsToDisableInnovation;
     private final ControlerConfigGroup controlerConfigGroup;
@@ -75,9 +78,9 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private static final Logger log = Logger.getLogger(StrategyManager.class);
 
 
-    private static Map<String, List<Double>> slopesScore = new HashMap<>();
-    private static Map<String, List<Double>> pctChangesForMode = new HashMap<>();
-    private static Map<String, List<Double>> slopesModeChoiceCoverage = new HashMap<>();
+    private static Map<String, Map<Integer,Double>> slopesScore = new HashMap<>();
+    private static Map<String, Map<Integer,Double>> slopesMode = new HashMap<>();
+    private static Map<String, Map<Integer,Double>> slopesModeChoiceCoverage = new HashMap<>();
 
     private int itersInZoneToConverge = 50;
     private double convergenceTheshold = 0.0001 ;
@@ -154,7 +157,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             bestFitLineModeChoiceCoverage(iteration);
             for (String mode : slopesModeChoiceCoverage.keySet()) {
                 log.info("Checking mode choice coverage convergence for " + mode);
-                List<Double> slopes = slopesModeChoiceCoverage.get(mode);
+                List<Double> slopes = (List<Double>) slopesModeChoiceCoverage.get(mode).values();
                 if (didntConverge(slopes, 0.0001)) return;
             }
         }
@@ -164,7 +167,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             bestFitLineScore(iteration);
             for (String scoreItem : slopesScore.keySet()) {
                 log.info("Checking score convergence for " + scoreItem);
-                List<Double> slopes = slopesModeChoiceCoverage.get(scoreItem);
+                List<Double> slopes = (List<Double>) slopesModeChoiceCoverage.get(scoreItem).values();
                 if (didntConverge(slopes, 0.001)) return;
             }
         }
@@ -232,7 +235,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private void bestFitLineModeChoiceCoverage(int iteration) {
         Map<Integer, Map<String, Map<Integer, Double>>> modeChoiceCoverageHistory;
 
-        if (iteration < 50) {
+        if (iteration < ITERATION_TO_START_FINDING_SLOPES) {
             return;
         }
 
@@ -246,8 +249,8 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
             double slope = computeLineSlope(entry.getValue());
 
-            List<Double> slopesForMode = slopesModeChoiceCoverage.computeIfAbsent(mode, v -> new ArrayList<>());
-            slopesForMode.add(slope);
+            Map<Integer,Double> slopesForMode = slopesModeChoiceCoverage.computeIfAbsent(mode, v -> new HashMap<>());
+            slopesForMode.put(iteration,slope);
         }
 
     }
@@ -255,7 +258,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     private void bestFitLineScore(int iteration) {
 
-        if (iteration < 50) {
+        if (iteration < ITERATION_TO_START_FINDING_SLOPES) {
             return;
         }
 
@@ -265,8 +268,8 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
             double slope = computeLineSlope(entry.getValue());
 
-            List<Double> slopesForScoreItem = slopesScore.computeIfAbsent(scoreItem, v -> new ArrayList<>());
-            slopesForScoreItem.add(slope);
+            Map<Integer,Double> slopesForScoreItem = slopesScore.computeIfAbsent(scoreItem, v -> new HashMap<>());
+            slopesForScoreItem.put(iteration,slope);
         }
     }
 
@@ -308,10 +311,16 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
 
         // mode choice coverage
-        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("PercentDifferencesModeChoiceCoverage.txt"))){
+        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("SlopesModeChoiceCoverage.txt"))){
             for (String mode : slopesModeChoiceCoverage.keySet()) {
+
+                bw.write("\n Iterations ; ");
+                for (Integer it : slopesModeChoiceCoverage.get(mode).keySet()) {
+                    bw.write(it + " ; ");
+                }
+
                 bw.write("\n" + mode+" ; ");
-                for (Double pct : slopesModeChoiceCoverage.get(mode)) {
+                for (Double pct : slopesModeChoiceCoverage.get(mode).values()) {
                     bw.write(pct + " ; ");
                 }
             }
@@ -320,10 +329,16 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         }
 
         // score
-        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("PercentDifferencesScore.txt"))){
+        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("SlopesScore.txt"))){
             for (String scoreStat : slopesScore.keySet()) {
+                bw.write("\n Iterations ; ");
+                for (Integer it : slopesScore.get(scoreStat).keySet()) {
+                    bw.write(it + " ; ");
+                }
+
                 bw.write("\n"+scoreStat+" ; ");
-                for (Double pct : slopesScore.get(scoreStat)) {
+
+                for (Double pct : slopesScore.get(scoreStat).values()) {
                     bw.write(pct + " ; ");
                 }
             }
