@@ -50,6 +50,7 @@ import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
+import org.matsim.run.dynamicShutdown.ConvergenceDynamicShutdownImpl;
 import org.matsim.run.dynamicShutdown.DynamicShutdownControlerListenerImpl;
 import org.matsim.run.dynamicShutdown.ModeChoiceCoverageControlerListener;
 import org.matsim.run.dynamicShutdown.TerminateDynamically;
@@ -74,19 +75,19 @@ public final class RunBerlinScenario {
 		}
 		
 		if ( args.length==0 ) {
-			//args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
-            args = new String[] {"scenarios/berlin-v5.5-1pct/input/08-Config-2500-ZoomerSlow.xml"}  ;
+			args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
+            //args = new String[] {"scenarios/berlin-v5.5-1pct/input/08-Config-2500-ZoomerSlow.xml"}  ;
 		}
 
 		Config config = prepareConfig( args ) ;
 
 		//jr start
-//		config.plans().setInputFile("berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");
+		//config.plans().setInputFile("berlin-v5.5-0.01pct.plans_modeChoiceCoverage.xml.gz");
 		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists); //jr
 //		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.failIfDirectoryExists);
 		config.qsim().setNumberOfThreads(8);
 		config.global().setNumberOfThreads(8);
-		config.controler().setLastIteration(2500);
+		config.controler().setLastIteration(20);
 		config.controler().setWriteEventsInterval(0);
 		config.controler().setWritePlansInterval(0);
 		config.controler().setWriteSnapshotsInterval(0);
@@ -150,7 +151,7 @@ public final class RunBerlinScenario {
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
-				this.addControlerListenerBinding().to(DynamicShutdownControlerListenerImpl.class);
+				this.addControlerListenerBinding().to(ConvergenceDynamicShutdownImpl.class);
 			}
 		});
 

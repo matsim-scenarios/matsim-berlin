@@ -59,7 +59,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private static final int MODECHOICECOVERAGE_CONDITION_SMOOTHING_INTERVAL = 50 ;
 
 
-    public static final int ITERATION_TO_START_FINDING_SLOPES = 50;
+    public static final int ITERATION_TO_START_FINDING_SLOPES = 5;
 
 
     private int lastIteration;
@@ -83,7 +83,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private static Map<String, Map<Integer,Double>> slopesModeChoiceCoverage = new HashMap<>();
 
     private int itersInZoneToConverge = 50;
-    private double convergenceTheshold = 0.0001 ;
+    private double convergenceThreshold = 0.0001 ;
 
 
     @Inject
@@ -97,6 +97,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         this.controlerConfigGroup = controlerConfigGroup ;
         this.controlerIO = controlerIO ;
         this.modeStatsControlerListener = modeStatsControlerListener ;
+
     }
 
     public static int getDynamicShutdownIteration() {
