@@ -40,7 +40,7 @@ import java.util.*;
 public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, StartupListener, ShutdownListener {
 
     // Dynamic Shutdown Config Group
-    private static final int MINIMUM_ITERATION = 10000;
+    private static final int MINIMUM_ITERATION = 0; // 500
     private static final int ITERATION_TO_START_FINDING_SLOPES = 5;
     private static final int MINIMUM_WINDOW_SIZE = 50;
     private static final boolean EXPANDING_WINDOW = true;
@@ -67,7 +67,6 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
 
 
-
     private int lastIteration;
     private double fractionOfIterationsToDisableInnovation;
     private final ControlerConfigGroup controlerConfigGroup;
@@ -88,7 +87,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private static Map<String, Map<Integer,Double>> slopesMode = new HashMap<>();
     private static Map<String, Map<Integer,Double>> slopesModeChoiceCoverage = new HashMap<>();
 
-
+    private static Map<String, Map<Integer, Boolean>> xxx = new HashMap<>();
 
 
     @Inject
@@ -141,8 +140,8 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         }
 
         // jr temporary:
-        bestFitLineModeChoiceCoverage(iteration);
-        bestFitLineScore(iteration);
+//        bestFitLineModeChoiceCoverage(iteration);
+//        bestFitLineScore(iteration);
 //        pctChangeForMode(iteration);
 //
         // Check 3: checks whether the minimum iteration was reached ;
@@ -156,15 +155,23 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 //            return;
 //        }
 
+
+        Map<Integer, Boolean> xxxItBoolTOTAL = xxx.computeIfAbsent("TOTAL" , v -> new HashMap<>()); //tmp
+        xxxItBoolTOTAL.put(iteration,false); //tmp
+
+
         // Check 5: returns if the mode choice coverage criteria has not yet been met (assuming the criteria is active)
         //     step A: Add newest percent difference to the pctDifference ArrayList
         //     step B: Check Last x percent changes, to see if innovation shutdown should be initiated
         if (MODECHOICECOVERAGE_CONDITION_ACTIVE) {
             bestFitLineModeChoiceCoverage(iteration);
             for (String mode : slopesModeChoiceCoverage.keySet()) {
+                Map<Integer, Boolean> xxxItBool = xxx.computeIfAbsent("mcc_" + mode, v -> new HashMap<>()); //tmp
+                xxxItBool.put(iteration,false); //tmp
                 log.info("Checking mode choice coverage convergence for " + mode);
                 List<Double> slopes = (List<Double>) slopesModeChoiceCoverage.get(mode).values();
                 if (didntConverge(slopes, MODECHOICECOVERAGE_CONDITION_THRESHOLD)) return;
+                xxxItBool.put(iteration, true); //tmp
             }
         }
 
@@ -172,9 +179,12 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         if (SCORE_CONDITION_ACTIVE) {
             bestFitLineScore(iteration);
             for (String scoreItem : slopesScore.keySet()) {
+                Map<Integer, Boolean> xxxItBool = xxx.computeIfAbsent("score_" + scoreItem, v -> new HashMap<>()); //tmp
+                xxxItBool.put(iteration,false); //tmp
                 log.info("Checking score convergence for " + scoreItem);
                 List<Double> slopes = (List<Double>) slopesScore.get(scoreItem).values();
                 if (didntConverge(slopes, SCORE_CONDITION_THRESHOLD)) return;
+                xxxItBool.put(iteration, true); //tmp
             }
         }
 
@@ -182,14 +192,19 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         if (MODE_CONDITION_ACTIVE) {
             bestFitLineMode(iteration);
             for (String mode : slopesMode.keySet()) {
+                Map<Integer, Boolean> xxxItBool = xxx.computeIfAbsent("mode_" + mode, v -> new HashMap<>()); //tmp
+                xxxItBool.put(iteration,false); //tmp
                 log.info("Checking mode convergence for " + mode);
                 List<Double> slopes = (List<Double>) slopesModeChoiceCoverage.get(mode).values();
                 if (didntConverge(slopes, MODE_CONDITION_THRESHOLD)) return;
+                xxxItBool.put(iteration, true); //tmp
             }
         }
 
         // FINALLY: if none of the previous checks terminated the process, then dynamic shutdown can be initiated.
-        shutdownInnovation(iteration);
+        log.info("JR: At this iteration, DynamicShutdown would have been initiated"); //tmp
+        xxxItBoolTOTAL.put(iteration,true); //tmp
+//        shutdownInnovation(iteration);
     }
 
     private boolean didntConverge(List<Double> slopes, double threshold) {
@@ -235,20 +250,18 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         int n = x.size();
 
         // first pass
-        double sumx = 0.0, sumy = 0.0, sumx2 = 0.0;
+        double sumx = 0.0, sumy = 0.0;
         for (int i = 0; i < n; i++) {
             sumx  += x.get(i);
-            sumx2 += x.get(i)*x.get(i);
             sumy  += y.get(i);
         }
         double xbar = sumx / n;
         double ybar = sumy / n;
 
         // second pass: compute summary statistics
-        double xxbar = 0.0, yybar = 0.0, xybar = 0.0;
+        double xxbar = 0.0, xybar = 0.0;
         for (int i = 0; i < n; i++) {
             xxbar += (x.get(i) - xbar) * (x.get(i) - xbar);
-            yybar += (y.get(i) - ybar) * (y.get(i) - ybar);
             xybar += (x.get(i) - xbar) * (y.get(i) - ybar);
         }
         return xybar / xxbar;
@@ -363,8 +376,8 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
                 }
 
                 bw.write("\n" + mode+" ; ");
-                for (Double pct : slopesModeChoiceCoverage.get(mode).values()) {
-                    bw.write(pct + " ; ");
+                for (Double slope : slopesModeChoiceCoverage.get(mode).values()) {
+                    bw.write(slope + " ; ");
                 }
             }
         } catch (IOException e) {
@@ -381,8 +394,8 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
                 bw.write("\n"+scoreStat+" ; ");
 
-                for (Double pct : slopesScore.get(scoreStat).values()) {
-                    bw.write(pct + " ; ");
+                for (Double slope : slopesScore.get(scoreStat).values()) {
+                    bw.write(slope + " ; ");
                 }
             }
         } catch (IOException e) {
@@ -390,16 +403,37 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         }
 
         // mode
-//        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("PercentDifferencesMode.txt"))){
-//            for (String mode : pctChangesForMode.keySet()) {
-//                bw.write("\n"+mode+" ; ");
-//                for (Double pct : pctChangesForMode.get(mode)) {
-//                    bw.write(pct + " ; ");
-//                }
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("SlopesMode.txt"))){
+            for (String mode : slopesMode.keySet()) {
+                bw.write("\n Iterations ; ");
+                for (Integer it : slopesMode.get(mode).keySet()) {
+                    bw.write(it + " ; ");
+                }
+
+                bw.write("\n"+mode+" ; ");
+                for (Double slope : slopesMode.get(mode).values()) {
+                    bw.write(slope + " ; ");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("DYNAMIC_SHUTDOWN_INFO.txt"))){
+            for (String metric : xxx.keySet()) {
+                bw.write("\n Iterations ; ");
+                for (Integer it : xxx.get(metric).keySet()) {
+                    bw.write(it + " ; ");
+                }
+
+                bw.write("\n"+metric+" ; ");
+                for (Boolean bool : xxx.get(metric).values()) {
+                    bw.write(bool + " ; ");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 
