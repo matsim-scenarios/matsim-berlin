@@ -86,7 +86,7 @@ public class KNVisOutputDrtOpenBerlinScenario {
 		otfVisConfigGroup.setDrawTransitFacilities( false );
 		otfVisConfigGroup.setLinkWidth( 10.f );
 		
-		DrtSpeedUpModule.adjustConfig(config);
+		DrtSpeedUpModule.addTeleportedDrtMode(config);
 		
 		for ( final PlanCalcScoreConfigGroup.ActivityParams params : config.planCalcScore().getActivityParams() ) {
 			if ( params.getActivityType().endsWith( "interaction" ) ) {

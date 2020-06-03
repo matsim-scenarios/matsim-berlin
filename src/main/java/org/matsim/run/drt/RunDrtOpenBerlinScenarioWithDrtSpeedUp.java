@@ -51,7 +51,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 		}
 
 		Config config = RunDrtOpenBerlinScenario.prepareConfig( args , new DrtSpeedUpConfigGroup() ) ;
-		DrtSpeedUpModule.adjustConfig(config);
+		DrtSpeedUpModule.addTeleportedDrtMode(config);
 
 		//jr start
 		//
