@@ -40,9 +40,9 @@ import java.util.*;
 public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, StartupListener, ShutdownListener {
 
     // Dynamic Shutdown Config Group
-    private static final int MINIMUM_ITERATION = 0; // 500
-    private static final int ITERATION_TO_START_FINDING_SLOPES = 5;
-    private static final int MINIMUM_WINDOW_SIZE = 5;
+    private static final int MINIMUM_ITERATION = 0; // 500 TODO: Revert
+    private static final int ITERATION_TO_START_FINDING_SLOPES = 50;
+    private static final int MINIMUM_WINDOW_SIZE = 50;
     private static final boolean EXPANDING_WINDOW = true;
     private static final double EXPANDING_WINDOW_PCT_RETENTION = 0.25;
     private int ITERATIONS_IN_ZONE_TO_CONVERGE = 50;
@@ -51,7 +51,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     // Score Config Group
     private static final boolean SCORE_CONDITION_ACTIVE = true;
-    private static final double SCORE_CONDITION_THRESHOLD = 1. ;//0.001; //TODO: Change back to prev value
+    private static final double SCORE_CONDITION_THRESHOLD = 0.001;
 
 
     // Mode Convergence Config Group
@@ -73,8 +73,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private final OutputDirectoryHierarchy controlerIO;
     private Scenario scenario;
     private ScoreStats scoreStats;
-    private ModeStatsControlerListener modeStats;
-    ModeStatsControlerListener modeStatsControlerListener;
+    private ModeStatsControlerListener modeStatsControlerListener;
 
     private StrategyManager strategyManager;
     private static int dynamicShutdownIteration;
@@ -156,22 +155,24 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 //        }
 
 
-        Map<Integer, Boolean> xxxItBoolTOTAL = xxx.computeIfAbsent("TOTAL" , v -> new HashMap<>()); //tmp
-        xxxItBoolTOTAL.put(iteration,false); //tmp
+//        Map<Integer, Boolean> xxxItBoolTOTAL = xxx.computeIfAbsent("TOTAL" , v -> new HashMap<>()); //tmp
+//        xxxItBoolTOTAL.put(iteration,false); //tmp
 
 
         // Check 5: returns if the mode choice coverage criteria has not yet been met (assuming the criteria is active)
-        //     step A: Add newest percent difference to the pctDifference ArrayList
-        //     step B: Check Last x percent changes, to see if innovation shutdown should be initiated
         if (MODECHOICECOVERAGE_CONDITION_ACTIVE) {
             bestFitLineModeChoiceCoverage(iteration);
             for (String mode : slopesModeChoiceCoverage.keySet()) {
                 Map<Integer, Boolean> xxxItBool = xxx.computeIfAbsent("mcc_" + mode, v -> new HashMap<>()); //tmp
-                xxxItBool.put(iteration,false); //tmp
+
                 log.info("Checking mode choice coverage convergence for " + mode);
                 List<Double> slopes = new ArrayList<>(slopesModeChoiceCoverage.get(mode).values());
-                if (didntConverge(slopes, MODECHOICECOVERAGE_CONDITION_THRESHOLD)) return;
-                xxxItBool.put(iteration, true); //tmp
+                if (didntConverge(slopes, MODECHOICECOVERAGE_CONDITION_THRESHOLD)){
+//                    return;
+                    xxxItBool.put(iteration,false); //tmp
+                } else {
+                    xxxItBool.put(iteration, true); //tmp
+                }
             }
         }
 
@@ -180,11 +181,15 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             bestFitLineScore(iteration);
             for (String scoreItem : slopesScore.keySet()) {
                 Map<Integer, Boolean> xxxItBool = xxx.computeIfAbsent("score_" + scoreItem, v -> new HashMap<>()); //tmp
-                xxxItBool.put(iteration,false); //tmp
+
                 log.info("Checking score convergence for " + scoreItem);
                 List<Double> slopes = new ArrayList<>(slopesScore.get(scoreItem).values());
-                if (didntConverge(slopes, SCORE_CONDITION_THRESHOLD)) return;
-                xxxItBool.put(iteration, true); //tmp
+                if (didntConverge(slopes, SCORE_CONDITION_THRESHOLD)) {
+                    xxxItBool.put(iteration,false); //tmp
+//                    return;
+                } else {
+                    xxxItBool.put(iteration, true); //tmp
+                }
             }
         }
 
@@ -193,18 +198,25 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             bestFitLineMode(iteration);
             for (String mode : slopesMode.keySet()) {
                 Map<Integer, Boolean> xxxItBool = xxx.computeIfAbsent("mode_" + mode, v -> new HashMap<>()); //tmp
-                xxxItBool.put(iteration,false); //tmp
+
                 log.info("Checking mode convergence for " + mode);
                 List<Double> slopes = new ArrayList<>(slopesModeChoiceCoverage.get(mode).values());
-                if (didntConverge(slopes, MODE_CONDITION_THRESHOLD)) return;
-                xxxItBool.put(iteration, true); //tmp
+                if (didntConverge(slopes, MODE_CONDITION_THRESHOLD)) {
+                    xxxItBool.put(iteration, false); //tmp
+                    return;
+                } else {
+                    xxxItBool.put(iteration, true); //tmp
+                }
+
             }
         }
 
         // FINALLY: if none of the previous checks terminated the process, then dynamic shutdown can be initiated.
-        log.info("JR: At this iteration, DynamicShutdown would have been initiated"); //tmp
-        xxxItBoolTOTAL.put(iteration,true); //tmp
+//        log.info("JR: At this iteration, DynamicShutdown would have been initiated"); //tmp
+//        xxxItBoolTOTAL.put(iteration,true); //tmp
 //        shutdownInnovation(iteration);
+
+
     }
 
     private boolean didntConverge(List<Double> slopes, double threshold) {
