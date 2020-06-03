@@ -25,7 +25,6 @@ import org.matsim.core.utils.io.IOUtils;
 import javax.inject.Inject;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -42,24 +41,31 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     // Dynamic Shutdown Config Group
     private static final int MINIMUM_ITERATION = 10000;
+    private static final int ITERATION_TO_START_FINDING_SLOPES = 5;
+    private static final int MINIMUM_WINDOW_SIZE = 50;
+    private static final boolean EXPANDING_WINDOW = true;
+    private static final double EXPANDING_WINDOW_PCT_RETENTION = 0.25;
+    private int ITERATIONS_IN_ZONE_TO_CONVERGE = 50;
+
+
 
     // Score Config Group
     private static final boolean SCORE_CONDITION_ACTIVE = true;
-    private static final double SCORE_CONDITION_THRESHOLD = 0.5;
-    private static final int SCORE_CONDITION_SMOOTHING_INTERVAL = 50 ;
+    private static final double SCORE_CONDITION_THRESHOLD = 0.001;
+
 
     // Mode Convergence Config Group
     private static final boolean MODE_CONDITION_ACTIVE = true;
-    private static final double MODE_CONDITION_THRESHOLD = 0.0005;
-    private static final int MODE_CONDITION_SMOOTHING_INTERVAL = 50 ;
+    private static final double MODE_CONDITION_THRESHOLD = 0.00003;
+
 
     // Mode Choice Coverage Config Group
     private static final boolean MODECHOICECOVERAGE_CONDITION_ACTIVE = true;
-    private static final double MODECHOICECOVERAGE_CONDITION_THRESHOLD = 0.0005;
-    private static final int MODECHOICECOVERAGE_CONDITION_SMOOTHING_INTERVAL = 50 ;
+    private static final double MODECHOICECOVERAGE_CONDITION_THRESHOLD = 0.0001;
 
 
-    public static final int ITERATION_TO_START_FINDING_SLOPES = 5;
+
+
 
 
     private int lastIteration;
@@ -82,8 +88,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private static Map<String, Map<Integer,Double>> slopesMode = new HashMap<>();
     private static Map<String, Map<Integer,Double>> slopesModeChoiceCoverage = new HashMap<>();
 
-    private int itersInZoneToConverge = 50;
-    private double convergenceThreshold = 0.0001 ;
+
 
 
     @Inject
@@ -159,7 +164,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             for (String mode : slopesModeChoiceCoverage.keySet()) {
                 log.info("Checking mode choice coverage convergence for " + mode);
                 List<Double> slopes = (List<Double>) slopesModeChoiceCoverage.get(mode).values();
-                if (didntConverge(slopes, 0.0001)) return;
+                if (didntConverge(slopes, MODECHOICECOVERAGE_CONDITION_THRESHOLD)) return;
             }
         }
 
@@ -168,17 +173,19 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             bestFitLineScore(iteration);
             for (String scoreItem : slopesScore.keySet()) {
                 log.info("Checking score convergence for " + scoreItem);
-                List<Double> slopes = (List<Double>) slopesModeChoiceCoverage.get(scoreItem).values();
-                if (didntConverge(slopes, 0.001)) return;
+                List<Double> slopes = (List<Double>) slopesScore.get(scoreItem).values();
+                if (didntConverge(slopes, SCORE_CONDITION_THRESHOLD)) return;
             }
         }
 
-        // Mode Convergence - work in progress
+        // Mode Convergence
         if (MODE_CONDITION_ACTIVE) {
-//            pctChangeForMode(iteration);
-//            if (!checkModeCriteria(MODE_CONDITION_SMOOTHING_INTERVAL)) {
-//                return;
-//            }
+            bestFitLineMode(iteration);
+            for (String mode : slopesMode.keySet()) {
+                log.info("Checking mode convergence for " + mode);
+                List<Double> slopes = (List<Double>) slopesModeChoiceCoverage.get(mode).values();
+                if (didntConverge(slopes, MODE_CONDITION_THRESHOLD)) return;
+            }
         }
 
         // FINALLY: if none of the previous checks terminated the process, then dynamic shutdown can be initiated.
@@ -187,7 +194,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     private boolean didntConverge(List<Double> slopes, double threshold) {
 
-        int startIteration = slopes.size() - itersInZoneToConverge - 1;
+        int startIteration = slopes.size() - ITERATIONS_IN_ZONE_TO_CONVERGE - 1;
 
         if (startIteration < 0) {
             log.info("Not enough slopes computed to check for convergence");
@@ -203,33 +210,49 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     }
 
 
+
     private double computeLineSlope(Map<Integer,Double> inputMap) {
 
-        double pctConsidered = 0.25;
 
         int currentIter = Collections.max(inputMap.keySet());
-        int startIteration = (int) (1 - pctConsidered) * currentIter;
+        int startIteration = currentIter - MINIMUM_WINDOW_SIZE;
+        if (EXPANDING_WINDOW && (int) EXPANDING_WINDOW_PCT_RETENTION * currentIter > MINIMUM_WINDOW_SIZE) {
+            startIteration = (int) (1 - EXPANDING_WINDOW_PCT_RETENTION) * currentIter;
+        }
 
-        ArrayList<Integer> iters = new ArrayList<>();
-        ArrayList<Double> vals = new ArrayList<>();
+        ArrayList<Integer> x = new ArrayList<>();
+        ArrayList<Double> y = new ArrayList<>();
         for (Integer it : inputMap.keySet()) {
             if (it >= startIteration) {
-                iters.add(it);
-                vals.add(inputMap.get(it));
+                x.add(it);
+                y.add(inputMap.get(it));
             }
         }
 
-
-        int size = iters.size();
-        double[] x = new double[size];
-        double[] y = new double[size];
-
-        for (int i = 0; i < size; i++) {
-            x[i] = (double) iters.get(i);
-            y[i] = vals.get(i);
+        if (x.size() != y.size()) {
+            throw new IllegalArgumentException("array lengths are not equal");
         }
-        LinearRegression linearRegression = new LinearRegression(x, y);
-        return linearRegression.slope();
+        int n = x.size();
+
+        // first pass
+        double sumx = 0.0, sumy = 0.0, sumx2 = 0.0;
+        for (int i = 0; i < n; i++) {
+            sumx  += x.get(i);
+            sumx2 += x.get(i)*x.get(i);
+            sumy  += y.get(i);
+        }
+        double xbar = sumx / n;
+        double ybar = sumy / n;
+
+        // second pass: compute summary statistics
+        double xxbar = 0.0, yybar = 0.0, xybar = 0.0;
+        for (int i = 0; i < n; i++) {
+            xxbar += (x.get(i) - xbar) * (x.get(i) - xbar);
+            yybar += (y.get(i) - ybar) * (y.get(i) - ybar);
+            xybar += (x.get(i) - xbar) * (y.get(i) - ybar);
+        }
+        return xybar / xxbar;
+
 
     }
 
@@ -273,6 +296,25 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             slopesForScoreItem.put(iteration,slope);
         }
     }
+
+    private void bestFitLineMode(int iteration) {
+
+        if (iteration < ITERATION_TO_START_FINDING_SLOPES) {
+            return;
+        }
+
+
+        for (Map.Entry<String, Map<Integer, Double>> entry : modeStatsControlerListener.getModeHistories().entrySet()) {
+            String mode = entry.getKey();
+            log.info("Mode checked for " + mode);
+
+            double slope = computeLineSlope(entry.getValue());
+
+            Map<Integer,Double> slopesForMode = slopesMode.computeIfAbsent(mode, v -> new HashMap<>());
+            slopesForMode.put(iteration,slope);
+        }
+    }
+
 
     private void shutdownInnovation(int iteration) {
         dynamicShutdownIteration = (int) (iteration / fractionOfIterationsToDisableInnovation) + 2; // jr review
