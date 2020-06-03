@@ -87,7 +87,7 @@ public final class RunBerlinScenario {
 //		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.failIfDirectoryExists);
 		config.qsim().setNumberOfThreads(8);
 		config.global().setNumberOfThreads(8);
-		config.controler().setLastIteration(20);
+		config.controler().setLastIteration(10);
 		config.controler().setWriteEventsInterval(0);
 		config.controler().setWritePlansInterval(0);
 		config.controler().setWriteSnapshotsInterval(0);

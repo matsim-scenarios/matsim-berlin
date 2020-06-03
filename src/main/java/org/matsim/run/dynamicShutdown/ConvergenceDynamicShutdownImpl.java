@@ -42,7 +42,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     // Dynamic Shutdown Config Group
     private static final int MINIMUM_ITERATION = 0; // 500
     private static final int ITERATION_TO_START_FINDING_SLOPES = 5;
-    private static final int MINIMUM_WINDOW_SIZE = 50;
+    private static final int MINIMUM_WINDOW_SIZE = 5;
     private static final boolean EXPANDING_WINDOW = true;
     private static final double EXPANDING_WINDOW_PCT_RETENTION = 0.25;
     private int ITERATIONS_IN_ZONE_TO_CONVERGE = 50;
@@ -51,7 +51,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     // Score Config Group
     private static final boolean SCORE_CONDITION_ACTIVE = true;
-    private static final double SCORE_CONDITION_THRESHOLD = 0.001;
+    private static final double SCORE_CONDITION_THRESHOLD = 1. ;//0.001; //TODO: Change back to prev value
 
 
     // Mode Convergence Config Group
@@ -169,7 +169,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
                 Map<Integer, Boolean> xxxItBool = xxx.computeIfAbsent("mcc_" + mode, v -> new HashMap<>()); //tmp
                 xxxItBool.put(iteration,false); //tmp
                 log.info("Checking mode choice coverage convergence for " + mode);
-                List<Double> slopes = (List<Double>) slopesModeChoiceCoverage.get(mode).values();
+                List<Double> slopes = new ArrayList<>(slopesModeChoiceCoverage.get(mode).values());
                 if (didntConverge(slopes, MODECHOICECOVERAGE_CONDITION_THRESHOLD)) return;
                 xxxItBool.put(iteration, true); //tmp
             }
@@ -182,7 +182,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
                 Map<Integer, Boolean> xxxItBool = xxx.computeIfAbsent("score_" + scoreItem, v -> new HashMap<>()); //tmp
                 xxxItBool.put(iteration,false); //tmp
                 log.info("Checking score convergence for " + scoreItem);
-                List<Double> slopes = (List<Double>) slopesScore.get(scoreItem).values();
+                List<Double> slopes = new ArrayList<>(slopesScore.get(scoreItem).values());
                 if (didntConverge(slopes, SCORE_CONDITION_THRESHOLD)) return;
                 xxxItBool.put(iteration, true); //tmp
             }
@@ -195,7 +195,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
                 Map<Integer, Boolean> xxxItBool = xxx.computeIfAbsent("mode_" + mode, v -> new HashMap<>()); //tmp
                 xxxItBool.put(iteration,false); //tmp
                 log.info("Checking mode convergence for " + mode);
-                List<Double> slopes = (List<Double>) slopesModeChoiceCoverage.get(mode).values();
+                List<Double> slopes = new ArrayList<>(slopesModeChoiceCoverage.get(mode).values());
                 if (didntConverge(slopes, MODE_CONDITION_THRESHOLD)) return;
                 xxxItBool.put(iteration, true); //tmp
             }
