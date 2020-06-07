@@ -85,30 +85,21 @@ public final class RunBerlinScenarioWithAccessibilities {
 
         Config config = RunBerlinScenario.prepareConfig(args, customModulesAll);
 
-        config.controler().setOutputDirectory("../../shared-svn/projects/accessibility-berlin/output/v4/500_8h05_school_10/");
+        config.controler().setOutputDirectory("../../shared-svn/projects/accessibility-berlin/output/v4/5000_8h05_school/");
 
         File opportunitiesFile = new File("../../shared-svn/projects/accessibility-berlin/osm/berlin/amenities/2018-05-30/facilities_classified.xml");
         config.facilities().setInputFile(opportunitiesFile.getAbsolutePath());
 
-        config.transitRouter().setCacheTree(true);
-
-        config.plansCalcRoute().setInsertingAccessEgressWalk(true);
-        config.qsim().setUsingTravelTimeCheckInTeleportation(true);
-        config.qsim().setTrafficDynamics(QSimConfigGroup.TrafficDynamics.kinematicWaves);
 
         ConfigUtils.setVspDefaults(config);
 
         AccessibilityConfigGroup acg = ConfigUtils.addOrGetModule(config, AccessibilityConfigGroup.class);
         acg.setTimeOfDay((8*60.+5.)*60.);
-        acg.setEnvelope(envelope);
         acg.setAreaOfAccessibilityComputation(AccessibilityConfigGroup.AreaOfAccesssibilityComputation.fromShapeFile);
         acg.setShapeFileCellBasedAccessibility("../../shared-svn/studies/countries/de/open_berlin_scenario/input/shapefiles/2013/Berlin_DHDN_GK4.shp");
-//		acg.setAreaOfAccessibilityComputation(AccessibilityConfigGroup.AreaOfAccesssibilityComputation.fromFacilitiesFile);
-//		File measurePointsFile = new File("../../shared-svn/projects/accessibility_berlin/av/waittimes_500_access_grid_rebalancing/facilities.xml");
-//		acg.setMeasuringPointsFile(measurePointsFile.getAbsolutePath());
-        acg.setTileSize_m(500);
+        acg.setTileSize_m(5000);
         acg.setComputingAccessibilityForMode(Modes4Accessibility.freespeed, false);
-        // acg.setComputingAccessibilityForMode(Modes4Accessibility.car, true);
+        acg.setComputingAccessibilityForMode(Modes4Accessibility.car, false);
         acg.setComputingAccessibilityForMode(Modes4Accessibility.pt, true);
         acg.setOutputCrs(config.global().getCoordinateSystem());
 
