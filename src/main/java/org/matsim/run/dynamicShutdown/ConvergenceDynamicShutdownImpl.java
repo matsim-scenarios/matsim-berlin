@@ -41,11 +41,14 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     // Dynamic Shutdown Config Group
     private static final int MINIMUM_ITERATION = 0; // 500 TODO: Revert
-    private static final int ITERATION_TO_START_FINDING_SLOPES = 50;
-    private static final int MINIMUM_WINDOW_SIZE = 50;
+    private static final int ITERATION_TO_START_FINDING_SLOPES = 3;
+    private static final int MINIMUM_WINDOW_SIZE = 5;
     private static final boolean EXPANDING_WINDOW = true;
     private static final double EXPANDING_WINDOW_PCT_RETENTION = 0.25;
     private int ITERATIONS_IN_ZONE_TO_CONVERGE = 50;
+
+    private static final int minIterationForGraphics = 3;
+
 
 
 
@@ -64,9 +67,6 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private static final double MODECHOICECOVERAGE_CONDITION_THRESHOLD = 0.0001;
 
 
-
-
-
     private int lastIteration;
     private double fractionOfIterationsToDisableInnovation;
     private final ControlerConfigGroup controlerConfigGroup;
@@ -74,6 +74,8 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private Scenario scenario;
     private ScoreStats scoreStats;
     private ModeStatsControlerListener modeStatsControlerListener;
+    private static final String FILENAME_DYNAMIC_SHUTDOWN = "dynShutdown_";
+    private static String outputFileName;
 
     private StrategyManager strategyManager;
     private static int dynamicShutdownIteration;
@@ -100,6 +102,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         this.controlerConfigGroup = controlerConfigGroup ;
         this.controlerIO = controlerIO ;
         this.modeStatsControlerListener = modeStatsControlerListener ;
+        this.outputFileName = controlerIO.getOutputFilename(FILENAME_DYNAMIC_SHUTDOWN);
 
     }
 
@@ -124,6 +127,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     public void notifyIterationStarts(IterationStartsEvent iterationStartsEvent) {
         int iteration = iterationStartsEvent.getIteration();
 
+
         // Checks 1:  at least one shutdown criteria is being active. Otherwise this module is superfluous.
         if (!MODECHOICECOVERAGE_CONDITION_ACTIVE && !SCORE_CONDITION_ACTIVE && !MODE_CONDITION_ACTIVE) {
             log.warn("dynamic shutdown should not be used if no criteria are specified. " +
@@ -131,6 +135,36 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             return;
         }
 
+        // For every active condition, calculate and plot the slopes. This will later be used to check convergence
+        if (SCORE_CONDITION_ACTIVE) {
+            String metricType = "Slope";
+            Map<ScoreStatsControlerListener.ScoreItem, Map<Integer, Double>> scoreHistory = scoreStats.getScoreHistory();
+            Map<String, Map<Integer, Double>> scoreHistoryMod = new HashMap<>();
+            for (ScoreStatsControlerListener.ScoreItem scoreItem : scoreHistory.keySet()) {
+                scoreHistoryMod.put(scoreItem.name(), scoreHistory.get(scoreItem));
+            }
+
+            bestFitLineGeneric(iteration, scoreHistoryMod, slopesScore, metricType);
+
+            produceDynShutdownGraphs(scoreHistoryMod,slopesScore,metricType, SCORE_CONDITION_THRESHOLD, iteration);
+        }
+
+        if (MODE_CONDITION_ACTIVE) {
+            String metricType = "Mode";
+            Map<String, Map<Integer, Double>> modeHistories = modeStatsControlerListener.getModeHistories();
+            bestFitLineGeneric(iteration, modeHistories, slopesMode, metricType);
+            produceDynShutdownGraphs(modeHistories, slopesMode, metricType, MODE_CONDITION_THRESHOLD, iteration);
+
+        }
+
+        if (MODECHOICECOVERAGE_CONDITION_ACTIVE) {
+            String metricType = "Mode Choice Coverage";
+            int mCCLimit = 1;
+            Map<String, Map<Integer, Double>> mCCHistory = ModeChoiceCoverageControlerListener.getModeHistory().get(mCCLimit);
+            bestFitLineGeneric(iteration, mCCHistory, slopesModeChoiceCoverage, metricType);
+            produceDynShutdownGraphs(mCCHistory,slopesModeChoiceCoverage, metricType,MODECHOICECOVERAGE_CONDITION_THRESHOLD,iteration);
+
+        }
 
         // Check 2: checks whether dynamic shutdown was already initiated.
         if (dynamicShutdownInitiated) {
@@ -138,11 +172,6 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             return;
         }
 
-        // jr temporary:
-//        bestFitLineModeChoiceCoverage(iteration);
-//        bestFitLineScore(iteration);
-//        pctChangeForMode(iteration);
-//
         // Check 3: checks whether the minimum iteration was reached ;
         if (iteration < MINIMUM_ITERATION) {
             return ;
@@ -155,13 +184,10 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 //        }
 
 
-//        Map<Integer, Boolean> xxxItBoolTOTAL = xxx.computeIfAbsent("TOTAL" , v -> new HashMap<>()); //tmp
-//        xxxItBoolTOTAL.put(iteration,false); //tmp
-
 
         // Check 5: returns if the mode choice coverage criteria has not yet been met (assuming the criteria is active)
         if (MODECHOICECOVERAGE_CONDITION_ACTIVE) {
-            bestFitLineModeChoiceCoverage(iteration);
+//            bestFitLineModeChoiceCoverage(iteration);
             for (String mode : slopesModeChoiceCoverage.keySet()) {
                 Map<Integer, Boolean> xxxItBool = xxx.computeIfAbsent("mcc_" + mode, v -> new HashMap<>()); //tmp
 
@@ -178,7 +204,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
         // Check 6: returns if the score criteria has not yet been met (assuming the criteria is active)
         if (SCORE_CONDITION_ACTIVE) {
-            bestFitLineScore(iteration);
+//            bestFitLineScore(iteration);
             for (String scoreItem : slopesScore.keySet()) {
                 Map<Integer, Boolean> xxxItBool = xxx.computeIfAbsent("score_" + scoreItem, v -> new HashMap<>()); //tmp
 
@@ -195,12 +221,12 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
         // Mode Convergence
         if (MODE_CONDITION_ACTIVE) {
-            bestFitLineMode(iteration);
+//            bestFitLineMode(iteration);
             for (String mode : slopesMode.keySet()) {
                 Map<Integer, Boolean> xxxItBool = xxx.computeIfAbsent("mode_" + mode, v -> new HashMap<>()); //tmp
 
                 log.info("Checking mode convergence for " + mode);
-                List<Double> slopes = new ArrayList<>(slopesModeChoiceCoverage.get(mode).values());
+                List<Double> slopes = new ArrayList<>(slopesMode.get(mode).values());
                 if (didntConverge(slopes, MODE_CONDITION_THRESHOLD)) {
                     xxxItBool.put(iteration, false); //tmp
                     return;
@@ -281,63 +307,50 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     }
 
-    private void bestFitLineModeChoiceCoverage(int iteration) {
-        Map<Integer, Map<String, Map<Integer, Double>>> modeChoiceCoverageHistory;
+    private void bestFitLineGeneric(int iteration,
+                                    Map<String, Map<Integer, Double>> history,
+                                    Map<String, Map<Integer, Double>> slopes,
+                                    String metricType) {
 
         if (iteration < ITERATION_TO_START_FINDING_SLOPES) {
             return;
         }
 
-        modeChoiceCoverageHistory = ModeChoiceCoverageControlerListener.getModeHistory();
-
-        Integer limit = 1;
-
-        for (Map.Entry<String, Map<Integer, Double>> entry : modeChoiceCoverageHistory.get(limit).entrySet()) {
-            String mode = entry.getKey();
-            log.info("Mode choice coverage checked for " + mode);
+        for (Map.Entry<String, Map<Integer, Double>> entry : history.entrySet()) {
+            String metricName = entry.getKey();
+            log.info(metricType + " checked for " + metricName);
 
             double slope = computeLineSlope(entry.getValue());
 
-            Map<Integer,Double> slopesForMode = slopesModeChoiceCoverage.computeIfAbsent(mode, v -> new HashMap<>());
-            slopesForMode.put(iteration,slope);
+            Map<Integer,Double> slopesForMetric = slopes.computeIfAbsent(metricName, v -> new HashMap<>());
+            slopesForMetric.put(iteration-1,slope); // calculation for the previous iteration
         }
-
     }
 
 
-    private void bestFitLineScore(int iteration) {
+    private static void produceDynShutdownGraphs(Map<String, Map<Integer, Double>> history,
+                                                 Map<String, Map<Integer, Double>> slopes,
+                                                 String metricType,
+                                                 double convergenceThreshold,
+                                                 int iteration) {
 
-        if (iteration < ITERATION_TO_START_FINDING_SLOPES) {
+        if (iteration <= minIterationForGraphics) {
             return;
         }
 
-        for (Map.Entry<ScoreStatsControlerListener.ScoreItem, Map<Integer, Double>> entry : scoreStats.getScoreHistory().entrySet()) {
-            String scoreItem = entry.getKey().toString();
-            log.info("Score checked for " + scoreItem);
+        for (String metricName : history.keySet()) {
+            XYLineChartDualYAxis chart = new XYLineChartDualYAxis("Dynamic Shutdown for " + metricType + " : " + metricName, "iteration", metricType + " : " +metricName, "slope of " + metricName );
+            Map<Integer, Double> metric = history.get(metricName);
+            chart.addSeries(metricName, metric);
+            chart.addSeries2("d/dx(" + metricName + ")", slopes.get(metricName));
 
-            double slope = computeLineSlope(entry.getValue());
 
-            Map<Integer,Double> slopesForScoreItem = slopesScore.computeIfAbsent(scoreItem, v -> new HashMap<>());
-            slopesForScoreItem.put(iteration,slope);
-        }
-    }
+            chart.addMatsimLogo();
 
-    private void bestFitLineMode(int iteration) {
-
-        if (iteration < ITERATION_TO_START_FINDING_SLOPES) {
-            return;
+//            chart.addVerticalRange();
+            chart.saveAsPng(outputFileName + "_" + metricType + "_" + metricName + ".png", 800, 600);
         }
 
-
-        for (Map.Entry<String, Map<Integer, Double>> entry : modeStatsControlerListener.getModeHistories().entrySet()) {
-            String mode = entry.getKey();
-            log.info("Mode checked for " + mode);
-
-            double slope = computeLineSlope(entry.getValue());
-
-            Map<Integer,Double> slopesForMode = slopesMode.computeIfAbsent(mode, v -> new HashMap<>());
-            slopesForMode.put(iteration,slope);
-        }
     }
 
 
@@ -368,7 +381,6 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         log.error("Full Shutdown at iteration " + dynamicShutdownIteration);
         dynamicShutdownInitiated = true;
     }
-
 
     private boolean isInnovativeStrategy(GenericPlanStrategy<Plan, Person> strategy) {
         return !(ReplanningUtils.isOnlySelector(strategy));
@@ -447,5 +459,70 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             e.printStackTrace();
         }
     }
+
+//    private void bestFitLineModeChoiceCoverage(int iteration) {
+//        Map<Integer, Map<String, Map<Integer, Double>>> modeChoiceCoverageHistory;
+//
+//        if (iteration < ITERATION_TO_START_FINDING_SLOPES) {
+//            return;
+//        }
+//
+//        modeChoiceCoverageHistory = ModeChoiceCoverageControlerListener.getModeHistory();
+//
+//        Integer limit = 1;
+//
+//        for (Map.Entry<String, Map<Integer, Double>> entry : modeChoiceCoverageHistory.get(limit).entrySet()) {
+//            String mode = entry.getKey();
+//            log.info("Mode choice coverage checked for " + mode);
+//
+//            double slope = computeLineSlope(entry.getValue());
+//
+//            Map<Integer,Double> slopesForMode = slopesModeChoiceCoverage.computeIfAbsent(mode, v -> new HashMap<>());
+//            slopesForMode.put(iteration,slope);
+//        }
+//
+//    }
+//
+//
+//    private void bestFitLineScore(int iteration) {
+//
+//        if (iteration < ITERATION_TO_START_FINDING_SLOPES) {
+//            return;
+//        }
+//
+//        for (Map.Entry<ScoreStatsControlerListener.ScoreItem, Map<Integer, Double>> entry : scoreStats.getScoreHistory().entrySet()) {
+//            String scoreItem = entry.getKey().toString();
+//            log.info("Score checked for " + scoreItem);
+//
+//            double slope = computeLineSlope(entry.getValue());
+//
+//            Map<Integer,Double> slopesForScoreItem = slopesScore.computeIfAbsent(scoreItem, v -> new HashMap<>());
+//            slopesForScoreItem.put(iteration,slope);
+//        }
+//    }
+//
+//    private void bestFitLineMode(int iteration) {
+//
+//        if (iteration < ITERATION_TO_START_FINDING_SLOPES) {
+//            return;
+//        }
+//
+//
+//        for (Map.Entry<String, Map<Integer, Double>> entry : modeStatsControlerListener.getModeHistories().entrySet()) {
+//            String mode = entry.getKey();
+//            log.info("Mode checked for " + mode);
+//
+//            double slope = computeLineSlope(entry.getValue());
+//
+//            Map<Integer,Double> slopesForMode = slopesMode.computeIfAbsent(mode, v -> new HashMap<>());
+//            slopesForMode.put(iteration,slope);
+//        }
+//    }
+
+
+
 }
+
+
+
 
