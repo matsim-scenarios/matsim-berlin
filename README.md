@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/matsim-scenarios/matsim-berlin.svg?branch=5.5.x)](https://travis-ci.org/matsim-scenarios/matsim-berlin)
+
 # The MATSim Open Berlin Scenario
 ![Berlin MATSim network and agents)](scenarios/berlin-v5.5-10pct/visualization-berlin.png "Berlin MATSim network and agents")
 
