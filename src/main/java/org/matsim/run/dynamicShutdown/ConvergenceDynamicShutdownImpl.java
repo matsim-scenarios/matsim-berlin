@@ -41,13 +41,13 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     // Dynamic Shutdown Config Group
     private static final int MINIMUM_ITERATION = 0; // 500 TODO: Revert
-    private static final int ITERATION_TO_START_FINDING_SLOPES = 3;
-    private static final int MINIMUM_WINDOW_SIZE = 5;
+    private static final int ITERATION_TO_START_FINDING_SLOPES = 50;
+    private static final int MINIMUM_WINDOW_SIZE = 50;
     private static final boolean EXPANDING_WINDOW = true;
     private static final double EXPANDING_WINDOW_PCT_RETENTION = 0.25;
     private int ITERATIONS_IN_ZONE_TO_CONVERGE = 50;
 
-    private static final int minIterationForGraphics = 3;
+    private static final int minIterationForGraphics = 10;
 
 
 
@@ -137,7 +137,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
         // For every active condition, calculate and plot the slopes. This will later be used to check convergence
         if (SCORE_CONDITION_ACTIVE) {
-            String metricType = "Slope";
+            String metricType = "Score";
             Map<ScoreStatsControlerListener.ScoreItem, Map<Integer, Double>> scoreHistory = scoreStats.getScoreHistory();
             Map<String, Map<Integer, Double>> scoreHistoryMod = new HashMap<>();
             for (ScoreStatsControlerListener.ScoreItem scoreItem : scoreHistory.keySet()) {
@@ -268,8 +268,8 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
 
         int currentIter = Collections.max(inputMap.keySet());
-        int startIteration = currentIter - MINIMUM_WINDOW_SIZE;
-        int startIterationExpanding = (int) ((1 - EXPANDING_WINDOW_PCT_RETENTION) * currentIter);
+        int startIteration = currentIter - MINIMUM_WINDOW_SIZE; // fixed window
+        int startIterationExpanding = (int) ((1 - EXPANDING_WINDOW_PCT_RETENTION) * currentIter); // expanding window
         if (EXPANDING_WINDOW && startIterationExpanding < startIteration) {
             startIteration = startIterationExpanding;
         }
@@ -344,11 +344,9 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             Map<Integer, Double> metric = history.get(metricName);
             chart.addSeries(metricName, metric);
             chart.addSeries2("d/dx(" + metricName + ")", slopes.get(metricName));
-
-
             chart.addMatsimLogo();
+            chart.addVerticalRange(-convergenceThreshold,convergenceThreshold);
 
-//            chart.addVerticalRange();
             chart.saveAsPng(outputFileName + "_" + metricType + "_" + metricName + ".png", 800, 600);
         }
 
@@ -356,8 +354,8 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
 
     private void shutdownInnovation(int iteration) {
-        dynamicShutdownIteration = (int) (iteration / fractionOfIterationsToDisableInnovation) + 2; // jr review
-        int nextDisableInnovativeStrategiesIteration = iteration + 1; // jr review
+        dynamicShutdownIteration = (int) (iteration / fractionOfIterationsToDisableInnovation) + 2; // TODO: review
+        int nextDisableInnovativeStrategiesIteration = iteration + 1; // TODO: review
 
 
         Set<String> subpopulations = new HashSet<>();
