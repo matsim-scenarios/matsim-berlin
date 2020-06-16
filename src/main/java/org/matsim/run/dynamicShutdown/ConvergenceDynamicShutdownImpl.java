@@ -247,14 +247,14 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     private boolean didntConverge(List<Double> slopes, double threshold) {
 
-        int startIteration = slopes.size() - ITERATIONS_IN_ZONE_TO_CONVERGE - 1;
+        int startIteration = slopes.size() - ITERATIONS_IN_ZONE_TO_CONVERGE;
 
         if (startIteration < 0) {
             log.info("Not enough slopes computed to check for convergence");
             return true;
         }
 
-        for (int i = startIteration; i < slopes.size()-1; i++) {
+        for (int i = startIteration; i < slopes.size(); i++) {
             if (slopes.get(i) < -1 * threshold || slopes.get(i) > threshold) {
                 return true;
             }
