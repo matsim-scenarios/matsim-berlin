@@ -229,7 +229,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
                 List<Double> slopes = new ArrayList<>(slopesMode.get(mode).values());
                 if (didntConverge(slopes, MODE_CONDITION_THRESHOLD)) {
                     xxxItBool.put(iteration, false); //tmp
-                    return;
+//                    return;
                 } else {
                     xxxItBool.put(iteration, true); //tmp
                 }
@@ -269,8 +269,9 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
         int currentIter = Collections.max(inputMap.keySet());
         int startIteration = currentIter - MINIMUM_WINDOW_SIZE;
-        if (EXPANDING_WINDOW && (int) EXPANDING_WINDOW_PCT_RETENTION * currentIter > MINIMUM_WINDOW_SIZE) {
-            startIteration = (int) (1 - EXPANDING_WINDOW_PCT_RETENTION) * currentIter;
+        int startIterationExpanding = (int) ((1 - EXPANDING_WINDOW_PCT_RETENTION) * currentIter);
+        if (EXPANDING_WINDOW && startIterationExpanding < startIteration) {
+            startIteration = startIterationExpanding;
         }
 
         ArrayList<Integer> x = new ArrayList<>();
