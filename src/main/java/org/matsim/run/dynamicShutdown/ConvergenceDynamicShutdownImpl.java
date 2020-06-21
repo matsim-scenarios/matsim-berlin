@@ -41,10 +41,10 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     // Dynamic Shutdown Config Group
     private static final int MINIMUM_ITERATION = 0; // 500 TODO: Revert
-    private static final int ITERATION_TO_START_FINDING_SLOPES = 50;
-    private static final int MINIMUM_WINDOW_SIZE = 50;
+    private static final int ITERATION_TO_START_FINDING_SLOPES = 5;
+    private static final int MINIMUM_WINDOW_SIZE = 5;
     private static final boolean EXPANDING_WINDOW = true;
-    private static final double EXPANDING_WINDOW_PCT_RETENTION = 0.25;
+    private static final double EXPANDING_WINDOW_PCT_RETENTION = 0.5;
     private int ITERATIONS_IN_ZONE_TO_CONVERGE = 50;
 
     private static final int minIterationForGraphics = 10;
@@ -268,25 +268,35 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
 
         int currentIter = Collections.max(inputMap.keySet());
-        int startIteration = currentIter - MINIMUM_WINDOW_SIZE; // fixed window
-        int startIterationExpanding = (int) ((1 - EXPANDING_WINDOW_PCT_RETENTION) * currentIter); // expanding window
+        System.out.println("QQQ current iteration " + currentIter);
+
+        int startIteration = currentIter - MINIMUM_WINDOW_SIZE + 1; // fixed window
+        System.out.println("QQQ start iteration, fixed: " + startIteration);
+        int startIterationExpanding = (int) ((1.0 - EXPANDING_WINDOW_PCT_RETENTION) * currentIter); // expanding window
+        System.out.println("QQQ start iteration, expanding : " + startIterationExpanding);
         if (EXPANDING_WINDOW && startIterationExpanding < startIteration) {
             startIteration = startIterationExpanding;
         }
+        System.out.println("QQQ start iteration, final: " + startIteration);
 
         ArrayList<Integer> x = new ArrayList<>();
         ArrayList<Double> y = new ArrayList<>();
+
+        int tmpCount = 0;
         for (Integer it : inputMap.keySet()) {
             if (it >= startIteration) {
                 x.add(it);
                 y.add(inputMap.get(it));
+                tmpCount++;
             }
         }
+        System.out.println("QQQ iterations for slope " +tmpCount);
 
         if (x.size() != y.size()) {
             throw new IllegalArgumentException("array lengths are not equal");
         }
         int n = x.size();
+        System.out.println("QQQ n size used to find slope " + n);
 
         // first pass
         double sumx = 0.0, sumy = 0.0;
