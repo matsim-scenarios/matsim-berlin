@@ -23,9 +23,12 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
 import org.matsim.drtSpeedUp.DrtSpeedUpConfigGroup;
 import org.matsim.drtSpeedUp.DrtSpeedUpModule;
+import org.matsim.optDRT.MultiModeOptDrtConfigGroup;
+import org.matsim.optDRT.OptDrt;
 import org.matsim.run.RunBerlinScenario;
 
 /**
@@ -44,7 +47,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 			args = new String[] {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-v5.5-1pct.config.xml"}  ;
 		}
 		
-		Config config = RunDrtOpenBerlinScenario.prepareConfig( args , new DrtSpeedUpConfigGroup() ) ;
+		Config config = RunDrtOpenBerlinScenario.prepareConfig( args , new DrtSpeedUpConfigGroup(), new MultiModeOptDrtConfigGroup() ) ;
 		DrtSpeedUpModule.addTeleportedDrtMode(config);
 		
 		Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
@@ -55,6 +58,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 		Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
 		
 		controler.addOverridingModule(new DrtSpeedUpModule());
+		OptDrt.addAsOverridingModule(controler, ConfigUtils.addOrGetModule(scenario.getConfig(), MultiModeOptDrtConfigGroup.class));
 		
 		controler.run() ;
 		

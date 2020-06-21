@@ -167,6 +167,12 @@
 		
 		<dependency>
 	    	<groupId>com.github.matsim-vsp</groupId>
+	    	<artifactId>opt-drt</artifactId>
+	    	<version>v2.3</version>
+		</dependency>
+		
+		<dependency>
+	    	<groupId>com.github.matsim-vsp</groupId>
 	    	<artifactId>matsim-analysis</artifactId>
 	    	<!-- <version>v2.5</version> -->
 	    	<version>5d376aedc5</version>
