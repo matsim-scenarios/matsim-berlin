@@ -41,13 +41,13 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     // Dynamic Shutdown Config Group
     private static final int MINIMUM_ITERATION = 0; // 500 TODO: Revert
-    private static final int ITERATION_TO_START_FINDING_SLOPES = 5;
-    private static final int MINIMUM_WINDOW_SIZE = 5;
+    private static final int ITERATION_TO_START_FINDING_SLOPES = 50;
+    private static final int MINIMUM_WINDOW_SIZE = 50;
     private static final boolean EXPANDING_WINDOW = true;
-    private static final double EXPANDING_WINDOW_PCT_RETENTION = 0.5;
+    private static final double EXPANDING_WINDOW_PCT_RETENTION = 0.25;
     private int ITERATIONS_IN_ZONE_TO_CONVERGE = 50;
 
-    private static final int minIterationForGraphics = 10;
+    private static final int minIterationForGraphics = 55;
 
 
 
@@ -187,7 +187,6 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
         // Check 5: returns if the mode choice coverage criteria has not yet been met (assuming the criteria is active)
         if (MODECHOICECOVERAGE_CONDITION_ACTIVE) {
-//            bestFitLineModeChoiceCoverage(iteration);
             for (String mode : slopesModeChoiceCoverage.keySet()) {
                 Map<Integer, Boolean> xxxItBool = xxx.computeIfAbsent("mcc_" + mode, v -> new HashMap<>()); //tmp
 
@@ -204,7 +203,6 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
         // Check 6: returns if the score criteria has not yet been met (assuming the criteria is active)
         if (SCORE_CONDITION_ACTIVE) {
-//            bestFitLineScore(iteration);
             for (String scoreItem : slopesScore.keySet()) {
                 Map<Integer, Boolean> xxxItBool = xxx.computeIfAbsent("score_" + scoreItem, v -> new HashMap<>()); //tmp
 
@@ -221,7 +219,6 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
         // Mode Convergence
         if (MODE_CONDITION_ACTIVE) {
-//            bestFitLineMode(iteration);
             for (String mode : slopesMode.keySet()) {
                 Map<Integer, Boolean> xxxItBool = xxx.computeIfAbsent("mode_" + mode, v -> new HashMap<>()); //tmp
 
@@ -349,15 +346,31 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             return;
         }
 
-        for (String metricName : history.keySet()) {
-            XYLineChartDualYAxis chart = new XYLineChartDualYAxis("Dynamic Shutdown for " + metricType + " : " + metricName, "iteration", metricType + " : " +metricName, "slope of " + metricName );
-            Map<Integer, Double> metric = history.get(metricName);
-            chart.addSeries(metricName, metric);
-            chart.addSeries2("d/dx(" + metricName + ")", slopes.get(metricName));
-            chart.addMatsimLogo();
-            chart.addVerticalRange(-convergenceThreshold,convergenceThreshold);
 
-            chart.saveAsPng(outputFileName + "_" + metricType + "_" + metricName + ".png", 800, 600);
+//        if (slopes.isEmpty()) {
+//            return;
+//        }
+
+//        for (Map<Integer, Double> map : slopes.values()){
+//            if (map.values().size() == 0) {
+//                return;
+//            }
+//        }
+        for (String metricName : history.keySet()) {
+            try {
+                XYLineChartDualYAxis chart = new XYLineChartDualYAxis("Dynamic Shutdown for " + metricType + " : " + metricName, "iteration", metricType + " : " + metricName, "slope of " + metricName);
+                Map<Integer, Double> metric = history.get(metricName);
+                chart.addSeries(metricName, metric);
+
+                chart.addSeries2("d/dx(" + metricName + ")", slopes.get(metricName));
+                chart.addMatsimLogo();
+                chart.addVerticalRange(-convergenceThreshold, convergenceThreshold);
+
+
+                chart.saveAsPng(outputFileName + "_" + metricType + "_" + metricName + ".png", 800, 600);
+            } catch (NullPointerException e) {
+                log.error("Could not produce Dynamic Shutdown Graphs (probably too early)");
+            }
         }
 
     }
@@ -386,8 +399,8 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             }
         }
 
-        log.error("Innovation Shutdown at iteration " + (nextDisableInnovativeStrategiesIteration));
-        log.error("Full Shutdown at iteration " + dynamicShutdownIteration);
+        log.info("Innovation Shutdown at iteration " + (nextDisableInnovativeStrategiesIteration));
+        log.info("Full Shutdown at iteration " + dynamicShutdownIteration);
         dynamicShutdownInitiated = true;
     }
 
@@ -468,67 +481,6 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             e.printStackTrace();
         }
     }
-
-//    private void bestFitLineModeChoiceCoverage(int iteration) {
-//        Map<Integer, Map<String, Map<Integer, Double>>> modeChoiceCoverageHistory;
-//
-//        if (iteration < ITERATION_TO_START_FINDING_SLOPES) {
-//            return;
-//        }
-//
-//        modeChoiceCoverageHistory = ModeChoiceCoverageControlerListener.getModeHistory();
-//
-//        Integer limit = 1;
-//
-//        for (Map.Entry<String, Map<Integer, Double>> entry : modeChoiceCoverageHistory.get(limit).entrySet()) {
-//            String mode = entry.getKey();
-//            log.info("Mode choice coverage checked for " + mode);
-//
-//            double slope = computeLineSlope(entry.getValue());
-//
-//            Map<Integer,Double> slopesForMode = slopesModeChoiceCoverage.computeIfAbsent(mode, v -> new HashMap<>());
-//            slopesForMode.put(iteration,slope);
-//        }
-//
-//    }
-//
-//
-//    private void bestFitLineScore(int iteration) {
-//
-//        if (iteration < ITERATION_TO_START_FINDING_SLOPES) {
-//            return;
-//        }
-//
-//        for (Map.Entry<ScoreStatsControlerListener.ScoreItem, Map<Integer, Double>> entry : scoreStats.getScoreHistory().entrySet()) {
-//            String scoreItem = entry.getKey().toString();
-//            log.info("Score checked for " + scoreItem);
-//
-//            double slope = computeLineSlope(entry.getValue());
-//
-//            Map<Integer,Double> slopesForScoreItem = slopesScore.computeIfAbsent(scoreItem, v -> new HashMap<>());
-//            slopesForScoreItem.put(iteration,slope);
-//        }
-//    }
-//
-//    private void bestFitLineMode(int iteration) {
-//
-//        if (iteration < ITERATION_TO_START_FINDING_SLOPES) {
-//            return;
-//        }
-//
-//
-//        for (Map.Entry<String, Map<Integer, Double>> entry : modeStatsControlerListener.getModeHistories().entrySet()) {
-//            String mode = entry.getKey();
-//            log.info("Mode checked for " + mode);
-//
-//            double slope = computeLineSlope(entry.getValue());
-//
-//            Map<Integer,Double> slopesForMode = slopesMode.computeIfAbsent(mode, v -> new HashMap<>());
-//            slopesForMode.put(iteration,slope);
-//        }
-//    }
-
-
 
 }
 
