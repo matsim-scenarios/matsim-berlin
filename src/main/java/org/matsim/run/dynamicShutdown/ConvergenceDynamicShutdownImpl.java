@@ -52,8 +52,6 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private static final int minIterationForGraphics = 5;
 
 
-
-
     // Score Config Group
     private static final boolean SCORE_CONDITION_ACTIVE = true;
     private static final double SCORE_THRESHOLD = 0.001;
@@ -204,11 +202,13 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             }
 
             for (String mode : slopesModeChoiceCoverage.keySet()) {
-                log.info("Checking mode choice coverage convergence for " + mode);
+
                 List<Double> slopes = new ArrayList<>(slopesModeChoiceCoverage.get(mode).values());
                 if (didntConverge(slopes, MODECHOICECOVERAGE_THRESHOLD)){
+                    log.info("mode choice coverage - " + mode + " = NOT converged");
                     return;
                 }
+                log.info("mode choice coverage - " + mode + " = converged");
             }
         }
 
@@ -223,8 +223,10 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
                 log.info("Checking score convergence for " + scoreItem);
                 List<Double> slopes = new ArrayList<>(slopesScore.get(scoreItem).values());
                 if (didntConverge(slopes, SCORE_THRESHOLD)) {
+                    log.info("score - " + scoreItem + " = NOT converged");
                     return;
                 }
+                log.info("score - " + scoreItem + " = converged");
             }
         }
 
@@ -239,8 +241,10 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
                 log.info("Checking mode convergence for " + mode);
                 List<Double> slopes = new ArrayList<>(slopesMode.get(mode).values());
                 if (didntConverge(slopes, MODE_THRESHOLD)) {
+                    log.info("mode - " + mode + " = NOT converged");
                     return;
                 }
+                log.info("mode - " + mode + " = converged");
             }
         }
 
