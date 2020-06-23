@@ -37,17 +37,19 @@ import java.util.*;
  * @author jakobrehmann
  */
 
-public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, StartupListener, ShutdownListener, DynamicShutdownControlerListener {
+// TODO: How should I deal with an interface & static methods?
+
+public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, StartupListener, ShutdownListener {
 
     // Dynamic Shutdown Config Group
     private static final int MINIMUM_ITERATION = 0; // 500 TODO: Revert
-    private static final int ITERATION_TO_START_FINDING_SLOPES = 50;
-    private static final int MINIMUM_WINDOW_SIZE = 50;
+    private static final int ITERATION_TO_START_FINDING_SLOPES = 3;
+    private static final int MINIMUM_WINDOW_SIZE = 3;
     private static final boolean EXPANDING_WINDOW = true;
     private static final double EXPANDING_WINDOW_PCT_RETENTION = 0.25;
     private static final int ITERATIONS_IN_ZONE_TO_CONVERGE = 50;
 
-    private static final int minIterationForGraphics = 55;
+    private static final int minIterationForGraphics = 5;
 
 
 
@@ -113,11 +115,11 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     }
 
-    public int getDynamicShutdownIteration() {
+    public static int getDynamicShutdownIteration() {
         return dynamicShutdownIteration;
     }
 
-    public boolean isDynamicShutdownInitiated() {
+    public static boolean isDynamicShutdownInitiated() {
         return dynamicShutdownInitiated;
     }
 

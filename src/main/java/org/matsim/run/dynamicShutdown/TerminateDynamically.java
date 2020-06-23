@@ -44,8 +44,10 @@ public class TerminateDynamically implements TerminationCriterion {
 
 	@Override
 	public boolean continueIterations(int iteration) {
-		if (DynamicShutdownControlerListenerImpl.isDynamicShutdownInitiated()) {
-			int lastIterationDynamic = DynamicShutdownControlerListenerImpl.getDynamicShutdownIteration();
+		System.out.println("*********** Terminator, initated: " + ConvergenceDynamicShutdownImpl.isDynamicShutdownInitiated());
+		System.out.println("*********** Terminator, end iteration: " + ConvergenceDynamicShutdownImpl.getDynamicShutdownIteration());
+		if (ConvergenceDynamicShutdownImpl.isDynamicShutdownInitiated()) {
+			int lastIterationDynamic = ConvergenceDynamicShutdownImpl.getDynamicShutdownIteration();
 			return (iteration <= lastIteration && iteration <= lastIterationDynamic);
 		}
 
