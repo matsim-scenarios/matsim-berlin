@@ -142,6 +142,13 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             return;
         }
 
+
+
+        // If we cannot start finding slopes, then we shouldn't do anything further.
+        if (iteration < ITERATION_TO_START_FINDING_SLOPES) {
+            return;
+        }
+
         // For every active condition, calculate and plot the slopes. This will later be used to check convergence
         if (SCORE_CONDITION_ACTIVE) {
             String metricType = "Score";
@@ -191,6 +198,11 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
         // Check if mode choice coverage has converged
         if (MODECHOICECOVERAGE_CONDITION_ACTIVE) {
+
+            if (slopesModeChoiceCoverage.isEmpty()) {
+                return;
+            }
+
             for (String mode : slopesModeChoiceCoverage.keySet()) {
                 log.info("Checking mode choice coverage convergence for " + mode);
                 List<Double> slopes = new ArrayList<>(slopesModeChoiceCoverage.get(mode).values());
@@ -202,6 +214,11 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
         // Check if score has converged
         if (SCORE_CONDITION_ACTIVE) {
+
+            if (slopesScore.isEmpty()) {
+                return;
+            }
+
             for (String scoreItem : slopesScore.keySet()) {
                 log.info("Checking score convergence for " + scoreItem);
                 List<Double> slopes = new ArrayList<>(slopesScore.get(scoreItem).values());
@@ -213,6 +230,11 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
         // Mode Convergence
         if (MODE_CONDITION_ACTIVE) {
+
+            if (slopesMode.isEmpty()) {
+                return;
+            }
+
             for (String mode : slopesMode.keySet()) {
                 log.info("Checking mode convergence for " + mode);
                 List<Double> slopes = new ArrayList<>(slopesMode.get(mode).values());
@@ -305,10 +327,6 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
                                     Map<String, Map<Integer, Double>> slopes,
                                     List<String> metricsToInclude,
                                     String metricType) {
-
-        if (iteration < ITERATION_TO_START_FINDING_SLOPES) {
-            return;
-        }
 
         for (Map.Entry<String, Map<Integer, Double>> entry : history.entrySet()) {
 
