@@ -23,6 +23,7 @@ env:
     - TEST=ChangeSingleTripModeAndRoutePlanRouterTest
     - TEST=RandomSingleTripPlanRouterTest
     - TEST=BerlinRaptorIntermodalAccessEgressTest
+    - TEST=RunDrtOpenBerlinScenarioWithPtRoutingModesTest
     - TEST=RunBerlinScenarioSingleTripStrategiesTest
 script:
   - mvn -Dtest=${TEST} test --batch-mode -Dmatsim.preferLocalDtds=true -Dmaven.javadoc.skip -e
