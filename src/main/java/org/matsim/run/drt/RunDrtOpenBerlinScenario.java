@@ -133,7 +133,10 @@ public final class RunDrtOpenBerlinScenario {
 			
 			String drtServiceAreaShapeFile = drtCfg.getDrtServiceAreaShapeFile();
 			if (drtServiceAreaShapeFile != null && !drtServiceAreaShapeFile.equals("") && !drtServiceAreaShapeFile.equals("null")) {
-				addDRTmode(scenario, drtCfg.getMode(), drtServiceAreaShapeFile);
+				
+				// I don't think we have to add the drt mode the allowed modes ihab June '20
+//				addDRTmode(scenario, drtCfg.getMode(), drtServiceAreaShapeFile);
+				
 				tagTransitStopsInServiceArea(scenario.getTransitSchedule(), 
 						DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_ATTRIBUTE, DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_VALUE, 
 						drtServiceAreaShapeFile,

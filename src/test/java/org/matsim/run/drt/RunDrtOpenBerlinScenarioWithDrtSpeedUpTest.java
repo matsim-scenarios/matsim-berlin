@@ -69,7 +69,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 			BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 			berlinCfg.setPopulationDownsampleFactor(1.0);
 						
-			DrtSpeedUpModule.adjustConfig(config);
+			DrtSpeedUpModule.addTeleportedDrtMode(config);
 
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 			
@@ -105,7 +105,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 			BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 			berlinCfg.setPopulationDownsampleFactor(0.01);
 			
-			DrtSpeedUpModule.adjustConfig(config);
+			DrtSpeedUpModule.addTeleportedDrtMode(config);
 
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 			
