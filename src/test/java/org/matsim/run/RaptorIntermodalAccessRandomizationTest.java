@@ -239,8 +239,8 @@ public class RaptorIntermodalAccessRandomizationTest {
          * but for agent1 we deduct 250s travel time -> weirdWalk = -0.65 + 0.25 utils = -0.4 -> better.
          * Agent2 unchanged -0.65
          */
-        Assert.assertEquals(WEIRD_WALK, ((Leg) agent1.getSelectedPlan().getPlanElements().get(8)).getMode());
-        Assert.assertEquals(TransportMode.walk, ((Leg) agent2.getSelectedPlan().getPlanElements().get(8)).getMode());
+        Assert.assertEquals(WEIRD_WALK, ((Leg) agent1.getSelectedPlan().getPlanElements().get(7)).getMode());
+        Assert.assertEquals(TransportMode.walk, ((Leg) agent2.getSelectedPlan().getPlanElements().get(7)).getMode());
     }
 
     private void createAndAddPlan(PopulationFactory pf, Person agent, Id<ActivityFacility> homeFacilityId, Id<ActivityFacility> workFacilityId) {
