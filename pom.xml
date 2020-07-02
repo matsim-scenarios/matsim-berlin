@@ -162,7 +162,7 @@
 	    	<groupId>com.github.matsim-vsp</groupId>
 	    	<artifactId>drt-speed-up</artifactId>
 	    	<!-- for some reason jitpack does not like release v0.0.2, but is happy with the commit id of the very same release -->
-	    	<version>efc228074e</version>
+	    	<version>d07153ce85</version>
 		</dependency>
 		
 		<dependency>
