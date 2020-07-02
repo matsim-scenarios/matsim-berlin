@@ -105,10 +105,11 @@ public class DrtVehicleCreator {
 		int seats = 4;
 		
 		DrtVehicleCreator tvc = new DrtVehicleCreator(networkFile, drtServiceAreaShapeFile, ct);
-		tvc.setLinkWeightsByActivities(populationFile, facilitiesFile);
-		tvc.setWeightsToSquareRoot();
+//		tvc.setLinkWeightsByActivities(populationFile, facilitiesFile);
+//		tvc.setWeightsToSquareRoot();
 		for (int numberOfVehicles: numbersOfVehicles) {
-			tvc.createVehiclesByWeightedDraw(numberOfVehicles, seats, vehiclesFilePrefix);
+//			tvc.createVehiclesByWeightedDraw(numberOfVehicles, seats, vehiclesFilePrefix);
+			tvc.createVehiclesByRandomPointInShape(numberOfVehicles, seats, vehiclesFilePrefix);
 		}
 }
 
