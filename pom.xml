@@ -128,6 +128,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.matsim</groupId>
+			<artifactId>matsim-examples</artifactId>
+			<version>${matsim.version}</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>analysis</artifactId>
 			<version>${matsim.version}</version>
