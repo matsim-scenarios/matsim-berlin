@@ -42,12 +42,15 @@ import org.matsim.core.controler.events.AfterMobsimEvent;
 import org.matsim.core.controler.events.BeforeMobsimEvent;
 import org.matsim.core.controler.listener.AfterMobsimListener;
 import org.matsim.core.controler.listener.BeforeMobsimListener;
+import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.examples.ExamplesUtils;
 import org.matsim.facilities.ActivityFacilitiesFactory;
 import org.matsim.facilities.ActivityFacility;
+import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier;
+import org.matsim.run.drt.SimpleTripChainAnalysisModeIdentifier;
 import org.matsim.run.singleTripStrategies.RandomSingleTripReRoute;
 import org.matsim.testcases.MatsimTestUtils;
 
@@ -212,6 +215,7 @@ public class RaptorIntermodalAccessRandomizationTest {
                     addPlanStrategyBinding("RandomSingleTripReRoute").toProvider(RandomSingleTripReRoute.class);
                     bind(RaptorIntermodalAccessEgress.class).to(BerlinRaptorIntermodalAccessEgress.class);
                     this.addControlerListenerBinding().toInstance( travelTimeModifier );
+                    bind(AnalysisMainModeIdentifier.class).to(SimpleTripChainAnalysisModeIdentifier.class);
                 }
             });
 
