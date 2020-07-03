@@ -26,7 +26,7 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
 import org.matsim.drtSpeedUp.DrtSpeedUpConfigGroup;
-import org.matsim.drtSpeedUp.DrtSpeedUpModule;
+import org.matsim.drtSpeedUp.MultiModeDrtSpeedUpModule;
 import org.matsim.optDRT.MultiModeOptDrtConfigGroup;
 import org.matsim.optDRT.OptDrt;
 import org.matsim.run.RunBerlinScenario;
@@ -48,7 +48,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 		}
 		
 		Config config = RunDrtOpenBerlinScenario.prepareConfig( args , new DrtSpeedUpConfigGroup(), new MultiModeOptDrtConfigGroup() ) ;
-		DrtSpeedUpModule.addTeleportedDrtMode(config);
+		MultiModeDrtSpeedUpModule.addTeleportedDrtMode(config);
 		
 		Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 		for( Person person : scenario.getPopulation().getPersons().values() ){
@@ -57,7 +57,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 		
 		Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
 		
-		controler.addOverridingModule(new DrtSpeedUpModule());
+		controler.addOverridingModule(new MultiModeDrtSpeedUpModule());
 		OptDrt.addAsOverridingModule(controler, ConfigUtils.addOrGetModule(scenario.getConfig(), MultiModeOptDrtConfigGroup.class));
 		
 		controler.run() ;
