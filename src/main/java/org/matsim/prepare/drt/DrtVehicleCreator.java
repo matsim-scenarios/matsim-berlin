@@ -85,21 +85,33 @@ public class DrtVehicleCreator {
 		String drtServiceAreaShapeFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-shp/berlin.shp";
 	    CoordinateTransformation ct = TransformationFactory.getCoordinateTransformation("EPSG:31468", "EPSG:31468");
 
-		String vehiclesFilePrefix = "berlin-drt-v5.5.drt-by-actLocations-sqrt-";
+//		String vehiclesFilePrefix = "berlin-drt-v5.5.spandau_b-drt-by-actLocations-sqrt-";
+		String vehiclesFilePrefix = "berlin-drt-v5.5.drt-by-rndLocations-";
 
 		Set<Integer> numbersOfVehicles = new HashSet<>();
 		numbersOfVehicles.add(20);
 		numbersOfVehicles.add(30);
 		numbersOfVehicles.add(50);
+		numbersOfVehicles.add(80);
 		numbersOfVehicles.add(100);
+		numbersOfVehicles.add(120);
 		numbersOfVehicles.add(150);
 		numbersOfVehicles.add(200);
+		numbersOfVehicles.add(250);
 		numbersOfVehicles.add(300);
+		numbersOfVehicles.add(400);
 		numbersOfVehicles.add(500);
+		numbersOfVehicles.add(600);
+		numbersOfVehicles.add(700);
+		numbersOfVehicles.add(800);
+		numbersOfVehicles.add(900);
 		numbersOfVehicles.add(1000);
+		numbersOfVehicles.add(1200);
 		numbersOfVehicles.add(1500);
 		numbersOfVehicles.add(2000);
+		numbersOfVehicles.add(2500);
 		numbersOfVehicles.add(3000);
+		numbersOfVehicles.add(4000);
 		numbersOfVehicles.add(5000);
 		numbersOfVehicles.add(10000);
 		int seats = 4;
@@ -189,17 +201,26 @@ public class DrtVehicleCreator {
 				filter(planElement -> planElement instanceof Activity).
 				map(planElement -> (Activity) planElement).
 				filter(activity -> activity.getType().equals(TripStructureUtils.createStageActivityType(TransportMode.pt)) || !StageActivityTypeIdentifier.isStageActivity(activity.getType())).
-				map(activity -> PopulationUtils.decideOnLinkIdForActivity(activity, scenario)).
+				filter(activity -> shpUtils.isCoordInDrtServiceAreaWithBuffer(PopulationUtils.decideOnCoordForActivity(activity, scenario), 2000.0)).
+				map(activity -> getLinkIdOnDrtNetwork(activity)).
 				collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
 		for (Map.Entry<Id<Link>, Long> entry : link2Occurences.entrySet()) {
 			// check link is in shape file
 			Link link = scenario.getNetwork().getLinks().get(entry.getKey());
 
-			if (shpUtils.isCoordInDrtServiceArea(link.getFromNode().getCoord()) && shpUtils.isCoordInDrtServiceArea(link.getToNode().getCoord()) && link.getAllowedModes().contains(drtNetworkMode)) {
+			if (shpUtils.isCoordInDrtServiceArea(link.getFromNode().getCoord()) && shpUtils.isCoordInDrtServiceArea(link.getToNode().getCoord())) {
 				links2weights.add(new Pair<>(entry.getKey(), entry.getValue().doubleValue()));
 			} // else forget that link because it's not usable for drt
 		}
+	}
+
+	private Id<Link> getLinkIdOnDrtNetwork(Activity activity) {
+		Id<Link> linkId = PopulationUtils.decideOnLinkIdForActivity(activity, scenario);
+		if (!drtNetwork.getLinks().containsKey(linkId)) {
+			linkId = NetworkUtils.getNearestLink(drtNetwork, PopulationUtils.decideOnCoordForActivity(activity, scenario)).getId();
+		}
+		return linkId;
 	}
 
 	/**
