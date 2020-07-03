@@ -57,6 +57,7 @@ import org.matsim.testcases.MatsimTestUtils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class RaptorIntermodalAccessRandomizationTest {
 
@@ -65,6 +66,8 @@ public class RaptorIntermodalAccessRandomizationTest {
 
     private static final String WEIRD_WALK = "weirdWalk";
     private static final Logger log = Logger.getLogger( RaptorIntermodalAccessRandomizationTest.class ) ;
+    Id<Person> agent1Id = Id.createPersonId("weirdWalkTravelTimeDifferentFromRoutedAgent");
+    Id<Person> agent2Id = Id.createPersonId("weirdWalkTravelTimeSameAsRoutedAgent");
 
     @Test
     public void accessModeWithDifferentTravelTimeThanRoutedTest() {
@@ -81,7 +84,9 @@ public class RaptorIntermodalAccessRandomizationTest {
 
         config.controler().setWritePlansInterval(1);
         config.controler().setWriteEventsInterval(1);
-        config.controler().setLastIteration(100);
+        config.controler().setWriteTripsInterval(1);
+        config.planCalcScore().setWriteExperiencedPlans(true);
+        config.controler().setLastIteration(50);
         config.controler().setOutputDirectory(utils.getOutputDirectory());
         config.plans().setHandlingOfPlansWithoutRoutingMode(PlansConfigGroup.HandlingOfPlansWithoutRoutingMode.useMainModeIdentifier);
 
@@ -184,12 +189,10 @@ public class RaptorIntermodalAccessRandomizationTest {
         ActivityFacility shopFacility = activityFacilitiesFactory.createActivityFacility(workFacilityId, CoordUtils.createCoord(4450,1050), Id.createLinkId("4142")); // 500m right of transit stop 3
         scenario.getActivityFacilities().addActivityFacility(shopFacility);
 
-        Id<Person> agent1Id = Id.createPersonId("weirdWalkTravelTimeDifferentFromRoutedAgent");
         Person agent1 = pf.createPerson(agent1Id);
         scenario.getPopulation().addPerson(agent1);
         createAndAddPlan(pf, agent1, homeFacilityId, workFacilityId);
 
-        Id<Person> agent2Id = Id.createPersonId("weirdWalkTravelTimeSameAsRoutedAgent");
         Person agent2 = pf.createPerson(agent2Id);
         scenario.getPopulation().addPerson(agent2);
         createAndAddPlan(pf, agent2, homeFacilityId, workFacilityId);
@@ -259,7 +262,7 @@ public class RaptorIntermodalAccessRandomizationTest {
         plan.addLeg(leg1);
 
         Activity work = pf.createActivityFromActivityFacilityId("work", workFacilityId);
-        work.setEndTime(17. * 3600.);
+        work.setEndTime(17. * 3600. - 60); // with 0 s weirdWalk time should manage to catch the 17:00:00 train (planned 250s, so would have missed)
         plan.addActivity(work);
 
         Leg leg2 = pf.createLeg(TransportMode.pt);
@@ -281,6 +284,24 @@ public class RaptorIntermodalAccessRandomizationTest {
         @Override
         public void notifyBeforeMobsim(BeforeMobsimEvent beforeMobsimEvent) {
             Population pop = beforeMobsimEvent.getServices().getScenario().getPopulation();
+
+            // log output selected mode chains for debugging
+            String outLog = "modeChoice iteration " + beforeMobsimEvent.getIteration() + ": ";
+            for (Person person: pop.getPersons().values()) {
+                Plan plan = person.getSelectedPlan();
+                List<TripStructureUtils.Trip> trips = TripStructureUtils.getTrips(plan);
+                for (int i = 0; i < trips.size(); i++) {
+                    outLog += "Agent: " + person.getId() + " tripNr " + i + " modes: " + trips.get(i).getLegsOnly().stream().map(leg -> leg.getMode() + "-").collect(Collectors.joining()) + "\t";
+                }
+            }
+            log.warn(outLog);
+
+            // keep consistent with asserts in accessModeWithDifferentTravelTimeThanRoutedTest
+            if (TransportMode.walk.equals(((Leg) pop.getPersons().get(agent1Id).getSelectedPlan().getPlanElements().get(1)).getMode()) && WEIRD_WALK.equals(((Leg) pop.getPersons().get(agent2Id).getSelectedPlan().getPlanElements().get(1)).getMode()) &&
+                    WEIRD_WALK.equals(((Leg) pop.getPersons().get(agent1Id).getSelectedPlan().getPlanElements().get(7)).getMode()) && TransportMode.walk.equals(((Leg) pop.getPersons().get(agent2Id).getSelectedPlan().getPlanElements().get(7)).getMode())) {
+                log.error("iteration " + beforeMobsimEvent.getIteration() + " correct modes assigned");
+            }
+
             for (Map.Entry<Id<Person>, Map<Integer, Double>> personId2TripChanges: person2AccessTripNr2AddedTravelTime.entrySet()) {
                 List<TripStructureUtils.Trip> trips = TripStructureUtils.getTrips(pop.getPersons().get(personId2TripChanges.getKey()).getSelectedPlan());
                 for (Map.Entry<Integer, Double> tripNr2Addition: personId2TripChanges.getValue().entrySet()) {
