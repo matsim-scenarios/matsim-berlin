@@ -23,15 +23,12 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.config.Config;
-import org.matsim.core.controler.AbstractModule;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
-import org.matsim.core.controler.OutputDirectoryHierarchy;
-import org.matsim.core.controler.TerminationCriterion;
 import org.matsim.drtSpeedUp.DrtSpeedUpConfigGroup;
-import org.matsim.drtSpeedUp.DrtSpeedUpModule;
-import org.matsim.run.dynamicShutdown.DynamicShutdownControlerListenerImpl;
-import org.matsim.run.dynamicShutdown.ModeChoiceCoverageControlerListener;
-import org.matsim.run.dynamicShutdown.TerminateDynamically;
+import org.matsim.drtSpeedUp.MultiModeDrtSpeedUpModule;
+import org.matsim.optDRT.MultiModeOptDrtConfigGroup;
+import org.matsim.optDRT.OptDrt;
 import org.matsim.run.RunBerlinScenario;
 
 /**
@@ -45,63 +42,26 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 		for (String arg : args) {
 			log.info( arg );
 		}
-//
+		
 		if ( args.length==0 ) {
 			args = new String[] {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-v5.5-1pct.config.xml"}  ;
 		}
-
-		Config config = RunDrtOpenBerlinScenario.prepareConfig( args , new DrtSpeedUpConfigGroup() ) ;
-		DrtSpeedUpModule.addTeleportedDrtMode(config);
-
-		//jr start
-		//
-//		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.failIfDirectoryExists);
-		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
-//		config.qsim().setNumberOfThreads(8);
-//		config.global().setNumberOfThreads(8);
-		config.controler().setLastIteration(1250);
-		config.controler().setWriteEventsInterval(0);
-		config.controler().setWritePlansInterval(0);
-		config.controler().setWriteSnapshotsInterval(0);
-		config.transit().setUsingTransitInMobsim(false); //jr end
-
-
-
+		
+		Config config = RunDrtOpenBerlinScenario.prepareConfig( args , new DrtSpeedUpConfigGroup(), new MultiModeOptDrtConfigGroup() ) ;
+		MultiModeDrtSpeedUpModule.addTeleportedDrtMode(config);
+		
 		Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 		for( Person person : scenario.getPopulation().getPersons().values() ){
 			person.getPlans().removeIf( (plan) -> plan!=person.getSelectedPlan() ) ;
 		}
-
+		
 		Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
-
-		controler.addOverridingModule(new DrtSpeedUpModule());
-
-		// jr start
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				this.addControlerListenerBinding().to(ModeChoiceCoverageControlerListener.class);
-			}
-		});
-
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				this.addControlerListenerBinding().to(DynamicShutdownControlerListenerImpl.class);
-			}
-		});
-
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				bind(TerminationCriterion.class).to(TerminateDynamically.class);
-			}
-		});
-
-		// jr end
-
+		
+		controler.addOverridingModule(new MultiModeDrtSpeedUpModule());
+		OptDrt.addAsOverridingModule(controler, ConfigUtils.addOrGetModule(scenario.getConfig(), MultiModeOptDrtConfigGroup.class));
+		
 		controler.run() ;
-
+		
 		RunBerlinScenario.runAnalysis(controler);
 	}
 
