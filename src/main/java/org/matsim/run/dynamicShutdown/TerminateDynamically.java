@@ -36,18 +36,20 @@ import javax.inject.Inject;
 public class TerminateDynamically implements TerminationCriterion {
 
 	private final int lastIteration;
+	ConvergenceDynamicShutdownImpl xxx;
 
 	@Inject
-	TerminateDynamically(ControlerConfigGroup controlerConfigGroup) {
+	TerminateDynamically(ControlerConfigGroup controlerConfigGroup, ConvergenceDynamicShutdownImpl xxx) {
 		this.lastIteration = controlerConfigGroup.getLastIteration();
+		this.xxx = xxx;
 	}
 
 	@Override
 	public boolean continueIterations(int iteration) {
-		System.out.println("*********** Terminator, initated: " + ConvergenceDynamicShutdownImpl.isDynamicShutdownInitiated());
-		System.out.println("*********** Terminator, end iteration: " + ConvergenceDynamicShutdownImpl.getDynamicShutdownIteration());
-		if (ConvergenceDynamicShutdownImpl.isDynamicShutdownInitiated()) {
-			int lastIterationDynamic = ConvergenceDynamicShutdownImpl.getDynamicShutdownIteration();
+		System.out.println("*********** Terminator, initated: " + xxx.isDynamicShutdownInitiated());
+		System.out.println("*********** Terminator, end iteration: " + xxx.getDynamicShutdownIteration());
+		if (xxx.isDynamicShutdownInitiated()) {
+			int lastIterationDynamic = xxx.getDynamicShutdownIteration();
 			return (iteration <= lastIteration && iteration <= lastIterationDynamic);
 		}
 
