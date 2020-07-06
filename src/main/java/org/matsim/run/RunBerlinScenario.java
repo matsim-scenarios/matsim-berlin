@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
 
+import com.google.inject.Singleton;
 import org.apache.log4j.Logger;
 import org.matsim.analysis.RunPersonTripAnalysis;
 import org.matsim.api.core.v01.Id;
@@ -37,6 +38,7 @@ import org.matsim.contrib.drt.routing.DrtRouteFactory;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.groups.PlansCalcRouteConfigGroup.AccessEgressWalkType;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
@@ -50,10 +52,7 @@ import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
-import org.matsim.run.dynamicShutdown.ConvergenceDynamicShutdownImpl;
-import org.matsim.run.dynamicShutdown.DynamicShutdownControlerListenerImpl;
-import org.matsim.run.dynamicShutdown.ModeChoiceCoverageControlerListener;
-import org.matsim.run.dynamicShutdown.TerminateDynamically;
+import org.matsim.run.dynamicShutdown.*;
 import org.matsim.run.singleTripStrategies.ChangeSingleTripModeAndRoute;
 import org.matsim.run.singleTripStrategies.RandomSingleTripReRoute;
 
@@ -151,6 +150,8 @@ public final class RunBerlinScenario {
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
+//				bind(DynamicShutdownControlerListener.class).to(ConvergenceDynamicShutdownImpl.class);
+				bind(ConvergenceDynamicShutdownImpl.class).in(Singleton.class);
 				this.addControlerListenerBinding().to(ConvergenceDynamicShutdownImpl.class);
 			}
 		});
@@ -239,7 +240,7 @@ public final class RunBerlinScenario {
 				
 		// vsp defaults
 		config.vspExperimental().setVspDefaultsCheckingLevel( VspExperimentalConfigGroup.VspDefaultsCheckingLevel.info );
-		config.plansCalcRoute().setInsertingAccessEgressWalk( true );
+		config.plansCalcRoute().setInsertingAccessEgressWalk( AccessEgressWalkType.walkToLink );
 		config.qsim().setUsingTravelTimeCheckInTeleportation( true );
 		config.qsim().setTrafficDynamics( TrafficDynamics.kinematicWaves );
 				

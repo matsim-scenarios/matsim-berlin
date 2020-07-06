@@ -8,6 +8,7 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.core.config.groups.ControlerConfigGroup;
+import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.StrategyConfigGroup;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.events.IterationStartsEvent;
@@ -21,6 +22,7 @@ import org.matsim.core.replanning.PlanStrategyImpl;
 import org.matsim.core.replanning.ReplanningUtils;
 import org.matsim.core.replanning.StrategyManager;
 import org.matsim.core.utils.io.IOUtils;
+import org.matsim.core.utils.io.UncheckedIOException;
 
 import javax.inject.Inject;
 import java.io.BufferedWriter;
@@ -37,9 +39,11 @@ import java.util.*;
  * @author jakobrehmann
  */
 
-// TODO: How should I deal with an interface & static methods?
 
 public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, StartupListener, ShutdownListener, DynamicShutdownControlerListener {
+
+
+    final private BufferedWriter slopesOut ;
 
     // Dynamic Shutdown Config Group
     private final int MINIMUM_ITERATION = 0; // 500 TODO: Revert
@@ -51,27 +55,43 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     private static final int minIterationForGraphics = 5;
 
-
     // Score Config Group
-    private static final boolean SCORE_CONDITION_ACTIVE = true;
+    enum scorePolicyOptions {
+        ON_FULL,
+        ON_EXECUTED_ONLY,
+        OFF
+    }
+
+    scorePolicyOptions scorePolicyChosen = scorePolicyOptions.ON_EXECUTED_ONLY;
+    private List<String> scoreMetricsActive = new ArrayList<>();
     private static final double SCORE_THRESHOLD = 0.001;
-    private final List<String> scoreMetrics = new ArrayList<>(Arrays.asList(
-            ScoreItem.executed.name(),
-            ScoreItem.average.name(),
-            ScoreItem.best.name(),
-            ScoreItem.worst.name()));
+
 
 
     // Mode Convergence Config Group
-    private static final boolean MODE_CONDITION_ACTIVE = true;
+
+    enum modePolicyOptions {
+        ON_FULL,
+        OFF
+    }
+
+    modePolicyOptions modePolicyChosen = modePolicyOptions.ON_FULL;
     private static final double MODE_THRESHOLD = 0.00003;
-    private final List<String> modeMetrics = new ArrayList<>(Arrays.asList()); // if empty, all will be examined
+    private final List<String> modeMetricsActive = new ArrayList(); // if empty, all will be examined
+
+
 
 
     // Mode Choice Coverage Config Group
-    private static final boolean MODECHOICECOVERAGE_CONDITION_ACTIVE = true;
+
+    enum modeCCPolicyOptions {
+        ON_FULL,
+        OFF
+    }
+
+    modeCCPolicyOptions modeCCPolicyChosen = modeCCPolicyOptions.ON_FULL;
     private static final double MODECHOICECOVERAGE_THRESHOLD = 0.0001;
-    private final List<String> modeCCMetrics = new ArrayList<>(Arrays.asList()); // if empty, all will be examined
+    private final List<String> modeCCMetricsActive = new ArrayList(); // if empty, all will be examined
 
 
     private final ControlerConfigGroup controlerConfigGroup;
@@ -79,8 +99,8 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private final Scenario scenario;
     private final ScoreStats scoreStats;
     private final ModeStatsControlerListener modeStatsControlerListener;
-    private static final String FILENAME_DYNAMIC_SHUTDOWN = "dynShutdown_";
-    private static String outputFileName;
+    private final String FILENAME_DYNAMIC_SHUTDOWN = "dynShutdown_";
+    private String outputFileName;
     private final int globalInnovationDisableAfter;
 
     private final StrategyManager strategyManager;
@@ -90,14 +110,16 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private static final Logger log = Logger.getLogger(StrategyManager.class);
 
 
-    private static final Map<String, Map<Integer,Double>> slopesScore = new HashMap<>();
+
     private static final Map<String, Map<Integer,Double>> slopesMode = new HashMap<>();
     private static final Map<String, Map<Integer,Double>> slopesModeChoiceCoverage = new HashMap<>();
+    private static final Map<String, Map<Integer,Double>> slopesScore = new HashMap<>();
+
 
 
     @Inject
     ConvergenceDynamicShutdownImpl(ControlerConfigGroup controlerConfigGroup, ScoreStats scoreStats, ModeStatsControlerListener modeStatsControlerListener, StrategyManager strategyManager,
-                                   StrategyConfigGroup strategyConfigGroup, Scenario scenario, OutputDirectoryHierarchy controlerIO) {
+                                   StrategyConfigGroup strategyConfigGroup, Scenario scenario, OutputDirectoryHierarchy controlerIO, PlanCalcScoreConfigGroup scoreConfig) {
 
         this.scenario = scenario;
         this.scoreStats = scoreStats;
@@ -106,10 +128,72 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         this.controlerConfigGroup = controlerConfigGroup ;
         this.controlerIO = controlerIO ;
         this.modeStatsControlerListener = modeStatsControlerListener ;
-        outputFileName = controlerIO.getOutputFilename(FILENAME_DYNAMIC_SHUTDOWN);
+        this.outputFileName = controlerIO.getOutputFilename(FILENAME_DYNAMIC_SHUTDOWN);
 
         this.globalInnovationDisableAfter = (int) ((controlerConfigGroup.getLastIteration() - controlerConfigGroup.getFirstIteration())
                 * strategyConfigGroup.getFractionOfIterationsToDisableInnovation() + controlerConfigGroup.getFirstIteration());
+
+
+
+        switch (scorePolicyChosen) {
+            case ON_FULL:
+                scoreMetricsActive = new ArrayList<>(Arrays.asList(
+                        ScoreItem.executed.name(),
+                        ScoreItem.average.name(),
+                        ScoreItem.best.name(),
+                        ScoreItem.worst.name()));
+                break;
+            case ON_EXECUTED_ONLY:
+                scoreMetricsActive = new ArrayList<>(Arrays.asList(
+                        ScoreItem.executed.name()));
+                break;
+            case OFF:
+                break;
+            default:
+                break;
+        }
+
+        switch (modePolicyChosen) {
+            case ON_FULL:
+                modeMetricsActive.addAll(scoreConfig.getAllModes());
+                break;
+            case OFF:
+                modeMetricsActive.clear();
+                break;
+            default:
+                modeMetricsActive.clear();
+                break;
+        }
+
+        switch (modeCCPolicyChosen) {
+            case ON_FULL:
+                modeCCMetricsActive.addAll(scoreConfig.getAllModes());
+                break;
+            case OFF:
+                modeCCMetricsActive.clear();
+                break;
+            default:
+                modeCCMetricsActive.clear();
+                break;
+        }
+
+        this.slopesOut = IOUtils.getBufferedWriter(this.outputFileName + "AllMetrics.txt");
+        try {
+            this.slopesOut.write("Iteration");
+
+            for ( String scoreType : scoreMetricsActive) {
+                this.slopesOut.write("\t" + scoreType);
+            }
+            for ( String mode : modeMetricsActive) {
+                this.slopesOut.write("\t" + mode);
+            }
+            for ( String mode : modeCCMetricsActive) {
+                this.slopesOut.write("\t" + mode);
+            }
+            this.slopesOut.write("\n"); ;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
 
     }
 
@@ -131,15 +215,19 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     @Override
     public void notifyIterationStarts(IterationStartsEvent iterationStartsEvent) {
         int iteration = iterationStartsEvent.getIteration();
-
+        int prevIteration = iteration - 1;
 
         // Checks 1:  at least one shutdown criteria is being active. Otherwise this module is superfluous.
-        if (!MODECHOICECOVERAGE_CONDITION_ACTIVE && !SCORE_CONDITION_ACTIVE && !MODE_CONDITION_ACTIVE) {
+        if (scoreMetricsActive.isEmpty() && modeMetricsActive.isEmpty() && modeCCMetricsActive.isEmpty()) {
             log.warn("dynamic shutdown should not be used if no criteria are specified. " +
                     "Therefore, the standard shutdown iteration will be used");
             return;
         }
 
+        for (String x : scoreMetricsActive) {
+            System.out.println("SCORE METRICS ACTIVE : " + x);
+
+        }
 
 
         // If we cannot start finding slopes, then we shouldn't do anything further.
@@ -148,7 +236,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         }
 
         // For every active condition, calculate and plot the slopes. This will later be used to check convergence
-        if (SCORE_CONDITION_ACTIVE) {
+        if (!scoreMetricsActive.isEmpty()) {
             String metricType = "Score";
             Map<ScoreItem, Map<Integer, Double>> scoreHistory = scoreStats.getScoreHistory();
             Map<String, Map<Integer, Double>> scoreHistoryMod = new HashMap<>();
@@ -156,23 +244,23 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
                 scoreHistoryMod.put(scoreItem.name(), scoreHistory.get(scoreItem));
             }
 
-            bestFitLineGeneric(iteration, scoreHistoryMod, slopesScore, scoreMetrics, metricType);
+            bestFitLineGeneric(iteration, scoreHistoryMod, slopesScore, scoreMetricsActive, metricType);
             produceDynShutdownGraphs(scoreHistoryMod,slopesScore,metricType, SCORE_THRESHOLD, iteration);
         }
 
-        if (MODE_CONDITION_ACTIVE) {
+        if (!modeMetricsActive.isEmpty()) {
             String metricType = "Mode";
             Map<String, Map<Integer, Double>> modeHistories = modeStatsControlerListener.getModeHistories();
-            bestFitLineGeneric(iteration, modeHistories, slopesMode, modeMetrics, metricType);
+            bestFitLineGeneric(iteration, modeHistories, slopesMode, modeMetricsActive, metricType);
             produceDynShutdownGraphs(modeHistories, slopesMode, metricType, MODE_THRESHOLD, iteration);
 
         }
 
-        if (MODECHOICECOVERAGE_CONDITION_ACTIVE) {
+        if (!modeCCMetricsActive.isEmpty()) {
             String metricType = "Mode Choice Coverage";
             int mCCLimit = 1;
             Map<String, Map<Integer, Double>> mCCHistory = ModeChoiceCoverageControlerListener.getModeHistory().get(mCCLimit);
-            bestFitLineGeneric(iteration, mCCHistory, slopesModeChoiceCoverage, modeCCMetrics, metricType);
+            bestFitLineGeneric(iteration, mCCHistory, slopesModeChoiceCoverage, modeCCMetricsActive, metricType);
             produceDynShutdownGraphs(mCCHistory,slopesModeChoiceCoverage, metricType, MODECHOICECOVERAGE_THRESHOLD,iteration);
 
         }
@@ -194,26 +282,10 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             return;
         }
 
-        // Check if mode choice coverage has converged
-        if (MODECHOICECOVERAGE_CONDITION_ACTIVE) {
 
-            if (slopesModeChoiceCoverage.isEmpty()) {
-                return;
-            }
-
-            for (String mode : slopesModeChoiceCoverage.keySet()) {
-
-                List<Double> slopes = new ArrayList<>(slopesModeChoiceCoverage.get(mode).values());
-                if (didntConverge(slopes, MODECHOICECOVERAGE_THRESHOLD)){
-                    log.info("mode choice coverage - " + mode + " = NOT converged");
-                    return;
-                }
-                log.info("mode choice coverage - " + mode + " = converged");
-            }
-        }
 
         // Check if score has converged
-        if (SCORE_CONDITION_ACTIVE) {
+        if (!scoreMetricsActive.isEmpty()) {
 
             if (slopesScore.isEmpty()) {
                 return;
@@ -231,7 +303,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         }
 
         // Mode Convergence
-        if (MODE_CONDITION_ACTIVE) {
+        if (!modeMetricsActive.isEmpty()) {
 
             if (slopesMode.isEmpty()) {
                 return;
@@ -245,6 +317,24 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
                     return;
                 }
                 log.info("mode - " + mode + " = converged");
+            }
+        }
+
+        // Check if mode choice coverage has converged
+        if (!modeCCMetricsActive.isEmpty()) {
+
+            if (slopesModeChoiceCoverage.isEmpty()) {
+                return;
+            }
+
+            for (String mode : slopesModeChoiceCoverage.keySet()) {
+
+                List<Double> slopes = new ArrayList<>(slopesModeChoiceCoverage.get(mode).values());
+                if (didntConverge(slopes, MODECHOICECOVERAGE_THRESHOLD)) {
+                    log.info("mode choice coverage - " + mode + " = NOT converged");
+                    return;
+                }
+                log.info("mode choice coverage - " + mode + " = converged");
             }
         }
 
@@ -337,6 +427,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             String metricName = entry.getKey();
 
             if (!metricsToInclude.isEmpty() &&  !metricsToInclude.contains(metricName)) {
+                log.info(metricType + " NOT checked for " + metricName);
                 continue;
             }
 
@@ -350,7 +441,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     }
 
 
-    private static void produceDynShutdownGraphs(Map<String, Map<Integer, Double>> history,
+    private void produceDynShutdownGraphs(Map<String, Map<Integer, Double>> history,
                                                  Map<String, Map<Integer, Double>> slopes,
                                                  String metricType,
                                                  double convergenceThreshold,
@@ -469,21 +560,6 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             e.printStackTrace();
         }
 
-//        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("DYNAMIC_SHUTDOWN_INFO.txt"))){
-//            for (String metric : xxx.keySet()) {
-//                bw.write("\n Iterations ; ");
-//                for (Integer it : xxx.get(metric).keySet()) {
-//                    bw.write(it + " ; ");
-//                }
-//
-//                bw.write("\n"+metric+" ; ");
-//                for (Boolean bool : xxx.get(metric).values()) {
-//                    bw.write(bool + " ; ");
-//                }
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
     }
 
 }
