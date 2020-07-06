@@ -49,7 +49,6 @@ import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.examples.ExamplesUtils;
 import org.matsim.facilities.ActivityFacilitiesFactory;
 import org.matsim.facilities.ActivityFacility;
-import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier;
 import org.matsim.run.drt.SimpleTripChainAnalysisModeIdentifier;
 import org.matsim.run.singleTripStrategies.RandomSingleTripReRoute;
 import org.matsim.testcases.MatsimTestUtils;
@@ -62,7 +61,8 @@ import java.util.stream.Collectors;
 public class RaptorIntermodalAccessRandomizationTest {
 
     public @Rule
-    MatsimTestUtils utils = new MatsimTestUtils();
+    MatsimTestUtils testUtils = new MatsimTestUtils();
+//    ExamplesUtils examplesUtils = new ExamplesUtils();
 
     private static final String WEIRD_WALK = "weirdWalk";
     private static final Logger log = Logger.getLogger( RaptorIntermodalAccessRandomizationTest.class ) ;
@@ -72,14 +72,14 @@ public class RaptorIntermodalAccessRandomizationTest {
     @Test
     public void accessModeWithDifferentTravelTimeThanRoutedTest() {
         Config config = ConfigUtils.createConfig();
-        // not working for IntelliJ stupdity
-//        config.network().setInputFile(ExamplesUtils.getTestScenarioURL("pt-tutorial").getFile() + "multimodalnetwork.xml");
-//        config.transit().setTransitScheduleFile(ExamplesUtils.getTestScenarioURL("pt-tutorial").getFile() + "transitschedule.xml");
-//        config.transit().setVehiclesFile(ExamplesUtils.getTestScenarioURL("pt-tutorial").getFile() + "transitVehicles.xml");
+//         not working for IntelliJ stupdity
+        config.network().setInputFile(ExamplesUtils.getTestScenarioURL("pt-tutorial").getFile() + "multimodalnetwork.xml");
+        config.transit().setTransitScheduleFile(ExamplesUtils.getTestScenarioURL("pt-tutorial").getFile() + "transitschedule.xml");
+        config.transit().setVehiclesFile(ExamplesUtils.getTestScenarioURL("pt-tutorial").getFile() + "transitVehicles.xml");
 
-        config.network().setInputFile("../matsim/examples/scenarios/pt-tutorial/multimodalnetwork.xml");
-        config.transit().setTransitScheduleFile("../matsim/examples/scenarios/pt-tutorial/transitschedule.xml");
-        config.transit().setVehiclesFile("../matsim/examples/scenarios/pt-tutorial/transitVehicles.xml");
+//        config.network().setInputFile("../matsim/examples/scenarios/pt-tutorial/multimodalnetwork.xml");
+//        config.transit().setTransitScheduleFile("../matsim/examples/scenarios/pt-tutorial/transitschedule.xml");
+//        config.transit().setVehiclesFile("../matsim/examples/scenarios/pt-tutorial/transitVehicles.xml");
         config.transit().setUseTransit(true);
 
         config.controler().setWritePlansInterval(1);
@@ -87,7 +87,7 @@ public class RaptorIntermodalAccessRandomizationTest {
         config.controler().setWriteTripsInterval(1);
         config.planCalcScore().setWriteExperiencedPlans(true);
         config.controler().setLastIteration(50);
-        config.controler().setOutputDirectory(utils.getOutputDirectory());
+        config.controler().setOutputDirectory(testUtils.getOutputDirectory());
         config.plans().setHandlingOfPlansWithoutRoutingMode(PlansConfigGroup.HandlingOfPlansWithoutRoutingMode.useMainModeIdentifier);
 
         PlansCalcRouteConfigGroup.ModeRoutingParams bikeRoutingParams = new PlansCalcRouteConfigGroup.ModeRoutingParams();
