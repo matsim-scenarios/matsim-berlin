@@ -298,10 +298,26 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         }
 
 
-//        // Check 4: check whether innovation shutdown has already occured
+//        // Check 4: check whether innovation shutdown has already occurred
         if (iteration >= globalInnovationDisableAfter) {
             return;
         }
+
+
+        if (!activeMetricsScore.isEmpty() &&   !scoreConverged) {
+            return;
+        }
+
+        if (!activeMetricsMode.isEmpty() && !modeConverged) {
+            return;
+        }
+
+        if (!activeMetricsModeCC.isEmpty() && !modeCCConverged) {
+            return;
+        }
+
+
+        shutdownInnovation(iteration);
 
 
 
@@ -342,27 +358,27 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 //        }
 
         // Check if mode choice coverage has converged
-        if (!activeMetricsModeCC.isEmpty()) {
-
-            if (slopesModeChoiceCoverage.isEmpty()) {
-                return;
-            }
-
-            for (String mode : slopesModeChoiceCoverage.keySet()) {
-
-                List<Double> slopes = new ArrayList<>(slopesModeChoiceCoverage.get(mode).values());
-                if (metricConverges(slopes, MODECHOICECOVERAGE_THRESHOLD)) {
-                    log.info("mode choice coverage - " + mode + " = NOT converged");
-                    return;
-                }
-                log.info("mode choice coverage - " + mode + " = converged");
-            }
-        }
+//        if (!activeMetricsModeCC.isEmpty()) {
+//
+//            if (slopesModeChoiceCoverage.isEmpty()) {
+//                return;
+//            }
+//
+//            for (String mode : slopesModeChoiceCoverage.keySet()) {
+//
+//                List<Double> slopes = new ArrayList<>(slopesModeChoiceCoverage.get(mode).values());
+//                if (metricConverges(slopes, MODECHOICECOVERAGE_THRESHOLD)) {
+//                    log.info("mode choice coverage - " + mode + " = NOT converged");
+//                    return;
+//                }
+//                log.info("mode choice coverage - " + mode + " = converged");
+//            }
+//        }
 
         // FINALLY: if none of the previous checks terminated the process, then dynamic shutdown can be initiated.
 
 
-        shutdownInnovation(iteration);
+
 
     }
 
@@ -574,58 +590,64 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     public void notifyShutdown(ShutdownEvent shutdownEvent) {
 
 
-        // mode choice coverage
-        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("SlopesModeChoiceCoverage.txt"))){
-            for (String mode : slopesModeChoiceCoverage.keySet()) {
-
-                bw.write("\n Iterations ; ");
-                for (Integer it : slopesModeChoiceCoverage.get(mode).keySet()) {
-                    bw.write(it + " ; ");
-                }
-
-                bw.write("\n" + mode+" ; ");
-                for (Double slope : slopesModeChoiceCoverage.get(mode).values()) {
-                    bw.write(slope + " ; ");
-                }
-            }
+        try {
+            this.slopesOut.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        // score
-        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("SlopesScore.txt"))){
-            for (String scoreStat : slopesScore.keySet()) {
-                bw.write("\n Iterations ; ");
-                for (Integer it : slopesScore.get(scoreStat).keySet()) {
-                    bw.write(it + " ; ");
-                }
-
-                bw.write("\n"+scoreStat+" ; ");
-
-                for (Double slope : slopesScore.get(scoreStat).values()) {
-                    bw.write(slope + " ; ");
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // mode
-        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("SlopesMode.txt"))){
-            for (String mode : slopesMode.keySet()) {
-                bw.write("\n Iterations ; ");
-                for (Integer it : slopesMode.get(mode).keySet()) {
-                    bw.write(it + " ; ");
-                }
-
-                bw.write("\n"+mode+" ; ");
-                for (Double slope : slopesMode.get(mode).values()) {
-                    bw.write(slope + " ; ");
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        // mode choice coverage
+//        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("SlopesModeChoiceCoverage.txt"))){
+//            for (String mode : slopesModeChoiceCoverage.keySet()) {
+//
+//                bw.write("\n Iterations ; ");
+//                for (Integer it : slopesModeChoiceCoverage.get(mode).keySet()) {
+//                    bw.write(it + " ; ");
+//                }
+//
+//                bw.write("\n" + mode+" ; ");
+//                for (Double slope : slopesModeChoiceCoverage.get(mode).values()) {
+//                    bw.write(slope + " ; ");
+//                }
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        // score
+//        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("SlopesScore.txt"))){
+//            for (String scoreStat : slopesScore.keySet()) {
+//                bw.write("\n Iterations ; ");
+//                for (Integer it : slopesScore.get(scoreStat).keySet()) {
+//                    bw.write(it + " ; ");
+//                }
+//
+//                bw.write("\n"+scoreStat+" ; ");
+//
+//                for (Double slope : slopesScore.get(scoreStat).values()) {
+//                    bw.write(slope + " ; ");
+//                }
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        // mode
+//        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("SlopesMode.txt"))){
+//            for (String mode : slopesMode.keySet()) {
+//                bw.write("\n Iterations ; ");
+//                for (Integer it : slopesMode.get(mode).keySet()) {
+//                    bw.write(it + " ; ");
+//                }
+//
+//                bw.write("\n"+mode+" ; ");
+//                for (Double slope : slopesMode.get(mode).values()) {
+//                    bw.write(slope + " ; ");
+//                }
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
     }
 
