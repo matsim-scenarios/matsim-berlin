@@ -42,59 +42,8 @@ import java.util.*;
 
 public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, StartupListener, ShutdownListener, DynamicShutdownControlerListener {
 
-    final private BufferedWriter slopesOut ;
-
-    // Dynamic Shutdown Config Group
-    private final int MINIMUM_ITERATION = 0; // 500 TODO: Revert
-    private final int ITERATION_TO_START_FINDING_SLOPES = 3;
-    private final int MINIMUM_WINDOW_SIZE = 3;
-    private final boolean EXPANDING_WINDOW = true;
-    private final double EXPANDING_WINDOW_PCT_RETENTION = 0.25;
-    private final int ITERATIONS_IN_ZONE_TO_CONVERGE = 50;
-
-    private static final int minIterationForGraphics = 5;
-
-    // Score Config Group
-    enum scorePolicyOptions {
-        ON_FULL,
-        ON_EXECUTED_ONLY,
-        OFF
-    }
-
-    scorePolicyOptions scorePolicyChosen = scorePolicyOptions.ON_EXECUTED_ONLY;
-    private List<String> activeMetricsScore = new ArrayList<>();
-    private static final double SCORE_THRESHOLD = 0.001;
-
-
-
-    // Mode Convergence Config Group
-
-    enum modePolicyOptions {
-        ON_FULL,
-        OFF
-    }
-
-    modePolicyOptions modePolicyChosen = modePolicyOptions.ON_FULL;
-    private static final double MODE_THRESHOLD = 0.00003;
-    private final List<String> activeMetricsMode = new ArrayList(); // if empty, all will be examined
-
-
-
-
-    // Mode Choice Coverage Config Group
-
-    enum modeCCPolicyOptions {
-        ON_FULL,
-        OFF
-    }
-
-    modeCCPolicyOptions modeCCPolicyChosen = modeCCPolicyOptions.ON_FULL;
-    private static final double MODECHOICECOVERAGE_THRESHOLD = 0.0001;
-    private final List<String> activeMetricsModeCC = new ArrayList(); // if empty, all will be examined
-
-
+    private final BufferedWriter slopesOut ;
     private final ControlerConfigGroup controlerConfigGroup;
-    private final OutputDirectoryHierarchy controlerIO;
     private final Scenario scenario;
     private final ScoreStats scoreStats;
     private final ModeStatsControlerListener modeStatsControlerListener;
@@ -118,6 +67,42 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private static final Map<String, Map<Integer,Boolean>> convergenceMode = new HashMap<>();
     private static final Map<String, Map<Integer,Boolean>> convergenceModeCC = new HashMap<>();
 
+    private List<String> activeMetricsScore = new ArrayList<>();
+    private List<String> activeMetricsMode = new ArrayList();
+    private List<String> activeMetricsModeCC = new ArrayList();
+
+    enum scorePolicyOptions { ON_FULL , ON_EXECUTED_ONLY , OFF }
+    enum modePolicyOptions { ON_FULL , OFF }
+    enum modeCCPolicyOptions { ON_FULL, OFF }
+
+    enum slopeWindowOption { FIXED , EXPANDING}
+
+
+    // U S E R   I N P U T
+
+    // Dynamic Shutdown Config Group
+    private final int MINIMUM_ITERATION = 0; // 500 TODO: Revert
+    private final int ITERATION_TO_START_FINDING_SLOPES = 3; // TODO: Revert
+
+    private final slopeWindowOption slopeWindowPolicy = slopeWindowOption.EXPANDING;
+    private final int MINIMUM_WINDOW_SIZE = 3; // TODO: Revert
+    private final double EXPANDING_WINDOW_PCT_RETENTION = 0.25;
+
+    private final int ITERATIONS_IN_ZONE_TO_CONVERGE = 1;// 50 TODO: Revert
+
+    private static final int minIterationForGraphics = 5;
+
+    // Score Parameters
+    private final scorePolicyOptions scorePolicyChosen = scorePolicyOptions.ON_EXECUTED_ONLY;
+    private static final double SCORE_THRESHOLD = 0.001;
+
+    // Mode Parameters
+    private final modePolicyOptions modePolicyChosen  = modePolicyOptions.ON_FULL;
+    private static final double MODE_THRESHOLD = 0.00003;
+
+    // Mode Choice Coverage Parameters
+    private final modeCCPolicyOptions modeCCPolicyChosen = modeCCPolicyOptions.ON_FULL;
+    private static final double MODECHOICECOVERAGE_THRESHOLD = 0.0001;
 
 
     @Inject
@@ -129,13 +114,11 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         this.strategyManager = strategyManager;
         this.strategyConfigGroup = strategyConfigGroup;
         this.controlerConfigGroup = controlerConfigGroup ;
-        this.controlerIO = controlerIO ;
         this.modeStatsControlerListener = modeStatsControlerListener ;
         this.outputFileName = controlerIO.getOutputFilename(FILENAME_DYNAMIC_SHUTDOWN);
 
         this.globalInnovationDisableAfter = (int) ((controlerConfigGroup.getLastIteration() - controlerConfigGroup.getFirstIteration())
                 * strategyConfigGroup.getFractionOfIterationsToDisableInnovation() + controlerConfigGroup.getFirstIteration());
-
 
 
         switch (scorePolicyChosen) {
@@ -201,10 +184,12 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     }
 
+    @Override
     public int getDynamicShutdownIteration() {
         return dynamicShutdownIteration;
     }
 
+    @Override
     public boolean isDynamicShutdownInitiated() {
         return dynamicShutdownInitiated;
     }
@@ -286,23 +271,18 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             writeSlopeAndConvergence(slopesModeChoiceCoverage, convergenceModeCC, activeMetricsModeCC, prevIteration);
         }
 
-        // Check 2: checks whether dynamic shutdown was already initiated.
         if (dynamicShutdownInitiated) {
             log.info("dynamic shutdown was previously initiated");
             return;
         }
 
-        // Check 3: checks whether the minimum iteration was reached ;
         if (iteration < MINIMUM_ITERATION) {
             return ;
         }
 
-
-//        // Check 4: check whether innovation shutdown has already occurred
         if (iteration >= globalInnovationDisableAfter) {
             return;
         }
-
 
         if (!activeMetricsScore.isEmpty() &&   !scoreConverged) {
             return;
@@ -316,69 +296,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             return;
         }
 
-
         shutdownInnovation(iteration);
-
-
-
-        // Check if score has converged
-//        if (!activeMetricsScore.isEmpty()) {
-//
-//            if (slopesScore.isEmpty()) {
-//                return;
-//            }
-//
-//            for (String scoreItem : slopesScore.keySet()) {
-//                log.info("Checking score convergence for " + scoreItem);
-//                List<Double> slopes = new ArrayList<>(slopesScore.get(scoreItem).values());
-//                if (metricConverges(slopes, SCORE_THRESHOLD)) {
-//                    log.info("score - " + scoreItem + " = NOT converged");
-//                    return;
-//                }
-//                log.info("score - " + scoreItem + " = converged");
-//            }
-//        }
-
-        // Mode Convergence
-//        if (!activeMetricsMode.isEmpty()) {
-//
-//            if (slopesMode.isEmpty()) {
-//                return;
-//            }
-//
-//            for (String mode : slopesMode.keySet()) {
-//                log.info("Checking mode convergence for " + mode);
-//                List<Double> slopes = new ArrayList<>(slopesMode.get(mode).values());
-//                if (metricConverges(slopes, MODE_THRESHOLD)) {
-//                    log.info("mode - " + mode + " = NOT converged");
-//                    return;
-//                }
-//                log.info("mode - " + mode + " = converged");
-//            }
-//        }
-
-        // Check if mode choice coverage has converged
-//        if (!activeMetricsModeCC.isEmpty()) {
-//
-//            if (slopesModeChoiceCoverage.isEmpty()) {
-//                return;
-//            }
-//
-//            for (String mode : slopesModeChoiceCoverage.keySet()) {
-//
-//                List<Double> slopes = new ArrayList<>(slopesModeChoiceCoverage.get(mode).values());
-//                if (metricConverges(slopes, MODECHOICECOVERAGE_THRESHOLD)) {
-//                    log.info("mode choice coverage - " + mode + " = NOT converged");
-//                    return;
-//                }
-//                log.info("mode choice coverage - " + mode + " = converged");
-//            }
-//        }
-
-        // FINALLY: if none of the previous checks terminated the process, then dynamic shutdown can be initiated.
-
-
-
 
     }
 
@@ -406,7 +324,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
                                         int prevIteration) {
 
 
-        int convergenceFailCount = 0;
+        int convergenceSuccessCnt = 0;
         for (String metric : metricsToInclude) {
             boolean metricConverges = false;
 
@@ -419,11 +337,11 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             convergencePerMetric.put(prevIteration,metricConverges);
 
             if (!metricConverges) {
-                convergenceFailCount++;
+                convergenceSuccessCnt++;
             }
         }
 
-        return convergenceFailCount <= 0;
+        return convergenceSuccessCnt == metricsToInclude.size();
     }
 
     private boolean metricConverges(List<Double> slopes, double threshold) {
@@ -472,35 +390,26 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
 
         int currentIter = Collections.max(inputMap.keySet());
-//        System.out.println("QQQ current iteration " + currentIter);
-
         int startIteration = currentIter - MINIMUM_WINDOW_SIZE + 1; // fixed window
-//        System.out.println("QQQ start iteration, fixed: " + startIteration);
         int startIterationExpanding = (int) ((1.0 - EXPANDING_WINDOW_PCT_RETENTION) * currentIter); // expanding window
-//        System.out.println("QQQ start iteration, expanding : " + startIterationExpanding);
-        if (EXPANDING_WINDOW && startIterationExpanding < startIteration) {
+        if (slopeWindowPolicy == slopeWindowOption.EXPANDING && startIterationExpanding < startIteration) { // TODO: Test whether enum works in this case
             startIteration = startIterationExpanding;
         }
-//        System.out.println("QQQ start iteration, final: " + startIteration);
 
         ArrayList<Integer> x = new ArrayList<>();
         ArrayList<Double> y = new ArrayList<>();
 
-        int tmpCount = 0;
         for (Integer it : inputMap.keySet()) {
             if (it >= startIteration) {
                 x.add(it);
                 y.add(inputMap.get(it));
-                tmpCount++;
             }
         }
-//        System.out.println("QQQ iterations for slope " +tmpCount);
 
         if (x.size() != y.size()) {
             throw new IllegalArgumentException("array lengths are not equal");
         }
         int n = x.size();
-//        System.out.println("QQQ n size used to find slope " + n);
 
         // first pass
         double sumx = 0.0, sumy = 0.0;
@@ -588,67 +497,11 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     @Override
     public void notifyShutdown(ShutdownEvent shutdownEvent) {
-
-
         try {
             this.slopesOut.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-//        // mode choice coverage
-//        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("SlopesModeChoiceCoverage.txt"))){
-//            for (String mode : slopesModeChoiceCoverage.keySet()) {
-//
-//                bw.write("\n Iterations ; ");
-//                for (Integer it : slopesModeChoiceCoverage.get(mode).keySet()) {
-//                    bw.write(it + " ; ");
-//                }
-//
-//                bw.write("\n" + mode+" ; ");
-//                for (Double slope : slopesModeChoiceCoverage.get(mode).values()) {
-//                    bw.write(slope + " ; ");
-//                }
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//        // score
-//        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("SlopesScore.txt"))){
-//            for (String scoreStat : slopesScore.keySet()) {
-//                bw.write("\n Iterations ; ");
-//                for (Integer it : slopesScore.get(scoreStat).keySet()) {
-//                    bw.write(it + " ; ");
-//                }
-//
-//                bw.write("\n"+scoreStat+" ; ");
-//
-//                for (Double slope : slopesScore.get(scoreStat).values()) {
-//                    bw.write(slope + " ; ");
-//                }
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//        // mode
-//        try (BufferedWriter bw = IOUtils.getBufferedWriter(controlerIO.getOutputFilename("SlopesMode.txt"))){
-//            for (String mode : slopesMode.keySet()) {
-//                bw.write("\n Iterations ; ");
-//                for (Integer it : slopesMode.get(mode).keySet()) {
-//                    bw.write(it + " ; ");
-//                }
-//
-//                bw.write("\n"+mode+" ; ");
-//                for (Double slope : slopesMode.get(mode).values()) {
-//                    bw.write(slope + " ; ");
-//                }
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
     }
 
 }

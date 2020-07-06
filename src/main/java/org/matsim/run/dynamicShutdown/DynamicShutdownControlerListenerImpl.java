@@ -34,6 +34,7 @@ import java.util.*;
  * @author jakobrehmann
  */
 
+@Deprecated
 public class DynamicShutdownControlerListenerImpl implements IterationStartsListener, StartupListener, ShutdownListener {
 
     // Dynamic Shutdown Config Group
