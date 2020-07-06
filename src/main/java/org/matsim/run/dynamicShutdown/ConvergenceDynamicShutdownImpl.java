@@ -42,7 +42,6 @@ import java.util.*;
 
 public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, StartupListener, ShutdownListener, DynamicShutdownControlerListener {
 
-
     final private BufferedWriter slopesOut ;
 
     // Dynamic Shutdown Config Group
@@ -182,15 +181,16 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             this.slopesOut.write("Iteration");
 
             for ( String scoreType : scoreMetricsActive) {
-                this.slopesOut.write("\t" + scoreType);
+                this.slopesOut.write("\tscore-" + scoreType+ "\tconverged");
             }
             for ( String mode : modeMetricsActive) {
-                this.slopesOut.write("\t" + mode);
+                this.slopesOut.write("\tmode-" + mode+ "\tconverged");
             }
             for ( String mode : modeCCMetricsActive) {
-                this.slopesOut.write("\t" + mode);
+                this.slopesOut.write("\tmodeCC-" + mode + "\tconverged");
             }
             this.slopesOut.write("\n"); ;
+            this.slopesOut.flush();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -246,6 +246,21 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
             bestFitLineGeneric(iteration, scoreHistoryMod, slopesScore, scoreMetricsActive, metricType);
             produceDynShutdownGraphs(scoreHistoryMod,slopesScore,metricType, SCORE_THRESHOLD, iteration);
+
+            if (slopesScore.isEmpty()) {
+                return;
+            }
+
+            for (String scoreItem : slopesScore.keySet()) {
+                log.info("Checking score convergence for " + scoreItem);
+                List<Double> slopes = new ArrayList<>(slopesScore.get(scoreItem).values());
+                boolean metricDidntConverge = didntConverge(slopes, SCORE_THRESHOLD);
+                if (metricDidntConverge) {
+                    log.info("score - " + scoreItem + " = NOT converged");
+                    return;
+                }
+                log.info("score - " + scoreItem + " = converged");
+            }
         }
 
         if (!modeMetricsActive.isEmpty()) {
@@ -285,22 +300,22 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
 
         // Check if score has converged
-        if (!scoreMetricsActive.isEmpty()) {
-
-            if (slopesScore.isEmpty()) {
-                return;
-            }
-
-            for (String scoreItem : slopesScore.keySet()) {
-                log.info("Checking score convergence for " + scoreItem);
-                List<Double> slopes = new ArrayList<>(slopesScore.get(scoreItem).values());
-                if (didntConverge(slopes, SCORE_THRESHOLD)) {
-                    log.info("score - " + scoreItem + " = NOT converged");
-                    return;
-                }
-                log.info("score - " + scoreItem + " = converged");
-            }
-        }
+//        if (!scoreMetricsActive.isEmpty()) {
+//
+//            if (slopesScore.isEmpty()) {
+//                return;
+//            }
+//
+//            for (String scoreItem : slopesScore.keySet()) {
+//                log.info("Checking score convergence for " + scoreItem);
+//                List<Double> slopes = new ArrayList<>(slopesScore.get(scoreItem).values());
+//                if (didntConverge(slopes, SCORE_THRESHOLD)) {
+//                    log.info("score - " + scoreItem + " = NOT converged");
+//                    return;
+//                }
+//                log.info("score - " + scoreItem + " = converged");
+//            }
+//        }
 
         // Mode Convergence
         if (!modeMetricsActive.isEmpty()) {
@@ -366,16 +381,16 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
 
         int currentIter = Collections.max(inputMap.keySet());
-        System.out.println("QQQ current iteration " + currentIter);
+//        System.out.println("QQQ current iteration " + currentIter);
 
         int startIteration = currentIter - MINIMUM_WINDOW_SIZE + 1; // fixed window
-        System.out.println("QQQ start iteration, fixed: " + startIteration);
+//        System.out.println("QQQ start iteration, fixed: " + startIteration);
         int startIterationExpanding = (int) ((1.0 - EXPANDING_WINDOW_PCT_RETENTION) * currentIter); // expanding window
-        System.out.println("QQQ start iteration, expanding : " + startIterationExpanding);
+//        System.out.println("QQQ start iteration, expanding : " + startIterationExpanding);
         if (EXPANDING_WINDOW && startIterationExpanding < startIteration) {
             startIteration = startIterationExpanding;
         }
-        System.out.println("QQQ start iteration, final: " + startIteration);
+//        System.out.println("QQQ start iteration, final: " + startIteration);
 
         ArrayList<Integer> x = new ArrayList<>();
         ArrayList<Double> y = new ArrayList<>();
@@ -388,13 +403,13 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
                 tmpCount++;
             }
         }
-        System.out.println("QQQ iterations for slope " +tmpCount);
+//        System.out.println("QQQ iterations for slope " +tmpCount);
 
         if (x.size() != y.size()) {
             throw new IllegalArgumentException("array lengths are not equal");
         }
         int n = x.size();
-        System.out.println("QQQ n size used to find slope " + n);
+//        System.out.println("QQQ n size used to find slope " + n);
 
         // first pass
         double sumx = 0.0, sumy = 0.0;
