@@ -46,6 +46,7 @@ import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
+import org.matsim.core.utils.io.IOUtils;
 import org.matsim.examples.ExamplesUtils;
 import org.matsim.facilities.ActivityFacilitiesFactory;
 import org.matsim.facilities.ActivityFacility;
@@ -72,14 +73,10 @@ public class RaptorIntermodalAccessRandomizationTest {
     @Test
     public void accessModeWithDifferentTravelTimeThanRoutedTest() {
         Config config = ConfigUtils.createConfig();
-//         not working for IntelliJ stupdity
-        config.network().setInputFile(ExamplesUtils.getTestScenarioURL("pt-tutorial").getFile() + "multimodalnetwork.xml");
-        config.transit().setTransitScheduleFile(ExamplesUtils.getTestScenarioURL("pt-tutorial").getFile() + "transitschedule.xml");
-        config.transit().setVehiclesFile(ExamplesUtils.getTestScenarioURL("pt-tutorial").getFile() + "transitVehicles.xml");
+        config.network().setInputFile(IOUtils.extendUrl(ExamplesUtils.getTestScenarioURL("pt-tutorial"), "multimodalnetwork.xml").toString());
+        config.transit().setTransitScheduleFile(IOUtils.extendUrl(ExamplesUtils.getTestScenarioURL("pt-tutorial"), "transitschedule.xml").toString());
+        config.transit().setVehiclesFile(IOUtils.extendUrl(ExamplesUtils.getTestScenarioURL("pt-tutorial"), "transitVehicles.xml").toString());
 
-//        config.network().setInputFile("../matsim/examples/scenarios/pt-tutorial/multimodalnetwork.xml");
-//        config.transit().setTransitScheduleFile("../matsim/examples/scenarios/pt-tutorial/transitschedule.xml");
-//        config.transit().setVehiclesFile("../matsim/examples/scenarios/pt-tutorial/transitVehicles.xml");
         config.transit().setUseTransit(true);
 
         config.controler().setWritePlansInterval(1);
