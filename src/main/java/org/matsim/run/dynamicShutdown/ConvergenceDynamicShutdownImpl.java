@@ -82,15 +82,15 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     // Dynamic Shutdown Config Group
     private final int MINIMUM_ITERATION = 0; // 500 TODO: Revert
-    private final int ITERATION_TO_START_FINDING_SLOPES = 3; // TODO: Revert
+    private final int ITERATION_TO_START_FINDING_SLOPES = 50; // TODO: Revert
 
     private final slopeWindowOption slopeWindowPolicy = slopeWindowOption.EXPANDING;
-    private final int MINIMUM_WINDOW_SIZE = 3; // TODO: Revert
+    private final int MINIMUM_WINDOW_SIZE = 50; // TODO: Revert
     private final double EXPANDING_WINDOW_PCT_RETENTION = 0.25;
 
-    private final int ITERATIONS_IN_ZONE_TO_CONVERGE = 1;// 50 TODO: Revert
+    private final int ITERATIONS_IN_ZONE_TO_CONVERGE = 50;// 50 TODO: Revert
 
-    private static final int minIterationForGraphics = 5;
+    private static final int minIterationForGraphics = 50;
 
     // Score Parameters
     private final scorePolicyOptions scorePolicyChosen = scorePolicyOptions.ON_EXECUTED_ONLY;
@@ -336,7 +336,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             Map<Integer,Boolean> convergencePerMetric = convergenceMap.computeIfAbsent(metric, v -> new HashMap<>());
             convergencePerMetric.put(prevIteration,metricConverges);
 
-            if (!metricConverges) {
+            if (metricConverges) {
                 convergenceSuccessCnt++;
             }
         }
