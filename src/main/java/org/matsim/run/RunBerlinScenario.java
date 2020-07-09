@@ -93,6 +93,9 @@ public final class RunBerlinScenario {
 		config.transit().setUsingTransitInMobsim(false);
 
 
+//		DynamicShutdownConfigGroup dynamicShutdownConfigGroup= ConfigUtils.addOrGetModule(config, DynamicShutdownConfigGroup.class);
+
+
 //        config.addModule(new DynamicShutdownConfigGroup());
 		//jr end
 

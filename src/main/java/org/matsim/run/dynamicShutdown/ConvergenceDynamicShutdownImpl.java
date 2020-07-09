@@ -50,6 +50,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private final ScoreStats scoreStats;
     private final ModeStatsControlerListener modeStatsControlerListener;
     private final ModeChoiceCoverageControlerListener modeChoiceCoverageControlerListener;
+    private final PlanCalcScoreConfigGroup scoreConfig;
     private final String FILENAME_DYNAMIC_SHUTDOWN = "dynShutdown_";
     private String outputFileName;
     private final int globalInnovationDisableAfter;
@@ -74,41 +75,8 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private List<String> activeMetricsMode = new ArrayList();
     private List<String> activeMetricsModeCC = new ArrayList();
 
-//    enum scorePolicyOptions { ON_FULL , ON_EXECUTED_ONLY , OFF }
-//    enum modePolicyOptions { ON_FULL , OFF }
-//    enum modeCCPolicyOptions { ON_FULL, OFF }
-//
-//    enum slopeWindowOption { FIXED , EXPANDING}
 
-
-    DynamicShutdownConfigGroup cfg;
-//    // U S E R   I N P U T
-//
-//    // Dynamic Shutdown Config Group
-//    private final int minimumIteration = 0; // 500 TODO: Revert
-//    private final int iterationToStartFindingSlopes = 3;//50; // TODO: Revert
-//
-//    private final slopeWindowOption slopeWindowPolicy = slopeWindowOption.EXPANDING;
-//    private final int minimumWindowSize = 3;//50; // TODO: Revert
-//    private final double expandingWindowPctRetention = 0.25;
-//
-//    private final int iterationsInZoneToConverge = 50;// 50 TODO: Revert
-//
-//    private final int minIterationForGraphics = 3;
-//
-//
-//    // Score Parameters
-//    private final scorePolicyOptions scorePolicyChosen = scorePolicyOptions.ON_EXECUTED_ONLY;
-//    private final double scoreThreshold = 0.001;
-//
-//    // Mode Parameters
-//    private final modePolicyOptions modePolicyChosen  = modePolicyOptions.ON_FULL;
-//    private final double modeThreshold = 0.00003;
-//
-//    // Mode Choice Coverage Parameters
-//    private final modeCCPolicyOptions modeCCPolicyChosen = modeCCPolicyOptions.ON_FULL;
-//    private final double modechoicecoverageThreshold = 0.0001;
-
+    private DynamicShutdownConfigGroup cfg;
 
 
     @Inject
@@ -122,6 +90,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         this.scoreStats = scoreStats;
         this.strategyManager = strategyManager;
         this.strategyConfigGroup = strategyConfigGroup;
+        this.scoreConfig = scoreConfig;
         this.controlerConfigGroup = controlerConfigGroup ;
         this.modeStatsControlerListener = modeStatsControlerListener ;
         this.outputFileName = controlerIO.getOutputFilename(FILENAME_DYNAMIC_SHUTDOWN);
@@ -134,47 +103,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
                 * strategyConfigGroup.getFractionOfIterationsToDisableInnovation() + controlerConfigGroup.getFirstIteration());
 
 
-        switch (cfg.getScorePolicyChosen()) {
-            case ON_FULL:
-                activeMetricsScore = new ArrayList<>(Arrays.asList(
-                        ScoreItem.executed.name(),
-                        ScoreItem.average.name(),
-                        ScoreItem.best.name(),
-                        ScoreItem.worst.name()));
-                break;
-            case ON_EXECUTED_ONLY:
-                activeMetricsScore = new ArrayList<>(Arrays.asList(
-                        ScoreItem.executed.name()));
-                break;
-            case OFF:
-                break;
-            default:
-                break;
-        }
 
-        switch (cfg.getModePolicyChosen()) {
-            case ON_FULL:
-                activeMetricsMode.addAll(scoreConfig.getAllModes());
-                break;
-            case OFF:
-                activeMetricsMode.clear();
-                break;
-            default:
-                activeMetricsMode.clear();
-                break;
-        }
-
-        switch (cfg.getModeCCPolicyChosen()) {
-            case ON_FULL:
-                activeMetricsModeCC.addAll(scoreConfig.getAllModes());
-                break;
-            case OFF:
-                activeMetricsModeCC.clear();
-                break;
-            default:
-                activeMetricsModeCC.clear();
-                break;
-        }
 
         this.slopesOut = IOUtils.getBufferedWriter(this.outputFileName + "AllMetrics.txt");
         try {
@@ -197,6 +126,8 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     }
 
+
+
     @Override
     public int getDynamicShutdownIteration() {
         return dynamicShutdownIteration;
@@ -211,6 +142,8 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     public void notifyStartup(StartupEvent startupEvent) {
         dynamicShutdownInitiated = false ;
         dynamicShutdownIteration = Integer.MAX_VALUE;
+
+        generateMetricLists(scoreConfig);
 
     }
 
@@ -509,6 +442,50 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     private boolean isInnovativeStrategy(GenericPlanStrategy<Plan, Person> strategy) {
         return !(ReplanningUtils.isOnlySelector(strategy));
+    }
+
+    private void generateMetricLists(PlanCalcScoreConfigGroup scoreConfig) {
+        switch (cfg.getScorePolicyChosen()) {
+            case ON_FULL:
+                activeMetricsScore = new ArrayList<>(Arrays.asList(
+                        ScoreItem.executed.name(),
+                        ScoreItem.average.name(),
+                        ScoreItem.best.name(),
+                        ScoreItem.worst.name()));
+                break;
+            case ON_EXECUTED_ONLY:
+                activeMetricsScore = new ArrayList<>(Arrays.asList(
+                        ScoreItem.executed.name()));
+                break;
+            case OFF:
+                break;
+            default:
+                break;
+        }
+
+        switch (cfg.getModePolicyChosen()) {
+            case ON_FULL:
+                activeMetricsMode.addAll(scoreConfig.getAllModes());
+                break;
+            case OFF:
+                activeMetricsMode.clear();
+                break;
+            default:
+                activeMetricsMode.clear();
+                break;
+        }
+
+        switch (cfg.getModeCCPolicyChosen()) {
+            case ON_FULL:
+                activeMetricsModeCC.addAll(scoreConfig.getAllModes());
+                break;
+            case OFF:
+                activeMetricsModeCC.clear();
+                break;
+            default:
+                activeMetricsModeCC.clear();
+                break;
+        }
     }
 
     @Override
