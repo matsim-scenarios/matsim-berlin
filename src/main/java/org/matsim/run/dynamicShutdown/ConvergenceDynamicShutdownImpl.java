@@ -55,6 +55,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private String outputFileName;
     private final int globalInnovationDisableAfter;
 
+
     private final StrategyManager strategyManager;
     private static int dynamicShutdownIteration;
     private static boolean dynamicShutdownInitiated;
@@ -77,6 +78,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
 
     private DynamicShutdownConfigGroup cfg;
+    private int innoShutoffIter;
 
 
     @Inject
@@ -102,27 +104,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         this.globalInnovationDisableAfter = (int) ((controlerConfigGroup.getLastIteration() - controlerConfigGroup.getFirstIteration())
                 * strategyConfigGroup.getFractionOfIterationsToDisableInnovation() + controlerConfigGroup.getFirstIteration());
 
-
-
-
         this.slopesOut = IOUtils.getBufferedWriter(this.outputFileName + "AllMetrics.txt");
-        try {
-            this.slopesOut.write("Iteration");
-
-            for ( String scoreType : activeMetricsScore) {
-                this.slopesOut.write("\tscore-" + scoreType+ "\tconverged");
-            }
-            for ( String mode : activeMetricsMode) {
-                this.slopesOut.write("\tmode-" + mode+ "\tconverged");
-            }
-            for ( String mode : activeMetricsModeCC) {
-                this.slopesOut.write("\tmodeCC-" + mode + "\tconverged");
-            }
-            this.slopesOut.write("\n"); ;
-            this.slopesOut.flush();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
 
     }
 
@@ -142,8 +124,27 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     public void notifyStartup(StartupEvent startupEvent) {
         dynamicShutdownInitiated = false ;
         dynamicShutdownIteration = Integer.MAX_VALUE;
+        innoShutoffIter = Integer.MAX_VALUE;
 
         generateMetricLists(scoreConfig);
+
+        try {
+            this.slopesOut.write("Iteration");
+
+            for ( String scoreType : activeMetricsScore) {
+                this.slopesOut.write("\tscore-" + scoreType+ "\tconverged");
+            }
+            for ( String mode : activeMetricsMode) {
+                this.slopesOut.write("\tmode-" + mode+ "\tconverged");
+            }
+            for ( String mode : activeMetricsModeCC) {
+                this.slopesOut.write("\tmodeCC-" + mode + "\tconverged");
+            }
+            this.slopesOut.write("\tnotes\n"); ;
+            this.slopesOut.flush();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
 
     }
 
@@ -218,6 +219,16 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             writeSlopeAndConvergence(slopesModeChoiceCoverage, convergenceModeCC, activeMetricsModeCC, prevIteration);
         }
 
+
+        try {
+            if (iteration == innoShutoffIter) {
+                this.slopesOut.write("\tNOTE: innovation turned off");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
         if (dynamicShutdownInitiated) {
             log.info("dynamic shutdown was previously initiated");
             return;
@@ -242,6 +253,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         if (!activeMetricsModeCC.isEmpty() && !modeCCConverged) {
             return;
         }
+
 
         shutdownInnovation(iteration);
 
@@ -274,7 +286,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         int convergenceSuccessCnt = 0;
         for (String metric : metricsToInclude) {
             boolean metricConverges = false;
-
+//            convergenceMap.put(prevIteration, )
             if (!slopesMap.isEmpty()) {
                 List<Double> slopesPerMetric = new ArrayList<>(slopesMap.get(metric).values());
                 metricConverges = metricConverges(slopesPerMetric, threshold);
@@ -374,10 +386,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             xybar += (x.get(i) - xbar) * (y.get(i) - ybar);
         }
         return xybar / xxbar;
-
-
     }
-
 
 
     private void produceDynShutdownGraphs(Map<String, Map<Integer, Double>> history,
@@ -390,7 +399,6 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         if (iteration <= cfg.getMinIterationForGraphics()) {
             return;
         }
-
 
 
         for (String metricName : metricsToInclude) {
@@ -413,7 +421,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
 
     private void shutdownInnovation(int iteration) {
-        int innoShutoffIter = iteration + 1; // New weights are in effect in following iteration.
+        innoShutoffIter = iteration + 1; // New weights are in effect in following iteration.
         double innoPct = strategyConfigGroup.getFractionOfIterationsToDisableInnovation();
         int firstIter = controlerConfigGroup.getFirstIteration();
         dynamicShutdownIteration = (int) ((innoShutoffIter - firstIter) / innoPct) + firstIter;
@@ -438,6 +446,12 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         log.info("********** DYNAMIC SHUTDOWN INITIATED ***********");
         log.info("Innovation strategies deactivated in iteration " + (innoShutoffIter));
         log.info("Full shutdown will occur in iteration " + dynamicShutdownIteration);
+
+        try {
+            this.slopesOut.write("\tNOTE: dynamic shutdown initiated");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private boolean isInnovativeStrategy(GenericPlanStrategy<Plan, Person> strategy) {
