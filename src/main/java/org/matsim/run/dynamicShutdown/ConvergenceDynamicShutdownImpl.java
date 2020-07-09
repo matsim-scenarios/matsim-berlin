@@ -47,6 +47,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private final Scenario scenario;
     private final ScoreStats scoreStats;
     private final ModeStatsControlerListener modeStatsControlerListener;
+    private final ModeChoiceCoverageControlerListener modeChoiceCoverageControlerListener;
     private final String FILENAME_DYNAMIC_SHUTDOWN = "dynShutdown_";
     private String outputFileName;
     private final int globalInnovationDisableAfter;
@@ -82,15 +83,16 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     // Dynamic Shutdown Config Group
     private final int MINIMUM_ITERATION = 0; // 500 TODO: Revert
-    private final int ITERATION_TO_START_FINDING_SLOPES = 50; // TODO: Revert
+    private final int ITERATION_TO_START_FINDING_SLOPES = 3;//50; // TODO: Revert
 
     private final slopeWindowOption slopeWindowPolicy = slopeWindowOption.EXPANDING;
-    private final int MINIMUM_WINDOW_SIZE = 50; // TODO: Revert
+    private final int MINIMUM_WINDOW_SIZE = 3;//50; // TODO: Revert
     private final double EXPANDING_WINDOW_PCT_RETENTION = 0.25;
 
     private final int ITERATIONS_IN_ZONE_TO_CONVERGE = 50;// 50 TODO: Revert
 
-    private static final int minIterationForGraphics = 50;
+    private static final int minIterationForGraphics = 3;
+
 
     // Score Parameters
     private final scorePolicyOptions scorePolicyChosen = scorePolicyOptions.ON_EXECUTED_ONLY;
@@ -107,7 +109,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     @Inject
     ConvergenceDynamicShutdownImpl(ControlerConfigGroup controlerConfigGroup, ScoreStats scoreStats, ModeStatsControlerListener modeStatsControlerListener, StrategyManager strategyManager,
-                                   StrategyConfigGroup strategyConfigGroup, Scenario scenario, OutputDirectoryHierarchy controlerIO, PlanCalcScoreConfigGroup scoreConfig) {
+                                   StrategyConfigGroup strategyConfigGroup, Scenario scenario, OutputDirectoryHierarchy controlerIO, PlanCalcScoreConfigGroup scoreConfig, ModeChoiceCoverageControlerListener modeChoiceCoverageControlerListener) {
 
         this.scenario = scenario;
         this.scoreStats = scoreStats;
@@ -116,6 +118,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         this.controlerConfigGroup = controlerConfigGroup ;
         this.modeStatsControlerListener = modeStatsControlerListener ;
         this.outputFileName = controlerIO.getOutputFilename(FILENAME_DYNAMIC_SHUTDOWN);
+        this.modeChoiceCoverageControlerListener = modeChoiceCoverageControlerListener;
 
         this.globalInnovationDisableAfter = (int) ((controlerConfigGroup.getLastIteration() - controlerConfigGroup.getFirstIteration())
                 * strategyConfigGroup.getFractionOfIterationsToDisableInnovation() + controlerConfigGroup.getFirstIteration());
@@ -237,7 +240,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             }
 
             bestFitLineGeneric(iteration, scoreHistoryMod, slopesScore, activeMetricsScore, metricType);
-            produceDynShutdownGraphs(scoreHistoryMod, slopesScore, metricType, SCORE_THRESHOLD, iteration);
+            produceDynShutdownGraphs(scoreHistoryMod, slopesScore, metricType, activeMetricsScore, SCORE_THRESHOLD, iteration);
 
             scoreConverged = metricTypeConverges(slopesScore, convergenceScore, activeMetricsScore, metricType, SCORE_THRESHOLD, prevIteration);
 
@@ -250,7 +253,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             String metricType = "Mode";
             Map<String, Map<Integer, Double>> modeHistories = modeStatsControlerListener.getModeHistories();
             bestFitLineGeneric(iteration, modeHistories, slopesMode, activeMetricsMode, metricType);
-            produceDynShutdownGraphs(modeHistories, slopesMode, metricType, MODE_THRESHOLD, iteration);
+            produceDynShutdownGraphs(modeHistories, slopesMode, metricType, activeMetricsMode, MODE_THRESHOLD, iteration);
 
             modeConverged = metricTypeConverges(slopesMode, convergenceMode, activeMetricsMode, metricType, MODE_THRESHOLD, prevIteration);
 
@@ -262,9 +265,9 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
             String metricType = "Mode Choice Coverage";
             int mCCLimit = 1;
-            Map<String, Map<Integer, Double>> mCCHistory = ModeChoiceCoverageControlerListener.getModeHistory().get(mCCLimit);
+            Map<String, Map<Integer, Double>> mCCHistory = modeChoiceCoverageControlerListener.getModeChoiceCoverageHistory().get(mCCLimit);
             bestFitLineGeneric(iteration, mCCHistory, slopesModeChoiceCoverage, activeMetricsModeCC, metricType);
-            produceDynShutdownGraphs(mCCHistory,slopesModeChoiceCoverage, metricType, MODECHOICECOVERAGE_THRESHOLD,iteration);
+            produceDynShutdownGraphs(mCCHistory,slopesModeChoiceCoverage, metricType, activeMetricsModeCC, MODECHOICECOVERAGE_THRESHOLD,iteration);
 
             modeCCConverged = metricTypeConverges(slopesModeChoiceCoverage, convergenceModeCC, activeMetricsModeCC, metricType, MODECHOICECOVERAGE_THRESHOLD, prevIteration);
 
@@ -434,18 +437,20 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
 
     private void produceDynShutdownGraphs(Map<String, Map<Integer, Double>> history,
-                                                 Map<String, Map<Integer, Double>> slopes,
-                                                 String metricType,
-                                                 double convergenceThreshold,
-                                                 int iteration) {
+                                          Map<String, Map<Integer, Double>> slopes,
+                                          String metricType,
+                                          List<String> metricsToInclude,
+                                          double convergenceThreshold,
+                                          int iteration) {
 
         if (iteration <= minIterationForGraphics) {
             return;
         }
 
 
-        try {
-            for (String metricName : history.keySet()) {
+
+        for (String metricName : metricsToInclude) {
+            try {
 
                 XYLineChartDualYAxis chart = new XYLineChartDualYAxis("Dynamic Shutdown for " + metricType + " : " + metricName, "iteration", metricType + " : " + metricName, "slope of " + metricName);
                 Map<Integer, Double> metric = history.get(metricName);
@@ -456,9 +461,9 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
                 chart.addVerticalRange(-convergenceThreshold, convergenceThreshold);
 
                 chart.saveAsPng(outputFileName + "_" + metricType + "_" + metricName + ".png", 800, 600);
+            } catch (NullPointerException e) {
+                    log.error("Could not produce Dynamic Shutdown Graphs (probably too early)");
             }
-        } catch (NullPointerException e) {
-            log.error("Could not produce Dynamic Shutdown Graphs (probably too early)");
         }
     }
 
@@ -505,7 +510,3 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     }
 
 }
-
-
-
-

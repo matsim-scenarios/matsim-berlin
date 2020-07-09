@@ -213,8 +213,8 @@ public class ModeChoiceCoverageControlerListener implements StartupListener, Ite
 
 	}
 
-	public static Map<Integer, Map<String, Map<Integer, Double>>> getModeHistory() {
-		return modeHistoryAll;
+	public final Map<Integer, Map<String, Map<Integer, Double>>> getModeChoiceCoverageHistory() {
+		return Collections.unmodifiableMap( modeHistoryAll);
 	}
 
 }
