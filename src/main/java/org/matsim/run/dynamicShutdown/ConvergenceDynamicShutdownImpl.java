@@ -79,7 +79,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     enum slopeWindowOption { FIXED , EXPANDING}
 
 
-    DynamicShutdownConfigGroup dynamicShutdownConfigGroup;
+    DynamicShutdownConfigGroup cfg;
     // U S E R   I N P U T
 
     // Dynamic Shutdown Config Group
@@ -125,7 +125,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         this.outputFileName = controlerIO.getOutputFilename(FILENAME_DYNAMIC_SHUTDOWN);
         this.modeChoiceCoverageControlerListener = modeChoiceCoverageControlerListener;
 
-        this.dynamicShutdownConfigGroup = (DynamicShutdownConfigGroup) scenario.getConfig().getModules().get(DynamicShutdownConfigGroup.GROUP_NAME);
+        this.cfg = (DynamicShutdownConfigGroup) scenario.getConfig().getModules().get(DynamicShutdownConfigGroup.GROUP_NAME);
 
 
         this.globalInnovationDisableAfter = (int) ((controlerConfigGroup.getLastIteration() - controlerConfigGroup.getFirstIteration())
@@ -209,8 +209,6 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     public void notifyStartup(StartupEvent startupEvent) {
         dynamicShutdownInitiated = false ;
         dynamicShutdownIteration = Integer.MAX_VALUE;
-
-        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX " + dynamicShutdownConfigGroup.getExpandingWindowPctRetention());
 
     }
 
