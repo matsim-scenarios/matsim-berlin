@@ -91,11 +91,17 @@ public final class RunBerlinScenario {
 		config.controler().setWritePlansInterval(0);
 		config.controler().setWriteSnapshotsInterval(0);
 		config.transit().setUsingTransitInMobsim(false);
+
+
+//        config.addModule(new DynamicShutdownConfigGroup());
 		//jr end
 
 		Scenario scenario = prepareScenario( config ) ;
 
 		Controler controler = prepareControler( scenario ) ;
+
+        controler.addOverridingModule(new DynamicShutdownModule());
+
 		controler.run() ;
 
 	}
@@ -137,34 +143,6 @@ public final class RunBerlinScenario {
 				bind(RaptorIntermodalAccessEgress.class).to(BerlinRaptorIntermodalAccessEgress.class);
 			}
 		} );
-
-
-		// jr start
-		 controler.addOverridingModule(new AbstractModule() {
-					@Override
-					public void install() {
-						this.addControlerListenerBinding().to(ModeChoiceCoverageControlerListener.class);
-					}
-				});
-
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-//				bind(DynamicShutdownControlerListener.class).to(ConvergenceDynamicShutdownImpl.class);
-				bind(ConvergenceDynamicShutdownImpl.class).in(Singleton.class);
-				this.addControlerListenerBinding().to(ConvergenceDynamicShutdownImpl.class);
-			}
-		});
-
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				bind(TerminationCriterion.class).to(TerminateDynamically.class);
-			}
-		});
-
-		// jr end
-
 
 		return controler;
 	}

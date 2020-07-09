@@ -79,6 +79,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     enum slopeWindowOption { FIXED , EXPANDING}
 
 
+    DynamicShutdownConfigGroup dynamicShutdownConfigGroup;
     // U S E R   I N P U T
 
     // Dynamic Shutdown Config Group
@@ -107,9 +108,13 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private final double modechoicecoverageThreshold = 0.0001;
 
 
+
     @Inject
-    ConvergenceDynamicShutdownImpl(ControlerConfigGroup controlerConfigGroup, ScoreStats scoreStats, ModeStatsControlerListener modeStatsControlerListener, StrategyManager strategyManager,
-                                   StrategyConfigGroup strategyConfigGroup, Scenario scenario, OutputDirectoryHierarchy controlerIO, PlanCalcScoreConfigGroup scoreConfig, ModeChoiceCoverageControlerListener modeChoiceCoverageControlerListener) {
+    ConvergenceDynamicShutdownImpl(ControlerConfigGroup controlerConfigGroup, ScoreStats scoreStats,
+                                   ModeStatsControlerListener modeStatsControlerListener, StrategyManager strategyManager,
+                                   StrategyConfigGroup strategyConfigGroup, Scenario scenario, OutputDirectoryHierarchy controlerIO,
+                                   PlanCalcScoreConfigGroup scoreConfig,
+                                   ModeChoiceCoverageControlerListener modeChoiceCoverageControlerListener) {
 
         this.scenario = scenario;
         this.scoreStats = scoreStats;
@@ -119,6 +124,9 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         this.modeStatsControlerListener = modeStatsControlerListener ;
         this.outputFileName = controlerIO.getOutputFilename(FILENAME_DYNAMIC_SHUTDOWN);
         this.modeChoiceCoverageControlerListener = modeChoiceCoverageControlerListener;
+
+        this.dynamicShutdownConfigGroup = (DynamicShutdownConfigGroup) scenario.getConfig().getModules().get(DynamicShutdownConfigGroup.GROUP_NAME);
+
 
         this.globalInnovationDisableAfter = (int) ((controlerConfigGroup.getLastIteration() - controlerConfigGroup.getFirstIteration())
                 * strategyConfigGroup.getFractionOfIterationsToDisableInnovation() + controlerConfigGroup.getFirstIteration());
@@ -202,10 +210,13 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         dynamicShutdownInitiated = false ;
         dynamicShutdownIteration = Integer.MAX_VALUE;
 
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX " + dynamicShutdownConfigGroup.getExpandingWindowPctRetention());
+
     }
 
     @Override
     public void notifyIterationStarts(IterationStartsEvent iterationStartsEvent) {
+
         int iteration = iterationStartsEvent.getIteration();
         int prevIteration = iteration - 1;
 
