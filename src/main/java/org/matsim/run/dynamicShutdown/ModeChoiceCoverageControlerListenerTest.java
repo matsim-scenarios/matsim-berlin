@@ -30,7 +30,7 @@ import java.util.Map;
  *
  * //TODO: What happens when activities/trips are added or deleted due to innovation?
  */
-public class ModeChoiceCoverageStatsControlerListenerTest {
+public class ModeChoiceCoverageControlerListenerTest {
 
 //	@Rule
 //	public MatsimTestUtils utils = new MatsimTestUtils();
