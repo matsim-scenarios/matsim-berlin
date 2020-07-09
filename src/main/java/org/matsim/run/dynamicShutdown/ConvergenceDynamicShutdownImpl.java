@@ -29,6 +29,8 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.*;
 
+import static org.matsim.run.dynamicShutdown.DynamicShutdownConfigGroup.slopeWindowOption.EXPANDING;
+
 /**
  * When user-specified criteria are met, dynamic shutdown is initiated: 1) Turns off innovation in next iteration and
  * 2) informs TerminateDynamically Module of the iteration at which MATSim should shut down.
@@ -72,40 +74,40 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private List<String> activeMetricsMode = new ArrayList();
     private List<String> activeMetricsModeCC = new ArrayList();
 
-    enum scorePolicyOptions { ON_FULL , ON_EXECUTED_ONLY , OFF }
-    enum modePolicyOptions { ON_FULL , OFF }
-    enum modeCCPolicyOptions { ON_FULL, OFF }
-
-    enum slopeWindowOption { FIXED , EXPANDING}
+//    enum scorePolicyOptions { ON_FULL , ON_EXECUTED_ONLY , OFF }
+//    enum modePolicyOptions { ON_FULL , OFF }
+//    enum modeCCPolicyOptions { ON_FULL, OFF }
+//
+//    enum slopeWindowOption { FIXED , EXPANDING}
 
 
     DynamicShutdownConfigGroup cfg;
-    // U S E R   I N P U T
-
-    // Dynamic Shutdown Config Group
-    private final int minimumIteration = 0; // 500 TODO: Revert
-    private final int iterationToStartFindingSlopes = 3;//50; // TODO: Revert
-
-    private final slopeWindowOption slopeWindowPolicy = slopeWindowOption.EXPANDING;
-    private final int minimumWindowSize = 3;//50; // TODO: Revert
-    private final double expandingWindowPctRetention = 0.25;
-
-    private final int iterationsInZoneToConverge = 50;// 50 TODO: Revert
-
-    private final int minIterationForGraphics = 3;
-
-
-    // Score Parameters
-    private final scorePolicyOptions scorePolicyChosen = scorePolicyOptions.ON_EXECUTED_ONLY;
-    private final double scoreThreshold = 0.001;
-
-    // Mode Parameters
-    private final modePolicyOptions modePolicyChosen  = modePolicyOptions.ON_FULL;
-    private final double modeThreshold = 0.00003;
-
-    // Mode Choice Coverage Parameters
-    private final modeCCPolicyOptions modeCCPolicyChosen = modeCCPolicyOptions.ON_FULL;
-    private final double modechoicecoverageThreshold = 0.0001;
+//    // U S E R   I N P U T
+//
+//    // Dynamic Shutdown Config Group
+//    private final int minimumIteration = 0; // 500 TODO: Revert
+//    private final int iterationToStartFindingSlopes = 3;//50; // TODO: Revert
+//
+//    private final slopeWindowOption slopeWindowPolicy = slopeWindowOption.EXPANDING;
+//    private final int minimumWindowSize = 3;//50; // TODO: Revert
+//    private final double expandingWindowPctRetention = 0.25;
+//
+//    private final int iterationsInZoneToConverge = 50;// 50 TODO: Revert
+//
+//    private final int minIterationForGraphics = 3;
+//
+//
+//    // Score Parameters
+//    private final scorePolicyOptions scorePolicyChosen = scorePolicyOptions.ON_EXECUTED_ONLY;
+//    private final double scoreThreshold = 0.001;
+//
+//    // Mode Parameters
+//    private final modePolicyOptions modePolicyChosen  = modePolicyOptions.ON_FULL;
+//    private final double modeThreshold = 0.00003;
+//
+//    // Mode Choice Coverage Parameters
+//    private final modeCCPolicyOptions modeCCPolicyChosen = modeCCPolicyOptions.ON_FULL;
+//    private final double modechoicecoverageThreshold = 0.0001;
 
 
 
@@ -132,7 +134,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
                 * strategyConfigGroup.getFractionOfIterationsToDisableInnovation() + controlerConfigGroup.getFirstIteration());
 
 
-        switch (scorePolicyChosen) {
+        switch (cfg.getScorePolicyChosen()) {
             case ON_FULL:
                 activeMetricsScore = new ArrayList<>(Arrays.asList(
                         ScoreItem.executed.name(),
@@ -150,7 +152,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
                 break;
         }
 
-        switch (modePolicyChosen) {
+        switch (cfg.getModePolicyChosen()) {
             case ON_FULL:
                 activeMetricsMode.addAll(scoreConfig.getAllModes());
                 break;
@@ -162,7 +164,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
                 break;
         }
 
-        switch (modeCCPolicyChosen) {
+        switch (cfg.getModeCCPolicyChosen()) {
             case ON_FULL:
                 activeMetricsModeCC.addAll(scoreConfig.getAllModes());
                 break;
@@ -227,7 +229,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
 
         // If we cannot start finding slopes, then we shouldn't do anything further.
-        if (iteration < iterationToStartFindingSlopes) {
+        if (iteration < cfg.getIterationToStartFindingSlopes()) {
             return;
         }
 
@@ -249,9 +251,9 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             }
 
             bestFitLineGeneric(iteration, scoreHistoryMod, slopesScore, activeMetricsScore, metricType);
-            produceDynShutdownGraphs(scoreHistoryMod, slopesScore, metricType, activeMetricsScore, scoreThreshold, iteration);
+            produceDynShutdownGraphs(scoreHistoryMod, slopesScore, metricType, activeMetricsScore, cfg.getScoreThreshold(), iteration);
 
-            scoreConverged = metricTypeConverges(slopesScore, convergenceScore, activeMetricsScore, metricType, scoreThreshold, prevIteration);
+            scoreConverged = metricTypeConverges(slopesScore, convergenceScore, activeMetricsScore, metricType, cfg.getScoreThreshold(), prevIteration);
 
             writeSlopeAndConvergence(slopesScore, convergenceScore, activeMetricsScore, prevIteration);
 
@@ -262,9 +264,9 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             String metricType = "Mode";
             Map<String, Map<Integer, Double>> modeHistories = modeStatsControlerListener.getModeHistories();
             bestFitLineGeneric(iteration, modeHistories, slopesMode, activeMetricsMode, metricType);
-            produceDynShutdownGraphs(modeHistories, slopesMode, metricType, activeMetricsMode, modeThreshold, iteration);
+            produceDynShutdownGraphs(modeHistories, slopesMode, metricType, activeMetricsMode, cfg.getModeThreshold(), iteration);
 
-            modeConverged = metricTypeConverges(slopesMode, convergenceMode, activeMetricsMode, metricType, modeThreshold, prevIteration);
+            modeConverged = metricTypeConverges(slopesMode, convergenceMode, activeMetricsMode, metricType, cfg.getModeThreshold(), prevIteration);
 
             writeSlopeAndConvergence(slopesMode, convergenceMode, activeMetricsMode, prevIteration);
         }
@@ -276,9 +278,9 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             int mCCLimit = 1;
             Map<String, Map<Integer, Double>> mCCHistory = modeChoiceCoverageControlerListener.getModeChoiceCoverageHistory().get(mCCLimit);
             bestFitLineGeneric(iteration, mCCHistory, slopesModeChoiceCoverage, activeMetricsModeCC, metricType);
-            produceDynShutdownGraphs(mCCHistory,slopesModeChoiceCoverage, metricType, activeMetricsModeCC, modechoicecoverageThreshold,iteration);
+            produceDynShutdownGraphs(mCCHistory,slopesModeChoiceCoverage, metricType, activeMetricsModeCC, cfg.getModechoicecoverageThreshold(),iteration);
 
-            modeCCConverged = metricTypeConverges(slopesModeChoiceCoverage, convergenceModeCC, activeMetricsModeCC, metricType, modechoicecoverageThreshold, prevIteration);
+            modeCCConverged = metricTypeConverges(slopesModeChoiceCoverage, convergenceModeCC, activeMetricsModeCC, metricType, cfg.getModechoicecoverageThreshold(), prevIteration);
 
             writeSlopeAndConvergence(slopesModeChoiceCoverage, convergenceModeCC, activeMetricsModeCC, prevIteration);
         }
@@ -288,7 +290,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             return;
         }
 
-        if (iteration < minimumIteration) {
+        if (iteration < cfg.getMinimumIteration()) {
             return ;
         }
 
@@ -358,7 +360,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
     private boolean metricConverges(List<Double> slopes, double threshold) {
 
-        int startIteration = slopes.size() - iterationsInZoneToConverge;
+        int startIteration = slopes.size() - cfg.getIterationsInZoneToConverge();
 
         if (startIteration < 0) {
             log.info("Not enough slopes computed to check for convergence");
@@ -402,9 +404,9 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
 
         int currentIter = Collections.max(inputMap.keySet());
-        int startIteration = currentIter - minimumWindowSize + 1; // fixed window
-        int startIterationExpanding = (int) ((1.0 - expandingWindowPctRetention) * currentIter); // expanding window
-        if (slopeWindowPolicy == slopeWindowOption.EXPANDING && startIterationExpanding < startIteration) { // TODO: Test whether enum works in this case
+        int startIteration = currentIter - cfg.getMinimumWindowSize() + 1; // fixed window
+        int startIterationExpanding = (int) ((1.0 - cfg.getExpandingWindowPctRetention()) * currentIter); // expanding window
+        if (cfg.getSlopeWindowPolicy() == EXPANDING && startIterationExpanding < startIteration) { // TODO: Test whether enum works in this case
             startIteration = startIterationExpanding;
         }
 
@@ -452,7 +454,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
                                           double convergenceThreshold,
                                           int iteration) {
 
-        if (iteration <= minIterationForGraphics) {
+        if (iteration <= cfg.getMinIterationForGraphics()) {
             return;
         }
 

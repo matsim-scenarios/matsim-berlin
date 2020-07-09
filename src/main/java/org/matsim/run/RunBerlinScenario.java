@@ -98,6 +98,8 @@ public final class RunBerlinScenario {
 
 		Scenario scenario = prepareScenario( config ) ;
 
+		downsample(scenario.getPopulation().getPersons(), 0.1); //jr
+
 		Controler controler = prepareControler( scenario ) ;
 
         controler.addOverridingModule(new DynamicShutdownModule());
