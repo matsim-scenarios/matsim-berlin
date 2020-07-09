@@ -23,6 +23,7 @@ import org.matsim.core.replanning.ReplanningUtils;
 import org.matsim.core.replanning.StrategyManager;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.core.utils.io.UncheckedIOException;
+import scala.Int;
 
 import javax.inject.Inject;
 import java.io.BufferedWriter;
@@ -68,9 +69,9 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     private static final Map<String, Map<Integer,Double>> slopesModeChoiceCoverage = new HashMap<>();
 
 
-    private static final Map<String, Map<Integer,Boolean>> convergenceScore = new HashMap<>();
-    private static final Map<String, Map<Integer,Boolean>> convergenceMode = new HashMap<>();
-    private static final Map<String, Map<Integer,Boolean>> convergenceModeCC = new HashMap<>();
+    private static final Map<String, Map<Integer,Integer>> convergenceScore = new HashMap<>();
+    private static final Map<String, Map<Integer,Integer>> convergenceMode = new HashMap<>();
+    private static final Map<String, Map<Integer,Integer>> convergenceModeCC = new HashMap<>();
 
     private List<String> activeMetricsScore = new ArrayList<>();
     private List<String> activeMetricsMode = new ArrayList();
@@ -242,7 +243,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
             return;
         }
 
-        if (!activeMetricsScore.isEmpty() &&   !scoreConverged) {
+        if (!activeMetricsScore.isEmpty() && !scoreConverged) {
             return;
         }
 
@@ -260,13 +261,20 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
     }
 
     private void writeSlopeAndConvergence(Map<String, Map<Integer, Double>> slopesMap,
-                                          Map<String, Map<Integer, Boolean>> convergenceMap,
+                                          Map<String, Map<Integer, Integer>> convergenceMap,
                                           List<String> metricsToInclude,int prevIteration) {
         try{
             for (String metric : metricsToInclude) {
                 Double slope = slopesMap.get(metric).get(prevIteration);
-                boolean conv = convergenceMap.get(metric).get(prevIteration);
-                this.slopesOut.write("\t"+ slope + "\t" + conv);
+
+                int convCnt = convergenceMap.get(metric).get(prevIteration); //TODO: Nullpointer!
+                String convStr;
+                if (convCnt >= cfg.getIterationsInZoneToConverge()) {
+                    convStr = "true";
+                } else {
+                    convStr = convCnt + "/" + cfg.getIterationsInZoneToConverge();
+                }
+                this.slopesOut.write("\t"+ slope + "\t" + convStr);
             }
             this.slopesOut.flush();
         } catch (IOException e) {
@@ -276,44 +284,31 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
 
     private boolean metricTypeConverges(Map<String, Map<Integer, Double>> slopesMap,
-                                       Map<String, Map<Integer, Boolean>> convergenceMap,
+                                       Map<String, Map<Integer, Integer>> convergenceMap,
                                        List<String> metricsToInclude,
                                        String metricType,
                                        double threshold,
-                                        int prevIteration) {
+                                       int prevIteration) {
 
 
-        int convergenceSuccessCnt = 0;
-        for (String metric : metricsToInclude) {
-            boolean metricConverges = false;
-//            convergenceMap.put(prevIteration, )
-            if (!slopesMap.isEmpty()) {
-                List<Double> slopesPerMetric = new ArrayList<>(slopesMap.get(metric).values());
-                metricConverges = metricConverges(slopesPerMetric, threshold);
-            }
 
-            Map<Integer,Boolean> convergencePerMetric = convergenceMap.computeIfAbsent(metric, v -> new HashMap<>());
-            convergencePerMetric.put(prevIteration,metricConverges);
-
-            if (metricConverges) {
-                convergenceSuccessCnt++;
-            }
-        }
-
-        return convergenceSuccessCnt == metricsToInclude.size();
-    }
-
-    private boolean metricConverges(List<Double> slopes, double threshold) {
-
-        int startIteration = slopes.size() - cfg.getIterationsInZoneToConverge();
-
-        if (startIteration < 0) {
-            log.info("Not enough slopes computed to check for convergence");
+        if (slopesMap.isEmpty()) {
             return false;
         }
+        for (String metric : metricsToInclude) {
+            Map<Integer,Integer> convergenceCntPerMetric = convergenceMap.computeIfAbsent(metric,  v -> new HashMap<>());
+            Double slope = slopesMap.get(metric).get(prevIteration);
+            if (slope > -1 * threshold && slope < threshold) {
+                int convergenceCountSoFar = convergenceCntPerMetric.getOrDefault(prevIteration - 1, 0);
+                convergenceCntPerMetric.put(prevIteration, convergenceCountSoFar + 1);
+            } else {
+                convergenceCntPerMetric.put(prevIteration, 0);
+            }
+        }
 
-        for (int i = startIteration; i < slopes.size(); i++) {
-            if (slopes.get(i) < -1 * threshold || slopes.get(i) > threshold) {
+
+        for (String metric : metricsToInclude) {
+            if (convergenceMap.get(metric).get(prevIteration) < cfg.getIterationsInZoneToConverge()) {
                 return false;
             }
         }
