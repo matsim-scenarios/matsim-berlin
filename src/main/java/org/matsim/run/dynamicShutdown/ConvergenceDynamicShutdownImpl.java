@@ -23,7 +23,6 @@ import org.matsim.core.replanning.ReplanningUtils;
 import org.matsim.core.replanning.StrategyManager;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.core.utils.io.UncheckedIOException;
-import scala.Int;
 
 import javax.inject.Inject;
 import java.io.BufferedWriter;
@@ -178,7 +177,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         // For every active condition, calculate and plot the slopes. This will later be used to check convergence
         boolean scoreConverged = false;
         if (!activeMetricsScore.isEmpty()) {
-            String metricType = "Score";
+            String metricType = "score";
             Map<ScoreItem, Map<Integer, Double>> scoreHistory = scoreStats.getScoreHistory();
             Map<String, Map<Integer, Double>> scoreHistoryMod = new HashMap<>();
             for (ScoreItem scoreItem : scoreHistory.keySet()) {
@@ -196,7 +195,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
         boolean modeConverged = false;
         if (!activeMetricsMode.isEmpty()) {
-            String metricType = "Mode";
+            String metricType = "mode";
             Map<String, Map<Integer, Double>> modeHistories = modeStatsControlerListener.getModeHistories();
             bestFitLineGeneric(iteration, modeHistories, slopesMode, activeMetricsMode, metricType);
             produceDynShutdownGraphs(modeHistories, slopesMode, metricType, activeMetricsMode, cfg.getModeThreshold(), iteration);
@@ -209,7 +208,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         boolean modeCCConverged = false;
         if (!activeMetricsModeCC.isEmpty()) {
 
-            String metricType = "Mode Choice Coverage";
+            String metricType = "modeChoiceCoverage";
             int mCCLimit = 1;
             Map<String, Map<Integer, Double>> mCCHistory = modeChoiceCoverageControlerListener.getModeChoiceCoverageHistory().get(mCCLimit);
             bestFitLineGeneric(iteration, mCCHistory, slopesModeChoiceCoverage, activeMetricsModeCC, metricType);
@@ -398,16 +397,15 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
 
         for (String metricName : metricsToInclude) {
             try {
+                XYLineChartDualYAxis chart = new XYLineChartDualYAxis("Convergence for " + metricType + " : " + metricName, "iteration", metricType + " : " + metricName, "slope of " + metricName);
 
-                XYLineChartDualYAxis chart = new XYLineChartDualYAxis("Dynamic Shutdown for " + metricType + " : " + metricName, "iteration", metricType + " : " + metricName, "slope of " + metricName);
-                Map<Integer, Double> metric = history.get(metricName);
-                chart.addSeries(metricName, metric);
+                chart.addSeries(metricName, history.get(metricName));
+                chart.addSeries2("slope of " + metricName, slopes.get(metricName));
 
-                chart.addSeries2("d/dx(" + metricName + ")", slopes.get(metricName));
-                chart.addMatsimLogo();
                 chart.addVerticalRange(-convergenceThreshold, convergenceThreshold);
+                chart.addMatsimLogo();
 
-                chart.saveAsPng(outputFileName + "_" + metricType + "_" + metricName + ".png", 800, 600);
+                chart.saveAsPng(outputFileName + metricType + "_" + metricName + ".png", 800, 600);
             } catch (NullPointerException e) {
                     log.error("Could not produce Dynamic Shutdown Graphs (probably too early)");
             }
@@ -432,7 +430,7 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         for (String subpopulation : subpopulations) {
             for (GenericPlanStrategy<Plan, Person> planStrategy : strategyManager.getStrategies(subpopulation)) {
                 PlanStrategyImpl planStrategyImpl = (PlanStrategyImpl) planStrategy;
-                if (isInnovativeStrategy(planStrategyImpl)) {
+                if (!(ReplanningUtils.isOnlySelector(planStrategyImpl))) { // if (innovation strategy)
                     strategyManager.addChangeRequest(innoShutoffIter, planStrategyImpl, subpopulation, 0.);
                 }
             }
@@ -447,10 +445,6 @@ public class ConvergenceDynamicShutdownImpl implements IterationStartsListener, 
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private boolean isInnovativeStrategy(GenericPlanStrategy<Plan, Person> strategy) {
-        return !(ReplanningUtils.isOnlySelector(strategy));
     }
 
     private void generateMetricLists(PlanCalcScoreConfigGroup scoreConfig) {

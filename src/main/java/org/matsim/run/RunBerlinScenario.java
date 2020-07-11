@@ -95,8 +95,12 @@ public final class RunBerlinScenario {
 
 //		DynamicShutdownConfigGroup dynamicShutdownConfigGroup= ConfigUtils.addOrGetModule(config, DynamicShutdownConfigGroup.class);
 
+		DynamicShutdownConfigGroup dynamicShutdownConfigGroup = new DynamicShutdownConfigGroup();
+		dynamicShutdownConfigGroup.setModeThreshold(1);
+		dynamicShutdownConfigGroup.setIterationToStartFindingSlopes(3);
+		dynamicShutdownConfigGroup.setMinimumWindowSize(3);
+		config.addModule(dynamicShutdownConfigGroup);
 
-//        config.addModule(new DynamicShutdownConfigGroup());
 		//jr end
 
 		Scenario scenario = prepareScenario( config ) ;
