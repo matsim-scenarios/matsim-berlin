@@ -21,6 +21,9 @@ public class DynamicShutdownConfigGroup extends ReflectiveConfigGroup {
     private static final String MODE_THRESHOLD= "modeConvergenceThreshold";
     private static final String MODE_CHOICE_COVERAGE_THRESHOLD= "modeChoiceCoverageConvergenceThreshold";
 
+    private static final String DYNAMIC_SHUTDOWN_MODULE_ACTIVE = "dynamicShutdownModuleActive";
+
+    public enum dynamicShutdownOptions { ON_FULL , ON_ANALYSIS_ONLY , OFF }
 
     enum scorePolicyOptions { ON_FULL , ON_EXECUTED_ONLY , OFF }
     enum modePolicyOptions { ON_FULL , OFF }
@@ -29,6 +32,7 @@ public class DynamicShutdownConfigGroup extends ReflectiveConfigGroup {
     enum slopeWindowOption { FIXED , EXPANDING}
 
 
+    private dynamicShutdownOptions dynamicShutdownModuleActive = dynamicShutdownOptions.OFF;
     private int minimumIteration = 0;
     private int iterationToStartFindingSlopes = 50;
     private slopeWindowOption slopeWindowPolicy = slopeWindowOption.EXPANDING;
@@ -46,7 +50,14 @@ public class DynamicShutdownConfigGroup extends ReflectiveConfigGroup {
     public DynamicShutdownConfigGroup() {
         super(GROUP_NAME);
     }
-
+    @StringGetter(DYNAMIC_SHUTDOWN_MODULE_ACTIVE)
+    public dynamicShutdownOptions isDynamicShutdownModuleActive() {
+        return dynamicShutdownModuleActive;
+    }
+    @StringSetter(DYNAMIC_SHUTDOWN_MODULE_ACTIVE)
+    public void setDynamicShutdownModuleActive(final dynamicShutdownOptions dynamicShutdownModuleActive) {
+        this.dynamicShutdownModuleActive = dynamicShutdownModuleActive;
+    }
     @StringGetter( MINIMUM_ITERATION_FOR_SHUTDOWN )
     public int getMinimumIteration() {
         return this.minimumIteration;
