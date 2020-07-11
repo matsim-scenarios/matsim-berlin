@@ -343,8 +343,8 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
 
         int currentIter = Collections.max(inputMap.keySet());
         int startIteration = currentIter - cfg.getMinimumWindowSize() + 1; // fixed window
-        int startIterationExpanding = (int) ((1.0 - cfg.getExpandingWindowPctRetention()) * currentIter); // expanding window
-        if (cfg.getSlopeWindowPolicy() == EXPANDING && startIterationExpanding < startIteration) { // TODO: Test whether enum works in this case
+        int startIterationExpanding = (int) ((1.0 - cfg.getExpandingWindowPctRetention()) * currentIter + 1); // expanding window
+        if (cfg.getSlopeWindowPolicy() == EXPANDING && startIterationExpanding < startIteration) {
             startIteration = startIterationExpanding;
         }
 
@@ -397,7 +397,7 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
 
         for (String metricName : metricsToInclude) {
             try {
-                XYLineChartDualYAxis chart = new XYLineChartDualYAxis("Convergence for " + metricType + " : " + metricName, "iteration", metricType + " : " + metricName, "slope of " + metricName);
+                XYLineChartDualYAxis chart = new XYLineChartDualYAxis("Convergence of " + metricType + "-" + metricName, "iteration", metricType + " : " + metricName, "slope of " + metricName);
 
                 chart.addSeries(metricName, history.get(metricName));
                 chart.addSeries2("slope of " + metricName, slopes.get(metricName));
