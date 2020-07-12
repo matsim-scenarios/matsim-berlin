@@ -97,17 +97,17 @@ public final class RunBerlinScenario {
 
 		DynamicShutdownConfigGroup dynamicShutdownConfigGroup = new DynamicShutdownConfigGroup();
 		dynamicShutdownConfigGroup.setDynamicShutdownModuleActive(DynamicShutdownConfigGroup.dynamicShutdownOptions.ON_FULL);
-		dynamicShutdownConfigGroup.setModeThreshold(1);
-		dynamicShutdownConfigGroup.setIterationToStartFindingSlopes(3);
-		dynamicShutdownConfigGroup.setMinimumWindowSize(3);
-		dynamicShutdownConfigGroup.setMinIterationForGraphics(5);
+//		dynamicShutdownConfigGroup.setModeThreshold(1);
+//		dynamicShutdownConfigGroup.setIterationToStartFindingSlopes(3);
+//		dynamicShutdownConfigGroup.setMinimumWindowSize(3);
+//		dynamicShutdownConfigGroup.setMinIterationForGraphics(5);
 		config.addModule(dynamicShutdownConfigGroup);
 
 		//jr end
 
 		Scenario scenario = prepareScenario( config ) ;
 
-		downsample(scenario.getPopulation().getPersons(), 0.1); //jr
+//		downsample(scenario.getPopulation().getPersons(), 0.1); //jr
 
 		Controler controler = prepareControler( scenario ) ;
 

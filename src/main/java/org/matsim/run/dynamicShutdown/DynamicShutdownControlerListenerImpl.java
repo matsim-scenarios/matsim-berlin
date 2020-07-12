@@ -138,7 +138,7 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
             for ( String mode : activeMetricsModeCC) {
                 this.slopesOut.write("\tmodeCC-" + mode + "\tconverged");
             }
-            this.slopesOut.write("\tnotes\n");
+            this.slopesOut.write("\tnotes");
             this.slopesOut.flush();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -180,7 +180,7 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
                 scoreHistoryMod.put(scoreItem.name(), scoreHistory.get(scoreItem));
             }
 
-            bestFitLineGeneric(iteration, scoreHistoryMod, slopesScore, activeMetricsScore, metricType);
+            bestFitLineGeneric(prevIteration, scoreHistoryMod, slopesScore, activeMetricsScore);
             produceDynShutdownGraphs(scoreHistoryMod, slopesScore, metricType, activeMetricsScore, cfg.getScoreThreshold(), iteration);
 
             scoreConverged = metricTypeConverges(slopesScore, convergenceScore, activeMetricsScore, cfg.getScoreThreshold(), prevIteration);
@@ -193,7 +193,7 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
         if (!activeMetricsMode.isEmpty()) {
             String metricType = "mode";
             Map<String, Map<Integer, Double>> modeHistories = modeStatsControlerListener.getModeHistories();
-            bestFitLineGeneric(iteration, modeHistories, slopesMode, activeMetricsMode, metricType);
+            bestFitLineGeneric(prevIteration, modeHistories, slopesMode, activeMetricsMode);
             produceDynShutdownGraphs(modeHistories, slopesMode, metricType, activeMetricsMode, cfg.getModeThreshold(), iteration);
 
             modeConverged = metricTypeConverges(slopesMode, convergenceMode, activeMetricsMode, cfg.getModeThreshold(), prevIteration);
@@ -207,7 +207,7 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
             String metricType = "modeChoiceCoverage";
             int mCCLimit = 1;
             Map<String, Map<Integer, Double>> mCCHistory = modeChoiceCoverageControlerListener.getModeChoiceCoverageHistory().get(mCCLimit);
-            bestFitLineGeneric(iteration, mCCHistory, slopesModeChoiceCoverage, activeMetricsModeCC, metricType);
+            bestFitLineGeneric(prevIteration, mCCHistory, slopesModeChoiceCoverage, activeMetricsModeCC);
             produceDynShutdownGraphs(mCCHistory,slopesModeChoiceCoverage, metricType, activeMetricsModeCC, cfg.getModechoicecoverageThreshold(),iteration);
 
             modeCCConverged = metricTypeConverges(slopesModeChoiceCoverage, convergenceModeCC, activeMetricsModeCC, cfg.getModechoicecoverageThreshold(), prevIteration);
@@ -313,27 +313,23 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
         return true;
     }
 
-    private void bestFitLineGeneric(int iteration,
+    private void bestFitLineGeneric(int prevIteration,
                                     Map<String, Map<Integer, Double>> history,
                                     Map<String, Map<Integer, Double>> slopes,
-                                    List<String> metricsToInclude,
-                                    String metricType) {
+                                    List<String> metricsToInclude) {
 
         for (Map.Entry<String, Map<Integer, Double>> entry : history.entrySet()) {
 
             String metricName = entry.getKey();
 
             if (!metricsToInclude.isEmpty() &&  !metricsToInclude.contains(metricName)) {
-                log.info(metricType + " NOT checked for " + metricName);
                 continue;
             }
-
-            log.info(metricType + " checked for " + metricName);
 
             double slope = computeLineSlope(entry.getValue());
 
             Map<Integer,Double> slopesForMetric = slopes.computeIfAbsent(metricName, v -> new HashMap<>());
-            slopesForMetric.put(iteration-1,slope); // calculation for the previous iteration
+            slopesForMetric.put(prevIteration-1,slope); // calculation for the previous iteration
         }
     }
 
@@ -362,7 +358,6 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
             throw new IllegalArgumentException("array lengths are not equal");
         }
         int n = x.size();
-        System.out.println("XXXXXXXXXXXXXXXX Window size: " + n);
 
         // first pass
         double sumx = 0.0, sumy = 0.0;
