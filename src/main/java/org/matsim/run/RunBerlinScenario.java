@@ -20,13 +20,13 @@
 package org.matsim.run;
 
 import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType.FastAStarLandmarks;
+import static org.matsim.core.config.groups.PlansCalcRouteConfigGroup.*;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
 
-import com.google.inject.Singleton;
 import org.apache.log4j.Logger;
 import org.matsim.analysis.RunPersonTripAnalysis;
 import org.matsim.api.core.v01.Id;
@@ -38,13 +38,12 @@ import org.matsim.contrib.drt.routing.DrtRouteFactory;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.config.groups.PlansCalcRouteConfigGroup;
-//import org.matsim.core.config.groups.PlansCalcRouteConfigGroup.AccessEgressWalkType; //jr
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
-import org.matsim.core.controler.*;
+import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.gbl.Gbl;
 import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.population.routes.RouteFactories;
@@ -53,7 +52,8 @@ import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
-import org.matsim.run.dynamicShutdown.*;
+import org.matsim.run.dynamicShutdown.DynamicShutdownConfigGroup;
+import org.matsim.run.dynamicShutdown.DynamicShutdownModule;
 import org.matsim.run.singleTripStrategies.ChangeSingleTripModeAndRoute;
 import org.matsim.run.singleTripStrategies.RandomSingleTripReRoute;
 
@@ -75,48 +75,21 @@ public final class RunBerlinScenario {
 		}
 		
 		if ( args.length==0 ) {
-			args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
-            //args = new String[] {"scenarios/berlin-v5.5-1pct/input/08-Config-2500-ZoomerSlow.xml"}  ;
+			args = new String[] {"scenarios/berlin-v5.5-10pct/input/berlin-v5.5-10pct.config.xml"}  ;
 		}
 
 		Config config = prepareConfig( args ) ;
 
-		//jr start
-		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists); //jr
-//		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.failIfDirectoryExists);
-		config.qsim().setNumberOfThreads(8);
-		config.global().setNumberOfThreads(8);
-		config.controler().setLastIteration(2500);
-		config.controler().setWriteEventsInterval(0);
-		config.controler().setWritePlansInterval(0);
-		config.controler().setWriteSnapshotsInterval(0);
-		config.transit().setUsingTransitInMobsim(false);
-
-
-//		DynamicShutdownConfigGroup dynamicShutdownConfigGroup= ConfigUtils.addOrGetModule(config, DynamicShutdownConfigGroup.class);
-
 		DynamicShutdownConfigGroup dynamicShutdownConfigGroup = new DynamicShutdownConfigGroup();
-		dynamicShutdownConfigGroup.setDynamicShutdownModuleActive(DynamicShutdownConfigGroup.dynamicShutdownOptions.ON_ANALYSIS_ONLY);
-		dynamicShutdownConfigGroup.setModeThreshold(1);
-		dynamicShutdownConfigGroup.setIterationToStartFindingSlopes(3);
-		dynamicShutdownConfigGroup.setMinimumWindowSize(3);
-		dynamicShutdownConfigGroup.setMinIterationForGraphics(5);
-		dynamicShutdownConfigGroup.setIterationsInZoneToConverge(1);
-		dynamicShutdownConfigGroup.setScorePolicyChosen(DynamicShutdownConfigGroup.scorePolicyOptions.OFF);
-		dynamicShutdownConfigGroup.setModeCCPolicyChosen(DynamicShutdownConfigGroup.modeCCPolicyOptions.OFF);
-
+		dynamicShutdownConfigGroup.setDynamicShutdownModuleActive(DynamicShutdownConfigGroup.dynamicShutdownOptions.ON_FULL);
 		config.addModule(dynamicShutdownConfigGroup);
-
-		//jr end
 
 		Scenario scenario = prepareScenario( config ) ;
 
-		downsample(scenario.getPopulation().getPersons(), 0.1); //jr
-
+		downsample(scenario.getPopulation().getPersons(), 0.01);
 		Controler controler = prepareControler( scenario ) ;
 
-        controler.addOverridingModule(new DynamicShutdownModule());
-
+		controler.addOverridingModule(new DynamicShutdownModule());
 		controler.run() ;
 
 	}
@@ -233,8 +206,7 @@ public final class RunBerlinScenario {
 				
 		// vsp defaults
 		config.vspExperimental().setVspDefaultsCheckingLevel( VspExperimentalConfigGroup.VspDefaultsCheckingLevel.info );
-		config.plansCalcRoute().setAccessEgressType(PlansCalcRouteConfigGroup.AccessEgressType.accessEgressModeToLink); //jr
-//		config.plansCalcRoute().setInsertingAccessEgressWalk( AccessEgressWalkType.walkToLink );
+		config.plansCalcRoute().setAccessEgressType(PlansCalcRouteConfigGroup.AccessEgressType.accessEgressModeToLink);
 		config.qsim().setUsingTravelTimeCheckInTeleportation( true );
 		config.qsim().setTrafficDynamics( TrafficDynamics.kinematicWaves );
 				

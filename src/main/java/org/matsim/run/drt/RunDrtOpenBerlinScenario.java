@@ -40,13 +40,11 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
-import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
-import org.matsim.run.dynamicShutdown.ModeChoiceCoverageControlerListener;
 import org.matsim.run.RunBerlinScenario;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
@@ -83,11 +81,6 @@ public final class RunDrtOpenBerlinScenario {
 		}
 		
 		Config config = prepareConfig( args ) ;
-		//jr
-        config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists); //jr
-        //jr
-
-
 		Scenario scenario = prepareScenario( config ) ;
 		Controler controler = prepareControler( scenario ) ;
 		controler.run() ;
@@ -120,16 +113,6 @@ public final class RunDrtOpenBerlinScenario {
 		// yyyy there is fareSModule (with S) in config. ?!?!  kai, jul'19
 		
 		controler.addOverridingModule(new IntermodalTripFareCompensatorsModule());
-
-		//jr
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				this.addControlerListenerBinding().to(ModeChoiceCoverageControlerListener.class);
-			}
-		});
-		//jr
-
 		
 		controler.addOverridingModule(new PtIntermodalRoutingModesModule());
 		
