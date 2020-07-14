@@ -20,7 +20,6 @@
 package org.matsim.run;
 
 import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType.FastAStarLandmarks;
-import static org.matsim.core.config.groups.PlansCalcRouteConfigGroup.*;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -38,6 +37,7 @@ import org.matsim.contrib.drt.routing.DrtRouteFactory;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.groups.PlansCalcRouteConfigGroup;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
@@ -52,8 +52,6 @@ import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
-import org.matsim.run.dynamicShutdown.DynamicShutdownConfigGroup;
-import org.matsim.run.dynamicShutdown.DynamicShutdownModule;
 import org.matsim.run.singleTripStrategies.ChangeSingleTripModeAndRoute;
 import org.matsim.run.singleTripStrategies.RandomSingleTripReRoute;
 
@@ -79,17 +77,8 @@ public final class RunBerlinScenario {
 		}
 
 		Config config = prepareConfig( args ) ;
-
-		DynamicShutdownConfigGroup dynamicShutdownConfigGroup = new DynamicShutdownConfigGroup();
-		dynamicShutdownConfigGroup.setDynamicShutdownModuleActive(DynamicShutdownConfigGroup.dynamicShutdownOptions.ON_FULL);
-		config.addModule(dynamicShutdownConfigGroup);
-
 		Scenario scenario = prepareScenario( config ) ;
-
-		downsample(scenario.getPopulation().getPersons(), 0.01);
 		Controler controler = prepareControler( scenario ) ;
-
-		controler.addOverridingModule(new DynamicShutdownModule());
 		controler.run() ;
 
 	}
@@ -100,7 +89,7 @@ public final class RunBerlinScenario {
 		Gbl.assertNotNull(scenario);
 		
 		final Controler controler = new Controler( scenario );
-
+		
 		if (controler.getConfig().transit().isUseTransit()) {
 			// use the sbb pt raptor router
 			controler.addOverridingModule( new AbstractModule() {
