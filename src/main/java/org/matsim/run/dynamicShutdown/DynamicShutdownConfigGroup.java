@@ -4,6 +4,8 @@ import org.matsim.core.config.ReflectiveConfigGroup;
 
 /**
  *
+ * Allows users to set and get parameters for DynamicShutdownControlerListener. Defaults are included for all parameters.
+ *
  * @author jakobrehmann
  */
 
@@ -30,11 +32,11 @@ public class DynamicShutdownConfigGroup extends ReflectiveConfigGroup {
 
     public enum dynamicShutdownOptions { ON_FULL , ON_ANALYSIS_ONLY , OFF }
 
-    enum scorePolicyOptions { ON_FULL , ON_EXECUTED_ONLY , OFF }
-    enum modePolicyOptions { ON_FULL , OFF }
-    enum modeCCPolicyOptions { ON_FULL, OFF }
+    public enum scorePolicyOptions { ON_FULL , ON_EXECUTED_ONLY , OFF }
+    public enum modePolicyOptions { ON_FULL , OFF }
+    public enum modeCCPolicyOptions { ON_FULL, OFF }
 
-    enum slopeWindowOption { FIXED , EXPANDING}
+    public enum slopeWindowOption { FIXED , EXPANDING }
 
 
     private dynamicShutdownOptions dynamicShutdownModuleActive = dynamicShutdownOptions.OFF;
@@ -160,7 +162,7 @@ public class DynamicShutdownConfigGroup extends ReflectiveConfigGroup {
         this.modeCCPolicyChosen = modeCCPolicyChosen;
     }
     @StringGetter(MODE_CHOICE_COVERAGE_THRESHOLD)
-    public double getModechoicecoverageThreshold() {
+    public double getModeChoiceCoverageThreshold() {
         return modechoicecoverageThreshold;
     }
     @StringSetter(MODE_CHOICE_COVERAGE_THRESHOLD)

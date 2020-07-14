@@ -25,6 +25,8 @@ import java.util.Map;
 
 /**
  *
+ * Tests ModeChoiceCoverageControlerListener
+ *
  * @author jakobrehmann
  * adapted from Aravind "ModeStatsControlerListenerTest"
  *

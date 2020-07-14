@@ -44,9 +44,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * Creates a new XYLineChart.
+ * Creates a new XYLineChart with dual Y axes
  *
- * @author mrieser
+ * @author jakobrehmann
+ * adapted from mrieser
  */
 public class XYLineChartDualYAxis extends ChartUtil {
 
@@ -104,16 +105,10 @@ public class XYLineChartDualYAxis extends ChartUtil {
 		XYPlot plot = this.chart.getXYPlot();
 		IntervalMarker marker = new IntervalMarker(botLimit, topLimit);
 		marker.setPaint(Color.PINK);
-//		marker.setLabelPaint(Color.green);
-//		marker.setOutlinePaint(Color.green);
 		marker.setLabel("CovergenceZone");
 		marker.setLabelAnchor(RectangleAnchor.TOP);
 
 		plot.addRangeMarker(marker);
-
-//		this.chart = new JFreeChart("blah", null, plot, true);
-
-		//generate the chart
 
 	}
 

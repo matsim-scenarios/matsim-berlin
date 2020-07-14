@@ -1,45 +1,28 @@
-/*
- *  *********************************************************************** *
- *  * project: org.matsim.*
- *  * ScoreStatsModule.java
- *  *                                                                         *
- *  * *********************************************************************** *
- *  *                                                                         *
- *  * copyright       : (C) 2014 by the members listed in the COPYING, *
- *  *                   LICENSE and WARRANTY file.                            *
- *  * email           : info at matsim dot org                                *
- *  *                                                                         *
- *  * *********************************************************************** *
- *  *                                                                         *
- *  *   This program is free software; you can redistribute it and/or modify  *
- *  *   it under the terms of the GNU General Public License as published by  *
- *  *   the Free Software Foundation; either version 2 of the License, or     *
- *  *   (at your option) any later version.                                   *
- *  *   See also COPYING, LICENSE and WARRANTY file                           *
- *  *                                                                         *
- *  * ***********************************************************************
- */
-
 package org.matsim.run.dynamicShutdown;
 
 import com.google.inject.Singleton;
-import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.TerminationCriterion;
 
 public class DynamicShutdownModule extends AbstractModule {
 
 
+    /**
+     * Adds all necessary GUICE bindings for Dynamic Shutdown to work.
+     *
+     * @author jakobrehmann
+     */
+
     @Override
     public void install() {
 
-        this.bind(ModeChoiceCoverageControlerListener.class).in(Singleton.class); //TODO: Delete?
+        this.bind(ModeChoiceCoverageControlerListener.class).in(Singleton.class);
         this.addControlerListenerBinding().to(ModeChoiceCoverageControlerListener.class);
 
-        this.bind(DynamicShutdownControlerListenerImpl.class).in(Singleton.class); //TODO: Delete?
+        this.bind(DynamicShutdownControlerListenerImpl.class).in(Singleton.class);
         this.addControlerListenerBinding().to(DynamicShutdownControlerListenerImpl.class);
 
-        this.bind(TerminateDynamically.class).in(Singleton.class); //TODO: Delete?
+        this.bind(TerminateDynamically.class).in(Singleton.class);
         this.bind(TerminationCriterion.class).to(TerminateDynamically.class);
 
     }

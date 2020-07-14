@@ -103,8 +103,6 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
         this.scoreConfig = scoreConfig;
     }
 
-
-
     @Override
     public int getDynamicShutdownIteration() {
         return dynamicShutdownIteration;
@@ -205,9 +203,9 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
             int mCCLimit = 1;
             Map<String, Map<Integer, Double>> mCCHistory = modeChoiceCoverageControlerListener.getModeChoiceCoverageHistory().get(mCCLimit);
             bestFitLineGeneric(prevIteration, mCCHistory, slopesModeChoiceCoverage, activeMetricsModeCC);
-            produceDynShutdownGraphs(mCCHistory,slopesModeChoiceCoverage, metricType, activeMetricsModeCC, cfg.getModechoicecoverageThreshold(),iteration);
+            produceDynShutdownGraphs(mCCHistory,slopesModeChoiceCoverage, metricType, activeMetricsModeCC, cfg.getModeChoiceCoverageThreshold(),iteration);
 
-            modeCCConverged = metricTypeConverges(slopesModeChoiceCoverage, convergenceModeCC, activeMetricsModeCC, cfg.getModechoicecoverageThreshold(), prevIteration);
+            modeCCConverged = metricTypeConverges(slopesModeChoiceCoverage, convergenceModeCC, activeMetricsModeCC, cfg.getModeChoiceCoverageThreshold(), prevIteration);
 
             writeSlopeAndConvergence(slopesModeChoiceCoverage, convergenceModeCC, activeMetricsModeCC, prevIteration);
         }
@@ -251,7 +249,6 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
             return;
         }
 
-
         shutdownInnovation(iteration);
 
     }
@@ -285,11 +282,10 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
                                        double threshold,
                                        int prevIteration) {
 
-
-
         if (slopesMap.isEmpty()) {
             return false;
         }
+
         for (String metric : metricsToInclude) {
             Map<Integer,Integer> convergenceCntPerMetric = convergenceMap.computeIfAbsent(metric,  v -> new HashMap<>());
             Double slope = slopesMap.get(metric).get(prevIteration);
@@ -326,17 +322,17 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
             double slope = computeLineSlope(entry.getValue());
 
             Map<Integer,Double> slopesForMetric = slopes.computeIfAbsent(metricName, v -> new HashMap<>());
-            slopesForMetric.put(prevIteration-1,slope); // calculation for the previous iteration
+            slopesForMetric.put(prevIteration,slope);
         }
     }
 
 
     private double computeLineSlope(Map<Integer,Double> inputMap) {
 
-
         int currentIter = Collections.max(inputMap.keySet());
         int startIteration = currentIter - cfg.getMinimumWindowSize() + 1; // fixed window
         int startIterationExpanding = (int) ((1.0 - cfg.getExpandingWindowPctRetention()) * currentIter + 1); // expanding window
+
         if (cfg.getSlopeWindowPolicy() == EXPANDING && startIterationExpanding < startIteration) {
             startIteration = startIterationExpanding;
         }
@@ -354,24 +350,26 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
         if (x.size() != y.size()) {
             throw new IllegalArgumentException("array lengths are not equal");
         }
+
         int n = x.size();
-
-        // first pass
-        double sumx = 0.0, sumy = 0.0;
+        double sumX = 0.0;
+        double sumY = 0.0;
         for (int i = 0; i < n; i++) {
-            sumx  += x.get(i);
-            sumy  += y.get(i);
+            sumX  += x.get(i);
+            sumY  += y.get(i);
         }
-        double xbar = sumx / n;
-        double ybar = sumy / n;
+        double xBar = sumX / n;
+        double yBar = sumY / n;
 
-        // second pass: compute summary statistics
-        double xxbar = 0.0, xybar = 0.0;
+        double xxBar = 0.0;
+        double xyBar = 0.0;
         for (int i = 0; i < n; i++) {
-            xxbar += (x.get(i) - xbar) * (x.get(i) - xbar);
-            xybar += (x.get(i) - xbar) * (y.get(i) - ybar);
+            xxBar += (x.get(i) - xBar) * (x.get(i) - xBar);
+            xyBar += (x.get(i) - xBar) * (y.get(i) - yBar);
         }
-        return xybar / xxbar;
+
+        return xyBar / xxBar;
+
     }
 
 
@@ -399,7 +397,7 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
 
                 chart.saveAsPng(outputFileName + metricType + "_" + metricName + ".png", 800, 600);
             } catch (NullPointerException e) {
-                    log.error("Could not produce Dynamic Shutdown Graphs (probably too early)");
+                    log.error("Too early to produce Could not produce Dynamic Shutdown Graphs (probably too early)");
             }
         }
     }

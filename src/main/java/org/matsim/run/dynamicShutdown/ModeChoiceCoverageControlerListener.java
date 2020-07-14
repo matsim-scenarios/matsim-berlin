@@ -37,26 +37,25 @@ import java.util.Map.Entry;
 public class ModeChoiceCoverageControlerListener implements StartupListener, IterationEndsListener,
         ShutdownListener {
 
-
-	// Config Group:
-	private Integer[] limits = new Integer[]{1, 5, 10};
-
+	private final static Logger log = Logger.getLogger(org.matsim.analysis.ModeStatsControlerListener.class);
 
 	private final Set<String> modes;
-	final private Map<Integer, BufferedWriter> modeOutMap = new HashMap<>();
-	private static Map<Integer, Map<String, Map<Integer, Double>>> modeHistoryAll = new HashMap<>();
-	private Map<Id<Person>, Map<Integer, Map<String, Integer>>> megaMap = new LinkedHashMap<>();
-	//      Map (Person,    Map (Trip #, Map (Mode,  Count)))
+	private final Map<Integer, BufferedWriter> modeOutMap = new HashMap<>();
 
-
-	private static final String FILENAME_MODESTATS = "modeChoiceCoverage";
-	final private Population population;
-	final private String modeFileName;
+	private final Population population;
+	private final String modeFileName;
 	private final boolean createPNG;
 	private final ControlerConfigGroup controlerConfigGroup;
+	private final MainModeIdentifier mainModeIdentifier;
+
 	private int minIteration = 0;
-	private MainModeIdentifier mainModeIdentifier;
-	private final static Logger log = Logger.getLogger(org.matsim.analysis.ModeStatsControlerListener.class);
+	private final Integer[] limits = new Integer[]{1, 5, 10};
+
+	private final Map<Integer, Map<String, Map<Integer, Double>>> modeCCHistory = new HashMap<>();
+	//            Map<Iter   , Map<Mode  , Map<Limit  , Pct   >>>
+	private final Map<Id<Person>, Map<Integer, Map<String, Integer>>> modesUsedPerPersonTrip = new LinkedHashMap<>();
+	//            Map<Person    , Map<Trip # , Map<Mode  , Count  >>>
+	private static final String FILENAME_MODESTATS = "modeChoiceCoverage";
 
 	@Inject
 	ModeChoiceCoverageControlerListener(ControlerConfigGroup controlerConfigGroup, Population population1, OutputDirectoryHierarchy controlerIO,
@@ -94,21 +93,21 @@ public class ModeChoiceCoverageControlerListener implements StartupListener, Ite
 	@Override
 	public void notifyIterationEnds(final IterationEndsEvent event) {
 		/*
-		 *  megaMap: for each person-trip, how many times (iterations) was each mode used. The following code adds the
-		 * 	mode information from the current iteration to the megaMap.
+		 *  modesUsedPerPersonTrip: for each person-trip, how many times (iterations) was each mode used. The following code adds the
+		 * 	mode information from the current iteration to the modesUsedPerPersonTrip.
 		 */
 
-		updateMegaMapWithCurrentIteration();
+		updateModesUsedPerPerson();
 
 
 		/*
-		 *	Looks through megaMap at each person-trip. How many of those person trips have used the each mode more than the
+		 *	Looks through modesUsedPerPersonTrip at each person-trip. How many of those person trips have used the each mode more than the
 		 *  predefined limits.
 		 */
 		int totalPersonTripCount = 0;
 		Map<Integer, Map<String, Double>> modeCountCurrentIteration = new TreeMap<>();
 
-		for (Map<Integer, Map<String, Integer>> mapForPerson : megaMap.values()) {
+		for (Map<Integer, Map<String, Integer>> mapForPerson : modesUsedPerPersonTrip.values()) {
 			for (Map<String, Integer> mapForPersonTrip : mapForPerson.values()) {
 				totalPersonTripCount++;
 				for (String mode : mapForPersonTrip.keySet()) {
@@ -132,7 +131,7 @@ public class ModeChoiceCoverageControlerListener implements StartupListener, Ite
 
 		for (Integer limit : limits) {
 			Map<String, Double> modeCnt = modeCountCurrentIteration.get(limit);
-			Map<String, Map<Integer, Double>> modeIterationShareMap = modeHistoryAll.computeIfAbsent(limit, k -> new HashMap<>());
+			Map<String, Map<Integer, Double>> modeIterationShareMap = modeCCHistory.computeIfAbsent(limit, k -> new HashMap<>());
 			BufferedWriter modeOut = modeOutMap.get(limit);
 			try {
 				modeOut.write(event.getIteration()+"");
@@ -163,10 +162,10 @@ public class ModeChoiceCoverageControlerListener implements StartupListener, Ite
 		}
 	}
 
-	private void updateMegaMapWithCurrentIteration() {
+	private void updateModesUsedPerPerson() {
 		for (Person person : this.population.getPersons().values()) {
 
-			Map<Integer, Map<String, Integer>> mapForPerson = megaMap.computeIfAbsent(person.getId(), v -> new LinkedHashMap<>());
+			Map<Integer, Map<String, Integer>> mapForPerson = modesUsedPerPersonTrip.computeIfAbsent(person.getId(), v -> new LinkedHashMap<>());
 
 			Plan plan = person.getSelectedPlan();
 			Integer tripNumber = 0;
@@ -177,19 +176,17 @@ public class ModeChoiceCoverageControlerListener implements StartupListener, Ite
 
 				Map<String, Integer> mapForPersonTrip = mapForPerson.computeIfAbsent(tripNumber, v -> new HashMap<>());
 
-				Integer modeCount = mapForPersonTrip.computeIfAbsent(mode, v -> 0);
+				Integer modeCount = mapForPersonTrip.getOrDefault(mode, 0);
 				mapForPersonTrip.put(mode, modeCount + 1);
 
-				mapForPerson.put(tripNumber, mapForPersonTrip); // close map for person trip
 			}
-			megaMap.put(person.getId(), mapForPerson); // reinsert map for person
 		}
 	}
 
 	private void produceGraphs() {
 		for (Integer limit : limits) {
-			XYLineChart chart = new XYLineChart("Mode Choice Coverage Statistics (Mode Used >= " + limit + "x per trip)", "iteration", "mode choice coverage");
-			for (Entry<String, Map<Integer, Double>> entry : modeHistoryAll.get(limit).entrySet()) {
+			XYLineChart chart = new XYLineChart("Mode Choice Coverage (Mode Used >= " + limit + "x per trip)", "iteration", "mode choice coverage");
+			for (Entry<String, Map<Integer, Double>> entry : modeCCHistory.get(limit).entrySet()) {
 				String mode = entry.getKey();
 				Map<Integer, Double> history = entry.getValue();
 				chart.addSeries(mode, history);
@@ -209,12 +206,9 @@ public class ModeChoiceCoverageControlerListener implements StartupListener, Ite
 				e.printStackTrace();
 			}
 		}
-
-
 	}
 
 	public final Map<Integer, Map<String, Map<Integer, Double>>> getModeChoiceCoverageHistory() {
-		return Collections.unmodifiableMap( modeHistoryAll);
+		return Collections.unmodifiableMap(modeCCHistory);
 	}
-
 }
