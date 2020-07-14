@@ -47,7 +47,7 @@ public class RunOfflineNoiseAnalysis {
 		String tunnelLinkIdFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/input/berlin-v5.10.tunnel-linkIDs.csv";
 		double receiverPointGap = 100.;
 		double timeBinSize = 3600.;
-
+		
 		Config config = ConfigUtils.createConfig(new NoiseConfigGroup());
 		config.global().setCoordinateSystem("EPSG:31468");
 		config.network().setInputCRS("EPSG:31468");
@@ -58,9 +58,9 @@ public class RunOfflineNoiseAnalysis {
 		config.plans().setInputCRS("EPSG:31468");
 		config.controler().setOutputDirectory(runDirectory);
 		config.controler().setRunId(runId);
-
+						
 		// adjust the default noise parameters
-
+		
 		NoiseConfigGroup noiseParameters = (NoiseConfigGroup) config.getModules().get(NoiseConfigGroup.GROUP_NAME);
 		noiseParameters.setReceiverPointGap(receiverPointGap);
 
@@ -68,17 +68,17 @@ public class RunOfflineNoiseAnalysis {
 		double yMin = 5801225.;
 		double xMax = 4620323.;
 		double yMax = 5839639.;
-
+		
 		noiseParameters.setReceiverPointsGridMinX(xMin);
 		noiseParameters.setReceiverPointsGridMinY(yMin);
 		noiseParameters.setReceiverPointsGridMaxX(xMax);
 		noiseParameters.setReceiverPointsGridMaxY(yMax);
-
+		
 		String[] consideredActivitiesForDamages = {"home*", "work*", "leisure*", "shopping*", "other*"};
 		noiseParameters.setConsideredActivitiesForDamageCalculationArray(consideredActivitiesForDamages);
-
+		
 		// ################################
-
+		
 		noiseParameters.setUseActualSpeedLevel(false);
 		noiseParameters.setAllowForSpeedsOutsideTheValidRange(false);
 		noiseParameters.setScaleFactor(100.);
@@ -88,10 +88,10 @@ public class RunOfflineNoiseAnalysis {
 		noiseParameters.setComputeCausingAgents(false);
 		noiseParameters.setThrowNoiseEventsAffected(true);
 		noiseParameters.setThrowNoiseEventsCaused(false);
-
+		
 		String[] hgvIdPrefixes = { "freight" };
 		noiseParameters.setHgvIdPrefixesArray(hgvIdPrefixes);
-
+		
 		noiseParameters.setTunnelLinkIdFile(tunnelLinkIdFile);
 		noiseParameters.setTimeBinSizeNoiseComputation(timeBinSize);
 

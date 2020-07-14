@@ -277,7 +277,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 			Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
-
+			
 			FareEventChecker fareChecker = new FareEventChecker();
 			controler.addOverridingModule(new AbstractModule() {
 				@Override
@@ -285,16 +285,16 @@ public class RunDrtOpenBerlinScenarioTest {
 					addEventHandlerBinding().toInstance(fareChecker);
 				}
 			});
-
-			controler.run() ;
-
+			
+			controler.run() ;	
+			
 			Plan intermodalPtAgentPlan = scenario.getPopulation().getPersons().get(Id.createPersonId("285614901pt")).getSelectedPlan();
-
+			
 			int intermodalTripCounter = 0;
 			int drtLegsInIntermodalTripsCounter = 0;
-
+			
 			List<Trip> trips = TripStructureUtils.getTrips(intermodalPtAgentPlan.getPlanElements());
-
+			
 			for (Trip trip: trips) {
 				Map<String, Integer> mode2NumberOfLegs = new HashMap<>();
 				for (Leg leg: trip.getLegsOnly()) {
@@ -310,17 +310,17 @@ public class RunDrtOpenBerlinScenarioTest {
 				}
 			}
 			Assert.assertTrue("pt agent has no intermodal route (=drt for access or egress to pt)", intermodalTripCounter > 0);
-
+			
 			// check drt-pt-intermodal trip fare compensator
 			List<PersonMoneyEvent> moneyEventsIntermodalAgent = fareChecker.getEventsForPerson(Id.createPersonId("285614901pt"));
-
+			
 			int hugeMoneyEventCounter = 0;
 			for(PersonMoneyEvent event: moneyEventsIntermodalAgent) {
 				if (event.getAmount() > 10000) {
 					hugeMoneyEventCounter++;
 				}
 			}
-
+			
 			Assert.assertEquals("Number of potential intermodal trip fare compensator money events should be equal to the number of persons who get a compensation.", 1, hugeMoneyEventCounter);
 			Assert.assertEquals("Huge money events thrown at the end of the day should translate into a very large score!", true, 10000 < controler.getScoreStats().getScoreHistory().get( ScoreStatsControlerListener.ScoreItem.average ).get(0));
 
