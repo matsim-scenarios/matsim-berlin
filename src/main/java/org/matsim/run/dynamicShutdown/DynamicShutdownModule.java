@@ -33,8 +33,6 @@ public class DynamicShutdownModule extends AbstractModule {
     @Override
     public void install() {
 
-        DynamicShutdownConfigGroup dynamicShutdownConfigGroup= ConfigUtils.addOrGetModule( getConfig() , DynamicShutdownConfigGroup.class );
-
         this.bind(ModeChoiceCoverageControlerListener.class).in(Singleton.class); //TODO: Delete?
         this.addControlerListenerBinding().to(ModeChoiceCoverageControlerListener.class);
 
@@ -43,5 +41,6 @@ public class DynamicShutdownModule extends AbstractModule {
 
         this.bind(TerminateDynamically.class).in(Singleton.class); //TODO: Delete?
         this.bind(TerminationCriterion.class).to(TerminateDynamically.class);
+
     }
 }

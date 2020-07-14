@@ -32,11 +32,12 @@ import java.util.*;
 import static org.matsim.run.dynamicShutdown.DynamicShutdownConfigGroup.slopeWindowOption.EXPANDING;
 
 /**
- * When user-specified criteria are met, dynamic shutdown is initiated: 1) Turns off innovation in next iteration and
+ * Initiats dynamic shutdown when a when the MATSim run has stabilized: 1) Turns off innovation in next iteration and
  * 2) informs TerminateDynamically Module of the iteration at which MATSim should shut down.
  *
- * The criteria to used must be user specified (i.e. score convergence), as well as the smoothing method and associated
- * parameters.
+ * The simulation is deemed stable, when a group of metrics converge; currently, this includes score, mode stats,
+ * and mode choice coverage. A metric converges when the slope of the metric consistently lies below a user-specified
+ * threshold for number of iterations (default=50).
  *
  * @author jakobrehmann
  */
@@ -44,41 +45,37 @@ import static org.matsim.run.dynamicShutdown.DynamicShutdownConfigGroup.slopeWin
 
 public class DynamicShutdownControlerListenerImpl implements IterationStartsListener, StartupListener, ShutdownListener, DynamicShutdownControlerListener {
 
-    private final BufferedWriter slopesOut ;
-    private final ControlerConfigGroup controlerConfigGroup;
-    private final Scenario scenario;
-    private final ScoreStats scoreStats;
-    private final ModeStatsControlerListener modeStatsControlerListener;
-    private final ModeChoiceCoverageControlerListener modeChoiceCoverageControlerListener;
-    private String outputFileName;
-    private final int globalInnovationDisableAfter;
-    private final PlanCalcScoreConfigGroup scoreConfig;
-
-
-    private final StrategyManager strategyManager;
-    private static int dynamicShutdownIteration;
-    private static boolean dynamicShutdownInitiated;
-    private final StrategyConfigGroup strategyConfigGroup;
     private static final Logger log = Logger.getLogger(StrategyManager.class);
 
+    private final ControlerConfigGroup controlerConfigGroup;
+    private final ScoreStats scoreStats;
+    private final PlanCalcScoreConfigGroup scoreConfig;
+    private final StrategyConfigGroup strategyConfigGroup;
+    private final ModeStatsControlerListener modeStatsControlerListener;
+    private final ModeChoiceCoverageControlerListener modeChoiceCoverageControlerListener;
+    private final Scenario scenario;
+    private final StrategyManager strategyManager;
+
+    private final DynamicShutdownConfigGroup cfg;
+    private final String outputFileName;
+    private final BufferedWriter slopesOut ;
+    private final int globalInnovationDisableAfter;
+
+    private int dynamicShutdownIteration;
+    private boolean dynamicShutdownInitiated;
+    private int dynamicInnovationDisableIteration;
 
     private static final Map<String, Map<Integer,Double>> slopesScore = new HashMap<>();
     private static final Map<String, Map<Integer,Double>> slopesMode = new HashMap<>();
     private static final Map<String, Map<Integer,Double>> slopesModeChoiceCoverage = new HashMap<>();
 
-
     private static final Map<String, Map<Integer,Integer>> convergenceScore = new HashMap<>();
     private static final Map<String, Map<Integer,Integer>> convergenceMode = new HashMap<>();
     private static final Map<String, Map<Integer,Integer>> convergenceModeCC = new HashMap<>();
 
-
     private List<String> activeMetricsScore = new ArrayList<>();
     private List<String> activeMetricsMode = new ArrayList<>();
     private List<String> activeMetricsModeCC = new ArrayList<>();
-
-    private DynamicShutdownConfigGroup cfg;
-    private int innoShutoffIter;
-
 
     @Inject
     DynamicShutdownControlerListenerImpl(ControlerConfigGroup controlerConfigGroup, ScoreStats scoreStats,
@@ -122,7 +119,7 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
     public void notifyStartup(StartupEvent startupEvent) {
         dynamicShutdownInitiated = false ;
         dynamicShutdownIteration = Integer.MAX_VALUE;
-        innoShutoffIter = Integer.MAX_VALUE;
+        dynamicInnovationDisableIteration = Integer.MAX_VALUE;
 
         generateMetricLists(scoreConfig);
 
@@ -217,7 +214,7 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
 
 
         try {
-            if (iteration == innoShutoffIter) {
+            if (iteration == dynamicInnovationDisableIteration) {
                 this.slopesOut.write("\tNOTE: innovation turned off");
             }
         } catch (IOException e) {
@@ -409,10 +406,10 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
 
 
     private void shutdownInnovation(int iteration) {
-        innoShutoffIter = iteration + 1; // New weights are in effect in following iteration.
+        dynamicInnovationDisableIteration = iteration + 1; // New weights are in effect in following iteration.
         double innoPct = strategyConfigGroup.getFractionOfIterationsToDisableInnovation();
         int firstIter = controlerConfigGroup.getFirstIteration();
-        dynamicShutdownIteration = (int) ((innoShutoffIter - firstIter) / innoPct) + firstIter;
+        dynamicShutdownIteration = (int) ((dynamicInnovationDisableIteration - firstIter) / innoPct) + firstIter;
         dynamicShutdownInitiated = true;
 
 
@@ -426,13 +423,13 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
             for (GenericPlanStrategy<Plan, Person> planStrategy : strategyManager.getStrategies(subpopulation)) {
                 PlanStrategyImpl planStrategyImpl = (PlanStrategyImpl) planStrategy;
                 if (!(ReplanningUtils.isOnlySelector(planStrategyImpl))) { // if (innovation strategy)
-                    strategyManager.addChangeRequest(innoShutoffIter, planStrategyImpl, subpopulation, 0.);
+                    strategyManager.addChangeRequest(dynamicInnovationDisableIteration, planStrategyImpl, subpopulation, 0.);
                 }
             }
         }
 
         log.info("********** DYNAMIC SHUTDOWN INITIATED ***********");
-        log.info("Innovation strategies deactivated in iteration " + (innoShutoffIter));
+        log.info("Innovation strategies deactivated in iteration " + (dynamicInnovationDisableIteration));
         log.info("Full shutdown will occur in iteration " + dynamicShutdownIteration);
 
         try {

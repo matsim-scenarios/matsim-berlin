@@ -2,6 +2,11 @@ package org.matsim.run.dynamicShutdown;
 
 import org.matsim.core.config.ReflectiveConfigGroup;
 
+/**
+ *
+ * @author jakobrehmann
+ */
+
 public class DynamicShutdownConfigGroup extends ReflectiveConfigGroup {
 
     public static final String GROUP_NAME = "dynamicShutdown";
