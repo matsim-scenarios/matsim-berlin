@@ -17,53 +17,70 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.run.drt;
+package org.matsim.run.bicycle;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.population.Person;
+import org.matsim.contrib.bicycle.BicycleConfigGroup;
+import org.matsim.contrib.bicycle.Bicycles;
 import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.controler.Controler;
-import org.matsim.drtSpeedUp.DrtSpeedUpConfigGroup;
-import org.matsim.drtSpeedUp.MultiModeDrtSpeedUpModule;
-import org.matsim.optDRT.MultiModeOptDrtConfigGroup;
-import org.matsim.optDRT.OptDrt;
 import org.matsim.run.RunBerlinScenario;
 
 /**
-* @author ikaddoura
-*/
+ * @author dziemke
+ */
+public final class RunBerlinScenarioWithBicycles {
 
-public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
-	private static final Logger log = Logger.getLogger(RunDrtOpenBerlinScenarioWithDrtSpeedUp.class);
+	private static final Logger log = Logger.getLogger(RunBerlinScenarioWithBicycles.class);
 
 	public static void main(String[] args) {
 		for (String arg : args) {
 			log.info( arg );
 		}
-		
+
 		if ( args.length==0 ) {
-			args = new String[] {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-v5.5-1pct.config.xml"}  ;
+			throw new IllegalArgumentException("Config file needs to be provided.");
 		}
 		
-		Config config = RunDrtOpenBerlinScenario.prepareConfig( args , new DrtSpeedUpConfigGroup(), new MultiModeOptDrtConfigGroup() ) ;
-		MultiModeDrtSpeedUpModule.addTeleportedDrtMode(config);
-		
-		Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
-		for( Person person : scenario.getPopulation().getPersons().values() ){
-			person.getPlans().removeIf( (plan) -> plan!=person.getSelectedPlan() ) ;
-		}
-		
-		Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
-		
-		controler.addOverridingModule(new MultiModeDrtSpeedUpModule());
-		OptDrt.addAsOverridingModule(controler, ConfigUtils.addOrGetModule(scenario.getConfig(), MultiModeOptDrtConfigGroup.class));
-		
+		Config config = prepareConfig( args ) ;
+		Scenario scenario = RunBerlinScenario.prepareScenario( config ) ;
+		Controler controler = prepareControler( scenario ) ;
 		controler.run() ;
-		
-		RunBerlinScenario.runAnalysis(controler);
+	}
+	
+	public static Controler prepareControler( Scenario scenario ) {
+		Controler controler = RunBerlinScenario.prepareControler( scenario ) ;
+		Bicycles.addAsOverridingModule(controler);
+
+		return controler;
 	}
 
-}
+	public static Config prepareConfig( String [] args, ConfigGroup... customModules) {
+		BicycleConfigGroup bicycleConfigGroup = new BicycleConfigGroup();
+		bicycleConfigGroup.setBicycleMode("bicycle");
+		ConfigGroup[] customModulesToAdd = new ConfigGroup[]{bicycleConfigGroup};
+		ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
 
+		int counter = 0;
+		for (ConfigGroup customModule : customModules) {
+			customModulesAll[counter] = customModule;
+			counter++;
+		}
+
+		for (ConfigGroup customModule : customModulesToAdd) {
+			customModulesAll[counter] = customModule;
+			counter++;
+		}
+
+		Config config = RunBerlinScenario.prepareConfig( args, customModulesAll ) ;
+		config.plansCalcRoute().removeModeRoutingParams("bicycle");
+
+		//
+		config.controler().setLastIteration(0);
+		//
+
+		return config ;
+	}
+}

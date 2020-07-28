@@ -32,7 +32,7 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.drtSpeedUp.DrtSpeedUpConfigGroup;
-import org.matsim.drtSpeedUp.DrtSpeedUpModule;
+import org.matsim.drtSpeedUp.MultiModeDrtSpeedUpModule;
 import org.matsim.run.BerlinExperimentalConfigGroup;
 import org.matsim.testcases.MatsimTestUtils;
 
@@ -68,13 +68,13 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 			
 			BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 			berlinCfg.setPopulationDownsampleFactor(1.0);
-						
-			DrtSpeedUpModule.adjustConfig(config);
+
+			MultiModeDrtSpeedUpModule.addTeleportedDrtMode(config);
 
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 			
 			Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
-			controler.addOverridingModule(new DrtSpeedUpModule());
+			controler.addOverridingModule(new MultiModeDrtSpeedUpModule());
 			controler.run() ;			
 			
 		} catch ( Exception ee ) {
@@ -104,13 +104,13 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 			
 			BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 			berlinCfg.setPopulationDownsampleFactor(0.01);
-			
-			DrtSpeedUpModule.adjustConfig(config);
+
+			MultiModeDrtSpeedUpModule.addTeleportedDrtMode(config);
 
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 			
 			Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;			
-			controler.addOverridingModule(new DrtSpeedUpModule());
+			controler.addOverridingModule(new MultiModeDrtSpeedUpModule());
 			controler.run() ;			
 			
 		} catch ( Exception ee ) {

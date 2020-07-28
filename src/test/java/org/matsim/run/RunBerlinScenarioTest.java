@@ -42,6 +42,8 @@ import org.matsim.core.router.TripStructureUtils.Trip;
 import org.matsim.testcases.MatsimTestUtils;
 
 /**
+ * part 2 of tests for {@link org.matsim.run.RunBerlinScenario}
+ *
  * @author ikaddoura
  *
  */
@@ -50,89 +52,6 @@ public class RunBerlinScenarioTest {
 	private static final Logger log = Logger.getLogger( RunBerlinScenarioTest.class ) ;
 	
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
-	
-	@Test
-	public final void aTestTest() {
-		// a dummy test to satisfy the matrix build by travis.
-		log.info( "Done with aTestTest"  );
-		log.info("") ;
-		Assert.assertTrue( true );
-	}
-	
-	@Test
-	public final void bTestConfig1() {
-		try {
-			String configFilename = "scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml";
-			final String[] args = {configFilename,
-					"--config:controler.runId", "test-run-ID",
-					"--config:controler.outputDirectory", utils.getOutputDirectory()};
-			
-			Config config =  RunBerlinScenario.prepareConfig( args );
-			Assert.assertEquals("Wrong parameter from command line", "test-run-ID", config.controler().getRunId());
-
-			log.info( "Done with bTestConfig1"  );
-			log.info("") ;
-			
-		} catch ( Exception ee ) {
-			throw new RuntimeException(ee) ;
-		}
-	}
-	
-	@Test
-	public final void cTestConfig2() {
-		try {
-			String configFilename = "scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml";
-			final String[] args = {configFilename,
-					"--config:controler.runId", "test-run-ID",
-					"--config:controler.outputDirectory", utils.getOutputDirectory(),
-					"--config:planCalcScore.scoringParameters[subpopulation=null].modeParams[mode=car].constant", "-0.12345"};
-			
-			Config config =  RunBerlinScenario.prepareConfig( args );
-			Assert.assertEquals("Wrong parameter from command line", -0.12345, config.planCalcScore().getModes().get("car").getConstant(), MatsimTestUtils.EPSILON);
-
-			log.info( "Done with cTestConfig2"  );
-			log.info("") ;
-			
-		} catch ( Exception ee ) {
-			ee.printStackTrace();
-			throw new RuntimeException(ee) ;
-		}
-	}
-	
-	@Test
-	public final void c2TestEquil() {
-		// this should work (but does not since RunBerlinScenario enforces vsp-abort). kai, sep'19
-		
-		try {
-			String configFilename = "scenarios/equil/config.xml" ;
-			final String[] args = {configFilename,
-					"--config:controler.outputDirectory", utils.getOutputDirectory(),
-			};
-			RunBerlinScenario.main( args );
-			
-		} catch ( Exception ee ) {
-			ee.printStackTrace();
-			throw new RuntimeException(ee) ;
-		}
-	}
-	
-	@Test
-	public final void c2TestEquilB() {
-		// this is overriding the vsp-abort but is still not working.  kai, sep'19
-
-		try {
-			String configFilename = "scenarios/equil/config.xml" ;
-			final String[] args = {configFilename,
-					"--config:controler.outputDirectory", utils.getOutputDirectory(),
-					"--config:vspExperimental.vspDefaultsCheckingLevel", "warn"
-			};
-			RunBerlinScenario.main( args );
-			
-		} catch ( Exception ee ) {
-			ee.printStackTrace();
-			throw new RuntimeException(ee) ;
-		}
-	}
 	
 	// 1pct, testing the scores in iteration 0 and 1
 	@Test

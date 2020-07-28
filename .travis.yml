@@ -9,20 +9,22 @@ env:
   global:
     - MAVEN_OPTS="-Xmx6g"
   matrix:
+    - TEST=RunBerlinScenarioSmallTests
     - TEST=RunBerlinScenarioTest
+    - TEST=AbfallUtilsTest
+    - TEST=BerlinRaptorIntermodalAccessEgressTest
+    - TEST=ChangeSingleTripModeAndRoutePlanRouterTest
+    - TEST=IntermodalTripFareCompensatorPerTripTest
+    - TEST=IntermodalTripFareCompensatorsTest
+    - TEST=OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifierTest
     - TEST=OpenBerlinIntermodalPtDrtRouterModeIdentifierTest
+    - TEST=RandomSingleTripPlanRouterTest
+    - TEST=RunBerlinScenarioSingleTripStrategiesTest
     - TEST=RunDrtOpenBerlinScenarioTest
+    - TEST=RunDrtOpenBerlinScenarioWithDrtSpeedUpTest
+    - TEST=RunDrtOpenBerlinScenarioWithPtRoutingModesTest
+    - TEST=RaptorIntermodalAccessRandomizationTest
     # - TEST=RunBerlinScenarioIT#test10pctUntilIteration1 # does not fit into travis.  kai, aug'18
     # - TEST=RunBerlinScenarioIT#test1pctManyIterations # does probably not fit into travis (not tested).  kai, aug'18
-    - TEST=AbfallUtilsTest
-    - TEST=IntermodalTripFareCompensatorsTest
-    - TEST=IntermodalTripFareCompensatorPerTripTest
-    - TEST=OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifierTest
-    - TEST=RunDrtOpenBerlinScenarioWithPtRoutingModesTest
-    - TEST=RunDrtOpenBerlinScenarioWithDrtSpeedUpTest
-    - TEST=ChangeSingleTripModeAndRoutePlanRouterTest
-    - TEST=RandomSingleTripPlanRouterTest
-    - TEST=BerlinRaptorIntermodalAccessEgressTest
-    - TEST=RunBerlinScenarioSingleTripStrategiesTest
 script:
   - mvn -Dtest=${TEST} test --batch-mode -Dmatsim.preferLocalDtds=true -Dmaven.javadoc.skip -e

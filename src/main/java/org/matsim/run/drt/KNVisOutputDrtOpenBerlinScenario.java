@@ -36,7 +36,7 @@ import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.drtSpeedUp.DrtSpeedUpModule;
+import org.matsim.drtSpeedUp.MultiModeDrtSpeedUpModule;
 import org.matsim.run.BerlinExperimentalConfigGroup;
 import org.matsim.vis.otfvis.OTFVisConfigGroup;
 
@@ -85,8 +85,8 @@ public class KNVisOutputDrtOpenBerlinScenario {
 		otfVisConfigGroup.setDrawTransitFacilityIds( false );
 		otfVisConfigGroup.setDrawTransitFacilities( false );
 		otfVisConfigGroup.setLinkWidth( 10.f );
-		
-		DrtSpeedUpModule.adjustConfig(config);
+
+		MultiModeDrtSpeedUpModule.addTeleportedDrtMode(config);
 		
 		for ( final PlanCalcScoreConfigGroup.ActivityParams params : config.planCalcScore().getActivityParams() ) {
 			if ( params.getActivityType().endsWith( "interaction" ) ) {

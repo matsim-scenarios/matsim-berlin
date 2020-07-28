@@ -28,8 +28,6 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.av.robotaxi.fares.drt.DrtFareModule;
 import org.matsim.contrib.av.robotaxi.fares.drt.DrtFaresConfigGroup;
-import org.matsim.contrib.drt.routing.DrtRoute;
-import org.matsim.contrib.drt.routing.DrtRouteFactory;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.drt.run.DrtConfigs;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
@@ -43,16 +41,15 @@ import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
-import org.matsim.core.population.routes.RouteFactories;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.run.RunBerlinScenario;
-import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesConfigGroup;
-import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesModule;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
+import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesConfigGroup;
+import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesModule;
 
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
 
@@ -126,14 +123,14 @@ public final class RunDrtOpenBerlinScenario {
 
 		Scenario scenario = RunBerlinScenario.prepareScenario( config );
 
-		RouteFactories routeFactories = scenario.getPopulation().getFactory().getRouteFactories();
-		routeFactories.setRouteFactory(DrtRoute.class, new DrtRouteFactory());
-
 		for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 			
 			String drtServiceAreaShapeFile = drtCfg.getDrtServiceAreaShapeFile();
 			if (drtServiceAreaShapeFile != null && !drtServiceAreaShapeFile.equals("") && !drtServiceAreaShapeFile.equals("null")) {
-				addDRTmode(scenario, drtCfg.getMode(), drtServiceAreaShapeFile);
+				
+				// I don't think we have to add the drt mode the allowed modes ihab June '20
+//				addDRTmode(scenario, drtCfg.getMode(), drtServiceAreaShapeFile);
+				
 				tagTransitStopsInServiceArea(scenario.getTransitSchedule(), 
 						DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_ATTRIBUTE, DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_VALUE, 
 						drtServiceAreaShapeFile,

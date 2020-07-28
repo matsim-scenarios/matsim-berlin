@@ -10,9 +10,9 @@
 	<description>MATSim Open Berlin scenario project</description>
 
 	<properties>
-		<!-- <matsim.version>12.0-SNAPSHOT</matsim.version>-->
-		<matsim.version>12.0-2020w12-SNAPSHOT</matsim.version>
-	</properties>
+		 <matsim.version>13.0-SNAPSHOT</matsim.version>
+		<!--		<matsim.version>13.0-2020w28-SNAPSHOT</matsim.version>-->
+            </properties>
 
 	<repositories>
 
@@ -31,13 +31,23 @@
 			<!-- Geotools is not on Maven central -->
 			<id>osgeo</id>
 			<name>Geotools repository</name>
-			<url>http://download.osgeo.org/webdav/geotools</url>
+			<url>https://repo.osgeo.org/repository/release</url>
 		</repository>
 
 		<repository>
 			<!-- Required for MATSim snaphots -->
 			<id>ojo-snapshots</id>
 			<url>http://oss.jfrog.org/libs-snapshot</url>
+		</repository>
+
+		<repository>
+			<id>de.topobyte</id>
+			<url>https://mvn.topobyte.de</url>
+		</repository>
+
+		<repository>
+			<id>com.slimjars.trove4j</id>
+			<url>https://mvn.slimjars.com</url>
 		</repository>
 
 	</repositories>
@@ -71,6 +81,14 @@
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>noise</artifactId>
+			<version>${matsim.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
 
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
@@ -110,8 +128,20 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.matsim</groupId>
+			<artifactId>matsim-examples</artifactId>
+			<version>${matsim.version}</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>analysis</artifactId>
+			<version>${matsim.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>bicycle</artifactId>
 			<version>${matsim.version}</version>
 		</dependency>
 
@@ -126,24 +156,32 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>drt</artifactId>
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
 		</dependency>
+
 		<dependency>
 	    	<groupId>com.github.matsim-vsp</groupId>
 	    	<artifactId>drt-speed-up</artifactId>
 	    	<!-- for some reason jitpack does not like release v0.0.2, but is happy with the commit id of the very same release -->
-	    	<version>83d661919a</version>
+	    	<version>2faf970d63</version>
+		</dependency>
+		
+		<dependency>
+	    	<groupId>com.github.matsim-vsp</groupId>
+	    	<artifactId>opt-drt</artifactId>
+	    	<version>b55180f2a9</version>
 		</dependency>
 		
 		<dependency>
 	    	<groupId>com.github.matsim-vsp</groupId>
 	    	<artifactId>matsim-analysis</artifactId>
 	    	<!-- <version>v2.5</version> -->
-	    	<version>c0fd16d1ec</version>
+	    	<version>5d376aedc5</version>
 		</dependency>
 
 		<dependency>
@@ -165,6 +203,14 @@
     </exclusions> 
     
 		</dependency>
+
+		<!-- for weighted random draw: https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-math3</artifactId>
+			<version>3.6.1</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -302,29 +348,6 @@
 					</plugins>
 				</pluginManagement>
 			</build>
-		</profile>
-		<profile>
-			<id>java-9+</id>
-			<activation>
-				<jdk>[9</jdk>
-			</activation>
-			<dependencies>
-				<dependency>
-					<groupId>javax.xml.bind</groupId>
-					<artifactId>jaxb-api</artifactId>
-					<version>2.3.1</version>
-				</dependency>
-				<dependency>
-					<groupId>com.sun.xml.bind</groupId>
-					<artifactId>jaxb-core</artifactId>
-					<version>2.3.0.1</version>
-				</dependency>
-				<dependency>
-					<groupId>com.sun.xml.bind</groupId>
-					<artifactId>jaxb-impl</artifactId>
-					<version>2.3.0.1</version>
-				</dependency>
-			</dependencies>
 		</profile>
 	</profiles>
 
