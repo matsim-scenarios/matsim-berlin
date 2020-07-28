@@ -18,7 +18,7 @@ import java.util.Set;
 public class GetLinksInArea {
 
     public static void main(String[] args) throws MalformedURLException {
-        Config config = ConfigUtils.createConfig();
+        Config config = ConfigUtils.loadConfig("scenarios/berlin-v5.5-10pct/input/berlin-v5.5-10pct.config.xml");
         Scenario scenario =  ScenarioUtils.loadScenario(config);
         List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new URL("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlin-hundekopf-areas/berlin_hundekopf.shp"));
         Set<Id<Link>> linksInArea = new HashSet<>();
