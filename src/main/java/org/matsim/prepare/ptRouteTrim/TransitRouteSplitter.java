@@ -153,6 +153,7 @@ public class TransitRouteSplitter {
         ArrayList<TransitRoute> resultRoutes = new ArrayList<>();
         for (TransitRouteStop stop : routeOld.getStops()) {
             Id<TransitStopFacility> id = stop.getStopFacility().getId();
+
             inOutList.add(stopsInArea.contains(id));
         }
 
