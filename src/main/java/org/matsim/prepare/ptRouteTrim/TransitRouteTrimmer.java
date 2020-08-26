@@ -95,7 +95,7 @@ public class TransitRouteTrimmer {
         final String inVehiclesFile = "D:\\runs\\gladbeck\\input\\optimizedVehicles.xml.gz";
         final String inNetworkFile = "D:\\runs\\gladbeck\\input\\optimizedNetwork.xml.gz";
         final String zoneShpFile = "D:/runs/gladbeck/input/area_B_en_detail.shp";
-        final String outputPath = "src/main/java/org/matsim/prepare/ptRouteTrim/output2/";
+        final String outputPath = "src/main/java/org/matsim/prepare/ptRouteTrim/output3/";
 
         Config config = ConfigUtils.createConfig();
         config.transit().setTransitScheduleFile(inScheduleFile);
@@ -111,11 +111,13 @@ public class TransitRouteTrimmer {
         TransitSchedule transitSchedule = scenario.getTransitSchedule();
 
 
-        Set<Id<TransitLine>> linesToModify = transitSchedule.getTransitLines().values().stream()
-                .filter(v -> v.getId().toString().contains("SB"))
-                .map(v -> v.getId())
-                .collect(Collectors.toSet()
-                );
+        Set<Id<TransitLine>> linesToModify = transitSchedule.getTransitLines().keySet();
+
+//        Set<Id<TransitLine>> linesToModify = transitSchedule.getTransitLines().values().stream()
+//                .filter(v -> v.getId().toString().contains("SB"))
+//                .map(v -> v.getId())
+//                .collect(Collectors.toSet()
+//                );
 
 
 //        Set<Id<TransitLine>> linesToModify = transitSchedule.getTransitLines().values().stream()
@@ -123,9 +125,6 @@ public class TransitRouteTrimmer {
 //                .map(v -> v.getId())
 //                .collect(Collectors.toSet()
 //                );
-        System.out.println("SIIIIIIIIIIIIIIIIIIZE"+linesToModify.size());
-
-        System.out.println(linesToModify);
 
         List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new File(zoneShpFile).toURI().toURL());
 //        List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new URL(zoneShpFile));
@@ -237,17 +236,32 @@ public class TransitRouteTrimmer {
                 stops2Keep.add(stop);
             } else {
                 if (allowOneStopWithinZone) {
-                    Id<TransitStopFacility> prevStop = stopsOld.get(i - 1).getStopFacility().getId();
-                    Id<TransitStopFacility> nextStop = stopsOld.get(i + 1).getStopFacility().getId();
-                    if (!stopsInZone.contains(prevStop) || !stopsInZone.contains(nextStop)) {
-                        stops2Keep.add(stop);
-                        //TODO: add attribute
+                    if (i > 0) {
+                        Id<TransitStopFacility> prevStop = stopsOld.get(i - 1).getStopFacility().getId();
+                        if (!stopsInZone.contains(prevStop)) {
+                            stops2Keep.add(stop); // TODO ADD ATTRIBUTE
+                            continue;
+                        }
+                    }
+
+                    if (i < stopsOld.size() - 1) {
+                        Id<TransitStopFacility> nextStop = stopsOld.get(i + 1).getStopFacility().getId();
+                        if (!stopsInZone.contains(nextStop)) {
+                            stops2Keep.add(stop);
+                        }
+
                     }
                 }
             }
         }
 
-        return createNewRoute(routeOld, stops2Keep, 1);
+
+        if (stops2Keep.size() >= minimumRouteLength && stops2Keep.size() > 0) {
+            return createNewRoute(routeOld, stops2Keep, 1);
+        }
+
+        return null; // What do we do here?
+
     }
 
 //    private TransitRoute modifyRouteTrimEnds(TransitRoute routeOld, Set<Id<TransitStopFacility>> stopsInZone, Scenario scenario) {
