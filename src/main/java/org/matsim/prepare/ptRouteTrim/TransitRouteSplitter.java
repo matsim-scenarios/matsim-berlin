@@ -222,7 +222,7 @@ public class TransitRouteSplitter {
 
     private TransitRoute createNewRoute(TransitRoute routeOld, Scenario scenario, List<TransitRouteStop> stopsNew, int modNumber) {
 //        int routecnt = 0;
-        List<TransitRoute> newRoutes = new ArrayList<TransitRoute>();
+//        List<TransitRoute> newRoutes = new ArrayList<TransitRoute>();
         //copy the old Routes link sequence
         List<Id<Link>> oldLinkIds = new ArrayList<>();
         oldLinkIds.add(routeOld.getRoute().getStartLinkId());
