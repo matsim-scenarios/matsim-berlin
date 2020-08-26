@@ -2,9 +2,6 @@ language: java
 
 jdk: openjdk11
 
-# The trusty build environment allows for more memory, see https://docs.travis-ci.com/user/reference/overview/
-dist: trusty
-
 env:
   global:
     - MAVEN_OPTS="-Xmx6g"
