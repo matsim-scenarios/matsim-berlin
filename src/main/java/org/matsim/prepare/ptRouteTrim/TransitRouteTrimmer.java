@@ -267,6 +267,12 @@ public class TransitRouteTrimmer {
 //    private TransitRoute modifyRouteTrimEnds(TransitRoute routeOld, Set<Id<TransitStopFacility>> stopsInZone, Scenario scenario) {
 //        TransitRoute routeNew = null;
 //
+//
+//        List<TransitRouteStop> stops2Keep = new ArrayList<>();
+//        List<TransitRouteStop> stopsOld = new ArrayList<>(routeOld.getStops());
+//
+//
+//
 //        // Find which stops of route are within zone
 //        ArrayList<Boolean> inOutList = new ArrayList<>();
 //        for (TransitRouteStop stop : routeOld.getStops()) {
@@ -283,6 +289,9 @@ public class TransitRouteTrimmer {
 //        for (int i = 0; i < keepDiscardList.size(); i++) {
 //            if (inOutList.get(i) == true) {
 //                keepDiscardList.set(i, true);
+////                if (allowOneStopWithinZone && i > 0) {
+////                    keepDiscardList.set(i - 1, true);
+////                }
 //            } else {
 //                break;
 //            }
@@ -292,10 +301,15 @@ public class TransitRouteTrimmer {
 //        for (int i = keepDiscardList.size() - 1; i >= 0; i--) {
 //            if (inOutList.get(i) == true) {
 //                keepDiscardList.set(i, true);
+//                if (allowOneStopWithinZone && i < keepDiscardList.size() - 1) {
+//                    keepDiscardList.set(i + 1, true);
+//                }
 //            } else {
 //                break;
 //            }
 //        }
+//
+//
 //        return createNewRoute(routeOld, scenario, keepDiscardList);
 //    }
 
