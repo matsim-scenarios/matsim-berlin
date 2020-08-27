@@ -37,15 +37,15 @@ public class TransitRouteTrimmer {
     private static final Logger log = Logger.getLogger(TransitRouteTrimmer.class);
 
     // Parameters
-    private static boolean removeEmptyLines = true;
-    private static boolean allowOneStopWithinZone = true ;
+    boolean removeEmptyLines = true;
+    boolean allowOneStopWithinZone = true ;
     private int minimumRouteLength = 2;
 
     private Set<String> modes2Trim;
     private Vehicles vehicles;
     private TransitSchedule transitScheduleOld;
     private TransitSchedule transitScheduleNew;
-    private Set<Id<TransitStopFacility>> stopsInZone;
+    private static Set<Id<TransitStopFacility>> stopsInZone;
     private TransitScheduleFactory tsf;
     
     //TODO: Vehicles new
@@ -87,9 +87,11 @@ public class TransitRouteTrimmer {
 
     }
 
-    public static void main(String[] args) throws IOException, SchemaException {
+    public Set<Id<TransitStopFacility>> getStopsInZone() {
+        return stopsInZone;
+    }
 
-        final String outputRouteShapeRoot = "C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\routes";
+    public static void main(String[] args) throws IOException, SchemaException {
 
         final String inScheduleFile = "D:\\runs\\gladbeck\\input\\optimizedSchedule.xml.gz";
         final String inVehiclesFile = "D:\\runs\\gladbeck\\input\\optimizedVehicles.xml.gz";
@@ -148,6 +150,10 @@ public class TransitRouteTrimmer {
 
 
     public void modifyTransitLinesFromTransitSchedule(Set<Id<TransitLine>> linesToModify, modMethod modifyMethod) {
+
+//        this.transitScheduleNew = (new TransitScheduleFactoryImpl()).createTransitSchedule(); //TODO: Does this makes sense? I want to clear the new transit schedule, multiple processes can be stacked.
+
+
         Iterator var3 = transitScheduleOld.getFacilities().values().iterator();
 
         while (var3.hasNext()) {
@@ -425,7 +431,7 @@ public class TransitRouteTrimmer {
 
         List<TransitRouteStop> stops2Keep = new ArrayList<>();
 
-        int newRouteCnt = 0;
+        int newRouteCnt = 1;
         for (int i = 0; i < stopsOld.size(); i++) {
             Id<TransitStopFacility> stopFacilityId = stopsOld.get(i).getStopFacility().getId();
             if (!stopsInZone.contains(stopFacilityId)) { // we are outside of zone --> we keep the stop
