@@ -180,8 +180,8 @@ public class TransitRouteTrimmer {
                         continue;
                     }
                     routeNew = route;
-//                } else if (modifyMethod.equals(modMethod.TrimEnds)) {
-//                    routeNew = modifyRouteTrimEnds(route, stopsInZone, scenario);
+                } else if (modifyMethod.equals(modMethod.TrimEnds)) {
+                    routeNew = modifyRouteTrimEnds(route);
 //                } else if (modifyMethod.equals(modMethod.ChooseLongerEnd)) {
 //                    routeNew = modifyRouteChooseLongerEnd(route, stopsInZone, scenario);
                 } else if (modifyMethod.equals((modMethod.SkipStopsWithinZone))) {
@@ -264,14 +264,76 @@ public class TransitRouteTrimmer {
 
     }
 
-//    private TransitRoute modifyRouteTrimEnds(TransitRoute routeOld, Set<Id<TransitStopFacility>> stopsInZone, Scenario scenario) {
-//        TransitRoute routeNew = null;
-//
-//
-//        List<TransitRouteStop> stops2Keep = new ArrayList<>();
-//        List<TransitRouteStop> stopsOld = new ArrayList<>(routeOld.getStops());
-//
-//
+    private TransitRoute modifyRouteTrimEnds(TransitRoute routeOld) {
+        TransitRoute routeNew = null;
+
+
+        List<TransitRouteStop> stops2Keep = new ArrayList<>();
+        List<TransitRouteStop> stopsOld = new ArrayList<>(routeOld.getStops());
+
+        ListIterator<TransitRouteStop> it = stopsOld.listIterator();
+
+
+        Id<TransitStopFacility> startStopId = null; //TODO: ???
+        for (int i = 0; i < stopsOld.size(); i++) {
+
+            Id<TransitStopFacility> id = stopsOld.get(i).getStopFacility().getId();
+            if (!stopsInZone.contains(id)) {
+                if (allowOneStopWithinZone && i > 0) {
+                    startStopId = stopsOld.get(i - 1).getStopFacility().getId();
+                } else {
+                    startStopId = id;
+                }
+
+                break;
+            }
+
+        }
+
+        Id<TransitStopFacility> lastStopId = null;//TODO: ???
+        for (int i = stopsOld.size()-1; i >= 0; i--) {
+
+            Id<TransitStopFacility> id = stopsOld.get(i).getStopFacility().getId();
+            if (!stopsInZone.contains(id)) {
+                if (allowOneStopWithinZone && i < stopsOld.size() - 1) {
+                    lastStopId = stopsOld.get(i + 1).getStopFacility().getId();
+                } else {
+                    lastStopId = id;
+                }
+                break;
+            }
+        }
+
+        if (startStopId == null || lastStopId == null) {
+            return null;
+        }
+
+        boolean start = false;
+        for (TransitRouteStop stop : stopsOld) {
+            if (!start) {
+                if (stop.getStopFacility().getId().equals(startStopId)){
+                    stops2Keep.add(stop);
+                    start = true;
+                }
+                continue;
+            }
+
+            if (stop.getStopFacility().getId().equals(lastStopId)) {
+                stops2Keep.add(stop);
+                break;
+            }
+            stops2Keep.add(stop);
+
+        }
+
+        if (stops2Keep.size() >= minimumRouteLength && stops2Keep.size() > 0) {
+            return createNewRoute(routeOld, stops2Keep, 1);
+        }
+
+        return null; // What do we do here?
+
+
+    }
 //
 //        // Find which stops of route are within zone
 //        ArrayList<Boolean> inOutList = new ArrayList<>();
