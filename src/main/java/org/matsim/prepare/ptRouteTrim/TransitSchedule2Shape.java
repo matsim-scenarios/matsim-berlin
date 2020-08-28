@@ -54,19 +54,19 @@ public class TransitSchedule2Shape {
         Scenario scenario = ScenarioUtils.loadScenario(config);
         TransitSchedule tS = scenario.getTransitSchedule();
 
-        createShpFile(tS, newFile);
+        createShpFile(tS, newFile, "31468");
 
     }
 
 
-    public static void createShpFile(TransitSchedule tS, String outputFilename) throws SchemaException, IOException {
+    public static void createShpFile(TransitSchedule tS, String outputFilename, String epsgCode) throws SchemaException, IOException {
 
         File newFile = new File(outputFilename);
 
         final SimpleFeatureType TYPE =
                 DataUtilities.createType(
                         "Link",
-                        "the_geom:LineString:srid=31468,"
+                        "the_geom:LineString:srid=" + epsgCode + ","
                                 + // <- the geometry attribute: Point type
                                 "name:String,"
 //                                + // <- a String attribute

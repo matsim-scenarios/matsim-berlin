@@ -46,6 +46,7 @@ public class TransitRouteSplitter {
         final String inNetworkFile = "D:\\runs\\gladbeck\\input\\optimizedNetwork.xml.gz";
         final String zoneShpFile = "D:/runs/gladbeck/input/area_B_en_detail.shp";
         final String outputPath = "src/main/java/org/matsim/prepare/ptRouteTrim/output2/";
+        final String epsgCode = "31468";
 
 
 //        final String inScheduleFile = "https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v0/optimizedSchedule.xml.gz";
@@ -94,7 +95,7 @@ public class TransitRouteSplitter {
         // Base Case
         String caseName = "base";
         TransitRouteTrimmer.countLinesInOut(inTransitSchedule, stopsInArea);
-        TransitSchedule2Shape.createShpFile(inTransitSchedule, outputPath + caseName + "Routes.shp");
+        TransitSchedule2Shape.createShpFile(inTransitSchedule, outputPath + caseName + "Routes.shp", epsgCode);
         writeTransitSchedule(outputPath + caseName + "Sched.xml.gz", scenario, inTransitSchedule);
 
         //Modify Routes: Split Routes into shorter sections (first stop not included)
@@ -114,7 +115,7 @@ public class TransitRouteSplitter {
         TransitSchedule outTransitSchedule2 = transitRouteSplitter.modifyTransitLines(inTransitSchedule, linesToModify, stopsInArea, scenario);
         System.out.println("\n Modify Routes: " + caseName);
         TransitRouteTrimmer.countLinesInOut(outTransitSchedule2, stopsInArea);
-        TransitSchedule2Shape.createShpFile(outTransitSchedule2, outputPath + caseName + "Routes.shp");
+        TransitSchedule2Shape.createShpFile(outTransitSchedule2, outputPath + caseName + "Routes.shp", epsgCode);
         writeTransitSchedule(outputPath + caseName + "Sched.xml.gz", scenario, outTransitSchedule2);
 
 //        Vehicles cleanedVehicles = TransitUtilsJR.removeUnusedVehicles(scenario.getVehicles(), outTransitSchedule2);

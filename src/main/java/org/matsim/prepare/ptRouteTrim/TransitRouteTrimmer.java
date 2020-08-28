@@ -88,19 +88,33 @@ public class TransitRouteTrimmer {
 
     public static void main(String[] args) throws IOException, SchemaException {
 
-        final String inScheduleFile = "D:\\runs\\gladbeck\\input\\optimizedSchedule.xml.gz";
-        final String inVehiclesFile = "D:\\runs\\gladbeck\\input\\optimizedVehicles.xml.gz";
-        final String inNetworkFile = "D:\\runs\\gladbeck\\input\\optimizedNetwork.xml.gz";
-        final String zoneShpFile = "D:/runs/gladbeck/input/area_B_en_detail.shp";
-        final String outputPath = "src/main/java/org/matsim/prepare/ptRouteTrim/output3/";
+        final String inScheduleFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v0/optimizedSchedule.xml.gz";
+        final String inVehiclesFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v0/optimizedVehicles.xml.gz";
+        final String inNetworkFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v0/optimizedNetwork.xml.gz";
+        final String zoneShpFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v1/shp-files/Gladbeck_area_b_en_detail_bus_hubs_Schnellbus_cut_out.shp";
+        final String epsgCode = "25832";
+
+//        final String inScheduleFile = "D:\\runs\\gladbeck\\input\\optimizedSchedule.xml.gz";
+//        final String inVehiclesFile = "D:\\runs\\gladbeck\\input\\optimizedVehicles.xml.gz";
+//        final String inNetworkFile = "D:\\runs\\gladbeck\\input\\optimizedNetwork.xml.gz";
+//        final String zoneShpFile = "D:/runs/gladbeck/input/area_B_en_detail.shp";
+        final String outputPath = "ptRouteTrim/output4/";
 
         Config config = ConfigUtils.createConfig();
+        config.global().setCoordinateSystem("EPSG:" + epsgCode);
         config.transit().setTransitScheduleFile(inScheduleFile);
         config.network().setInputFile(inNetworkFile);
         config.vehicles().setVehiclesFile(inVehiclesFile);
 
         MutableScenario scenario = (MutableScenario) ScenarioUtils.loadScenario(config);
 
+        /*
+         * vsp-gleich: My intuition here would be to rather prepare a set of TransitLines (or ids of TransitLines) as a
+         * preprocessing step outside of TransitRouteTrimmer (at most in its main method) and
+         * pass that to TransitRouteTrimmer instead of a list of modes. Makes things probably more flexible.
+         * TransitUtilsJR (a class in search of a better name ;-) ) could offer some method
+         * getAllTransitLinesOfMode(String mode) to make things easy.
+         */
         Set<String> modes2Trim = new HashSet<>();
         modes2Trim.add("bus");
 
@@ -132,13 +146,13 @@ public class TransitRouteTrimmer {
         List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new File(zoneShpFile).toURI().toURL());
 //        List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new URL(zoneShpFile));
 
-
+        TransitSchedule2Shape.createShpFile(scenario.getTransitSchedule(), outputPath + "output-input-routes.shp", epsgCode);
         System.out.println("\n Modify Routes: SplitRoute");
         TransitRouteTrimmer transitRouteTrimmer = new TransitRouteTrimmer(scenario.getTransitSchedule(), scenario.getVehicles(), modes2Trim, geometries);
         transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, modMethod.SplitRoute);
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
         Vehicles vehiclesNew = transitRouteTrimmer.getVehicles();
-        TransitSchedule2Shape.createShpFile(transitScheduleNew, outputPath + "output-trimmed-routes.shp");
+        TransitSchedule2Shape.createShpFile(transitScheduleNew, outputPath + "output-trimmed-routes.shp", epsgCode);
         new TransitScheduleWriter(transitScheduleNew).writeFile(outputPath + "output-trimmed-schedule.xml.gz");
         new MatsimVehicleWriter(vehiclesNew).writeFile(outputPath + "output-vehicles.xml.gz");
 
