@@ -11,6 +11,8 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.pt.transitSchedule.api.*;
 import org.matsim.utils.gis.shp2matsim.ShpGeometryUtils;
+import org.matsim.vehicles.MatsimVehicleWriter;
+import org.matsim.vehicles.Vehicles;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -43,7 +45,7 @@ public class TransitRouteTrimmerTest {
         Set<String> modes2Trim = new HashSet<>();
         modes2Trim.add("bus");
         List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new URL(zoneShpFile));
-        System.out.println("\n Modify Routes: SplitOldRouteIntoMultiplePieces");
+        System.out.println("\n Modify Routes: SplitRoute");
         transitRouteTrimmer = new TransitRouteTrimmer(scenario.getTransitSchedule(), scenario.getVehicles(), modes2Trim, geometries);
 
     }
@@ -325,7 +327,7 @@ public class TransitRouteTrimmerTest {
 
         // Modification
         Set<Id<TransitLine>> linesToModify = scenario.getTransitSchedule().getTransitLines().keySet();
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitOldRouteIntoMultiplePieces);
+        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitRoute);
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
 
 
@@ -377,7 +379,7 @@ public class TransitRouteTrimmerTest {
 
         Set<Id<TransitLine>> linesToModify = scenario.getTransitSchedule().getTransitLines().keySet();
         transitRouteTrimmer.removeEmptyLines = false;
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitOldRouteIntoMultiplePieces);
+        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitRoute);
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
         assertTrue("sched should include empty transit line",transitScheduleNew.getTransitLines().containsKey(transitLineId));
         assertEquals("transitLine should not longer contain any routes", transitScheduleNew.getTransitLines().get(transitLineId).getRoutes().size(),0);
@@ -405,7 +407,7 @@ public class TransitRouteTrimmerTest {
         // Modification
         Set<Id<TransitLine>> linesToModify = scenario.getTransitSchedule().getTransitLines().keySet();
         transitRouteTrimmer.removeEmptyLines = false;
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitOldRouteIntoMultiplePieces);
+        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitRoute);
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
 
         assertTrue("line should still exist", transitScheduleNew.getTransitLines().containsKey(transitLineId));
@@ -444,6 +446,12 @@ public class TransitRouteTrimmerTest {
 //        Assert.assertEquals("new route should contain same number of links as old one", numLinksOld, numLinksNew);
         Assert.assertEquals("new route #1 should only have one stop within zone", 1, inCntNew1);
         Assert.assertEquals("new route #2 should only have one stop within zone", 1, inCntNew2);
+
+
+        final String outputPath = "src/main/java/org/matsim/prepare/ptRouteTrim/output4/";
+        Vehicles vehiclesNew = transitRouteTrimmer.getVehicles();
+        new TransitScheduleWriter(transitScheduleNew).writeFile(outputPath + "output-trimmed-schedule.xml.gz");
+        new MatsimVehicleWriter(vehiclesNew).writeFile(outputPath + "output-vehicles.xml.gz");
 
     }
 

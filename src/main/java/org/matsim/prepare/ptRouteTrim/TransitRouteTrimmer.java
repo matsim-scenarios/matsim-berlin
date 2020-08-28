@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 import org.geotools.feature.SchemaException;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.matsim.api.core.v01.Id;
-import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -19,7 +18,6 @@ import org.matsim.vehicles.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,8 +25,6 @@ import java.util.stream.Collectors;
  * This tool creates a trims TransitRoutes, so as not to enter a user-specified ESRI shape file.
  * There are several modifier methods that can be used separately or in combination.
  *
- * TODO: Keep one TransitStop within the shapefile
- * TODO: Change Offsets
  *
  * @author jakobrehmann
  */
@@ -53,11 +49,10 @@ public class TransitRouteTrimmer {
 
 
     enum modMethod {
-        DeleteRoutesEntirelyInsideZone,
+        SplitRoute,
         SkipStopsWithinZone,
-        TrimEnds,
-        ChooseLongerEnd,
-        SplitOldRouteIntoMultiplePieces
+        DeleteRoutesEntirelyInsideZone,
+        TrimEnds
     }
 
 
@@ -113,13 +108,19 @@ public class TransitRouteTrimmer {
         TransitSchedule transitSchedule = scenario.getTransitSchedule();
 
 
-        Set<Id<TransitLine>> linesToModify = transitSchedule.getTransitLines().keySet();
+        Set<Id<TransitLine>> linesToModify = new HashSet<>(transitSchedule.getTransitLines().keySet());
 
-//        Set<Id<TransitLine>> linesToModify = transitSchedule.getTransitLines().values().stream()
-//                .filter(v -> v.getId().toString().contains("SB"))
-//                .map(v -> v.getId())
-//                .collect(Collectors.toSet()
-//                );
+
+
+        Set<Id<TransitLine>> linesSB = transitSchedule.getTransitLines().values().stream()
+                .filter(v -> v.getId().toString().contains("SB"))
+                .map(v -> v.getId())
+                .collect(Collectors.toSet()
+                );
+
+        for (Id<TransitLine> line : linesSB) {
+            linesToModify.remove(line);
+        }
 
 
 //        Set<Id<TransitLine>> linesToModify = transitSchedule.getTransitLines().values().stream()
@@ -132,9 +133,9 @@ public class TransitRouteTrimmer {
 //        List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new URL(zoneShpFile));
 
 
-        System.out.println("\n Modify Routes: SplitOldRouteIntoMultiplePieces");
+        System.out.println("\n Modify Routes: SplitRoute");
         TransitRouteTrimmer transitRouteTrimmer = new TransitRouteTrimmer(scenario.getTransitSchedule(), scenario.getVehicles(), modes2Trim, geometries);
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, modMethod.SplitOldRouteIntoMultiplePieces);
+        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, modMethod.SplitRoute);
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
         Vehicles vehiclesNew = transitRouteTrimmer.getVehicles();
         TransitSchedule2Shape.createShpFile(transitScheduleNew, outputPath + "output-trimmed-routes.shp");
@@ -188,12 +189,10 @@ public class TransitRouteTrimmer {
                     routeNew = route;
                 } else if (modifyMethod.equals(modMethod.TrimEnds)) {
                     routeNew = modifyRouteTrimEnds(route);
-//                } else if (modifyMethod.equals(modMethod.ChooseLongerEnd)) {
-//                    routeNew = modifyRouteChooseLongerEnd(route, stopsInZone, scenario);
                 } else if (modifyMethod.equals((modMethod.SkipStopsWithinZone))) {
                     routeNew = modifyRouteSkipStopsWithinZone(route);
-                } else if (modifyMethod.equals(modMethod.SplitOldRouteIntoMultiplePieces)) {
-                    ArrayList<TransitRoute> routesNew = modifyRouteCutIntoShorterRoutes(route);
+                } else if (modifyMethod.equals(modMethod.SplitRoute)) {
+                    ArrayList<TransitRoute> routesNew = modifyRouteSplitRoute(route);
                     for (TransitRoute rt : routesNew) {
                         lineNew.addRoute(rt);
                     }
@@ -228,8 +227,6 @@ public class TransitRouteTrimmer {
     public TransitSchedule getTransitScheduleNew() {
         return transitScheduleNew;
     }
-
-
 
     // This will skip stops within zone. If beginning or end of route is within zone, it will cut those ends off.
     private TransitRoute modifyRouteSkipStopsWithinZone(TransitRoute routeOld) {
@@ -266,18 +263,14 @@ public class TransitRouteTrimmer {
             return createNewRoute(routeOld, stops2Keep, 1);
         }
 
-        return null; // What do we do here?
+        return null; // TODO: Check this
 
     }
 
     private TransitRoute modifyRouteTrimEnds(TransitRoute routeOld) {
-        TransitRoute routeNew = null;
-
 
         List<TransitRouteStop> stops2Keep = new ArrayList<>();
         List<TransitRouteStop> stopsOld = new ArrayList<>(routeOld.getStops());
-
-        ListIterator<TransitRouteStop> it = stopsOld.listIterator();
 
 
         Id<TransitStopFacility> startStopId = null; //TODO: ???
@@ -336,96 +329,12 @@ public class TransitRouteTrimmer {
             return createNewRoute(routeOld, stops2Keep, 1);
         }
 
-        return null; // What do we do here?
-
+        return null; // TODO: Check this
 
     }
-//
-//        // Find which stops of route are within zone
-//        ArrayList<Boolean> inOutList = new ArrayList<>();
-//        for (TransitRouteStop stop : routeOld.getStops()) {
-//            Id<TransitStopFacility> id = stop.getStopFacility().getId();
-//            inOutList.add(stopsInZone.contains(id));
-//        }
-//
-//        ArrayList<Boolean> keepDiscardList = new ArrayList<>();
-//        for (int i = 0; i < inOutList.size(); i++) {
-//            keepDiscardList.add(false);
-//        }
-//
-//        // from beginning of trip
-//        for (int i = 0; i < keepDiscardList.size(); i++) {
-//            if (inOutList.get(i) == true) {
-//                keepDiscardList.set(i, true);
-////                if (allowOneStopWithinZone && i > 0) {
-////                    keepDiscardList.set(i - 1, true);
-////                }
-//            } else {
-//                break;
-//            }
-//        }
-//
-//        // from end of trip
-//        for (int i = keepDiscardList.size() - 1; i >= 0; i--) {
-//            if (inOutList.get(i) == true) {
-//                keepDiscardList.set(i, true);
-//                if (allowOneStopWithinZone && i < keepDiscardList.size() - 1) {
-//                    keepDiscardList.set(i + 1, true);
-//                }
-//            } else {
-//                break;
-//            }
-//        }
-//
-//
-//        return createNewRoute(routeOld, scenario, keepDiscardList);
-//    }
 
-//    private TransitRoute modifyRouteChooseLongerEnd(TransitRoute routeOld, Set<Id<TransitStopFacility>> stopsInZone, Scenario scenario) {
-//        // Find which stops of route are within zone
-//        ArrayList<Boolean> inOutList = new ArrayList<>();
-//        for (TransitRouteStop stop : routeOld.getStops()) {
-//            Id<TransitStopFacility> id = stop.getStopFacility().getId();
-//            inOutList.add(stopsInZone.contains(id));
-//        }
-//
-//        int falseCountBeginning = 0;
-//        for (int i = 0; i < inOutList.size(); i++) {
-//            if (!inOutList.get(i)) {
-//                falseCountBeginning++;
-//            } else {
-//                break;
-//            }
-//        }
-//
-//        int falseCountEnd = 0;
-//        for (int i = inOutList.size() - 1; i >= 0; i--) {
-//            if (!inOutList.get(i)) {
-//                falseCountEnd++;
-//            } else {
-//                break;
-//            }
-//        }
-//
-//        ArrayList<Boolean> keepDiscardList = new ArrayList<>();
-//        for (int i = 0; i < inOutList.size(); i++) {
-//            keepDiscardList.add(true);
-//        }
-//
-//        if (falseCountBeginning >= falseCountEnd) {
-//            for (int i = 0; i < falseCountBeginning; i++) {
-//                keepDiscardList.set(i, false);
-//            }
-//        } else {
-//            for (int i = inOutList.size() - 1; i >= inOutList.size() - falseCountEnd; i--) {
-//                keepDiscardList.set(i, false);
-//            }
-//        }
-//
-//        return createNewRoute(routeOld, scenario, keepDiscardList);
-//    }
 
-    private ArrayList<TransitRoute> modifyRouteCutIntoShorterRoutes(TransitRoute routeOld) {
+    private ArrayList<TransitRoute> modifyRouteSplitRoute(TransitRoute routeOld) {
         ArrayList<TransitRoute> resultRoutes = new ArrayList<>();
         List<TransitRouteStop> stopsOld = new ArrayList<>(routeOld.getStops());
 
@@ -502,26 +411,27 @@ public class TransitRouteTrimmer {
         }
 
         // Modify arrivalOffset and departureOffset for each stop
-        double initialDepartureOffset = routeOld.getStops().get(0).getDepartureOffset().seconds();
+        TransitRouteStop transitRouteStop = routeOld.getStops().get(0);
+
+
+        double initialDepartureOffset = transitRouteStop.getDepartureOffset().seconds();
         double departureOffset = stopsInNewRoute.get(0).getDepartureOffset().seconds() - initialDepartureOffset;
-//        TransitRouteStop transitRouteStop = routeOld.getStops().get(0);
+
 //        double initialArrivalOffset = transitRouteStop.getArrivalOffset().seconds();
+        double arrivalOffset = departureOffset;
 //        double arrivalOffset = stopsInNewRoute.get(0).getArrivalOffset().seconds() - initialArrivalOffset;
 
-        List<TransitRouteStop> stopsNew = new ArrayList<>(copyStops(stopsInNewRoute, departureOffset));
+        List<TransitRouteStop> stopsNew = new ArrayList<>(copyStops(stopsInNewRoute, departureOffset,arrivalOffset));
 
 
-        // make route
-//        NetworkRoute networkRouteNew = RouteUtils.createNetworkRoute(midLinksNew, scenario.getNetwork());
+        // make route.
         NetworkRoute networkRouteNew = RouteUtils.createLinkNetworkRouteImpl(startLinkNew, midLinksNew, endLinkNew);
         String routeIdOld = routeOld.getId().toString();
         Id<TransitRoute> routeIdNew = Id.create( routeIdOld + "_mod" + modNumber, TransitRoute.class);
         routeNew = tsf.createTransitRoute(routeIdNew, networkRouteNew, stopsNew, routeOld.getTransportMode());
         routeNew.setDescription(routeOld.getDescription());
 
-
         VehiclesFactory vf = this.vehicles.getFactory();
-
 
         for (Departure departure : routeOld.getDepartures().values()) {
             Id<Vehicle> vehIdOld = departure.getVehicleId();
@@ -541,23 +451,26 @@ public class TransitRouteTrimmer {
 
 
     // TODO: how to deal with arrival and departure offsets? I don't know the conventions...
-    private Collection<? extends TransitRouteStop> copyStops(List<TransitRouteStop> s, Double departureOffset) {
+    private Collection<? extends TransitRouteStop> copyStops(List<TransitRouteStop> s, Double departureOffset, Double arrivalOffset) {
         List<TransitRouteStop> stops = new ArrayList<>();
         TransitRouteStop newStop;
         for(TransitRouteStop oldStop: s){
 
+//            newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
+//                    oldStop.getDepartureOffset().seconds() - departureOffset,
+//                    oldStop.getDepartureOffset().seconds() - departureOffset);
             if (oldStop.getDepartureOffset().isDefined() && oldStop.getArrivalOffset().isDefined()) {
                 newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
                         oldStop.getDepartureOffset().seconds() - departureOffset,
-                        oldStop.getArrivalOffset().seconds() - departureOffset);
+                        oldStop.getArrivalOffset().seconds() - arrivalOffset);
             } else if (oldStop.getDepartureOffset().isDefined()) {
                 newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
                         oldStop.getDepartureOffset().seconds() - departureOffset,
                         oldStop.getDepartureOffset().seconds() - departureOffset);
             } else if (oldStop.getArrivalOffset().isDefined()) {
                 newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
-                        oldStop.getArrivalOffset().seconds() - departureOffset,
-                        oldStop.getArrivalOffset().seconds() - departureOffset);
+                        oldStop.getArrivalOffset().seconds() - arrivalOffset,
+                        oldStop.getArrivalOffset().seconds() - arrivalOffset);
             } else {
                 newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(), 0, 0);
             }
