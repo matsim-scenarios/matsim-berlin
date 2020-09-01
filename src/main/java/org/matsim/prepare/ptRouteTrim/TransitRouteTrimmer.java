@@ -73,7 +73,6 @@ public class TransitRouteTrimmer {
         return stopsInZone;
     }
 
-
     public void modifyTransitLinesFromTransitSchedule(Set<Id<TransitLine>> linesToModify, modMethod modifyMethod) {
 
         Iterator var3 = transitScheduleOld.getFacilities().values().iterator();
