@@ -173,4 +173,66 @@ public class TransitRouteTrimmerUtils {
             }
         }
     }
+
+    public static Set<Id<TransitLine>> filterTransitLinesForMode(Collection<TransitLine> allLines, Set<String> modes2Trim) {
+        Set<Id<TransitLine>> lines2Modify = new HashSet<>();
+
+        for (TransitLine line : allLines) {
+            if (allRoutesInList(line, modes2Trim)) {
+                lines2Modify.add(line.getId());
+            }
+        }
+
+        return lines2Modify;
+    }
+
+    private static boolean allRoutesInList(TransitLine line, Set<String> modes2Trim) {
+        for (TransitRoute route : line.getRoutes().values()) {
+            if (!modes2Trim.contains(route.getTransportMode())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    static double pctOfStopsInZone(TransitRoute route, Set<Id<TransitStopFacility>> stopsInZone) {
+        double inAreaCount = 0.;
+        for (TransitRouteStop stop : route.getStops()) {
+            if (stopsInZone.contains(stop.getStopFacility().getId())) {
+                inAreaCount++;
+            }
+        }
+        return inAreaCount / route.getStops().size();
+    }
+
+    static void countLinesInOut(TransitSchedule tS, Set<Id<TransitStopFacility>> stopsInZone) {
+        int inCount = 0;
+        int outCount = 0;
+        int wrongCount = 0;
+        int halfCount = 0;
+        int totalCount = 0;
+
+        for (TransitLine line : tS.getTransitLines().values()) {
+            for (TransitRoute route : line.getRoutes().values()) {
+                totalCount++;
+                ArrayList<Boolean> inOutList = new ArrayList<>();
+                for (TransitRouteStop stop : route.getStops()) {
+                    Id<TransitStopFacility> id = stop.getStopFacility().getId();
+                    inOutList.add(stopsInZone.contains(id));
+                }
+                if (inOutList.contains(true) && inOutList.contains(false)) {
+                    halfCount++;
+                } else if (inOutList.contains(true)) {
+                    inCount++;
+                } else if (inOutList.contains(false)) {
+                    outCount++;
+                } else {
+                    wrongCount++;
+                }
+            }
+        }
+
+        System.out.printf("in: %d, out: %d, half: %d, wrong: %d, total: %d %n", inCount, outCount, halfCount, wrongCount, totalCount);
+
+    }
 }

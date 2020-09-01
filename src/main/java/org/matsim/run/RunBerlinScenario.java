@@ -52,9 +52,6 @@ import org.matsim.core.population.routes.RouteFactories;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
-import org.matsim.prepare.ptRouteTrim.TransitUtilsJR;
-import org.matsim.pt.transitSchedule.api.TransitSchedule;
-import org.matsim.pt.transitSchedule.api.TransitScheduleReader;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
 import org.matsim.run.singleTripStrategies.ChangeSingleTripModeAndRoute;
@@ -94,8 +91,6 @@ public final class RunBerlinScenario {
 
 
 		Scenario scenario = prepareScenario( config ) ;
-
-		TransitUtilsJR.removeLinksAndRoutes(scenario.getPopulation());
 
 
 		//jr:

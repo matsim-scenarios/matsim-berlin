@@ -42,11 +42,9 @@ public class TransitRouteTrimmerTest {
 
         scenario = ScenarioUtils.loadScenario(config);
 
-        Set<String> modes2Trim = new HashSet<>();
-        modes2Trim.add("bus");
         List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new URL(zoneShpFile));
         System.out.println("\n Modify Routes: SplitRoute");
-        transitRouteTrimmer = new TransitRouteTrimmer(scenario.getTransitSchedule(), scenario.getVehicles(), modes2Trim, geometries);
+        transitRouteTrimmer = new TransitRouteTrimmer(scenario.getTransitSchedule(), scenario.getVehicles(), geometries);
 
     }
 

@@ -1,26 +1,17 @@
 package org.matsim.prepare.ptRouteTrim;
 
 import org.apache.log4j.Logger;
-import org.geotools.feature.SchemaException;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.population.routes.RouteUtils;
-import org.matsim.core.scenario.MutableScenario;
-import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.pt.transitSchedule.TransitScheduleFactoryImpl;
 import org.matsim.pt.transitSchedule.api.*;
-import org.matsim.pt.utils.TransitScheduleValidator;
 import org.matsim.utils.gis.shp2matsim.ShpGeometryUtils;
 import org.matsim.vehicles.*;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * This tool creates a trims TransitRoutes, so as not to enter a user-specified ESRI shape file.
@@ -38,7 +29,6 @@ public class TransitRouteTrimmer {
     boolean allowOneStopWithinZone = true ;
     private int minimumRouteLength = 2;
 
-    private Set<String> modes2Trim;
     private Vehicles vehicles;
     private TransitSchedule transitScheduleOld;
     private TransitSchedule transitScheduleNew;
@@ -57,11 +47,10 @@ public class TransitRouteTrimmer {
     }
 
 
-    public TransitRouteTrimmer(TransitSchedule transitSchedule,Vehicles vehicles,Set<String> modes2Trim, List<PreparedGeometry> geometries) {
+    public TransitRouteTrimmer(TransitSchedule transitSchedule,Vehicles vehicles, List<PreparedGeometry> geometries) {
         this.transitScheduleOld = transitSchedule;
         this.transitScheduleNew = (new TransitScheduleFactoryImpl()).createTransitSchedule(); // TODO: Is this okay?
         this.vehicles = vehicles;
-        this.modes2Trim = modes2Trim;
         this.tsf = transitScheduleNew.getFactory(); //TODO: ???
         stopsInZone = new HashSet<>();
         for (TransitStopFacility stop : transitSchedule.getFacilities().values()) {
@@ -69,16 +58,13 @@ public class TransitRouteTrimmer {
                 this.stopsInZone.add(stop.getId());
             }
         }
-
-
     }
 
-    public TransitRouteTrimmer(TransitSchedule transitSchedule,Vehicles vehicles,Set<String> modes2Trim, Set<Id<TransitStopFacility>> stopsInZone) {
+    public TransitRouteTrimmer(TransitSchedule transitSchedule,Vehicles vehicles, Set<Id<TransitStopFacility>> stopsInZone) {
         this.transitScheduleOld = transitSchedule;
         this.transitScheduleNew = (new TransitScheduleFactoryImpl()).createTransitSchedule(); // TODO: Is this okay?
         this.tsf = transitScheduleNew.getFactory(); //TODO: ???
         this.vehicles = vehicles;
-        this.modes2Trim = modes2Trim;
         this.stopsInZone = stopsInZone;
 
     }
@@ -87,96 +73,8 @@ public class TransitRouteTrimmer {
         return stopsInZone;
     }
 
-    public static void main(String[] args) throws IOException, SchemaException {
-
-//        final String inScheduleFile = "D:\\runs\\gladbeck\\input\\optimizedSchedule.xml.gz";
-        final String inScheduleFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v0/optimizedSchedule.xml.gz";
-
-//        final String inVehiclesFile = "D:\\runs\\gladbeck\\input\\optimizedVehicles.xml.gz";
-        final String inVehiclesFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v0/optimizedVehicles.xml.gz";
-//        final String inNetworkFile = "D:\\runs\\gladbeck\\input\\optimizedNetwork.xml.gz";
-        final String inNetworkFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v0/optimizedNetwork.xml.gz";
-//        final String zoneShpFile = "D:/runs/gladbeck/input/area_B_en_detail.shp";
-        final String zoneShpFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v1/shp-files/Gladbeck_area_b_en_detail_bus_hubs_Schnellbus_cut_out.shp";
-        final String outputPath = "src/main/java/org/matsim/prepare/ptRouteTrim/output3/";
-
-        Config config = ConfigUtils.createConfig();
-        config.transit().setTransitScheduleFile(inScheduleFile);
-        config.network().setInputFile(inNetworkFile);
-        config.vehicles().setVehiclesFile(inVehiclesFile);
-
-        MutableScenario scenario = (MutableScenario) ScenarioUtils.loadScenario(config);
-
-        Set<String> modes2Trim = new HashSet<>();
-        modes2Trim.add("bus");
-
-
-        TransitSchedule transitSchedule = scenario.getTransitSchedule();
-
-
-        Set<Id<TransitLine>> linesToModify = new HashSet<>(transitSchedule.getTransitLines().keySet());
-
-
-
-        Set<Id<TransitLine>> linesSB = transitSchedule.getTransitLines().values().stream()
-                .filter(v -> v.getId().toString().contains("SB"))
-                .map(v -> v.getId())
-                .collect(Collectors.toSet()
-                );
-
-        for (Id<TransitLine> line : linesSB) {
-            linesToModify.remove(line);
-        }
-
-
-//        Set<Id<TransitLine>> linesToModify = transitSchedule.getTransitLines().values().stream()
-//                .filter(v -> v.getRoutes().get(0).getTransportMode().equals("bus"))
-//                .map(v -> v.getId())
-//                .collect(Collectors.toSet()
-//                );
-
-        List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new File(zoneShpFile).toURI().toURL());
-//        List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new URL(zoneShpFile));
-
-
-        System.out.println("\n Modify Routes: SplitRoute");
-        TransitRouteTrimmer transitRouteTrimmer = new TransitRouteTrimmer(scenario.getTransitSchedule(), scenario.getVehicles(), modes2Trim, geometries);
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, modMethod.SplitRoute);
-        TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
-        Vehicles vehiclesNew = transitRouteTrimmer.getVehicles();
-
-
-        System.out.println("NEW");
-        TransitScheduleValidator.ValidationResult validationResult = TransitScheduleValidator.validateAll(transitScheduleNew, scenario.getNetwork());
-        log.warn(validationResult.getErrors());
-
-
-        TransitRouteTrimmerUtils.transitSchedule2ShapeFile(transitScheduleNew, outputPath + "output-trimmed-routes.shp");
-        new TransitScheduleWriter(transitScheduleNew).writeFile(outputPath + "optimizedSchedule_nonSB-bus-split-at-hubs.xml.gz");
-        new MatsimVehicleWriter(vehiclesNew).writeFile(outputPath + "optimizedVehicles_nonSB-bus-split-at-hubs.xml.gz");
-
-        // Schedule Cleaner and Writer
-
-//        System.out.println("OLD");
-//        TransitScheduleValidator.ValidationResult validationResult0 = TransitScheduleValidator.validateAll(transitSchedule, scenario.getNetwork());
-//        log.warn(validationResult0.getErrors());
-
-
-
-
-//        System.out.println("NEW CLEANED");
-//        TransitSchedule tScleaned = TransitScheduleCleaner.removeStopsNotUsed(transitScheduleNew);
-//
-//        TransitScheduleValidator.ValidationResult validationResult2 = TransitScheduleValidator.validateAll(tScleaned, scenario.getNetwork());
-//        log.warn(validationResult2.getErrors());
-
-    }
-
 
     public void modifyTransitLinesFromTransitSchedule(Set<Id<TransitLine>> linesToModify, modMethod modifyMethod) {
-
-//        this.transitScheduleNew = (new TransitScheduleFactoryImpl()).createTransitSchedule(); //TODO: Does this makes sense? I want to clear the new transit schedule, multiple processes can be stacked.
-
 
         Iterator var3 = transitScheduleOld.getFacilities().values().iterator();
 
@@ -200,19 +98,19 @@ public class TransitRouteTrimmer {
                 TransitRoute routeNew = null;
 
                 // Only handles specified routes.
-                if (!this.modes2Trim.contains(route.getTransportMode())) {
-                    lineNew.addRoute(route);
-                    continue;
-                }
+//                if (!this.modes2Trim.contains(route.getTransportMode())) {
+//                    lineNew.addRoute(route);
+//                    continue;
+//                }
 
 //                 Only handle routes that interact with zone
-                if (pctOfStopsInZone(route, stopsInZone) == 0.0) {
+                if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 0.0) {
                     lineNew.addRoute(route);
                     continue;
                 }
 
                 if (modifyMethod.equals(modMethod.DeleteRoutesEntirelyInsideZone)) {
-                    if (pctOfStopsInZone(route, stopsInZone) == 1.0) {
+                    if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 1.0) {
                         continue;
                     }
                     routeNew = route;
@@ -245,7 +143,7 @@ public class TransitRouteTrimmer {
         log.info("Old schedule contained " + transitScheduleOld.getTransitLines().values().size() + " lines.");
         log.info("New schedule contains " + transitScheduleNew.getTransitLines().values().size() + " lines.");
 
-        countLinesInOut(transitScheduleNew, stopsInZone);
+        TransitRouteTrimmerUtils.countLinesInOut(transitScheduleNew, stopsInZone);
     }
 
 
@@ -524,44 +422,4 @@ public class TransitRouteTrimmer {
     }
 
 
-    private double pctOfStopsInZone(TransitRoute route, Set<Id<TransitStopFacility>> stopsInZone) {
-        double inAreaCount = 0.;
-        for (TransitRouteStop stop : route.getStops()) {
-            if (stopsInZone.contains(stop.getStopFacility().getId())) {
-                inAreaCount++;
-            }
-        }
-        return inAreaCount / route.getStops().size();
-    }
-
-    static void countLinesInOut(TransitSchedule tS, Set<Id<TransitStopFacility>> stopsInZone) {
-        int inCount = 0;
-        int outCount = 0;
-        int wrongCount = 0;
-        int halfCount = 0;
-        int totalCount = 0;
-
-        for (TransitLine line : tS.getTransitLines().values()) {
-            for (TransitRoute route : line.getRoutes().values()) {
-                totalCount++;
-                ArrayList<Boolean> inOutList = new ArrayList<>();
-                for (TransitRouteStop stop : route.getStops()) {
-                    Id<TransitStopFacility> id = stop.getStopFacility().getId();
-                    inOutList.add(stopsInZone.contains(id));
-                }
-                if (inOutList.contains(true) && inOutList.contains(false)) {
-                    halfCount++;
-                } else if (inOutList.contains(true)) {
-                    inCount++;
-                } else if (inOutList.contains(false)) {
-                    outCount++;
-                } else {
-                    wrongCount++;
-                }
-            }
-        }
-
-        System.out.printf("in: %d, out: %d, half: %d, wrong: %d, total: %d %n", inCount, outCount, halfCount, wrongCount, totalCount);
-
-    }
 }
