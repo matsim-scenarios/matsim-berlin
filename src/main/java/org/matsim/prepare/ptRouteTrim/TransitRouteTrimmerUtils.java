@@ -90,14 +90,14 @@ public class TransitRouteTrimmerUtils {
 
     // This tool creates a LineString for each route in a TransitSchedule, based on the coordinates of the StopFacilities.
     // The collection of LineStrings is then exported to a ESRI shape file.
-    public static void transitSchedule2ShapeFile(TransitSchedule tS, String outputFilename) throws SchemaException, IOException {
+    public static void transitSchedule2ShapeFile(TransitSchedule tS, String outputFilename, String epsgCode ) throws SchemaException, IOException {
 
         File newFile = new File(outputFilename);
 
         final SimpleFeatureType TYPE =
                 DataUtilities.createType(
                         "Link",
-                        "the_geom:LineString:srid=31468,"
+                        "the_geom:LineString:srid=" + epsgCode + ","
                                 + // <- the geometry attribute: Point type
                                 "name:String,"
 //                                + // <- a String attribute

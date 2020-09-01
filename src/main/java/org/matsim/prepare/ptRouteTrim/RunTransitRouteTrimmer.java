@@ -1,5 +1,6 @@
 package org.matsim.prepare.ptRouteTrim;
 
+import org.geotools.feature.SchemaException;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.matsim.api.core.v01.Id;
 import org.matsim.core.config.Config;
@@ -22,15 +23,18 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class RunTransitRouteTrimmer {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, SchemaException {
 
         final String inScheduleFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v0/optimizedSchedule.xml.gz";
         final String inVehiclesFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v0/optimizedVehicles.xml.gz";
         final String inNetworkFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v0/optimizedNetwork.xml.gz";
         final String zoneShpFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v1/shp-files/Gladbeck_area_b_en_detail_bus_hubs_Schnellbus_cut_out.shp";
         final String outputPath = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v1/";
+        final String epsgCode = "25832";
+
 
         Config config = ConfigUtils.createConfig();
+        config.global().setCoordinateSystem("EPSG:" + epsgCode);
         config.transit().setTransitScheduleFile(inScheduleFile);
         config.network().setInputFile(inNetworkFile);
         config.vehicles().setVehiclesFile(inVehiclesFile);
@@ -66,7 +70,7 @@ public class RunTransitRouteTrimmer {
         System.out.println(validationResult.getErrors());
 
 
-//        TransitRouteTrimmerUtils.transitSchedule2ShapeFile(transitScheduleNew, outputPath + "output-trimmed-routes.shp");
+        TransitRouteTrimmerUtils.transitSchedule2ShapeFile(transitScheduleNew, outputPath + "output-trimmed-routes.shp",epsgCode);
         new TransitScheduleWriter(transitScheduleNew).writeFile(outputPath + "optimizedSchedule_nonSB-bus-split-at-hubs.xml.gz");
         new MatsimVehicleWriter(vehiclesNew).writeFile(outputPath + "optimizedVehicles_nonSB-bus-split-at-hubs.xml.gz");
 
