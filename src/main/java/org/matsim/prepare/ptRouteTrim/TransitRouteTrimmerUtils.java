@@ -1,12 +1,10 @@
 package org.matsim.prepare.ptRouteTrim;
 
-import java.io.*;
-import java.net.MalformedURLException;
-import java.util.*;
-
-import org.geotools.data.*;
+import org.apache.log4j.Logger;
+import org.geotools.data.DataUtilities;
+import org.geotools.data.DefaultTransaction;
+import org.geotools.data.Transaction;
 import org.geotools.data.collection.ListFeatureCollection;
-import org.geotools.data.memory.MemoryDataStore;
 import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.shapefile.ShapefileDataStoreFactory;
 import org.geotools.data.simple.SimpleFeatureCollection;
@@ -14,52 +12,85 @@ import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.feature.SchemaException;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
-import org.geotools.geometry.GeometryBuilder;
 import org.geotools.geometry.jts.JTSFactoryFinder;
-import org.geotools.referencing.CRS;
-//import org.geotools.swing.data.JFileDataStoreChooser;
-import org.geotools.util.URLs;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.matsim.api.core.v01.Coord;
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.core.config.Config;
+import org.matsim.api.core.v01.population.*;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.pt.transitSchedule.TransitScheduleImpl;
-import org.matsim.pt.transitSchedule.api.TransitLine;
-import org.matsim.pt.transitSchedule.api.TransitRoute;
-import org.matsim.pt.transitSchedule.api.TransitRouteStop;
-import org.matsim.pt.transitSchedule.api.TransitSchedule;
+import org.matsim.pt.transitSchedule.api.*;
+import org.matsim.vehicles.Vehicle;
+import org.matsim.vehicles.VehicleType;
+import org.matsim.vehicles.Vehicles;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
-/**
- * This tool creates a LineString for each route in a TransitSchedule, based on the coordinates of the StopFacilities.
- * The collection of LineStrings is then exported to a ESRI shape file.
- *
- * @author jakobrehmann
- */
-public class TransitSchedule2Shape {
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.*;
+import java.util.stream.Collectors;
 
-    public static void main(String[] args) throws Exception {
+public class TransitRouteTrimmerUtils {
+    private static final Logger log = Logger.getLogger(TransitRouteTrimmer.class);
 
-        final String inScheduleFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz";//"../../shared-svn/projects/avoev/matsim-input-files/vulkaneifel/v0/optimizedSchedule.xml.gz";
-        String newFile = "C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output\\output.shp";
+    public static Vehicles removeUnusedVehicles(Vehicles vehicles, TransitSchedule tS) {
 
-        Config config = ConfigUtils.createConfig();
-        config.transit().setTransitScheduleFile(inScheduleFile);
+        Scenario scenarioNew = ScenarioUtils.createScenario(ConfigUtils.createConfig());
+        Vehicles vehiclesNew = scenarioNew.getVehicles();
+        Set<Id<Vehicle>> vehIds = tS.getTransitLines().values().stream().
+                flatMap(line -> line.getRoutes().values().stream().
+                        flatMap(route -> route.getDepartures().values().stream()
+                                .map(Departure::getVehicleId)))
+                                .collect(Collectors.toSet());
 
-        Scenario scenario = ScenarioUtils.loadScenario(config);
-        TransitSchedule tS = scenario.getTransitSchedule();
 
-        createShpFile(tS, newFile);
+        // Add all Vehicle Types
+        for ( VehicleType vehicleType : vehicles.getVehicleTypes().values()) {
+            vehiclesNew.addVehicleType(vehicleType);
+        }
+
+        // Add only vehicles that are in use
+        int vehicleDeleteCount = 0;
+        for (Map.Entry<Id<Vehicle>, Vehicle> veh : vehicles.getVehicles().entrySet()) {
+            if (vehIds.contains(veh.getKey())) {
+                vehiclesNew.addVehicle(veh.getValue());
+            } else {
+                vehicleDeleteCount++;
+            }
+        }
+
+        log.info(vehicleDeleteCount + " vehicles were removed");
+        return vehicles;
 
     }
 
+    public static void removeLinksAndRoutes(Plan plan) {
+        for (PlanElement pe : plan.getPlanElements()) {
+            if (pe instanceof Activity) {
+                ((Activity) pe).setLinkId(null); // Remove link
+            }
+            if (pe instanceof Leg) {
+                ((Leg) pe).setRoute(null); // Remove route
+            }
+        }
+    }
 
-    public static void createShpFile(TransitSchedule tS, String outputFilename) throws SchemaException, IOException {
+    public static void removeLinksAndRoutes(Population pop) {
+        pop.getPersons().values().
+                forEach(person -> {
+                    person.getPlans().
+                            forEach(TransitRouteTrimmerUtils::removeLinksAndRoutes);
+                });
+    }
+
+    // This tool creates a LineString for each route in a TransitSchedule, based on the coordinates of the StopFacilities.
+    // The collection of LineStrings is then exported to a ESRI shape file.
+    public static void transitSchedule2ShapeFile(TransitSchedule tS, String outputFilename) throws SchemaException, IOException {
 
         File newFile = new File(outputFilename);
 

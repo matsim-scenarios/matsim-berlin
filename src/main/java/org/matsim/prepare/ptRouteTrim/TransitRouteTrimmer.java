@@ -13,6 +13,7 @@ import org.matsim.core.scenario.MutableScenario;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.pt.transitSchedule.TransitScheduleFactoryImpl;
 import org.matsim.pt.transitSchedule.api.*;
+import org.matsim.pt.utils.TransitScheduleValidator;
 import org.matsim.utils.gis.shp2matsim.ShpGeometryUtils;
 import org.matsim.vehicles.*;
 
@@ -88,10 +89,15 @@ public class TransitRouteTrimmer {
 
     public static void main(String[] args) throws IOException, SchemaException {
 
-        final String inScheduleFile = "D:\\runs\\gladbeck\\input\\optimizedSchedule.xml.gz";
-        final String inVehiclesFile = "D:\\runs\\gladbeck\\input\\optimizedVehicles.xml.gz";
-        final String inNetworkFile = "D:\\runs\\gladbeck\\input\\optimizedNetwork.xml.gz";
-        final String zoneShpFile = "D:/runs/gladbeck/input/area_B_en_detail.shp";
+//        final String inScheduleFile = "D:\\runs\\gladbeck\\input\\optimizedSchedule.xml.gz";
+        final String inScheduleFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v0/optimizedSchedule.xml.gz";
+
+//        final String inVehiclesFile = "D:\\runs\\gladbeck\\input\\optimizedVehicles.xml.gz";
+        final String inVehiclesFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v0/optimizedVehicles.xml.gz";
+//        final String inNetworkFile = "D:\\runs\\gladbeck\\input\\optimizedNetwork.xml.gz";
+        final String inNetworkFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v0/optimizedNetwork.xml.gz";
+//        final String zoneShpFile = "D:/runs/gladbeck/input/area_B_en_detail.shp";
+        final String zoneShpFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v1/shp-files/Gladbeck_area_b_en_detail_bus_hubs_Schnellbus_cut_out.shp";
         final String outputPath = "src/main/java/org/matsim/prepare/ptRouteTrim/output3/";
 
         Config config = ConfigUtils.createConfig();
@@ -138,14 +144,31 @@ public class TransitRouteTrimmer {
         transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, modMethod.SplitRoute);
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
         Vehicles vehiclesNew = transitRouteTrimmer.getVehicles();
-        TransitSchedule2Shape.createShpFile(transitScheduleNew, outputPath + "output-trimmed-routes.shp");
-        new TransitScheduleWriter(transitScheduleNew).writeFile(outputPath + "output-trimmed-schedule.xml.gz");
-        new MatsimVehicleWriter(vehiclesNew).writeFile(outputPath + "output-vehicles.xml.gz");
+
+
+        System.out.println("NEW");
+        TransitScheduleValidator.ValidationResult validationResult = TransitScheduleValidator.validateAll(transitScheduleNew, scenario.getNetwork());
+        log.warn(validationResult.getErrors());
+
+
+        TransitRouteTrimmerUtils.transitSchedule2ShapeFile(transitScheduleNew, outputPath + "output-trimmed-routes.shp");
+        new TransitScheduleWriter(transitScheduleNew).writeFile(outputPath + "optimizedSchedule_nonSB-bus-split-at-hubs.xml.gz");
+        new MatsimVehicleWriter(vehiclesNew).writeFile(outputPath + "optimizedVehicles_nonSB-bus-split-at-hubs.xml.gz");
 
         // Schedule Cleaner and Writer
-//        TransitSchedule transitScheduleNewCleaned = TransitScheduleCleaner.removeStopsNotUsed(transitScheduleNew);
-//        TransitScheduleValidator.ValidationResult validationResult = TransitScheduleValidator.validateAll(transitScheduleNewCleaned, scenario.getNetwork());
-//        log.warn(validationResult.getErrors());
+
+//        System.out.println("OLD");
+//        TransitScheduleValidator.ValidationResult validationResult0 = TransitScheduleValidator.validateAll(transitSchedule, scenario.getNetwork());
+//        log.warn(validationResult0.getErrors());
+
+
+
+
+//        System.out.println("NEW CLEANED");
+//        TransitSchedule tScleaned = TransitScheduleCleaner.removeStopsNotUsed(transitScheduleNew);
+//
+//        TransitScheduleValidator.ValidationResult validationResult2 = TransitScheduleValidator.validateAll(tScleaned, scenario.getNetwork());
+//        log.warn(validationResult2.getErrors());
 
     }
 
@@ -171,13 +194,19 @@ public class TransitRouteTrimmer {
                 continue;
             }
 
-
             TransitLine lineNew = transitScheduleOld.getFactory().createTransitLine(line.getId());
+
             for (TransitRoute route : line.getRoutes().values()) {
                 TransitRoute routeNew = null;
 
                 // Only handles specified routes.
                 if (!this.modes2Trim.contains(route.getTransportMode())) {
+                    lineNew.addRoute(route);
+                    continue;
+                }
+
+//                 Only handle routes that interact with zone
+                if (pctOfStopsInZone(route, stopsInZone) == 0.0) {
                     lineNew.addRoute(route);
                     continue;
                 }
@@ -394,19 +423,31 @@ public class TransitRouteTrimmer {
         Id<Link> endLinkNew = stopsInNewRoute.get(stopsInNewRoute.size() - 1).getStopFacility().getLinkId();
         ArrayList<Id<Link>> midLinksNew = new ArrayList<>();
 
+        Iterator<TransitRouteStop> stopIt = stopsInNewRoute.iterator();
+
         boolean start = false;
+        TransitRouteStop stop = stopIt.next();
         for (Id<Link> linkId : linksOld) {
             if (!start) {
                 if (linkId.equals(startLinkNew)){
                     start = true;
+                    stop = stopIt.next();
                 }
                 continue;
             }
 
-            if (linkId.equals(endLinkNew)) {
+            if (!stopIt.hasNext() && linkId.equals(endLinkNew)) {
+
                 break;
             }
+
             midLinksNew.add(linkId);
+
+            if (linkId.equals(stop.getStopFacility().getLinkId())) {
+
+                stop = stopIt.next();
+
+            }
 
         }
 
