@@ -20,24 +20,59 @@
 
 package org.matsim.run.ev;
 
+import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
+import org.matsim.contrib.ev.EvConfigGroup;
+import org.matsim.contrib.ev.EvModule;
+import org.matsim.contrib.ev.charging.VehicleChargingHandler;
+import org.matsim.contrib.ev.discharging.AuxEnergyConsumption;
+import org.matsim.contrib.ev.discharging.DriveEnergyConsumption;
 import org.matsim.contrib.ev.routing.EvNetworkRoutingProvider;
+import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.groups.PlansCalcRouteConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.controler.OutputDirectoryHierarchy;
+import org.matsim.core.mobsim.qsim.AbstractQSimModule;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.run.RunBerlinScenario;
 
 class RunEV {
 
 	public static void main(String[] args) {
+		if(args.length == 0){
+			args = new String[1];
+			args[0] = "D:/ev-test/berlin-v5.5-1pct.config-ev-test.xml";
+		}
+		Config config = RunBerlinScenario.prepareConfig(args, new EvConfigGroup());
+//		config.plansCalcRoute().setAccessEgressType(PlansCalcRouteConfigGroup.AccessEgressType.accessEgressModeToLink);
+//		config.qsim().setUsePersonIdForMissingVehicleId(false);
 
-		Controler controler = new Controler(ScenarioUtils.createScenario(ConfigUtils.createConfig()));
+		//TODO
+		config.plansCalcRoute().setAccessEgressType(PlansCalcRouteConfigGroup.AccessEgressType.none);
+
+		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
+
+		Scenario scenario = RunBerlinScenario.prepareScenario(config);
+		Controler controler = RunBerlinScenario.prepareControler(scenario);
+		controler.addOverridingModule(new EvModule());
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
-				this.addRoutingModuleBinding(TransportMode.car).toProvider(MyEvNetworkRoutingProvider.class);
+				addRoutingModuleBinding(TransportMode.car).toProvider(new MyEvNetworkRoutingProvider(TransportMode.car));
+				installQSimModule(new AbstractQSimModule() {
+					@Override
+					protected void configureQSim() {
+						bind(VehicleChargingHandler.class).asEagerSingleton();
+						addMobsimScopeEventHandlerBinding().to(VehicleChargingHandler.class);
+					}
+				});
 			}
 		});
+		controler.configureQSimComponents(components -> components.addNamedComponent(EvModule.EV_COMPONENT));
+
+		controler.run();
 
 	}
 }

@@ -31,10 +31,7 @@ import org.matsim.contrib.ev.EvConfigGroup;
 import org.matsim.contrib.ev.charging.VehicleChargingHandler;
 import org.matsim.contrib.ev.discharging.AuxEnergyConsumption;
 import org.matsim.contrib.ev.discharging.DriveEnergyConsumption;
-import org.matsim.contrib.ev.fleet.ElectricFleetSpecification;
-import org.matsim.contrib.ev.fleet.ElectricVehicle;
-import org.matsim.contrib.ev.fleet.ElectricVehicleImpl;
-import org.matsim.contrib.ev.fleet.ElectricVehicleSpecification;
+import org.matsim.contrib.ev.fleet.*;
 import org.matsim.contrib.ev.infrastructure.ChargerSpecification;
 import org.matsim.contrib.ev.infrastructure.ChargingInfrastructureSpecification;
 import org.matsim.contrib.util.StraightLineKnnFinder;
@@ -115,10 +112,12 @@ public final class MyEvNetworkRoutingModule implements RoutingModule {
 
 			EVUtils.getInitialEnergy(vType.getEngineInformation());
 
+//			consider using ImmutableElectricVehicleSpecification.newBuilder()
+
 			ElectricVehicleSpecification ev = new ElectricVehicleSpecification() {
 				@Override public String getVehicleType() { return vType.getId().toString(); }
 
-				@Override public ImmutableList<String> getChargerTypes() { return null; }
+				@Override public ImmutableList<String> getChargerTypes() { return EVUtils.getChargerTypes(vType.getEngineInformation()); }
 
 				@Override public double getInitialSoc() { return EVUtils.getInitialEnergy(vType.getEngineInformation()); }
 
