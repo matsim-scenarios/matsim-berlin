@@ -110,14 +110,15 @@ public final class MyEvNetworkRoutingModule implements RoutingModule {
 			return basicRoute;
 		} else {
 
-			EVUtils.getInitialEnergy(vType.getEngineInformation());
-
 //			consider using ImmutableElectricVehicleSpecification.newBuilder()
-
 			ElectricVehicleSpecification ev = new ElectricVehicleSpecification() {
 				@Override public String getVehicleType() { return vType.getId().toString(); }
 
-				@Override public ImmutableList<String> getChargerTypes() { return EVUtils.getChargerTypes(vType.getEngineInformation()); }
+				@Override public ImmutableList<String> getChargerTypes() {
+					return ImmutableList.of(ChargerSpecification.DEFAULT_CHARGER_TYPE);
+//					return EVUtils.getChargerTypes(vType.getEngineInformation()); //TODO wait for matsim version where string collections can be read in
+
+				}
 
 				@Override public double getInitialSoc() { return EVUtils.getInitialEnergy(vType.getEngineInformation()); }
 
