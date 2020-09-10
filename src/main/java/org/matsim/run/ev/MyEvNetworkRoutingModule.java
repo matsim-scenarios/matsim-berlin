@@ -60,7 +60,7 @@ import java.util.*;
  * @author jfbischoff, tschlenther
  */
 
-public final class MyEvNetworkRoutingModule implements RoutingModule {
+final class MyEvNetworkRoutingModule implements RoutingModule {
 
 	private final String mode;
 

@@ -29,7 +29,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class MyEvNetworkRoutingProvider implements Provider<RoutingModule> {
+class MyEvNetworkRoutingProvider implements Provider<RoutingModule> {
 	private static final Logger log = Logger.getLogger(MyEvNetworkRoutingProvider.class);
 
 	private final String routingMode;
@@ -78,7 +78,7 @@ public class MyEvNetworkRoutingProvider implements Provider<RoutingModule> {
 	 *
 	 * @param mode
 	 */
-	public MyEvNetworkRoutingProvider(String mode) {
+	MyEvNetworkRoutingProvider(String mode) {
 		this(mode, mode);
 	}
 
@@ -90,7 +90,7 @@ public class MyEvNetworkRoutingProvider implements Provider<RoutingModule> {
 	 * @param mode
 	 * @param routingMode
 	 */
-	public MyEvNetworkRoutingProvider(String mode, String routingMode) {
+	MyEvNetworkRoutingProvider(String mode, String routingMode) {
 		this.mode = mode;
 		this.routingMode = routingMode;
 	}
