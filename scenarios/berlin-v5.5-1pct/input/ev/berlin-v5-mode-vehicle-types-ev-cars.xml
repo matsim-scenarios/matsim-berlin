@@ -16,7 +16,7 @@
 		<engineInformation>
 			<attributes>
 				<attribute name="HbefaTechnology" class="java.lang.String">electricity</attribute>
-				<attribute name="chargerTypes" class="java.util.Arrays$ArrayList">["a","b"]</attribute>
+				<attribute name="chargerTypes" class="java.util.Arrays$ArrayList">["default","specialChargerType"]</attribute>
 				<attribute name="energyCapacityInKWhOrLiters" class="java.lang.Double">100.0</attribute>
 				<attribute name="initialEnergy" class="java.lang.Double">100.0</attribute>
 			</attributes>

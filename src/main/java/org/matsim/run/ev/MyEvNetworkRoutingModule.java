@@ -120,9 +120,7 @@ public final class MyEvNetworkRoutingModule implements RoutingModule {
 					@Override public String getVehicleType() { return vType.getId().toString(); }
 
 					@Override public ImmutableList<String> getChargerTypes() {
-						return ImmutableList.of(ChargerSpecification.DEFAULT_CHARGER_TYPE);
-//					return EVUtils.getChargerTypes(vType.getEngineInformation()); //TODO wait for matsim version where string collections can be read in
-
+						return EVUtils.getChargerTypes(vType.getEngineInformation());
 					}
 
 					@Override public double getInitialSoc() { return EVUtils.getInitialEnergy(vType.getEngineInformation()); }
@@ -166,6 +164,11 @@ public final class MyEvNetworkRoutingModule implements RoutingModule {
 									.values()
 									.stream()
 									.filter(charger -> finalEv.getChargerTypes().contains(charger.getChargerType())));
+
+					if (nearestChargers.isEmpty()){
+						throw new RuntimeException("no charger could be found for vehicle type " + ev.getVehicleType());
+					}
+
 					ChargerSpecification selectedCharger = nearestChargers.get(random.nextInt(1));
 					Link selectedChargerLink = network.getLinks().get(selectedCharger.getLinkId());
 					Facility nexttoFacility = new LinkWrapperFacility(selectedChargerLink);
