@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE population SYSTEM "http://www.matsim.org/files/dtd/population_v6.dtd">
+
+<population>
+
+
+
+<!-- ====================================================================== -->
+
+	<person id="testperson">
+		<attributes>
+			<attribute name="subpopulation" class="java.lang.String">person</attribute>
+		</attributes>
+		<plan selected="yes">
+			<activity type="home_4800.0" link="7574" end_time="08:00:00" x="4589811" y="5817841" >
+			</activity>
+			<leg mode="car">	</leg>
+			<activity type="work_4800.0" link="97873">
+			</activity>
+		</plan>
+
+	</person>
+
+
+<!-- ====================================================================== -->
+
+</population>

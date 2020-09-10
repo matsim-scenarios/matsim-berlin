@@ -30,11 +30,13 @@ import org.matsim.contrib.ev.discharging.DriveEnergyConsumption;
 import org.matsim.contrib.ev.routing.EvNetworkRoutingProvider;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.PlansCalcRouteConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.mobsim.qsim.AbstractQSimModule;
+import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.run.RunBerlinScenario;
 
@@ -43,7 +45,7 @@ class RunEV {
 	public static void main(String[] args) {
 		if(args.length == 0){
 			args = new String[1];
-			args[0] = "D:/ev-test/berlin-v5.5-1pct.config-ev-test.xml";
+			args[0] = "scenarios/berlin-v5.5-1pct/input/ev/berlin-v5.5-1pct.config-ev-test.xml";
 		}
 		Config config = RunBerlinScenario.prepareConfig(args, new EvConfigGroup());
 //		config.plansCalcRoute().setAccessEgressType(PlansCalcRouteConfigGroup.AccessEgressType.accessEgressModeToLink);
@@ -52,10 +54,16 @@ class RunEV {
 		//TODO
 		config.plansCalcRoute().setAccessEgressType(PlansCalcRouteConfigGroup.AccessEgressType.none);
 
+		config.planCalcScore().addActivityParams(
+				new PlanCalcScoreConfigGroup.ActivityParams(
+						PlanCalcScoreConfigGroup.createStageActivityType(TransportMode.car + VehicleChargingHandler.CHARGING_IDENTIFIER))
+				.setScoringThisActivityAtAll(false));
+
 		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
 
 		Scenario scenario = RunBerlinScenario.prepareScenario(config);
 		Controler controler = RunBerlinScenario.prepareControler(scenario);
+
 		controler.addOverridingModule(new EvModule());
 		controler.addOverridingModule(new AbstractModule() {
 			@Override

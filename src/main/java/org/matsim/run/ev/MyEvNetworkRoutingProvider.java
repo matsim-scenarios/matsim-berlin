@@ -138,7 +138,7 @@ public class MyEvNetworkRoutingProvider implements Provider<RoutingModule> {
 			return new MyEvNetworkRoutingModule(mode, filteredNetwork,
 					DefaultRoutingModules.createPureNetworkRouter(mode, populationFactory, filteredNetwork, routeAlgo),
 					chargingInfrastructureSpecification, travelTime,
-					driveConsumptionFactory, auxConsumptionFactory, EvConfigGroup.get(config), vehicles);
+					driveConsumptionFactory, auxConsumptionFactory, EvConfigGroup.get(config), vehicles, electricFleetSpecification);
 		}
 	}
 }

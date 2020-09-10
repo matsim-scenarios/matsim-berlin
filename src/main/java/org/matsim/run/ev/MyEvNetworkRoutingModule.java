@@ -75,11 +75,12 @@ public final class MyEvNetworkRoutingModule implements RoutingModule {
 	private final String vehicleSuffix;
 	private final EvConfigGroup evConfigGroup;
 	private final Vehicles vehicles;
+	private final ElectricFleetSpecification electricFleetSpecification;
 
 	MyEvNetworkRoutingModule(final String mode, final Network network, RoutingModule delegate,
 							 ChargingInfrastructureSpecification chargingInfrastructureSpecification, TravelTime travelTime,
 							 DriveEnergyConsumption.Factory driveConsumptionFactory, AuxEnergyConsumption.Factory auxConsumptionFactory,
-							 EvConfigGroup evConfigGroup, Vehicles vehicles) {
+							 EvConfigGroup evConfigGroup, Vehicles vehicles, ElectricFleetSpecification electricFleetSpecification) {
 		this.travelTime = travelTime;
 		Gbl.assertNotNull(network);
 		this.delegate = delegate;
@@ -92,6 +93,7 @@ public final class MyEvNetworkRoutingModule implements RoutingModule {
 		stageActivityModePrefix = mode + VehicleChargingHandler.CHARGING_IDENTIFIER;
 		this.evConfigGroup = evConfigGroup;
 		this.vehicleSuffix = mode.equals(TransportMode.car) ? "" : "_" + mode;
+		this.electricFleetSpecification = electricFleetSpecification;
 	}
 
 	@Override
@@ -110,22 +112,27 @@ public final class MyEvNetworkRoutingModule implements RoutingModule {
 			return basicRoute;
 		} else {
 
-//			consider using ImmutableElectricVehicleSpecification.newBuilder()
-			ElectricVehicleSpecification ev = new ElectricVehicleSpecification() {
-				@Override public String getVehicleType() { return vType.getId().toString(); }
+			ElectricVehicleSpecification ev = electricFleetSpecification.getVehicleSpecifications().get(Id.create(vehicle.getId(), ElectricVehicle.class));
 
-				@Override public ImmutableList<String> getChargerTypes() {
-					return ImmutableList.of(ChargerSpecification.DEFAULT_CHARGER_TYPE);
+			if(ev == null){
+//			consider using ImmutableElectricVehicleSpecification.newBuilder()
+				ev = new ElectricVehicleSpecification() {
+					@Override public String getVehicleType() { return vType.getId().toString(); }
+
+					@Override public ImmutableList<String> getChargerTypes() {
+						return ImmutableList.of(ChargerSpecification.DEFAULT_CHARGER_TYPE);
 //					return EVUtils.getChargerTypes(vType.getEngineInformation()); //TODO wait for matsim version where string collections can be read in
 
-				}
+					}
 
-				@Override public double getInitialSoc() { return EVUtils.getInitialEnergy(vType.getEngineInformation()); }
+					@Override public double getInitialSoc() { return EVUtils.getInitialEnergy(vType.getEngineInformation()); }
 
-				@Override public double getBatteryCapacity() { return VehicleUtils.getEnergyCapacity(vType.getEngineInformation()); }
+					@Override public double getBatteryCapacity() { return VehicleUtils.getEnergyCapacity(vType.getEngineInformation()); }
 
-				@Override public Id<ElectricVehicle> getId() { return Id.create(vehicle.getId(), ElectricVehicle.class); }
-			};
+					@Override public Id<ElectricVehicle> getId() { return Id.create(vehicle.getId(), ElectricVehicle.class); }
+				};
+				electricFleetSpecification.addVehicleSpecification(ev);
+			}
 
 			Map<Link, Double> estimatedEnergyConsumption = estimateConsumption(ev, basicLeg);
 			double estimatedOverallConsumption = estimatedEnergyConsumption.values()
@@ -153,11 +160,12 @@ public final class MyEvNetworkRoutingModule implements RoutingModule {
 
 					StraightLineKnnFinder<Link, ChargerSpecification> straightLineKnnFinder = new StraightLineKnnFinder<>(
 							2, l -> l, s -> network.getLinks().get(s.getLinkId()));
+					ElectricVehicleSpecification finalEv = ev;
 					List<ChargerSpecification> nearestChargers = straightLineKnnFinder.findNearest(stopLocation,
 							chargingInfrastructureSpecification.getChargerSpecifications()
 									.values()
 									.stream()
-									.filter(charger -> ev.getChargerTypes().contains(charger.getChargerType())));
+									.filter(charger -> finalEv.getChargerTypes().contains(charger.getChargerType())));
 					ChargerSpecification selectedCharger = nearestChargers.get(random.nextInt(1));
 					Link selectedChargerLink = network.getLinks().get(selectedCharger.getLinkId());
 					Facility nexttoFacility = new LinkWrapperFacility(selectedChargerLink);
