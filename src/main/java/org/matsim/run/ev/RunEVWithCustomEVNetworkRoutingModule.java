@@ -40,7 +40,7 @@ import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.run.RunBerlinScenario;
 
-class RunEV {
+class RunEVWithCustomEVNetworkRoutingModule {
 
 	public static void main(String[] args) {
 		if(args.length == 0){
