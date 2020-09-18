@@ -228,14 +228,19 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 		Link chargingLink = modeNetwork.getLinks().get(selectedCharger.getLinkId());
 
 
-//					if (!insertPluginActivity(leg, mobsimagent, realActIndex, plugInAct)) return;
 		Activity actBeforeCharging = plansEditor.findRealActBefore(mobsimagent, modifiablePlan.getPlanElements().indexOf(actWhileCharging));
+		if(actBeforeCharging == null) {
+			log.error("could not insert plugin activity in plan of agent " + mobsimagent.getId());
+			log.error("this is probably because it's vehicle is running beyond energy threshold during the first leg of the day.");
+			log.error("this might be avoidable by using EVNetworkRoutingModule... we currently skip the replanning of this EV!");
+			throw new RuntimeException("see log error messages above");
+		}
 		Preconditions.checkState(!actBeforeCharging.equals(actWhileCharging));
 		Activity actAfterCharging = plansEditor.findRealActAfter(mobsimagent, modifiablePlan.getPlanElements().indexOf(actWhileCharging));
 		Preconditions.checkState(!actAfterCharging.equals(actWhileCharging));
 
 		//this does not work. see comments at method
-//				insertPluginActivity(leg,mobsimagent, modifiablePlan.getPlanElements().indexOf(actWhileCharging) - 1, selectedChargerLink);
+//		insertPluginActivity(leg,mobsimagent, modifiablePlan.getPlanElements().indexOf(actWhileCharging) - 1, selectedChargerLink);
 
 		//set SOC back to the second last value as we reroute the last leg and the current leg
 		pseudoVehicle.getBattery().setSoc(secondLastSOC);
@@ -258,7 +263,7 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 
 		//charge pseudo vehicle
 
-		//TODO: if the provider for ChargingInfrastrucutre would be bound, we could inject it and use it here and did not have to copy chargers...
+		//TODO: if the provider for ChargingInfrastructure would be bound, we could inject it and use it here and did not have to copy chargers...
 		//same is actually valid for the electric fleet / electric vehicle. but there we DO want a copy...
 		Charger chargerCopy = ChargerImpl.create(selectedCharger, chargingLink, chargingLogicFactory);
 		pseudoVehicle.getBattery().changeSoc(pseudoVehicle.getChargingPower().calcChargingPower(chargerCopy) * chargingDuration);
