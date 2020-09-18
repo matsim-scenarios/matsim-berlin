@@ -196,68 +196,74 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 			if (pseudoVehicle.getBattery().getSoc() <= capacityThreshold){
 				//plan charging trip
 
-				Network modeNetwork = this.singleModeNetworksCache.getSingleModeNetworksCache().get(leg.getMode());
+				secondLastSOC = replanPrecedentAndCurrentLegAndPrecedentSOC(plan, electricVehicleSpecification, pseudoVehicle, secondLastSOC, leg);
 
-				int legIndex = plan.getPlanElements().indexOf(leg);
-				Preconditions.checkState(legIndex > -1, "could not locate leg in plan");
-
-				MobsimAgent mobsimagent = qsim.getAgents().get(plan.getPerson().getId());
-				Plan modifiablePlan = WithinDayAgentUtils.getModifiablePlan(mobsimagent);
-
-				//find suitable non-stage activity before threshold passover
-				//TODO possibly put behind interface
-				Activity actWhileCharging = plansEditor.findRealActBefore(mobsimagent, legIndex);
-//				if ( (realAct.getEndTime() - realAct.getStartTime()) < evConfigGroup.getMinimumChargeTime()) //TODO
-
-
-				//TODO what if actWhileCharging does not hold a link id?
-				ChargerSpecification selectedCharger = selectChargerNearToLink(actWhileCharging.getLinkId(), electricVehicleSpecification, modeNetwork);
-				Link chargingLink = modeNetwork.getLinks().get(selectedCharger.getLinkId());
-
-
-//					if (!insertPluginActivity(leg, mobsimagent, realActIndex, plugInAct)) return;
-				Activity actBeforeCharging = plansEditor.findRealActBefore(mobsimagent, modifiablePlan.getPlanElements().indexOf(actWhileCharging));
-				Preconditions.checkState(!actBeforeCharging.equals(actWhileCharging));
-				Activity actAfterCharging = plansEditor.findRealActAfter(mobsimagent, modifiablePlan.getPlanElements().indexOf(actWhileCharging));
-				Preconditions.checkState(!actAfterCharging.equals(actWhileCharging));
-
-				//this does not work. see comments at method
-//				insertPluginActivity(leg,mobsimagent, modifiablePlan.getPlanElements().indexOf(actWhileCharging) - 1, selectedChargerLink);
-
-				//set SOC back to the second last value as we reroute the last leg and the current leg
-				pseudoVehicle.getBattery().setSoc(secondLastSOC);
-
-				//facilities
-				Facility fromFacility = FacilitiesUtils.toFacility(actBeforeCharging, scenario.getActivityFacilities());
-				Facility chargerFacility = new LinkWrapperFacility(chargingLink);
-				Facility toFacility = FacilitiesUtils.toFacility(actWhileCharging, scenario.getActivityFacilities());
-
-				TripRouter tripRouter = tripRouterProvider.get();
-				String routingMode = TripStructureUtils.getRoutingMode(leg);
-
-				Leg legToCharger = planPluginTripAndGetMainLeg(modifiablePlan, routingMode, actBeforeCharging, actWhileCharging, chargingLink, tripRouter, fromFacility, chargerFacility, toFacility);
-				double chargingBegin =  legToCharger.getDepartureTime().seconds() + legToCharger.getTravelTime().seconds();
-				emulateVehicleDischarging(pseudoVehicle, legToCharger);
-				secondLastSOC = pseudoVehicle.getBattery().getSoc();
-
-				Leg legFromCharger = planPlugoutTripAndGetMainLeg(modifiablePlan, routingMode, actWhileCharging, actAfterCharging, chargingLink, tripRouter, chargerFacility, toFacility, PlanRouter.calcEndOfActivity(actWhileCharging, plan, config));
-				double chargingDuration = (legFromCharger == null) ? 0 : legFromCharger.getDepartureTime().seconds() - chargingBegin;
-
-				//charge pseudo vehicle
-
-				//TODO: if the provider for ChargingInfrastrucutre would be bound, we could inject it and use it here and did not have to copy chargers...
-				//same is actually valid for the electric fleet / electric vehicle. but there we DO want a copy...
-				Charger chargerCopy = ChargerImpl.create(selectedCharger, chargingLink, chargingLogicFactory);
-				pseudoVehicle.getBattery().changeSoc(pseudoVehicle.getChargingPower().calcChargingPower(chargerCopy) * chargingDuration);
-				emulateVehicleDischarging(pseudoVehicle, legFromCharger);
 				lastSOC = pseudoVehicle.getBattery().getSoc();
-				if(lastSOC <= capacityThreshold) throw new RuntimeException("tried to find a suitable charging station for agent " + mobsimagent + " but apparently did not work");
+				if(lastSOC <= capacityThreshold) throw new RuntimeException("tried to find a suitable charging station for agent " + plan.getPerson() + " but apparently did not work");
 				continue;
 			}
 			secondLastSOC = lastSOC;
 			lastSOC = pseudoVehicle.getBattery().getSoc();
 		}
 
+	}
+
+	private double replanPrecedentAndCurrentLegAndPrecedentSOC(Plan plan, ElectricVehicleSpecification electricVehicleSpecification, ElectricVehicle pseudoVehicle, double secondLastSOC, Leg leg) {
+		Network modeNetwork = this.singleModeNetworksCache.getSingleModeNetworksCache().get(leg.getMode());
+
+		int legIndex = plan.getPlanElements().indexOf(leg);
+		Preconditions.checkState(legIndex > -1, "could not locate leg in plan");
+
+		MobsimAgent mobsimagent = qsim.getAgents().get(plan.getPerson().getId());
+		Plan modifiablePlan = WithinDayAgentUtils.getModifiablePlan(mobsimagent);
+
+		//find suitable non-stage activity before threshold passover
+		//TODO possibly put behind interface
+		Activity actWhileCharging = plansEditor.findRealActBefore(mobsimagent, legIndex);
+//				if ( (realAct.getEndTime() - realAct.getStartTime()) < evConfigGroup.getMinimumChargeTime()) //TODO
+
+
+		//TODO what if actWhileCharging does not hold a link id?
+		ChargerSpecification selectedCharger = selectChargerNearToLink(actWhileCharging.getLinkId(), electricVehicleSpecification, modeNetwork);
+		Link chargingLink = modeNetwork.getLinks().get(selectedCharger.getLinkId());
+
+
+//					if (!insertPluginActivity(leg, mobsimagent, realActIndex, plugInAct)) return;
+		Activity actBeforeCharging = plansEditor.findRealActBefore(mobsimagent, modifiablePlan.getPlanElements().indexOf(actWhileCharging));
+		Preconditions.checkState(!actBeforeCharging.equals(actWhileCharging));
+		Activity actAfterCharging = plansEditor.findRealActAfter(mobsimagent, modifiablePlan.getPlanElements().indexOf(actWhileCharging));
+		Preconditions.checkState(!actAfterCharging.equals(actWhileCharging));
+
+		//this does not work. see comments at method
+//				insertPluginActivity(leg,mobsimagent, modifiablePlan.getPlanElements().indexOf(actWhileCharging) - 1, selectedChargerLink);
+
+		//set SOC back to the second last value as we reroute the last leg and the current leg
+		pseudoVehicle.getBattery().setSoc(secondLastSOC);
+
+		//facilities
+		Facility fromFacility = FacilitiesUtils.toFacility(actBeforeCharging, scenario.getActivityFacilities());
+		Facility chargerFacility = new LinkWrapperFacility(chargingLink);
+		Facility toFacility = FacilitiesUtils.toFacility(actWhileCharging, scenario.getActivityFacilities());
+
+		TripRouter tripRouter = tripRouterProvider.get();
+		String routingMode = TripStructureUtils.getRoutingMode(leg);
+
+		Leg legToCharger = planPluginTripAndGetMainLeg(modifiablePlan, routingMode, actBeforeCharging, actWhileCharging, chargingLink, tripRouter, fromFacility, chargerFacility, toFacility);
+		double chargingBegin =  legToCharger.getDepartureTime().seconds() + legToCharger.getTravelTime().seconds();
+		emulateVehicleDischarging(pseudoVehicle, legToCharger);
+		secondLastSOC = pseudoVehicle.getBattery().getSoc();
+
+		Leg legFromCharger = planPlugoutTripAndGetMainLeg(modifiablePlan, routingMode, actWhileCharging, actAfterCharging, chargingLink, tripRouter, chargerFacility, toFacility, PlanRouter.calcEndOfActivity(actWhileCharging, plan, config));
+		double chargingDuration = (legFromCharger == null) ? 0 : legFromCharger.getDepartureTime().seconds() - chargingBegin;
+
+		//charge pseudo vehicle
+
+		//TODO: if the provider for ChargingInfrastrucutre would be bound, we could inject it and use it here and did not have to copy chargers...
+		//same is actually valid for the electric fleet / electric vehicle. but there we DO want a copy...
+		Charger chargerCopy = ChargerImpl.create(selectedCharger, chargingLink, chargingLogicFactory);
+		pseudoVehicle.getBattery().changeSoc(pseudoVehicle.getChargingPower().calcChargingPower(chargerCopy) * chargingDuration);
+		emulateVehicleDischarging(pseudoVehicle, legFromCharger);
+		return secondLastSOC;
 	}
 
 	private Leg planPlugoutTripAndGetMainLeg(Plan plan, String routingMode, Activity actWhileCharging, Activity actAfterCharging, Link chargingLink, TripRouter tripRouter, Facility chargerFacility, Facility toFacility, double now) {
