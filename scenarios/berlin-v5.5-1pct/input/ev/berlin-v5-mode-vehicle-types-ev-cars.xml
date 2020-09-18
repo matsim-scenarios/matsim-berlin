@@ -17,8 +17,11 @@
 			<attributes>
 				<attribute name="HbefaTechnology" class="java.lang.String">electricity</attribute>
 				<attribute name="chargerTypes" class="java.util.Arrays$ArrayList">["default","specialChargerType"]</attribute>
-				<attribute name="energyCapacityInKWhOrLiters" class="java.lang.Double">100.0</attribute>
-				<attribute name="initialEnergy" class="java.lang.Double">100.0</attribute>
+			 <!-- capacity in Joule; this value is equivalent to 24kWh which is the capacity of a Nissan Leaf (see wikipedia)-->
+				<attribute name="energyCapacityInKWhOrLiters" class="java.lang.Double">86400000.0</attribute>
+				<!-- <attribute name="initialEnergy" class="java.lang.Double">86400000.0</attribute> -->
+				<attribute name="initialEnergy" class="java.lang.Double">43200000.0</attribute> <!-- 50% -->
+				<attribute name="initialEnergy" class="java.lang.Double">25600000.0</attribute> <!-- 25% -->
 			</attributes>
 		</engineInformation>
 		<costInformation>

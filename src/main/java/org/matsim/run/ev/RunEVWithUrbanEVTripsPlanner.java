@@ -44,11 +44,9 @@ class RunEVWithUrbanEVTripsPlanner {
 	public static void main(String[] args) {
 		if(args.length == 0){
 			args = new String[1];
-			args[0] = "D:/ev-test/berlin-v5.5-1pct.config-ev-test.xml";
+			args[0] = "scenarios/berlin-v5.5-1pct/input/ev/berlin-v5.5-1pct.config-ev-test.xml";
 		}
 		Config config = RunBerlinScenario.prepareConfig(args, new EvConfigGroup());
-//		config.plansCalcRoute().setAccessEgressType(PlansCalcRouteConfigGroup.AccessEgressType.accessEgressModeToLink);
-//		config.qsim().setUsePersonIdForMissingVehicleId(false);
 
 		config.controler().setOutputDirectory("./output-berlin-v5.5-1pct/evTest-withMobsimInitialitzedListener");
 		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);

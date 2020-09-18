@@ -12,10 +12,34 @@
 			<attribute name="subpopulation" class="java.lang.String">person</attribute>
 		</attributes>
 		<plan selected="yes">
-			<activity type="home_4800.0" link="7574" end_time="08:00:00" x="4589811" y="5817841" >
+			<activity type="home_4800.0" link="7574" end_time="08:00:00" >
 			</activity>
 			<leg mode="car">	</leg>
-			<activity type="work_4800.0" link="97873">
+			<activity type="work_4800.0" link="97873" end_time="10:00:00">
+			</activity>
+			<leg mode="car">	</leg>
+			<activity type="home_4800.0" link="7574" end_time="12:00:00">
+			</activity>
+			<!-- ROUNDTRIP -->
+			<leg mode="car">	</leg>
+			<activity type="work_4800.0" link="97873" end_time="14:00:00">
+			</activity>
+			<leg mode="car">	</leg>
+			<activity type="home_4800.0" link="7574" end_time="16:00:00">
+			</activity>
+			<!-- ROUNDTRIP -->
+			<leg mode="car">	</leg>
+			<activity type="work_4800.0" link="97873" end_time="18:00:00">
+			</activity>
+			<leg mode="car">	</leg>
+			<activity type="home_4800.0" link="7574"  end_time="20:00:00">
+			</activity>
+			<!-- ROUNDTRIP -->
+			<leg mode="car">	</leg>
+			<activity type="work_4800.0" link="97873" end_time="22:00:00">
+			</activity>
+			<leg mode="car">	</leg>
+			<activity type="home_4800.0" link="7574" >
 			</activity>
 		</plan>
 

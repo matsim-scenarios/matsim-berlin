@@ -31,7 +31,7 @@ public class ConvertOldVehiclesFile {
 	public static void main(String[] args) {
 
 		String openBerlinVehiclesFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5-mode-vehicle-types.xml";
-		String outputVehiclesFile = "D:/ev-test/berlin-v5-mode-vehicle-types-ev-cars.xml";
+		String outputVehiclesFile = "scenarios/berlin-v5.5-1pct/input/ev/berlin-v5-mode-vehicle-types-ev-cars.xml";
 
 		Vehicles vehicles = VehicleUtils.createVehiclesContainer();
 
