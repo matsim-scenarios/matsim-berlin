@@ -86,10 +86,10 @@ class MATSimVehicleWrappingEVSpecificationProvider implements Provider<ElectricF
 			public ImmutableList<String> getChargerTypes() { return EVUtils.getChargerTypes(vehicle.getType().getEngineInformation()); }
 
 			@Override
-			public double getInitialSoc() { return EVUtils.getInitialEnergy(vehicle.getType().getEngineInformation()); }
+			public double getInitialSoc() { return EVUtils.getInitialEnergy(vehicle.getType().getEngineInformation()) * 3_600_000; }
 
 			@Override
-			public double getBatteryCapacity() { return VehicleUtils.getEnergyCapacity(vehicle.getType().getEngineInformation()); }
+			public double getBatteryCapacity() { return VehicleUtils.getEnergyCapacity(vehicle.getType().getEngineInformation()) * 3_600_000; }
 
 			@Override
 			public Id<ElectricVehicle> getId() { return getWrappedElectricVehicleId(vehicle.getId()); }

@@ -27,25 +27,25 @@ import java.util.Collection;
 
 class EVUtils {
 
-	private static final String INITIALENERGY = "initialEnergy";
+	private static final String INITIALENERGY_KWH = "initialEnergyInKWh";
 	private static final String CHARGERTYPES = "chargerTypes";
 
 	/**
 	 *
 	 * @param engineInformation
-	 * @return the initial energy in Joule
+	 * @return the initial energy in kWh
 	 */
 	static Double getInitialEnergy(EngineInformation engineInformation ){
-		return (Double) engineInformation.getAttributes().getAttribute( INITIALENERGY );
+		return (Double) engineInformation.getAttributes().getAttribute(INITIALENERGY_KWH);
 	}
 
 	/**
 	 *
 	 * @param engineInformation
-	 * @param initialEnergy in Joule
+	 * @param initialEnergy in kWh
 	 */
 	static void setInitialEnergy(EngineInformation engineInformation, double initialEnergy ){
-		engineInformation.getAttributes().putAttribute(INITIALENERGY,  initialEnergy);
+		engineInformation.getAttributes().putAttribute(INITIALENERGY_KWH,  initialEnergy);
 	}
 
 	static ImmutableList<String> getChargerTypes(EngineInformation engineInformation ){
