@@ -11,7 +11,7 @@
 
 	<properties>
 		<matsim.version>13.0-SNAPSHOT</matsim.version>
-<!--		<matsim.version>13.0-2020w34-SNAPSHOT</matsim.version>-->
+<!--		<matsim.version>13.0-2020w37-SNAPSHOT</matsim.version>-->
 	</properties>
 
 	<repositories>
@@ -168,7 +168,7 @@
 	    	<groupId>com.github.matsim-vsp</groupId>
 	    	<artifactId>drt-speed-up</artifactId>
 	    	<!-- for some reason jitpack does not like release v0.0.2, but is happy with the commit id of the very same release -->
-	    	<version>d744a322dd1</version>
+	    	<version>1dc5c98dcf</version>
 		</dependency>
 		
 		<dependency>
@@ -181,7 +181,7 @@
 	    	<groupId>com.github.matsim-vsp</groupId>
 	    	<artifactId>matsim-analysis</artifactId>
 	    	<!-- <version>v2.5</version> -->
-	    	<version>778d27a871</version>
+	    	<version>5d376aedc5</version>
 		</dependency>
 
 		<dependency>
