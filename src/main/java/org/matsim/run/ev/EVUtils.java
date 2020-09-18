@@ -30,10 +30,20 @@ class EVUtils {
 	private static final String INITIALENERGY = "initialEnergy";
 	private static final String CHARGERTYPES = "chargerTypes";
 
+	/**
+	 *
+	 * @param engineInformation
+	 * @return the initial energy in Joule
+	 */
 	static Double getInitialEnergy(EngineInformation engineInformation ){
 		return (Double) engineInformation.getAttributes().getAttribute( INITIALENERGY );
 	}
 
+	/**
+	 *
+	 * @param engineInformation
+	 * @param initialEnergy in Joule
+	 */
 	static void setInitialEnergy(EngineInformation engineInformation, double initialEnergy ){
 		engineInformation.getAttributes().putAttribute(INITIALENERGY,  initialEnergy);
 	}
