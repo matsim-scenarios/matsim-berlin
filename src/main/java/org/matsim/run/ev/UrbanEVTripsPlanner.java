@@ -211,6 +211,7 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 	private double replanPrecedentAndCurrentLegAndPrecedentSOC(Plan plan, ElectricVehicleSpecification electricVehicleSpecification, ElectricVehicle pseudoVehicle, double secondLastSOC, Leg leg) {
 		Network modeNetwork = this.singleModeNetworksCache.getSingleModeNetworksCache().get(leg.getMode());
 
+		String routingMode = TripStructureUtils.getRoutingMode(leg);
 		int legIndex = plan.getPlanElements().indexOf(leg);
 		Preconditions.checkState(legIndex > -1, "could not locate leg in plan");
 
@@ -236,6 +237,9 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 			throw new RuntimeException("see log error messages above");
 		}
 		Preconditions.checkState(!actBeforeCharging.equals(actWhileCharging));
+		PlanElement legToBeReplaced = modifiablePlan.getPlanElements().get(modifiablePlan.getPlanElements().indexOf(actBeforeCharging) - 1);
+		Preconditions.checkState(legToBeReplaced instanceof Leg);
+		Preconditions.checkState(TripStructureUtils.getRoutingMode((Leg) legToBeReplaced).equals(routingMode), "vehicle runs dry on a leg for which the precedent leg does not have the same routing mode....");
 		Activity actAfterCharging = plansEditor.findRealActAfter(mobsimagent, modifiablePlan.getPlanElements().indexOf(actWhileCharging));
 		Preconditions.checkState(!actAfterCharging.equals(actWhileCharging));
 
@@ -251,7 +255,7 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 		Facility toFacility = FacilitiesUtils.toFacility(actWhileCharging, scenario.getActivityFacilities());
 
 		TripRouter tripRouter = tripRouterProvider.get();
-		String routingMode = TripStructureUtils.getRoutingMode(leg);
+
 
 		Leg legToCharger = planPluginTripAndGetMainLeg(modifiablePlan, routingMode, actBeforeCharging, actWhileCharging, chargingLink, tripRouter, fromFacility, chargerFacility, toFacility);
 		double chargingBegin =  legToCharger.getDepartureTime().seconds() + legToCharger.getTravelTime().seconds();
