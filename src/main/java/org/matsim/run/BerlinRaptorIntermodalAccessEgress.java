@@ -73,83 +73,83 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
 		
         double utility = 0.0;
         double tTime = 0.0;
-        for (PlanElement pe : legs) {
-            if (pe instanceof Leg) {
-                String mode = ((Leg) pe).getMode();
-                double travelTime = ((Leg) pe).getTravelTime();
-                
-                // overrides individual parameters per person; use default scoring parameters
-                if (Time.getUndefinedTime() != travelTime) {
-                    tTime += travelTime;
-                    utility += travelTime * (scoringParams.getModes().get(mode).getMarginalUtilityOfTraveling() + (-1) * scoringParams.getPerforming_utils_hr()) / 3600;
-                }
-                Double distance = ((Leg) pe).getRoute().getDistance();
-                if (distance != null && distance != 0.) {
-                	utility += distance * scoringParams.getModes().get(mode).getMarginalUtilityOfDistance();
-                	utility += distance * scoringParams.getModes().get(mode).getMonetaryDistanceRate() * scoringParams.getMarginalUtilityOfMoney();
-                }
-                utility += scoringParams.getModes().get(mode).getConstant();
-                
-                // account for drt fares
-                for (DrtFareConfigGroup drtFareConfigGroup : drtFaresConfigGroup.getDrtFareConfigGroups()) {
-                	if (drtFareConfigGroup.getMode().equals(mode)) {
-                        double fare = 0.;
-                		if (distance != null && distance != 0.) {
-                        	fare += drtFareConfigGroup.getDistanceFare_m() * distance;
-                        }
-                                                
-                        if (Time.getUndefinedTime() != travelTime) {
-                            fare += drtFareConfigGroup.getTimeFare_h() * travelTime / 3600.;
-
-                        }
-                        
-                        fare += drtFareConfigGroup.getBasefare(); 
-                        fare = Math.max(fare, drtFareConfigGroup.getMinFarePerTrip());
-                        utility += -1. * fare * scoringParams.getMarginalUtilityOfMoney();
-                	}
-                }
-                
-                // account for intermodal trip fare compensations
-                for (IntermodalTripFareCompensatorConfigGroup compensatorCfg : interModalTripFareCompensatorsCfg.getIntermodalTripFareCompensatorConfigGroups()) {
-                	if (compensatorCfg.getDrtModes().contains(mode) && compensatorCfg.getPtModes().contains(TransportMode.pt)) {
-                		// the following is a compensation, thus positive!
-                		utility += compensatorCfg.getCompensationPerTrip() * scoringParams.getMarginalUtilityOfMoney();
-                	}
-                }
-
-                //check whether the same agente was already handled for the same direction (for each trip it should always first handle all access stops and then all egress stops)
-                // assumes that the RaptorStopFinder handles by person, then by direction, then by mode for each routing request (what DefaultRaptorStopFinder does)
-                // -> same person, same direction should be all in one row without other agents in between (otherwise will not work as expected)
-                if(!(lastPersonId.equals(person.getId()) && lastDirection.equals(direction))) {
-                    lastModes2Randomization.clear();
-                    lastPersonId = person.getId();
-                    lastDirection = direction;
-                }
-
-                // apply randomization to utility if applicable;
-                IntermodalAccessEgressModeUtilityRandomization randomization = berlinCfg.getIntermodalAccessEgressModeUtilityRandomization(mode);
-                if (randomization != null) {
-                	double utilityRandomizationSigma = randomization.getAdditiveRandomizationWidth();
-                	if (utilityRandomizationSigma != 0.0) {
-                        Double additiveRandomization = lastModes2Randomization.get(mode);
-                        if (additiveRandomization == null) {
-                            /**
-                             * logNormal distribution in {@link org.matsim.core.router.costcalculators.RandomizingTimeDistanceTravelDisutilityFactory}
-                             */
-//                            double normalization = 1. / Math.exp(utilityRandomizationSigma * utilityRandomizationSigma / 2);
-//                            lastModes2Randomization.put(mode, Math.exp( utilityRandomizationSigma * random.nextGaussian() ) * normalization);
-//                            Does log normal distribution really make sense for a term we add (instead of multiply)?
-//                            Maybe rather use log normal distribution to multiply with the estimated travel time?
-//                            (fare and distance seem more predictable, but travel time fluctuates)-gl mar'20
-                            additiveRandomization = (random.nextDouble() - 0.5) * utilityRandomizationSigma;
-                            lastModes2Randomization.put(mode, additiveRandomization);
-                        }
-//                        System.err.println(person.getId().toString() + ";" + direction.toString() + ";" + additiveRandomization);
-                        utility += additiveRandomization;
-                    }
-                }
-            }
-        }
+//        for (PlanElement pe : legs) {
+//            if (pe instanceof Leg) {
+//                String mode = ((Leg) pe).getMode();
+//                double travelTime = ((Leg) pe).getTravelTime();
+//
+//                // overrides individual parameters per person; use default scoring parameters
+//                if (Time.getUndefinedTime() != travelTime) {
+//                    tTime += travelTime;
+//                    utility += travelTime * (scoringParams.getModes().get(mode).getMarginalUtilityOfTraveling() + (-1) * scoringParams.getPerforming_utils_hr()) / 3600;
+//                }
+//                Double distance = ((Leg) pe).getRoute().getDistance();
+//                if (distance != null && distance != 0.) {
+//                	utility += distance * scoringParams.getModes().get(mode).getMarginalUtilityOfDistance();
+//                	utility += distance * scoringParams.getModes().get(mode).getMonetaryDistanceRate() * scoringParams.getMarginalUtilityOfMoney();
+//                }
+//                utility += scoringParams.getModes().get(mode).getConstant();
+//
+//                // account for drt fares
+//                for (DrtFareConfigGroup drtFareConfigGroup : drtFaresConfigGroup.getDrtFareConfigGroups()) {
+//                	if (drtFareConfigGroup.getMode().equals(mode)) {
+//                        double fare = 0.;
+//                		if (distance != null && distance != 0.) {
+//                        	fare += drtFareConfigGroup.getDistanceFare_m() * distance;
+//                        }
+//
+//                        if (Time.getUndefinedTime() != travelTime) {
+//                            fare += drtFareConfigGroup.getTimeFare_h() * travelTime / 3600.;
+//
+//                        }
+//
+//                        fare += drtFareConfigGroup.getBasefare();
+//                        fare = Math.max(fare, drtFareConfigGroup.getMinFarePerTrip());
+//                        utility += -1. * fare * scoringParams.getMarginalUtilityOfMoney();
+//                	}
+//                }
+//
+//                // account for intermodal trip fare compensations
+//                for (IntermodalTripFareCompensatorConfigGroup compensatorCfg : interModalTripFareCompensatorsCfg.getIntermodalTripFareCompensatorConfigGroups()) {
+//                	if (compensatorCfg.getDrtModes().contains(mode) && compensatorCfg.getPtModes().contains(TransportMode.pt)) {
+//                		// the following is a compensation, thus positive!
+//                		utility += compensatorCfg.getCompensationPerTrip() * scoringParams.getMarginalUtilityOfMoney();
+//                	}
+//                }
+//
+//                //check whether the same agente was already handled for the same direction (for each trip it should always first handle all access stops and then all egress stops)
+//                // assumes that the RaptorStopFinder handles by person, then by direction, then by mode for each routing request (what DefaultRaptorStopFinder does)
+//                // -> same person, same direction should be all in one row without other agents in between (otherwise will not work as expected)
+//                if(!(lastPersonId.equals(person.getId()) && lastDirection.equals(direction))) {
+//                    lastModes2Randomization.clear();
+//                    lastPersonId = person.getId();
+//                    lastDirection = direction;
+//                }
+//
+//                // apply randomization to utility if applicable;
+//                IntermodalAccessEgressModeUtilityRandomization randomization = berlinCfg.getIntermodalAccessEgressModeUtilityRandomization(mode);
+//                if (randomization != null) {
+//                	double utilityRandomizationSigma = randomization.getAdditiveRandomizationWidth();
+//                	if (utilityRandomizationSigma != 0.0) {
+//                        Double additiveRandomization = lastModes2Randomization.get(mode);
+//                        if (additiveRandomization == null) {
+//                            /**
+//                             * logNormal distribution in {@link org.matsim.core.router.costcalculators.RandomizingTimeDistanceTravelDisutilityFactory}
+//                             */
+////                            double normalization = 1. / Math.exp(utilityRandomizationSigma * utilityRandomizationSigma / 2);
+////                            lastModes2Randomization.put(mode, Math.exp( utilityRandomizationSigma * random.nextGaussian() ) * normalization);
+////                            Does log normal distribution really make sense for a term we add (instead of multiply)?
+////                            Maybe rather use log normal distribution to multiply with the estimated travel time?
+////                            (fare and distance seem more predictable, but travel time fluctuates)-gl mar'20
+//                            additiveRandomization = (random.nextDouble() - 0.5) * utilityRandomizationSigma;
+//                            lastModes2Randomization.put(mode, additiveRandomization);
+//                        }
+////                        System.err.println(person.getId().toString() + ";" + direction.toString() + ";" + additiveRandomization);
+//                        utility += additiveRandomization;
+//                    }
+//                }
+//            }
+//        }
         return new RIntermodalAccessEgress(legs, -utility, tTime, direction);
     }
 }
