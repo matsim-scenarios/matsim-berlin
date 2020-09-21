@@ -42,10 +42,10 @@ class EVUtils {
 	/**
 	 *
 	 * @param engineInformation
-	 * @param initialEnergy in kWh
+	 * @param initialEnergyInKWh initial energy [kWh]
 	 */
-	static void setInitialEnergy(EngineInformation engineInformation, double initialEnergy ){
-		engineInformation.getAttributes().putAttribute(INITIALENERGY_KWH,  initialEnergy);
+	static void setInitialEnergy(EngineInformation engineInformation, double initialEnergyInKWh ){
+		engineInformation.getAttributes().putAttribute(INITIALENERGY_KWH,  initialEnergyInKWh);
 	}
 
 	static ImmutableList<String> getChargerTypes(EngineInformation engineInformation ){

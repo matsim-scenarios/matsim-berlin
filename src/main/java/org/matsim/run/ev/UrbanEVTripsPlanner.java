@@ -208,6 +208,13 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 
 	}
 
+	//TODO we imply/check that the leg before actWhileCharging is an EV leg.
+	//we also imply that the ev trip chain is not interrupted.
+	/* should be more flexible, like:
+	 * find a suitable preceding activity that follows an ev leg. schedule plugin activity there
+	 * find the first activity after that, which precedes an ev leg and schedule plugout activity..
+	 * should not be tooooo difficult.
+	 */
 	private double replanPrecedentAndCurrentLegAndPrecedentSOC(Plan plan, ElectricVehicleSpecification electricVehicleSpecification, ElectricVehicle pseudoVehicle, double secondLastSOC, Leg leg) {
 		Network modeNetwork = this.singleModeNetworksCache.getSingleModeNetworksCache().get(leg.getMode());
 
@@ -255,7 +262,6 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 		Facility toFacility = FacilitiesUtils.toFacility(actWhileCharging, scenario.getActivityFacilities());
 
 		TripRouter tripRouter = tripRouterProvider.get();
-
 
 		Leg legToCharger = planPluginTripAndGetMainLeg(modifiablePlan, routingMode, actBeforeCharging, actWhileCharging, chargingLink, tripRouter, fromFacility, chargerFacility, toFacility);
 		double chargingBegin =  legToCharger.getDepartureTime().seconds() + legToCharger.getTravelTime().seconds();
@@ -346,8 +352,7 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 	}
 
 
-	//possibly put behind interface
-
+	//TODO possibly put behind interface
 	private ChargerSpecification selectChargerNearToLink(Id<Link> linkId, ElectricVehicleSpecification vehicleSpecification, Network network){
 		StraightLineKnnFinder<Link, ChargerSpecification> straightLineKnnFinder = new StraightLineKnnFinder<>(
 				1, l -> l, s -> network.getLinks().get(s.getLinkId())); //TODO get closest X chargers and choose randomly?
@@ -366,7 +371,6 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 	 * this method has the side effect that the soc of the ev is altered by estimated energy consumption of the leg
 	 * @param ev
 	 * @param basicLeg
-	 * @return
 	 */
 	private void emulateVehicleDischarging(ElectricVehicle ev, Leg basicLeg) {
 		//retrieve mode specific network

@@ -26,7 +26,7 @@ import org.matsim.vehicles.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class ConvertOldVehiclesFile {
+public class ConvertCarsInVehiclesFileToEVs {
 
 	public static void main(String[] args) {
 
