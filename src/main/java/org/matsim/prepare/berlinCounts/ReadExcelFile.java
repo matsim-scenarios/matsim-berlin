@@ -15,8 +15,10 @@ public class ReadExcelFile {
 
     public static void main(String[] args) {
 
-        String excel = "Datenexport_2018_TU_Berlin_LKW_Abweichungen.xlsx";
-//        String excel = "D:/Arbeit/vsp/Datenexport_2018_TU_Berlin_LKW_Abweichungen.xlsx";
+//        String excel = "Datenexport_2018_TU_Berlin_LKW_Abweichungen.xlsx";
+        String excel = "D:/Arbeit/vsp/Datenexport_2018_TU_Berlin_LKW_Abweichungen.xlsx";
+        String outputFile = "counts_berlin.xml";
+
         HashMap<Integer, BerlinCounts> berlinCountsMap = new HashMap<>();
 
         try {
@@ -34,6 +36,8 @@ public class ReadExcelFile {
         }
 
         Counts<Link> counts = new Counts();
+        counts.setYear(2018);
+        counts.setDescription("data from the berliner senate to matsim counts");
         for (BerlinCounts berlinCounts : berlinCountsMap.values()) {
             counts.createAndAddCount(Id.createLinkId(berlinCounts.getLinkid() + "_PKW" ),berlinCounts.getPosition() + "_" + berlinCounts.getOrientation());
             double[] PERC_Q_PKW_TYPE = berlinCounts.getPERC_Q_KFZ_TYPE();
@@ -49,8 +53,7 @@ public class ReadExcelFile {
             }
         }
         CountsWriter writer = new CountsWriter(counts);
-        writer.write("counts.xml");
-
+        writer.write("outputFile");
     }
 }
 
@@ -61,7 +64,6 @@ class ExcelDataFormat {
     private static final String[] sheet2 = {"MQ_ID","PERC_LKW"};
     private static final String[] sheet3 = {"MQ_ID","HOUR","PERC_Q_KFZ_TYPE","PERC_Q_PKW_TYPE","PERC_Q_LKW_TYPE"};
     private static final String[] sheet4 = {"MQ_ID","POSITION","DETAIL","ORIENTATION","X_GK4","Y_GK4","linkid"};
-    private static final String[][] sheets = {sheet0, sheet1, sheet2, sheet3, sheet4};
 
     public static  HashMap<Integer, BerlinCounts> handleSheet(HashMap<Integer, BerlinCounts> berlinCountsMap, int i, XSSFSheet sheet) {
         if (i == 0) {
@@ -97,9 +99,6 @@ class ExcelDataFormat {
                 if (sheet.getRow(j).getCell(4) != null) {
                     PERC_Q_LKW_TYPE = sheet.getRow(j).getCell(4).getNumericCellValue();
                 }
-                if (berlinCounts == null) {
-                    System.out.println();
-                }
                 berlinCounts.setArrays(hour, PERC_Q_KFZ_TYPE, PERC_Q_PKW_TYPE, PERC_Q_LKW_TYPE);
             }
         } else if (i == 4) {
@@ -115,8 +114,6 @@ class ExcelDataFormat {
 }
 
 class BerlinCounts {
-
-    public final List<String> informations = Arrays.asList("MQ_ID","DTVW_KFZ","DTVW_LKW","PERC_LKW","PERC_Q_KFZ_TYPE","PERC_Q_PKW_TYPE","PERC_Q_LKW_TYPE","linkid");
 
     private int MQ_ID;
     private int DTVW_KFZ;
