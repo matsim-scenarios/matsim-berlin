@@ -15,8 +15,8 @@ public class ReadExcelFile {
 
     public static void main(String[] args) {
 
-//        String excel = "Datenexport_2018_TU_Berlin_LKW_Abweichungen.xlsx";
-        String excel = "D:/Arbeit/vsp/Datenexport_2018_TU_Berlin_LKW_Abweichungen.xlsx";
+        String excel = "Datenexport_2018_TU_Berlin_LKW_Abweichungen.xlsx";
+//        String excel = "D:/Arbeit/vsp/Datenexport_2018_TU_Berlin_LKW_Abweichungen.xlsx";
         String outputFile = "counts_berlin.xml";
 
         HashMap<Integer, BerlinCounts> berlinCountsMap = new HashMap<>();
@@ -42,18 +42,18 @@ public class ReadExcelFile {
             counts.createAndAddCount(Id.createLinkId(berlinCounts.getLinkid() + "_PKW" ),berlinCounts.getPosition() + "_" + berlinCounts.getOrientation());
             double[] PERC_Q_PKW_TYPE = berlinCounts.getPERC_Q_KFZ_TYPE();
             for (int i = 1; i < 25; i++) {
-                counts.getCount(Id.createLinkId(berlinCounts.getLinkid() + "_PKW")).createVolume(i, (int) (berlinCounts.getDTVW_KFZ() * PERC_Q_PKW_TYPE[i - 1]));
+                counts.getCount(Id.createLinkId(berlinCounts.getLinkid() + "_PKW")).createVolume(i, (berlinCounts.getDTVW_KFZ() * PERC_Q_PKW_TYPE[i - 1]));
             }
             if (berlinCounts.isLKW_Anteil()) {
                 counts.createAndAddCount(Id.createLinkId(berlinCounts.getLinkid() + "_LKW"), berlinCounts.getPosition() + "_" + berlinCounts.getOrientation());
                 double[] PERC_Q_LKW_TYPE = berlinCounts.getPERC_Q_LKW_TYPE();
                 for (int i = 1; i < 25; i++) {
-                    counts.getCount(Id.createLinkId(berlinCounts.getLinkid() + "_LKW")).createVolume(i, (int) (berlinCounts.getDTVW_KFZ() * PERC_Q_LKW_TYPE[i - 1]));
+                    counts.getCount(Id.createLinkId(berlinCounts.getLinkid() + "_LKW")).createVolume(i, (berlinCounts.getDTVW_LKW() * PERC_Q_LKW_TYPE[i - 1]));
                 }
             }
         }
         CountsWriter writer = new CountsWriter(counts);
-        writer.write("outputFile");
+        writer.write(outputFile);
     }
 }
 
