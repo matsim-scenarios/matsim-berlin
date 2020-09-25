@@ -41,11 +41,9 @@ class ActivityWhileChargingFinder {
 
 	private final Set<String> activityTypes;
 	private static final double MINIMUM_TIME = 10 * 60;
-	private final String evRoutingMode;
 	private Logger log = Logger.getLogger(ActivityWhileChargingFinder.class);
 
-	ActivityWhileChargingFinder(String mode, List<String> possibleWhileChargingStartActTypes){
-		this.evRoutingMode = mode;
+	ActivityWhileChargingFinder(Set<String> possibleWhileChargingStartActTypes){
 		this.activityTypes = possibleWhileChargingStartActTypes;
 	}
 
@@ -57,14 +55,18 @@ class ActivityWhileChargingFinder {
 	 * @return null if no suitable activity was found
 	 */
 	@Nullable
-	Activity findActivityWhileCharging (List<PlanElement> planElements){
-		List<Activity> activities = TripStructureUtils.getActivities(planElements, TripStructureUtils.StageActivityHandling.ExcludeStageActivities);
+	Activity findActivityWhileChargingBeforeLeg(Plan plan, Leg leg){
+		String evRoutingMode = TripStructureUtils.getRoutingMode(leg);
+		Preconditions.checkState(plan.getPlanElements().contains(leg));
+		List<PlanElement> planElementsBeforeLeg = plan.getPlanElements().subList(0, plan.getPlanElements().indexOf(leg));
+
+		List<Activity> activities = TripStructureUtils.getActivities(planElementsBeforeLeg, TripStructureUtils.StageActivityHandling.ExcludeStageActivities);
 		List<Tuple<Leg, Activity>> evLegsWithFollowingActs = activities.stream()
 				.filter(activity -> activityTypes.contains(activity.getType()))
 				.map(activity -> planElementsBeforeLeg.indexOf(activity))
 				.filter(idx -> idx > 0)
-				.map(idx -> new Tuple<>((Leg) planElements.get(idx - 1), (Activity) planElements.get(idx)))
-				.filter(tuple -> TripStructureUtils.getRoutingMode(tuple.getFirst()).equals(this.evRoutingMode))
+				.map(idx -> new Tuple<>((Leg) planElementsBeforeLeg.get(idx - 1), (Activity) planElementsBeforeLeg.get(idx)))
+				.filter(tuple -> TripStructureUtils.getRoutingMode(tuple.getFirst()).equals(evRoutingMode))
 				.collect(Collectors.toList());
 
 		if(evLegsWithFollowingActs.isEmpty()) return null;
@@ -72,8 +74,11 @@ class ActivityWhileChargingFinder {
 
 		for (int i = evLegsWithFollowingActs.size() - 1; i >= 0; i++) {
 			Tuple<Leg, Activity> tuple = evLegsWithFollowingActs.get(i);
-			double begin = tuple.getFirst().getDepartureTime().seconds() + tuple.getFirst().getTravelTime().seconds();
-			double end = getNextLegOfRoutingModeAfterActivity(planElements, tuple.getSecond(), this.evRoutingMode).getDepartureTime().seconds();
+			//all legs should be routed at this time so we do not expect leg.getRoute().getTravelTime() to be undefined
+			double begin = tuple.getFirst().getDepartureTime().seconds() + tuple.getFirst().getRoute().getTravelTime().seconds();
+			Leg nextEVLeg = getNextLegOfRoutingModeAfterActivity(plan.getPlanElements(), tuple.getSecond(), evRoutingMode);
+			Preconditions.checkNotNull(nextEVLeg, "should not happen");
+			double end = nextEVLeg.getDepartureTime().seconds();
 			if(end - begin >= MINIMUM_TIME) return tuple.getSecond();
 		}
 		return null;
