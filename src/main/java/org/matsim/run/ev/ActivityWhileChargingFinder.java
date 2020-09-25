@@ -50,9 +50,10 @@ class ActivityWhileChargingFinder {
 	}
 
 	/**
-	 * last possible activity that fulfills all criteria is returned
+	 * last possible activity before leg that fulfills all criteria is returned
 	 *
 	 * @param plan
+	 * @param leg
 	 * @return null if no suitable activity was found
 	 */
 	@Nullable
