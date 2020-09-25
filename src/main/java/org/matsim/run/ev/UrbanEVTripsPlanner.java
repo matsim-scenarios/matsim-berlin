@@ -60,8 +60,6 @@ import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleUtils;
 import org.matsim.vehicles.Vehicles;
 import org.matsim.withinday.utils.EditPlans;
-import org.matsim.withinday.utils.EditTrips;
-import org.matsim.withinday.utils.ReplanningException;
 
 import javax.inject.Provider;
 import java.util.*;
@@ -109,8 +107,6 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 
 
 	private QSim qsim;
-	private EditTrips tripsEditor;
-	private EditPlans plansEditor;
 
 	private static final Logger log = Logger.getLogger(UrbanEVTripsPlanner.class);
 
@@ -122,9 +118,6 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 		}
 		Set<Plan> selectedEVPlans = collectEVUserPlans();
 		this.qsim = (QSim) e.getQueueSimulation();
-		//editors
-		this.tripsEditor = new EditTrips(tripRouterProvider.get(), scenario, null); //internal interface seems to be needed for pt only...
-		this.plansEditor = new EditPlans(qsim, tripsEditor);
 		processPlans(selectedEVPlans);
 	}
 
@@ -227,7 +220,7 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 
 		//find suitable non-stage activity before threshold passover
 		//TODO possibly put behind interface
-		Activity actWhileCharging = plansEditor.findRealActBefore(mobsimagent, legIndex);
+		Activity actWhileCharging = EditPlans.findRealActBefore(mobsimagent, legIndex);
 //				if ( (realAct.getEndTime() - realAct.getStartTime()) < evConfigGroup.getMinimumChargeTime()) //TODO
 
 
@@ -236,7 +229,7 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 		Link chargingLink = modeNetwork.getLinks().get(selectedCharger.getLinkId());
 
 
-		Activity actBeforeCharging = plansEditor.findRealActBefore(mobsimagent, modifiablePlan.getPlanElements().indexOf(actWhileCharging));
+		Activity actBeforeCharging = EditPlans.findRealActBefore(mobsimagent, modifiablePlan.getPlanElements().indexOf(actWhileCharging));
 		if(actBeforeCharging == null) {
 			log.error("could not insert plugin activity in plan of agent " + mobsimagent.getId());
 			log.error("this is probably because it's vehicle is running beyond energy threshold during the first leg of the day.");
@@ -247,11 +240,8 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 		PlanElement legToBeReplaced = modifiablePlan.getPlanElements().get(modifiablePlan.getPlanElements().indexOf(actBeforeCharging) - 1);
 		Preconditions.checkState(legToBeReplaced instanceof Leg);
 		Preconditions.checkState(TripStructureUtils.getRoutingMode((Leg) legToBeReplaced).equals(routingMode), "vehicle runs dry on a leg for which the precedent leg does not have the same routing mode....");
-		Activity actAfterCharging = plansEditor.findRealActAfter(mobsimagent, modifiablePlan.getPlanElements().indexOf(actWhileCharging));
+		Activity actAfterCharging = EditPlans.findRealActAfter(mobsimagent, modifiablePlan.getPlanElements().indexOf(actWhileCharging));
 		Preconditions.checkState(!actAfterCharging.equals(actWhileCharging));
-
-		//this does not work. see comments at method
-//		insertPluginActivity(leg,mobsimagent, modifiablePlan.getPlanElements().indexOf(actWhileCharging) - 1, selectedChargerLink);
 
 		//set SOC back to the second last value as we reroute the last leg and the current leg
 		pseudoVehicle.getBattery().setSoc(secondLastSOC);
@@ -273,7 +263,7 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 
 		//charge pseudo vehicle
 
-		//TODO: if the provider for ChargingInfrastructure would be bound, we could inject it and use it here and did not have to copy chargers...
+		//TODO: if the provider for ChargingInfrastructure.class would be bound, we could inject it and use it here and did not have to copy chargers...
 		//same is actually valid for the electric fleet / electric vehicle. but there we DO want a copy...
 		Charger chargerCopy = ChargerImpl.create(selectedCharger, chargingLink, chargingLogicFactory);
 		pseudoVehicle.getBattery().changeSoc(pseudoVehicle.getChargingPower().calcChargingPower(chargerCopy) * chargingDuration);
@@ -402,31 +392,6 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 		}
 	}
 
-
-
-	//for some reason, plansEditor inserts empty (i.e. non-routed) trips.
-	//moreover, plansEditor.insertActivity led to the ActivityEngineDefaultImpl calling endActivityAndComputeNextState twice for origin activity, leading to an exception.
-	//that is because the agent is put twice into the activity end list (once inititally by the qsim itselt and once by plansEditor.insertTrip)
-	//left it here in commented form for documentary reason / as basis for improvement discussions
-//						TODO implement plansEditor.insertActivity in a way that it inserts routed trips before and after given activity and can be called before the first beforeSimStep invoke
-	private boolean insertPluginActivity(Leg leg, MobsimAgent mobsimagent, int index, Link selectedChargerLink) {
-		try {
-			Activity pluginAct = PopulationUtils.createStageActivityFromCoordLinkIdAndModePrefix(selectedChargerLink.getCoord(),
-					selectedChargerLink.getId(), TripStructureUtils.getRoutingMode(leg) + UrbanVehicleChargingHandler.PLUGIN_IDENTIFIER);
-			plansEditor.insertActivity(mobsimagent, index, pluginAct, leg.getMode(), TransportMode.walk);
-
-			//the following neither works because the plugin and plug out activities are stage activities and it will simply remove those and add a 'normal' car leg
-//			Activity actBeforeRealAct = plansEditor.findRealActBefore(mobsimagent, realActIndex);
-//			tripsEditor.replanFutureTrip(tripsEditor.findTripAfterActivity(modifiablePlan,actBeforeRealAct),modifiablePlan, leg.getMode());
-
-		} catch (ReplanningException e){
-			log.error("could not insert plugin activity in plan of agent " + mobsimagent.getId());
-			log.error("this is probably because it's vehicle is running beyond energy threshold during the first leg of the day.");
-			log.info("this might be avoidable by using EVNetworkRoutingModule... we currently skip the replanning of this EV!");
-			return false;
-		}
-		return true;
-	}
 }
 
 
