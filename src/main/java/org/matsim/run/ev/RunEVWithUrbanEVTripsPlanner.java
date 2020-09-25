@@ -39,6 +39,9 @@ import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.mobsim.qsim.AbstractQSimModule;
 import org.matsim.run.RunBerlinScenario;
 
+import java.util.HashSet;
+import java.util.Set;
+
 class RunEVWithUrbanEVTripsPlanner {
 
 	public static void main(String[] args) {
@@ -68,29 +71,12 @@ class RunEVWithUrbanEVTripsPlanner {
 		Scenario scenario = RunBerlinScenario.prepareScenario(config);
 		Controler controler = RunBerlinScenario.prepareControler(scenario);
 
-		//TODO: this only works if you first bind EVModule and then override it with our custom stuff. create a custom UrbanEV module instead!
-		controler.addOverridingModule(new EvModule());
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				bind(MATSimVehicleWrappingEVSpecificationProvider.class).in(Singleton.class);
-				bind(ElectricFleetSpecification.class).toProvider(MATSimVehicleWrappingEVSpecificationProvider.class);
-				addControlerListenerBinding().to(MATSimVehicleWrappingEVSpecificationProvider.class);
-
-				addMobsimListenerBinding().to(UrbanEVTripsPlanner.class).in(Singleton.class);
-				installQSimModule(new AbstractQSimModule() {
-					@Override
-					protected void configureQSim() {
-						//this is responsible for charging vehicles according to person activity start and end events..
-						bind(UrbanVehicleChargingHandler.class).in(Singleton.class);
-						addMobsimScopeEventHandlerBinding().to(UrbanVehicleChargingHandler.class);
-					}
-				});
-			}
-		});
+		controler.addOverridingModule(new UrbanEVModule());
 		controler.configureQSimComponents(components -> components.addNamedComponent(EvModule.EV_COMPONENT));
 
 		controler.run();
 
 	}
+
+
 }

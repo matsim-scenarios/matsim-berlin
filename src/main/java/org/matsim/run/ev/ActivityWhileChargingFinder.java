@@ -20,10 +20,13 @@
 
 package org.matsim.run.ev;
 
+import com.google.common.base.Preconditions;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
+import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.PlanElement;
+import org.matsim.core.router.PlanRouter;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.utils.collections.Tuple;
 
@@ -31,11 +34,12 @@ import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 class ActivityWhileChargingFinder {
 
-	private final List<String> activityTypes;
+	private final Set<String> activityTypes;
 	private static final double MINIMUM_TIME = 10 * 60;
 	private final String evRoutingMode;
 	private Logger log = Logger.getLogger(ActivityWhileChargingFinder.class);
@@ -48,7 +52,7 @@ class ActivityWhileChargingFinder {
 	/**
 	 * last possible activity that fulfills all criteria is returned
 	 *
-	 * @param planElements
+	 * @param plan
 	 * @return null if no suitable activity was found
 	 */
 	@Nullable
@@ -56,7 +60,7 @@ class ActivityWhileChargingFinder {
 		List<Activity> activities = TripStructureUtils.getActivities(planElements, TripStructureUtils.StageActivityHandling.ExcludeStageActivities);
 		List<Tuple<Leg, Activity>> evLegsWithFollowingActs = activities.stream()
 				.filter(activity -> activityTypes.contains(activity.getType()))
-				.map(activity -> planElements.indexOf(activity))
+				.map(activity -> planElementsBeforeLeg.indexOf(activity))
 				.filter(idx -> idx > 0)
 				.map(idx -> new Tuple<>((Leg) planElements.get(idx - 1), (Activity) planElements.get(idx)))
 				.filter(tuple -> TripStructureUtils.getRoutingMode(tuple.getFirst()).equals(this.evRoutingMode))
@@ -84,12 +88,12 @@ class ActivityWhileChargingFinder {
 	@Nullable
 	Leg getNextLegOfRoutingModeAfterActivity(List<PlanElement> planElements, Activity activity, String routingMode){
 		int actIndex = planElements.indexOf(activity);
-		if(actIndex > 0){
-			log.info("could not find activity within given list of plan elements");
+		if(actIndex < 0){
+			log.warn("could not find activity within given list of plan elements");
 			return null;
 		}
-		if(actIndex < planElements.size() - 1) {
-			log.info("the given activity is the last activity in the given list of plan elements");
+		if(actIndex == planElements.size() - 1) {
+			log.warn("the given activity is the last activity in the given list of plan elements");
 			return null;
 		}
 		for (int ii = actIndex + 1; ii < planElements.size(); ii++){

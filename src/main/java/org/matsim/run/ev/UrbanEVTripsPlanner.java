@@ -21,6 +21,7 @@
 package org.matsim.run.ev;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import one.util.streamex.StreamEx;
 import org.apache.log4j.Logger;
@@ -101,6 +102,9 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 
 	@Inject
 	private Map<String, TravelTime> travelTimes;
+
+	@Inject
+	ActivityWhileChargingFinder activityWhileChargingFinder;
 
 	@Inject
 	Config config;
@@ -189,7 +193,7 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 			if (pseudoVehicle.getBattery().getSoc() <= capacityThreshold){
 				//plan charging trip
 
-				secondLastSOC = replanPrecedentAndCurrentLegAndPrecedentSOC(plan, electricVehicleSpecification, pseudoVehicle, secondLastSOC, leg);
+				secondLastSOC = replanPrecedentAndCurrentEVLegsAndGetPrecedentSOC(plan, electricVehicleSpecification, pseudoVehicle, secondLastSOC, leg);
 
 				lastSOC = pseudoVehicle.getBattery().getSoc();
 				if(lastSOC <= capacityThreshold) throw new RuntimeException("tried to find a suitable charging station for agent " + plan.getPerson() + " but apparently did not work");
@@ -208,21 +212,36 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 	 * find the first activity after that, which precedes an ev leg and schedule plugout activity..
 	 * should not be tooooo difficult.
 	 */
-	private double replanPrecedentAndCurrentLegAndPrecedentSOC(Plan plan, ElectricVehicleSpecification electricVehicleSpecification, ElectricVehicle pseudoVehicle, double secondLastSOC, Leg leg) {
+	/**
+	 *
+	 * @param plan
+	 * @param electricVehicleSpecification
+	 * @param pseudoVehicle
+	 * @param secondLastSOC
+	 * @param leg
+	 * @return
+	 */
+	private double replanPrecedentAndCurrentEVLegsAndGetPrecedentSOC(Plan plan, ElectricVehicleSpecification electricVehicleSpecification, ElectricVehicle pseudoVehicle, double secondLastSOC, Leg leg) {
 		Network modeNetwork = this.singleModeNetworksCache.getSingleModeNetworksCache().get(leg.getMode());
 
 		String routingMode = TripStructureUtils.getRoutingMode(leg);
 		int legIndex = plan.getPlanElements().indexOf(leg);
 		Preconditions.checkState(legIndex > -1, "could not locate leg in plan");
 
+//		Activity actWhileCharging = EditPlans.findRealActBefore(mobsimagent, legIndex);
+
+		//from here we deal with the modifiable plan (only!?)
 		MobsimAgent mobsimagent = qsim.getAgents().get(plan.getPerson().getId());
 		Plan modifiablePlan = WithinDayAgentUtils.getModifiablePlan(mobsimagent);
 
-		//find suitable non-stage activity before threshold passover
-		//TODO possibly put behind interface
-		Activity actWhileCharging = EditPlans.findRealActBefore(mobsimagent, legIndex);
-//				if ( (realAct.getEndTime() - realAct.getStartTime()) < evConfigGroup.getMinimumChargeTime()) //TODO
+		//find suitable non-stage activity before SOC threshold passover
+		HashSet<String> actTypes = new HashSet<>();
+		actTypes.add("work_4800.0");
+		Activity actWhileCharging = activityWhileChargingFinder.findActivityWhileChargingBeforeLeg(modifiablePlan, (Leg) modifiablePlan.getPlanElements().get(legIndex));
 
+		Preconditions.checkNotNull(actWhileCharging, "could not insert plugin activity in plan of agent " + plan.getPerson().getId() +
+		"this is probably because it's vehicle is running beyond energy threshold during the first leg of the day." +
+		"this might be avoidable by using EVNetworkRoutingModule...");
 
 		//TODO what if actWhileCharging does not hold a link id?
 		ChargerSpecification selectedCharger = selectChargerNearToLink(actWhileCharging.getLinkId(), electricVehicleSpecification, modeNetwork);
@@ -230,18 +249,22 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 
 
 		Activity actBeforeCharging = EditPlans.findRealActBefore(mobsimagent, modifiablePlan.getPlanElements().indexOf(actWhileCharging));
-		if(actBeforeCharging == null) {
-			log.error("could not insert plugin activity in plan of agent " + mobsimagent.getId());
-			log.error("this is probably because it's vehicle is running beyond energy threshold during the first leg of the day.");
-			log.error("this might be avoidable by using EVNetworkRoutingModule... we currently skip the replanning of this EV!");
-			throw new RuntimeException("see log error messages above");
+		Leg nextEVLegAfterCharging = activityWhileChargingFinder.getNextLegOfRoutingModeAfterActivity(ImmutableList.copyOf(modifiablePlan.getPlanElements()), actWhileCharging, routingMode);
+		Activity actAfterCharging = EditPlans.findRealActAfter(mobsimagent, modifiablePlan.getPlanElements().indexOf(nextEVLegAfterCharging));
+
+		{	//some consistency checks.. //TODO put in a JUnit test..
+			Preconditions.checkNotNull(actBeforeCharging, "actBeforeCharging is null. should never happen..");
+			Preconditions.checkState(!actBeforeCharging.equals(actWhileCharging), "actBeforeCharging is equal to actWhileCharging. should never happen..");
+			PlanElement legToBeReplaced = modifiablePlan.getPlanElements().get(modifiablePlan.getPlanElements().indexOf(actBeforeCharging) - 1);
+			Preconditions.checkState(legToBeReplaced instanceof Leg);
+			Preconditions.checkState(TripStructureUtils.getRoutingMode((Leg) legToBeReplaced).equals(routingMode), "leg before actWhileCharging has the wrong routing mode. should not happen..");
+			Preconditions.checkState(!actAfterCharging.equals(actWhileCharging), "actAfterCharging is equal to actWhileCharging. should never happen..");
+			//TODO check act indices as well
+			legToBeReplaced = modifiablePlan.getPlanElements().get(modifiablePlan.getPlanElements().indexOf(actAfterCharging) - 1);
+			Preconditions.checkState(legToBeReplaced instanceof Leg);
+			Preconditions.checkState(TripStructureUtils.getRoutingMode((Leg) legToBeReplaced).equals(routingMode), "leg before actAfterCharging has the wrong routing mode. should not happen..");
 		}
-		Preconditions.checkState(!actBeforeCharging.equals(actWhileCharging));
-		PlanElement legToBeReplaced = modifiablePlan.getPlanElements().get(modifiablePlan.getPlanElements().indexOf(actBeforeCharging) - 1);
-		Preconditions.checkState(legToBeReplaced instanceof Leg);
-		Preconditions.checkState(TripStructureUtils.getRoutingMode((Leg) legToBeReplaced).equals(routingMode), "vehicle runs dry on a leg for which the precedent leg does not have the same routing mode....");
-		Activity actAfterCharging = EditPlans.findRealActAfter(mobsimagent, modifiablePlan.getPlanElements().indexOf(actWhileCharging));
-		Preconditions.checkState(!actAfterCharging.equals(actWhileCharging));
+
 
 		//set SOC back to the second last value as we reroute the last leg and the current leg
 		pseudoVehicle.getBattery().setSoc(secondLastSOC);
@@ -315,7 +338,7 @@ class UrbanEVTripsPlanner implements MobsimInitializedListener {
 		List<? extends PlanElement> routedSegment = tripRouter.calcRoute(routingMode,fromFacility, chargerFacility,
 				PlanRouter.calcEndOfActivity(actBeforeCharging, plan, config), plan.getPerson());
 		Leg mainLeg = (Leg)routedSegment.get(0);
-		double now = mainLeg.getDepartureTime().seconds() + mainLeg.getTravelTime().seconds();
+		double now = mainLeg.getDepartureTime().seconds() + mainLeg.getRoute().getTravelTime().seconds();
 		trip.add(mainLeg);
 
 
