@@ -42,7 +42,7 @@ import org.matsim.run.RunBerlinScenario;
 import java.util.HashSet;
 import java.util.Set;
 
-class RunEVWithUrbanEVTripsPlanner {
+class RunBerlinScenarioWithUrbanEVTripsPlanner {
 
 	public static void main(String[] args) {
 		if(args.length == 0){
@@ -71,7 +71,9 @@ class RunEVWithUrbanEVTripsPlanner {
 		Scenario scenario = RunBerlinScenario.prepareScenario(config);
 		Controler controler = RunBerlinScenario.prepareControler(scenario);
 
+		//plug in UrbanEVModule
 		controler.addOverridingModule(new UrbanEVModule());
+		//register EV qsim components
 		controler.configureQSimComponents(components -> components.addNamedComponent(EvModule.EV_COMPONENT));
 
 		controler.run();
