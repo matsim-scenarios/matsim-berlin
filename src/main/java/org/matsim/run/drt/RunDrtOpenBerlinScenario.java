@@ -26,8 +26,6 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.contrib.av.robotaxi.fares.drt.DrtFareModule;
-import org.matsim.contrib.av.robotaxi.fares.drt.DrtFaresConfigGroup;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.drt.run.DrtConfigs;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
@@ -108,8 +106,6 @@ public final class RunDrtOpenBerlinScenario {
 			}
 		});
 
-		// Add drt-specific fare module
-		controler.addOverridingModule(new DrtFareModule());
 		// yyyy there is fareSModule (with S) in config. ?!?!  kai, jul'19
 		
 		controler.addOverridingModule(new IntermodalTripFareCompensatorsModule());
@@ -149,7 +145,9 @@ public final class RunDrtOpenBerlinScenario {
 	public enum AdditionalInformation { none, acceptUnknownParamsBerlinConfig }
 
 	public static Config prepareConfig( AdditionalInformation additionalInformation, String [] args, ConfigGroup... customModules) {
-		ConfigGroup[] customModulesToAdd = new ConfigGroup[]{new DvrpConfigGroup(), new MultiModeDrtConfigGroup(), new DrtFaresConfigGroup(), new SwissRailRaptorConfigGroup(), new IntermodalTripFareCompensatorsConfigGroup(), new PtIntermodalRoutingModesConfigGroup() };
+		ConfigGroup[] customModulesToAdd = new ConfigGroup[] { new DvrpConfigGroup(), new MultiModeDrtConfigGroup(),
+				new SwissRailRaptorConfigGroup(), new IntermodalTripFareCompensatorsConfigGroup(),
+				new PtIntermodalRoutingModesConfigGroup() };
 		ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
 
 		int counter = 0;
