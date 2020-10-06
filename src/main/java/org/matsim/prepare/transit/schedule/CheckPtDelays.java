@@ -102,8 +102,10 @@ public class CheckPtDelays {
 		EventsManager eventsManager = EventsUtils.createEventsManager();
 		VehicleDelayEventHandler delayHandler = this.new VehicleDelayEventHandler();
 		eventsManager.addHandler(delayHandler);
+		eventsManager.initProcessing();
 		MatsimEventsReader reader = new MatsimEventsReader(eventsManager);
 		reader.readFile(eventsFile);
+		eventsManager.finishProcessing();
 		aggregatePerTransitLine();
 	}
 	
