@@ -20,27 +20,18 @@
 
 package org.matsim.run.ev;
 
-import com.google.inject.Singleton;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.contrib.ev.EvConfigGroup;
 import org.matsim.contrib.ev.EvModule;
-import org.matsim.contrib.ev.charging.VehicleChargingHandler;
-import org.matsim.contrib.ev.fleet.ElectricFleetReader;
-import org.matsim.contrib.ev.fleet.ElectricFleetSpecification;
-import org.matsim.contrib.ev.fleet.ElectricFleetSpecificationImpl;
 import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.PlansCalcRouteConfigGroup;
-import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
-import org.matsim.core.mobsim.qsim.AbstractQSimModule;
 import org.matsim.run.RunBerlinScenario;
-
-import java.util.HashSet;
-import java.util.Set;
+import org.matsim.urbanEV.UrbanEVModule;
+import org.matsim.urbanEV.UrbanVehicleChargingHandler;
 
 class RunBerlinScenarioWithUrbanEVTripsPlanner {
 

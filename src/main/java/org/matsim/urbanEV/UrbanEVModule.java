@@ -18,12 +18,11 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.run.ev;
+package org.matsim.urbanEV;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import org.matsim.contrib.ev.EvModule;
 import org.matsim.contrib.ev.charging.ChargingModule;
 import org.matsim.contrib.ev.charging.ChargingPower;
 import org.matsim.contrib.ev.discharging.AuxEnergyConsumption;

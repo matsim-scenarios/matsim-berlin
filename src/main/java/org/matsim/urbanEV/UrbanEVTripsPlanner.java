@@ -18,7 +18,7 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.run.ev;
+package org.matsim.urbanEV;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -66,7 +66,7 @@ import javax.inject.Provider;
 import java.util.*;
 
 import static java.util.stream.Collectors.*;
-import static org.matsim.run.ev.MATSimVehicleWrappingEVSpecificationProvider.getWrappedElectricVehicleId;
+import static org.matsim.urbanEV.MATSimVehicleWrappingEVSpecificationProvider.getWrappedElectricVehicleId;
 
 class UrbanEVTripsPlanner implements MobsimInitializedListener {
 

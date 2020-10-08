@@ -18,12 +18,11 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.run.ev;
+package org.matsim.urbanEV;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.vehicles.*;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 public class ConvertCarsInVehiclesFileToEVs {

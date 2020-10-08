@@ -17,13 +17,7 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.run.ev;
-/*
- * created by tschlenther, 16.09.2020
- *  This is an events based approach to trigger vehicle charging. Vehicles will be begin charging as soon as a person begins a plugin activity.
- *  Charging will end as soon as the person performs a plugout activity.
- *  This class is a modified version of VehicleChargingHandler.class
- */
+package org.matsim.urbanEV;
 
 import com.google.common.collect.ImmutableListMultimap;
 import org.matsim.api.core.v01.Id;
@@ -37,6 +31,7 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.ev.charging.ChargingEndEvent;
 import org.matsim.contrib.ev.charging.ChargingEndEventHandler;
+import org.matsim.contrib.ev.charging.VehicleChargingHandler;
 import org.matsim.contrib.ev.fleet.ElectricFleet;
 import org.matsim.contrib.ev.fleet.ElectricVehicle;
 import org.matsim.contrib.ev.infrastructure.Charger;
@@ -51,19 +46,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 /**
- * This is an events based approach to trigger vehicle charging. Vehicles will be charged as soon as a person begins a charging activity.
+ * This is an events based approach to trigger vehicle charging. Vehicles will be charged as soon as a person begins a PLUGIN_INTERACTION activity.
+ * Charging will end as soon as the person performs a PLUGOUT_INTERACTION activity.
  * <p>
  * Do not use this class for charging DVRP vehicles (DynAgents). In that case, vehicle charging is simulated with ChargingActivity (DynActivity)
+ * <p>
+ *
+ * This class is a modified version of {@link VehicleChargingHandler}
+ *
+ * @author tschlenther
  */
-class UrbanVehicleChargingHandler
+public class UrbanVehicleChargingHandler
 		implements ActivityStartEventHandler, ActivityEndEventHandler, PersonLeavesVehicleEventHandler,
 		ChargingEndEventHandler, MobsimScopeEventHandler {
 
-	public static final String PLUGIN_IDENTIFIER = " plugin";
+	static final String PLUGIN_IDENTIFIER = " plugin";
 	public static final String PLUGIN_INTERACTION = PlanCalcScoreConfigGroup.createStageActivityType(
 			PLUGIN_IDENTIFIER);
-	public static final String PLUGOUT_IDENTIFIER = " plugout";
+	static final String PLUGOUT_IDENTIFIER = " plugout";
 	public static final String PLUGOUT_INTERACTION = PlanCalcScoreConfigGroup.createStageActivityType(
 			PLUGOUT_IDENTIFIER);
 	private final Map<Id<Person>, Id<Vehicle>> lastVehicleUsed = new HashMap<>();
@@ -74,7 +76,7 @@ class UrbanVehicleChargingHandler
 	private final ImmutableListMultimap<Id<Link>, Charger> chargersAtLinks;
 
 	@Inject
-	public UrbanVehicleChargingHandler(ChargingInfrastructure chargingInfrastructure, ElectricFleet electricFleet) {
+	UrbanVehicleChargingHandler(ChargingInfrastructure chargingInfrastructure, ElectricFleet electricFleet) {
 		this.chargingInfrastructure = chargingInfrastructure;
 		this.electricFleet = electricFleet;
 		chargersAtLinks = ChargingInfrastructures.getChargersAtLinks(chargingInfrastructure);

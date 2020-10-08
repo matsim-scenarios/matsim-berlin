@@ -18,7 +18,7 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.run.ev;
+package org.matsim.urbanEV;
 
 import com.google.common.collect.ImmutableList;
 import org.matsim.vehicles.EngineInformation;
