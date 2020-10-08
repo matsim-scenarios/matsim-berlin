@@ -37,9 +37,10 @@ import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.api.core.v01.population.PopulationFactory;
 import org.matsim.api.core.v01.population.Route;
-import org.matsim.contrib.av.robotaxi.fares.drt.DrtFareConfigGroup;
-import org.matsim.contrib.av.robotaxi.fares.drt.DrtFaresConfigGroup;
+import org.matsim.contrib.drt.fare.DrtFareParams;
 import org.matsim.contrib.drt.routing.DrtRoute;
+import org.matsim.contrib.drt.run.DrtConfigGroup;
+import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
@@ -91,17 +92,19 @@ public class BerlinRaptorIntermodalAccessEgressTest {
 		drtParams.setMarginalUtilityOfDistance(-0.00024);
 		drtParams.setMarginalUtilityOfTraveling(-0.00025 * 3600.0);
 		drtParams.setMonetaryDistanceRate(-0.00026);
-		
-		DrtFaresConfigGroup drtFaresConfigGroup = ConfigUtils.addOrGetModule(config, DrtFaresConfigGroup.class);
-		DrtFareConfigGroup drtFareConfigGroup = new DrtFareConfigGroup();
-		drtFareConfigGroup.setMode(TransportMode.drt);
-		drtFareConfigGroup.setBasefare(1.0);
-		drtFareConfigGroup.setDailySubscriptionFee(10.0);
-		drtFareConfigGroup.setMinFarePerTrip(2.0);
-		drtFareConfigGroup.setDistanceFare_m(0.0002);
-		drtFareConfigGroup.setTimeFare_h(0.0003 * 3600);
-		drtFaresConfigGroup.addParameterSet(drtFareConfigGroup);
-		
+
+		MultiModeDrtConfigGroup multiModeDrtConfigGroup = ConfigUtils.addOrGetModule(config, MultiModeDrtConfigGroup.class);
+		DrtConfigGroup drtCfg = (DrtConfigGroup) multiModeDrtConfigGroup.createParameterSet(DrtConfigGroup.GROUP_NAME);
+
+		DrtFareParams fareParams = new DrtFareParams();
+		fareParams.setBasefare(1.0);
+		fareParams.setDailySubscriptionFee(10.0);
+		fareParams.setMinFarePerTrip(2.0);
+		fareParams.setDistanceFare_m(0.0002);
+		fareParams.setTimeFare_h(0.0003 * 3600);
+		drtCfg.addParameterSet(fareParams);
+		multiModeDrtConfigGroup.addParameterSet(drtCfg);
+
 		BerlinRaptorIntermodalAccessEgress raptorIntermodalAccessEgress = new BerlinRaptorIntermodalAccessEgress(config);
 		
 		Leg walkLeg1 = PopulationUtils.createLeg(TransportMode.walk);
