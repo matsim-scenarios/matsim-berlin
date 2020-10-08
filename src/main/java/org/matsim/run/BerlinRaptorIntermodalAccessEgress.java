@@ -4,13 +4,10 @@
 
 package org.matsim.run;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
+import ch.sbb.matsim.routing.pt.raptor.RaptorIntermodalAccessEgress;
+import ch.sbb.matsim.routing.pt.raptor.RaptorParameters;
 import ch.sbb.matsim.routing.pt.raptor.RaptorStopFinder;
-import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Leg;
@@ -28,12 +25,10 @@ import org.matsim.run.BerlinExperimentalConfigGroup.IntermodalAccessEgressModeUt
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
 
-import com.google.inject.Inject;
-
-import ch.sbb.matsim.routing.pt.raptor.RaptorIntermodalAccessEgress;
-import ch.sbb.matsim.routing.pt.raptor.RaptorParameters;
-
-import javax.validation.Valid;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 /**
  * A default implementation of {@link RaptorIntermodalAccessEgress} returning a new RIntermodalAccessEgress,
@@ -52,6 +47,7 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
     Id<Person> lastPersonId = Id.createPersonId("");
     RaptorStopFinder.Direction lastDirection = RaptorStopFinder.Direction.EGRESS;
     Map<String, Double> lastModes2Randomization = new HashMap<>();
+    Map<String, DrtFareParams> drtModes2Fares = new HashMap<>();
 	
 	Random random = MatsimRandom.getLocalInstance();
 	
@@ -59,9 +55,15 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
     BerlinRaptorIntermodalAccessEgress(Config config) {
 		this.config = config;
 		this.berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
-		this.multiModeDrtCfgGroup = MultiModeDrtConfigGroup.get(config);
-		Preconditions.checkNotNull(multiModeDrtCfgGroup);
 		this.interModalTripFareCompensatorsCfg = ConfigUtils.addOrGetModule(config, IntermodalTripFareCompensatorsConfigGroup.class);
+        this.multiModeDrtCfgGroup = MultiModeDrtConfigGroup.get(config);
+        if (multiModeDrtCfgGroup != null) {
+            for (DrtConfigGroup drtCfg: multiModeDrtCfgGroup.getModalElements()) {
+                if (drtCfg.getDrtFareParams().isPresent()) {
+                    drtModes2Fares.put(drtCfg.getMode(), drtCfg.getDrtFareParams().get());
+                }
+            }
+        }
 	}
 
 	@Override
@@ -95,24 +97,22 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                 }
                 utility += scoringParams.getModes().get(mode).getConstant();
                 
-                // account for drt fares
-				@Valid DrtConfigGroup drtCfg = multiModeDrtCfgGroup.getModalElements().stream().filter(cfg -> cfg.getMode().equals(mode)).findAny().orElse(null);
-				if(drtCfg != null){
-					Preconditions.checkState(drtCfg.getDrtFareParams().isPresent());
-					DrtFareParams drtFareParams = drtCfg.getDrtFareParams().get();
-                        double fare = 0.;
-                		if (distance != null && distance != 0.) {
-                        	fare += drtFareParams.getDistanceFare_m() * distance;
-                        }
-                                                
-                        if (travelTime.isDefined()) {
-                            fare += drtFareParams.getTimeFare_h() * travelTime.seconds() / 3600.;
-                        }
-                        
-                        fare += drtFareParams.getBasefare();
-                        fare = Math.max(fare, drtFareParams.getMinFarePerTrip());
-                        utility += -1. * fare * scoringParams.getMarginalUtilityOfMoney();
-				}
+                // account for drt fares if present for the mode
+                DrtFareParams drtFareParams = drtModes2Fares.get(mode);
+                if (drtFareParams != null) {
+                    double fare = 0.;
+                    if (distance != null && distance != 0.) {
+                        fare += drtFareParams.getDistanceFare_m() * distance;
+                    }
+
+                    if (travelTime.isDefined()) {
+                        fare += drtFareParams.getTimeFare_h() * travelTime.seconds() / 3600.;
+                    }
+
+                    fare += drtFareParams.getBasefare();
+                    fare = Math.max(fare, drtFareParams.getMinFarePerTrip());
+                    utility += -1. * fare * scoringParams.getMarginalUtilityOfMoney();
+                }
 
                 // account for intermodal trip fare compensations
                 for (IntermodalTripFareCompensatorConfigGroup compensatorCfg : interModalTripFareCompensatorsCfg.getIntermodalTripFareCompensatorConfigGroups()) {
