@@ -25,49 +25,54 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.contrib.ev.EvConfigGroup;
 import org.matsim.contrib.ev.EvModule;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.PlansCalcRouteConfigGroup;
 import org.matsim.core.controler.Controler;
-import org.matsim.core.controler.OutputDirectoryHierarchy;
-import org.matsim.run.RunBerlinScenario;
+import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.urbanEV.UrbanEVModule;
 import org.matsim.urbanEV.UrbanVehicleChargingHandler;
 
-class RunBerlinScenarioWithUrbanEVTripsPlanner {
+/**
+ * this is an example of how to run MATSim with the UrbanEV module which inserts charging activities for all legs which use a EV.
+ * By default, {@link org.matsim.urbanEV.MATSimVehicleWrappingEVSpecificationProvider} is used, which declares any vehicle as an EV
+ * that has a vehicle type with HbefaTechnology set to 'electricity'.
+ * At the beginning of each iteration, the consumption is estimated. Charging is planned to take place during the latest possible activity in the agent's plan
+ * that fits certain criteria (ActivityType and minimum duration) and takes place before the estimated SOC drops below a defined threshold.
+ */
+public class RunUrbanEVExample {
 
 	public static void main(String[] args) {
-		if(args.length == 0){
-			args = new String[1];
-			args[0] = "scenarios/berlin-v5.5-1pct/input/ev/berlin-v5.5-1pct.config-ev-test.xml";
-		}
-		Config config = RunBerlinScenario.prepareConfig(args, new EvConfigGroup());
 
-		config.controler().setOutputDirectory("./output-berlin-v5.5-1pct/evTest-withMobsimInitialitzedListener");
-		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
-		config.controler().setLastIteration(1);
+		Config config = ConfigUtils.loadConfig(args, new EvConfigGroup());
 
+		prepareConfig(config);
+		Scenario scenario = ScenarioUtils.loadScenario(config);
+		Controler controler = prepareControler(scenario);
+
+		controler.run();
+	}
+
+	public static Controler prepareControler(Scenario scenario) {
+		Controler controler = new Controler(scenario);
+		//plug in UrbanEVModule
+		controler.addOverridingModule(new UrbanEVModule());
+		//register EV qsim components
+		controler.configureQSimComponents(components -> components.addNamedComponent(EvModule.EV_COMPONENT));
+		return controler;
+	}
+
+	public static void prepareConfig(Config config) {
+		//TODO actually, should also work with all AccessEgressTypes but we have to check (write JUnit test)
 		config.plansCalcRoute().setAccessEgressType(PlansCalcRouteConfigGroup.AccessEgressType.none);
 
 		//register charging interaction activities for car
 		config.planCalcScore().addActivityParams(
 				new PlanCalcScoreConfigGroup.ActivityParams(TransportMode.car + UrbanVehicleChargingHandler.PLUGOUT_INTERACTION)
-				.setScoringThisActivityAtAll(false));
+						.setScoringThisActivityAtAll(false));
 		config.planCalcScore().addActivityParams(
 				new PlanCalcScoreConfigGroup.ActivityParams(TransportMode.car + UrbanVehicleChargingHandler.PLUGIN_INTERACTION)
 						.setScoringThisActivityAtAll(false));
-
-		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
-
-		Scenario scenario = RunBerlinScenario.prepareScenario(config);
-		Controler controler = RunBerlinScenario.prepareControler(scenario);
-
-		//plug in UrbanEVModule
-		controler.addOverridingModule(new UrbanEVModule());
-		//register EV qsim components
-		controler.configureQSimComponents(components -> components.addNamedComponent(EvModule.EV_COMPONENT));
-
-		controler.run();
-
 	}
 
 
