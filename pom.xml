@@ -165,16 +165,16 @@
 		</dependency>
 
 		<dependency>
-	    	<groupId>com.github.matsim-vsp</groupId>
-	    	<artifactId>drt-speed-up</artifactId>
-	    	<!-- for some reason jitpack does not like release v0.0.2, but is happy with the commit id of the very same release -->
-	    	<version>d744a322dd1</version>
+			<groupId>com.github.matsim-vsp</groupId>
+			<artifactId>drt-speed-up</artifactId>
+			<!-- for some reason jitpack does not like release v0.0.2, but is happy with the commit id of the very same release -->
+			<version>1dfb20495f</version>
 		</dependency>
-		
+
 		<dependency>
-	    	<groupId>com.github.matsim-vsp</groupId>
-	    	<artifactId>opt-drt</artifactId>
-	    	<version>b55180f2a9</version>
+			<groupId>com.github.matsim-vsp</groupId>
+			<artifactId>opt-drt</artifactId>
+			<version>4c06b135f3</version>
 		</dependency>
 		
 		<dependency>
