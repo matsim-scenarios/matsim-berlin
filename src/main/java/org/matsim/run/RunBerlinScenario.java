@@ -144,9 +144,6 @@ public final class RunBerlinScenario {
 		ScenarioUtils.loadScenario(scenario);
 
 		BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
-		for( Person person : scenario.getPopulation().getPersons().values() ){
-			person.getPlans().removeIf( (plan) -> plan!=person.getSelectedPlan() ) ;
-		}
 		if (berlinCfg.getPopulationDownsampleFactor() != 1.0) {
 			downsample(scenario.getPopulation().getPersons(), berlinCfg.getPopulationDownsampleFactor());
 		}
