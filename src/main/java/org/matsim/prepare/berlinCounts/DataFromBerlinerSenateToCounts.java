@@ -8,7 +8,6 @@ import org.matsim.counts.Counts;
 import org.matsim.counts.CountsWriter;
 
 import java.io.*;
-import java.net.URL;
 import java.util.HashMap;
 import java.lang.String;
 
@@ -18,8 +17,10 @@ public class DataFromBerlinerSenateToCounts {
 
     public static void main(String[] args) {
 
-        String excel = "https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx";
-        String csv = "https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/CountsId_to_linkId.csv";
+        // Data is here https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/CountsId_to_linkId.csv
+        String excel = "Enter your local path here";
+        // Data is here https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/CountsId_to_linkId.csv
+        String csv = "Enter your local path here";
         String outputFile = "counts_berlin";
 
         readExcelFile(excel);
@@ -27,6 +28,10 @@ public class DataFromBerlinerSenateToCounts {
         createCountsFile(outputFile);
     }
 
+    /**
+     * reads the given excel file and creates an BerlinCounts object for every count
+     * @param excel
+     */
     private static void readExcelFile(String excel) {
         try {
             XSSFWorkbook wb = new XSSFWorkbook(excel);
@@ -43,6 +48,10 @@ public class DataFromBerlinerSenateToCounts {
         }
     }
 
+    /**
+     * uses the BerlinCounts object to create a car and a truck counts file for matsim
+     * @param outputFile
+     */
     private static void createCountsFile(String outputFile) {
         Counts<Link> countsPkw = new Counts();
         countsPkw.setYear(2018);
@@ -74,9 +83,12 @@ public class DataFromBerlinerSenateToCounts {
         writerLkw.write(outputFile + "_Lkw.xml");
     }
 
+    /**
+     * reads a given csv file and adds the data to the BerlinCounts object
+     * @param file
+     */
     private static void readMappingFile(String file) {
-//        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader((new URL(file)).openStream()))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String headerLine = br.readLine();
             String line;
             while ((line = br.readLine()) != null) {
@@ -104,6 +116,9 @@ public class DataFromBerlinerSenateToCounts {
     }
 }
 
+/**
+ * a description for every excel sheet that is given in the input file to process the data correctly
+ */
 class ExcelDataFormat {
 
     private static final String[] sheet0 = {"MQ_ID","DTVW_KFZ","QUALITY"};
@@ -164,6 +179,11 @@ class ExcelDataFormat {
         return berlinCountsMap;
     }
 
+    /**
+     * replaces the german umlauts
+     * @param str
+     * @return
+     */
     private static String replaceUmlaute(String str) {
         str = str.replace("ü", "ue")
                 .replace("ö", "oe")
@@ -180,6 +200,9 @@ class ExcelDataFormat {
     
 }
 
+/**
+ * the BerlinCounts object to save the scanned data for further processing
+ */
 class BerlinCounts {
 
     private int MQ_ID;
