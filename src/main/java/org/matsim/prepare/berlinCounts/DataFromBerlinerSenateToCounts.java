@@ -12,7 +12,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.lang.String;
 
-public class DataFromBerlinerSenatToCounts {
+public class DataFromBerlinerSenateToCounts {
 
     private static HashMap<Integer, BerlinCounts> berlinCountsMap = new HashMap<>();
 
