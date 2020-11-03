@@ -7,20 +7,27 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.counts.Counts;
 import org.matsim.counts.CountsWriter;
 
-import java.util.Arrays;
+import java.io.*;
+import java.net.URL;
 import java.util.HashMap;
-import java.util.List;
+import java.lang.String;
 
-public class ReadExcelFile {
+public class DataFromBerlinerSenatToCounts {
+
+    private static HashMap<Integer, BerlinCounts> berlinCountsMap = new HashMap<>();
 
     public static void main(String[] args) {
 
-        String excel = "Datenexport_2018_TU_Berlin_LKW_Abweichungen.xlsx";
-//        String excel = "D:/Arbeit/vsp/Datenexport_2018_TU_Berlin_LKW_Abweichungen.xlsx";
-        String outputFile = "counts_berlin.xml";
+        String excel = "https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx";
+        String csv = "https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/CountsId_to_linkId.csv";
+        String outputFile = "counts_berlin";
 
-        HashMap<Integer, BerlinCounts> berlinCountsMap = new HashMap<>();
+        readExcelFile(excel);
+        readMappingFile(csv);
+        createCountsFile(outputFile);
+    }
 
+    private static void readExcelFile(String excel) {
         try {
             XSSFWorkbook wb = new XSSFWorkbook(excel);
             for (int i = 0; i < wb.getNumberOfSheets(); i++) {
@@ -34,26 +41,66 @@ public class ReadExcelFile {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
 
-        Counts<Link> counts = new Counts();
-        counts.setYear(2018);
-        counts.setDescription("data from the berliner senate to matsim counts");
+    private static void createCountsFile(String outputFile) {
+        Counts<Link> countsPkw = new Counts();
+        countsPkw.setYear(2018);
+        countsPkw.setDescription("data from the berliner senate to matsim counts");
+        Counts<Link> countsLkw = new Counts();
+        countsLkw.setYear(2018);
+        countsLkw.setDescription("data from the berliner senate to matsim counts");
+
         for (BerlinCounts berlinCounts : berlinCountsMap.values()) {
-            counts.createAndAddCount(Id.createLinkId(berlinCounts.getLinkid() + "_PKW" ),berlinCounts.getPosition() + "_" + berlinCounts.getOrientation());
+            if (!berlinCounts.isUsing()) {
+                continue;
+            }
+            countsPkw.createAndAddCount(Id.createLinkId(berlinCounts.getLinkid()),berlinCounts.getMQ_ID() + "_" + berlinCounts.getPosition() + "_" + berlinCounts.getOrientation());
             double[] PERC_Q_PKW_TYPE = berlinCounts.getPERC_Q_KFZ_TYPE();
             for (int i = 1; i < 25; i++) {
-                counts.getCount(Id.createLinkId(berlinCounts.getLinkid() + "_PKW")).createVolume(i, (berlinCounts.getDTVW_KFZ() * PERC_Q_PKW_TYPE[i - 1]));
+                countsPkw.getCount(Id.createLinkId(berlinCounts.getLinkid())).createVolume(i, (berlinCounts.getDTVW_KFZ() * PERC_Q_PKW_TYPE[i - 1]));
             }
             if (berlinCounts.isLKW_Anteil()) {
-                counts.createAndAddCount(Id.createLinkId(berlinCounts.getLinkid() + "_LKW"), berlinCounts.getPosition() + "_" + berlinCounts.getOrientation());
+                countsLkw.createAndAddCount(Id.createLinkId(berlinCounts.getLinkid()), berlinCounts.getMQ_ID() + "_" + berlinCounts.getPosition() + "_" + berlinCounts.getOrientation());
                 double[] PERC_Q_LKW_TYPE = berlinCounts.getPERC_Q_LKW_TYPE();
                 for (int i = 1; i < 25; i++) {
-                    counts.getCount(Id.createLinkId(berlinCounts.getLinkid() + "_LKW")).createVolume(i, (berlinCounts.getDTVW_LKW() * PERC_Q_LKW_TYPE[i - 1]));
+                    countsLkw.getCount(Id.createLinkId(berlinCounts.getLinkid())).createVolume(i, (berlinCounts.getDTVW_LKW() * PERC_Q_LKW_TYPE[i - 1]));
                 }
             }
         }
-        CountsWriter writer = new CountsWriter(counts);
-        writer.write(outputFile);
+        CountsWriter writerPkw = new CountsWriter(countsPkw);
+        CountsWriter writerLkw = new CountsWriter(countsLkw);
+        writerPkw.write(outputFile + "_Pkw.xml");
+        writerLkw.write(outputFile + "_Lkw.xml");
+    }
+
+    private static void readMappingFile(String file) {
+//        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader((new URL(file)).openStream()))) {
+            String headerLine = br.readLine();
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] information = line.split(";");
+                if (information.length < 3) {
+                    continue;
+                }
+                int MQ_ID = Integer.parseInt(information[0]);
+                int linkid = 0;
+                if (!information[1].isBlank()) {
+                    linkid = Integer.parseInt(information[1]);
+                }
+                String using = information[2];
+                BerlinCounts count = berlinCountsMap.get(MQ_ID);
+                count.setLinkid(linkid);
+                if (using.equals("x")) {
+                    count.setUsing(true);
+                }
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 
@@ -104,13 +151,33 @@ class ExcelDataFormat {
         } else if (i == 4) {
             for (int j = 1; j <= sheet.getLastRowNum(); j++) {
                 BerlinCounts berlinCounts = berlinCountsMap.get((int) sheet.getRow(j).getCell(0).getNumericCellValue());
-                berlinCounts.setPosition(sheet.getRow(j).getCell(1).getStringCellValue());
-                berlinCounts.setOrientation(sheet.getRow(j).getCell(3).getStringCellValue());
+                berlinCounts.setPosition(replaceUmlaute(sheet.getRow(j).getCell(1).getStringCellValue()));
+                if (sheet.getRow(j).getCell(2) != null) {
+                    berlinCounts.setDetail(replaceUmlaute(sheet.getRow(j).getCell(2).getStringCellValue()));
+                } else {
+                    berlinCounts.setDetail("");
+                }
+                berlinCounts.setOrientation(replaceUmlaute(sheet.getRow(j).getCell(3).getStringCellValue()));
                 berlinCounts.setLinkid((int) sheet.getRow(j).getCell(6).getNumericCellValue());
             }
         }
         return berlinCountsMap;
     }
+
+    private static String replaceUmlaute(String str) {
+        str = str.replace("ü", "ue")
+                .replace("ö", "oe")
+                .replace("ä", "ae")
+                .replace("ß", "ss")
+                .replaceAll("Ü(?=[a-zäöüß ])", "Ue")
+                .replaceAll("Ö(?=[a-zäöüß ])", "Oe")
+                .replaceAll("Ä(?=[a-zäöüß ])", "Ae")
+                .replaceAll("Ü", "UE")
+                .replaceAll("Ö", "OE")
+                .replaceAll("Ä", "AE");
+        return str;
+    }
+    
 }
 
 class BerlinCounts {
@@ -125,7 +192,25 @@ class BerlinCounts {
     private int linkid;
     private String position;
     private String orientation;
+    private String detail;
     private boolean LKW_Anteil = false;
+    private boolean using = false;
+
+    public boolean isUsing() {
+        return using;
+    }
+
+    public void setUsing(boolean using) {
+        this.using = using;
+    }
+
+    public String getDetail() {
+        return detail;
+    }
+
+    public void setDetail(String detail) {
+        this.detail = detail;
+    }
 
     public String getPosition() {
         return position;
