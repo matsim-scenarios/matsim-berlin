@@ -36,31 +36,25 @@ import org.matsim.contrib.analysis.spatial.Grid;
 import org.matsim.contrib.analysis.time.TimeBinMap;
 import org.matsim.contrib.emissions.Pollutant;
 import org.matsim.contrib.emissions.analysis.EmissionGridAnalyzer;
+import org.matsim.contrib.emissions.analysis.FastEmissionGridAnalyzer;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.utils.geometry.geotools.MGC;
 
 /**
- * @author amit, ihab
+ * @author amit, ihab, janek
  */
 
-public class GenerateAirPollutionSpatialPlots {
+public abstract class GenerateAirPollutionSpatialPlots {
 	private static final Logger log = Logger.getLogger(GenerateAirPollutionSpatialPlots.class);
-
-    private final double countScaleFactor;
-    private final double gridSize;
-    private final double smoothingRadius;
     
     private static final double xMin = 4565039. - 125.;
 	private static final double xMax = 4632739. + 125.; 
 	private static final double yMin = 5801108. - 125.;
 	private static final double yMax = 5845708. + 125.;
 
-    private GenerateAirPollutionSpatialPlots(final double gridSize, final double smoothingRadius, final double countScaleFactor) {
-        this.gridSize = gridSize;
-        this.smoothingRadius = smoothingRadius;
-        this.countScaleFactor = countScaleFactor;
-    }
 
 	public static void main(String[] args) {
 
@@ -73,79 +67,49 @@ public class GenerateAirPollutionSpatialPlots {
 		}
         
         final double gridSize = 100.;
-        final double smoothingRadius = 500.;
         final double scaleFactor = 100.;
-        
         final String runDir = rootDirectory + "public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/";
-    	final String runId = "berlin-v5.4-1pct";
+        final String runId = "berlin-v5.4-1pct";
+        final String events = runDir + runId + ".emission.events.offline.xml.gz";
+        final String networkFile = runDir + runId + "output_network.xml.gz";
+        final String outputFile = runDir + runId + ".emissions." + Pollutant.NOx + ".csv";
 
-        GenerateAirPollutionSpatialPlots plots = new GenerateAirPollutionSpatialPlots(gridSize, smoothingRadius, scaleFactor);
-        
-        final String configFile = runDir + runId + ".output_config.xml";
-		final String events = runDir + runId + ".emission.events.offline.xml.gz";
+        // filter the network onto the bounding box. This way only the links within the bounding box will collect emissions
+        var boundingBox = createBoundingBox();
+        var filteredNetwork = NetworkUtils.readNetwork(networkFile).getLinks().values().parallelStream()
+                .filter(link -> boundingBox.covers(MGC.coord2Point(link.getFromNode().getCoord())) || boundingBox.covers(MGC.coord2Point(link.getToNode().getCoord())))
+                .collect(NetworkUtils.getCollector());
 
-		plots.writeEmissions(configFile , events, runDir, runId);
-    }
+        // do the actual rastering. Reducing the radius will lead to less smoothed emissions
+        // reduce to 0, to only draw emissions onto cells which are covered by a link.
+        var rasterMap = FastEmissionGridAnalyzer.processEventsFile(events, filteredNetwork, gridSize, 20);
 
-    private void writeEmissions(String configPath, String eventsPath, String runDir, String runId) {
+        // write the raster for nox
+        var noxRaster = rasterMap.get(Pollutant.NOx);
+        try (CSVPrinter printer = new CSVPrinter(new FileWriter(outputFile), CSVFormat.TDF)) {
 
-		Config config = ConfigUtils.loadConfig(configPath);
-		config.plans().setInputFile(null);
-		config.transit().setTransitScheduleFile(null);
-		config.transit().setVehiclesFile(null);
-		config.vehicles().setVehiclesFile(null);
-		config.network().setInputFile(runDir + runId + ".output_network.xml.gz");
-        Scenario scenario = ScenarioUtils.loadScenario(config);
+            // write header
+            printer.printRecord("x", "y", Pollutant.NOx);
 
-        double binSize = 3600. * 3; // for daily numbers: make the bin size bigger than the scenario has seconds
+            // write values
+            noxRaster.forEachCoordinate((x, y, value) -> {
 
-        Network network = scenario.getNetwork();
+                // skip values smaller than 0.1g/ha to reduce file size
+                if (value < 0.1)  return;
 
-        EmissionGridAnalyzer analyzer = new EmissionGridAnalyzer.Builder()
-                .withGridSize(gridSize)
-                .withTimeBinSize(binSize)
-                .withNetwork(network)
-                .withBounds(createBoundingBox())
-                .withSmoothingRadius(smoothingRadius)
-                .withCountScaleFactor(countScaleFactor)
-                .withGridType(EmissionGridAnalyzer.GridType.Square)
-                .build();
-
-		TimeBinMap<Grid<Map<Pollutant, Double>>> timeBins = analyzer.process(eventsPath );
-		analyzer.processToJsonFile(eventsPath, runDir + runId + ".emissions.json");
-		
-		Set<Pollutant> pollutants = new HashSet<>();
-		for (TimeBinMap.TimeBin<Grid<Map<Pollutant, Double>>> bin : timeBins.getTimeBins()) {
-            for (Grid.Cell<Map<Pollutant, Double>> cell : bin.getValue().getCells()) {
-                for (Pollutant pollutentInCell : cell.getValue().keySet()) {
-                	if (!pollutants.contains(pollutentInCell)) pollutants.add(pollutentInCell);
+                // unfortunately one has to wrap this in try/catch because it is inside a lambda function
+                try {
+                    printer.printRecord(x, y, value * scaleFactor);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-			}
-		}
-		for (Pollutant pollutant : pollutants) {
-			log.info("Writing data to csv file: " + pollutant);
-	        writeGridToCSV(timeBins, pollutant, runDir + runId + ".emissions." + pollutant + ".csv");
-		}
-    }
-
-    private void writeGridToCSV(TimeBinMap<Grid<Map<Pollutant, Double>>> bins, Pollutant pollutant, String outputPath) {
-
-		try (CSVPrinter printer = new CSVPrinter(new FileWriter(outputPath), CSVFormat.TDF)) {
-            printer.printRecord("timeBinStartTime", "centroidX", "centroidY", "weight");
-
-            for (TimeBinMap.TimeBin<Grid<Map<Pollutant, Double>>> bin : bins.getTimeBins()) {
-                final double timeBinStartTime = bin.getStartTime();
-                for (Grid.Cell<Map<Pollutant, Double>> cell : bin.getValue().getCells()) {
-                    double weight = cell.getValue().containsKey(pollutant) ? cell.getValue().get(pollutant) : 0;
-                    printer.printRecord(timeBinStartTime, cell.getCoordinate().x, cell.getCoordinate().y, weight);
-				}
-			}
+            });
         } catch (IOException e) {
             e.printStackTrace();
-		}
-	}
+        }
+    }
 
-    private Geometry createBoundingBox() {
+    private static Geometry createBoundingBox() {
         return new GeometryFactory().createPolygon(new Coordinate[]{
                 new Coordinate(xMin, yMin), new Coordinate(xMax, yMin),
                 new Coordinate(xMax, yMax), new Coordinate(xMin, yMax),

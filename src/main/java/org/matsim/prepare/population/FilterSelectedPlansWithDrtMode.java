@@ -21,34 +21,33 @@ package org.matsim.prepare.population;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.population.*;
+import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.population.Leg;
+import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Population;
+import org.matsim.api.core.v01.population.PopulationWriter;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.population.algorithms.TripsToLegsAlgorithm;
-import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scenario.ScenarioUtils;
-
-import java.util.Set;
 
 /**
 * @author ikaddoura
 */
 
-public class FilterSelectedPlans {
+public class FilterSelectedPlansWithDrtMode {
 	
-	private static final Logger log = Logger.getLogger(FilterSelectedPlans.class);
+	private static final Logger log = Logger.getLogger(FilterSelectedPlansWithDrtMode.class);
 	
-	private final static String inputPlans = "/home/gregor/git/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.plans.xml.gz";//"...";
-	private final static String outputPlans = "/home/gregor/git/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.plans_selectedPlans_woRoutes.xml.gz";//"...";
-	private final static boolean deleteRoutes = true;
+	private final static String inputPlans = "...";
+	private final static String outputPlans = "...";
 	
 	public static void main(String[] args) {
 		
-		FilterSelectedPlans filter = new FilterSelectedPlans();
-		filter.run(inputPlans, outputPlans, deleteRoutes);
+		FilterSelectedPlansWithDrtMode filter = new FilterSelectedPlansWithDrtMode();
+		filter.run(inputPlans, outputPlans);
 	}
 	
-	public void run (final String inputPlans, final String outputPlans, final boolean deleteRoutes) {
+	public void run (final String inputPlans, final String outputPlans) {
 		
 		Config config = ConfigUtils.createConfig();
 		config.global().setCoordinateSystem("EPSG:31468");
@@ -59,22 +58,21 @@ public class FilterSelectedPlans {
 		Scenario scOutput = ScenarioUtils.createScenario(ConfigUtils.createConfig());
 		Population popOutput = scOutput.getPopulation();
 		popOutput.getAttributes().putAttribute("coordinateReferenceSystem", "EPSG:31468");
-
-		TripsToLegsAlgorithm trips2Legs = new TripsToLegsAlgorithm(TripStructureUtils.getRoutingModeIdentifier());
-
+		
 		for (Person p : scInput.getPopulation().getPersons().values()){
-			Person personNew = popOutput.getFactory().createPerson(p.getId());
-			
-			for (String attribute : p.getAttributes().getAsMap().keySet()) {
-				personNew.getAttributes().putAttribute(attribute, p.getAttributes().getAttribute(attribute));
+			if (p.getSelectedPlan().getPlanElements().stream().
+					filter(pe -> pe instanceof Leg).
+					map(l -> ((Leg) l).getMode()).
+					anyMatch(mode -> mode.equals(TransportMode.drt)))  {
+				Person personNew = popOutput.getFactory().createPerson(p.getId());
+
+				for (String attribute : p.getAttributes().getAsMap().keySet()) {
+					personNew.getAttributes().putAttribute(attribute, p.getAttributes().getAttribute(attribute));
+				}
+				personNew.addPlan(p.getSelectedPlan());
+
+				popOutput.addPerson(personNew);
 			}
-			Plan selectedPlan = p.getSelectedPlan();
-			if (deleteRoutes) {
-				trips2Legs.run(selectedPlan);
-			}
-			personNew.addPlan(selectedPlan);
-									
-			popOutput.addPerson(personNew);
 		}
 		
 		log.info("Writing population...");

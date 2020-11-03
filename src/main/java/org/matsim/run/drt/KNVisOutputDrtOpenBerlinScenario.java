@@ -19,6 +19,9 @@
 
 package org.matsim.run.drt;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Leg;
@@ -33,15 +36,9 @@ import org.matsim.core.config.groups.QSimConfigGroup.SnapshotStyle;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.population.PopulationUtils;
-import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.drtSpeedUp.DrtSpeedUpModule;
-import org.matsim.run.BerlinExperimentalConfigGroup;
 import org.matsim.vis.otfvis.OTFVisConfigGroup;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
 * @author knagel
@@ -76,28 +73,33 @@ public class KNVisOutputDrtOpenBerlinScenario {
 
 		config.transit().setTransitScheduleFile( config.controler().getRunId() + ".output_transitSchedule.xml.gz" );
 
-		config.global().setNumberOfThreads( 6 );
-		
-		config.controler().setOverwriteFileSetting( OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
-		config.controler().setLastIteration( 0 );
+		config.global().setNumberOfThreads(6);
 
-		final OTFVisConfigGroup otfVisConfigGroup = ConfigUtils.addOrGetModule( config, OTFVisConfigGroup.class );
-		otfVisConfigGroup.setDrawTransitFacilityIds( false );
-		otfVisConfigGroup.setDrawTransitFacilities( false );
-		otfVisConfigGroup.setLinkWidth( 10.f );
-		
-		DrtSpeedUpModule.adjustConfig(config);
-		
-		for ( final PlanCalcScoreConfigGroup.ActivityParams params : config.planCalcScore().getActivityParams() ) {
-			if ( params.getActivityType().endsWith( "interaction" ) ) {
-				params.setScoringThisActivityAtAll( false ) ;
+		config.controler()
+				.setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
+		config.controler().setLastIteration(0);
+
+		final OTFVisConfigGroup otfVisConfigGroup = ConfigUtils.addOrGetModule(config, OTFVisConfigGroup.class);
+		otfVisConfigGroup.setDrawTransitFacilityIds(false);
+		otfVisConfigGroup.setDrawTransitFacilities(false);
+		otfVisConfigGroup.setLinkWidth(10.f);
+
+		//uncomment to enable drt-speed-up
+		//		for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
+		//			if (drtCfg.getDrtSpeedUpParams().isEmpty()) {
+		//				drtCfg.addParameterSet(new DrtSpeedUpParams());
+		//			}
+		//		}
+		for (final PlanCalcScoreConfigGroup.ActivityParams params : config.planCalcScore().getActivityParams()) {
+			if (params.getActivityType().endsWith("interaction")) {
+				params.setScoringThisActivityAtAll(false);
 			}
 		}
 
-		config.qsim().setSnapshotStyle( SnapshotStyle.kinematicWaves );
-		config.qsim().setTrafficDynamics( QSimConfigGroup.TrafficDynamics.kinematicWaves );
+		config.qsim().setSnapshotStyle(SnapshotStyle.kinematicWaves);
+		config.qsim().setTrafficDynamics(QSimConfigGroup.TrafficDynamics.kinematicWaves);
 
-		config.transit().setUsingTransitInMobsim( true );
+		config.transit().setUsingTransitInMobsim(true);
 
 		// ---
 		
@@ -131,14 +133,13 @@ public class KNVisOutputDrtOpenBerlinScenario {
 		log.warn( "population size after=" + scenario.getPopulation().getPersons().size() );
 		
 		PopulationUtils.writePopulation( scenario.getPopulation(), "popWOnlyDrtPtPlans.xml.gz" );
-		
+
 		// ---
 		
 		Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
 		
 		controler.addOverridingModule( new OTFVisLiveModule() ) ;
-//		controler.addOverridingModule(new DrtSpeedUpModule());
-		
+
 		// ---
 		
 		controler.run() ;

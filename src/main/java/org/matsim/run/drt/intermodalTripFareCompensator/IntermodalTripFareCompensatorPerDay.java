@@ -99,11 +99,11 @@ public class IntermodalTripFareCompensatorPerDay implements PersonDepartureEvent
     }
 
 	private double getOrCalcCompensationTime() {
-//		if (Double.isNaN(this.compensationTime)) {
-//			this.compensationTime = (Double.isFinite(qSimConfigGroup.getEndTime()) && qSimConfigGroup.getEndTime() > 0)
-//					? qSimConfigGroup.getEndTime()
-//					: Double.MAX_VALUE;
-//		}
+		if (Double.isNaN(this.compensationTime)) {
+			this.compensationTime = (Double.isFinite(qSimConfigGroup.getEndTime().seconds()) && qSimConfigGroup.getEndTime().seconds() > 0)
+					? qSimConfigGroup.getEndTime().seconds()
+					: Double.MAX_VALUE;
+		}
 
 		return this.compensationTime;
 	}
