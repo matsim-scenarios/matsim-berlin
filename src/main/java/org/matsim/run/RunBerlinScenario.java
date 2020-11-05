@@ -52,6 +52,7 @@ import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
+import org.matsim.prepare.population.AssignIncome;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
 import org.matsim.run.singleTripStrategies.ChangeSingleTripModeAndRoute;
@@ -75,12 +76,29 @@ public final class RunBerlinScenario {
 		}
 		
 		if ( args.length==0 ) {
-			args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
+			args = new String[] {"true","scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
 		}
 
-		Config config = prepareConfig( args ) ;
+		boolean usePersonSpecificMarginalUtilityOfMoney = Boolean.parseBoolean(args[0]);
+		String[] arguments = new String[args.length -1];
+		for (int i = 1; i < args.length; i++) {
+			arguments[i-1] = args[i];
+		}
+
+		Config config = prepareConfig( arguments ) ;
 		Scenario scenario = prepareScenario( config ) ;
+
+		if(usePersonSpecificMarginalUtilityOfMoney) AssignIncome.assignIncomeToPersonSubpopulationAccordingToGermanyAverage(scenario.getPopulation());
+
 		Controler controler = prepareControler( scenario ) ;
+
+		if(usePersonSpecificMarginalUtilityOfMoney) controler.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				bind(ScoringParametersForPerson.class).to(OpenBerlinPersonScoringParameters.class);
+			}
+		});
+
 		controler.run();
 
 	}
@@ -120,8 +138,6 @@ public final class RunBerlinScenario {
 				addPlanStrategyBinding("ChangeSingleTripModeAndRoute").toProvider(ChangeSingleTripModeAndRoute.class);
 
 				bind(RaptorIntermodalAccessEgress.class).to(BerlinRaptorIntermodalAccessEgress.class);
-
-				bind(ScoringParametersForPerson.class).to(OpenBerlinPersonScoringParameters.class);
 			}
 		} );
 

@@ -41,8 +41,11 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.MainModeIdentifier;
+import org.matsim.core.scoring.functions.ScoringParametersForPerson;
+import org.matsim.prepare.population.AssignIncome;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
+import org.matsim.run.OpenBerlinPersonScoringParameters;
 import org.matsim.run.RunBerlinScenario;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
@@ -73,14 +76,31 @@ public final class RunDrtOpenBerlinScenario {
 		for (String arg : args) {
 			log.info( arg );
 		}
-		
+
 		if ( args.length==0 ) {
-			args = new String[] {"scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-v5.5-1pct.config.xml"}  ;
+			args = new String[] {"true", "scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-v5.5-1pct.config.xml"}  ;
 		}
-		
-		Config config = prepareConfig( args ) ;
+
+		boolean usePersonSpecificMarginalUtilityOfMoney = Boolean.parseBoolean(args[0]);
+		String[] arguments = new String[args.length -1];
+		for (int i = 1; i < args.length; i++) {
+			arguments[i-1] = args[i];
+		}
+
+		Config config = prepareConfig( arguments ) ;
 		Scenario scenario = prepareScenario( config ) ;
+
+		if(usePersonSpecificMarginalUtilityOfMoney) AssignIncome.assignIncomeToPersonSubpopulationAccordingToGermanyAverage(scenario.getPopulation());
+
 		Controler controler = prepareControler( scenario ) ;
+
+		if(usePersonSpecificMarginalUtilityOfMoney) controler.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				bind(ScoringParametersForPerson.class).to(OpenBerlinPersonScoringParameters.class);
+			}
+		});
+
 		controler.run() ;
 	}
 	
