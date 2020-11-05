@@ -18,6 +18,7 @@
  * *********************************************************************** */
 package org.matsim.run;
 
+import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
@@ -43,18 +44,35 @@ import java.util.Map;
  * It additionaly accounts for person-specific marginalUtilityOfMoney.
  */
 public class OpenBerlinPersonScoringParameters implements ScoringParametersForPerson {
+	Logger log = Logger.getLogger(OpenBerlinPersonScoringParameters.class);
+
 	public static final String INCOME_ATTRIBUTE_NAME = "income";
 
 	private final PlanCalcScoreConfigGroup config;
 	private final ScenarioConfigGroup scConfig;
 	private final TransitConfigGroup transitConfigGroup;
 	private final Map<Id<Person>, ScoringParameters> params = new HashMap<>();
+	private final double globalAvgIncome;
 
 	@Inject
-	OpenBerlinPersonScoringParameters(PlanCalcScoreConfigGroup planCalcScoreConfigGroup, ScenarioConfigGroup scenarioConfigGroup, TransitConfigGroup transitConfigGroup) {
+	OpenBerlinPersonScoringParameters(Population population, PlanCalcScoreConfigGroup planCalcScoreConfigGroup, ScenarioConfigGroup scenarioConfigGroup, TransitConfigGroup transitConfigGroup) {
 		this.config = planCalcScoreConfigGroup;
 		this.scConfig = scenarioConfigGroup;
 		this.transitConfigGroup = transitConfigGroup;
+		this.globalAvgIncome = computeAvgIncome(population);
+	}
+
+	private double computeAvgIncome(Population population) {
+		log.info("reading income attribute '" + INCOME_ATTRIBUTE_NAME + "' of all agents in 'person' subpopulation...");
+		return population.getPersons().values().stream()
+				.filter(person -> PopulationUtils.getSubpopulation(person).equals("person")) //consider true persons only
+				.mapToDouble(person -> {
+					if(person.getAttributes().getAttribute(INCOME_ATTRIBUTE_NAME) == null)
+						throw new IllegalStateException("you are trying to use person specific marginal utilitiess of money but" +
+								" person " + person + "has no " + INCOME_ATTRIBUTE_NAME + " attribute!");
+					return (double) person.getAttributes().getAttribute(INCOME_ATTRIBUTE_NAME);
+				})
+				.average().getAsDouble();
 	}
 
 //	public OpenBerlinPersonScoringParameters(Scenario scenario) {
@@ -86,10 +104,10 @@ public class OpenBerlinPersonScoringParameters implements ScoringParametersForPe
 				builder.setActivityParameters(PtConstants.TRANSIT_ACTIVITY_TYPE, modeParamsBuilder);
 			}
 
-			double globalAvgIncome = 1; //TODO
-
-			//this is where we put person-specific stuff
-			builder.setMarginalUtilityOfMoney( globalAvgIncome / (double) person.getAttributes().getAttribute(INCOME_ATTRIBUTE_NAME));
+			if (subpopulation.equals("person")){
+				//this is where we put person-specific stuff
+				builder.setMarginalUtilityOfMoney( globalAvgIncome / (double) person.getAttributes().getAttribute(INCOME_ATTRIBUTE_NAME));
+			}
 
 			this.params.put(
 					person.getId(),
