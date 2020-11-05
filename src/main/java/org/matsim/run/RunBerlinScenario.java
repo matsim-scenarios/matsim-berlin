@@ -43,12 +43,14 @@ import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.gbl.Gbl;
 import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.population.routes.RouteFactories;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
@@ -73,13 +75,13 @@ public final class RunBerlinScenario {
 		}
 		
 		if ( args.length==0 ) {
-			args = new String[] {"scenarios/berlin-v5.5-10pct/input/berlin-v5.5-10pct.config.xml"}  ;
+			args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
 		}
 
 		Config config = prepareConfig( args ) ;
 		Scenario scenario = prepareScenario( config ) ;
 		Controler controler = prepareControler( scenario ) ;
-		controler.run() ;
+		controler.run();
 
 	}
 
@@ -118,6 +120,8 @@ public final class RunBerlinScenario {
 				addPlanStrategyBinding("ChangeSingleTripModeAndRoute").toProvider(ChangeSingleTripModeAndRoute.class);
 
 				bind(RaptorIntermodalAccessEgress.class).to(BerlinRaptorIntermodalAccessEgress.class);
+
+				bind(ScoringParametersForPerson.class).to(OpenBerlinPersonScoringParameters.class);
 			}
 		} );
 
