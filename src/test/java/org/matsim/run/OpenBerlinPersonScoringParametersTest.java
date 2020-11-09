@@ -9,6 +9,9 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.ScenarioConfigGroup;
 import org.matsim.core.population.PopulationUtils;
+import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.scoring.functions.CharyparNagelMoneyScoring;
+import org.matsim.core.scoring.functions.CharyparNagelScoringFunctionFactory;
 import org.matsim.core.scoring.functions.ScoringParameters;
 import org.matsim.pt.config.TransitConfigGroup;
 import org.matsim.run.OpenBerlinPersonScoringParameters;
@@ -102,6 +105,21 @@ public class OpenBerlinPersonScoringParametersTest {
 		ScoringParameters params = personScoringParams.getScoringParameters(population.getPersons().get(id));
 		//freight agent actually has income attribute set to 2, but this should be ignored as the freight agent is not in the person subpopulation!
 		makeAssert(params, 1d, 1d);
+	}
+
+	@Test
+	public void testMoneyScore(){
+		ScoringParameters paramsRich = personScoringParams.getScoringParameters(population.getPersons().get(Id.createPersonId("highIncome")));
+		CharyparNagelMoneyScoring moneyScoringRich = new CharyparNagelMoneyScoring(paramsRich);
+		moneyScoringRich.addMoney(100);
+		Assert.assertEquals("for the rich person, 100 money units should be equal to a score of 66.66", 1./1.5 * 100, moneyScoringRich.getScore(), utils.EPSILON);
+
+		ScoringParameters paramsPoor = personScoringParams.getScoringParameters(population.getPersons().get(Id.createPersonId("lowIncome")));
+		CharyparNagelMoneyScoring moneyScoringPoor = new CharyparNagelMoneyScoring(paramsPoor);
+		moneyScoringPoor.addMoney(100);
+		Assert.assertEquals("for the poor person, 100 money units should be equal to a score of 200.00", 1./0.5 * 100, moneyScoringPoor.getScore(), utils.EPSILON);
+
+		Assert.assertTrue("100 money units should worth more for a poor person than for a rich person", moneyScoringPoor.getScore() > moneyScoringRich.getScore());
 	}
 
 	private void makeAssert(ScoringParameters params, double income, double marginalUtilityOfWaitingPt_s){
