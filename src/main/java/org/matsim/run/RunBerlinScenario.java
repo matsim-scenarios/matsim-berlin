@@ -88,13 +88,14 @@ public final class RunBerlinScenario {
 		Config config = prepareConfig( arguments ) ;
 		Scenario scenario = prepareScenario( config ) ;
 
-		if(usePersonSpecificMarginalUtilityOfMoney) AssignIncome.assignIncomeToPersonSubpopulationAccordingToGermanyAverage(scenario.getPopulation());
+		if(usePersonSpecificMarginalUtilityOfMoney)	AssignIncome.assignIncomeToPersonSubpopulationAccordingToGermanyAverage(scenario.getPopulation());
 
 		Controler controler = prepareControler( scenario ) ;
 
 		if(usePersonSpecificMarginalUtilityOfMoney) controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
+				log.info("will use personSpecificMarginalUtilityOfMoney..");
 				bind(ScoringParametersForPerson.class).to(OpenBerlinPersonScoringParameters.class);
 			}
 		});

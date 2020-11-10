@@ -20,7 +20,7 @@
 
 package org.matsim.prepare.population;
 
-import org.matsim.api.core.v01.population.Person;
+import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.population.PopulationUtils;
@@ -30,10 +30,14 @@ import java.util.Random;
 
 public class AssignIncome {
 
+	private static final Logger log = Logger.getLogger(AssignIncome.class);
+
 	public static void assignIncomeToPersonSubpopulationAccordingToGermanyAverage(Population population){
 		// https://de.wikipedia.org/wiki/Einkommensverteilung_in_Deutschland
 		// Anteil der Personen (%) an allen Personen 10 20 30 40 50 60 70 80 90 100
 		// Nettoäquivalenzeinkommen(€) 826 1.142 1.399 1.630 1.847 2.070 2.332 2.659 3.156 4.329
+
+		log.info("start assigning income to persons according to german average");
 
 		final Random rnd = MatsimRandom.getLocalInstance();
 
@@ -58,6 +62,8 @@ public class AssignIncome {
 						}
 						person.getAttributes().putAttribute(OpenBerlinPersonScoringParameters.INCOME_ATTRIBUTE_NAME, income);
 				});
+
+		log.info("finished");
 	}
 
 }
