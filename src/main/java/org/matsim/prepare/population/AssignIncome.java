@@ -60,7 +60,7 @@ public class AssignIncome {
 						else {
 							throw new RuntimeException("Aborting..." + rndDouble);
 						}
-						person.getAttributes().putAttribute(OpenBerlinPersonScoringParameters.INCOME_ATTRIBUTE_NAME, income);
+						person.getAttributes().putAttribute(OpenBerlinPersonScoringParameters.PERSONAL_INCOME_ATTRIBUTE_NAME, income);
 				});
 
 		log.info("finished");

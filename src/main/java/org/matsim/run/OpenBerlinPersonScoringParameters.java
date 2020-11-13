@@ -20,11 +20,9 @@ package org.matsim.run;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
-import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
-import org.matsim.core.config.groups.PlansConfigGroup;
 import org.matsim.core.config.groups.ScenarioConfigGroup;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.scoring.functions.ActivityUtilityParameters;
@@ -42,11 +40,20 @@ import java.util.Map;
  *
  * This class is an adoption of {@link org.matsim.core.scoring.functions.SubpopulationScoringParameters}.
  * It additionaly accounts for person-specific marginalUtilityOfMoney.
+ *
+ * The person specific marginal utility is computed by AVERAGE_INCOME / PERSONAL_INCOME
+ *
+ * Note that AVERAGE_INCOME might be person-specific, if provided in the person attribute {@link #INCOME_AVG_RELEVANT_FOR_PERSON_ATTRIBUTE_NAME}.
+ * This is useful in scenarios where you want distinguish zonal average incomes.
+ * However, if the person-specific average income attribute is not provided, the overall global average income is taken into account.
+ * This is computed as the sum of all values of the attribute {@link #PERSONAL_INCOME_ATTRIBUTE_NAME} that are contained in the population.
  */
 public class OpenBerlinPersonScoringParameters implements ScoringParametersForPerson {
 	Logger log = Logger.getLogger(OpenBerlinPersonScoringParameters.class);
 
-	public static final String INCOME_ATTRIBUTE_NAME = "income";
+	public static final String PERSONAL_INCOME_ATTRIBUTE_NAME = "income";
+	public static final String INCOME_AVG_RELEVANT_FOR_PERSON_ATTRIBUTE_NAME = "relevantAvgIncome";
+
 
 	private final PlanCalcScoreConfigGroup config;
 	private final ScenarioConfigGroup scConfig;
@@ -63,16 +70,13 @@ public class OpenBerlinPersonScoringParameters implements ScoringParametersForPe
 	}
 
 	private double computeAvgIncome(Population population) {
-		log.info("reading income attribute '" + INCOME_ATTRIBUTE_NAME + "' of all agents in 'person' subpopulation...");
+		log.info("reading income attribute '" + PERSONAL_INCOME_ATTRIBUTE_NAME + "' of all agents in 'person' subpopulation...");
 		return population.getPersons().values().stream()
-				.filter(person -> PopulationUtils.getSubpopulation(person).equals("person")) //consider true persons only
-				.mapToDouble(person -> {
-					if(person.getAttributes().getAttribute(INCOME_ATTRIBUTE_NAME) == null)
-						throw new IllegalStateException("you are trying to use person specific marginal utilitiess of money but" +
-								" person " + person + "has no " + INCOME_ATTRIBUTE_NAME + " attribute!");
-					return (double) person.getAttributes().getAttribute(INCOME_ATTRIBUTE_NAME);
-				})
-				.average().getAsDouble();
+				.filter(person -> PopulationUtils.getSubpopulation(person).equals("person"))
+				.filter(person -> person.getAttributes().getAttribute(PERSONAL_INCOME_ATTRIBUTE_NAME) != null) //consider only agents that have a specific income provided
+				.mapToDouble(person ->	(double) person.getAttributes().getAttribute(PERSONAL_INCOME_ATTRIBUTE_NAME))
+				.average()
+				.getAsDouble();
 	}
 
 //	public OpenBerlinPersonScoringParameters(Scenario scenario) {
@@ -91,9 +95,6 @@ public class OpenBerlinPersonScoringParameters implements ScoringParametersForPe
 			 */
 			ScoringParameters.Builder builder = new ScoringParameters.Builder(this.config, this.config.getScoringParameters(subpopulation), scConfig);
 			if (transitConfigGroup.isUseTransit()) {
-				// yyyy this should go away somehow. :-)
-
-
 
 				PlanCalcScoreConfigGroup.ActivityParams transitActivityParams = new PlanCalcScoreConfigGroup.ActivityParams(PtConstants.TRANSIT_ACTIVITY_TYPE);
 				transitActivityParams.setTypicalDuration(120.0);
@@ -104,9 +105,11 @@ public class OpenBerlinPersonScoringParameters implements ScoringParametersForPe
 				builder.setActivityParameters(PtConstants.TRANSIT_ACTIVITY_TYPE, modeParamsBuilder);
 			}
 
-			if (subpopulation.equals("person")){
+			if (person.getAttributes().getAttribute(PERSONAL_INCOME_ATTRIBUTE_NAME) != null){
+				double averageIncome = person.getAttributes().getAttribute(INCOME_AVG_RELEVANT_FOR_PERSON_ATTRIBUTE_NAME) != null ?
+						(double) person.getAttributes().getAttribute(INCOME_AVG_RELEVANT_FOR_PERSON_ATTRIBUTE_NAME) : globalAvgIncome;
 				//this is where we put person-specific stuff
-				builder.setMarginalUtilityOfMoney( globalAvgIncome / (double) person.getAttributes().getAttribute(INCOME_ATTRIBUTE_NAME));
+				builder.setMarginalUtilityOfMoney( averageIncome / (double) person.getAttributes().getAttribute(PERSONAL_INCOME_ATTRIBUTE_NAME));
 			}
 
 			this.params.put(

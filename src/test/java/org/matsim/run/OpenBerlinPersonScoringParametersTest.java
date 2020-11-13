@@ -9,15 +9,12 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.ScenarioConfigGroup;
 import org.matsim.core.population.PopulationUtils;
-import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.scoring.functions.CharyparNagelMoneyScoring;
-import org.matsim.core.scoring.functions.CharyparNagelScoringFunctionFactory;
 import org.matsim.core.scoring.functions.ScoringParameters;
 import org.matsim.pt.config.TransitConfigGroup;
-import org.matsim.run.OpenBerlinPersonScoringParameters;
 import org.matsim.testcases.MatsimTestUtils;
 
-import static org.matsim.run.OpenBerlinPersonScoringParameters.INCOME_ATTRIBUTE_NAME;
+import static org.matsim.run.OpenBerlinPersonScoringParameters.PERSONAL_INCOME_ATTRIBUTE_NAME;
 
 /**
  * this class tests {@link OpenBerlinPersonScoringParameters}
@@ -57,22 +54,22 @@ public class OpenBerlinPersonScoringParametersTest {
 		{ //fill population
 			Person lowIncome = factory.createPerson(Id.createPersonId("lowIncome"));
 			PopulationUtils.putSubpopulation(lowIncome, "person");
-			PopulationUtils.putPersonAttribute(lowIncome, INCOME_ATTRIBUTE_NAME, 0.5d);
+			PopulationUtils.putPersonAttribute(lowIncome, PERSONAL_INCOME_ATTRIBUTE_NAME, 0.5d);
 			population.addPerson(lowIncome);
 
 			Person mediumIncome = factory.createPerson(Id.createPersonId("mediumIncome"));
 			PopulationUtils.putSubpopulation(mediumIncome, "person");
-			PopulationUtils.putPersonAttribute(mediumIncome, INCOME_ATTRIBUTE_NAME, 1d);
+			PopulationUtils.putPersonAttribute(mediumIncome, PERSONAL_INCOME_ATTRIBUTE_NAME, 1d);
 			population.addPerson(mediumIncome);
 
 			Person highIncome = factory.createPerson(Id.createPersonId("highIncome"));
 			PopulationUtils.putSubpopulation(highIncome, "person");
-			PopulationUtils.putPersonAttribute(highIncome, INCOME_ATTRIBUTE_NAME, 1.5d);
+			PopulationUtils.putPersonAttribute(highIncome, PERSONAL_INCOME_ATTRIBUTE_NAME, 1.5d);
 			population.addPerson(highIncome);
 
 			Person freight = factory.createPerson(Id.createPersonId("freight"));
 			PopulationUtils.putSubpopulation(freight, "freight");
-			PopulationUtils.putPersonAttribute(freight, INCOME_ATTRIBUTE_NAME, 2d);
+			PopulationUtils.putPersonAttribute(freight, PERSONAL_INCOME_ATTRIBUTE_NAME, 2d);
 			population.addPerson(freight);
 		}
 		personScoringParams = new OpenBerlinPersonScoringParameters(population, planCalcScoreConfigGroup, scenarioConfigGroup, transitConfigGroup);
