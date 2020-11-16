@@ -45,7 +45,7 @@ import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.prepare.population.AssignIncome;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
-import org.matsim.run.IncomeDependentUtilityOfMoneyPersonScoringParameters;
+import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 import org.matsim.run.RunBerlinScenario;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;

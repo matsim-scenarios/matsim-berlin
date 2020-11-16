@@ -59,6 +59,7 @@ import org.matsim.run.singleTripStrategies.RandomSingleTripReRoute;
 
 import ch.sbb.matsim.routing.pt.raptor.RaptorIntermodalAccessEgress;
 import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
+import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
 /**
 * @author ikaddoura
