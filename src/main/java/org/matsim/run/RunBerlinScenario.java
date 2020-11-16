@@ -43,7 +43,6 @@ import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
-import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.gbl.Gbl;
 import org.matsim.core.gbl.MatsimRandom;
@@ -96,7 +95,7 @@ public final class RunBerlinScenario {
 			@Override
 			public void install() {
 				log.info("will use personSpecificMarginalUtilityOfMoney..");
-				bind(ScoringParametersForPerson.class).to(OpenBerlinPersonScoringParameters.class);
+				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class);
 			}
 		});
 

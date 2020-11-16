@@ -14,24 +14,24 @@ import org.matsim.core.scoring.functions.ScoringParameters;
 import org.matsim.pt.config.TransitConfigGroup;
 import org.matsim.testcases.MatsimTestUtils;
 
-import static org.matsim.run.OpenBerlinPersonScoringParameters.PERSONAL_INCOME_ATTRIBUTE_NAME;
+import static org.matsim.run.IncomeDependentUtilityOfMoneyPersonScoringParameters.*;
 
 /**
- * this class tests {@link OpenBerlinPersonScoringParameters}
+ * this class tests {@link IncomeDependentUtilityOfMoneyPersonScoringParameters}
  *
  * It checks whether the person specific income is read from the person attributes.
  * The marginalUtilityOfMoney should be calculated as averageIncome/personSpecificIncome and not taken from the subpopulation-specific scoring params.
  * To check whether the remaining scoring params are subpopulation-specific, this class tests the the person's marginalUtilityOfWaitingPt_s accordingly.
  *
  */
-public class OpenBerlinPersonScoringParametersTest {
+public class IncomeDependentUtilityOfMoneyPersonScoringParametersTest {
 
 	@Rule
 	public MatsimTestUtils utils;
 	private static TransitConfigGroup transitConfigGroup;
 	private static ScenarioConfigGroup scenarioConfigGroup;
 	private static PlanCalcScoreConfigGroup planCalcScoreConfigGroup;
-	private static OpenBerlinPersonScoringParameters personScoringParams;
+	private static IncomeDependentUtilityOfMoneyPersonScoringParameters personScoringParams;
 	private static Population population;
 
 	@BeforeClass
@@ -45,7 +45,7 @@ public class OpenBerlinPersonScoringParametersTest {
 		personParams.setMarginalUtlOfWaitingPt_utils_hr(0.5 * 3600);
 
 		PlanCalcScoreConfigGroup.ScoringParameterSet freightParams = planCalcScoreConfigGroup.getOrCreateScoringParameters("freight");
-		freightParams.setMarginalUtilityOfMoney(1);
+		freightParams.setMarginalUtilityOfMoney(444);
 		freightParams.setMarginalUtlOfWaitingPt_utils_hr(1d * 3600);
 
 		population = PopulationUtils.createPopulation(ConfigUtils.createConfig());
@@ -69,10 +69,16 @@ public class OpenBerlinPersonScoringParametersTest {
 
 			Person freight = factory.createPerson(Id.createPersonId("freight"));
 			PopulationUtils.putSubpopulation(freight, "freight");
-			PopulationUtils.putPersonAttribute(freight, PERSONAL_INCOME_ATTRIBUTE_NAME, 2d);
 			population.addPerson(freight);
+
+			//a person living in a specifically poor are - average income is provided in person's attribute and might differ from global average
+			Person mediumIncomeWithSpecificAverage = factory.createPerson(Id.createPersonId("mediumIncomeWithSpecificAverage"));
+			PopulationUtils.putSubpopulation(mediumIncomeWithSpecificAverage, "person");
+			PopulationUtils.putPersonAttribute(mediumIncomeWithSpecificAverage, PERSONAL_INCOME_ATTRIBUTE_NAME, 1d);
+			PopulationUtils.putPersonAttribute(mediumIncomeWithSpecificAverage, INCOME_AVG_RELEVANT_FOR_PERSON_ATTRIBUTE_NAME, 0.1d);
+			population.addPerson(mediumIncomeWithSpecificAverage);
 		}
-		personScoringParams = new OpenBerlinPersonScoringParameters(population, planCalcScoreConfigGroup, scenarioConfigGroup, transitConfigGroup);
+		personScoringParams = new IncomeDependentUtilityOfMoneyPersonScoringParameters(population, planCalcScoreConfigGroup, scenarioConfigGroup, transitConfigGroup);
 	}
 
 	@Test
@@ -100,8 +106,17 @@ public class OpenBerlinPersonScoringParametersTest {
 	public void testPersonFreight(){
 		Id<Person> id = Id.createPersonId("freight");
 		ScoringParameters params = personScoringParams.getScoringParameters(population.getPersons().get(id));
-		//freight agent actually has income attribute set to 2, but this should be ignored as the freight agent is not in the person subpopulation!
-		makeAssert(params, 1d, 1d);
+		//freight agent has no income attribute set, so it should use the marginal utility of money that is set in it's subpopulation scoring parameters!
+		makeAssert(params, 1d/444d, 1d);
+	}
+
+	@Test
+	public void testPersonWithSpecificIncomeAverage(){
+		Id<Person> id = Id.createPersonId("mediumIncomeWithSpecificAverage");
+		ScoringParameters params = personScoringParams.getScoringParameters(population.getPersons().get(id));
+		//this agent actually has income attribute set to 1, but it's person-specific average income attribute is set to 0.1.
+		// the resulting marginal utility of money should thus be 1/10 which is the same as if it used the global average income (1) and had an income of 10.
+		makeAssert(params, 10d, 0.5d);
 	}
 
 	@Test

@@ -45,7 +45,7 @@ import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.prepare.population.AssignIncome;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
-import org.matsim.run.OpenBerlinPersonScoringParameters;
+import org.matsim.run.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 import org.matsim.run.RunBerlinScenario;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
@@ -97,7 +97,7 @@ public final class RunDrtOpenBerlinScenario {
 		if(usePersonSpecificMarginalUtilityOfMoney) controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
-				bind(ScoringParametersForPerson.class).to(OpenBerlinPersonScoringParameters.class);
+				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class);
 			}
 		});
 

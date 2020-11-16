@@ -24,7 +24,7 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.population.PopulationUtils;
-import org.matsim.run.OpenBerlinPersonScoringParameters;
+import org.matsim.run.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
 import java.util.Random;
 
@@ -60,7 +60,7 @@ public class AssignIncome {
 						else {
 							throw new RuntimeException("Aborting..." + rndDouble);
 						}
-						person.getAttributes().putAttribute(OpenBerlinPersonScoringParameters.PERSONAL_INCOME_ATTRIBUTE_NAME, income);
+						person.getAttributes().putAttribute(IncomeDependentUtilityOfMoneyPersonScoringParameters.PERSONAL_INCOME_ATTRIBUTE_NAME, income);
 				});
 
 		log.info("finished");

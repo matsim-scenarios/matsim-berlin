@@ -40,6 +40,9 @@ import java.util.Map;
  *
  * This class is an adoption of {@link org.matsim.core.scoring.functions.SubpopulationScoringParameters}.
  * It additionaly accounts for person-specific marginalUtilityOfMoney.
+ * In order to use this, you need to provide an attribute {@link #PERSONAL_INCOME_ATTRIBUTE_NAME} for persons that have
+ * a specific income. Persons in the population, that have no attribute {@link #PERSONAL_INCOME_ATTRIBUTE_NAME} will use the
+ * default marginal utility set in their subpopulation's scoring parameters.
  *
  * The person specific marginal utility is computed by AVERAGE_INCOME / PERSONAL_INCOME
  *
@@ -48,12 +51,11 @@ import java.util.Map;
  * However, if the person-specific average income attribute is not provided, the overall global average income is taken into account.
  * This is computed as the sum of all values of the attribute {@link #PERSONAL_INCOME_ATTRIBUTE_NAME} that are contained in the population.
  */
-public class OpenBerlinPersonScoringParameters implements ScoringParametersForPerson {
-	Logger log = Logger.getLogger(OpenBerlinPersonScoringParameters.class);
+public class IncomeDependentUtilityOfMoneyPersonScoringParameters implements ScoringParametersForPerson {
+	Logger log = Logger.getLogger(IncomeDependentUtilityOfMoneyPersonScoringParameters.class);
 
 	public static final String PERSONAL_INCOME_ATTRIBUTE_NAME = "income";
 	public static final String INCOME_AVG_RELEVANT_FOR_PERSON_ATTRIBUTE_NAME = "relevantAvgIncome";
-
 
 	private final PlanCalcScoreConfigGroup config;
 	private final ScenarioConfigGroup scConfig;
@@ -62,7 +64,7 @@ public class OpenBerlinPersonScoringParameters implements ScoringParametersForPe
 	private final double globalAvgIncome;
 
 	@Inject
-	OpenBerlinPersonScoringParameters(Population population, PlanCalcScoreConfigGroup planCalcScoreConfigGroup, ScenarioConfigGroup scenarioConfigGroup, TransitConfigGroup transitConfigGroup) {
+	IncomeDependentUtilityOfMoneyPersonScoringParameters(Population population, PlanCalcScoreConfigGroup planCalcScoreConfigGroup, ScenarioConfigGroup scenarioConfigGroup, TransitConfigGroup transitConfigGroup) {
 		this.config = planCalcScoreConfigGroup;
 		this.scConfig = scenarioConfigGroup;
 		this.transitConfigGroup = transitConfigGroup;
@@ -70,18 +72,17 @@ public class OpenBerlinPersonScoringParameters implements ScoringParametersForPe
 	}
 
 	private double computeAvgIncome(Population population) {
-		log.info("reading income attribute '" + PERSONAL_INCOME_ATTRIBUTE_NAME + "' of all agents in 'person' subpopulation...");
-		return population.getPersons().values().stream()
+		log.info("read income attribute '" + PERSONAL_INCOME_ATTRIBUTE_NAME + "' of all agents and compute global average.\n" +
+				"Make sure to set this attribute only to appropriate agents (i.e. true 'persons' and not freight agents)");
+		double averageIncome =  population.getPersons().values().stream()
 				.filter(person -> PopulationUtils.getSubpopulation(person).equals("person"))
 				.filter(person -> person.getAttributes().getAttribute(PERSONAL_INCOME_ATTRIBUTE_NAME) != null) //consider only agents that have a specific income provided
 				.mapToDouble(person ->	(double) person.getAttributes().getAttribute(PERSONAL_INCOME_ATTRIBUTE_NAME))
 				.average()
 				.getAsDouble();
+		log.info("global average income is " + averageIncome);
+		return averageIncome;
 	}
-
-//	public OpenBerlinPersonScoringParameters(Scenario scenario) {
-//		this(scenario.getConfig().plans(), scenario.getConfig().planCalcScore(), scenario.getConfig().scenario(), scenario.getPopulation(), scenario.getConfig().transit());
-//	}
 
 	@Override
 	public ScoringParameters getScoringParameters(Person person) {
