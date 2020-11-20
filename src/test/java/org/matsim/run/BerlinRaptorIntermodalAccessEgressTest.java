@@ -21,7 +21,6 @@ package org.matsim.run;
 import java.util.ArrayList;
 import java.util.List;
 
-import ch.sbb.matsim.routing.pt.raptor.RaptorStopFinder;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -52,6 +51,7 @@ import org.matsim.testcases.MatsimTestUtils;
 
 import ch.sbb.matsim.routing.pt.raptor.RaptorIntermodalAccessEgress.RIntermodalAccessEgress;
 import ch.sbb.matsim.routing.pt.raptor.RaptorParameters;
+import ch.sbb.matsim.routing.pt.raptor.RaptorStopFinder;
 
 /**
  * @author vsp-gleich
@@ -93,22 +93,24 @@ public class BerlinRaptorIntermodalAccessEgressTest {
 		drtParams.setMarginalUtilityOfTraveling(-0.00025 * 3600.0);
 		drtParams.setMonetaryDistanceRate(-0.00026);
 
-		MultiModeDrtConfigGroup multiModeDrtConfigGroup = ConfigUtils.addOrGetModule(config, MultiModeDrtConfigGroup.class);
-		DrtConfigGroup drtCfg = (DrtConfigGroup) multiModeDrtConfigGroup.createParameterSet(DrtConfigGroup.GROUP_NAME);
+		DrtConfigGroup drtConfigGroup = new DrtConfigGroup();
+		drtConfigGroup.setMode(TransportMode.drt);
+		DrtFareParams drtFareParams = new DrtFareParams();
+		drtFareParams.setBasefare(1.0);
+		drtFareParams.setDailySubscriptionFee(10.0);
+		drtFareParams.setMinFarePerTrip(2.0);
+		drtFareParams.setDistanceFare_m(0.0002);
+		drtFareParams.setTimeFare_h(0.0003 * 3600);
+		drtConfigGroup.addParameterSet(drtFareParams);
+		MultiModeDrtConfigGroup multiModeDrtConfigGroup = ConfigUtils.addOrGetModule(config,
+				MultiModeDrtConfigGroup.class);
+		multiModeDrtConfigGroup.addParameterSet(drtConfigGroup);
 
-		DrtFareParams fareParams = new DrtFareParams();
-		fareParams.setBasefare(1.0);
-		fareParams.setDailySubscriptionFee(10.0);
-		fareParams.setMinFarePerTrip(2.0);
-		fareParams.setDistanceFare_m(0.0002);
-		fareParams.setTimeFare_h(0.0003 * 3600);
-		drtCfg.addParameterSet(fareParams);
-		multiModeDrtConfigGroup.addParameterSet(drtCfg);
+		BerlinRaptorIntermodalAccessEgress raptorIntermodalAccessEgress = new BerlinRaptorIntermodalAccessEgress(
+				config);
 
-		BerlinRaptorIntermodalAccessEgress raptorIntermodalAccessEgress = new BerlinRaptorIntermodalAccessEgress(config);
-		
 		Leg walkLeg1 = PopulationUtils.createLeg(TransportMode.walk);
-		walkLeg1.setDepartureTime(7*3600.0);
+		walkLeg1.setDepartureTime(7 * 3600.0);
 		walkLeg1.setTravelTime(100);
 		Route walkRoute1 = new GenericRouteImpl(Id.createLinkId("dummy1"), Id.createLinkId("dummy2"));
 		walkRoute1.setDistance(200.0);
