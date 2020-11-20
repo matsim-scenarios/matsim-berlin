@@ -44,7 +44,7 @@ public class RunUrbanEVExample {
 
 	public static void main(String[] args) {
 
-		Config config = ConfigUtils.loadConfig(args, new EvConfigGroup());
+		Config config = ConfigUtils.loadConfig("C:/Users/admin/IdeaProjects/matsim-berlin/scenarios/berlin-v5.5-1pct/input/ev/berlin-v5.5-1pct.config-ev-test2.xml", new EvConfigGroup());
 
 		prepareConfig(config);
 		Scenario scenario = ScenarioUtils.loadScenario(config);
