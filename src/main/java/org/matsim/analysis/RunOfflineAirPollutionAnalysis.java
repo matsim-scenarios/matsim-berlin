@@ -24,6 +24,7 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.emissions.EmissionModule;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
+import org.matsim.contrib.emissions.utils.EmissionsConfigGroup.DetailedVsAverageLookupBehavior;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup.HbefaRoadTypeSource;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup.NonScenarioVehicles;
 import org.matsim.core.api.experimental.events.EventsManager;
@@ -61,11 +62,17 @@ public class RunOfflineAirPollutionAnalysis {
 		
 		if (!rootDirectory.endsWith("/")) rootDirectory = rootDirectory + "/";
 		
-		Config config = ConfigUtils.loadConfig(rootDirectory + runDirectory + runId + ".output_config.xml");
+		Config config = ConfigUtils.createConfig();
 		config.vehicles().setVehiclesFile(rootDirectory + runDirectory + runId + ".output_vehicles.xml.gz");
+		config.network().setInputFile(rootDirectory + runDirectory + runId + ".output_network.xml.gz");
+		config.global().setCoordinateSystem("GK4");
 		config.plans().setInputFile(null);
+		config.parallelEventHandling().setNumberOfThreads(null);
+		config.parallelEventHandling().setEstimatedNumberOfEvents(null);
+		config.global().setNumberOfThreads(1);
 		
 		EmissionsConfigGroup eConfig = ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
+		eConfig.setDetailedVsAverageLookupBehavior(DetailedVsAverageLookupBehavior.directlyTryAverageTable);
 		eConfig.setAverageColdEmissionFactorsFile(rootDirectory + hbefaFileCold);
 		eConfig.setAverageWarmEmissionFactorsFile(rootDirectory + hbefaFileWarm);
 		eConfig.setHbefaRoadTypeSource(HbefaRoadTypeSource.fromLinkAttributes);
@@ -153,8 +160,10 @@ public class RunOfflineAirPollutionAnalysis {
         EventWriterXML emissionEventWriter = new EventWriterXML(emissionEventOutputFile);
         emissionModule.getEmissionEventsManager().addHandler(emissionEventWriter);
 
+        eventsManager.initProcessing();
         MatsimEventsReader matsimEventsReader = new MatsimEventsReader(eventsManager);
         matsimEventsReader.readFile(eventsFile);
+        eventsManager.finishProcessing();
 
         emissionEventWriter.closeFile();
 	}
