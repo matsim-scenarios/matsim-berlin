@@ -176,10 +176,6 @@
 			<param name="changeStartLinkToLastLinkInSchedule" value="true" />
 			<!-- allows to configure a service area per drt mode.Used with serviceArea Operational Scheme -->
 			<param name="drtServiceAreaShapeFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-shp/berlin.shp" />
-			<!-- Beeline distance factor for DRT. Used in analyis and in plans file. The default value is 1.3. -->
-			<param name="estimatedBeelineDistanceFactor" value="1.3" />
-			<!-- Beeline-speed estimate for DRT. Used in analysis, optimisation constraints and in plans file, [m/s]. The default value is 25 km/h -->
-			<param name="estimatedDrtSpeed" value="8.333333333333334" />
 			<!-- Idle vehicles return to the nearest of all start links. See: DvrpVehicle.getStartLink() -->
 			<param name="idleVehiclesReturnToDepots" value="false" />
 			<!-- Defines the slope of the maxTravelTime estimation function (optimisation constraint), i.e. maxTravelTimeAlpha * estimated_drt_travel_time + maxTravelTimeBeta. Alpha should not be smaller than 1. -->
