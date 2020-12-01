@@ -172,15 +172,15 @@
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>opt-drt</artifactId>
-			<version>4c06b135f3</version>
+			<version>0a4ad0fe73</version>
 		</dependency>
 		
 		<dependency>
 	    	<groupId>com.github.matsim-vsp</groupId>
 	    	<artifactId>matsim-analysis</artifactId>
-	    	<!-- <version>v2.5</version> -->
-	    	<version>94a0b679d7</version>
-		</dependency>
+	    	<version>v3.2</version>
+			<!-- <version>94a0b679d7</version> -->
+        </dependency>
 
 		<dependency>
 		<!-- This is the matsim "freight" contrib: -->
