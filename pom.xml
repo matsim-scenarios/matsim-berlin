@@ -10,8 +10,8 @@
 	<description>MATSim Open Berlin scenario project</description>
 
 	<properties>
-		<matsim.version>13.0-SNAPSHOT</matsim.version>
-<!--		<matsim.version>13.0-2020w37-SNAPSHOT</matsim.version>-->
+		<!--		<matsim.version>13.0-SNAPSHOT</matsim.version>-->
+		<matsim.version>13.0-2020w48-SNAPSHOT</matsim.version>
 	</properties>
 
 	<repositories>
