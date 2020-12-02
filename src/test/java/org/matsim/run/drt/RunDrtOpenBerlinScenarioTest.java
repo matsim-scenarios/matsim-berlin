@@ -19,10 +19,8 @@
 
 package org.matsim.run.drt;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.junit.*;
@@ -146,6 +144,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 				drtCfg.setNumberOfThreads(1);
 				drtCfg.setDrtServiceAreaShapeFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlkoenig-area/berlkoenig-area.shp");
+				drtCfg.setVehiclesFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlkoenig-drt-v5.5/input/berlkoenig-drt-v5.5.drt-by-rndLocations-1000vehicles-4seats.xml.gz");
 			}
 			
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
@@ -253,6 +252,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 				drtCfg.setNumberOfThreads(1);
 				drtCfg.setDrtServiceAreaShapeFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlkoenig-area/berlkoenig-area.shp");
+				drtCfg.setVehiclesFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlkoenig-drt-v5.5/input/berlkoenig-drt-v5.5.drt-by-rndLocations-1000vehicles-4seats.xml.gz");
 			}
 			
 			IntermodalTripFareCompensatorsConfigGroup compensatorsCfg = ConfigUtils.addOrGetModule(config, IntermodalTripFareCompensatorsConfigGroup.class);
@@ -267,8 +267,8 @@ public class RunDrtOpenBerlinScenarioTest {
 			compensatorCfg.setCompensationCondition(CompensationCondition.PtModeUsedAnywhereInTheDay);
 			compensatorCfg.setDrtModesAsString("drt");
 			compensatorCfg.setPtModesAsString("pt");
-			compensatorCfg.setCompensationMoneyPerTrip(1000);
-			compensatorCfg.setCompensationScorePerDay(2000);
+			compensatorCfg.setCompensationMoneyPerTrip(10000);
+			compensatorCfg.setCompensationScorePerDay(20000);
 			compensatorsCfg.addParameterSet(compensatorCfg);
 			
 			config.transit().setUsingTransitInMobsim(false);
@@ -314,13 +314,20 @@ public class RunDrtOpenBerlinScenarioTest {
 			
 			int hugeMoneyEventCounter = 0;
 			for(PersonMoneyEvent event: moneyEventsIntermodalAgent) {
-				if (event.getAmount() > 10000) {
+				if (event.getAmount() > 900) {
 					hugeMoneyEventCounter++;
 				}
 			}
-			
+
 			Assert.assertEquals("Number of potential intermodal trip fare compensator money events should be equal to the number of persons who get a compensation.", 1, hugeMoneyEventCounter);
-			Assert.assertEquals("Huge money events thrown at the end of the day should translate into a very large score!", true, 2100 < controler.getScoreStats().getScoreHistory().get( ScoreStatsControlerListener.ScoreItem.average ).get(0));
+			Assert.assertTrue("Huge money events thrown at the end of the day should translate into a very large score!", 21000 < intermodalPtAgentPlan.getScore());
+
+			List<String> agentIdHighScore = scenario.getPopulation().getPersons().values().stream().
+					filter(person -> !person.getId().equals(Id.createPersonId("285614901pt"))).
+					filter(person -> person.getSelectedPlan().getScore() > 1000.0).
+					map(person -> person.getId() + " score: " + person.getSelectedPlan().getScore().toString()).collect(Collectors.toList());
+			Assert.assertTrue("Other agents should not profit from compensations and should have normal scores, but the following had very high scores: " + agentIdHighScore,
+					agentIdHighScore.isEmpty());
 
 		} catch ( Exception ee ) {
 			throw new RuntimeException(ee) ;
