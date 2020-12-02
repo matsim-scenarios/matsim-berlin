@@ -36,6 +36,7 @@ import org.matsim.contrib.dvrp.run.DvrpQSimComponents;
 import org.matsim.core.config.CommandLine;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
@@ -43,6 +44,7 @@ import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
+import org.matsim.run.BerlinExperimentalConfigGroup;
 import org.matsim.run.RunBerlinScenario;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
@@ -118,14 +120,19 @@ public final class RunDrtOpenBerlinScenario {
 	public static Scenario prepareScenario( Config config ) {
 
 		Scenario scenario = RunBerlinScenario.prepareScenario( config );
+		BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 
 		for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 			
 			String drtServiceAreaShapeFile = drtCfg.getDrtServiceAreaShapeFile();
 			if (drtServiceAreaShapeFile != null && !drtServiceAreaShapeFile.equals("") && !drtServiceAreaShapeFile.equals("null")) {
 				
-				// I don't think we have to add the drt mode the allowed modes ihab June '20
-//				addDRTmode(scenario, drtCfg.getMode(), drtServiceAreaShapeFile);
+				// Michal says restricting drt to a drt network roughly the size of the service area helps to speed up.
+				// This is even more true since drt started to route on a freespeed TT matrix (Nov '20).
+				// A buffer of 10km to the service area Berlin includes the A10 on some useful stretches outside Berlin.
+				if(berlinCfg.getTagDrtLinksBufferAroundServiceAreaShp() >= 0.0) {
+					addDRTmode(scenario, drtCfg.getMode(), drtServiceAreaShapeFile, berlinCfg.getTagDrtLinksBufferAroundServiceAreaShp());
+				}
 				
 				tagTransitStopsInServiceArea(scenario.getTransitSchedule(), 
 						DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_ATTRIBUTE, DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_VALUE, 
@@ -171,7 +178,7 @@ public final class RunDrtOpenBerlinScenario {
 		return prepareConfig( AdditionalInformation.none, args, customModules ) ;
 	}
 	
-	public static void addDRTmode(Scenario scenario, String drtNetworkMode, String drtServiceAreaShapeFile) {
+	public static void addDRTmode(Scenario scenario, String drtNetworkMode, String drtServiceAreaShapeFile, double buffer) {
 		
 		log.info("Adjusting network...");
 		
@@ -185,8 +192,8 @@ public final class RunDrtOpenBerlinScenario {
 				log.info("link #" + counter);
 			counter++;
 			if (link.getAllowedModes().contains(TransportMode.car)) {
-				if (shpUtils.isCoordInDrtServiceArea(link.getFromNode().getCoord())
-						|| shpUtils.isCoordInDrtServiceArea(link.getToNode().getCoord())) {
+				if (shpUtils.isCoordInDrtServiceAreaWithBuffer(link.getFromNode().getCoord(), buffer)
+						|| shpUtils.isCoordInDrtServiceAreaWithBuffer(link.getToNode().getCoord(), buffer)) {
 					Set<String> allowedModes = new HashSet<>(link.getAllowedModes());
 					
 					allowedModes.add(drtNetworkMode);

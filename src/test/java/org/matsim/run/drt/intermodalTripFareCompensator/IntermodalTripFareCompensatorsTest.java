@@ -33,7 +33,9 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.events.PersonMoneyEvent;
+import org.matsim.api.core.v01.events.PersonScoreEvent;
 import org.matsim.api.core.v01.events.handler.PersonMoneyEventHandler;
+import org.matsim.api.core.v01.events.handler.PersonScoreEventHandler;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
@@ -63,10 +65,14 @@ public class IntermodalTripFareCompensatorsTest {
         compensatorConfig.setCompensationCondition(CompensationCondition.PtModeUsedAnywhereInTheDay);
         compensatorConfig.setDrtModesAsString(TransportMode.drt + ",drt2");
         compensatorConfig.setPtModesAsString(TransportMode.pt);
-        double compensationPerTrip = 1.0;
-        compensatorConfig.setCompensationPerTrip(compensationPerTrip);
-        double compensationPerDay = 10.0;
-        compensatorConfig.setCompensationPerDay(compensationPerDay);
+        double compensationMoneyPerTrip = 1.0;
+        compensatorConfig.setCompensationMoneyPerTrip(compensationMoneyPerTrip);
+        double compensationScorePerTrip = 2.0;
+        compensatorConfig.setCompensationScorePerTrip(compensationScorePerTrip);
+        double compensationMoneyPerDay = 10.0;
+        compensatorConfig.setCompensationMoneyPerDay(compensationMoneyPerDay);
+        double compensationScorePerDay = 20.0;
+        compensatorConfig.setCompensationScorePerDay(compensationScorePerDay);
         
         IntermodalTripFareCompensatorsConfigGroup compensatorsConfig = new IntermodalTripFareCompensatorsConfigGroup();
         compensatorsConfig.addParameterSet(compensatorConfig);
@@ -80,24 +86,33 @@ public class IntermodalTripFareCompensatorsTest {
 		controler.addOverridingModule(new IntermodalTripFareCompensatorsModule());
         
         EventsManager events = controler.getEvents();
-        FareSumCalculator fareSummer = new FareSumCalculator();
+        PersonMoneySumAndScoreSumCalculator fareSummer = new PersonMoneySumAndScoreSumCalculator();
         events.addHandler(fareSummer);
         
         controler.run();
         
         Map<Id<Person>, Double> person2Fare = fareSummer.getPerson2Fare();
+        Map<Id<Person>, Double> person2Score = fareSummer.getPerson2Score();
         
 		Assert.assertNull("NoPtButDrt received compensation but should not", person2Fare.get(fixture.personIdNoPtButDrt));
+        Assert.assertNull("NoPtButDrt received compensation but should not", person2Score.get(fixture.personIdNoPtButDrt));
 		Assert.assertNull("PtNoDrt received compensation but should not", person2Fare.get(fixture.personIdPtNoDrt));
+        Assert.assertNull("PtNoDrt received compensation but should not", person2Score.get(fixture.personIdPtNoDrt));
 		
-		Assert.assertEquals("Pt1DrtSameTrip received wrong compensation", compensationPerDay + 1 * compensationPerTrip,
+		Assert.assertEquals("Pt1DrtSameTrip received wrong compensation", compensationMoneyPerDay + 1 * compensationMoneyPerTrip,
 				person2Fare.get(fixture.personIdPt1DrtSameTrip), MatsimTestUtils.EPSILON);
+        Assert.assertEquals("Pt1DrtSameTrip received wrong compensation", compensationScorePerDay + 1 * compensationScorePerTrip,
+                person2Score.get(fixture.personIdPt1DrtSameTrip), MatsimTestUtils.EPSILON);
 		
-		Assert.assertEquals("Pt1DrtDifferentTrips received wrong compensation", compensationPerDay + 1 * compensationPerTrip,
+		Assert.assertEquals("Pt1DrtDifferentTrips received wrong compensation", compensationMoneyPerDay + 1 * compensationMoneyPerTrip,
 				person2Fare.get(fixture.personIdPt1DrtDifferentTrips), MatsimTestUtils.EPSILON);
+        Assert.assertEquals("Pt1DrtDifferentTrips received wrong compensation", compensationScorePerDay + 1 * compensationScorePerTrip,
+                person2Score.get(fixture.personIdPt1DrtDifferentTrips), MatsimTestUtils.EPSILON);
 		
-		Assert.assertEquals("Pt3DrtIn2IntermodalTrips received wrong compensation", compensationPerDay + 3 * compensationPerTrip,
+		Assert.assertEquals("Pt3DrtIn2IntermodalTrips received wrong compensation", compensationMoneyPerDay + 3 * compensationMoneyPerTrip,
 				person2Fare.get(fixture.personIdPt3DrtIn2IntermodalTrips), MatsimTestUtils.EPSILON);
+        Assert.assertEquals("Pt3DrtIn2IntermodalTrips received wrong compensation", compensationScorePerDay + 3 * compensationScorePerTrip,
+                person2Score.get(fixture.personIdPt3DrtIn2IntermodalTrips), MatsimTestUtils.EPSILON);
 
     }
     
@@ -112,8 +127,10 @@ public class IntermodalTripFareCompensatorsTest {
         compensatorConfig.setCompensationCondition(CompensationCondition.PtModeUsedInSameTrip);
         compensatorConfig.setDrtModesAsString(TransportMode.drt + ",drt2");
         compensatorConfig.setPtModesAsString(TransportMode.pt);
-        double compensationPerTrip = 1.0;
-        compensatorConfig.setCompensationPerTrip(compensationPerTrip);
+        double compensationMoneyPerTrip = 1.0;
+        compensatorConfig.setCompensationMoneyPerTrip(compensationMoneyPerTrip);
+        double compensationScorePerTrip = 2.0;
+        compensatorConfig.setCompensationScorePerTrip(compensationScorePerTrip);
         
         IntermodalTripFareCompensatorsConfigGroup compensatorsConfig = new IntermodalTripFareCompensatorsConfigGroup();
         compensatorsConfig.addParameterSet(compensatorConfig);
@@ -127,23 +144,31 @@ public class IntermodalTripFareCompensatorsTest {
 		controler.addOverridingModule(new IntermodalTripFareCompensatorsModule());
         
         EventsManager events = controler.getEvents();
-        FareSumCalculator fareSummer = new FareSumCalculator();
+        PersonMoneySumAndScoreSumCalculator fareSummer = new PersonMoneySumAndScoreSumCalculator();
         events.addHandler(fareSummer);
         
         controler.run();
         
         Map<Id<Person>, Double> person2Fare = fareSummer.getPerson2Fare();
+        Map<Id<Person>, Double> person2Score = fareSummer.getPerson2Score();
         
 		Assert.assertNull("NoPtButDrt received compensation but should not", person2Fare.get(fixture.personIdNoPtButDrt));
+        Assert.assertNull("NoPtButDrt received compensation but should not", person2Score.get(fixture.personIdNoPtButDrt));
 		Assert.assertNull("PtNoDrt received compensation but should not", person2Fare.get(fixture.personIdPtNoDrt));
+        Assert.assertNull("PtNoDrt received compensation but should not", person2Score.get(fixture.personIdPtNoDrt));
 		
-		Assert.assertEquals("Pt1DrtSameTrip received wrong compensation", 1 * compensationPerTrip,
+		Assert.assertEquals("Pt1DrtSameTrip received wrong compensation", 1 * compensationMoneyPerTrip,
 				person2Fare.get(fixture.personIdPt1DrtSameTrip), MatsimTestUtils.EPSILON);
+        Assert.assertEquals("Pt1DrtSameTrip received wrong compensation", 1 * compensationScorePerTrip,
+                person2Score.get(fixture.personIdPt1DrtSameTrip), MatsimTestUtils.EPSILON);
 		
 		Assert.assertNull("Pt1DrtDifferentTrips received compensation but should not", person2Fare.get(fixture.personIdPt1DrtDifferentTrips));
+        Assert.assertNull("Pt1DrtDifferentTrips received compensation but should not", person2Score.get(fixture.personIdPt1DrtDifferentTrips));
 		
-		Assert.assertEquals("Pt3DrtIn2IntermodalTrips received wrong compensation", 3 * compensationPerTrip,
+		Assert.assertEquals("Pt3DrtIn2IntermodalTrips received wrong compensation", 3 * compensationMoneyPerTrip,
 				person2Fare.get(fixture.personIdPt3DrtIn2IntermodalTrips), MatsimTestUtils.EPSILON);
+        Assert.assertEquals("Pt3DrtIn2IntermodalTrips received wrong compensation", 3 * compensationScorePerTrip,
+                person2Score.get(fixture.personIdPt3DrtIn2IntermodalTrips), MatsimTestUtils.EPSILON);
     }
     
     @Test
@@ -159,18 +184,24 @@ public class IntermodalTripFareCompensatorsTest {
         compensatorPerDayConfig.setCompensationCondition(CompensationCondition.PtModeUsedAnywhereInTheDay);
         compensatorPerDayConfig.setDrtModesAsString(TransportMode.drt + ",drt2");
         compensatorPerDayConfig.setPtModesAsString(TransportMode.pt);
-        double compensationPerTripAnywhereInTheDay = 111.0;
-        compensatorPerDayConfig.setCompensationPerTrip(compensationPerTripAnywhereInTheDay);
-        double compensationPerDayAnywhereInTheDay = 1111.0;
-        compensatorPerDayConfig.setCompensationPerDay(compensationPerDayAnywhereInTheDay);
+        double compensationMoneyPerTripAnywhereInTheDay = 111.0;
+        compensatorPerDayConfig.setCompensationMoneyPerTrip(compensationMoneyPerTripAnywhereInTheDay);
+        double compensationScorePerTripAnywhereInTheDay = 222.0;
+        compensatorPerDayConfig.setCompensationScorePerTrip(compensationScorePerTripAnywhereInTheDay);
+        double compensationMoneyPerDayAnywhereInTheDay = 1111.0;
+        compensatorPerDayConfig.setCompensationMoneyPerDay(compensationMoneyPerDayAnywhereInTheDay);
+        double compensationScorePerDayAnywhereInTheDay = 2222.0;
+        compensatorPerDayConfig.setCompensationScorePerDay(compensationScorePerDayAnywhereInTheDay);
         compensatorsConfig.addParameterSet(compensatorPerDayConfig);
 
         IntermodalTripFareCompensatorConfigGroup compensatorPerTripConfig = new IntermodalTripFareCompensatorConfigGroup();
         compensatorPerTripConfig.setCompensationCondition(CompensationCondition.PtModeUsedInSameTrip);
         compensatorPerTripConfig.setDrtModesAsString(TransportMode.drt + ",drt2");
         compensatorPerTripConfig.setPtModesAsString(TransportMode.pt);
-        double compensationPerTripSameTrip = 1.0;
-        compensatorPerTripConfig.setCompensationPerTrip(compensationPerTripSameTrip);
+        double compensationMoneyPerTripSameTrip = 1.0;
+        compensatorPerTripConfig.setCompensationMoneyPerTrip(compensationMoneyPerTripSameTrip);
+        double compensationScorePerTripSameTrip = 2.0;
+        compensatorPerTripConfig.setCompensationScorePerTrip(compensationScorePerTripSameTrip);
         compensatorsConfig.addParameterSet(compensatorPerTripConfig);
         
         config.addModule(compensatorsConfig);
@@ -182,32 +213,45 @@ public class IntermodalTripFareCompensatorsTest {
 		controler.addOverridingModule(new IntermodalTripFareCompensatorsModule());
         
         EventsManager events = controler.getEvents();
-        FareSumCalculator fareSummer = new FareSumCalculator();
+        PersonMoneySumAndScoreSumCalculator fareSummer = new PersonMoneySumAndScoreSumCalculator();
         events.addHandler(fareSummer);
         
         controler.run();
         
         Map<Id<Person>, Double> person2Fare = fareSummer.getPerson2Fare();
+        Map<Id<Person>, Double> person2Score = fareSummer.getPerson2Score();
         
         // The result should be the same no matter whether we run 1 or 2 iterations (replanning switched off). So check after 2nd iteration.
 		Assert.assertNull("NoPtButDrt received compensation but should not",
 				person2Fare.get(fixture.personIdNoPtButDrt));
+        Assert.assertNull("NoPtButDrt received compensation but should not",
+                person2Score.get(fixture.personIdNoPtButDrt));
 		Assert.assertNull("PtNoDrt received compensation but should not", person2Fare.get(fixture.personIdPtNoDrt));
+        Assert.assertNull("PtNoDrt received compensation but should not", person2Score.get(fixture.personIdPtNoDrt));
 
 		Assert.assertEquals("Pt1DrtSameTrip received wrong compensation",
-				compensationPerDayAnywhereInTheDay + 1 * (compensationPerTripAnywhereInTheDay + compensationPerTripSameTrip),
+				compensationMoneyPerDayAnywhereInTheDay + 1 * (compensationMoneyPerTripAnywhereInTheDay + compensationMoneyPerTripSameTrip),
 				person2Fare.get(fixture.personIdPt1DrtSameTrip), MatsimTestUtils.EPSILON);
+        Assert.assertEquals("Pt1DrtSameTrip received wrong compensation",
+                compensationScorePerDayAnywhereInTheDay + 1 * (compensationScorePerTripAnywhereInTheDay + compensationScorePerTripSameTrip),
+                person2Score.get(fixture.personIdPt1DrtSameTrip), MatsimTestUtils.EPSILON);
 
-		Assert.assertEquals("Pt1DrtDifferentTrips received wrong compensation", compensationPerDayAnywhereInTheDay + 1 * compensationPerTripAnywhereInTheDay,
+		Assert.assertEquals("Pt1DrtDifferentTrips received wrong compensation", compensationMoneyPerDayAnywhereInTheDay + 1 * compensationMoneyPerTripAnywhereInTheDay,
 				person2Fare.get(fixture.personIdPt1DrtDifferentTrips), MatsimTestUtils.EPSILON);
+        Assert.assertEquals("Pt1DrtDifferentTrips received wrong compensation", compensationScorePerDayAnywhereInTheDay + 1 * compensationScorePerTripAnywhereInTheDay,
+                person2Score.get(fixture.personIdPt1DrtDifferentTrips), MatsimTestUtils.EPSILON);
 
 		Assert.assertEquals("Pt3DrtIn2IntermodalTrips received wrong compensation",
-				compensationPerDayAnywhereInTheDay + 3 * (compensationPerTripAnywhereInTheDay + compensationPerTripSameTrip),
+				compensationMoneyPerDayAnywhereInTheDay + 3 * (compensationMoneyPerTripAnywhereInTheDay + compensationMoneyPerTripSameTrip),
 				person2Fare.get(fixture.personIdPt3DrtIn2IntermodalTrips), MatsimTestUtils.EPSILON);
+        Assert.assertEquals("Pt3DrtIn2IntermodalTrips received wrong compensation",
+                compensationScorePerDayAnywhereInTheDay + 3 * (compensationScorePerTripAnywhereInTheDay + compensationScorePerTripSameTrip),
+                person2Score.get(fixture.personIdPt3DrtIn2IntermodalTrips), MatsimTestUtils.EPSILON);
     }
     
-    private static class FareSumCalculator implements PersonMoneyEventHandler {
+    private static class PersonMoneySumAndScoreSumCalculator implements PersonMoneyEventHandler, PersonScoreEventHandler {
         Map<Id<Person>, Double> person2Fare = new HashMap<>();
+        Map<Id<Person>, Double> person2Score = new HashMap<>();
     	
         @Override
         public void handleEvent(PersonMoneyEvent event) {
@@ -219,12 +263,25 @@ public class IntermodalTripFareCompensatorsTest {
         }
 
         @Override
+        public void handleEvent(PersonScoreEvent event) {
+            if (!person2Score.containsKey(event.getPersonId())) {
+                person2Score.put(event.getPersonId(), event.getAmount());
+            } else {
+                person2Score.put(event.getPersonId(), person2Score.get(event.getPersonId()) + event.getAmount());
+            }
+        }
+
+        @Override
         public void reset(int iteration) {
         	person2Fare.clear();
+            person2Score.clear();
         }
         
         private Map<Id<Person>, Double> getPerson2Fare() {
         	return person2Fare;
+        }
+        private Map<Id<Person>, Double> getPerson2Score() {
+            return person2Score;
         }
     }
 }

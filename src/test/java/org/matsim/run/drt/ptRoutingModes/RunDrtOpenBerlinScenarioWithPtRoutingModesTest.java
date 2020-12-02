@@ -97,6 +97,7 @@ public class RunDrtOpenBerlinScenarioWithPtRoutingModesTest {
 			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 				drtCfg.setNumberOfThreads(1);
 				drtCfg.setDrtServiceAreaShapeFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlkoenig-area/berlkoenig-area.shp");
+				drtCfg.setVehiclesFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlkoenig-drt-v5.5/input/berlkoenig-drt-v5.5.drt-by-rndLocations-1000vehicles-4seats.xml.gz");
 			}
 			
 			String personAttributeDrt = "canUseDrt";

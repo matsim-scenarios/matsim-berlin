@@ -26,12 +26,11 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.events.ActivityStartEvent;
 import org.matsim.api.core.v01.events.PersonDepartureEvent;
 import org.matsim.api.core.v01.events.PersonMoneyEvent;
+import org.matsim.api.core.v01.events.PersonScoreEvent;
 import org.matsim.api.core.v01.events.handler.ActivityStartEventHandler;
 import org.matsim.api.core.v01.events.handler.PersonDepartureEventHandler;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.api.experimental.events.EventsManager;
-import org.matsim.core.controler.events.AfterMobsimEvent;
-import org.matsim.core.controler.listener.AfterMobsimListener;
 import org.matsim.core.router.StageActivityTypeIdentifier;
 
 import com.google.inject.Inject;
@@ -48,13 +47,15 @@ public class IntermodalTripFareCompensatorPerTrip implements PersonDepartureEven
 	@Inject private EventsManager events;
 	private Set<Id<Person>> personsOnPtTrip = new HashSet<>();
 	private Set<Id<Person>> personsOnDrtTrip = new HashSet<>();
-	private double compensation;
+	private double compensationMoney;
+	private double compensationScore;
 	private Set<String> drtModes;
 	private Set<String> ptModes;
 	
 	// for the module
 	IntermodalTripFareCompensatorPerTrip(IntermodalTripFareCompensatorConfigGroup intermodalFareConfigGroup) {
-		this.compensation = intermodalFareConfigGroup.getCompensationPerTrip();
+		this.compensationMoney = intermodalFareConfigGroup.getCompensationMoneyPerTrip();
+		this.compensationScore = intermodalFareConfigGroup.getCompensationScorePerTrip();
 		this.drtModes = intermodalFareConfigGroup.getDrtModes();
 		this.ptModes = intermodalFareConfigGroup.getPtModes();
 	}
@@ -72,14 +73,16 @@ public class IntermodalTripFareCompensatorPerTrip implements PersonDepartureEven
 			
  			if (personsOnDrtTrip.contains(event.getPersonId())) {
 				// drt before pt case: compensate here when pt leg follows
-				compensate(event.getTime(), event.getPersonId(), compensation);
+				compensateMoney(event.getTime(), event.getPersonId(), compensationMoney);
+				compensateScore(event.getTime(), event.getPersonId(), compensationScore);
 				personsOnDrtTrip.remove(event.getPersonId());
 			}
 		}
 		if (drtModes.contains(event.getLegMode())) {
 			if (personsOnPtTrip.contains(event.getPersonId())) {
 				// drt after pt case: compensate immediately
-				compensate(event.getTime(), event.getPersonId(), compensation);
+				compensateMoney(event.getTime(), event.getPersonId(), compensationMoney);
+				compensateScore(event.getTime(), event.getPersonId(), compensationScore);
 			} else {
 				// drt before pt case: compensate later _if_ pt leg follows
 				personsOnDrtTrip.add(event.getPersonId());
@@ -97,8 +100,12 @@ public class IntermodalTripFareCompensatorPerTrip implements PersonDepartureEven
 		
 	}
 	
-	private void compensate(double time, Id<Person> agentId, double amount) {
-		events.processEvent(new PersonMoneyEvent(time, agentId, amount));
+	private void compensateMoney(double time, Id<Person> agentId, double amount) {
+		events.processEvent(new PersonMoneyEvent(time, agentId, amount, "intermodalTripFareCompensation", ""));
+	}
+
+	private void compensateScore(double time, Id<Person> agentId, double amount) {
+		events.processEvent(new PersonScoreEvent(time, agentId, amount, "intermodalTripFareCompensation"));
 	}
 
     @Override
