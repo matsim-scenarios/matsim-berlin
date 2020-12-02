@@ -45,7 +45,7 @@ public class BerlinExperimentalConfigGroup extends ReflectiveConfigGroup {
         }
 	
 	private double populationDownsampleFactor = 1.0;
-    private double tagDrtLinksBufferAroundServiceAreaShp = 10000.0;
+    private double tagDrtLinksBufferAroundServiceAreaShp = 2000.0;
 	private Map<String, IntermodalAccessEgressModeUtilityRandomization> intermodalAccessEgressMode2utilityRandomization = new HashMap<>();
 	
     public void addIntermodalAccessEgressModeUtilityRandomization(IntermodalAccessEgressModeUtilityRandomization paramSet) {
