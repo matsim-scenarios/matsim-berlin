@@ -199,7 +199,7 @@
 			<!-- Stop locations file (transit schedule format, but without lines) for DRT stops. Used only for the stopbased mode -->
 			<param name="transitStopFile" value="null"/>
 			<!-- Limit the operation of vehicles to links (of the 'dvrp_routing' network) with 'allowedModes' containing this 'mode'. For backward compatibility, the value is set to false by default - this means that the vehicles are allowed to operate on all links of the 'dvrp_routing' network. The 'dvrp_routing' is defined by DvrpConfigGroup.networkModes) -->
-			<param name="useModeFilteredSubnetwork" value="false"/>
+			<param name="useModeFilteredSubnetwork" value="drt"/>
 			<!-- An XML file specifying the vehicle fleet. The file format according to dvrp_vehicles_v1.dtd -->
 			<param name="vehiclesFile"
 				   value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlin-drt-v5.5-10pct/input/berlin-drt-v5.5.drt-10000vehicles-4seats.xml.gz"/>
@@ -224,7 +224,7 @@
 		<!-- Mode of which the network will be used for throwing events and hence calculating travel times. Default is car. -->
 		<param name="mobsimMode" value="car"/>
 		<!-- Set of modes of which the network will be used for DVRP travel time estimation and routing DVRP vehicles. Each specific DVRP mode may use a subnetwork of this network for routing vehicles (e.g. DRT buses travelling only along a specified links or serving a limited area). Default is "car" (i.e. single-element set of modes), i.e. the car network is used. Empty value "" (i.e. empty set of modes) means no network filtering, i.e. the original scenario.network is used -->
-		<param name="networkModes" value="car"/>
+		<param name="networkModes" value="drt"/>
 		<!-- Used for OFFLINE estimation of travel times for VrpOptimizer by means of the exponential moving average. The weighting decrease, alpha, must be in (0,1]. We suggest small values of alpha, e.g. 0.05. The averaging starts from the initial travel time estimates. If not provided, the free-speed TTs is used as the initial estimates -->
 		<param name="travelTimeEstimationAlpha" value="0.05"/>
 		<!-- Used for ONLINE estimation of travel times for VrpOptimizer by combining WithinDayTravelTime and DvrpOfflineTravelTimeEstimator. The beta coefficient is provided in seconds and should be either 0 (no online estimation) or positive (mixed online-offline estimation). For 'beta = 0', only the offline estimate is used: 'onlineTT(t) = offlineTT(t)', where 'offlineTT(t)' in the offline estimate for TT at time 't', For 'beta > 0', estimating future TTs at time 't', uses the currently observed TT to correct the offline estimates is made: where 'currentTT' is the currently observed TT, and 'correction = min(1, max(0, 1 - (time - currentTime) / beta))' The rule is that correction decreases linearly from 1 (when 'time = currentTime') to 0 (when 'time = currentTime + beta' For 'time > currentTime + beta' correction is 0, whereas if 'time < currentTime' it is 1. If beta is sufficiently large, 'beta >> 0', only the currently observed TT is used. -->
