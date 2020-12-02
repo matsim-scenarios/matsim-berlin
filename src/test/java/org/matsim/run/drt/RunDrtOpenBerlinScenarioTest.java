@@ -38,9 +38,7 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
-import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.StrategyConfigGroup.StrategySettings;
 import org.matsim.core.controler.AbstractModule;
@@ -50,7 +48,6 @@ import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
 import org.matsim.run.BerlinExperimentalConfigGroup;
 import org.matsim.run.BerlinExperimentalConfigGroup.IntermodalAccessEgressModeUtilityRandomization;
-import org.matsim.run.RunBerlinScenario;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup.CompensationCondition;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
@@ -193,7 +190,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			double expectedCompensationAmountPerTrip = Double.NaN;
 			for (IntermodalTripFareCompensatorConfigGroup fareCompensator : fareCompensators.getIntermodalTripFareCompensatorConfigGroups()) {
 				if (fareCompensator.getDrtModes().contains(TransportMode.drt) && fareCompensator.getPtModes().contains(TransportMode.pt)) { 
-					expectedCompensationAmountPerTrip = fareCompensator.getCompensationPerTrip();
+					expectedCompensationAmountPerTrip = fareCompensator.getCompensationMoneyPerTrip();
 				}
 			}
 			
@@ -270,7 +267,8 @@ public class RunDrtOpenBerlinScenarioTest {
 			compensatorCfg.setCompensationCondition(CompensationCondition.PtModeUsedAnywhereInTheDay);
 			compensatorCfg.setDrtModesAsString("drt");
 			compensatorCfg.setPtModesAsString("pt");
-			compensatorCfg.setCompensationPerTrip(111111.);
+			compensatorCfg.setCompensationMoneyPerTrip(1000);
+			compensatorCfg.setCompensationScorePerDay(2000);
 			compensatorsCfg.addParameterSet(compensatorCfg);
 			
 			config.transit().setUsingTransitInMobsim(false);
@@ -322,7 +320,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			}
 			
 			Assert.assertEquals("Number of potential intermodal trip fare compensator money events should be equal to the number of persons who get a compensation.", 1, hugeMoneyEventCounter);
-			Assert.assertEquals("Huge money events thrown at the end of the day should translate into a very large score!", true, 10000 < controler.getScoreStats().getScoreHistory().get( ScoreStatsControlerListener.ScoreItem.average ).get(0));
+			Assert.assertEquals("Huge money events thrown at the end of the day should translate into a very large score!", true, 2100 < controler.getScoreStats().getScoreHistory().get( ScoreStatsControlerListener.ScoreItem.average ).get(0));
 
 		} catch ( Exception ee ) {
 			throw new RuntimeException(ee) ;
