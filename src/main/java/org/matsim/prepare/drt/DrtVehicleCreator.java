@@ -133,7 +133,7 @@ public class DrtVehicleCreator {
 		this.scenario = ScenarioUtils.loadScenario(config);
 		
 		shpUtils = new BerlinShpUtils(drtServiceAreaShapeFile);
-		RunDrtOpenBerlinScenario.addDRTmode(scenario, drtNetworkMode, drtServiceAreaShapeFile);
+		RunDrtOpenBerlinScenario.addDRTmode(scenario, drtNetworkMode, drtServiceAreaShapeFile, 0);
 		
 		Set<String> modes = new HashSet<>();
 		modes.add(drtNetworkMode);
