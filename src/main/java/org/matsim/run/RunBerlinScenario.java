@@ -81,21 +81,9 @@ public final class RunBerlinScenario {
 
 		Config config = prepareConfig( args ) ;
 		Scenario scenario = prepareScenario( config ) ;
-
 		AssignIncome.assignIncomeToPersonSubpopulationAccordingToGermanyAverage(scenario.getPopulation());
-
 		Controler controler = prepareControler( scenario ) ;
-
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				log.info("will use personSpecificMarginalUtilityOfMoney..");
-				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class);
-			}
-		});
-
 		controler.run();
-
 	}
 
 	public static Controler prepareControler( Scenario scenario ) {
@@ -133,6 +121,9 @@ public final class RunBerlinScenario {
 				addPlanStrategyBinding("ChangeSingleTripModeAndRoute").toProvider(ChangeSingleTripModeAndRoute.class);
 
 				bind(RaptorIntermodalAccessEgress.class).to(BerlinRaptorIntermodalAccessEgress.class);
+
+				//use income-dependent marginal utility of money for scoring
+				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class);
 			}
 		} );
 

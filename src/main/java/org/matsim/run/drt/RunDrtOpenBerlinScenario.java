@@ -85,11 +85,8 @@ public final class RunDrtOpenBerlinScenario {
 		
 		Config config = prepareConfig( args ) ;
 		Scenario scenario = prepareScenario( config ) ;
-
 		AssignIncome.assignIncomeToPersonSubpopulationAccordingToGermanyAverage(scenario.getPopulation());
-
 		Controler controler = prepareControler( scenario ) ;
-
 		controler.run() ;
 	}
 	
