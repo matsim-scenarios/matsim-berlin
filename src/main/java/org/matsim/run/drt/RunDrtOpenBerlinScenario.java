@@ -85,7 +85,6 @@ public final class RunDrtOpenBerlinScenario {
 		
 		Config config = prepareConfig( args ) ;
 		Scenario scenario = prepareScenario( config ) ;
-		AssignIncome.assignIncomeToPersonSubpopulationAccordingToGermanyAverage(scenario.getPopulation());
 		Controler controler = prepareControler( scenario ) ;
 		controler.run() ;
 	}
@@ -152,7 +151,7 @@ public final class RunDrtOpenBerlinScenario {
 						200.0); // TODO: Use constant in RunGTFS2MATSimOpenBerlin and here? Or better some kind of set available pt modes?
 			}
 		}
-		
+
 		return scenario;
 	}
 

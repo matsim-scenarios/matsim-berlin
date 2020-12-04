@@ -81,7 +81,6 @@ public final class RunBerlinScenario {
 
 		Config config = prepareConfig( args ) ;
 		Scenario scenario = prepareScenario( config ) ;
-		AssignIncome.assignIncomeToPersonSubpopulationAccordingToGermanyAverage(scenario.getPopulation());
 		Controler controler = prepareControler( scenario ) ;
 		controler.run();
 	}
@@ -153,7 +152,8 @@ public final class RunBerlinScenario {
 		if (berlinCfg.getPopulationDownsampleFactor() != 1.0) {
 			downsample(scenario.getPopulation().getPersons(), berlinCfg.getPopulationDownsampleFactor());
 		}
-		
+
+		AssignIncome.assignIncomeToPersonSubpopulationAccordingToGermanyAverage(scenario.getPopulation());
 		return scenario;
 	}
 
