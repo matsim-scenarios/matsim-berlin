@@ -76,23 +76,17 @@ public final class RunBerlinScenario {
 		}
 		
 		if ( args.length==0 ) {
-			args = new String[] {"true","scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
+			args = new String[] {"scenarios/berlin-v5.5-10pct/input/berlin-v5.5-10pct.config.xml"}  ;
 		}
 
-		boolean usePersonSpecificMarginalUtilityOfMoney = Boolean.parseBoolean(args[0]);
-		String[] arguments = new String[args.length -1];
-		for (int i = 1; i < args.length; i++) {
-			arguments[i-1] = args[i];
-		}
-
-		Config config = prepareConfig( arguments ) ;
+		Config config = prepareConfig( args ) ;
 		Scenario scenario = prepareScenario( config ) ;
 
-		if(usePersonSpecificMarginalUtilityOfMoney)	AssignIncome.assignIncomeToPersonSubpopulationAccordingToGermanyAverage(scenario.getPopulation());
+		AssignIncome.assignIncomeToPersonSubpopulationAccordingToGermanyAverage(scenario.getPopulation());
 
 		Controler controler = prepareControler( scenario ) ;
 
-		if(usePersonSpecificMarginalUtilityOfMoney) controler.addOverridingModule(new AbstractModule() {
+		controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
 				log.info("will use personSpecificMarginalUtilityOfMoney..");

@@ -35,7 +35,7 @@ import static playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringP
 
 public class IncomeDependentPersonAnalysis {
 
-	private static final String INPUT_POPULATION = "D:/berlin-calibration-2020/income-output/1pct/with-drt/income/incDRT.output_plans.xml.gz";
+	private static final String INPUT_POPULATION = "";
 
 	public static void main(String[] args) {
 		Population population = PopulationUtils.readPopulation(INPUT_POPULATION);

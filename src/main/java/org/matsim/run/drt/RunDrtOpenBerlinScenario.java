@@ -61,7 +61,7 @@ import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
  * 
  *  - The input DRT vehicles file specifies the number of vehicles and the vehicle capacity (a vehicle capacity of 1 means there is no ride-sharing).
  * 	- The DRT service area is set to the the inner-city Berlin area (see input shape file).
- * 	- Initial plans are not modified.
+ * 	- Initial plans only modified such that persons receive a specific income.
  * 
  * @author ikaddoura
  */
@@ -86,16 +86,9 @@ public final class RunDrtOpenBerlinScenario {
 		Config config = prepareConfig( args ) ;
 		Scenario scenario = prepareScenario( config ) ;
 
-		if(usePersonSpecificMarginalUtilityOfMoney) AssignIncome.assignIncomeToPersonSubpopulationAccordingToGermanyAverage(scenario.getPopulation());
+		AssignIncome.assignIncomeToPersonSubpopulationAccordingToGermanyAverage(scenario.getPopulation());
 
 		Controler controler = prepareControler( scenario ) ;
-
-		if(usePersonSpecificMarginalUtilityOfMoney) controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class);
-			}
-		});
 
 		controler.run() ;
 	}
@@ -119,6 +112,9 @@ public final class RunDrtOpenBerlinScenario {
 				// So we need our own main mode indentifier which replaces both :-(
 				bind(MainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifier.class);
 				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier.class);
+
+				//use income-dependent marginal utility of money for scoring
+				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class);
 			}
 		});
 
