@@ -117,8 +117,9 @@
 	<module name="planCalcScore" >
 		<param name="fractionOfIterationsToStartScoreMSA" value="1.0" />
 		<parameterset type="scoringParameters" >
+			<param name="marginalUtilityOfMoney" value="0.7" />
 			<parameterset type="modeParams" >
-				<param name="constant" value="-0.0" />
+				<param name="constant" value="-0.9" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="car" />
 				<param name="monetaryDistanceRate" value="-0.0002" />
