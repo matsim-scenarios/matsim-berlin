@@ -44,8 +44,10 @@ public class AssignIncome {
 		population.getPersons().values().stream()
 				.filter(person ->  {
 					String subpopulation = PopulationUtils.getSubpopulation(person);
-					return subpopulation != null && subpopulation.equals("person");
-				}) //only assign income to person subpopulation (not to freight etc.)
+					return subpopulation != null && subpopulation.equals("person"); //only assign income to person subpopulation (not to freight etc.)
+				})
+				//don't overwrite income attribute (input plans may have income attributes already)
+				.filter(person -> person.getAttributes().getAttribute(IncomeDependentUtilityOfMoneyPersonScoringParameters.PERSONAL_INCOME_ATTRIBUTE_NAME) == null)
 				.forEach(person -> {
 						double income = 0.;
 						double rndDouble = rnd.nextDouble();
