@@ -42,7 +42,10 @@ public class AssignIncome {
 		final Random rnd = MatsimRandom.getLocalInstance();
 
 		population.getPersons().values().stream()
-				.filter(person -> PopulationUtils.getSubpopulation(person).equals("person")) //only assign income to person subpopulation (not to freight etc.)
+				.filter(person ->  {
+					String subpopulation = PopulationUtils.getSubpopulation(person);
+					return subpopulation != null && subpopulation.equals("person");
+				}) //only assign income to person subpopulation (not to freight etc.)
 				.forEach(person -> {
 						double income = 0.;
 						double rndDouble = rnd.nextDouble();
