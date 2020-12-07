@@ -44,6 +44,8 @@ public class TerminateDynamically implements TerminationCriterion {
 		this.convergenceDynamicShutdown = convergenceDynamicShutdown;
 	}
 
+
+	//FIXME
 	@Override
 	public boolean mayTerminateAfterIteration(int i) {
 		return i <= lastIteration ;
