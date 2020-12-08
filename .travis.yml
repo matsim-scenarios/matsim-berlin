@@ -4,7 +4,7 @@ jdk: openjdk11
 
 env:
   global:
-    - MAVEN_OPTS="-Xmx15g"
+    - MAVEN_OPTS="-Xmx7g"
   matrix:
     - TEST=RunBerlinScenarioSmallTests
     - TEST=RunBerlinScenarioTest

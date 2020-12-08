@@ -34,6 +34,7 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.router.MainModeIdentifierImpl;
@@ -94,6 +95,9 @@ public class RunBerlinScenarioTest {
 			final String[] args = {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"};
 			
 			Config config =  RunBerlinScenario.prepareConfig( args ) ;
+			BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
+			berlinCfg.setPopulationDownsampleFactor(0.1);
+
 			config.controler().setLastIteration(1);
 			config.strategy().setFractionOfIterationsToDisableInnovation(1);
 			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
