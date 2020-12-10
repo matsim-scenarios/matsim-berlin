@@ -87,7 +87,7 @@ This will update your repository to the newest version.
 1. There should be a file directly in the `matsim-berlin` directory with name approximately as `matsim-berlin-5.x-jar-with-dependencies.jar`.
 1. Double-click on that file (in a file system browser).  A simple GUI should open.
 1. In the GUI, click on the "Choose" button for configuration file.  Navigate to one of the `scenario` directories and load one of the configuration files.
-1. Increase memory in the GUI.
+1. Increase memory in the GUI. To run the 1pct sample, you probably don't need more than 6 GB. For the 10pct sample, you should have at least 16 GB, but 32 GB are usually sufficient.
 1. Press the "Start MATSim" button.  This should run MATSim.  Note that MATSim accepts URLs as filenames in its config, so while the config files are part of the git repo, running them will pull additional material from our server.
 1. "Open" the output directory.  You can drag files into VIA as was already done above.
 1. "Edit..." (in the GUI) the config file.  Re-run MATSim.
