@@ -31,14 +31,18 @@ public class IntermodalTripFareCompensatorConfigGroup extends ReflectiveConfigGr
 
 	    public static final String GROUP_NAME = "intermodalTripFareCompensator";
 
-	    public static final String COMPENSATION_PER_TRIP = "compensationPerTrip";
-	    public static final String COMPENSATION_PER_DAY = "compensationPerDay";
+	    public static final String COMPENSATION_MONEY_PER_TRIP = "compensationMoneyPerTrip";
+	    public static final String COMPENSATION_MONEY_PER_DAY = "compensationMoneyPerDay";
+		public static final String COMPENSATION_SCORE_PER_TRIP = "compensationScorePerTrip";
+		public static final String COMPENSATION_SCORE_PER_DAY = "compensationScorePerDay";
 	    public static final String COMPENSATION_CONDITION= "compensationCondition";
 	    public static final String DRT_MODES = "drtModes";
 	    public static final String PT_MODES = "ptModes";
 
-	    private double compensationPerDay = 0.0;
-	    private double compensationPerTrip = 0.0;
+	    private double compensationMoneyPerDay = 0.0;
+	    private double compensationMoneyPerTrip = 0.0;
+		private double compensationScorePerDay = 0.0;
+		private double compensationScorePerTrip = 0.0;
 	    private CompensationCondition compensationCondition = CompensationCondition.PtModeUsedInSameTrip;
 	    
 	    /*
@@ -60,8 +64,10 @@ public class IntermodalTripFareCompensatorConfigGroup extends ReflectiveConfigGr
 	    @Override
 	    public Map<String, String> getComments() {
 	        Map<String, String> map = super.getComments();
-	        map.put(COMPENSATION_PER_TRIP, "Compensation per Trip (compensation = refund paid to the customer = positive value)");
-	        map.put(COMPENSATION_PER_DAY, "Compensation per Day, i.e. only paid once per day no matter the number of trips. Not implemented yet for compensationCondition==PtModeUsedInSameTrip (compensation = refund paid to the customer = positive value)");
+	        map.put(COMPENSATION_MONEY_PER_TRIP, "Compensation money per Trip (compensation = refund paid to the customer = positive value)");
+	        map.put(COMPENSATION_MONEY_PER_DAY, "Compensation money per Day, i.e. only paid once per day no matter the number of trips. Not implemented yet for compensationCondition==PtModeUsedInSameTrip (compensation = refund paid to the customer = positive value)");
+			map.put(COMPENSATION_SCORE_PER_TRIP, "Compensation score per Trip (compensation = refund score paid to the customer = positive value)");
+			map.put(COMPENSATION_SCORE_PER_DAY, "Compensation score per Day, i.e. only paid once per day no matter the number of trips. Not implemented yet for compensationCondition==PtModeUsedInSameTrip (compensation = refund score paid to the customer = positive value)");
 	        map.put(COMPENSATION_CONDITION, "Condition which governs which agents are compensated. Options: "
 				+ CompensationCondition.PtModeUsedInSameTrip + ", " + CompensationCondition.PtModeUsedAnywhereInTheDay);
 	        map.put(DRT_MODES, "drt modes for which the compensation applies (comma separated list).");
@@ -69,25 +75,45 @@ public class IntermodalTripFareCompensatorConfigGroup extends ReflectiveConfigGr
 	        return map;
 	    }
 
-	    @StringGetter(COMPENSATION_PER_TRIP)
-	    public double getCompensationPerTrip() {
-	        return compensationPerTrip;
+	    @StringGetter(COMPENSATION_MONEY_PER_TRIP)
+	    public double getCompensationMoneyPerTrip() {
+	        return compensationMoneyPerTrip;
 	    }
 
-	    @StringSetter(COMPENSATION_PER_TRIP)
-	    public void setCompensationPerTrip(double compensationPerTrip) {
-	        this.compensationPerTrip = compensationPerTrip;
+	    @StringSetter(COMPENSATION_MONEY_PER_TRIP)
+	    public void setCompensationMoneyPerTrip(double compensationMoneyPerTrip) {
+	        this.compensationMoneyPerTrip = compensationMoneyPerTrip;
 	    }
 	    
-	    @StringGetter(COMPENSATION_PER_DAY)
-	    public double getCompensationPerDay() {
-	        return compensationPerDay;
+	    @StringGetter(COMPENSATION_MONEY_PER_DAY)
+	    public double getCompensationMoneyPerDay() {
+	        return compensationMoneyPerDay;
 	    }
 
-	    @StringSetter(COMPENSATION_PER_DAY)
-	    public void setCompensationPerDay(double compensationPerDay) {
-	        this.compensationPerDay = compensationPerDay;
+	    @StringSetter(COMPENSATION_MONEY_PER_DAY)
+	    public void setCompensationMoneyPerDay(double compensationMoneyPerDay) {
+	        this.compensationMoneyPerDay = compensationMoneyPerDay;
 	    }
+
+		@StringGetter(COMPENSATION_SCORE_PER_TRIP)
+		public double getCompensationScorePerTrip() {
+		return compensationScorePerTrip;
+	}
+
+		@StringSetter(COMPENSATION_SCORE_PER_TRIP)
+		public void setCompensationScorePerTrip(double compensationScorePerTrip) {
+			this.compensationScorePerTrip = compensationScorePerTrip;
+		}
+
+		@StringGetter(COMPENSATION_SCORE_PER_DAY)
+		public double getCompensationScorePerDay() {
+		return compensationScorePerDay;
+	}
+
+		@StringSetter(COMPENSATION_SCORE_PER_DAY)
+		public void setCompensationScorePerDay(double compensationScorePerDay) {
+			this.compensationScorePerDay = compensationScorePerDay;
+		}
 	    
 	    @StringGetter(COMPENSATION_CONDITION)
 	    public CompensationCondition getCompensationCondition() {
