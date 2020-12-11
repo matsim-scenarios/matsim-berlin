@@ -28,6 +28,7 @@ import java.util.Set;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.events.PersonDepartureEvent;
 import org.matsim.api.core.v01.events.PersonMoneyEvent;
+import org.matsim.api.core.v01.events.PersonScoreEvent;
 import org.matsim.api.core.v01.events.handler.PersonDepartureEventHandler;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.api.experimental.events.EventsManager;
@@ -49,15 +50,19 @@ public class IntermodalTripFareCompensatorPerDay implements PersonDepartureEvent
 	private QSimConfigGroup qSimConfigGroup;
 	private Set<Id<Person>> personsOnPtTrip = new HashSet<>();
 	private Map<Id<Person>, Integer> persons2DrtTrips = new HashMap<>();
-	private double compensationPerDay;
-	private double compensationPerTrip;
+	private double compensationMoneyPerDay;
+	private double compensationMoneyPerTrip;
+	private double compensationScorePerDay;
+	private double compensationScorePerTrip;
 	private Set<String> drtModes;
 	private Set<String> ptModes;
 	private double compensationTime = Double.NaN;
 
 	IntermodalTripFareCompensatorPerDay(IntermodalTripFareCompensatorConfigGroup intermodalFareConfigGroup) {
-		this.compensationPerDay = intermodalFareConfigGroup.getCompensationPerDay();
-		this.compensationPerTrip = intermodalFareConfigGroup.getCompensationPerTrip();
+		this.compensationMoneyPerDay = intermodalFareConfigGroup.getCompensationMoneyPerDay();
+		this.compensationMoneyPerTrip = intermodalFareConfigGroup.getCompensationMoneyPerTrip();
+		this.compensationScorePerDay = intermodalFareConfigGroup.getCompensationScorePerDay();
+		this.compensationScorePerTrip = intermodalFareConfigGroup.getCompensationScorePerTrip();
 		this.drtModes = intermodalFareConfigGroup.getDrtModes();
 		this.ptModes = intermodalFareConfigGroup.getPtModes();
 	}
@@ -76,8 +81,12 @@ public class IntermodalTripFareCompensatorPerDay implements PersonDepartureEvent
 		}
 	}
 
-	private void compensate(double time, Id<Person> agentId, double amount) {
-		events.processEvent(new PersonMoneyEvent(time, agentId, amount));
+	private void compensateMoney(double time, Id<Person> agentId, double amount) {
+		events.processEvent(new PersonMoneyEvent(time, agentId, amount, "intermodalTripFareCompensation", ""));
+	}
+
+	private void compensateScore(double time, Id<Person> agentId, double amount) {
+		events.processEvent(new PersonScoreEvent(time, agentId, amount, "intermodalTripFareCompensation"));
 	}
 
 	@Override
@@ -86,7 +95,8 @@ public class IntermodalTripFareCompensatorPerDay implements PersonDepartureEvent
 
 		for (Entry<Id<Person>, Integer> person2DrtTrips : persons2DrtTrips.entrySet()) {
 			if (personsOnPtTrip.contains(person2DrtTrips.getKey())) {
-				compensate(time, person2DrtTrips.getKey(), compensationPerDay + compensationPerTrip * person2DrtTrips.getValue());
+				compensateMoney(time, person2DrtTrips.getKey(), compensationMoneyPerDay + compensationMoneyPerTrip * person2DrtTrips.getValue());
+				compensateScore(time, person2DrtTrips.getKey(), compensationScorePerDay + compensationScorePerTrip * person2DrtTrips.getValue());
 			}
 		}
 	}

@@ -34,6 +34,7 @@ public class BerlinExperimentalConfigGroup extends ReflectiveConfigGroup {
 	public static final String GROUP_NAME = "berlinExperimental" ;
 
     private static final String POPULATION_DOWNSAMPLE_FACTOR = "populationDownsampleFactor";
+    private static final String TAG_DRT_LINKS_BUFFER_AROUND_SERVICE_AREA_SHP = "tagDrtLinksBufferAroundServiceAreaShp";
 	
 	public BerlinExperimentalConfigGroup() {
 		super(GROUP_NAME);
@@ -44,6 +45,7 @@ public class BerlinExperimentalConfigGroup extends ReflectiveConfigGroup {
         }
 	
 	private double populationDownsampleFactor = 1.0;
+    private double tagDrtLinksBufferAroundServiceAreaShp = 2000.0;
 	private Map<String, IntermodalAccessEgressModeUtilityRandomization> intermodalAccessEgressMode2utilityRandomization = new HashMap<>();
 	
     public void addIntermodalAccessEgressModeUtilityRandomization(IntermodalAccessEgressModeUtilityRandomization paramSet) {
@@ -102,6 +104,16 @@ public class BerlinExperimentalConfigGroup extends ReflectiveConfigGroup {
     @StringSetter(POPULATION_DOWNSAMPLE_FACTOR)
     public void setPopulationDownsampleFactor(double populationDownsampleFactor) {
         this.populationDownsampleFactor = populationDownsampleFactor;
+    }
+
+    @StringGetter(TAG_DRT_LINKS_BUFFER_AROUND_SERVICE_AREA_SHP)
+    public double getTagDrtLinksBufferAroundServiceAreaShp() {
+        return tagDrtLinksBufferAroundServiceAreaShp;
+    }
+
+    @StringSetter(TAG_DRT_LINKS_BUFFER_AROUND_SERVICE_AREA_SHP)
+    public void setTagDrtLinksBufferAroundServiceAreaShp(double tagDrtLinksBufferAroundServiceAreaShp) {
+        this.tagDrtLinksBufferAroundServiceAreaShp = tagDrtLinksBufferAroundServiceAreaShp;
     }
 			
 }
