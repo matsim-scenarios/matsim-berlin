@@ -225,6 +225,7 @@ public final class RunDrtOpenBerlinScenario {
 			String drtServiceAreaShapeFile, 
 			String oldFilterAttribute, String oldFilterValue,
 			double bufferAroundServiceArea) {
+		log.info("Tagging pt stops marked for intermodal access/egress in the service area.");
 		BerlinShpUtils shpUtils = new BerlinShpUtils( drtServiceAreaShapeFile );
 		for (TransitStopFacility stop: transitSchedule.getFacilities().values()) {
 			if (stop.getAttributes().getAttribute(oldFilterAttribute) != null) {
