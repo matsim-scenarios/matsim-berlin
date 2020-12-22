@@ -185,9 +185,8 @@
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>pt-extensions</artifactId>
-			<version>6c0132f9b2</version>
+			<version>fac7381209</version>
 		</dependency>
-
 
 		<dependency>
 		<!-- This is the matsim "freight" contrib: -->
