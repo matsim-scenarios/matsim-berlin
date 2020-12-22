@@ -88,18 +88,18 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                 // overrides individual parameters per person; use default scoring parameters
                 if (travelTime.isDefined()) {
                     tTime += travelTime.seconds();
-					utility += travelTime.seconds() * (scoringParams.getModes()
+					utility += travelTime.seconds() * (scoringParams.modeParams
 							.get(mode)
-							.getMarginalUtilityOfTraveling() + (-1) * scoringParams.getPerforming_utils_hr()) / 3600;
+							.marginalUtilityOfTraveling_s + (-1) * scoringParams.marginalUtilityOfPerforming_s);
 				}
 				Double distance = ((Leg)pe).getRoute().getDistance();
 				if (distance != null && distance != 0.) {
-					utility += distance * scoringParams.getModes().get(mode).getMarginalUtilityOfDistance();
+					utility += distance * scoringParams.modeParams.get(mode).marginalUtilityOfDistance_m;
 					utility += distance
-							* scoringParams.getModes().get(mode).getMonetaryDistanceRate()
-							* scoringParams.getMarginalUtilityOfMoney();
+							* scoringParams.modeParams.get(mode).monetaryDistanceCostRate
+							* scoringParams.marginalUtilityOfMoney;
 				}
-				utility += scoringParams.getModes().get(mode).getConstant();
+				utility += scoringParams.modeParams.get(mode).constant;
 
 				// account for drt fares
 				for (DrtConfigGroup drtConfig : multiModeDrtConfigGroup.getModalElements()) {
@@ -117,7 +117,7 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
 
 						fare += drtFareParams.getBasefare();
 						fare = Math.max(fare, drtFareParams.getMinFarePerTrip());
-						utility += -1. * fare * scoringParams.getMarginalUtilityOfMoney();
+						utility += -1. * fare * scoringParams.marginalUtilityOfMoney;
 					}
                 }
                 
@@ -125,7 +125,7 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                 for (IntermodalTripFareCompensatorConfigGroup compensatorCfg : interModalTripFareCompensatorsCfg.getIntermodalTripFareCompensatorConfigGroups()) {
                 	if (compensatorCfg.getDrtModes().contains(mode) && compensatorCfg.getPtModes().contains(TransportMode.pt)) {
                 		// the following is a compensation, thus positive!
-                		utility += compensatorCfg.getCompensationMoneyPerTrip() * scoringParams.getMarginalUtilityOfMoney();
+                		utility += compensatorCfg.getCompensationMoneyPerTrip() * scoringParams.marginalUtilityOfMoney;
 						utility += compensatorCfg.getCompensationScorePerTrip();
                 	}
                 }
