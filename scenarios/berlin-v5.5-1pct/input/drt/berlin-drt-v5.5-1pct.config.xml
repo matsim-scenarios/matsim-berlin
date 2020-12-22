@@ -18,10 +18,6 @@
 		<param name="numberOfThreads" value="8" />
 	</module>
 	<module name="berlinExperimental" >
-		<parameterset type="intermodalAccessEgressModeUtilityRandomization" >
-			<param name="accessEgressMode" value="drt" />
-			<param name="additiveRandomizationWidth" value="0." />
-		</parameterset>
 		<param name="populationDownsampleFactor" value="1.0" />
 	</module>
 	<module name="network" >
