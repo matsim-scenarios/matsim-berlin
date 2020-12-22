@@ -74,9 +74,9 @@ public class RunBerlinScenarioTest {
 			controler.run() ;
 			
 			Assert.assertEquals("Change in score (ride + walk agent)", 127.23287390213895, scenario.getPopulation().getPersons().get(Id.createPersonId("100087501")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Change in score (bicycle agent)", 129.80394930541985, scenario.getPopulation().getPersons().get(Id.createPersonId("100200201")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Change in score (bicycle agent)", 130.00394930541987, scenario.getPopulation().getPersons().get(Id.createPersonId("100200201")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
 			Assert.assertEquals("Change in score (ride agent)", 133.77462208387647, scenario.getPopulation().getPersons().get(Id.createPersonId("10099501")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
-			Assert.assertEquals("Change in score (pt agent)", 136.70399488649892, scenario.getPopulation().getPersons().get(Id.createPersonId("100024301")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
+			Assert.assertEquals("Change in score (pt agent)", 136.10399488649892, scenario.getPopulation().getPersons().get(Id.createPersonId("100024301")).getSelectedPlan().getScore(), MatsimTestUtils.EPSILON);
 			
 			log.info( "Done with dTest1person1iteration"  );
 			log.info("") ;

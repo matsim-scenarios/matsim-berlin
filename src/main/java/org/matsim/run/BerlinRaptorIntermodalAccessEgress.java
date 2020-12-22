@@ -21,6 +21,8 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ScoringParameterSet;
 import org.matsim.core.gbl.MatsimRandom;
+import org.matsim.core.scoring.functions.ScoringParameters;
+import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.misc.OptionalTime;
 import org.matsim.run.BerlinExperimentalConfigGroup.IntermodalAccessEgressModeUtilityRandomization;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup;
@@ -40,6 +42,7 @@ import ch.sbb.matsim.routing.pt.raptor.RaptorStopFinder;
  */
 public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAccessEgress {
 
+	private final ScoringParametersForPerson parametersForPerson;
 	Config config;
 	BerlinExperimentalConfigGroup berlinCfg;
 	MultiModeDrtConfigGroup multiModeDrtConfigGroup;
@@ -53,12 +56,13 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
 	Random random = MatsimRandom.getLocalInstance();
 
 	@Inject
-    BerlinRaptorIntermodalAccessEgress(Config config) {
+    BerlinRaptorIntermodalAccessEgress(Config config, ScoringParametersForPerson parametersForPerson) {
 		this.config = config;
 		this.berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 		this.multiModeDrtConfigGroup = ConfigUtils.addOrGetModule(config, MultiModeDrtConfigGroup.class);
 		this.interModalTripFareCompensatorsCfg = ConfigUtils.addOrGetModule(config,
 				IntermodalTripFareCompensatorsConfigGroup.class);
+		this.parametersForPerson = parametersForPerson;
 	}
 
 	@Override
@@ -70,8 +74,9 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
 			Object attr = person.getAttributes().getAttribute("subpopulation") ;
 			subpopulationName = attr == null ? null : attr.toString();
 		}
-		
-		ScoringParameterSet scoringParams = config.planCalcScore().getScoringParameters(subpopulationName);
+
+		ScoringParameters scoringParams = this.parametersForPerson.getScoringParameters(person);
+//		ScoringParameterSet scoringParams = config.planCalcScore().getScoringParameters(subpopulationName);
 		
         double utility = 0.0;
         double tTime = 0.0;

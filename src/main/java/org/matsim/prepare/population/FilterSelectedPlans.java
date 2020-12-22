@@ -24,6 +24,7 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.*;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.algorithms.TripsToLegsAlgorithm;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scenario.ScenarioUtils;
@@ -38,9 +39,9 @@ public class FilterSelectedPlans {
 	
 	private static final Logger log = Logger.getLogger(FilterSelectedPlans.class);
 	
-	private final static String inputPlans = "/home/gregor/git/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.plans.xml.gz";//"...";
-	private final static String outputPlans = "/home/gregor/git/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.plans_selectedPlans_woRoutes.xml.gz";//"...";
-	private final static boolean deleteRoutes = true;
+	private final static String inputPlans = "D:/svn/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/base_b18_pt03_c1_mgn0.6.output_plans.xml.gz";//"...";
+	private final static String outputPlans = "D:/svn/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.plans.xml.gz";//"...";
+	private final static boolean deleteRoutes = false;
 	
 	public static void main(String[] args) {
 		
@@ -49,7 +50,7 @@ public class FilterSelectedPlans {
 	}
 	
 	public void run (final String inputPlans, final String outputPlans, final boolean deleteRoutes) {
-		
+
 		Config config = ConfigUtils.createConfig();
 		config.global().setCoordinateSystem("EPSG:31468");
 		config.plans().setInputFile(inputPlans);
