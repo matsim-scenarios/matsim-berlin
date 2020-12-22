@@ -21,6 +21,8 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ScoringParameterSet;
 import org.matsim.core.gbl.MatsimRandom;
+import org.matsim.core.scoring.functions.ScoringParameters;
+import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.misc.OptionalTime;
 import org.matsim.run.BerlinExperimentalConfigGroup.IntermodalAccessEgressModeUtilityRandomization;
 import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup;
@@ -40,6 +42,7 @@ import ch.sbb.matsim.routing.pt.raptor.RaptorStopFinder;
  */
 public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAccessEgress {
 
+	private final ScoringParametersForPerson parametersForPerson;
 	Config config;
 	BerlinExperimentalConfigGroup berlinCfg;
 	MultiModeDrtConfigGroup multiModeDrtConfigGroup;
@@ -53,12 +56,13 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
 	Random random = MatsimRandom.getLocalInstance();
 
 	@Inject
-    BerlinRaptorIntermodalAccessEgress(Config config) {
+    BerlinRaptorIntermodalAccessEgress(Config config, ScoringParametersForPerson parametersForPerson) {
 		this.config = config;
 		this.berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 		this.multiModeDrtConfigGroup = ConfigUtils.addOrGetModule(config, MultiModeDrtConfigGroup.class);
 		this.interModalTripFareCompensatorsCfg = ConfigUtils.addOrGetModule(config,
 				IntermodalTripFareCompensatorsConfigGroup.class);
+		this.parametersForPerson = parametersForPerson;
 	}
 
 	@Override
@@ -70,8 +74,9 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
 			Object attr = person.getAttributes().getAttribute("subpopulation") ;
 			subpopulationName = attr == null ? null : attr.toString();
 		}
-		
-		ScoringParameterSet scoringParams = config.planCalcScore().getScoringParameters(subpopulationName);
+
+		ScoringParameters scoringParams = this.parametersForPerson.getScoringParameters(person);
+//		ScoringParameterSet scoringParams = config.planCalcScore().getScoringParameters(subpopulationName);
 		
         double utility = 0.0;
         double tTime = 0.0;
@@ -83,18 +88,18 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                 // overrides individual parameters per person; use default scoring parameters
                 if (travelTime.isDefined()) {
                     tTime += travelTime.seconds();
-					utility += travelTime.seconds() * (scoringParams.getModes()
+					utility += travelTime.seconds() * (scoringParams.modeParams
 							.get(mode)
-							.getMarginalUtilityOfTraveling() + (-1) * scoringParams.getPerforming_utils_hr()) / 3600;
+							.marginalUtilityOfTraveling_s + (-1) * scoringParams.marginalUtilityOfPerforming_s);
 				}
 				Double distance = ((Leg)pe).getRoute().getDistance();
 				if (distance != null && distance != 0.) {
-					utility += distance * scoringParams.getModes().get(mode).getMarginalUtilityOfDistance();
+					utility += distance * scoringParams.modeParams.get(mode).marginalUtilityOfDistance_m;
 					utility += distance
-							* scoringParams.getModes().get(mode).getMonetaryDistanceRate()
-							* scoringParams.getMarginalUtilityOfMoney();
+							* scoringParams.modeParams.get(mode).monetaryDistanceCostRate
+							* scoringParams.marginalUtilityOfMoney;
 				}
-				utility += scoringParams.getModes().get(mode).getConstant();
+				utility += scoringParams.modeParams.get(mode).constant;
 
 				// account for drt fares
 				for (DrtConfigGroup drtConfig : multiModeDrtConfigGroup.getModalElements()) {
@@ -112,7 +117,7 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
 
 						fare += drtFareParams.getBasefare();
 						fare = Math.max(fare, drtFareParams.getMinFarePerTrip());
-						utility += -1. * fare * scoringParams.getMarginalUtilityOfMoney();
+						utility += -1. * fare * scoringParams.marginalUtilityOfMoney;
 					}
                 }
                 
@@ -120,7 +125,7 @@ public class BerlinRaptorIntermodalAccessEgress implements RaptorIntermodalAcces
                 for (IntermodalTripFareCompensatorConfigGroup compensatorCfg : interModalTripFareCompensatorsCfg.getIntermodalTripFareCompensatorConfigGroups()) {
                 	if (compensatorCfg.getDrtModes().contains(mode) && compensatorCfg.getPtModes().contains(TransportMode.pt)) {
                 		// the following is a compensation, thus positive!
-                		utility += compensatorCfg.getCompensationMoneyPerTrip() * scoringParams.getMarginalUtilityOfMoney();
+                		utility += compensatorCfg.getCompensationMoneyPerTrip() * scoringParams.marginalUtilityOfMoney;
 						utility += compensatorCfg.getCompensationScorePerTrip();
                 	}
                 }

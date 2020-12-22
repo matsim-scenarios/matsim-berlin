@@ -22,6 +22,7 @@ package org.matsim.run.drt;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.inject.Singleton;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -42,6 +43,7 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.MainModeIdentifier;
+import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.run.BerlinExperimentalConfigGroup;
@@ -52,13 +54,14 @@ import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesConfigGroup;
 import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesModule;
 
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
+import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
 /**
  * This class starts a simulation run with DRT.
  * 
  *  - The input DRT vehicles file specifies the number of vehicles and the vehicle capacity (a vehicle capacity of 1 means there is no ride-sharing).
  * 	- The DRT service area is set to the the inner-city Berlin area (see input shape file).
- * 	- Initial plans are not modified.
+ * 	- Initial plans only modified such that persons receive a specific income.
  * 
  * @author ikaddoura
  */
@@ -105,6 +108,9 @@ public final class RunDrtOpenBerlinScenario {
 				// So we need our own main mode indentifier which replaces both :-(
 				bind(MainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifier.class);
 				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier.class);
+
+				//use income-dependent marginal utility of money for scoring
+				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class).in(Singleton.class);
 			}
 		});
 
@@ -145,7 +151,7 @@ public final class RunDrtOpenBerlinScenario {
 						200.0); // TODO: Use constant in RunGTFS2MATSimOpenBerlin and here? Or better some kind of set available pt modes?
 			}
 		}
-		
+
 		return scenario;
 	}
 

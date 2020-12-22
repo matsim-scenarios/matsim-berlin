@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
 
+import com.google.inject.Singleton;
 import org.apache.log4j.Logger;
 import org.matsim.analysis.RunPersonTripAnalysis;
 import org.matsim.api.core.v01.Id;
@@ -49,7 +50,9 @@ import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.population.routes.RouteFactories;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
+import org.matsim.prepare.population.AssignIncome;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
 import org.matsim.run.singleTripStrategies.ChangeSingleTripModeAndRoute;
@@ -57,6 +60,7 @@ import org.matsim.run.singleTripStrategies.RandomSingleTripReRoute;
 
 import ch.sbb.matsim.routing.pt.raptor.RaptorIntermodalAccessEgress;
 import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
+import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
 /**
 * @author ikaddoura
@@ -79,8 +83,7 @@ public final class RunBerlinScenario {
 		Config config = prepareConfig( args ) ;
 		Scenario scenario = prepareScenario( config ) ;
 		Controler controler = prepareControler( scenario ) ;
-		controler.run() ;
-
+		controler.run();
 	}
 
 	public static Controler prepareControler( Scenario scenario ) {
@@ -118,6 +121,9 @@ public final class RunBerlinScenario {
 				addPlanStrategyBinding("ChangeSingleTripModeAndRoute").toProvider(ChangeSingleTripModeAndRoute.class);
 
 				bind(RaptorIntermodalAccessEgress.class).to(BerlinRaptorIntermodalAccessEgress.class);
+
+				//use income-dependent marginal utility of money for scoring
+				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class).in(Singleton.class);
 			}
 		} );
 
@@ -147,7 +153,8 @@ public final class RunBerlinScenario {
 		if (berlinCfg.getPopulationDownsampleFactor() != 1.0) {
 			downsample(scenario.getPopulation().getPersons(), berlinCfg.getPopulationDownsampleFactor());
 		}
-		
+
+		AssignIncome.assignIncomeToPersonSubpopulationAccordingToGermanyAverage(scenario.getPopulation());
 		return scenario;
 	}
 
