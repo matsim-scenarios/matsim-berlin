@@ -69,8 +69,8 @@
 			<param name="weight" value="0.85" />
 		</parameterset>
 		<parameterset type="strategysettings" >
-			<!-- <param name="strategyName" value="ReRoute" /> -->
-			<param name="strategyName" value="RandomSingleTripReRoute" />
+			 <param name="strategyName" value="ReRoute" />
+<!--			<param name="strategyName" value="RandomSingleTripReRoute" />-->
 			<param name="subpopulation" value="person" />
 			<param name="weight" value="0.05" />
 		</parameterset>
