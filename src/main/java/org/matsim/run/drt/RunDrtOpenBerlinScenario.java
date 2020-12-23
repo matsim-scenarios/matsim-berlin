@@ -48,10 +48,10 @@ import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.run.BerlinExperimentalConfigGroup;
 import org.matsim.run.RunBerlinScenario;
-import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
-import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
-import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesConfigGroup;
-import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesModule;
+import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
+import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
+import org.matsim.extensions.pt.routing.ptRoutingModes.PtIntermodalRoutingModesConfigGroup;
+import org.matsim.extensions.pt.routing.ptRoutingModes.PtIntermodalRoutingModesModule;
 
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
 import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;

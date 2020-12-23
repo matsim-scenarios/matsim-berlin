@@ -42,9 +42,10 @@ import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
+import org.matsim.extensions.pt.routing.ptRoutingModes.PtIntermodalRoutingModesConfigGroup;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
-import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesConfigGroup.PersonAttribute2ValuePair;
-import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesConfigGroup.PtIntermodalRoutingModeParameterSet;
+import org.matsim.extensions.pt.routing.ptRoutingModes.PtIntermodalRoutingModesConfigGroup.PersonAttribute2ValuePair;
+import org.matsim.extensions.pt.routing.ptRoutingModes.PtIntermodalRoutingModesConfigGroup.PtIntermodalRoutingModeParameterSet;
 import org.matsim.testcases.MatsimTestUtils;
 
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;

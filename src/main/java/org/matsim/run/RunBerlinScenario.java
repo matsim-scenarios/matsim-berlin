@@ -19,13 +19,8 @@
 
 package org.matsim.run;
 
-import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType.FastAStarLandmarks;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Random;
-
+import ch.sbb.matsim.routing.pt.raptor.RaptorIntermodalAccessEgress;
+import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 import com.google.inject.Singleton;
 import org.apache.log4j.Logger;
 import org.matsim.analysis.RunPersonTripAnalysis;
@@ -38,8 +33,8 @@ import org.matsim.contrib.drt.routing.DrtRouteFactory;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.config.groups.PlansCalcRouteConfigGroup;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
+import org.matsim.core.config.groups.PlansCalcRouteConfigGroup;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
@@ -52,15 +47,21 @@ import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
+import org.matsim.extensions.pt.PtExtensionsConfigGroup;
+import org.matsim.extensions.pt.routing.EnhancedRaptorIntermodalAccessEgress;
 import org.matsim.prepare.population.AssignIncome;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
-import org.matsim.run.singleTripStrategies.ChangeSingleTripModeAndRoute;
-import org.matsim.run.singleTripStrategies.RandomSingleTripReRoute;
-
-import ch.sbb.matsim.routing.pt.raptor.RaptorIntermodalAccessEgress;
-import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
+import org.matsim.extensions.pt.replanning.singleTripStrategies.ChangeSingleTripModeAndRoute;
+import org.matsim.extensions.pt.replanning.singleTripStrategies.RandomSingleTripReRoute;
 import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Random;
+
+import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType.FastAStarLandmarks;
 
 /**
 * @author ikaddoura
@@ -120,7 +121,7 @@ public final class RunBerlinScenario {
 				addPlanStrategyBinding("RandomSingleTripReRoute").toProvider(RandomSingleTripReRoute.class);
 				addPlanStrategyBinding("ChangeSingleTripModeAndRoute").toProvider(ChangeSingleTripModeAndRoute.class);
 
-				bind(RaptorIntermodalAccessEgress.class).to(BerlinRaptorIntermodalAccessEgress.class);
+				bind(RaptorIntermodalAccessEgress.class).to(EnhancedRaptorIntermodalAccessEgress.class);
 
 				//use income-dependent marginal utility of money for scoring
 				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class).in(Singleton.class);
@@ -168,10 +169,12 @@ public final class RunBerlinScenario {
 		String[] typedArgs = Arrays.copyOfRange( args, 1, args.length );
 		
 		ConfigGroup[] customModulesToAdd = null ;
-		if ( additionalInformation== RunDrtOpenBerlinScenario.AdditionalInformation.acceptUnknownParamsBerlinConfig ) {
-			customModulesToAdd = new ConfigGroup[]{ new BerlinExperimentalConfigGroup(true) };
+		if (additionalInformation == RunDrtOpenBerlinScenario.AdditionalInformation.acceptUnknownParamsBerlinConfig) {
+			customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(true),
+					new PtExtensionsConfigGroup()};
 		} else {
-			customModulesToAdd = new ConfigGroup[]{ new BerlinExperimentalConfigGroup(false) };
+			customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(false),
+					new PtExtensionsConfigGroup()};
 		}
 		ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
 		
