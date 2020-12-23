@@ -107,7 +107,7 @@
 	<module name="planCalcScore" >
 		<param name="fractionOfIterationsToStartScoreMSA" value="1.0" />
 		<parameterset type="scoringParameters" >
-			<param name="marginalUtilityOfMoney" value="0.7" />
+			<param name="marginalUtilityOfMoney" value="0.6" />
 			<parameterset type="modeParams" >
 				<!--set this to -0.9 during income calibration process-->
 				<param name="constant" value="-1.0" />
