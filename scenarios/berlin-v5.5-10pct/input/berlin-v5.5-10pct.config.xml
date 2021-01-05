@@ -7,7 +7,7 @@
 	<module name="controler" >
 		<param name="lastIteration" value="500" />
 		<param name="overwriteFiles" value="failIfDirectoryExists" />
-		<param name="runId" value="berlin-drt-v5.5-10pct" />
+		<param name="runId" value="berlin-v5.5-10pct" />
 		<param name="outputDirectory" value="./scenarios/berlin-v5.5-10pct/output-berlin-drt-v5.5-10pct" />
 		<param name="writeEventsInterval" value="50" />
 		<param name="writePlansInterval" value="50" />

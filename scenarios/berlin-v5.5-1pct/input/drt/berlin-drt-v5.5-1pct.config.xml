@@ -53,7 +53,7 @@
 		<param name="endTime" value="36:00:00" />
 		<param name="flowCapacityFactor" value="0.015" />
 		<param name="mainMode" value="car,freight" />
-		<param name="numberOfThreads" value="1" />
+		<param name="numberOfThreads" value="8" />
 		<param name="startTime" value="00:00:00" />
 		<param name="storageCapacityFactor" value="0.015" />
 		<param name="stuckTime" value="30.0" />
@@ -149,6 +149,7 @@
 				<param name="mode" value="walk" />
 			</parameterset>
 			<parameterset type="modeParams" >
+				<param name="constant" value="-0.1" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="drt" />
 			</parameterset>
@@ -187,7 +188,7 @@
 			<!-- Mode which will be handled by PassengerEngine and VrpOptimizer (passengers'/customers' perspective) -->
 			<param name="mode" value="drt" />
 			<!-- Number of threads used for parallel evaluation of request insertion into existing schedules. Scales well up to 4, due to path data provision, the most computationally intensive part, using up to 4 threads. Default value is 'min(4, no. of cores available to JVM)' -->
-			<param name="numberOfThreads" value="4" />
+			<param name="numberOfThreads" value="8" />
 			<!-- Operational Scheme, either of door2door, stopbased or serviceAreaBased. door2door by default -->
 			<param name="operationalScheme" value="serviceAreaBased" />
 			<!-- If true, the max travel and wait times of a submitted request are considered hard constraints (the request gets rejected if one of the constraints is violated). If false, the max travel and wait times are considered soft constraints (insertion of a request that violates one of the constraints is allowed, but its cost is increased by additional penalty to make it relatively less attractive). Penalisation of insertions can be customised by injecting a customised InsertionCostCalculator.PenaltyCalculator -->
