@@ -75,13 +75,6 @@
 
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
-			<artifactId>av</artifactId>
-			<version>${matsim.version}</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.matsim.contrib</groupId>
 			<artifactId>emissions</artifactId>
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
@@ -133,12 +126,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.matsim</groupId>
-			<artifactId>matsim-examples</artifactId>
-			<version>${matsim.version}</version>
-		</dependency>
-
-		<dependency>
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>analysis</artifactId>
 			<version>${matsim.version}</version>
@@ -181,12 +168,6 @@
 	    	<version>v3.2</version>
 			<!-- <version>94a0b679d7</version> -->
         </dependency>
-
-		<dependency>
-			<groupId>com.github.matsim-vsp</groupId>
-			<artifactId>pt-extensions</artifactId>
-			<version>fac7381209</version>
-		</dependency>
 
 		<dependency>
 		<!-- This is the matsim "freight" contrib: -->

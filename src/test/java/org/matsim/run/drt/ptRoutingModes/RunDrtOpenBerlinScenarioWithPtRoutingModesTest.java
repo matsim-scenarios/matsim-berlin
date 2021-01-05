@@ -42,10 +42,7 @@ import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
-import org.matsim.extensions.pt.routing.ptRoutingModes.PtIntermodalRoutingModesConfigGroup;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
-import org.matsim.extensions.pt.routing.ptRoutingModes.PtIntermodalRoutingModesConfigGroup.PersonAttribute2ValuePair;
-import org.matsim.extensions.pt.routing.ptRoutingModes.PtIntermodalRoutingModesConfigGroup.PtIntermodalRoutingModeParameterSet;
 import org.matsim.testcases.MatsimTestUtils;
 
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
@@ -62,6 +59,7 @@ public class RunDrtOpenBerlinScenarioWithPtRoutingModesTest {
 	private static final Logger log = Logger.getLogger(RunDrtOpenBerlinScenarioWithPtRoutingModesTest.class);
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 
+	@Ignore //ignored this since we removed pt-extensions from pom.xml and thus can not use PtIntermodalRoutingModesConfigGroup. (this applies to release v5.5!)
 	@Test
 	public final void testAFewAgentsOnly() {
 		try {
@@ -114,15 +112,15 @@ public class RunDrtOpenBerlinScenarioWithPtRoutingModesTest {
 				}
 			}
 			
-			PtIntermodalRoutingModesConfigGroup ptRoutingModes = ConfigUtils.addOrGetModule(config, PtIntermodalRoutingModesConfigGroup.class);
-			PtIntermodalRoutingModeParameterSet routingModeParamSet = new PtIntermodalRoutingModeParameterSet();
-			routingModeParamSet.setDelegateMode(TransportMode.pt);
-			routingModeParamSet.setRoutingMode("pt_w_drt_allowed");
-			PersonAttribute2ValuePair personAttributeValue = new PersonAttribute2ValuePair();
-			personAttributeValue.setPersonFilterAttribute(personAttributeDrt);
-			personAttributeValue.setPersonFilterValue(personAttributeDrtValue);
-			routingModeParamSet.addPersonAttribute2ValuePair(personAttributeValue);
-			ptRoutingModes.addPtIntermodalRoutingModeParameterSet(routingModeParamSet);
+//			PtIntermodalRoutingModesConfigGroup ptRoutingModes = ConfigUtils.addOrGetModule(config, PtIntermodalRoutingModesConfigGroup.class);
+//			PtIntermodalRoutingModeParameterSet routingModeParamSet = new PtIntermodalRoutingModeParameterSet();
+//			routingModeParamSet.setDelegateMode(TransportMode.pt);
+//			routingModeParamSet.setRoutingMode("pt_w_drt_allowed");
+//			PersonAttribute2ValuePair personAttributeValue = new PersonAttribute2ValuePair();
+//			personAttributeValue.setPersonFilterAttribute(personAttributeDrt);
+//			personAttributeValue.setPersonFilterValue(personAttributeDrtValue);
+//			routingModeParamSet.addPersonAttribute2ValuePair(personAttributeValue);
+//			ptRoutingModes.addPtIntermodalRoutingModeParameterSet(routingModeParamSet);
 			
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 			Person monomodalPtAgent = scenario.getPopulation().getPersons().get(monomodalPtAgentId);

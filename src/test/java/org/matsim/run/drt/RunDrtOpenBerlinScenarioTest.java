@@ -43,12 +43,7 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
-import org.matsim.extensions.pt.PtExtensionsConfigGroup;
 import org.matsim.run.BerlinExperimentalConfigGroup;
-import org.matsim.extensions.pt.PtExtensionsConfigGroup.IntermodalAccessEgressModeUtilityRandomization;
-import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup;
-import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup.CompensationCondition;
-import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
 import org.matsim.testcases.MatsimTestUtils;
 
 /**
@@ -104,6 +99,7 @@ public class RunDrtOpenBerlinScenarioTest {
 	
 	// During debug some exceptions only occured at the replanning stage of the 3rd
 	// iteration, so we need at least 3 iterations.
+	@Ignore //ignored this test since we removed pt-extensions from pom.xml
 	@Test
 	public final void testAFewAgentsOnly() {
 		try {
@@ -134,12 +130,12 @@ public class RunDrtOpenBerlinScenarioTest {
 			// make pt more attractive to obtain less direct walks (routing mode pt) due to drt triangle walk being more attractive 
 			config.planCalcScore().getScoringParameters("person").setMarginalUtlOfWaitingPt_utils_hr(5.0);
 			
-			PtExtensionsConfigGroup ptExtensionsConfigGroup = ConfigUtils.addOrGetModule(config, PtExtensionsConfigGroup.class);
-			
-			IntermodalAccessEgressModeUtilityRandomization utilityRandomization = new IntermodalAccessEgressModeUtilityRandomization();
-			utilityRandomization.setAccessEgressMode(TransportMode.drt);
-			utilityRandomization.setAdditiveRandomizationWidth(20.);
-			ptExtensionsConfigGroup.addIntermodalAccessEgressModeUtilityRandomization(utilityRandomization);
+//			PtExtensionsConfigGroup ptExtensionsConfigGroup = ConfigUtils.addOrGetModule(config, PtExtensionsConfigGroup.class);
+//
+//			IntermodalAccessEgressModeUtilityRandomization utilityRandomization = new IntermodalAccessEgressModeUtilityRandomization();
+//			utilityRandomization.setAccessEgressMode(TransportMode.drt);
+//			utilityRandomization.setAdditiveRandomizationWidth(20.);
+//			ptExtensionsConfigGroup.addIntermodalAccessEgressModeUtilityRandomization(utilityRandomization);
 			
 			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 				drtCfg.setNumberOfThreads(1);
@@ -150,13 +146,13 @@ public class RunDrtOpenBerlinScenarioTest {
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
 			Controler controler = RunDrtOpenBerlinScenario.prepareControler( scenario ) ;
 			
-			FareEventChecker fareChecker = new FareEventChecker();
-			controler.addOverridingModule(new AbstractModule() {
-				@Override
-				public void install() {
-					addEventHandlerBinding().toInstance(fareChecker);
-				}
-			});
+//			FareEventChecker fareChecker = new FareEventChecker();
+//			controler.addOverridingModule(new AbstractModule() {
+//				@Override
+//				public void install() {
+//					addEventHandlerBinding().toInstance(fareChecker);
+//				}
+//			});
 			
 			controler.run() ;	
 			
@@ -184,34 +180,35 @@ public class RunDrtOpenBerlinScenarioTest {
 			Assert.assertTrue("pt agent has no intermodal route (=drt for access or egress to pt)", intermodalTripCounter > 0);
 			
 			// check drt-pt-intermodal trip fare compensator
-			List<PersonMoneyEvent> moneyEventsIntermodalAgent = fareChecker.getEventsForPerson(Id.createPersonId("285614901pt"));
-			IntermodalTripFareCompensatorsConfigGroup fareCompensators = ConfigUtils.addOrGetModule(config, IntermodalTripFareCompensatorsConfigGroup.class);
-			double expectedCompensationAmountPerTrip = Double.NaN;
-			for (IntermodalTripFareCompensatorConfigGroup fareCompensator : fareCompensators.getIntermodalTripFareCompensatorConfigGroups()) {
-				if (fareCompensator.getDrtModes().contains(TransportMode.drt) && fareCompensator.getPtModes().contains(TransportMode.pt)) { 
-					expectedCompensationAmountPerTrip = fareCompensator.getCompensationMoneyPerTrip();
-				}
-			}
-			
-			int compensatorMoneyEventsCounter = 0;
-			for(PersonMoneyEvent event: moneyEventsIntermodalAgent) {
-				if (Math.abs(event.getAmount() - expectedCompensationAmountPerTrip * drtLegsInIntermodalTripsCounter) < MatsimTestUtils.EPSILON) {
-					// We do not know where the money event comes from, so these are money events *potentially* thrown by the intermodal trip fare compensator.
-					compensatorMoneyEventsCounter++;
-				}
-			}
-			
-			Assert.assertTrue(
-					"Number of potential intermodal trip fare compensator money events should be equal or higher than the number of intermodal trips."
-							+ "drtLegsInIntermodalTripsCounter: " + drtLegsInIntermodalTripsCounter
-							+ ", compensatorMoneyEventsCounter:" + compensatorMoneyEventsCounter,
-					1 <= compensatorMoneyEventsCounter);
-			
+//			List<PersonMoneyEvent> moneyEventsIntermodalAgent = fareChecker.getEventsForPerson(Id.createPersonId("285614901pt"));
+//			IntermodalTripFareCompensatorsConfigGroup fareCompensators = ConfigUtils.addOrGetModule(config, IntermodalTripFareCompensatorsConfigGroup.class);
+//			double expectedCompensationAmountPerTrip = Double.NaN;
+//			for (IntermodalTripFareCompensatorConfigGroup fareCompensator : fareCompensators.getIntermodalTripFareCompensatorConfigGroups()) {
+//				if (fareCompensator.getDrtModes().contains(TransportMode.drt) && fareCompensator.getPtModes().contains(TransportMode.pt)) {
+//					expectedCompensationAmountPerTrip = fareCompensator.getCompensationMoneyPerTrip();
+//				}
+//			}
+//
+//			int compensatorMoneyEventsCounter = 0;
+//			for(PersonMoneyEvent event: moneyEventsIntermodalAgent) {
+//				if (Math.abs(event.getAmount() - expectedCompensationAmountPerTrip * drtLegsInIntermodalTripsCounter) < MatsimTestUtils.EPSILON) {
+//					// We do not know where the money event comes from, so these are money events *potentially* thrown by the intermodal trip fare compensator.
+//					compensatorMoneyEventsCounter++;
+//				}
+//			}
+//
+//			Assert.assertTrue(
+//					"Number of potential intermodal trip fare compensator money events should be equal or higher than the number of intermodal trips."
+//							+ "drtLegsInIntermodalTripsCounter: " + drtLegsInIntermodalTripsCounter
+//							+ ", compensatorMoneyEventsCounter:" + compensatorMoneyEventsCounter,
+//					1 <= compensatorMoneyEventsCounter);
+//
 		} catch ( Exception ee ) {
 			throw new RuntimeException(ee) ;
 		}
 	}
 
+	@Ignore //ignored this test since we removed pt-extensions from pom.xml
 	@Test
 	public final void testAFewAgentsOnlyWithHugeIntermodalTripFareCompensation() {
 		try {
@@ -242,34 +239,34 @@ public class RunDrtOpenBerlinScenarioTest {
 			// make pt more attractive to obtain less direct walks (routing mode pt) due to drt triangle walk being more attractive 
 			config.planCalcScore().setMarginalUtlOfWaitingPt_utils_hr(5);
 			
-			PtExtensionsConfigGroup ptExtensionsConfigGroup = ConfigUtils.addOrGetModule(config, PtExtensionsConfigGroup.class);
-			
-			IntermodalAccessEgressModeUtilityRandomization utilityRandomization = new IntermodalAccessEgressModeUtilityRandomization();
-			utilityRandomization.setAccessEgressMode(TransportMode.drt);
-			utilityRandomization.setAdditiveRandomizationWidth(20.);
-			ptExtensionsConfigGroup.addIntermodalAccessEgressModeUtilityRandomization(utilityRandomization);
-			
-			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
-				drtCfg.setNumberOfThreads(1);
-				drtCfg.setDrtServiceAreaShapeFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlkoenig-area/berlkoenig-area.shp");
-				drtCfg.setVehiclesFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlkoenig-drt-v5.5/input/berlkoenig-drt-v5.5.drt-by-rndLocations-1000vehicles-4seats.xml.gz");
-			}
-			
-			IntermodalTripFareCompensatorsConfigGroup compensatorsCfg = ConfigUtils.addOrGetModule(config, IntermodalTripFareCompensatorsConfigGroup.class);
-			List<IntermodalTripFareCompensatorConfigGroup> remove = new ArrayList<>();
-			for (IntermodalTripFareCompensatorConfigGroup previousCfg : compensatorsCfg.getIntermodalTripFareCompensatorConfigGroups()) {
-				remove.add(previousCfg);
-			}
-			for (IntermodalTripFareCompensatorConfigGroup previousCfg : remove) {
-				compensatorsCfg.removeParameterSet(previousCfg);
-			}
-			IntermodalTripFareCompensatorConfigGroup compensatorCfg = new IntermodalTripFareCompensatorConfigGroup();
-			compensatorCfg.setCompensationCondition(CompensationCondition.PtModeUsedAnywhereInTheDay);
-			compensatorCfg.setDrtModesAsString("drt");
-			compensatorCfg.setPtModesAsString("pt");
-			compensatorCfg.setCompensationMoneyPerTrip(10000);
-			compensatorCfg.setCompensationScorePerDay(20000);
-			compensatorsCfg.addParameterSet(compensatorCfg);
+//			PtExtensionsConfigGroup ptExtensionsConfigGroup = ConfigUtils.addOrGetModule(config, PtExtensionsConfigGroup.class);
+//
+//			IntermodalAccessEgressModeUtilityRandomization utilityRandomization = new IntermodalAccessEgressModeUtilityRandomization();
+//			utilityRandomization.setAccessEgressMode(TransportMode.drt);
+//			utilityRandomization.setAdditiveRandomizationWidth(20.);
+//			ptExtensionsConfigGroup.addIntermodalAccessEgressModeUtilityRandomization(utilityRandomization);
+//
+//			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
+//				drtCfg.setNumberOfThreads(1);
+//				drtCfg.setDrtServiceAreaShapeFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlkoenig-area/berlkoenig-area.shp");
+//				drtCfg.setVehiclesFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlkoenig-drt-v5.5/input/berlkoenig-drt-v5.5.drt-by-rndLocations-1000vehicles-4seats.xml.gz");
+//			}
+//
+//			IntermodalTripFareCompensatorsConfigGroup compensatorsCfg = ConfigUtils.addOrGetModule(config, IntermodalTripFareCompensatorsConfigGroup.class);
+//			List<IntermodalTripFareCompensatorConfigGroup> remove = new ArrayList<>();
+//			for (IntermodalTripFareCompensatorConfigGroup previousCfg : compensatorsCfg.getIntermodalTripFareCompensatorConfigGroups()) {
+//				remove.add(previousCfg);
+//			}
+//			for (IntermodalTripFareCompensatorConfigGroup previousCfg : remove) {
+//				compensatorsCfg.removeParameterSet(previousCfg);
+//			}
+//			IntermodalTripFareCompensatorConfigGroup compensatorCfg = new IntermodalTripFareCompensatorConfigGroup();
+//			compensatorCfg.setCompensationCondition(CompensationCondition.PtModeUsedAnywhereInTheDay);
+//			compensatorCfg.setDrtModesAsString("drt");
+//			compensatorCfg.setPtModesAsString("pt");
+//			compensatorCfg.setCompensationMoneyPerTrip(10000);
+//			compensatorCfg.setCompensationScorePerDay(20000);
+//			compensatorsCfg.addParameterSet(compensatorCfg);
 			
 			config.transit().setUsingTransitInMobsim(false);
 			
