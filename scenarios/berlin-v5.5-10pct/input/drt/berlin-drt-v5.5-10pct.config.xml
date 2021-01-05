@@ -70,7 +70,6 @@
 		</parameterset>
 		<parameterset type="strategysettings" >
 			 <param name="strategyName" value="ReRoute" />
-<!--			<param name="strategyName" value="RandomSingleTripReRoute" />-->
 			<param name="subpopulation" value="person" />
 			<param name="weight" value="0.05" />
 		</parameterset>
@@ -152,11 +151,6 @@
 				<param name="marginalUtilityOfTraveling_util_hr" value="-0.1" />
 				<param name="mode" value="drt" />
 			</parameterset>
-			<parameterset type="modeParams" >
-			<!-- This parameter set should never actually be used. It is only here to let ModeStatsControlerListener include "pt_w_drt_used" until ModeStats is fixed for that. -->
-				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-				<param name="mode" value="pt_w_drt_used" />
-			</parameterset>
 		</parameterset>
 	</module>
 	
@@ -228,75 +222,8 @@
 		<!-- Used for ONLINE estimation of travel times for VrpOptimizer by combining WithinDayTravelTime and DvrpOfflineTravelTimeEstimator. The beta coefficient is provided in seconds and should be either 0 (no online estimation) or positive (mixed online-offline estimation). For 'beta = 0', only the offline estimate is used: 'onlineTT(t) = offlineTT(t)', where 'offlineTT(t)' in the offline estimate for TT at time 't', For 'beta > 0', estimating future TTs at time 't', uses the currently observed TT to correct the offline estimates is made: where 'currentTT' is the currently observed TT, and 'correction = min(1, max(0, 1 - (time - currentTime) / beta))' The rule is that correction decreases linearly from 1 (when 'time = currentTime') to 0 (when 'time = currentTime + beta' For 'time > currentTime + beta' correction is 0, whereas if 'time < currentTime' it is 1. If beta is sufficiently large, 'beta >> 0', only the currently observed TT is used. -->
 		<param name="travelTimeEstimationBeta" value="0.0"/>
 	</module>
-
-	<module name="intermodalTripFareCompensators">
-		<parameterset type="intermodalTripFareCompensator">
-			<!-- Compensation per Trip (compensation = refund paid to the customer = positive value) -->
-			<param name="compensationMoneyPerTrip" value="0.0"/>
-			<!-- Condition which governs which agents are compensated. Options: PtModeUsedInSameTrip, PtModeUsedAnywhereInTheDay -->
-			<param name="compensationCondition" value="PtModeUsedInSameTrip"/>
-			<!-- drt modes for which the compensation applies (comma separated list). -->
-			<param name="drtModes" value="drt,drt_teleportation"/>
-			<!-- pt modes for which the compensation applies (comma separated list). -->
-			<param name="ptModes" value="pt" />
-		</parameterset>
-	</module>
 	
 	<module name="swissRailRaptor" >
-		<!-- KN comments: in principle, walk as alternative to drt will not work, since drt is always faster. Need to give the ASC to the router! However, with the reduced drt network we should be able to see differentiation.) -->
-	
-	
-		<!-- Possible values: CalcLeastCostModePerStop, RandomSelectOneModePerRoutingRequestAndDirection -->
-		<param name="intermodalAccessEgressModeSelection" value="CalcLeastCostModePerStop" />
-		<param name="useIntermodalAccessEgress" value="true" />
-		<parameterset type="intermodalAccessEgress" >
-			<!-- Radius from the origin / destination coord in which transit stops are searched. Only if less than 2 transit stops are found the search radius is increased step-wise until the maximum search radius set in param radius is reached. -->
-			<param name="initialSearchRadius" value="1500.0" />
-			<!-- If the mode is routed on the network, specify which linkId acts as access link to this stop in the transport modes sub-network. -->
-			<param name="linkIdAttribute" value="null" />
-			<!-- Radius from the origin / destination coord in which transit stops are accessible by this mode. -->
-			<param name="maxRadius" value="100000.0" />
-			<param name="mode" value="walk" />
-			<!-- If less than 2 stops were found in initialSearchRadius take the distance of the closest transit stop and add this extension radius to search again.The search radius will not exceed the maximum search radius set in param radius. -->
-			<param name="searchExtensionRadius" value="1000.0" />
-			<!-- Name of the transit stop attribute used to filter stops that should be included in the set of potential stops for access and egress. The attribute should be of type String. 'null' disables the filter and all stops within the specified radius will be used. -->
-			<param name="stopFilterAttribute" value="null" />
-			<!-- Only stops where the filter attribute has the value specified here will be considered as access or egress stops. -->
-			<param name="stopFilterValue" value="null" />
-		</parameterset>
-		<parameterset type="intermodalAccessEgress" >
-			<!-- If more than 1 transit stop is found in the initial search radius, the raptor stop finder will stop to search
-				 * more distant transit stops.
-				 * Setting setInitialSearchRadius(12000) will allow for crossing the whole Berlkoenig area with drt as 
-				 * access/egress mode to pt. This way we are on the safe side and do not exclude any theoretically possible 
-				 * drt ride.
-				 * Unfortunately that means that for a route from Alexanderplatz to Friedrichstrasse the pt router basically has 
-				 * to route from all transit stops in the city center of Berlin to all transit stops in the city center of Berlin,
-				 * because it has to consider all transit stops in that 12 km radius from Alexanderplatz and Friedrichstrasse, 
-				 * respectively. This slows down pt routing enormously. 
-				 * To speed up there are two options:
-				 *  - restrict the set of transit stops accessible by drt using a stop filter attribute, e.g. only RE+S+U-Bahn
-				 *  - reduce the initial search radius (and thereby effectively prohibit drt rides longer than that initial
-				 *    search radius for access/egress to pt, because there is always more than 1 transit stop in that radius). 
-				 *    
-				 * For 2528 agents and no stop filter attribute PlanRouter in iteration 1 took 
-				 *  - ca. 1 min at InitialSearchRadius 3 km
-				 *  - but 53 min at InitialSearchRadius 12km
-				 * 
-				 * So we have to make use of the speed up options (and exclude theoretically possible but unlikely drt trips).
-				 *  - gleich aug'19  -->
-			<param name="initialSearchRadius" value="3000.0" />
-			<param name="linkIdAttribute" value="null" />
-			<!-- Berlkoenig service area has a maximum diameter of ca. 11km, access trips over 12km don't make sense.
-				 Prohibit them to save computation time. 
-				 (RandomAccessEgressModeRaptorStopFinder will try again with walk, the other available access/egress mode)
-				 maybe we should restrict even further, see comment below for InitialSearchRadius. -->
-			<param name="maxRadius" value="12000.0" />
-			<param name="mode" value="drt" />
-			<param name="searchExtensionRadius" value="1000.0" />
-			<!-- take care that this still corresponds to the attribute used for tagging these TransitStops in RunDrtOpenBerlinScenario -->
-			<param name="stopFilterAttribute" value="drtStopFilter" />
-			<param name="stopFilterValue" value="station_S/U/RE/RB_drtServiceArea" />
-		</parameterset>
+		<param name="useIntermodalAccessEgress" value="false" />
 	</module>
 </config>
