@@ -148,7 +148,8 @@
 				<param name="mode" value="walk" />
 			</parameterset>
 			<parameterset type="modeParams" >
-				<param name="marginalUtilityOfTraveling_util_hr" value="-0.1" />
+				<param name="constant" value="-0.1" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="-0.0" />
 				<param name="mode" value="drt" />
 			</parameterset>
 		</parameterset>
