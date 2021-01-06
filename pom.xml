@@ -233,6 +233,24 @@
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.19</version>
+				<configuration>
+					<excludes>
+						<exclude>**/*$*</exclude> <!-- exclude all inner classes -->
+						<exclude>org/matsim/testcases/TestDepth.java</exclude>
+						<exclude>org/matsim/testcases/MatsimTestCase.java</exclude>
+					</excludes>
+					<forkMode>once</forkMode>
+					<!-- avoid out of memory errors: -->
+					<argLine>-Xmx6000m -Djava.awt.headless=true -Dmatsim.preferLocalDtds=true</argLine>
+					<!--necessary in tu berlin gitlab. BUT not good in other places, so solve by command line switch only where needed.  kai, nov'18-->
+					<!--<useSystemClassLoader>false</useSystemClassLoader>-->
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
 				<version>3.2.2</version>
 				<executions>
