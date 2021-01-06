@@ -109,7 +109,6 @@
 		<parameterset type="scoringParameters" >
 			<param name="marginalUtilityOfMoney" value="0.6" />
 			<parameterset type="modeParams" >
-				<!--set this to -0.9 during income calibration process-->
 				<param name="constant" value="-1.0" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="car" />
