@@ -7,14 +7,14 @@
 
 This repository provides an open MATSim transport model for Berlin, provided by the [Transport Systems Planning and Transport Telematics group](https://www.vsp.tu-berlin.de) of [Technische Universität Berlin](http://www.tu-berlin.de). Please reference/cite the scenario based on <a rel="license" href="https://doi.org/10.1016/j.procs.2019.04.120">this paper</a>.
 
-<a rel="TU Berlin" href="https://www.vsp.tu-berlin.de"><img src="https://svn.vsp.tu-berlin.de/repos/public-svn/ueber_uns/logo/TUB_Logo.png" width="15%" height="15%"/></a>
+<a rel="TU Berlin" href="https://www.vsp.tu-berlin.de"><img src="https://svn.vsp.tu-berlin.de/repos/public-svn/ueber_uns/logo/TUB_Logo.png" width="12%" height="12%"/></a>
 
 Currently, there are two versions of the MATSim Open Berlin model:
 
 ##### 10pct scenario (`scenarios/berlin-v5.x-10pct`)
 
 This scenario contains a 10pct sample of the Greater Berlin population; road capacities are accordingly reduced. The scenario is calibrated taking into consideration the traffic counts, modal split and mode-specific trip distance distributions.
-
+    
 ##### 1pct scenario (`scenarios/berlin-v5.x-1pct`)
 
 This scenario contains a 1pct sample of the Greater Berlin population; road capacities are accordingly reduced. This scenario was not (!) calibrated and should only be used for testing purposes or pre-studies.
@@ -42,7 +42,7 @@ Handling of large files within git is not without problems (git lfs files are no
 1. Go to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/
 1. Decide for a scenario that you find interesting (e.g. `berlin-v5.x-10pct`) and go into that directory.
 1. Inside there, look for an `output-*` directory that you find interesting and go into that directory.
-1. Inside there, look for `movie-*` files.  You can't view them directly, but you there are various ways to download them, and you can view them then.  Try that.
+1. Inside there, look for `movie-*` files.  You can't watch them directly, but there are various ways to download them. You can watch them then. Try that.
 
 ##### Run VIA on output files
 
@@ -87,8 +87,19 @@ This will update your repository to the newest version.
 ##### ... using a runnable jar file
 (Requires either cloning or downloading the repository.)
 
-1. There should be a file directly in the `matsim-berlin` directory with name approximately as `matsim-berlin-5.x-jar-with-dependencies.jar`.
-1. Double-click on that file (in a file system browser).  A simple GUI should open.
+1. Depending on the version of matsim-berlin you have selected, you might have to create the jar file yourself. 
+    1. **For version v5.4 or earlier:** <br/> 
+    There should be a file directly in the `matsim-berlin` directory with name approximately as `matsim-berlin-5.x-jar-with-dependencies.jar`.
+    1. **For version v5.5 or later:** <br/> 
+    You can build an executable jar-file by executing one of the following commands in the top directory. 
+This will download all necessary dependencies (it might take a while the first time it is run) and dump the jar into the top directory.
+        1. `./mvnw clean package -DskipTests=true`    
+        1. or on Windows: `mvnw.cmd clean package -DskipTests=true`
+     
+1. Double-click on that .jar file (in a file system browser). Alternatively, try opening it with the following command:``
+java -jar [FILENAME].jar
+``
+1. A simple GUI should open.
 1. In the GUI, click on the "Choose" button for configuration file.  Navigate to one of the `scenario` directories and load one of the configuration files.
 1. Increase memory in the GUI.
 1. Press the "Start MATSim" button.  This should run MATSim.  Note that MATSim accepts URLs as filenames in its config, so while the config files are part of the git repo, running them will pull additional material from our server.

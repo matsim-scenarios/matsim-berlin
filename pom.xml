@@ -75,13 +75,6 @@
 
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
-			<artifactId>av</artifactId>
-			<version>${matsim.version}</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.matsim.contrib</groupId>
 			<artifactId>emissions</artifactId>
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
@@ -93,7 +86,6 @@
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
 		</dependency>
-
 
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
@@ -129,12 +121,6 @@
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>common</artifactId>
-			<version>${matsim.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.matsim</groupId>
-			<artifactId>matsim-examples</artifactId>
 			<version>${matsim.version}</version>
 		</dependency>
 
@@ -181,12 +167,6 @@
 	    	<version>v3.2</version>
 			<!-- <version>94a0b679d7</version> -->
         </dependency>
-
-		<dependency>
-			<groupId>com.github.matsim-vsp</groupId>
-			<artifactId>pt-extensions</artifactId>
-			<version>fac7381209</version>
-		</dependency>
 
 		<dependency>
 		<!-- This is the matsim "freight" contrib: -->
@@ -270,46 +250,35 @@
 			</plugin>
 
 			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<!--Presumably, you can run this by mvn assembly:assembly (?)-->
-
-				<configuration>
-					<descriptorRefs>
-						<descriptorRef>jar-with-dependencies</descriptorRef>
-					</descriptorRefs>
-					<archive>
-						<manifest>
-							<mainClass>org.matsim.gui.RunBerlinScenarioGUI</mainClass>
-						</manifest>
-					</archive>
-				</configuration>
-				<executions>
-					<execution>
-						<id>make-assembly</id>
-						<phase>package</phase>
-						<!--Presumably, this plugin is thus run as part of the package phase.  So-->
-						<!--you can either only run assembly:assembly, or package, where the-->
-						<!--latter may run additional stuff or not.-->
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>  <!-- Create sources.jar -->
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>3.2.0</version>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.2.2</version>
 				<executions>
 					<execution>
-						<id>attach-sources</id>
+						<phase>package</phase>
 						<goals>
-							<goal>jar</goal>
+							<goal>shade</goal>
 						</goals>
+						<configuration>
+							<outputFile>${project.basedir}/${project.build.finalName}.jar</outputFile>
+							<transformers>
+								<!-- This bit sets the main class for the executable jar as you otherwise would with the assembly plugin -->
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<manifestEntries>
+										<Main-Class>org.matsim.gui.RunBerlinScenarioGUI</Main-Class>
+										<Specification-Vendor>org.matsim</Specification-Vendor>
+										<Implementation-Vendor>org.matsim</Implementation-Vendor>
+										<Implementation-Version>${project.version}</Implementation-Version>
+									</manifestEntries>
+								</transformer>
+								<!-- This bit merges the various GeoTools META-INF/services files         -->
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+							</transformers>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
+
 		</plugins>
 	</build>
 
