@@ -76,11 +76,13 @@
 		<parameterset type="strategysettings">
 			<param name="strategyName" value="BestScore"/>
 			<param name="weight" value="0.9"/>
+			<param name="subpopulation" value="person"/>
 		</parameterset>
 
 		<parameterset type="strategysettings">
 			<param name="strategyName" value="ReRoute"/>
 			<param name="weight" value="0.1"/>
+			<param name="subpopulation" value="person"/>
 		</parameterset>
 	</module>
 

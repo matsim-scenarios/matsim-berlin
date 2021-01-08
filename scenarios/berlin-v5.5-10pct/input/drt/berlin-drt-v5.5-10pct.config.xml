@@ -18,10 +18,6 @@
 		<param name="numberOfThreads" value="8" />
 	</module>
 	<module name="berlinExperimental" >
-		<parameterset type="intermodalAccessEgressModeUtilityRandomization" >
-			<param name="accessEgressMode" value="drt" />
-			<param name="additiveRandomizationWidth" value="0." />
-		</parameterset>
 		<param name="populationDownsampleFactor" value="1.0" />
 	</module>
 	<module name="network" >
@@ -73,8 +69,8 @@
 			<param name="weight" value="0.85" />
 		</parameterset>
 		<parameterset type="strategysettings" >
-			<!-- <param name="strategyName" value="ReRoute" /> -->
-			<param name="strategyName" value="RandomSingleTripReRoute" />
+			 <param name="strategyName" value="ReRoute" />
+<!--			<param name="strategyName" value="RandomSingleTripReRoute" />-->
 			<param name="subpopulation" value="person" />
 			<param name="weight" value="0.05" />
 		</parameterset>
@@ -116,8 +112,10 @@
 	<module name="planCalcScore" >
 		<param name="fractionOfIterationsToStartScoreMSA" value="1.0" />
 		<parameterset type="scoringParameters" >
+			<param name="marginalUtilityOfMoney" value="0.6" />
 			<parameterset type="modeParams" >
-				<param name="constant" value="-0.0" />
+				<!--set this to -0.9 during income calibration process-->
+				<param name="constant" value="-1.0" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="car" />
 				<param name="monetaryDistanceRate" value="-0.0002" />
@@ -136,13 +134,13 @@
 				<param name="monetaryDistanceRate" value="-0.0004" />
 			</parameterset>
 			<parameterset type="modeParams" >
-				<param name="constant" value="-0.0" />
+				<param name="constant" value="-0.3" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="pt" />
 				<param name="dailyMonetaryConstant" value="-2.1" />
 			</parameterset>
 			<parameterset type="modeParams" >
-				<param name="constant" value="-1.9" />
+				<param name="constant" value="-1.8" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="bicycle" />
 			</parameterset>

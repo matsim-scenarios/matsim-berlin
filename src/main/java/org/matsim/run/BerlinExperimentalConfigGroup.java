@@ -46,56 +46,7 @@ public class BerlinExperimentalConfigGroup extends ReflectiveConfigGroup {
 	
 	private double populationDownsampleFactor = 1.0;
     private double tagDrtLinksBufferAroundServiceAreaShp = 2000.0;
-	private Map<String, IntermodalAccessEgressModeUtilityRandomization> intermodalAccessEgressMode2utilityRandomization = new HashMap<>();
 	
-    public void addIntermodalAccessEgressModeUtilityRandomization(IntermodalAccessEgressModeUtilityRandomization paramSet) {
-        this.intermodalAccessEgressMode2utilityRandomization.put(paramSet.getAccessEgressMode(), paramSet);
-        super.addParameterSet(paramSet);
-    }
-
-    public IntermodalAccessEgressModeUtilityRandomization getIntermodalAccessEgressModeUtilityRandomization(String accessEgressMode) {
-        return this.intermodalAccessEgressMode2utilityRandomization.get(accessEgressMode);
-    }
-	
-    public Collection<IntermodalAccessEgressModeUtilityRandomization> getIntermodalAccessEgressModeUtilityRandomizations() {
-        return this.intermodalAccessEgressMode2utilityRandomization.values();
-    }
-	
-    public static class IntermodalAccessEgressModeUtilityRandomization extends ReflectiveConfigGroup {
-	 
-        private static final String TYPE = "intermodalAccessEgressModeUtilityRandomization";
-
-        private static final String ACCESS_EGRESS_MODE = "accessEgressMode";
-        private static final String ADDITIVE_RANDOMIZATION_WIDTH = "additiveRandomizationWidth";
-
-        private String accessEgressMode;
-        private double additiveRandomizationWidth = 0;
-
-        public IntermodalAccessEgressModeUtilityRandomization() {
-            super(TYPE);
-        }
-        
-        @StringGetter(ACCESS_EGRESS_MODE)
-        public String getAccessEgressMode() {
-            return accessEgressMode;
-        }
-
-        @StringSetter(ACCESS_EGRESS_MODE)
-        public void setAccessEgressMode(String accessEgressMode) {
-            this.accessEgressMode = accessEgressMode;
-        }
-
-        @StringGetter(ADDITIVE_RANDOMIZATION_WIDTH)
-        public double getAdditiveRandomizationWidth() {
-            return additiveRandomizationWidth;
-        }
-
-        @StringSetter(ADDITIVE_RANDOMIZATION_WIDTH)
-        public void setAdditiveRandomizationWidth(double additiveRandomizationWidth) {
-            this.additiveRandomizationWidth = additiveRandomizationWidth;
-        }
-    }
-    
     @StringGetter(POPULATION_DOWNSAMPLE_FACTOR)
     public double getPopulationDownsampleFactor() {
         return populationDownsampleFactor;

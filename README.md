@@ -120,7 +120,7 @@ This will update your repository to the newest version.
 <dependency>
   <groupId>com.github.matsim-scenarios</groupId>
   <artifactId>matsim-berlin</artifactId>
-  <version>5.4</version>
+  <version>5.5</version>
 </dependency>
 ```
 
