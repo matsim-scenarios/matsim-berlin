@@ -4,14 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.matsim-scenarios</groupId>
 	<artifactId>matsim-berlin</artifactId>
-	<version>5.5.x-SNAPSHOT</version>
+	<version>5.5</version>
 
 	<name>MATSim Open Berlin scenario project</name>
 	<description>MATSim Open Berlin scenario project</description>
 
 	<properties>
 		<!--		<matsim.version>13.0-SNAPSHOT</matsim.version>-->
-		<matsim.version>13.0-2020w48-SNAPSHOT</matsim.version>
+		<matsim.version>13.0-2020w51-SNAPSHOT</matsim.version>
 	</properties>
 
 	<repositories>
@@ -181,6 +181,12 @@
 	    	<version>v3.2</version>
 			<!-- <version>94a0b679d7</version> -->
         </dependency>
+
+		<dependency>
+			<groupId>com.github.matsim-vsp</groupId>
+			<artifactId>pt-extensions</artifactId>
+			<version>fac7381209</version>
+		</dependency>
 
 		<dependency>
 		<!-- This is the matsim "freight" contrib: -->

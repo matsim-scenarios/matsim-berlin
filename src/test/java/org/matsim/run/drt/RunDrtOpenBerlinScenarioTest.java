@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 import org.apache.log4j.Logger;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
-import org.matsim.analysis.ScoreStatsControlerListener;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -44,11 +43,12 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
+import org.matsim.extensions.pt.PtExtensionsConfigGroup;
 import org.matsim.run.BerlinExperimentalConfigGroup;
-import org.matsim.run.BerlinExperimentalConfigGroup.IntermodalAccessEgressModeUtilityRandomization;
-import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup;
-import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup.CompensationCondition;
-import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
+import org.matsim.extensions.pt.PtExtensionsConfigGroup.IntermodalAccessEgressModeUtilityRandomization;
+import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup;
+import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup.CompensationCondition;
+import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
 import org.matsim.testcases.MatsimTestUtils;
 
 /**
@@ -134,12 +134,12 @@ public class RunDrtOpenBerlinScenarioTest {
 			// make pt more attractive to obtain less direct walks (routing mode pt) due to drt triangle walk being more attractive 
 			config.planCalcScore().getScoringParameters("person").setMarginalUtlOfWaitingPt_utils_hr(5.0);
 			
-			BerlinExperimentalConfigGroup berlinExpConfigGroup = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
+			PtExtensionsConfigGroup ptExtensionsConfigGroup = ConfigUtils.addOrGetModule(config, PtExtensionsConfigGroup.class);
 			
 			IntermodalAccessEgressModeUtilityRandomization utilityRandomization = new IntermodalAccessEgressModeUtilityRandomization();
 			utilityRandomization.setAccessEgressMode(TransportMode.drt);
 			utilityRandomization.setAdditiveRandomizationWidth(20.);
-			berlinExpConfigGroup.addIntermodalAccessEgressModeUtilityRandomization(utilityRandomization);
+			ptExtensionsConfigGroup.addIntermodalAccessEgressModeUtilityRandomization(utilityRandomization);
 			
 			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 				drtCfg.setNumberOfThreads(1);
@@ -242,12 +242,12 @@ public class RunDrtOpenBerlinScenarioTest {
 			// make pt more attractive to obtain less direct walks (routing mode pt) due to drt triangle walk being more attractive 
 			config.planCalcScore().setMarginalUtlOfWaitingPt_utils_hr(5);
 			
-			BerlinExperimentalConfigGroup berlinExpConfigGroup = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
+			PtExtensionsConfigGroup ptExtensionsConfigGroup = ConfigUtils.addOrGetModule(config, PtExtensionsConfigGroup.class);
 			
 			IntermodalAccessEgressModeUtilityRandomization utilityRandomization = new IntermodalAccessEgressModeUtilityRandomization();
 			utilityRandomization.setAccessEgressMode(TransportMode.drt);
 			utilityRandomization.setAdditiveRandomizationWidth(20.);
-			berlinExpConfigGroup.addIntermodalAccessEgressModeUtilityRandomization(utilityRandomization);
+			ptExtensionsConfigGroup.addIntermodalAccessEgressModeUtilityRandomization(utilityRandomization);
 			
 			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 				drtCfg.setNumberOfThreads(1);
