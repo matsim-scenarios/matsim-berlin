@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE population SYSTEM "http://www.matsim.org/files/dtd/population_v6.dtd">
+
+<population>
+
+
+
+<!-- ====================================================================== -->
+
+	<person id="testperson">
+		<attributes>
+			<attribute name="subpopulation" class="java.lang.String">person</attribute>
+		</attributes>
+		<plan selected="yes">
+			<activity type="home_4800.0" link="i(1,0)" end_time="08:00:00" >
+			</activity>
+			<leg mode="car">	</leg>
+			<activity type="work_4800.0" link="j(6,2)R" end_time="10:00:00">
+			</activity>
+			<leg mode="car">	</leg>
+			<activity type="home_4800.0" link="i(1,0)" end_time="12:00:00">
+			</activity>
+			<!-- ROUNDTRIP -->
+			<leg mode="car">	</leg>
+			<activity type="work_4800.0" link="j(6,2)R" end_time="14:00:00">
+			</activity>
+			<leg mode="car">	</leg>
+			<activity type="home_4800.0" link="i(1,0)" end_time="16:00:00">
+			</activity>
+			<!-- ROUNDTRIP -->
+			<leg mode="car">	</leg>
+			<activity type="work_4800.0" link="j(6,2)R" end_time="18:00:00">
+			</activity>
+			<leg mode="car">	</leg>
+			<activity type="home_4800.0" link="i(1,0)"  end_time="20:00:00">
+			</activity>
+			<!-- ROUNDTRIP -->
+			<leg mode="car">	</leg>
+			<activity type="work_4800.0" link="j(6,2)R" end_time="22:00:00">
+			</activity>
+			<leg mode="car">	</leg>
+			<activity type="home_4800.0" link="i(1,0)" >
+			</activity>
+		</plan>
+
+	</person>
+
+
+<!-- ====================================================================== -->
+
+</population>

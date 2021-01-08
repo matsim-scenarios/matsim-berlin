@@ -2,7 +2,7 @@
 
 <vehicleDefinitions xmlns="http://www.matsim.org/files/dtd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.matsim.org/files/dtd http://www.matsim.org/files/dtd/vehicleDefinitions_v2.0.xsd">
 
-	<vehicleType id="car">
+	<vehicleType id="car1">
 		<attributes>
 			<attribute name="accessTimeInSecondsPerPerson" class="java.lang.Double">1.0</attribute>
 			<attribute name="doorOperationMode" class="org.matsim.vehicles.VehicleType$DoorOperationMode">serial</attribute>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE plans SYSTEM "http://www.matsim.org/files/dtd/plans_v4.dtd">
+
+<plans name="Plans_Test1">
+
+<!-- ====================================================================== -->
+
+<person id="324" age="14">
+		<knowledge>
+			<activity type="home">
+				<location id="36" isPrimary="yes"/>
+			</activity>
+			<activity type="work">
+				<location id="27" isPrimary="yes"/>
+			</activity>
+			<activity type="shopping">
+				<location id="39" isPrimary="no"/>
+			</activity>
+			<activity type="leisure">
+				<location id="45" isPrimary="no"/>
+			</activity>
+		</knowledge>
+
+		<plan>
+			<act type="home" link="90" facility="36" x="8500.0" y="9000.0" start_time="00:00:00" dur="08:00:00" end_time="08:00:00" />
+			<leg num="0" mode="car" dep_time="08:00:00" trav_time="00:00:00" arr_time="08:00:00">
+			</leg>
+			<act type="work" link="9" facility="27" x="8500.0" y="0.0" start_time="08:00:00" dur="08:00:00" end_time="16:00:00" />
+			<leg num="1" mode="car" dep_time="16:00:00" trav_time="00:00:00" arr_time="16:00:00">
+			</leg>
+			<act type="leisure" link="77" facility="45" x="4500" y="7000" start_time="16:00:00" dur="04:00:00" end_time="20:00:00" />
+			<leg num="3" mode="car" dep_time="20:00:00" trav_time="00:00:00" arr_time="20:00:00">
+			</leg>
+			<act type="home" link="90" facility="36" x="8500.0" y="9000.0" start_time="20:00:00" dur="04:00:00" end_time="24:00:00" />
+		</plan>
+	</person>
+
+<!-- ====================================================================== -->
+
+</plans>
