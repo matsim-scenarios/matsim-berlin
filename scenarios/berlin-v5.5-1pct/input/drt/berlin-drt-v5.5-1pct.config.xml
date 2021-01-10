@@ -236,7 +236,7 @@
 			<!-- Condition which governs which agents are compensated. Options: PtModeUsedInSameTrip, PtModeUsedAnywhereInTheDay -->
 			<param name="compensationCondition" value="PtModeUsedInSameTrip"/>
 			<!-- drt modes for which the compensation applies (comma separated list). -->
-			<param name="drtModes" value="drt,drt_teleportation"/>
+			<param name="nonPtModes" value="drt,drt_teleportation"/>
 			<!-- pt modes for which the compensation applies (comma separated list). -->
 			<param name="ptModes" value="pt" />
 		</parameterset>
