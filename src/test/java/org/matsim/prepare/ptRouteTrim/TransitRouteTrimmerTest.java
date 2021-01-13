@@ -305,6 +305,58 @@ public class TransitRouteTrimmerTest {
 
     }
 
+    @Test
+    public void testSkipStops_MiddleIn_Hub() {
+
+        Id<TransitLine> transitLineId = Id.create("161---17326_700", TransitLine.class);
+        Id<TransitRoute> transitRouteId = Id.create("161---17326_700_21", TransitRoute.class);
+        Set<Id<TransitStopFacility>> stopsInZone = transitRouteTrimmer.getStopsInZone();
+
+        // add attribute
+        for (TransitStopFacility facility : scenario.getTransitSchedule().getFacilities().values()) {
+            facility.getAttributes().putAttribute("hub", 0);
+        }
+
+        // Stop 070101005708 = S Wilhelmshagen (Berlin) - Hub
+        Id<TransitStopFacility> facId = Id.create("070101005708", TransitStopFacility.class);
+        scenario.getTransitSchedule().getFacilities().get(facId).getAttributes().putAttribute("hub", 1);
+        // old
+        TransitRoute transitRouteOld = scenario.getTransitSchedule().getTransitLines().get(transitLineId).getRoutes().get(transitRouteId);
+        int numStopsOld = transitRouteOld.getStops().size();
+        int numLinksOld = transitRouteOld.getRoute().getLinkIds().size();
+
+        assertFalse(stopsInZone.contains(transitRouteOld.getStops().get(0).getStopFacility().getId()));
+        assertFalse(stopsInZone.contains(transitRouteOld.getStops().get(numStopsOld - 1).getStopFacility().getId()));
+
+
+
+        // Modification
+        Set<Id<TransitLine>> linesToModify = scenario.getTransitSchedule().getTransitLines().keySet();
+        transitRouteTrimmer.removeEmptyLines = false;
+        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SkipStopsWithinZone);
+        TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
+        TransitRoute routeNew = transitScheduleNew.getTransitLines().get(transitLineId).getRoutes().get(Id.create("161---17326_700_21_mod1", TransitRoute.class));
+        int numStopsNew = routeNew.getStops().size();
+        int numLinksNew = routeNew.getRoute().getLinkIds().size();
+
+
+        int inCntNew = 0;
+        for (TransitRouteStop stop : routeNew.getStops()) {
+            if (transitRouteTrimmer.getStopsInZone().contains(stop.getStopFacility().getId())) {
+                inCntNew++;
+            }
+        }
+
+
+        Assert.assertTrue("line should still exist", transitScheduleNew.getTransitLines().containsKey(transitLineId));
+        Assert.assertNotEquals("new route should NOT contain same number of stops as old one", numStopsOld, numStopsNew);
+        Assert.assertEquals("new route should contain same number of links as old one", numLinksOld, numLinksNew);
+        Assert.assertEquals("new route should have three stops within zone, one per zone entrance/exit and one for the hub", 3, inCntNew);
+
+        new TransitScheduleWriter(transitScheduleNew).writeFile("test/output/sched.xml.gz");
+
+    }
+
 
     @Test
     public void testSplitRoutes_HalfInHalfOut() {

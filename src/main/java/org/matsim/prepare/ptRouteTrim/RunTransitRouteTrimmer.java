@@ -10,6 +10,7 @@ import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.pt.transitSchedule.api.TransitLine;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitScheduleWriter;
+import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.pt.utils.TransitScheduleValidator;
 import org.matsim.utils.gis.shp2matsim.ShpGeometryUtils;
 import org.matsim.vehicles.MatsimVehicleWriter;
@@ -29,7 +30,7 @@ public class RunTransitRouteTrimmer {
         final String inVehiclesFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v0/optimizedVehicles.xml.gz";
         final String inNetworkFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v0/optimizedNetwork.xml.gz";
         final String zoneShpFile = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v1/shp-files/Gladbeck_area_b_en_detail_bus_hubs_Schnellbus_cut_out.shp";
-        final String outputPath = "../shared-svn/projects/avoev/matsim-input-files/gladbeck_umland/v1/";
+        final String outputPath = "C:\\Users\\jakob\\projects\\matsim-berlin\\src\\main\\java\\org\\matsim\\prepare\\ptRouteTrim\\output4\\";
         final String epsgCode = "25832";
 
 
@@ -43,9 +44,18 @@ public class RunTransitRouteTrimmer {
 
         TransitSchedule transitSchedule = scenario.getTransitSchedule();
 
+//        // add attribute
+//        for (TransitStopFacility facility : transitSchedule.getFacilities().values()) {
+//            facility.getAttributes().putAttribute("hub", 0);
+//        }
+
+
+
+
         Set<String> modes2Trim = new HashSet<>();
         modes2Trim.add("bus");
-        Set<Id<TransitLine>> linesToModify = TransitRouteTrimmerUtils.filterTransitLinesForMode(transitSchedule.getTransitLines().values(), modes2Trim);
+        Set<Id<TransitLine>> linesToModify = TransitRouteTrimmerUtils
+                .filterTransitLinesForMode(transitSchedule.getTransitLines().values(), modes2Trim);
 
 //        Set<Id<TransitLine>> linesToModify = new HashSet<>(transitSchedule.getTransitLines().keySet());
 

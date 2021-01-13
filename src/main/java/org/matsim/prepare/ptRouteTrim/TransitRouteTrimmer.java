@@ -161,24 +161,35 @@ public class TransitRouteTrimmer {
 
         for (int i = 0; i < stopsOld.size(); i++) {
             TransitRouteStop stop = stopsOld.get(i);
+            // If stop is outside of zone, keep it
             if (!stopsInZone.contains(stop.getStopFacility().getId())) {
                 stops2Keep.add(stop);
-            } else {
-                if (allowOneStopWithinZone) {
-                    if (i > 0) {
-                        Id<TransitStopFacility> prevStop = stopsOld.get(i - 1).getStopFacility().getId();
-                        if (!stopsInZone.contains(prevStop)) {
-                            stops2Keep.add(stop); // TODO ADD ATTRIBUTE
-                            continue;
-                        }
+                continue;
+            }
+
+            //If stop is inside zone, but is a hub, then keep it
+            if (stop.getStopFacility().getAttributes().getAsMap().containsKey("hub")) {
+                if(((int) stop.getStopFacility().getAttributes().getAttribute("hub")) != 0){
+                    stops2Keep.add(stop);
+                    continue;
+                }
+            }
+            // If stop is inside zone, but the stop before or after it is outside, then keep it
+            if (allowOneStopWithinZone) {
+                // Checks if previous stop is outside of zone; if yes, include current stop
+                if (i > 0) {
+                    Id<TransitStopFacility> prevStop = stopsOld.get(i - 1).getStopFacility().getId();
+                    if (!stopsInZone.contains(prevStop)) {
+                        stops2Keep.add(stop); // TODO ADD ATTRIBUTE
+                        continue;
                     }
+                }
 
-                    if (i < stopsOld.size() - 1) {
-                        Id<TransitStopFacility> nextStop = stopsOld.get(i + 1).getStopFacility().getId();
-                        if (!stopsInZone.contains(nextStop)) {
-                            stops2Keep.add(stop);
-                        }
-
+                // Checks if next stop is outside of zone; if yes, include current stop
+                if (i < stopsOld.size() - 1) {
+                    Id<TransitStopFacility> nextStop = stopsOld.get(i + 1).getStopFacility().getId();
+                    if (!stopsInZone.contains(nextStop)) {
+                        stops2Keep.add(stop);
                     }
                 }
             }
@@ -269,8 +280,8 @@ public class TransitRouteTrimmer {
         int newRouteCnt = 1;
         for (int i = 0; i < stopsOld.size(); i++) {
             Id<TransitStopFacility> stopFacilityId = stopsOld.get(i).getStopFacility().getId();
-            if (!stopsInZone.contains(stopFacilityId)) { // we are outside of zone --> we keep the stop
-
+            // we are outside of zone --> we keep the stop
+            if (!stopsInZone.contains(stopFacilityId)) {
                 // adds first stop that's within zone
                 if (stops2Keep.size() == 0 && i > 0 && allowOneStopWithinZone) {
                     //TODO: ADD ATTRIBUTE TO STOP
@@ -286,6 +297,7 @@ public class TransitRouteTrimmer {
                     if (allowOneStopWithinZone) {
                         stops2Keep.add(stopsOld.get(i));
                     }
+
 
                     // creates route and clears stopsNew and linksNew
                     if (stops2Keep.size() >= minimumRouteLength) {

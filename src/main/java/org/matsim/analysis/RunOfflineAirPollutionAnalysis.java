@@ -23,8 +23,11 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.emissions.EmissionModule;
+import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
+import org.matsim.contrib.emissions.utils.EmissionsConfigGroup.DetailedVsAverageLookupBehavior;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup.HbefaRoadTypeSource;
+import org.matsim.contrib.emissions.utils.EmissionsConfigGroup.HbefaVehicleDescriptionSource;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup.NonScenarioVehicles;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
@@ -35,7 +38,9 @@ import org.matsim.core.events.EventsUtils;
 import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.events.algorithms.EventWriterXML;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.vehicles.EngineInformation;
 import org.matsim.vehicles.VehicleType;
+import org.matsim.vehicles.VehicleUtils;
 
 /**
 * @author ikaddoura
@@ -61,11 +66,19 @@ public class RunOfflineAirPollutionAnalysis {
 		
 		if (!rootDirectory.endsWith("/")) rootDirectory = rootDirectory + "/";
 		
-		Config config = ConfigUtils.loadConfig(rootDirectory + runDirectory + runId + ".output_config.xml");
+		Config config = ConfigUtils.createConfig();
 		config.vehicles().setVehiclesFile(rootDirectory + runDirectory + runId + ".output_vehicles.xml.gz");
+		config.network().setInputFile(rootDirectory + runDirectory + runId + ".output_network.xml.gz");
+		config.transit().setTransitScheduleFile(rootDirectory + runDirectory + runId + ".output_transitSchedule.xml.gz");
+		config.transit().setVehiclesFile(rootDirectory + runDirectory + runId + ".output_transitVehicles.xml.gz");
+		config.global().setCoordinateSystem("GK4");
 		config.plans().setInputFile(null);
+		config.parallelEventHandling().setNumberOfThreads(null);
+		config.parallelEventHandling().setEstimatedNumberOfEvents(null);
+		config.global().setNumberOfThreads(1);
 		
 		EmissionsConfigGroup eConfig = ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
+		eConfig.setDetailedVsAverageLookupBehavior(DetailedVsAverageLookupBehavior.directlyTryAverageTable);
 		eConfig.setAverageColdEmissionFactorsFile(rootDirectory + hbefaFileCold);
 		eConfig.setAverageWarmEmissionFactorsFile(rootDirectory + hbefaFileWarm);
 		eConfig.setHbefaRoadTypeSource(HbefaRoadTypeSource.fromLinkAttributes);
@@ -126,12 +139,35 @@ public class RunOfflineAirPollutionAnalysis {
 			}			
 		}
 		
+		// vehicles
+
 		Id<VehicleType> carVehicleTypeId = Id.create("car", VehicleType.class);
 		Id<VehicleType> freightVehicleTypeId = Id.create("freight", VehicleType.class);
 		
-		// vehicles
-		scenario.getVehicles().getVehicleTypes().get(carVehicleTypeId).setDescription("BEGIN_EMISSIONSPASSENGER_CAR;average;average;averageEND_EMISSIONS");
-		scenario.getVehicles().getVehicleTypes().get(freightVehicleTypeId).setDescription("BEGIN_EMISSIONSHEAVY_GOODS_VEHICLE;average;average;averageEND_EMISSIONS");		
+		VehicleType carVehicleType = scenario.getVehicles().getVehicleTypes().get(carVehicleTypeId);
+		VehicleType freightVehicleType = scenario.getVehicles().getVehicleTypes().get(freightVehicleTypeId);
+		
+		EngineInformation carEngineInformation = carVehicleType.getEngineInformation();
+		VehicleUtils.setHbefaVehicleCategory( carEngineInformation, HbefaVehicleCategory.PASSENGER_CAR.toString());
+		VehicleUtils.setHbefaTechnology( carEngineInformation, "average" );
+		VehicleUtils.setHbefaSizeClass( carEngineInformation, "average" );
+		VehicleUtils.setHbefaEmissionsConcept( carEngineInformation, "average" );
+		
+		EngineInformation freightEngineInformation = freightVehicleType.getEngineInformation();
+		VehicleUtils.setHbefaVehicleCategory( freightEngineInformation, HbefaVehicleCategory.HEAVY_GOODS_VEHICLE.toString());
+		VehicleUtils.setHbefaTechnology( freightEngineInformation, "average" );
+		VehicleUtils.setHbefaSizeClass( freightEngineInformation, "average" );
+		VehicleUtils.setHbefaEmissionsConcept( freightEngineInformation, "average" );
+		
+		// public transit vehicles should be considered as non-hbefa vehicles
+		for (VehicleType type : scenario.getTransitVehicles().getVehicleTypes().values()) {
+			EngineInformation engineInformation = type.getEngineInformation();
+			// TODO: Check! Is this a zero emission vehicle?!
+			VehicleUtils.setHbefaVehicleCategory( engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
+			VehicleUtils.setHbefaTechnology( engineInformation, "average" );
+			VehicleUtils.setHbefaSizeClass( engineInformation, "average" );
+			VehicleUtils.setHbefaEmissionsConcept( engineInformation, "average" );			
+		}
 		
 		// the following is copy paste from the example...
 		
@@ -153,8 +189,10 @@ public class RunOfflineAirPollutionAnalysis {
         EventWriterXML emissionEventWriter = new EventWriterXML(emissionEventOutputFile);
         emissionModule.getEmissionEventsManager().addHandler(emissionEventWriter);
 
+        eventsManager.initProcessing();
         MatsimEventsReader matsimEventsReader = new MatsimEventsReader(eventsManager);
         matsimEventsReader.readFile(eventsFile);
+        eventsManager.finishProcessing();
 
         emissionEventWriter.closeFile();
 	}

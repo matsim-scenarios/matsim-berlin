@@ -21,6 +21,7 @@ output*
 
 /.idea/
 *.iml
+*.jar
 
 *.DS_STORE
 /.DS_Store

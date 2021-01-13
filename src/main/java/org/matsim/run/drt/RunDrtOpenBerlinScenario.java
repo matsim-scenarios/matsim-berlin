@@ -22,6 +22,7 @@ package org.matsim.run.drt;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.inject.Singleton;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -36,27 +37,27 @@ import org.matsim.contrib.dvrp.run.DvrpQSimComponents;
 import org.matsim.core.config.CommandLine;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.MainModeIdentifier;
+import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
+import org.matsim.run.BerlinExperimentalConfigGroup;
 import org.matsim.run.RunBerlinScenario;
-import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
-import org.matsim.run.drt.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
-import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesConfigGroup;
-import org.matsim.run.drt.ptRoutingModes.PtIntermodalRoutingModesModule;
 
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
+import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
 /**
  * This class starts a simulation run with DRT.
  * 
  *  - The input DRT vehicles file specifies the number of vehicles and the vehicle capacity (a vehicle capacity of 1 means there is no ride-sharing).
  * 	- The DRT service area is set to the the inner-city Berlin area (see input shape file).
- * 	- Initial plans are not modified.
+ * 	- Initial plans only modified such that persons receive a specific income.
  * 
  * @author ikaddoura
  */
@@ -103,29 +104,33 @@ public final class RunDrtOpenBerlinScenario {
 				// So we need our own main mode indentifier which replaces both :-(
 				bind(MainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifier.class);
 				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier.class);
+
+				//use income-dependent marginal utility of money for scoring
+				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class).in(Singleton.class);
 			}
 		});
 
 		// yyyy there is fareSModule (with S) in config. ?!?!  kai, jul'19
-		
-		controler.addOverridingModule(new IntermodalTripFareCompensatorsModule());
-		
-		controler.addOverridingModule(new PtIntermodalRoutingModesModule());
-		
+
 		return controler;
 	}
 	
 	public static Scenario prepareScenario( Config config ) {
 
 		Scenario scenario = RunBerlinScenario.prepareScenario( config );
+		BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 
 		for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 			
 			String drtServiceAreaShapeFile = drtCfg.getDrtServiceAreaShapeFile();
 			if (drtServiceAreaShapeFile != null && !drtServiceAreaShapeFile.equals("") && !drtServiceAreaShapeFile.equals("null")) {
 				
-				// I don't think we have to add the drt mode the allowed modes ihab June '20
-//				addDRTmode(scenario, drtCfg.getMode(), drtServiceAreaShapeFile);
+				// Michal says restricting drt to a drt network roughly the size of the service area helps to speed up.
+				// This is even more true since drt started to route on a freespeed TT matrix (Nov '20).
+				// A buffer of 10km to the service area Berlin includes the A10 on some useful stretches outside Berlin.
+				if(berlinCfg.getTagDrtLinksBufferAroundServiceAreaShp() >= 0.0) {
+					addDRTmode(scenario, drtCfg.getMode(), drtServiceAreaShapeFile, berlinCfg.getTagDrtLinksBufferAroundServiceAreaShp());
+				}
 				
 				tagTransitStopsInServiceArea(scenario.getTransitSchedule(), 
 						DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_ATTRIBUTE, DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_VALUE, 
@@ -138,7 +143,7 @@ public final class RunDrtOpenBerlinScenario {
 						200.0); // TODO: Use constant in RunGTFS2MATSimOpenBerlin and here? Or better some kind of set available pt modes?
 			}
 		}
-		
+
 		return scenario;
 	}
 
@@ -146,8 +151,7 @@ public final class RunDrtOpenBerlinScenario {
 
 	public static Config prepareConfig( AdditionalInformation additionalInformation, String [] args, ConfigGroup... customModules) {
 		ConfigGroup[] customModulesToAdd = new ConfigGroup[] { new DvrpConfigGroup(), new MultiModeDrtConfigGroup(),
-				new SwissRailRaptorConfigGroup(), new IntermodalTripFareCompensatorsConfigGroup(),
-				new PtIntermodalRoutingModesConfigGroup() };
+				new SwissRailRaptorConfigGroup() };
 		ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
 
 		int counter = 0;
@@ -171,7 +175,7 @@ public final class RunDrtOpenBerlinScenario {
 		return prepareConfig( AdditionalInformation.none, args, customModules ) ;
 	}
 	
-	public static void addDRTmode(Scenario scenario, String drtNetworkMode, String drtServiceAreaShapeFile) {
+	public static void addDRTmode(Scenario scenario, String drtNetworkMode, String drtServiceAreaShapeFile, double buffer) {
 		
 		log.info("Adjusting network...");
 		
@@ -185,8 +189,8 @@ public final class RunDrtOpenBerlinScenario {
 				log.info("link #" + counter);
 			counter++;
 			if (link.getAllowedModes().contains(TransportMode.car)) {
-				if (shpUtils.isCoordInDrtServiceArea(link.getFromNode().getCoord())
-						|| shpUtils.isCoordInDrtServiceArea(link.getToNode().getCoord())) {
+				if (shpUtils.isCoordInDrtServiceAreaWithBuffer(link.getFromNode().getCoord(), buffer)
+						|| shpUtils.isCoordInDrtServiceAreaWithBuffer(link.getToNode().getCoord(), buffer)) {
 					Set<String> allowedModes = new HashSet<>(link.getAllowedModes());
 					
 					allowedModes.add(drtNetworkMode);
@@ -218,6 +222,7 @@ public final class RunDrtOpenBerlinScenario {
 			String drtServiceAreaShapeFile, 
 			String oldFilterAttribute, String oldFilterValue,
 			double bufferAroundServiceArea) {
+		log.info("Tagging pt stops marked for intermodal access/egress in the service area.");
 		BerlinShpUtils shpUtils = new BerlinShpUtils( drtServiceAreaShapeFile );
 		for (TransitStopFacility stop: transitSchedule.getFacilities().values()) {
 			if (stop.getAttributes().getAttribute(oldFilterAttribute) != null) {
