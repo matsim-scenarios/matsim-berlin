@@ -17,7 +17,7 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.analysis;
+package org.matsim.analysis.emissions;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -46,7 +46,7 @@ import org.matsim.vehicles.VehicleUtils;
 * @author ikaddoura
 */
 
-public class RunOfflineAirPollutionAnalysis {
+public class RunOfflineAirPollutionAnalysisByVehicleCategory {
 	
 	final static String runDirectory = "public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/output-berlin-v5.4-10pct/";	
 	final static String runId = "berlin-v5.4-10pct";

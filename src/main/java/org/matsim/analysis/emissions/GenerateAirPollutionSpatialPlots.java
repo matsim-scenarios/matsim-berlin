@@ -16,7 +16,7 @@
  *   See also COPYING, LICENSE and WARRANTY file                           *
  *                                                                         *
  * *********************************************************************** */
-package org.matsim.analysis;
+package org.matsim.analysis.emissions;
 
 import java.io.FileWriter;
 import java.io.IOException;
