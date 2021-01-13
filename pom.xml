@@ -11,7 +11,7 @@
 
 	<properties>
 		<!--		<matsim.version>13.0-SNAPSHOT</matsim.version>-->
-		<matsim.version>13.0-2020w51-SNAPSHOT</matsim.version>
+		<matsim.version>13.0-2021w02-SNAPSHOT</matsim.version>
 	</properties>
 
 	<repositories>
@@ -185,7 +185,7 @@
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>pt-extensions</artifactId>
-			<version>fac7381209</version>
+			<version>67dec05d3b</version>
 		</dependency>
 
 		<dependency>

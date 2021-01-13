@@ -188,7 +188,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			IntermodalTripFareCompensatorsConfigGroup fareCompensators = ConfigUtils.addOrGetModule(config, IntermodalTripFareCompensatorsConfigGroup.class);
 			double expectedCompensationAmountPerTrip = Double.NaN;
 			for (IntermodalTripFareCompensatorConfigGroup fareCompensator : fareCompensators.getIntermodalTripFareCompensatorConfigGroups()) {
-				if (fareCompensator.getDrtModes().contains(TransportMode.drt) && fareCompensator.getPtModes().contains(TransportMode.pt)) { 
+				if (fareCompensator.getNonPtModes().contains(TransportMode.drt) && fareCompensator.getPtModes().contains(TransportMode.pt)) {
 					expectedCompensationAmountPerTrip = fareCompensator.getCompensationMoneyPerTrip();
 				}
 			}
@@ -265,7 +265,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			}
 			IntermodalTripFareCompensatorConfigGroup compensatorCfg = new IntermodalTripFareCompensatorConfigGroup();
 			compensatorCfg.setCompensationCondition(CompensationCondition.PtModeUsedAnywhereInTheDay);
-			compensatorCfg.setDrtModesAsString("drt");
+			compensatorCfg.setNonPtModesAsString("drt");
 			compensatorCfg.setPtModesAsString("pt");
 			compensatorCfg.setCompensationMoneyPerTrip(10000);
 			compensatorCfg.setCompensationScorePerDay(20000);
