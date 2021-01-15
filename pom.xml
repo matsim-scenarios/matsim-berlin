@@ -101,6 +101,13 @@
 			<scope>compile</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>signals</artifactId>
+			<version>${matsim.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
 		<!-- Include the JUnit testing library.  Not transitive. -->
 		<dependency>
 			<groupId>junit</groupId>
