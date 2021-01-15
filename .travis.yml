@@ -11,10 +11,8 @@ env:
     - TEST=AbfallUtilsTest
     - TEST=OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifierTest
     - TEST=OpenBerlinIntermodalPtDrtRouterModeIdentifierTest
-    - TEST=RunBerlinScenarioSingleTripStrategiesTest
     - TEST=RunDrtOpenBerlinScenarioTest
     - TEST=RunDrtOpenBerlinScenarioWithDrtSpeedUpTest
-    - TEST=RunDrtOpenBerlinScenarioWithPtRoutingModesTest
     # - TEST=RunBerlinScenarioIT#test10pctUntilIteration1 # does not fit into travis.  kai, aug'18
     # - TEST=RunBerlinScenarioIT#test1pctManyIterations # does probably not fit into travis (not tested).  kai, aug'18
 script:
