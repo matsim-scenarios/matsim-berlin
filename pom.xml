@@ -4,14 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.matsim-scenarios</groupId>
 	<artifactId>matsim-berlin</artifactId>
-	<version>5.5.1</version>
+	<version>5.5.2</version>
 
 	<name>MATSim Open Berlin scenario project</name>
 	<description>MATSim Open Berlin scenario project</description>
 
 	<properties>
-		<!--		<matsim.version>13.0-SNAPSHOT</matsim.version>-->
-		<matsim.version>13.0-2021w02-SNAPSHOT</matsim.version>
+<!--				<matsim.version>13.0-SNAPSHOT</matsim.version>-->
+		<matsim.version>13.0-2021w03-SNAPSHOT</matsim.version>
 	</properties>
 
 	<repositories>
