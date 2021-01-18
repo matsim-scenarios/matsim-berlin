@@ -4,7 +4,7 @@ import com.google.inject.Singleton;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.TerminationCriterion;
 
-public class DynamicShutdownModule extends AbstractModule {
+//public class DynamicShutdownModule extends AbstractModule {
 
 
     /**
@@ -13,7 +13,7 @@ public class DynamicShutdownModule extends AbstractModule {
      * @author jakobrehmann
      */
 
-    @Override
+   /** @Override
     public void install() {
 
         this.bind(ModeChoiceCoverageControlerListener.class).in(Singleton.class);
@@ -27,3 +27,4 @@ public class DynamicShutdownModule extends AbstractModule {
 
     }
 }
+*/
