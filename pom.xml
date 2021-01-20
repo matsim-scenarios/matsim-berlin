@@ -10,8 +10,8 @@
 	<description>MATSim Open Berlin scenario project</description>
 
 	<properties>
-		<!--		<matsim.version>13.0-SNAPSHOT</matsim.version>-->
-		<matsim.version>13.0-2021w03-SNAPSHOT</matsim.version>
+				<matsim.version>13.0-SNAPSHOT</matsim.version>
+<!--		<matsim.version>13.0-2021w03-SNAPSHOT</matsim.version>-->
 	</properties>
 
 	<repositories>
@@ -101,18 +101,18 @@
 			<scope>compile</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>org.matsim.contrib</groupId>
-			<artifactId>signals</artifactId>
-			<version>${matsim.version}</version>
-			<scope>compile</scope>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>org.matsim.contrib</groupId>-->
+<!--			<artifactId>signals</artifactId>-->
+<!--			<version>${matsim.version}</version>-->
+<!--			<scope>compile</scope>-->
+<!--		</dependency>-->
 
-		<dependency>
-			<groupId>org.matsim</groupId>
-			<artifactId>matsim-examples</artifactId>
-			<version>${matsim.version}</version>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>org.matsim</groupId>-->
+<!--			<artifactId>matsim-examples</artifactId>-->
+<!--			<version>${matsim.version}</version>-->
+<!--		</dependency>-->
 
 		<!-- Include the JUnit testing library.  Not transitive. -->
 		<dependency>
