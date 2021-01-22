@@ -167,13 +167,6 @@ public class TransitRouteTrimmer {
                 continue;
             }
 
-            //If stop is inside zone, but is a hub, then keep it
-            if (stop.getStopFacility().getAttributes().getAsMap().containsKey("hub")) {
-                if(((int) stop.getStopFacility().getAttributes().getAttribute("hub")) != 0){
-                    stops2Keep.add(stop);
-                    continue;
-                }
-            }
             // If stop is inside zone, but the stop before or after it is outside, then keep it
             if (allowOneStopWithinZone) {
                 // Checks if previous stop is outside of zone; if yes, include current stop
@@ -283,9 +276,21 @@ public class TransitRouteTrimmer {
             // we are outside of zone --> we keep the stop
             if (!stopsInZone.contains(stopFacilityId)) {
                 // adds first stop that's within zone
-                if (stops2Keep.size() == 0 && i > 0 && allowOneStopWithinZone) {
-                    //TODO: ADD ATTRIBUTE TO STOP
-                    stops2Keep.add(stopsOld.get(i - 1));
+                if (stops2Keep.size() == 0 && i > 0 ) {
+                    // check previous stops for hub:
+                    for (int j = i-1; j >= 0; j--) {
+                        TransitStopFacility stopFacility = stopsOld.get(j).getStopFacility();
+                        int hubNum = (int) stopFacility.getAttributes().getAttribute("hub");
+                        if (hubNum > 0) {
+                            stops2Keep.add(stopsOld.get(j));
+                            break;
+                        }
+                    }
+
+                    if (allowOneStopWithinZone) {
+                        stops2Keep.add(stopsOld.get(i - 1));
+                    }
+
                 }
 
                 stops2Keep.add(stopsOld.get(i));
@@ -296,6 +301,16 @@ public class TransitRouteTrimmer {
                     //adds first stop in zone
                     if (allowOneStopWithinZone) {
                         stops2Keep.add(stopsOld.get(i));
+                    }
+                // check remaining stops for hub:
+                    int stepCnt = 0;
+                    for (int j = i + 1; j < stopsOld.size(); j++) {
+                        TransitStopFacility stopFacility = stopsOld.get(j).getStopFacility();
+                        int hubNum = (int) stopFacility.getAttributes().getAttribute("hub");
+                        if (hubNum > 0) {
+                            stops2Keep.add(stopsOld.get(j));
+                            break;
+                        }
                     }
 
 
