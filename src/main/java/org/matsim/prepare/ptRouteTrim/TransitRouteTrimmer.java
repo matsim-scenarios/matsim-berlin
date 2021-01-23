@@ -17,7 +17,6 @@ import java.util.*;
  * This tool creates a trims TransitRoutes, so as not to enter a user-specified ESRI shape file.
  * There are several modifier methods that can be used separately or in combination.
  *
- *
  * @author jakobrehmann
  */
 
@@ -26,7 +25,8 @@ public class TransitRouteTrimmer {
 
     // Parameters
     boolean removeEmptyLines = true;
-    boolean allowOneStopWithinZone = true ;
+    boolean allowOneStopWithinZone = true;
+    boolean allowHubsWithinZone = true;
     private int minimumRouteLength = 2;
 
     private Vehicles vehicles;
@@ -34,9 +34,8 @@ public class TransitRouteTrimmer {
     private TransitSchedule transitScheduleNew;
     private static Set<Id<TransitStopFacility>> stopsInZone;
     private TransitScheduleFactory tsf;
-    
+
     //TODO: Vehicles new
-    
 
 
     enum modMethod {
@@ -47,7 +46,7 @@ public class TransitRouteTrimmer {
     }
 
 
-    public TransitRouteTrimmer(TransitSchedule transitSchedule,Vehicles vehicles, List<PreparedGeometry> geometries) {
+    public TransitRouteTrimmer(TransitSchedule transitSchedule, Vehicles vehicles, List<PreparedGeometry> geometries) {
         this.transitScheduleOld = transitSchedule;
         this.transitScheduleNew = (new TransitScheduleFactoryImpl()).createTransitSchedule(); // TODO: Is this okay?
         this.vehicles = vehicles;
@@ -60,7 +59,7 @@ public class TransitRouteTrimmer {
         }
     }
 
-    public TransitRouteTrimmer(TransitSchedule transitSchedule,Vehicles vehicles, Set<Id<TransitStopFacility>> stopsInZone) {
+    public TransitRouteTrimmer(TransitSchedule transitSchedule, Vehicles vehicles, Set<Id<TransitStopFacility>> stopsInZone) {
         this.transitScheduleOld = transitSchedule;
         this.transitScheduleNew = (new TransitScheduleFactoryImpl()).createTransitSchedule(); // TODO: Is this okay?
         this.tsf = transitScheduleNew.getFactory(); //TODO: ???
@@ -97,12 +96,12 @@ public class TransitRouteTrimmer {
                 TransitRoute routeNew = null;
 
                 // Only handles specified routes.
-//                if (!this.modes2Trim.contains(route.getTransportMode())) {
-//                    lineNew.addRoute(route);
-//                    continue;
-//                }
+                //                if (!this.modes2Trim.contains(route.getTransportMode())) {
+                //                    lineNew.addRoute(route);
+                //                    continue;
+                //                }
 
-//                 Only handle routes that interact with zone
+                //                 Only handle routes that interact with zone
                 if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 0.0) {
                     lineNew.addRoute(route);
                     continue;
@@ -153,6 +152,7 @@ public class TransitRouteTrimmer {
     public TransitSchedule getTransitScheduleNew() {
         return transitScheduleNew;
     }
+
 
     // This will skip stops within zone. If beginning or end of route is within zone, it will cut those ends off.
     private TransitRoute modifyRouteSkipStopsWithinZone(TransitRoute routeOld) {
@@ -220,7 +220,7 @@ public class TransitRouteTrimmer {
         }
 
         Id<TransitStopFacility> lastStopId = null;//TODO: ???
-        for (int i = stopsOld.size()-1; i >= 0; i--) {
+        for (int i = stopsOld.size() - 1; i >= 0; i--) {
 
             Id<TransitStopFacility> id = stopsOld.get(i).getStopFacility().getId();
             if (!stopsInZone.contains(id)) {
@@ -240,7 +240,7 @@ public class TransitRouteTrimmer {
         boolean start = false;
         for (TransitRouteStop stop : stopsOld) {
             if (!start) {
-                if (stop.getStopFacility().getId().equals(startStopId)){
+                if (stop.getStopFacility().getId().equals(startStopId)) {
                     stops2Keep.add(stop);
                     start = true;
                 }
@@ -263,78 +263,286 @@ public class TransitRouteTrimmer {
 
     }
 
+    //
+    //    private ArrayList<TransitRoute> modifyRouteSplitRoute(TransitRoute routeOld) {
+    //        ArrayList<TransitRoute> resultRoutes = new ArrayList<>();
+    //        List<TransitRouteStop> stopsOld = new ArrayList<>(routeOld.getStops());
+    //
+    //        List<TransitRouteStop> stops2Keep = new ArrayList<>();
+    //        List<int[]> hubs = new ArrayList<>();
+    //
+    //        for (int i = 0; i < stopsOld.size(); i++) {
+    //            TransitRouteStop stop = stopsOld.get(i);
+    //            int hubNum = (int) stop.getStopFacility().getAttributes().getAttribute("hub");
+    //
+    //            if (hubNum > 0) {
+    //                int[] myNum = {i, hubNum};
+    //                hubs.add(myNum);
+    //
+    //            }
+    //        }
+    //
+    //        int newRouteCnt = 1;
+    //        for (int i = 0; i < stopsOld.size(); i++) {
+    //            Id<TransitStopFacility> stopFacilityId = stopsOld.get(i).getStopFacility().getId();
+    //            // we are outside of zone --> we keep the stop
+    //            if (!stopsInZone.contains(stopFacilityId)) {
+    //                // adds first stop that's within zone
+    //                if (stops2Keep.size() == 0 && i > 0 ) {
+    //                    // check previous stops for hub:
+    //                    int stepCnt = 0;
+    //                    for (int j = i-1; j >= 0; j--) {
+    //                        stepCnt++;
+    //                        TransitStopFacility stopFacility = stopsOld.get(j).getStopFacility();
+    //                        int hubNum = (int) stopFacility.getAttributes().getAttribute("hub");
+    //                        if (hubNum >= stepCnt) {
+    //                            stops2Keep.add(stopsOld.get(j));
+    //                            break;
+    //                        }
+    //                    }
+    //
+    //                    if (allowOneStopWithinZone) {
+    //                        stops2Keep.add(stopsOld.get(i - 1));
+    //                    }
+    //
+    //                }
+    //
+    //                stops2Keep.add(stopsOld.get(i));
+    //            } else if (stopsInZone.contains(stopFacilityId)) { // inside of zone --> discard
+    //
+    //                // The following is only done, if stop i is the first stop to enter the zone.
+    //                if (stops2Keep.size() > 0) {
+    //                    //adds first stop in zone
+    //                    if (allowOneStopWithinZone) {
+    //                        stops2Keep.add(stopsOld.get(i));
+    //                    }
+    //                // check remaining stops for hub:
+    //                    int stepCnt = 0;
+    //                    for (int j = i + 1; j < stopsOld.size(); j++) {
+    //                        stepCnt++;
+    //                        TransitStopFacility stopFacility = stopsOld.get(j).getStopFacility();
+    //                        int hubNum = (int) stopFacility.getAttributes().getAttribute("hub");
+    //                        if (hubNum >= stepCnt) {
+    //                            stops2Keep.add(stopsOld.get(j));
+    //                            break;
+    //                        }
+    //                    }
+    //
+    //
+    //                    // creates route and clears stopsNew and linksNew
+    //                    if (stops2Keep.size() >= minimumRouteLength) {
+    //                        TransitRoute routeNew = createNewRoute(routeOld, stops2Keep, newRouteCnt);
+    //                        resultRoutes.add(routeNew);
+    //                        newRouteCnt++;
+    //                    }
+    //                    stops2Keep.clear();
+    //                }
+    //            }
+    //        }
+    //
+    //        if (stops2Keep.size() >= minimumRouteLength && stops2Keep.size() > 0) {
+    //            TransitRoute routeNew = createNewRoute(routeOld, stops2Keep, newRouteCnt);
+    //            resultRoutes.add(routeNew);
+    //        }
+    //
+    //        return resultRoutes;
+    //    }
+
 
     private ArrayList<TransitRoute> modifyRouteSplitRoute(TransitRoute routeOld) {
         ArrayList<TransitRoute> resultRoutes = new ArrayList<>();
         List<TransitRouteStop> stopsOld = new ArrayList<>(routeOld.getStops());
 
-        List<TransitRouteStop> stops2Keep = new ArrayList<>();
+        List<int[]> hubs = new ArrayList<>();
+        List<Integer[]> routeIndicies = new ArrayList<>();
 
-        int newRouteCnt = 1;
+
         for (int i = 0; i < stopsOld.size(); i++) {
-            Id<TransitStopFacility> stopFacilityId = stopsOld.get(i).getStopFacility().getId();
-            // we are outside of zone --> we keep the stop
-            if (!stopsInZone.contains(stopFacilityId)) {
-                // adds first stop that's within zone
-                if (stops2Keep.size() == 0 && i > 0 ) {
-                    // check previous stops for hub:
-                    for (int j = i-1; j >= 0; j--) {
-                        TransitStopFacility stopFacility = stopsOld.get(j).getStopFacility();
-                        int hubNum = (int) stopFacility.getAttributes().getAttribute("hub");
-                        if (hubNum > 0) {
-                            stops2Keep.add(stopsOld.get(j));
-                            break;
-                        }
-                    }
-
-                    if (allowOneStopWithinZone) {
-                        stops2Keep.add(stopsOld.get(i - 1));
-                    }
-
-                }
-
-                stops2Keep.add(stopsOld.get(i));
-            } else if (stopsInZone.contains(stopFacilityId)) { // inside of zone --> discard
-
-                // The following is only done, if stop i is the first stop to enter the zone.
-                if (stops2Keep.size() > 0) {
-                    //adds first stop in zone
-                    if (allowOneStopWithinZone) {
-                        stops2Keep.add(stopsOld.get(i));
-                    }
-                // check remaining stops for hub:
-                    int stepCnt = 0;
-                    for (int j = i + 1; j < stopsOld.size(); j++) {
-                        TransitStopFacility stopFacility = stopsOld.get(j).getStopFacility();
-                        int hubNum = (int) stopFacility.getAttributes().getAttribute("hub");
-                        if (hubNum > 0) {
-                            stops2Keep.add(stopsOld.get(j));
-                            break;
-                        }
-                    }
-
-
-                    // creates route and clears stopsNew and linksNew
-                    if (stops2Keep.size() >= minimumRouteLength) {
-                        TransitRoute routeNew = createNewRoute(routeOld, stops2Keep, newRouteCnt);
-                        resultRoutes.add(routeNew);
-                        newRouteCnt++;
-                    }
-                    stops2Keep.clear();
+            TransitRouteStop stop = stopsOld.get(i);
+            if (stop.getStopFacility().getAttributes().getAsMap().containsKey("hub")) {
+                int hubValue = (int) stop.getStopFacility().getAttributes().getAttribute("hub");
+                if (hubValue > 0) {
+                    int[] hubPosValuePair = {i, hubValue};
+                    hubs.add(hubPosValuePair);
                 }
             }
         }
 
-        if (stops2Keep.size() >= minimumRouteLength && stops2Keep.size() > 0) {
-            TransitRoute routeNew = createNewRoute(routeOld, stops2Keep, newRouteCnt);
-            resultRoutes.add(routeNew);
+        Integer startIndex = null;
+        Integer endIndex = null;
+        for (int i = 0; i < stopsOld.size(); i++) {
+            Id<TransitStopFacility> stopFacilityId = stopsOld.get(i).getStopFacility().getId();
+            // we are outside of zone --> we keep the stop
+            if (!stopsInZone.contains(stopFacilityId)) {
+                if (startIndex == null) {
+                    startIndex = i;
+                }
+                // If this is the last stop, end route at this stop
+                if (i == stopsOld.size() - 1) {
+                    endIndex = i;
+                }
+                // If this is not last stop, and next stop is within zone, end route at this stop
+                else {
+                    Id<TransitStopFacility> stopFacilityIdNext = stopsOld.get(i + 1).getStopFacility().getId();
+                    if (stopsInZone.contains(stopFacilityIdNext)) {
+                        endIndex = i;
+                    }
+                }
+            }
+
+            if (startIndex != null && endIndex != null) {
+                Integer[] startEndPair = {startIndex, endIndex};
+
+                routeIndicies.add(startEndPair);
+                startIndex = null;
+                endIndex = null;
+            }
+        }
+
+        // add first last stop in zone
+//        if (allowOneStopWithinZone) {
+//            for (Integer[] pair : routeIndicies) {
+//                Integer startI = pair[0];
+//                Integer endI = pair[1];
+//
+//                if (startI > 0) {
+//                    startI--;
+//                }
+//
+//                if (endI < stopsOld.size() - 1) {
+//                    endI++;
+//                }
+//                pair[0] = startI;
+//                pair[1] = endI;
+//
+//            }
+//        }
+
+
+        // check if we should add hubs to routes
+
+        // Extend routes with hubs and/or first stop within zone
+        for (Integer[] pair : routeIndicies) {
+            int leftIndex = pair[0];
+            int leftIndexNew = leftIndex;
+
+            int rightIndex = pair[1];
+            int rightIndexNew = rightIndex;
+
+            // Add hubs
+            if (allowHubsWithinZone && !hubs.isEmpty()) {
+                for (int[] hubPosValuePair : hubs) {
+                    int hubPos = hubPosValuePair[0];
+                    int hubReach = hubPosValuePair[1];
+                    if (hubPos < leftIndex && hubPos + hubReach > leftIndex) {
+                        if (hubPos < leftIndexNew) {
+                            leftIndexNew = hubPos;
+                        }
+                    }
+
+                    if (hubPos > rightIndex && hubPos - hubReach < rightIndex) {
+                        if (hubPos > rightIndexNew) {
+                            rightIndexNew = hubPos;
+                        }
+                    }
+                }
+            }
+
+            // add first stop within zone
+            if (allowOneStopWithinZone) {
+                if (leftIndex == leftIndexNew) {
+                    if (leftIndex > 0) {
+                        leftIndexNew--;
+                    }
+                }
+
+                if (rightIndex == rightIndexNew) {
+                    if (rightIndex < stopsOld.size() - 1) {
+                        rightIndexNew++;
+                    }
+                }
+            }
+
+            pair[0] = leftIndexNew;
+            pair[1] = rightIndexNew;
+        }
+
+
+        // create transit routes
+        int newRouteCnt = 1;
+        for (Integer[] pair : routeIndicies) {
+            resultRoutes.add(createNewRoute(routeOld, pair[0], pair[1], newRouteCnt));
+            newRouteCnt++;
+
         }
 
         return resultRoutes;
+
     }
 
 
-    private TransitRoute createNewRoute(TransitRoute routeOld, List<TransitRouteStop> stopsInNewRoute, int modNumber) {
+    // check overlap
+
+    // create routes
+
+
+    //
+    //                // The following is only done, if stop i is the first stop to enter the zone.
+    //                if (stops2Keep.size() > 0) {
+    //                    //adds first stop in zone
+    //                    if (allowOneStopWithinZone) {
+    //                        stops2Keep.put(i, stopsOld.get(i));
+    //                    }
+    //
+    //                    int startIndex = Collections.min(stops2Keep.keySet());
+    //                    int endIndex = Collections.max(stops2Keep.keySet());
+    //
+    //                    for (int[] pair : hubs) {
+    //                        int hubLocation = pair[0];
+    //                        int hubValue = pair[1];
+    //                        if (hubLocation < startIndex) {
+    //                            if (hubLocation + hubValue > startIndex) {
+    //                                // add intermediary stops
+    //                            }
+    //                        }
+    //
+    //                        if (hubLocation > endIndex) {
+    //                            if (hubLocation - hubValue < endIndex) {
+    //                                // add intermediary stops
+    //                            }
+    //                        }
+    //                    }
+    //                    // creates route and clears stopsNew and linksNew
+    //                    if (stops2Keep.size() >= minimumRouteLength) {
+    //                        TransitRoute routeNew = createNewRoute(routeOld, stops2Keep, newRouteCnt);
+    //                        resultRoutes.add(routeNew);
+    //                        newRouteCnt++;
+    //                    }
+    //                    stops2Keep.clear();
+    //                }
+    //
+    //        }
+    //
+    //        if (stops2Keep.size() >= minimumRouteLength && stops2Keep.size() > 0) {
+    //            TransitRoute routeNew = createNewRoute(routeOld, stops2Keep, newRouteCnt);
+    //            resultRoutes.add(routeNew);
+    //        }
+    //
+    //        return resultRoutes;
+    //    }
+
+
+    private TransitRoute createNewRoute(TransitRoute routeOld, Integer startIndex, Integer endIndex, int modNumber) {
+        List<TransitRouteStop> stopsInNewRoute = new ArrayList<>();
+        for (int i = startIndex; i <= endIndex; i++) {
+            stopsInNewRoute.add(routeOld.getStops().get(i));
+        }
+
+        return createNewRoute(routeOld, stopsInNewRoute, modNumber);
+    }
+
+    private TransitRoute createNewRoute(TransitRoute routeOld, List<TransitRouteStop> stopsInNewRoute,
+                                        int modNumber) {
 
         TransitRoute routeNew;
 
@@ -353,7 +561,7 @@ public class TransitRouteTrimmer {
         TransitRouteStop stop = stopIt.next();
         for (Id<Link> linkId : linksOld) {
             if (!start) {
-                if (linkId.equals(startLinkNew)){
+                if (linkId.equals(startLinkNew)) {
                     start = true;
                     stop = stopIt.next();
                 }
@@ -382,17 +590,17 @@ public class TransitRouteTrimmer {
         double initialDepartureOffset = transitRouteStop.getDepartureOffset().seconds();
         double departureOffset = stopsInNewRoute.get(0).getDepartureOffset().seconds() - initialDepartureOffset;
 
-//        double initialArrivalOffset = transitRouteStop.getArrivalOffset().seconds();
+        // double initialArrivalOffset = transitRouteStop.getArrivalOffset().seconds();
         double arrivalOffset = departureOffset;
-//        double arrivalOffset = stopsInNewRoute.get(0).getArrivalOffset().seconds() - initialArrivalOffset;
+        // double arrivalOffset = stopsInNewRoute.get(0).getArrivalOffset().seconds() - initialArrivalOffset;
 
-        List<TransitRouteStop> stopsNew = new ArrayList<>(copyStops(stopsInNewRoute, departureOffset,arrivalOffset));
+        List<TransitRouteStop> stopsNew = new ArrayList<>(copyStops(stopsInNewRoute, departureOffset, arrivalOffset));
 
 
         // make route.
         NetworkRoute networkRouteNew = RouteUtils.createLinkNetworkRouteImpl(startLinkNew, midLinksNew, endLinkNew);
         String routeIdOld = routeOld.getId().toString();
-        Id<TransitRoute> routeIdNew = Id.create( routeIdOld + "_mod" + modNumber, TransitRoute.class);
+        Id<TransitRoute> routeIdNew = Id.create(routeIdOld + "_mod" + modNumber, TransitRoute.class);
         routeNew = tsf.createTransitRoute(routeIdNew, networkRouteNew, stopsNew, routeOld.getTransportMode());
         routeNew.setDescription(routeOld.getDescription());
 
@@ -402,7 +610,7 @@ public class TransitRouteTrimmer {
             Id<Vehicle> vehIdOld = departure.getVehicleId();
             Id<Vehicle> vehIdNew = Id.createVehicleId(vehIdOld.toString() + "_mod" + modNumber);
             VehicleType vehType = this.vehicles.getVehicles().get(vehIdOld).getType();
-//            this.vehicles.removeVehicle(departure.getVehicleId()); //TODO VEH MUST BE REMOVED LATER ON IF UNUSED
+            // this.vehicles.removeVehicle(departure.getVehicleId()); //TODO VEH MUST BE REMOVED LATER ON IF UNUSED
             Vehicle vehicle = vf.createVehicle(vehIdNew, vehType);
             this.vehicles.addVehicle(vehicle);
 
@@ -416,14 +624,15 @@ public class TransitRouteTrimmer {
 
 
     // TODO: how to deal with arrival and departure offsets? I don't know the conventions...
-    private Collection<? extends TransitRouteStop> copyStops(List<TransitRouteStop> s, Double departureOffset, Double arrivalOffset) {
+    private Collection<? extends TransitRouteStop> copyStops(List<TransitRouteStop> s, Double
+            departureOffset, Double arrivalOffset) {
         List<TransitRouteStop> stops = new ArrayList<>();
         TransitRouteStop newStop;
-        for(TransitRouteStop oldStop: s){
+        for (TransitRouteStop oldStop : s) {
 
-//            newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
-//                    oldStop.getDepartureOffset().seconds() - departureOffset,
-//                    oldStop.getDepartureOffset().seconds() - departureOffset);
+            //            newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
+            //                    oldStop.getDepartureOffset().seconds() - departureOffset,
+            //                    oldStop.getDepartureOffset().seconds() - departureOffset);
             if (oldStop.getDepartureOffset().isDefined() && oldStop.getArrivalOffset().isDefined()) {
                 newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
                         oldStop.getDepartureOffset().seconds() - departureOffset,
@@ -449,3 +658,4 @@ public class TransitRouteTrimmer {
 
 
 }
+
