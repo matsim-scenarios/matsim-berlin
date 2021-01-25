@@ -72,6 +72,7 @@ public class TransitRouteTrimmer {
         return stopsInZone;
     }
 
+
     public void modifyTransitLinesFromTransitSchedule(Set<Id<TransitLine>> linesToModify, modMethod modifyMethod) {
 
         Iterator var3 = transitScheduleOld.getFacilities().values().iterator();
@@ -357,6 +358,7 @@ public class TransitRouteTrimmer {
         List<Integer[]> routeIndicies = new ArrayList<>();
 
 
+        //Get list of hubs
         for (int i = 0; i < stopsOld.size(); i++) {
             TransitRouteStop stop = stopsOld.get(i);
             if (stop.getStopFacility().getAttributes().getAsMap().containsKey("hub")) {
@@ -368,58 +370,43 @@ public class TransitRouteTrimmer {
             }
         }
 
-        Integer startIndex = null;
-        Integer endIndex = null;
+//        Integer startIndex = null;
+//        Integer endIndex = null;
+
+        boolean[] stops2keep = new boolean[stopsOld.size()];
         for (int i = 0; i < stopsOld.size(); i++) {
-            Id<TransitStopFacility> stopFacilityId = stopsOld.get(i).getStopFacility().getId();
-            // we are outside of zone --> we keep the stop
-            if (!stopsInZone.contains(stopFacilityId)) {
-                if (startIndex == null) {
-                    startIndex = i;
-                }
-                // If this is the last stop, end route at this stop
-                if (i == stopsOld.size() - 1) {
-                    endIndex = i;
-                }
-                // If this is not last stop, and next stop is within zone, end route at this stop
-                else {
-                    Id<TransitStopFacility> stopFacilityIdNext = stopsOld.get(i + 1).getStopFacility().getId();
-                    if (stopsInZone.contains(stopFacilityIdNext)) {
-                        endIndex = i;
-                    }
-                }
-            }
-
-            if (startIndex != null && endIndex != null) {
-                Integer[] startEndPair = {startIndex, endIndex};
-
-                routeIndicies.add(startEndPair);
-                startIndex = null;
-                endIndex = null;
-            }
+            stops2keep[i] = (!stopsInZone.contains(stopsOld.get(i).getStopFacility().getId()));
         }
 
-        // add first last stop in zone
-//        if (allowOneStopWithinZone) {
-//            for (Integer[] pair : routeIndicies) {
-//                Integer startI = pair[0];
-//                Integer endI = pair[1];
-//
-//                if (startI > 0) {
-//                    startI--;
+        routeIndicies = findStartEndIndiciesForAllRoutes(stops2keep);
+        //        for (int i = 0; i < stopsOld.size(); i++) {
+//            Id<TransitStopFacility> stopFacilityId = stopsOld.get(i).getStopFacility().getId();
+//            // we are outside of zone --> we keep the stop
+//            if (!stopsInZone.contains(stopFacilityId)) {
+//                if (startIndex == null) {
+//                    startIndex = i;
 //                }
-//
-//                if (endI < stopsOld.size() - 1) {
-//                    endI++;
+//                // If this is the last stop, end route at this stop
+//                if (i == stopsOld.size() - 1) {
+//                    endIndex = i;
 //                }
-//                pair[0] = startI;
-//                pair[1] = endI;
+//                // If this is not last stop, and next stop is within zone, end route at this stop
+//                else {
+//                    Id<TransitStopFacility> stopFacilityIdNext = stopsOld.get(i + 1).getStopFacility().getId();
+//                    if (stopsInZone.contains(stopFacilityIdNext)) {
+//                        endIndex = i;
+//                    }
+//                }
+//            }
 //
+//            if (startIndex != null && endIndex != null) {
+//                Integer[] startEndPair = {startIndex, endIndex};
+//
+//                routeIndicies.add(startEndPair);
+//                startIndex = null;
+//                endIndex = null;
 //            }
 //        }
-
-
-        // check if we should add hubs to routes
 
         // Extend routes with hubs and/or first stop within zone
         for (Integer[] pair : routeIndicies) {
@@ -434,13 +421,13 @@ public class TransitRouteTrimmer {
                 for (int[] hubPosValuePair : hubs) {
                     int hubPos = hubPosValuePair[0];
                     int hubReach = hubPosValuePair[1];
-                    if (hubPos < leftIndex && hubPos + hubReach > leftIndex) {
+                    if (hubPos < leftIndex && hubPos + hubReach >= leftIndex) {
                         if (hubPos < leftIndexNew) {
                             leftIndexNew = hubPos;
                         }
                     }
 
-                    if (hubPos > rightIndex && hubPos - hubReach < rightIndex) {
+                    if (hubPos > rightIndex && hubPos - hubReach <= rightIndex) {
                         if (hubPos > rightIndexNew) {
                             rightIndexNew = hubPos;
                         }
@@ -468,6 +455,18 @@ public class TransitRouteTrimmer {
         }
 
 
+        // combine routes if overlap
+        List<Integer[]> routeIndiciesIntersected = new ArrayList<>();
+
+        boolean[] stops2Keep = new boolean[stopsOld.size()];
+        for (Integer[] pair : routeIndicies) {
+            for (int i = pair[0]; i <= pair[1]; i++) {
+                stops2Keep[i] = true;
+            }
+        }
+
+        routeIndicies = findStartEndIndiciesForAllRoutes(stops2Keep);
+
         // create transit routes
         int newRouteCnt = 1;
         for (Integer[] pair : routeIndicies) {
@@ -480,6 +479,82 @@ public class TransitRouteTrimmer {
 
     }
 
+    private List<Integer[]> findStartEndIndiciesForAllRoutes(boolean[] stops2Keep) {
+        List<Integer[]> routeIndicies = new ArrayList<>();
+        Integer startIndex = null;
+        Integer endIndex = null;
+
+        for (int i = 0; i < stops2Keep.length; i++) {
+            // we only look at stops that are outside of the zone (which should be kept)
+            if (stops2Keep[i]) {
+                // if the route has not begun previously, then begin it at the current index
+                if (startIndex == null) {
+                    startIndex = i;
+                }
+                // If this is the last stop, end route at this stop
+                if (i == stops2Keep.length - 1) {
+                    endIndex = i;
+                }
+                // If this is not last stop, and next stop is within zone, end route at this stop
+                else {
+                    if (!stops2Keep[i + 1]) {
+                        endIndex = i;
+                    }
+                }
+            }
+            // the route is complete when we have a start and end index --> add route indicies to routeIndicies
+            if (startIndex != null && endIndex != null) {
+                routeIndicies.add(new Integer[]{startIndex, endIndex});
+                startIndex = null;
+                endIndex = null;
+            }
+        }
+
+        return routeIndicies;
+    }
+
+
+
+    private boolean checkIntersection(Integer[] pair1, Integer[] pair2) {
+        Integer pair1Left = pair1[0];
+        Integer pair1Right = pair1[1];
+        if (pair1Left >= pair2[0] && pair1Left <= pair2[1]) {
+            return true;
+        } else if (pair1Right >= pair2[0] && pair1Right <= pair2[1]) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private Integer[] intersectPairs(Integer[] pair1, Integer[] pair2) {
+        int newLeft = Math.min(pair1[0], pair2[0]);
+        int newRight = Math.max(pair1[1], pair2[1]);
+        return new Integer[]{newLeft, newRight};
+    }
+
+
+    // add first last stop in zone
+    //        if (allowOneStopWithinZone) {
+    //            for (Integer[] pair : routeIndicies) {
+    //                Integer startI = pair[0];
+    //                Integer endI = pair[1];
+    //
+    //                if (startI > 0) {
+    //                    startI--;
+    //                }
+    //
+    //                if (endI < stopsOld.size() - 1) {
+    //                    endI++;
+    //                }
+    //                pair[0] = startI;
+    //                pair[1] = endI;
+    //
+    //            }
+    //        }
+
+
+    // check if we should add hubs to routes
 
     // check overlap
 
