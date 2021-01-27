@@ -28,6 +28,7 @@ public class TransitRouteTrimmer {
     boolean allowOneStopWithinZone = true;
     boolean allowHubsWithinZone = true;
     private int minimumRouteLength = 2;
+    private int allowableStopsWithinZone = 3;
 
     private Vehicles vehicles;
     private TransitSchedule transitScheduleOld;
@@ -354,59 +355,16 @@ public class TransitRouteTrimmer {
         ArrayList<TransitRoute> resultRoutes = new ArrayList<>();
         List<TransitRouteStop> stopsOld = new ArrayList<>(routeOld.getStops());
 
-        List<int[]> hubs = new ArrayList<>();
-        List<Integer[]> routeIndicies = new ArrayList<>();
-
-
-        //Get list of hubs
-        for (int i = 0; i < stopsOld.size(); i++) {
-            TransitRouteStop stop = stopsOld.get(i);
-            if (stop.getStopFacility().getAttributes().getAsMap().containsKey("hub")) {
-                int hubValue = (int) stop.getStopFacility().getAttributes().getAttribute("hub");
-                if (hubValue > 0) {
-                    int[] hubPosValuePair = {i, hubValue};
-                    hubs.add(hubPosValuePair);
-                }
-            }
-        }
-
-//        Integer startIndex = null;
-//        Integer endIndex = null;
+        // Get list of hubs: each hub is represented [location, reach] where location is the index along the route and
+        // reach is the number of stops away the hub can be from the edge of the zone to still be included.
+        List<int[]> hubLocationAndReach = getHubList(stopsOld);
 
         boolean[] stops2keep = new boolean[stopsOld.size()];
         for (int i = 0; i < stopsOld.size(); i++) {
             stops2keep[i] = (!stopsInZone.contains(stopsOld.get(i).getStopFacility().getId()));
         }
 
-        routeIndicies = findStartEndIndiciesForAllRoutes(stops2keep);
-        //        for (int i = 0; i < stopsOld.size(); i++) {
-//            Id<TransitStopFacility> stopFacilityId = stopsOld.get(i).getStopFacility().getId();
-//            // we are outside of zone --> we keep the stop
-//            if (!stopsInZone.contains(stopFacilityId)) {
-//                if (startIndex == null) {
-//                    startIndex = i;
-//                }
-//                // If this is the last stop, end route at this stop
-//                if (i == stopsOld.size() - 1) {
-//                    endIndex = i;
-//                }
-//                // If this is not last stop, and next stop is within zone, end route at this stop
-//                else {
-//                    Id<TransitStopFacility> stopFacilityIdNext = stopsOld.get(i + 1).getStopFacility().getId();
-//                    if (stopsInZone.contains(stopFacilityIdNext)) {
-//                        endIndex = i;
-//                    }
-//                }
-//            }
-//
-//            if (startIndex != null && endIndex != null) {
-//                Integer[] startEndPair = {startIndex, endIndex};
-//
-//                routeIndicies.add(startEndPair);
-//                startIndex = null;
-//                endIndex = null;
-//            }
-//        }
+        List<Integer[]>  routeIndicies = findStartEndIndiciesForAllRoutes(stops2keep);
 
         // Extend routes with hubs and/or first stop within zone
         for (Integer[] pair : routeIndicies) {
@@ -417,8 +375,8 @@ public class TransitRouteTrimmer {
             int rightIndexNew = rightIndex;
 
             // Add hubs
-            if (allowHubsWithinZone && !hubs.isEmpty()) {
-                for (int[] hubPosValuePair : hubs) {
+            if (allowHubsWithinZone && !hubLocationAndReach.isEmpty()) {
+                for (int[] hubPosValuePair : hubLocationAndReach) {
                     int hubPos = hubPosValuePair[0];
                     int hubReach = hubPosValuePair[1];
                     if (hubPos < leftIndex && hubPos + hubReach >= leftIndex) {
@@ -435,7 +393,7 @@ public class TransitRouteTrimmer {
                 }
             }
 
-            // add first stop within zone
+            // add first stop within zone (only if hub hasn't already extended the route in the respective direction)
             if (allowOneStopWithinZone) {
                 if (leftIndex == leftIndexNew) {
                     if (leftIndex > 0) {
@@ -456,16 +414,32 @@ public class TransitRouteTrimmer {
 
 
         // combine routes if overlap
-        List<Integer[]> routeIndiciesIntersected = new ArrayList<>();
-
-        boolean[] stops2Keep = new boolean[stopsOld.size()];
+        boolean[] stops2keep2 = new boolean[stopsOld.size()];
         for (Integer[] pair : routeIndicies) {
             for (int i = pair[0]; i <= pair[1]; i++) {
-                stops2Keep[i] = true;
+                stops2keep2[i] = true;
             }
         }
 
-        routeIndicies = findStartEndIndiciesForAllRoutes(stops2Keep);
+        // fill gaps of two or less
+        int zeroCnt = 0;
+        List<Integer> tmpIndex = new ArrayList<>();
+        for (int i = 0; i < stops2keep2.length; i++) {
+            if (!stops2keep2[i]) {
+                zeroCnt++;
+                tmpIndex.add(i);
+            } else {
+                if (zeroCnt > 0 && zeroCnt <= allowableStopsWithinZone) {
+                    for (int index : tmpIndex) {
+                        stops2keep2[index] = true;
+                    }
+                }
+                zeroCnt = 0;
+                tmpIndex.clear();
+            }
+        }
+
+        routeIndicies = findStartEndIndiciesForAllRoutes(stops2keep2);
 
         // create transit routes
         int newRouteCnt = 1;
@@ -477,6 +451,22 @@ public class TransitRouteTrimmer {
 
         return resultRoutes;
 
+    }
+
+    private List<int[]> getHubList(List<TransitRouteStop> stopsOld) {
+        List<int[]> hubs = new ArrayList<>();
+
+        for (int i = 0; i < stopsOld.size(); i++) {
+            TransitRouteStop stop = stopsOld.get(i);
+            if (stop.getStopFacility().getAttributes().getAsMap().containsKey("hub")) {
+                int hubValue = (int) stop.getStopFacility().getAttributes().getAttribute("hub");
+                if (hubValue > 0) {
+                    int[] hubPosValuePair = {i, hubValue};
+                    hubs.add(hubPosValuePair);
+                }
+            }
+        }
+        return hubs;
     }
 
     private List<Integer[]> findStartEndIndiciesForAllRoutes(boolean[] stops2Keep) {
@@ -498,6 +488,7 @@ public class TransitRouteTrimmer {
                 // If this is not last stop, and next stop is within zone, end route at this stop
                 else {
                     if (!stops2Keep[i + 1]) {
+
                         endIndex = i;
                     }
                 }
