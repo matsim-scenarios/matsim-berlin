@@ -681,6 +681,64 @@ public class TransitRouteTrimmerTest {
 
     }
 
+    @Test
+    public void testSplitRoutes_MiddleIn_Hub_allowableStopsWithin() {
+
+        Id<TransitLine> transitLineId = Id.create("161---17326_700", TransitLine.class);
+        Id<TransitRoute> transitRouteId = Id.create("161---17326_700_21", TransitRoute.class);
+
+        Set<Id<TransitStopFacility>> stopsInZone = transitRouteTrimmer.getStopsInZone();
+
+        // old
+        TransitRoute transitRouteOld = scenario.getTransitSchedule().getTransitLines().get(transitLineId).getRoutes().get(transitRouteId);
+        int numStopsOld = transitRouteOld.getStops().size();
+
+        assertFalse(stopsInZone.contains(transitRouteOld.getStops().get(0).getStopFacility().getId()));
+        assertFalse(stopsInZone.contains(transitRouteOld.getStops().get(numStopsOld - 1).getStopFacility().getId()));
+
+
+        // Modification
+        Set<Id<TransitLine>> linesToModify = new HashSet<>();
+        linesToModify.add(transitLineId); // jr EDIT
+
+
+        transitRouteTrimmer.removeEmptyLines = false;
+        transitRouteTrimmer.allowOneStopWithinZone = false;
+        transitRouteTrimmer.allowableStopsWithinZone = 19;
+        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitRoute);
+        TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
+
+        assertTrue("line should still exist", transitScheduleNew.getTransitLines().containsKey(transitLineId));
+        TransitLine transitLineNew = transitScheduleNew.getTransitLines().get(transitLineId);
+
+        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod1", TransitRoute.class)));
+        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod2", TransitRoute.class)));
+        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod0", TransitRoute.class)));
+        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod3", TransitRoute.class)));
+        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21", TransitRoute.class)));
+
+
+        TransitRoute routeNew1 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_mod1", TransitRoute.class));
+        //        TransitRoute routeNew2 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_mod2", TransitRoute.class));
+
+        assertEquals(transitRouteOld.getStops().size(), routeNew1.getStops().size());
+        //        assertNotEquals(routeNew1.getStops().size(), routeNew2.getStops().size());
+
+        int inCntNew1 = 0;
+        for (TransitRouteStop stop : routeNew1.getStops()) {
+            if (transitRouteTrimmer.getStopsInZone().contains(stop.getStopFacility().getId())) {
+                inCntNew1++;
+            }
+        }
+
+
+        assertEquals("new route #1 should have 19 stops within zone", 19, inCntNew1);
+
+
+
+
+    }
+
 
 }
 //        final String outputPath = "src/main/java/org/matsim/prepare/ptRouteTrim/output4/";

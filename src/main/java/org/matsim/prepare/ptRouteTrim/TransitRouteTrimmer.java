@@ -27,8 +27,8 @@ public class TransitRouteTrimmer {
     boolean removeEmptyLines = true;
     boolean allowOneStopWithinZone = true;
     boolean allowHubsWithinZone = true;
-    private int minimumRouteLength = 2;
-    private int allowableStopsWithinZone = 3;
+    int minimumRouteLength = 2;
+    int allowableStopsWithinZone = 3;
 
     private Vehicles vehicles;
     private TransitSchedule transitScheduleOld;
