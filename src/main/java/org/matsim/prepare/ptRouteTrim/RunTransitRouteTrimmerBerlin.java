@@ -3,6 +3,7 @@ package org.matsim.prepare.ptRouteTrim;
 import org.geotools.data.shapefile.shp.ShapeType;
 import org.geotools.data.shapefile.shp.ShapefileWriter;
 import org.geotools.feature.SchemaException;
+import org.geotools.geometry.jts.Geometries;
 import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
@@ -58,77 +59,90 @@ public class RunTransitRouteTrimmerBerlin {
 
         List<Id<TransitStopFacility>> railStationIds = railStations.stream().map(x -> x.getId()).collect(Collectors.toList());
 
-//        List<TransitStopFacility> nonRailStations = allStations.stream().filter(x -> !railStationIds.contains(x.getId())).collect(Collectors.toList());
-
-
-
-
-
-
 
         GeometryFactory GEOMETRY_FACTORY = JTSFactoryFinder.getGeometryFactory();
 
-//        GEOMETRY_FACTORY.buildGeometry();
 
+        List<Geometry> bufferGeoList = new ArrayList<>();
 
-
-
-        List<Geometry> geoList = new ArrayList<>();
-        List<SimpleFeature> featureList = new ArrayList<>();
+        List<TransitStopFacility> stopsInBuffer = new ArrayList<>();
+        List<Geometry> stopsInBufferGeoList = new ArrayList<>();
+        List<Geometry> busStopGeoList = new ArrayList<>();
+        List<Geometry> railStopGeoList = new ArrayList<>();
 
         for (TransitStopFacility stop : railStations) {
-
-            Coordinate coordinate = new Coordinate(stop.getCoord().getX(), stop.getCoord().getY());
+            double x = stop.getCoord().getX();
+            double y = stop.getCoord().getY();
+            Coordinate coordinate = new Coordinate(x, y);
             Point point = GEOMETRY_FACTORY.createPoint(coordinate);
             Geometry buffer = buffer(point, 400);
-            geoList.add(buffer);
+            bufferGeoList.add(buffer);
         }
 
-        Geometry geometry_full = GEOMETRY_FACTORY.buildGeometry(geoList);
+        Geometry railBufferGeo = GEOMETRY_FACTORY.buildGeometry(bufferGeoList);
 
-//        Geometry[] geoArray = new Geometry[geoList.size()];
-//        geoArray = geoList.toArray(geoArray);
-//
-//        GeometryCollection geometryCollection = GEOMETRY_FACTORY.createGeometryCollection(geoArray);
+        // This makes a union between the individual polygons and results in a valid geometry
+        railBufferGeo = buffer(railBufferGeo, 0);
 
+        for (TransitStopFacility stop : allStations) {
+            double x = stop.getCoord().getX();
+            double y = stop.getCoord().getY();
+            Coordinate coordinate = new Coordinate(x, y);
+            Point point = GEOMETRY_FACTORY.createPoint(coordinate);
 
-        RandomAccessFile shp = new RandomAccessFile("myshape2.shp", "rw");
-        RandomAccessFile shx = new RandomAccessFile("myshape2.shx", "rw");
+            if (railStationIds.contains(stop.getId())) {
+                railStopGeoList.add(point);
+            } else {
+                busStopGeoList.add(point);
+            }
+        }
+
+        Geometry busStopAll = GEOMETRY_FACTORY.buildGeometry(busStopGeoList);
+
+        Geometry railStopGeo = GEOMETRY_FACTORY.buildGeometry(railStopGeoList);
+
+        Geometry busStopInBuffer = busStopAll.intersection(railBufferGeo);
+
+        RandomAccessFile shp = new RandomAccessFile("railBufferGeo.shp", "rw");
+        RandomAccessFile shx = new RandomAccessFile("railBufferGeo.shx", "rw");
         ShapefileWriter writer = new ShapefileWriter(shp.getChannel(), shx.getChannel());
-        writer.write((GeometryCollection) geometry_full, ShapeType.POLYGON);
-//        writer.write(geometryCollection, ShapeType.POLYGON);
+        writer.write((GeometryCollection) railBufferGeo, ShapeType.POLYGON);
 
+        RandomAccessFile shp_bus = new RandomAccessFile("busStopGeo.shp", "rw");
+        RandomAccessFile shx_bus = new RandomAccessFile("busStopGeo.shx", "rw");
+        ShapefileWriter writer_bus = new ShapefileWriter(shp_bus.getChannel(), shx_bus.getChannel());
+        writer_bus.write((GeometryCollection) busStopInBuffer, ShapeType.POINT);
+
+        RandomAccessFile shp_railStop = new RandomAccessFile("railStopGeo.shp", "rw");
+        RandomAccessFile shx_railStop = new RandomAccessFile("railStopGeo.shx", "rw");
+        ShapefileWriter writer_railStop = new ShapefileWriter(shp_railStop.getChannel(), shx_railStop.getChannel());
+        writer_railStop.write((GeometryCollection) railStopGeo, ShapeType.POINT);
+
+
+        //        List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new URL(zoneShpFile));
+        //        System.out.println("\n Modify Routes: SplitRoute");
+        //        TransitRouteTrimmer transitRouteTrimmer = new TransitRouteTrimmer(scenario.getTransitSchedule(), scenario.getVehicles(), geometries);
         //
-        //        String shpFileName = "xxxxxxx";
-        //        RandomAccessFile shpFile = new RandomAccessFile(shpFileName, "rw");
-        //        ShapefileWriter shapefileWriter = new ShapefileWriter(shpFile.getChannel(), shpFile.getChannel());
-        //        shapefileWriter.write(geometryCollection, ShapeType.POLYGON);
+        //        Set<Id<TransitStopFacility>> stopsInZone = transitRouteTrimmer.getStopsInZone();
         //
-        //        shapefileWriter.
-
-        List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new URL(zoneShpFile));
-        System.out.println("\n Modify Routes: SplitRoute");
-        TransitRouteTrimmer transitRouteTrimmer = new TransitRouteTrimmer(scenario.getTransitSchedule(), scenario.getVehicles(), geometries);
-
-        Set<Id<TransitStopFacility>> stopsInZone = transitRouteTrimmer.getStopsInZone();
-
-        Set<Id<TransitLine>> linesToModify = scenario.getTransitSchedule().getTransitLines().keySet();
-
-
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitRoute);
-        TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
-        Vehicles vehiclesNew = transitRouteTrimmer.getVehicles();
-
-        TransitScheduleValidator.ValidationResult validationResult = TransitScheduleValidator.validateAll(transitScheduleNew, scenario.getNetwork());
-        System.out.println(validationResult.getErrors());
-
-
-        TransitRouteTrimmerUtils.transitSchedule2ShapeFile(transitScheduleNew, outputPath + "output-trimmed-routes.shp", epsgCode);
-        new TransitScheduleWriter(transitScheduleNew).writeFile(outputPath + "optimizedSchedule_nonSB-bus-split-at-hubs.xml.gz");
-        new MatsimVehicleWriter(vehiclesNew).writeFile(outputPath + "optimizedVehicles_nonSB-bus-split-at-hubs.xml.gz");
+        //        Set<Id<TransitLine>> linesToModify = scenario.getTransitSchedule().getTransitLines().keySet();
+        //
+        //
+        //        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitRoute);
+        //        TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
+        //        Vehicles vehiclesNew = transitRouteTrimmer.getVehicles();
+        //
+        //        TransitScheduleValidator.ValidationResult validationResult = TransitScheduleValidator.validateAll(transitScheduleNew, scenario.getNetwork());
+        //        System.out.println(validationResult.getErrors());
+        //
+        //
+        //        TransitRouteTrimmerUtils.transitSchedule2ShapeFile(transitScheduleNew, outputPath + "output-trimmed-routes.shp", epsgCode);
+        //        new TransitScheduleWriter(transitScheduleNew).writeFile(outputPath + "optimizedSchedule_nonSB-bus-split-at-hubs.xml.gz");
+        //        new MatsimVehicleWriter(vehiclesNew).writeFile(outputPath + "optimizedVehicles_nonSB-bus-split-at-hubs.xml.gz");
 
 
     }
 
 
 }
+
