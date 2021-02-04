@@ -16,5 +16,6 @@ env:
     # - TEST=RunBerlinScenarioIT#test10pctUntilIteration1 # does not fit into travis.  kai, aug'18
     # - TEST=RunBerlinScenarioIT#test1pctManyIterations # does probably not fit into travis (not tested).  kai, aug'18
     - TEST=RunOfflineAirPollutionAnalysisTest
+    - TEST=RunOfflineNoiseAnalysisTest
 script:
   - mvn -Dtest=${TEST} test --batch-mode -Dmatsim.preferLocalDtds=true -Dmaven.javadoc.skip -e
