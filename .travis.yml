@@ -1,7 +1,5 @@
 language: java
 
-install: travis_wait 30 mvn install
-
 jdk: openjdk11
 
 env:
@@ -20,4 +18,4 @@ env:
     - TEST=RunOfflineAirPollutionAnalysisTest
     - TEST=RunOfflineNoiseAnalysisTest
 script:
-  - mvn -Dtest=${TEST} test --batch-mode -Dmatsim.preferLocalDtds=true -Dmaven.javadoc.skip -e
+  - mvn -Dtest=${TEST} test --batch-mode -Dmatsim.preferLocalDtds=true -Dmaven.javadoc.skip -e && travis_wait 20 mvn
