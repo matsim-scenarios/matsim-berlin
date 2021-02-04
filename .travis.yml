@@ -1,5 +1,7 @@
 language: java
 
+install: travis_wait 30 mvn install
+
 jdk: openjdk11
 
 env:
