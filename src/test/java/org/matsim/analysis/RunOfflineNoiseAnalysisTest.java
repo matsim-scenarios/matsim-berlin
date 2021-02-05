@@ -31,8 +31,8 @@ public class RunOfflineNoiseAnalysisTest{
 	@Test
 	public final void test1() {
 		try {
-			String runDirectory = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/";
-			String runId = "berlin-v5.4-1pct";
+			String runDirectory = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-0.1pct/output-berlin-v5.4-0.1pct/";
+			String runId = "berlin-v5.4-0.1pct";
 			
 			RunOfflineNoiseAnalysis analysis = new RunOfflineNoiseAnalysis(runDirectory, runId, utils.getOutputDirectory());
 			analysis.run();
