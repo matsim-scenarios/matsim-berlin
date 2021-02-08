@@ -27,7 +27,6 @@ import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup.DetailedVsAverageLookupBehavior;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup.HbefaRoadTypeSource;
-import org.matsim.contrib.emissions.utils.EmissionsConfigGroup.HbefaVehicleDescriptionSource;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup.NonScenarioVehicles;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
@@ -48,29 +47,54 @@ import org.matsim.vehicles.VehicleUtils;
 
 public class RunOfflineAirPollutionAnalysis {
 	
-	final static String runDirectory = "public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/output-berlin-v5.4-10pct/";	
-	final static String runId = "berlin-v5.4-10pct";
+	private final String runDirectory;
+	private final String runId;
+	private final String hbefaWarmFile;
+	private final String hbefaColdFile;
+	private final String analysisOutputDirectory;
 
-	final static String hbefaFileCold = "shared-svn/projects/matsim-germany/hbefa/hbefa-files/v3.2/EFA_ColdStart_vehcat_2005average.txt";
-	final static String hbefaFileWarm = "shared-svn/projects/matsim-germany/hbefa/hbefa-files/v3.2/EFA_HOT_vehcat_2005average.txt";
-	
 	public static void main(String[] args) {
-		
-		String rootDirectory = null;
-		
+				
 		if (args.length == 1) {
-			rootDirectory = args[0];
+			String rootDirectory = args[0];
+			if (!rootDirectory.endsWith("/")) rootDirectory = rootDirectory + "/";
+			
+			final String runDirectory = "public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/output-berlin-v5.4-10pct/";	
+			final String runId = "berlin-v5.4-10pct";
+
+			final String hbefaFileCold = "shared-svn/projects/matsim-germany/hbefa/hbefa-files/v3.2/EFA_ColdStart_vehcat_2005average.txt";
+			final String hbefaFileWarm = "shared-svn/projects/matsim-germany/hbefa/hbefa-files/v3.2/EFA_HOT_vehcat_2005average.txt";
+			
+			RunOfflineAirPollutionAnalysis analysis = new RunOfflineAirPollutionAnalysis(
+					rootDirectory + runDirectory,
+					runId,
+					rootDirectory + hbefaFileWarm,
+					rootDirectory + hbefaFileCold,
+					rootDirectory + runDirectory);
+			analysis.run();
+			
 		} else {
 			throw new RuntimeException("Please set the root directory. Aborting...");
 		}
+	}
+	
+	public RunOfflineAirPollutionAnalysis(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
+		this.runDirectory = runDirectory;
+		this.runId = runId;
+		this.hbefaWarmFile = hbefaFileWarm;
+		this.hbefaColdFile = hbefaFileCold;
 		
-		if (!rootDirectory.endsWith("/")) rootDirectory = rootDirectory + "/";
-		
+		if (!analysisOutputDirectory.endsWith("/")) analysisOutputDirectory = analysisOutputDirectory + "/";
+		this.analysisOutputDirectory = analysisOutputDirectory;
+	}
+
+	void run() {
+
 		Config config = ConfigUtils.createConfig();
-		config.vehicles().setVehiclesFile(rootDirectory + runDirectory + runId + ".output_vehicles.xml.gz");
-		config.network().setInputFile(rootDirectory + runDirectory + runId + ".output_network.xml.gz");
-		config.transit().setTransitScheduleFile(rootDirectory + runDirectory + runId + ".output_transitSchedule.xml.gz");
-		config.transit().setVehiclesFile(rootDirectory + runDirectory + runId + ".output_transitVehicles.xml.gz");
+		config.vehicles().setVehiclesFile(runDirectory + runId + ".output_vehicles.xml.gz");
+		config.network().setInputFile(runDirectory + runId + ".output_network.xml.gz");
+		config.transit().setTransitScheduleFile(runDirectory + runId + ".output_transitSchedule.xml.gz");
+		config.transit().setVehiclesFile(runDirectory + runId + ".output_transitVehicles.xml.gz");
 		config.global().setCoordinateSystem("GK4");
 		config.plans().setInputFile(null);
 		config.parallelEventHandling().setNumberOfThreads(null);
@@ -79,16 +103,15 @@ public class RunOfflineAirPollutionAnalysis {
 		
 		EmissionsConfigGroup eConfig = ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
 		eConfig.setDetailedVsAverageLookupBehavior(DetailedVsAverageLookupBehavior.directlyTryAverageTable);
-		eConfig.setAverageColdEmissionFactorsFile(rootDirectory + hbefaFileCold);
-		eConfig.setAverageWarmEmissionFactorsFile(rootDirectory + hbefaFileWarm);
+		eConfig.setAverageColdEmissionFactorsFile(this.hbefaColdFile);
+		eConfig.setAverageWarmEmissionFactorsFile(this.hbefaWarmFile);
 		eConfig.setHbefaRoadTypeSource(HbefaRoadTypeSource.fromLinkAttributes);
 		eConfig.setNonScenarioVehicles(NonScenarioVehicles.ignore);
 		
-		final String emissionEventOutputFile = rootDirectory + runDirectory + runId + ".emission.events.offline.xml.gz";
-		final String eventsFile = rootDirectory + runDirectory + runId + ".output_events.xml.gz";
+		final String emissionEventOutputFile = analysisOutputDirectory + runId + ".emission.events.offline.xml.gz";
+		final String eventsFile = runDirectory + runId + ".output_events.xml.gz";
 		
 		Scenario scenario = ScenarioUtils.loadScenario(config);
-		
 		// network
 		for (Link link : scenario.getNetwork().getLinks().values()) {
 
@@ -194,7 +217,7 @@ public class RunOfflineAirPollutionAnalysis {
         matsimEventsReader.readFile(eventsFile);
         eventsManager.finishProcessing();
 
-        emissionEventWriter.closeFile();
+        emissionEventWriter.closeFile();	
 	}
 
 }

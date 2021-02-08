@@ -4,14 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.matsim-scenarios</groupId>
 	<artifactId>matsim-berlin</artifactId>
-	<version>5.5.1</version>
+	<version>5.5.2</version>
 
 	<name>MATSim Open Berlin scenario project</name>
 	<description>MATSim Open Berlin scenario project</description>
 
 	<properties>
-		<!--		<matsim.version>13.0-SNAPSHOT</matsim.version>-->
-		<matsim.version>13.0-2021w02-SNAPSHOT</matsim.version>
+<!--				<matsim.version>13.0-SNAPSHOT</matsim.version>-->
+		<matsim.version>13.0-2020w51-SNAPSHOT</matsim.version>
 	</properties>
 
 	<repositories>
@@ -158,7 +158,7 @@
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>opt-drt</artifactId>
-			<version>0a4ad0fe73</version>
+			<version>e955606ea4</version>
 		</dependency>
 		
 		<dependency>
