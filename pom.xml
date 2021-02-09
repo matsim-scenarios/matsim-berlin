@@ -4,14 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.matsim-scenarios</groupId>
 	<artifactId>matsim-berlin</artifactId>
-	<version>5.5.x</version>
+	<version>5.5.ev</version>
 
 	<name>MATSim Open Berlin scenario project</name>
 	<description>MATSim Open Berlin scenario project</description>
 
 	<properties>
 				<matsim.version>13.0-SNAPSHOT</matsim.version>
-<!--		<matsim.version>13.0-2021w03-SNAPSHOT</matsim.version>-->
+<!--		<matsim.version>13.0-2020w51-SNAPSHOT</matsim.version>-->
 	</properties>
 
 	<repositories>
@@ -101,19 +101,6 @@
 			<scope>compile</scope>
 		</dependency>
 
-<!--		<dependency>-->
-<!--			<groupId>org.matsim.contrib</groupId>-->
-<!--			<artifactId>signals</artifactId>-->
-<!--			<version>${matsim.version}</version>-->
-<!--			<scope>compile</scope>-->
-<!--		</dependency>-->
-
-<!--		<dependency>-->
-<!--			<groupId>org.matsim</groupId>-->
-<!--			<artifactId>matsim-examples</artifactId>-->
-<!--			<version>${matsim.version}</version>-->
-<!--		</dependency>-->
-
 		<!-- Include the JUnit testing library.  Not transitive. -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -171,7 +158,7 @@
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>opt-drt</artifactId>
-			<version>0a4ad0fe73</version>
+			<version>e955606ea4</version>
 		</dependency>
 		
 		<dependency>
