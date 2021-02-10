@@ -438,12 +438,12 @@ public class TransitRouteTrimmerTest {
         //        Assert.assertEquals("new route should contain same number of links as old one", numLinksOld, numLinksNew);
         Assert.assertEquals("new route #1 should only have one stop within zone", 1, inCntNew1);
         Assert.assertEquals("new route #2 should only have one stop within zone", 1, inCntNew2);
-
-
-        final String outputPath = "src/main/java/org/matsim/prepare/ptRouteTrim/output4/";
-        Vehicles vehiclesNew = transitRouteTrimmer.getVehicles();
-        new TransitScheduleWriter(transitScheduleNew).writeFile(outputPath + "output-trimmed-schedule.xml.gz");
-        new MatsimVehicleWriter(vehiclesNew).writeFile(outputPath + "output-vehicles.xml.gz");
+//
+//
+//        final String outputPath = "src/main/java/org/matsim/prepare/ptRouteTrim/output4/";
+//        Vehicles vehiclesNew = transitRouteTrimmer.getVehicles();
+//        new TransitScheduleWriter(transitScheduleNew).writeFile(outputPath + "output-trimmed-schedule.xml.gz");
+//        new MatsimVehicleWriter(vehiclesNew).writeFile(outputPath + "output-vehicles.xml.gz");
 
     }
 
