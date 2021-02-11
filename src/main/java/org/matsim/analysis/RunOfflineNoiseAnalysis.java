@@ -36,26 +36,42 @@ import org.matsim.core.scenario.ScenarioUtils;
  */
 public class RunOfflineNoiseAnalysis {
 	private static final Logger log = Logger.getLogger(RunOfflineNoiseAnalysis.class);
+	
+	private final String runDirectory;
+	private final String runId;
+	private final String analysisOutputDirectory;
+	
+//	private final String tunnelLinkIdFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/input/berlin-v5.1.tunnel-linkIDs.csv";
+	private final String tunnelLinkIdFile = null;
 
-	private final static String runDirectory = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/";
-	private final static String runId = "berlin-v5.4-1pct";
+//	private final String noiseBarriersFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-buildings/osm-buildings-dissolved.geojson";
+	private final String noiseBarriersFile = null;
+
+	public RunOfflineNoiseAnalysis(String runDirectory, String runId, String analysisOutputDirectory) {
+		this.runDirectory = runDirectory;
+		this.runId = runId;
+		
+		if (!analysisOutputDirectory.endsWith("/")) analysisOutputDirectory = analysisOutputDirectory + "/";
+		this.analysisOutputDirectory = analysisOutputDirectory;
+	}
 
 	public static void main(String[] args) {
+		
+		final String runDirectory = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/";
+		final String runId = "berlin-v5.4-1pct";
+		
+		RunOfflineNoiseAnalysis analysis = new RunOfflineNoiseAnalysis(runDirectory, runId, "./scenario/");
+		analysis.run();
+	}
 
-		String outputDirectory = "./scenarios/";
-
-		String tunnelLinkIdFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/input/berlin-v5.10.tunnel-linkIDs.csv";
+	void run() {
 		double receiverPointGap = 100.;
 		double timeBinSize = 3600.;
 		
 		Config config = ConfigUtils.createConfig(new NoiseConfigGroup());
-		config.global().setCoordinateSystem("EPSG:31468");
-		config.network().setInputCRS("EPSG:31468");
-//		config.network().setInputFile(runDirectory + runId + ".output_network.xml.gz");
-		config.network().setInputFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz");
-//		config.plans().setInputFile(runDirectory + runId + ".output_plans.xml.gz");
-		config.plans().setInputFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/input/berlin-v5.5-1pct.plans.xml.gz");
-		config.plans().setInputCRS("EPSG:31468");
+		config.global().setCoordinateSystem("GK4");
+		config.network().setInputFile(runDirectory + runId + ".output_network.xml.gz");
+		config.plans().setInputFile(runDirectory + runId + ".output_plans.xml.gz");
 		config.controler().setOutputDirectory(runDirectory);
 		config.controler().setRunId(runId);
 						
@@ -96,16 +112,15 @@ public class RunOfflineNoiseAnalysis {
 		noiseParameters.setTimeBinSizeNoiseComputation(timeBinSize);
 
 		noiseParameters.setConsiderNoiseBarriers(false);
-		noiseParameters.setNoiseBarriersFilePath("/Users/ihab/Documents/workspace/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-buildings/osm-buildings-dissolved.geojson");
-//		noiseParameters.setNoiseBarriersFilePath("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-buildings/osm-buildings-dissolved.geojson");
+		noiseParameters.setNoiseBarriersFilePath(noiseBarriersFile);
 		noiseParameters.setNoiseBarriersSourceCRS("EPSG:31468");
 		
 		Scenario scenario = ScenarioUtils.loadScenario(config);
-		NoiseOfflineCalculation noiseCalculation = new NoiseOfflineCalculation(scenario, outputDirectory);
+		NoiseOfflineCalculation noiseCalculation = new NoiseOfflineCalculation(scenario, analysisOutputDirectory);
 		noiseCalculation.run();	
 		
 		// some processing of the output data
-		String outputFilePath = outputDirectory + "noise-analysis/";
+		String outputFilePath = analysisOutputDirectory + "noise-analysis/";
 		ProcessNoiseImmissions process = new ProcessNoiseImmissions(outputFilePath + "immissions/", outputFilePath + "receiverPoints/receiverPoints.csv", noiseParameters.getReceiverPointGap());
 		process.run();
 				
