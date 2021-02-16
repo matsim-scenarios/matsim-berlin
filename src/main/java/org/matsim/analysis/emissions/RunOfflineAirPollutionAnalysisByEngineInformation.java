@@ -127,9 +127,10 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		
 		File folder = new File(analysisOutputDirectory);			
 		folder.mkdirs();
-		
-		final String emissionEventOutputFile = runDirectory + runId + ".emission.events.offline.xml.gz";
+
 		final String eventsFile = runDirectory + runId + ".output_events.xml.gz";
+
+		final String emissionEventOutputFile = analysisOutputDirectory + runId + ".emission.events.offline.xml.gz";
 		final String linkEmissionAnalysisFile = analysisOutputDirectory + runId + ".emissionsPerLink.csv";
 		final String vehicleTypeFile = analysisOutputDirectory + runId + ".emissionVehicleInformation.csv";
 
