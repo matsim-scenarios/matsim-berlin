@@ -123,7 +123,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		eConfig.setDetailedWarmEmissionFactorsFile(hbefaWarmFile);
 		eConfig.setHbefaRoadTypeSource(HbefaRoadTypeSource.fromLinkAttributes);
 		eConfig.setNonScenarioVehicles(NonScenarioVehicles.ignore);
-		eConfig.setWritingEmissionsEvents(false);
+		eConfig.setWritingEmissionsEvents(true);
 		
 		File folder = new File(analysisOutputDirectory);			
 		folder.mkdirs();
