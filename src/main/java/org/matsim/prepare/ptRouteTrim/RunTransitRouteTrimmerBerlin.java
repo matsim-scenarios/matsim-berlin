@@ -104,7 +104,7 @@ public class RunTransitRouteTrimmerBerlin {
 
         // Add hub attribute to bus stops within buffer of rail stops
         for (Id<TransitStopFacility> id : busStopsInBufferIds) {
-            scenario.getTransitSchedule().getFacilities().get(id).getAttributes().putAttribute("hub", hubReach);
+            scenario.getTransitSchedule().getFacilities().get(id).getAttributes().putAttribute("hub-reach", hubReach);
         }
 
         { // Write shape files for rail stops, buffers around rail stops, and bus stops within buffer
