@@ -61,33 +61,56 @@ import org.matsim.vehicles.VehicleUtils;
 public class RunOfflineAirPollutionAnalysisByEngineInformation {
 	private static final Logger log = Logger.getLogger(RunOfflineAirPollutionAnalysisByEngineInformation.class);
 	
-	private final static String runDirectory = "public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/";	
-	private final static String runId = "berlin-v5.4-1pct";
+	private final String runDirectory;
+	private final String runId;
+	private final String hbefaWarmFile;
+	private final String hbefaColdFile;
+	private final String analysisOutputDirectory;
 
-	private final static String hbefaFileCold = "shared-svn/projects/matsim-germany/hbefa/hbefa-files/v4.1/EFA_ColdStart_Concept_2020_detailed_perTechAverage_Bln_carOnly.csv";
-	private final static String hbefaFileWarm = "shared-svn/projects/matsim-germany/hbefa/hbefa-files/v4.1/EFA_HOT_Concept_2020_detailed_perTechAverage_Bln_carOnly.csv";
+	private final static double shareOfPrivateVehiclesChangedToElectric = 0.0; // in addition to electric vehicle share in the reference case!
 
-	private final static double shareOfPrivateVehiclesChangedToElectric = 0.01; // in addition to electric vehicle share in the reference case!
-	private final static String analysisOutputDirectoryName = "emissionAnalysis-hbefa4.1-ev" + shareOfPrivateVehiclesChangedToElectric;
-
+	public RunOfflineAirPollutionAnalysisByEngineInformation(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
+		this.runDirectory = runDirectory;
+		this.runId = runId;
+		this.hbefaWarmFile = hbefaFileWarm;
+		this.hbefaColdFile = hbefaFileCold;
+		
+		if (!analysisOutputDirectory.endsWith("/")) analysisOutputDirectory = analysisOutputDirectory + "/";
+		this.analysisOutputDirectory = analysisOutputDirectory;
+	}
+	
 	public static void main(String[] args) throws IOException {
 		
-		String rootDirectory = null;
-		
 		if (args.length == 1) {
-			rootDirectory = args[0];
+			String rootDirectory = args[0];
+			if (!rootDirectory.endsWith("/")) rootDirectory = rootDirectory + "/";
+			
+			final String runDirectory = "public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/output-berlin-v5.4-10pct/";	
+			final String runId = "berlin-v5.4-10pct";
+
+			final String hbefaFileCold = "shared-svn/projects/matsim-germany/hbefa/hbefa-files/v4.1/EFA_ColdStart_Concept_2020_detailed_perTechAverage_Bln_carOnly.csv";
+			final String hbefaFileWarm = "shared-svn/projects/matsim-germany/hbefa/hbefa-files/v4.1/EFA_HOT_Concept_2020_detailed_perTechAverage_Bln_carOnly.csv";
+
+			RunOfflineAirPollutionAnalysisByEngineInformation analysis = new RunOfflineAirPollutionAnalysisByEngineInformation(
+					rootDirectory + runDirectory,
+					runId,
+					rootDirectory + hbefaFileWarm,
+					rootDirectory + hbefaFileCold,
+					rootDirectory + runDirectory + "emission-analysis-hbefa-v4.1");
+			analysis.run();
+			
 		} else {
 			throw new RuntimeException("Please set the root directory. Aborting...");
 		}
-		
-		
-		if (!rootDirectory.endsWith("/")) rootDirectory = rootDirectory + "/";
-				
+	}
+	
+	void run() throws IOException {
+					
 		Config config = ConfigUtils.createConfig();		
-		config.vehicles().setVehiclesFile(rootDirectory + runDirectory + runId + ".output_vehicles.xml.gz");
-		config.network().setInputFile(rootDirectory + runDirectory + runId + ".output_network.xml.gz");
-		config.transit().setTransitScheduleFile(rootDirectory + runDirectory + runId + ".output_transitSchedule.xml.gz");
-		config.transit().setVehiclesFile(rootDirectory + runDirectory + runId + ".output_transitVehicles.xml.gz");
+		config.vehicles().setVehiclesFile(runDirectory + runId + ".output_vehicles.xml.gz");
+		config.network().setInputFile(runDirectory + runId + ".output_network.xml.gz");
+		config.transit().setTransitScheduleFile(runDirectory + runId + ".output_transitSchedule.xml.gz");
+		config.transit().setVehiclesFile(runDirectory + runId + ".output_transitVehicles.xml.gz");
 		config.global().setCoordinateSystem("GK4");
 		config.plans().setInputFile(null);
 		config.parallelEventHandling().setNumberOfThreads(null);
@@ -96,18 +119,17 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		
 		EmissionsConfigGroup eConfig = ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
 		eConfig.setDetailedVsAverageLookupBehavior(DetailedVsAverageLookupBehavior.tryDetailedThenTechnologyAverageElseAbort);
-		eConfig.setDetailedColdEmissionFactorsFile(rootDirectory + hbefaFileCold);
-		eConfig.setDetailedWarmEmissionFactorsFile(rootDirectory + hbefaFileWarm);
+		eConfig.setDetailedColdEmissionFactorsFile(hbefaColdFile);
+		eConfig.setDetailedWarmEmissionFactorsFile(hbefaWarmFile);
 		eConfig.setHbefaRoadTypeSource(HbefaRoadTypeSource.fromLinkAttributes);
 		eConfig.setNonScenarioVehicles(NonScenarioVehicles.ignore);
 //		eConfig.setWritingEmissionsEvents(false);
 		
-		String analysisOutputDirectory = rootDirectory + runDirectory + analysisOutputDirectoryName + "/";
 		File folder = new File(analysisOutputDirectory);			
 		folder.mkdirs();
 		
-		final String emissionEventOutputFile = rootDirectory + runDirectory + runId + ".emission.events.offline.xml.gz";
-		final String eventsFile = rootDirectory + runDirectory + runId + ".output_events.xml.gz";
+		final String emissionEventOutputFile = runDirectory + runId + ".emission.events.offline.xml.gz";
+		final String eventsFile = runDirectory + runId + ".output_events.xml.gz";
 		final String linkEmissionAnalysisFile = analysisOutputDirectory + runId + ".emissionsPerLink.csv";
 		final String vehicleTypeFile = analysisOutputDirectory + runId + ".emissionVehicleInformation.csv";
 
