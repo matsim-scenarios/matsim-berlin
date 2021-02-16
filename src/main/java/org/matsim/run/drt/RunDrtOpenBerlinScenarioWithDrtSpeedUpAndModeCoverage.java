@@ -51,7 +51,6 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpAndModeCoverage {
 		}
 
 		Config config = RunDrtOpenBerlinScenario.prepareConfig(args, new MultiModeOptDrtConfigGroup(), new DynamicShutdownConfigGroup());
-config.controler().setLastIteration(0);
 		for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 			if (drtCfg.getDrtSpeedUpParams().isEmpty()) {
 				drtCfg.addParameterSet(new DrtSpeedUpParams());
