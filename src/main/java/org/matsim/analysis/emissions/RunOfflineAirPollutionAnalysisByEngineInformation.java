@@ -85,8 +85,8 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 			String rootDirectory = args[0];
 			if (!rootDirectory.endsWith("/")) rootDirectory = rootDirectory + "/";
 			
-			final String runDirectory = "public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/output-berlin-v5.4-10pct/";	
-			final String runId = "berlin-v5.4-10pct";
+			final String runDirectory = "public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-0.1pct/output-berlin-v5.4-0.1pct/";	
+			final String runId = "berlin-v5.4-0.1pct";
 
 			final String hbefaFileCold = "shared-svn/projects/matsim-germany/hbefa/hbefa-files/v4.1/EFA_ColdStart_Concept_2020_detailed_perTechAverage_Bln_carOnly.csv";
 			final String hbefaFileWarm = "shared-svn/projects/matsim-germany/hbefa/hbefa-files/v4.1/EFA_HOT_Concept_2020_detailed_perTechAverage_Bln_carOnly.csv";
@@ -123,7 +123,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		eConfig.setDetailedWarmEmissionFactorsFile(hbefaWarmFile);
 		eConfig.setHbefaRoadTypeSource(HbefaRoadTypeSource.fromLinkAttributes);
 		eConfig.setNonScenarioVehicles(NonScenarioVehicles.ignore);
-//		eConfig.setWritingEmissionsEvents(false);
+		eConfig.setWritingEmissionsEvents(false);
 		
 		File folder = new File(analysisOutputDirectory);			
 		folder.mkdirs();
@@ -338,7 +338,6 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		
 		// the following is copy paste from the example...
 		
-//		EventsManager eventsManager = new ParallelEventsManager(false, 1, 16777216);
 		EventsManager eventsManager = EventsUtils.createEventsManager();
 
 		AbstractModule module = new AbstractModule(){

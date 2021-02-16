@@ -19,6 +19,7 @@
 
 package org.matsim.analysis.emissions;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.matsim.testcases.MatsimTestUtils;
@@ -28,6 +29,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformationTest{
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 
 	// to run this test an environment variable needs to be set in your IDE and on the server...
+	@Ignore
 	@Test
 	public final void test1() {
 		try {
