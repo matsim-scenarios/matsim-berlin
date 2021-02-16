@@ -25,10 +25,11 @@ public class TransitRouteTrimmer {
 
     // Parameters
     boolean removeEmptyLines = true;
-    boolean allowOneStopWithinZone = true;
+    boolean includeFirstStopWithinZone = true;
     boolean allowHubsWithinZone = true;
     int minimumRouteLength = 2;
     int allowableStopsWithinZone = 3;
+    boolean includeFirstHubInZone = false;
 
     private Vehicles vehicles;
     private TransitSchedule transitScheduleOld;
@@ -170,7 +171,7 @@ public class TransitRouteTrimmer {
             }
 
             // If stop is inside zone, but the stop before or after it is outside, then keep it
-            if (allowOneStopWithinZone) {
+            if (includeFirstStopWithinZone) {
                 // Checks if previous stop is outside of zone; if yes, include current stop
                 if (i > 0) {
                     Id<TransitStopFacility> prevStop = stopsOld.get(i - 1).getStopFacility().getId();
@@ -205,12 +206,13 @@ public class TransitRouteTrimmer {
         List<TransitRouteStop> stopsOld = new ArrayList<>(routeOld.getStops());
 
 
+        // cut stops from beginning of route, if they are within zone
         Id<TransitStopFacility> startStopId = null; //TODO: ???
         for (int i = 0; i < stopsOld.size(); i++) {
 
             Id<TransitStopFacility> id = stopsOld.get(i).getStopFacility().getId();
             if (!stopsInZone.contains(id)) {
-                if (allowOneStopWithinZone && i > 0) {
+                if (includeFirstStopWithinZone && i > 0) {
                     startStopId = stopsOld.get(i - 1).getStopFacility().getId();
                 } else {
                     startStopId = id;
@@ -221,12 +223,13 @@ public class TransitRouteTrimmer {
 
         }
 
+        // cut stops from end of route, if they are within zone
         Id<TransitStopFacility> lastStopId = null;//TODO: ???
         for (int i = stopsOld.size() - 1; i >= 0; i--) {
 
             Id<TransitStopFacility> id = stopsOld.get(i).getStopFacility().getId();
             if (!stopsInZone.contains(id)) {
-                if (allowOneStopWithinZone && i < stopsOld.size() - 1) {
+                if (includeFirstStopWithinZone && i < stopsOld.size() - 1) {
                     lastStopId = stopsOld.get(i + 1).getStopFacility().getId();
                 } else {
                     lastStopId = id;
@@ -275,7 +278,7 @@ public class TransitRouteTrimmer {
     //
     //        for (int i = 0; i < stopsOld.size(); i++) {
     //            TransitRouteStop stop = stopsOld.get(i);
-    //            int hubNum = (int) stop.getStopFacility().getAttributes().getAttribute("hub");
+    //            int hubNum = (int) stop.getStopFacility().getAttributes().getAttribute("hub-reach");
     //
     //            if (hubNum > 0) {
     //                int[] myNum = {i, hubNum};
@@ -296,7 +299,7 @@ public class TransitRouteTrimmer {
     //                    for (int j = i-1; j >= 0; j--) {
     //                        stepCnt++;
     //                        TransitStopFacility stopFacility = stopsOld.get(j).getStopFacility();
-    //                        int hubNum = (int) stopFacility.getAttributes().getAttribute("hub");
+    //                        int hubNum = (int) stopFacility.getAttributes().getAttribute("hub-reach");
     //                        if (hubNum >= stepCnt) {
     //                            stops2Keep.add(stopsOld.get(j));
     //                            break;
@@ -323,7 +326,7 @@ public class TransitRouteTrimmer {
     //                    for (int j = i + 1; j < stopsOld.size(); j++) {
     //                        stepCnt++;
     //                        TransitStopFacility stopFacility = stopsOld.get(j).getStopFacility();
-    //                        int hubNum = (int) stopFacility.getAttributes().getAttribute("hub");
+    //                        int hubNum = (int) stopFacility.getAttributes().getAttribute("hub-reach");
     //                        if (hubNum >= stepCnt) {
     //                            stops2Keep.add(stopsOld.get(j));
     //                            break;
@@ -359,42 +362,68 @@ public class TransitRouteTrimmer {
         // reach is the number of stops away the hub can be from the edge of the zone to still be included.
         List<int[]> hubLocationAndReach = getHubList(stopsOld);
 
+        // check if stop is within or outside of zone, and store in boolean array
         boolean[] stops2keep = new boolean[stopsOld.size()];
         for (int i = 0; i < stopsOld.size(); i++) {
             stops2keep[i] = (!stopsInZone.contains(stopsOld.get(i).getStopFacility().getId()));
         }
 
-        List<Integer[]>  routeIndicies = findStartEndIndiciesForAllRoutes(stops2keep);
+
+        // Exact start and end indices from boolean array.
+        List<Integer[]>  routeIndices = findStartEndIndicesForAllRoutes(stops2keep);
 
         // Extend routes with hubs and/or first stop within zone
-        for (Integer[] pair : routeIndicies) {
+        for (Integer[] pair : routeIndices) {
             int leftIndex = pair[0];
             int leftIndexNew = leftIndex;
 
             int rightIndex = pair[1];
             int rightIndexNew = rightIndex;
 
+
+
             // Add hubs
             if (allowHubsWithinZone && !hubLocationAndReach.isEmpty()) {
+                List<Integer> hubPositionsLeft = new ArrayList<>();
+                List<Integer> hubPositionsRight = new ArrayList<>();
+
                 for (int[] hubPosValuePair : hubLocationAndReach) {
                     int hubPos = hubPosValuePair[0];
                     int hubReach = hubPosValuePair[1];
-                    if (hubPos < leftIndex && hubPos + hubReach >= leftIndex) {
-                        if (hubPos < leftIndexNew) {
+
+                    // add hub before beginning of route
+                    if (hubPos < leftIndex ) {
+                        hubPositionsLeft.add(hubPos);
+                        if (hubPos < leftIndexNew && hubPos + hubReach >= leftIndex) {
                             leftIndexNew = hubPos;
                         }
                     }
-
-                    if (hubPos > rightIndex && hubPos - hubReach <= rightIndex) {
-                        if (hubPos > rightIndexNew) {
+                    // add hub after end of route
+                    if (hubPos > rightIndex) {
+                        hubPositionsRight.add(hubPos);
+                        if (hubPos > rightIndexNew && hubPos - hubReach <= rightIndex) {
                             rightIndexNew = hubPos;
                         }
                     }
                 }
+
+
+                // if there are hubs in a particular direction, but none are included in route because their reaches
+                // aren't large enough, then we can add the closest hub afterward.
+                if (includeFirstHubInZone) {
+                    if (leftIndex == leftIndexNew && !hubPositionsLeft.isEmpty()) {
+                        leftIndexNew = Collections.max(hubPositionsLeft);
+                    }
+
+                    if (rightIndex == rightIndexNew && !hubPositionsRight.isEmpty()) {
+                        leftIndexNew = Collections.min(hubPositionsLeft);
+                    }
+                }
+
             }
 
-            // add first stop within zone (only if hub hasn't already extended the route in the respective direction)
-            if (allowOneStopWithinZone) {
+            // add first stop within zone if hub hasn't already extended the route in the respective direction
+            if (includeFirstStopWithinZone) {
                 if (leftIndex == leftIndexNew) {
                     if (leftIndex > 0) {
                         leftIndexNew--;
@@ -413,9 +442,9 @@ public class TransitRouteTrimmer {
         }
 
 
-        // combine routes if overlap
+        // combine routes if they overlap
         boolean[] stops2keep2 = new boolean[stopsOld.size()];
-        for (Integer[] pair : routeIndicies) {
+        for (Integer[] pair : routeIndices) {
             for (int i = pair[0]; i <= pair[1]; i++) {
                 stops2keep2[i] = true;
             }
@@ -439,14 +468,13 @@ public class TransitRouteTrimmer {
             }
         }
 
-        routeIndicies = findStartEndIndiciesForAllRoutes(stops2keep2);
+        List<Integer[]> routeIndices2 = findStartEndIndicesForAllRoutes(stops2keep2);
 
         // create transit routes
         int newRouteCnt = 1;
-        for (Integer[] pair : routeIndicies) {
+        for (Integer[] pair : routeIndices2) {
             resultRoutes.add(createNewRoute(routeOld, pair[0], pair[1], newRouteCnt));
             newRouteCnt++;
-
         }
 
         return resultRoutes;
@@ -458,8 +486,8 @@ public class TransitRouteTrimmer {
 
         for (int i = 0; i < stopsOld.size(); i++) {
             TransitRouteStop stop = stopsOld.get(i);
-            if (stop.getStopFacility().getAttributes().getAsMap().containsKey("hub")) {
-                int hubValue = (int) stop.getStopFacility().getAttributes().getAttribute("hub");
+            if (stop.getStopFacility().getAttributes().getAsMap().containsKey("hub-reach")) {
+                int hubValue = (int) stop.getStopFacility().getAttributes().getAttribute("hub-reach");
                 if (hubValue > 0) {
                     int[] hubPosValuePair = {i, hubValue};
                     hubs.add(hubPosValuePair);
@@ -469,7 +497,7 @@ public class TransitRouteTrimmer {
         return hubs;
     }
 
-    private List<Integer[]> findStartEndIndiciesForAllRoutes(boolean[] stops2Keep) {
+    private List<Integer[]> findStartEndIndicesForAllRoutes(boolean[] stops2Keep) {
         List<Integer[]> routeIndicies = new ArrayList<>();
         Integer startIndex = null;
         Integer endIndex = null;
