@@ -43,7 +43,7 @@ public class RunTransitRouteTrimmerBerlin {
         final String epsgCode = "31468";
         String filename = "hub-100";
         int bufferRadius = 300; // based on maxBeelineWalkConnectionDistance in config
-        int hubReach = 5;
+        int hubReach = 100;
 
         Scenario scenario = ScenarioUtils.loadScenario(config);
         TransitSchedule transitScheduleOld = scenario.getTransitSchedule();
