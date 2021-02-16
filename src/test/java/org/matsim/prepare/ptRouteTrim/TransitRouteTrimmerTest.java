@@ -23,7 +23,15 @@ public class TransitRouteTrimmerTest {
     private TransitRouteTrimmer transitRouteTrimmer;
     private Scenario scenario;
 
-    public enum routeScenario {
+    /**
+     * This test class examines three different types of routes:
+     * allIn: all stops of transitRoute are within zone
+     * halfIn: one end of route is within the zone, one outside of the zone
+     * middleIn: both ends of route are outside of zone, but middle in within zone
+     *
+     * The following enum stores the transitRoute and transitLine Ids for each type
+     */
+    public enum routeType {
         allIn(Id.create("265---17372_700", TransitLine.class),
                 Id.create("265---17372_700_0", TransitRoute.class)),
         halfIn(Id.create("184---17340_700", TransitLine.class),
@@ -34,7 +42,7 @@ public class TransitRouteTrimmerTest {
         public final Id<TransitLine> transitLineId;
         public final Id<TransitRoute> transitRouteId;
 
-        routeScenario(Id<TransitLine> transitLineId, Id<TransitRoute> transitRouteId) {
+        routeType(Id<TransitLine> transitLineId, Id<TransitRoute> transitRouteId) {
             this.transitLineId = transitLineId;
             this.transitRouteId = transitRouteId;
         }
@@ -60,13 +68,17 @@ public class TransitRouteTrimmerTest {
     }
 
 
+    /*
+    Part 1: these tests check whether the three route types are actually configured as described above
+     */
+
     /**
      * In the allIn scenario, the transitRoute in question should have all stops within zone.
      */
     @Test
     public void test_AllIn() {
-        Id<TransitLine> transitLineId = routeScenario.allIn.transitLineId;
-        Id<TransitRoute> transitRouteId = routeScenario.allIn.transitRouteId;
+        Id<TransitLine> transitLineId = routeType.allIn.transitLineId;
+        Id<TransitRoute> transitRouteId = routeType.allIn.transitRouteId;
 
         TransitRoute transitRoute = scenario.getTransitSchedule().getTransitLines().get(transitLineId).getRoutes().get(transitRouteId);
         int stopsTotal = transitRoute.getStops().size();
@@ -90,8 +102,8 @@ public class TransitRouteTrimmerTest {
      */
     @Test
     public void test_HalfIn() {
-        Id<TransitLine> transitLineId = routeScenario.halfIn.transitLineId;
-        Id<TransitRoute> transitRouteId = routeScenario.halfIn.transitRouteId;
+        Id<TransitLine> transitLineId = routeType.halfIn.transitLineId;
+        Id<TransitRoute> transitRouteId = routeType.halfIn.transitRouteId;
         TransitRoute transitRoute = scenario.getTransitSchedule().getTransitLines().get(transitLineId).getRoutes().get(transitRouteId);
         int sizeOld = transitRoute.getStops().size();
         int inCnt = countStopsInZone(transitRoute);
@@ -114,8 +126,8 @@ public class TransitRouteTrimmerTest {
      */
     @Test
     public void test_MiddleIn() {
-        Id<TransitLine> transitLineId = routeScenario.middleIn.transitLineId;
-        Id<TransitRoute> transitRouteId = routeScenario.middleIn.transitRouteId;
+        Id<TransitLine> transitLineId = routeType.middleIn.transitLineId;
+        Id<TransitRoute> transitRouteId = routeType.middleIn.transitRouteId;
         TransitRoute transitRoute = scenario.getTransitSchedule().getTransitLines().get(transitLineId).getRoutes().get(transitRouteId);
         int sizeOld = transitRoute.getStops().size();
         int inCnt = countStopsInZone(transitRoute);
@@ -132,6 +144,11 @@ public class TransitRouteTrimmerTest {
 
     }
 
+    /*
+    Part 2: These tests check functionality of all four trimming methods. For each trimming
+    method, all three route types are checked.
+     */
+
     /**
      * trimming method: DeleteRoutesEntirelyInsideZone.
      * route scenario: AllIn
@@ -140,7 +157,7 @@ public class TransitRouteTrimmerTest {
     @Test
     public void testDeleteRoutesEntirelyInsideZone_AllIn() {
 
-        Id<TransitLine> transitLineId = routeScenario.allIn.transitLineId;
+        Id<TransitLine> transitLineId = routeType.allIn.transitLineId;
 
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
@@ -160,13 +177,51 @@ public class TransitRouteTrimmerTest {
      * trimming method: DeleteRoutesEntirelyInsideZone.
      * route scenario: HalfIn
      * The testRoute should be retained and left unmodified,
-     * since some stops are within the zone.
+     * since some stops are outside the zone.
      */
     @Test
     public void testDeleteRoutesEntirelyInsideZone_HalfIn() {
 
-        Id<TransitLine> transitLineId = routeScenario.halfIn.transitLineId;
-        Id<TransitRoute> transitRouteId = routeScenario.halfIn.transitRouteId;
+        Id<TransitLine> transitLineId = routeType.halfIn.transitLineId;
+        Id<TransitRoute> transitRouteId = routeType.halfIn.transitRouteId;
+
+        // Before trim
+        TransitRoute transitRouteOld = scenario.getTransitSchedule().getTransitLines().get(transitLineId).getRoutes().get(transitRouteId);
+        int stopCntOld = transitRouteOld.getStops().size();
+
+        // Modification
+        Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
+        transitRouteTrimmer.removeEmptyLines = false;
+        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.DeleteRoutesEntirelyInsideZone);
+
+        // After trim
+        TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
+
+        assertTrue("Schedule should include transit line",
+                transitScheduleNew.getTransitLines().containsKey(transitLineId));
+
+        TransitLine transitLine = transitScheduleNew.getTransitLines().get(transitLineId);
+        assertTrue("Schedule should include transit route",
+                transitLine.getRoutes().containsKey(transitRouteId));
+
+        TransitRoute transitRoute = transitLine.getRoutes().get(transitRouteId);
+        int stopCntNew = transitRoute.getStops().size();
+        assertEquals("transitRoute should contain same number of stops as before modification",
+                stopCntOld, stopCntNew);
+
+    }
+
+    /**
+     * trimming method: DeleteRoutesEntirelyInsideZone.
+     * route scenario: MiddleIn
+     * The testRoute should be retained and left unmodified,
+     * since some stops are outside the zone.
+     */
+    @Test
+    public void testDeleteRoutesEntirelyInsideZone_MiddleIn() {
+
+        Id<TransitLine> transitLineId = routeType.middleIn.transitLineId;
+        Id<TransitRoute> transitRouteId = routeType.middleIn.transitRouteId;
 
         // Before trim
         TransitRoute transitRouteOld = scenario.getTransitSchedule().getTransitLines().get(transitLineId).getRoutes().get(transitRouteId);
@@ -202,7 +257,7 @@ public class TransitRouteTrimmerTest {
     @Test
     public void testTrimEnds_AllIn() {
 
-        Id<TransitLine> transitLineId = routeScenario.allIn.transitLineId;
+        Id<TransitLine> transitLineId = routeType.allIn.transitLineId;
 
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
@@ -226,8 +281,8 @@ public class TransitRouteTrimmerTest {
     @Test
     public void testTrimEnds_HalfIn() {
 
-        Id<TransitLine> transitLineId = routeScenario.halfIn.transitLineId;
-        Id<TransitRoute> transitRouteId = routeScenario.halfIn.transitRouteId;
+        Id<TransitLine> transitLineId = routeType.halfIn.transitLineId;
+        Id<TransitRoute> transitRouteId = routeType.halfIn.transitRouteId;
 
         // Before trim
         TransitRoute transitRouteOld = scenario.getTransitSchedule().getTransitLines().get(Id.create("184---17340_700", TransitLine.class)).getRoutes().get(Id.create("184---17340_700_15", TransitRoute.class));
@@ -272,9 +327,8 @@ public class TransitRouteTrimmerTest {
     @Test
     public void testTrimEnds_MiddleIn() {
 
-        Id<TransitLine> transitLineId = routeScenario.middleIn.transitLineId;
-        Id<TransitRoute> transitRouteId = routeScenario.middleIn.transitRouteId;
-        Set<Id<TransitStopFacility>> stopsInZone = transitRouteTrimmer.getStopsInZone();
+        Id<TransitLine> transitLineId = routeType.middleIn.transitLineId;
+        Id<TransitRoute> transitRouteId = routeType.middleIn.transitRouteId;
 
 
         // Before Trim
@@ -304,6 +358,29 @@ public class TransitRouteTrimmerTest {
     }
 
 
+
+    /**
+     * trimming method: SkipStops.
+     * route scenario: AllIn
+     * New route should be empty
+     */
+    @Test
+    public void testSkipStops_AllIn() {
+
+        Id<TransitLine> transitLineId = routeType.allIn.transitLineId;
+
+        // Modification
+        Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
+        transitRouteTrimmer.removeEmptyLines = false;
+        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SkipStopsWithinZone);
+
+        // After trim
+        TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
+        assertTrue("sched should include empty transit line", transitScheduleNew.getTransitLines().containsKey(transitLineId));
+        assertEquals("transitLine should not longer contain any routes", transitScheduleNew.getTransitLines().get(transitLineId).getRoutes().size(), 0);
+
+    }
+
     /**
      * trimming method: SkipStops.
      * route scenario: HalfIn
@@ -313,7 +390,7 @@ public class TransitRouteTrimmerTest {
     public void testSkipStops_HalfIn() {
 
         // Before trim
-        Id<TransitLine> transitLineId = routeScenario.halfIn.transitLineId;
+        Id<TransitLine> transitLineId = routeType.halfIn.transitLineId;
         TransitRoute transitRouteOld = scenario.getTransitSchedule().getTransitLines().get(transitLineId).getRoutes().get(Id.create("184---17340_700_15", TransitRoute.class));
         int sizeOld = transitRouteOld.getStops().size();
         int outCntOld = countStopsOutsideZone(transitRouteOld);
@@ -331,7 +408,7 @@ public class TransitRouteTrimmerTest {
         int outCntNew = countStopsOutsideZone(transitRouteNew);
         int numLinksNew = transitRouteNew.getRoute().getLinkIds().size();
 
-        Assert.assertNotEquals("there should be less stops after the modificaton",
+        Assert.assertTrue("there should be less stops after the modificaton",
                 sizeOld > sizeNew);
         assertTrue("new route should have less links than old route",
                 numLinksNew < numLinksOld);
@@ -342,27 +419,7 @@ public class TransitRouteTrimmerTest {
 
     }
 
-    /**
-     * trimming method: SkipStops.
-     * route scenario: AllIn
-     * New route should be empty
-     */
-    @Test
-    public void testSkipStops_AllIn() {
 
-        Id<TransitLine> transitLineId = routeScenario.allIn.transitLineId;
-
-        // Modification
-        Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
-        transitRouteTrimmer.removeEmptyLines = false;
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SkipStopsWithinZone);
-
-        // After trim
-        TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
-        assertTrue("sched should include empty transit line", transitScheduleNew.getTransitLines().containsKey(transitLineId));
-        assertEquals("transitLine should not longer contain any routes", transitScheduleNew.getTransitLines().get(transitLineId).getRoutes().size(), 0);
-
-    }
     /**
      * trimming method: SkipStops.
      * route scenario: MiddleIn
@@ -371,8 +428,8 @@ public class TransitRouteTrimmerTest {
     @Test
     public void testSkipStops_MiddleIn() {
 
-        Id<TransitLine> transitLineId = routeScenario.middleIn.transitLineId;
-        Id<TransitRoute> transitRouteId = routeScenario.middleIn.transitRouteId;
+        Id<TransitLine> transitLineId = routeType.middleIn.transitLineId;
+        Id<TransitRoute> transitRouteId = routeType.middleIn.transitRouteId;
 
         // Before trim
         TransitRoute transitRouteOld = scenario.getTransitSchedule().getTransitLines().get(transitLineId).getRoutes().get(transitRouteId);
@@ -404,13 +461,37 @@ public class TransitRouteTrimmerTest {
 
     /**
      * trimming method: SplitRoutes.
+     * route scenario: AllIn
+     * route will be deleted
+     */
+    @Test
+    public void testSplitRoutes_AllIn() {
+
+        Id<TransitLine> transitLineId = routeType.allIn.transitLineId;
+
+        // Modification
+        Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
+        transitRouteTrimmer.removeEmptyLines = false;
+        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitRoute);
+
+        // After trim
+        TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
+        assertTrue("schedule should include empty transit line",
+                transitScheduleNew.getTransitLines().containsKey(transitLineId));
+        assertEquals("transitLine should not longer contain any routes",
+                0, transitScheduleNew.getTransitLines().get(transitLineId).getRoutes().size());
+
+    }
+
+    /**
+     * trimming method: SplitRoutes.
      * route scenario: HalfIn
      * New route should have less stops than old route
      */
     @Test
     public void testSplitRoutes_HalfIn() {
 
-        Id<TransitLine> transitLineId = routeScenario.halfIn.transitLineId;
+        Id<TransitLine> transitLineId = routeType.halfIn.transitLineId;
 
         // Before trim
         TransitRoute transitRouteOld = scenario.getTransitSchedule().getTransitLines().get(transitLineId).getRoutes().get(Id.create("184---17340_700_15", TransitRoute.class));
@@ -444,38 +525,14 @@ public class TransitRouteTrimmerTest {
 
     /**
      * trimming method: SplitRoutes.
-     * route scenario: AllIn
-     * route will be deleted
-     */
-    @Test
-    public void testSplitRoutes_AllIn() {
-
-        Id<TransitLine> transitLineId = routeScenario.allIn.transitLineId;
-
-        // Modification
-        Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
-        transitRouteTrimmer.removeEmptyLines = false;
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitRoute);
-
-        // After trim
-        TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
-        assertTrue("schedule should include empty transit line",
-                transitScheduleNew.getTransitLines().containsKey(transitLineId));
-        assertEquals("transitLine should not longer contain any routes",
-                0, transitScheduleNew.getTransitLines().get(transitLineId).getRoutes().size());
-
-    }
-
-    /**
-     * trimming method: SplitRoutes.
      * route scenario: MiddleIn
      * Two routes should be created, each with only one stop within zone
      */
     @Test
     public void testSplitRoutes_MiddleIn() {
 
-        Id<TransitLine> transitLineId = routeScenario.middleIn.transitLineId;
-        Id<TransitRoute> transitRouteId = routeScenario.middleIn.transitRouteId;
+        Id<TransitLine> transitLineId = routeType.middleIn.transitLineId;
+        Id<TransitRoute> transitRouteId = routeType.middleIn.transitRouteId;
 
         // Before trim
         TransitRoute transitRouteOld = scenario.getTransitSchedule().getTransitLines().get(transitLineId).getRoutes().get(transitRouteId);
@@ -512,18 +569,28 @@ public class TransitRouteTrimmerTest {
 
     }
 
+
+    /*
+    Part 3: tests hub functionality for SplitRoutes trimming method (using route type "middleIn")
+    Hubs allow route to extend into zone to reach a import transit stop (like a major transfer point)
+     */
+
+
+    /**
+     * Test Hub functionality
+     * trimming method: SplitRoutes.
+     * route scenario: MiddleIn
+     * tests reach of hubs. Left hub should be included in route 1, while right hub should not be
+     * included in route 2, due to lacking reach
+     */
     @Test
-    public void testSplitRoutes_MiddleIn_Hub_validateReach() {
+    public void testSplitRoutes_MiddleIn_Hub_ValidateReach() {
 
-        Id<TransitLine> transitLineId = routeScenario.middleIn.transitLineId;
-        Id<TransitRoute> transitRouteId = routeScenario.middleIn.transitRouteId;
-
-        Set<Id<TransitStopFacility>> stopsInZone = transitRouteTrimmer.getStopsInZone();
-
+        Id<TransitLine> transitLineId = routeType.middleIn.transitLineId;
+        Id<TransitRoute> transitRouteId = routeType.middleIn.transitRouteId;
 
         // Before trim
         TransitRoute transitRouteOld = scenario.getTransitSchedule().getTransitLines().get(transitLineId).getRoutes().get(transitRouteId);
-        int numStopsOld = transitRouteOld.getStops().size();
 
         // add hub attributes
         // Stop 070101005700 is a hub with reach of 3. This stop (as well as the intermediary stops)
@@ -568,17 +635,20 @@ public class TransitRouteTrimmerTest {
 
     }
 
+    /**
+     * Test Hub functionality
+     * trimming method: SplitRoutes.
+     * route scenario: MiddleIn
+     * tests parameter to include first nearest hub, even if reach is insufficient.
+     * Right hub should be included, even though reach is too low.
+     */
     @Test
-    public void testSplitRoutes_MiddleIn_Hub_includeFirstHubInZone() {
-        Id<TransitLine> transitLineId = routeScenario.middleIn.transitLineId;
-        Id<TransitRoute> transitRouteId = routeScenario.middleIn.transitRouteId;
-
-        Set<Id<TransitStopFacility>> stopsInZone = transitRouteTrimmer.getStopsInZone();
-
+    public void testSplitRoutes_MiddleIn_Hub_IncludeFirstHubInZone() {
+        Id<TransitLine> transitLineId = routeType.middleIn.transitLineId;
+        Id<TransitRoute> transitRouteId = routeType.middleIn.transitRouteId;
 
         // Before trim
         TransitRoute transitRouteOld = scenario.getTransitSchedule().getTransitLines().get(transitLineId).getRoutes().get(transitRouteId);
-        int numStopsOld = transitRouteOld.getStops().size();
 
         // Stop 070101005700 is a hub with reach of 3. This stop (as well as the intermediary stops)
         // should be included in route1
@@ -618,21 +688,31 @@ public class TransitRouteTrimmerTest {
         int inCntNew2 = countStopsInZone(transitRouteNew2);
 
 
-        assertEquals("new route #1 should have three stops within zone", 3, inCntNew1);
-        assertEquals("new route #2 should have four stops within zone", 4, inCntNew2);
+        assertEquals("new route #1 should have three stops within zone",
+                3, inCntNew1);
+        assertEquals("new route #2 should have four stops within zone",
+                4, inCntNew2);
         Id<TransitStopFacility> idRoute1 = transitRouteNew1.getStops().get(transitRouteNew1.getStops().size() - 1).getStopFacility().getId();
-        assertEquals("last stop of route #1 should be the left hub", facIdLeft, idRoute1);
+        assertEquals("last stop of route #1 should be the left hub",
+                facIdLeft, idRoute1);
 
         Id<TransitStopFacility> idRoute2 = transitRouteNew2.getStops().get(0).getStopFacility().getId();
-        assertEquals("first stop of route #2 should be the right hub", facIdRight, idRoute2);
+        assertEquals("first stop of route #2 should be the right hub",
+                facIdRight, idRoute2);
 
     }
 
+    /**
+     * Test Hub functionality
+     * trimming method: SplitRoutes.
+     * route scenario: MiddleIn
+     * if multiple hubs are within reach of route, the route should go to further one
+     */
     @Test
-    public void testSplitRoutes_MiddleIn_Hub_validateMultipleHubs() {
+    public void testSplitRoutes_MiddleIn_Hub_MultipleHubs() {
 
-        Id<TransitLine> transitLineId = routeScenario.middleIn.transitLineId;
-        Id<TransitRoute> transitRouteId = routeScenario.middleIn.transitRouteId;
+        Id<TransitLine> transitLineId = routeType.middleIn.transitLineId;
+        Id<TransitRoute> transitRouteId = routeType.middleIn.transitRouteId;
         Set<Id<TransitStopFacility>> stopsInZone = transitRouteTrimmer.getStopsInZone();
 
         // Before trim
@@ -684,13 +764,18 @@ public class TransitRouteTrimmerTest {
 
     }
 
-
+    /**
+     * Test Hub functionality
+     * trimming method: SplitRoutes.
+     * route scenario: MiddleIn
+     * if two new routes overlap (because they both reach to same hub)
+     * then they should be combined into one route
+     */
     @Test
-    public void testSplitRoutes_MiddleIn_Hub_overlapRoutes() {
+    public void testSplitRoutes_MiddleIn_Hub_OverlapRoutes() {
 
-        Id<TransitLine> transitLineId = routeScenario.middleIn.transitLineId;
-        Id<TransitRoute> transitRouteId = routeScenario.middleIn.transitRouteId;
-        Set<Id<TransitStopFacility>> stopsInZone = transitRouteTrimmer.getStopsInZone();
+        Id<TransitLine> transitLineId = routeType.middleIn.transitLineId;
+        Id<TransitRoute> transitRouteId = routeType.middleIn.transitRouteId;
 
         // Before trim
         TransitRoute transitRouteOld = scenario.getTransitSchedule().getTransitLines().get(transitLineId).getRoutes().get(transitRouteId);
@@ -726,11 +811,22 @@ public class TransitRouteTrimmerTest {
 
     }
 
-    @Test
-    public void testSplitRoutes_MiddleIn_allowableStopsWithin() {
+    /*
+    Part 4: Tests individual user-defined parameters
+     */
 
-        Id<TransitLine> transitLineId = routeScenario.middleIn.transitLineId;
-        Id<TransitRoute> transitRouteId = routeScenario.middleIn.transitRouteId;
+    /**
+     * Test parameter allowableStopsWithinZone
+     * trimming method: SplitRoutes.
+     * route scenario: MiddleIn
+     * route should not be split, since the parameter allowableStopsWithinZone is equal to the number
+     * of stops within zone
+     */
+    @Test
+    public void testSplitRoutes_MiddleIn_AllowableStopsWithin() {
+
+        Id<TransitLine> transitLineId = routeType.middleIn.transitLineId;
+        Id<TransitRoute> transitRouteId = routeType.middleIn.transitRouteId;
 
         // Before trim
         TransitRoute transitRouteOld = scenario.getTransitSchedule().getTransitLines().get(transitLineId).getRoutes().get(transitRouteId);
@@ -765,6 +861,8 @@ public class TransitRouteTrimmerTest {
 
 
     }
+
+
 
     private int countStopsInZone(TransitRoute transitRoute) {
         int inCnt = 0;
