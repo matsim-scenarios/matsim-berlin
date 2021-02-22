@@ -20,16 +20,23 @@ import java.util.*;
  * @author jakobrehmann
  */
 
+//TODO Define Hub: if no hubReach=0, is it a hub?
+//TODO: modes to use?
+//TODO: Check Nullpointer exceptions in tests
+
+
 public class TransitRouteTrimmer {
     private static final Logger log = Logger.getLogger(TransitRouteTrimmer.class);
 
     // Parameters
-    boolean removeEmptyLines = true;
-    boolean includeFirstStopWithinZone = true;
-    boolean allowHubsWithinZone = true;
-    int minimumRouteLength = 2;
-    int allowableStopsWithinZone = 3;
-    boolean includeFirstHubInZone = false;
+    boolean removeEmptyLines = true; // all
+    boolean includeFirstStopWithinZone = true; // 3
+    boolean allowHubsWithinZone = true; // split und trim, skip stops at intermediary
+    int minimumRouteLength = 2; // 3
+    int allowableStopsWithinZone = 3; // split, skip
+    boolean includeFirstHubInZone = false; // split und trim
+    Set<String> modes2Trim = new HashSet<>();  // all
+
 
     private Vehicles vehicles;
     private TransitSchedule transitScheduleOld;
@@ -75,6 +82,12 @@ public class TransitRouteTrimmer {
     }
 
 
+    /**
+     *
+     * @param linesToModify
+     * @param modifyMethod
+     */
+
     public void modifyTransitLinesFromTransitSchedule(Set<Id<TransitLine>> linesToModify, modMethod modifyMethod) {
 
         Iterator var3 = transitScheduleOld.getFacilities().values().iterator();
@@ -99,10 +112,12 @@ public class TransitRouteTrimmer {
                 TransitRoute routeNew = null;
 
                 // Only handles specified routes.
-                //                if (!this.modes2Trim.contains(route.getTransportMode())) {
-                //                    lineNew.addRoute(route);
-                //                    continue;
-                //                }
+                if (!this.modes2Trim.isEmpty()) { //TODO
+                    if (!this.modes2Trim.contains(route.getTransportMode())) {
+                        lineNew.addRoute(route);
+                        continue;
+                    }
+                }
 
                 //                 Only handle routes that interact with zone
                 if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 0.0) {
@@ -284,7 +299,7 @@ public class TransitRouteTrimmer {
 
 
         // Exact start and end indices from boolean array.
-        List<Integer[]>  routeIndices = findStartEndIndicesForAllRoutes(stops2keep);
+        List<Integer[]> routeIndices = findStartEndIndicesForAllRoutes(stops2keep);
 
         // Extend routes with hubs and/or first stop within zone
         for (Integer[] pair : routeIndices) {
@@ -293,7 +308,6 @@ public class TransitRouteTrimmer {
 
             int rightIndex = pair[1];
             int rightIndexNew = rightIndex;
-
 
 
             // Add hubs
@@ -306,7 +320,7 @@ public class TransitRouteTrimmer {
                     int hubReach = hubPosValuePair[1];
 
                     // add hub before beginning of route
-                    if (hubPos < leftIndex ) {
+                    if (hubPos < leftIndex) {
                         hubPositionsLeft.add(hubPos);
                         if (hubPos < leftIndexNew && hubPos + hubReach >= leftIndex) {
                             leftIndexNew = hubPos;
@@ -330,7 +344,7 @@ public class TransitRouteTrimmer {
                     }
 
                     if (rightIndex == rightIndexNew && !hubPositionsRight.isEmpty()) {
-                        leftIndexNew = Collections.min(hubPositionsLeft);
+                        rightIndexNew = Collections.min(hubPositionsRight);
                     }
                 }
 
@@ -447,7 +461,6 @@ public class TransitRouteTrimmer {
     }
 
 
-
     private boolean checkIntersection(Integer[] pair1, Integer[] pair2) {
         Integer pair1Left = pair1[0];
         Integer pair1Right = pair1[1];
@@ -559,6 +572,7 @@ public class TransitRouteTrimmer {
 
 
     // TODO: how to deal with arrival and departure offsets? I don't know the conventions...
+    // TODO: first stop can have no arr offset, last stop no dep offset
     private Collection<? extends TransitRouteStop> copyStops(List<TransitRouteStop> s, Double
             departureOffset, Double arrivalOffset) {
         List<TransitRouteStop> stops = new ArrayList<>();

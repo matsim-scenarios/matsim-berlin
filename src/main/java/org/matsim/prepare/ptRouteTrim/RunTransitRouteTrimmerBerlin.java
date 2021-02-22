@@ -20,6 +20,7 @@ import org.matsim.utils.gis.shp2matsim.ShpGeometryUtils;
 import org.matsim.vehicles.MatsimVehicleWriter;
 import org.matsim.vehicles.Vehicles;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.URL;
@@ -34,19 +35,37 @@ public class RunTransitRouteTrimmerBerlin {
         final String inScheduleFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz";
         final String inVehiclesFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-transit-vehicles.xml.gz";
         final String inNetworkFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz";
-        final String zoneShpFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlin-hundekopf-areas/berlin_hundekopf.shp";
+//        final String zoneShpFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlin-hundekopf-areas/berlin_hundekopf.shp";
+//        final String zoneShpFile = "C:\\Users\\jakob\\tubCloud\\Shared\\DRT\\PolicyCase\\Frohnau\\Frohnau-1.shp";
+        final String zoneShpFile = "D:/Dropbox/Documents/VSP/zehlendorfPLUS/zehlendorfPlus.shp";
         final String outputPath = "src/main/java/org/matsim/prepare/ptRouteTrim/output/";
         Config config = ConfigUtils.createConfig();
         config.transit().setTransitScheduleFile(inScheduleFile);
         config.network().setInputFile(inNetworkFile);
         config.vehicles().setVehiclesFile(inVehiclesFile);
         final String epsgCode = "31468";
-        String filename = "hub-100";
+        String filename = "zeh-firstHub";
         int bufferRadius = 300; // based on maxBeelineWalkConnectionDistance in config
-        int hubReach = 100;
+        int hubReach = 1;
 
         Scenario scenario = ScenarioUtils.loadScenario(config);
         TransitSchedule transitScheduleOld = scenario.getTransitSchedule();
+
+        // TRIMMER SETUP
+        List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new File(zoneShpFile).toURI().toURL()); //new URL(
+
+        System.out.println("\n Modify Routes: SplitRoute");
+        TransitRouteTrimmer transitRouteTrimmer = new TransitRouteTrimmer(scenario.getTransitSchedule(), scenario.getVehicles(), geometries);
+//        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule();
+        transitRouteTrimmer.includeFirstStopWithinZone = true; //
+        transitRouteTrimmer.includeFirstHubInZone = true; //
+        transitRouteTrimmer.allowHubsWithinZone = true;
+        transitRouteTrimmer.allowableStopsWithinZone = 0;
+        transitRouteTrimmer.modes2Trim = Collections.singleton("bus");
+
+
+
+
 
         // Collect all rail stations
         Collection<TransitStopFacility> allStations = transitScheduleOld.getFacilities().values();
@@ -118,11 +137,8 @@ public class RunTransitRouteTrimmerBerlin {
                             (GeometryCollection) busStopsInBuffer);
         }
 
-        // Split ROutes
-        List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new URL(zoneShpFile));
-        System.out.println("\n Modify Routes: SplitRoute");
-        TransitRouteTrimmer transitRouteTrimmer = new TransitRouteTrimmer(scenario.getTransitSchedule(), scenario.getVehicles(), geometries);
 
+        // Run Trimmer
         Set<Id<TransitLine>> linesToModify = scenario.getTransitSchedule().getTransitLines().keySet();
 
         transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitRoute);
@@ -138,7 +154,7 @@ public class RunTransitRouteTrimmerBerlin {
 
     }
 
-    private static void writeGeometryCollection2ShapeFile(String fileName, ShapeType shapeType, GeometryCollection geometryCollection) throws IOException {
+    public static void writeGeometryCollection2ShapeFile(String fileName, ShapeType shapeType, GeometryCollection geometryCollection) throws IOException {
         RandomAccessFile shp = new RandomAccessFile(fileName + ".shp", "rw");
         RandomAccessFile shx = new RandomAccessFile(fileName + ".shx", "rw");
         ShapefileWriter writer = new ShapefileWriter(shp.getChannel(), shx.getChannel());
