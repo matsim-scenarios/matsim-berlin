@@ -39,7 +39,7 @@ public class ModeChoiceCoverageControlerListener implements StartupListener, Ite
 
 	private final static Logger log = Logger.getLogger(org.matsim.analysis.ModeStatsControlerListener.class);
 
-	private final Set<String> modes;
+
 	private final Map<Integer, BufferedWriter> modeOutMap = new HashMap<>();
 
 	private final Population population;
@@ -57,6 +57,10 @@ public class ModeChoiceCoverageControlerListener implements StartupListener, Ite
 	//            Map<Person    , Map<Trip # , Map<Mode  , Count  >>>
 	private static final String FILENAME_MODESTATS = "modeChoiceCoverage";
 
+	// Keep all modes encountered so far in a sorted set to ensure output is written for modes sorted by mode.
+	private final Set<String> modes = new TreeSet<>();
+
+
 	@Inject
 	ModeChoiceCoverageControlerListener(ControlerConfigGroup controlerConfigGroup, Population population1, OutputDirectoryHierarchy controlerIO,
 										PlanCalcScoreConfigGroup scoreConfig, AnalysisMainModeIdentifier mainModeIdentifier) {
@@ -67,21 +71,21 @@ public class ModeChoiceCoverageControlerListener implements StartupListener, Ite
 //		this.createPNG = controlerConfigGroup.isCreateGraphs();
 		this.createPNG = true;
 
-		this.modes = new TreeSet<>();
-		this.modes.addAll(scoreConfig.getAllModes());
-		for (Integer limit : limits){
-			BufferedWriter modeOut = IOUtils.getBufferedWriter(this.modeFileName  + limit + "x.txt");
-			try {
-				modeOut.write("Iteration");
-				for (String mode : modes) {
-					modeOut.write("\t" + mode);
-				}
-				modeOut.write("\n");
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
-			}
-			this.modeOutMap.put(limit, modeOut);
-		}
+//		this.modes = new TreeSet<>();
+//		this.modes.addAll(scoreConfig.getAllModes());
+//		for (Integer limit : limits){
+//			BufferedWriter modeOut = IOUtils.getBufferedWriter(this.modeFileName  + limit + "x.txt");
+//			try {
+//				modeOut.write("Iteration");
+//				for (String mode : modes) {
+//					modeOut.write("\t" + mode);
+//				}
+//				modeOut.write("\n");
+//			} catch (IOException e) {
+//				throw new UncheckedIOException(e);
+//			}
+//			this.modeOutMap.put(limit, modeOut);
+//		}
 		this.mainModeIdentifier = mainModeIdentifier;
 	}
 
