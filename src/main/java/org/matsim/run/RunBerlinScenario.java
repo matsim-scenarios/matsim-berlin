@@ -39,6 +39,7 @@ import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.gbl.Gbl;
 import org.matsim.core.gbl.MatsimRandom;
@@ -54,6 +55,8 @@ import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
 import org.matsim.extensions.pt.replanning.singleTripStrategies.ChangeSingleTripModeAndRoute;
 import org.matsim.extensions.pt.replanning.singleTripStrategies.RandomSingleTripReRoute;
+import org.matsim.run.dynamicShutdown.DynamicShutdownConfigGroup;
+import org.matsim.run.dynamicShutdown.DynamicShutdownModule;
 import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
 import java.io.IOException;
@@ -62,6 +65,7 @@ import java.util.Map;
 import java.util.Random;
 
 import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType.FastAStarLandmarks;
+import static org.matsim.run.dynamicShutdown.DynamicShutdownConfigGroup.dynamicShutdownOptions.ON_ANALYSIS_ONLY;
 
 /**
 * @author ikaddoura
@@ -78,12 +82,22 @@ public final class RunBerlinScenario {
 		}
 		
 		if ( args.length==0 ) {
-			args = new String[] {"scenarios/berlin-v5.5-10pct/input/berlin-v5.5-10pct.config.xml"}  ;
+			args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"}  ;
 		}
 
 		Config config = prepareConfig( args ) ;
+		config.controler().setLastIteration(10);
+		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
+		DynamicShutdownConfigGroup dynShutdownCfg = new DynamicShutdownConfigGroup();
+
+		dynShutdownCfg.setDynamicShutdownModuleActive(ON_ANALYSIS_ONLY); // or ON_FULL
+		config.addModule(dynShutdownCfg);
+
 		Scenario scenario = prepareScenario( config ) ;
 		Controler controler = prepareControler( scenario ) ;
+
+		controler.addOverridingModule(new DynamicShutdownModule());
+
 		controler.run();
 	}
 
