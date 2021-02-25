@@ -57,6 +57,7 @@ import org.matsim.extensions.pt.replanning.singleTripStrategies.ChangeSingleTrip
 import org.matsim.extensions.pt.replanning.singleTripStrategies.RandomSingleTripReRoute;
 import org.matsim.run.dynamicShutdown.DynamicShutdownConfigGroup;
 import org.matsim.run.dynamicShutdown.DynamicShutdownModule;
+import org.matsim.run.dynamicShutdown.ModeChoiceCoverageControlerListener;
 import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
 import java.io.IOException;
@@ -88,15 +89,21 @@ public final class RunBerlinScenario {
 		Config config = prepareConfig( args ) ;
 		config.controler().setLastIteration(10);
 		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
-		DynamicShutdownConfigGroup dynShutdownCfg = new DynamicShutdownConfigGroup();
 
-		dynShutdownCfg.setDynamicShutdownModuleActive(ON_ANALYSIS_ONLY); // or ON_FULL
-		config.addModule(dynShutdownCfg);
 
 		Scenario scenario = prepareScenario( config ) ;
+
+		downsample(scenario.getPopulation().getPersons(),0.1);
+
 		Controler controler = prepareControler( scenario ) ;
 
-		controler.addOverridingModule(new DynamicShutdownModule());
+		controler.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				this.bind(ModeChoiceCoverageControlerListener.class).in(Singleton.class);
+				this.addControlerListenerBinding().to(ModeChoiceCoverageControlerListener.class);
+			}
+		});
 
 		controler.run();
 	}
