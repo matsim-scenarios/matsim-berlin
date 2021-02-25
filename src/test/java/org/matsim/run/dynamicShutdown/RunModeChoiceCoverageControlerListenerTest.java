@@ -75,6 +75,8 @@ public class RunModeChoiceCoverageControlerListenerTest {
                 2, modeChoiceCoverageHistory.get(1).keySet().size());
         Assert.assertEquals( "Since all trips were completed with walk (in previous iterations), mcc for walk should be 1.0 (or 100%)",
                 (Double) 1.0, modeChoiceCoverageHistory.get(1).get(TransportMode.walk).get(1));
+        Assert.assertEquals( "The mcc for bike from the 0th iteration should be 0.0, since bike only showed up in this iteration",
+                (Double) 0.0, modeChoiceCoverageHistory.get(1).get(TransportMode.bike).get(0));
         Assert.assertEquals( "Since 1 of 2 trips were completed with bike, mcc for bike should be 0.5 (or 50%)",
                 (Double) 0.5, modeChoiceCoverageHistory.get(1).get(TransportMode.bike).get(1));
 
