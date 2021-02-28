@@ -4,14 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.matsim-scenarios</groupId>
 	<artifactId>matsim-berlin</artifactId>
-	<version>5.5.1</version>
+	<version>5.6.x-SNAPSHOT</version>
 
 	<name>MATSim Open Berlin scenario project</name>
 	<description>MATSim Open Berlin scenario project</description>
 
 	<properties>
 		<!--		<matsim.version>13.0-SNAPSHOT</matsim.version>-->
-		<matsim.version>13.0-2021w02-SNAPSHOT</matsim.version>
+		<matsim.version>13.0-2021w07-SNAPSHOT</matsim.version>
 	</properties>
 
 	<repositories>
@@ -75,6 +75,13 @@
 
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
+			<artifactId>av</artifactId>
+			<version>${matsim.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.matsim.contrib</groupId>
 			<artifactId>emissions</artifactId>
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
@@ -86,6 +93,7 @@
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
 		</dependency>
+
 
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
@@ -121,6 +129,12 @@
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>common</artifactId>
+			<version>${matsim.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.matsim</groupId>
+			<artifactId>matsim-examples</artifactId>
 			<version>${matsim.version}</version>
 		</dependency>
 
@@ -169,6 +183,12 @@
         </dependency>
 
 		<dependency>
+			<groupId>com.github.matsim-vsp</groupId>
+			<artifactId>pt-extensions</artifactId>
+			<version>67dec05d3b</version>
+		</dependency>
+
+		<dependency>
 		<!-- This is the matsim "freight" contrib: -->
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>freight</artifactId>
@@ -193,18 +213,6 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-math3</artifactId>
 			<version>3.6.1</version>
-		</dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>5.3.2</version>
-            <scope>compile</scope>
-        </dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-api</artifactId>
-			<version>5.3.2</version>
-			<scope>compile</scope>
 		</dependency>
 
 	</dependencies>
@@ -262,35 +270,46 @@
 			</plugin>
 
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.2.2</version>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<!--Presumably, you can run this by mvn assembly:assembly (?)-->
+
+				<configuration>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+					<archive>
+						<manifest>
+							<mainClass>org.matsim.gui.RunBerlinScenarioGUI</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
 				<executions>
 					<execution>
+						<id>make-assembly</id>
 						<phase>package</phase>
+						<!--Presumably, this plugin is thus run as part of the package phase.  So-->
+						<!--you can either only run assembly:assembly, or package, where the-->
+						<!--latter may run additional stuff or not.-->
 						<goals>
-							<goal>shade</goal>
+							<goal>single</goal>
 						</goals>
-						<configuration>
-							<outputFile>${project.basedir}/${project.build.finalName}.jar</outputFile>
-							<transformers>
-								<!-- This bit sets the main class for the executable jar as you otherwise would with the assembly plugin -->
-								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<manifestEntries>
-										<Main-Class>org.matsim.gui.RunBerlinScenarioGUI</Main-Class>
-										<Specification-Vendor>org.matsim</Specification-Vendor>
-										<Implementation-Vendor>org.matsim</Implementation-Vendor>
-										<Implementation-Version>${project.version}</Implementation-Version>
-									</manifestEntries>
-								</transformer>
-								<!-- This bit merges the various GeoTools META-INF/services files         -->
-								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-							</transformers>
-						</configuration>
 					</execution>
 				</executions>
 			</plugin>
 
+			<plugin>  <!-- Create sources.jar -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.2.0</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 

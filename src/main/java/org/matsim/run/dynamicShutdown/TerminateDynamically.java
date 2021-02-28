@@ -48,15 +48,19 @@ public class TerminateDynamically implements TerminationCriterion {
 	//FIXME
 	@Override
 	public boolean mayTerminateAfterIteration(int i) {
-		return i <= lastIteration ;
+		if (convergenceDynamicShutdown.isDynamicShutdownInitiated()) {
+			int lastIterationDynamic = convergenceDynamicShutdown.getDynamicShutdownIteration();
+			return (i >= lastIteration || i >= lastIterationDynamic);
+		}
+		return i >= lastIteration ;
 	}
 
 	@Override
 	public boolean doTerminate(int i) {
 		if (convergenceDynamicShutdown.isDynamicShutdownInitiated()) {
 			int lastIterationDynamic = convergenceDynamicShutdown.getDynamicShutdownIteration();
-			return (i <= lastIteration && i <= lastIterationDynamic);
+			return (i >= lastIteration || i >= lastIterationDynamic);
 		}
-		return i <= lastIteration ;
+		return i >= lastIteration ;
 	}
 }

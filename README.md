@@ -131,7 +131,7 @@ java -jar [FILENAME].jar
 <dependency>
   <groupId>com.github.matsim-scenarios</groupId>
   <artifactId>matsim-berlin</artifactId>
-  <version>5.5</version>
+  <version>5.6</version>
 </dependency>
 ```
 
