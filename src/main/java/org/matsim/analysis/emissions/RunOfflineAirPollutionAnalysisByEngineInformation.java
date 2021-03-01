@@ -132,6 +132,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 
 		final String emissionEventOutputFile = analysisOutputDirectory + runId + ".emission.events.offline.xml.gz";
 		final String linkEmissionAnalysisFile = analysisOutputDirectory + runId + ".emissionsPerLink.csv";
+		final String linkEmissionPerMAnalysisFile = analysisOutputDirectory + runId + ".emissionsPerLinkPerM.csv";
 		final String vehicleTypeFile = analysisOutputDirectory + runId + ".emissionVehicleInformation.csv";
 
 		Scenario scenario = ScenarioUtils.loadScenario(config);
@@ -388,7 +389,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
     		bw1.write("linkId");
     		
     		for (Pollutant pollutant : Pollutant.values()) {
-    			bw1.write(";" + pollutant);
+    			bw1.write(";" + pollutant + " [g]");
     		}
     		bw1.newLine();
     		
@@ -409,6 +410,44 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
     		
     		bw1.close();
     		log.info("Output written to " + linkEmissionAnalysisFile);
+        }
+        
+        {
+    		File file1 = new File(linkEmissionPerMAnalysisFile);
+    		
+    		BufferedWriter bw1 = new BufferedWriter(new FileWriter(file1));
+
+    		bw1.write("linkId");
+    		
+    		for (Pollutant pollutant : Pollutant.values()) {
+    			bw1.write(";" + pollutant + " [g/m]");
+    		}
+    		bw1.newLine();
+    		
+    		Map<Id<Link>, Map<Pollutant, Double>> link2pollutants = emissionsEventHandler.getLink2pollutants();
+    		
+    		for (Id<Link> linkId : link2pollutants.keySet()) {
+    			bw1.write(linkId.toString());
+
+    			for (Pollutant pollutant : Pollutant.values()) {
+    				double emission = 0.;
+    				if (link2pollutants.get(linkId).get(pollutant) != null) {
+    					emission = link2pollutants.get(linkId).get(pollutant);
+    				}
+    				
+    				double emissionPerM = Double.NaN;
+    				Link link = scenario.getNetwork().getLinks().get(linkId);
+    				if (link != null) {
+    					emissionPerM = emission / link.getLength();
+    				}
+    				
+    				bw1.write(";" + emissionPerM);
+    			}
+    			bw1.newLine();
+    		}
+    		
+    		bw1.close();
+    		log.info("Output written to " + linkEmissionPerMAnalysisFile);
         }
 		
 		{
