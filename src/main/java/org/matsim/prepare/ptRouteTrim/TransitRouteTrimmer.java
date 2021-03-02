@@ -83,24 +83,15 @@ public class TransitRouteTrimmer {
 
 
     /**
-     *
      * @param linesToModify
      * @param modifyMethod
      */
 
     public void modifyTransitLinesFromTransitSchedule(Set<Id<TransitLine>> linesToModify, modMethod modifyMethod) {
 
-        Iterator var3 = transitScheduleOld.getFacilities().values().iterator();
+        copyFacilitiesToNewSchedule();
 
-        while (var3.hasNext()) {
-            TransitStopFacility stop = (TransitStopFacility) var3.next();
-            transitScheduleNew.addStopFacility(stop);
-        }
-
-        var3 = transitScheduleOld.getTransitLines().values().iterator();
-
-        while (var3.hasNext()) {
-            TransitLine line = (TransitLine) var3.next();
+        for (TransitLine line : transitScheduleOld.getTransitLines().values()) {
             if (!linesToModify.contains(line.getId())) {
                 transitScheduleNew.addTransitLine(line);
                 continue;
@@ -112,14 +103,14 @@ public class TransitRouteTrimmer {
                 TransitRoute routeNew = null;
 
                 // Only handles specified routes.
-                if (!this.modes2Trim.isEmpty()) { //TODO
+                if (!this.modes2Trim.isEmpty()) {
                     if (!this.modes2Trim.contains(route.getTransportMode())) {
                         lineNew.addRoute(route);
                         continue;
                     }
                 }
 
-                //                 Only handle routes that interact with zone
+                // Only handle routes that interact with zone
                 if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 0.0) {
                     lineNew.addRoute(route);
                     continue;
@@ -160,6 +151,168 @@ public class TransitRouteTrimmer {
         log.info("New schedule contains " + transitScheduleNew.getTransitLines().values().size() + " lines.");
 
         TransitRouteTrimmerUtils.countLinesInOut(transitScheduleNew, stopsInZone);
+    }
+
+    public void xxxSkipStops(Set<Id<TransitLine>> linesToModify) {
+
+        copyFacilitiesToNewSchedule();
+
+        for (TransitLine line : transitScheduleOld.getTransitLines().values()) {
+            if (!linesToModify.contains(line.getId())) {
+                transitScheduleNew.addTransitLine(line);
+                continue;
+            }
+
+            TransitLine lineNew = transitScheduleOld.getFactory().createTransitLine(line.getId());
+
+            for (TransitRoute route : line.getRoutes().values()) {
+                TransitRoute routeNew = null;
+
+                // Only handles specified routes.
+                if (!this.modes2Trim.isEmpty()) {
+                    if (!this.modes2Trim.contains(route.getTransportMode())) {
+                        lineNew.addRoute(route);
+                        continue;
+                    }
+                }
+
+                // Only handle routes that interact with zone
+                if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 0.0) {
+                    lineNew.addRoute(route);
+                    continue;
+                }
+
+                routeNew = modifyRouteSkipStopsWithinZone(route);
+
+                if (routeNew != null) {
+                    lineNew.addRoute(routeNew);
+                }
+            }
+
+            if (lineNew.getRoutes().size() == 0 && removeEmptyLines) {
+                log.info(lineNew.getId() + " does not contain routes. It will NOT be added to the schedule");
+                continue;
+            }
+
+            transitScheduleNew.addTransitLine(lineNew);
+
+        }
+
+        log.info("Old schedule contained " + transitScheduleOld.getTransitLines().values().size() + " lines.");
+        log.info("New schedule contains " + transitScheduleNew.getTransitLines().values().size() + " lines.");
+
+        TransitRouteTrimmerUtils.countLinesInOut(transitScheduleNew, stopsInZone);
+    }
+
+
+
+
+    public void xxxTrimEnds(Set<Id<TransitLine>> linesToModify) {
+
+        copyFacilitiesToNewSchedule();
+
+        for (TransitLine line : transitScheduleOld.getTransitLines().values()) {
+            if (!linesToModify.contains(line.getId())) {
+                transitScheduleNew.addTransitLine(line);
+                continue;
+            }
+
+            TransitLine lineNew = transitScheduleOld.getFactory().createTransitLine(line.getId());
+
+            for (TransitRoute route : line.getRoutes().values()) {
+                TransitRoute routeNew = null;
+
+                // Only handles specified routes.
+                if (!this.modes2Trim.isEmpty()) {
+                    if (!this.modes2Trim.contains(route.getTransportMode())) {
+                        lineNew.addRoute(route);
+                        continue;
+                    }
+                }
+
+                // Only handle routes that interact with zone
+                if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 0.0) {
+                    lineNew.addRoute(route);
+                    continue;
+                }
+
+                routeNew = modifyRouteTrimEnds(route);
+
+                if (routeNew != null) {
+                    lineNew.addRoute(routeNew);
+                }
+
+            }
+
+            if (lineNew.getRoutes().size() == 0 && removeEmptyLines) {
+                log.info(lineNew.getId() + " does not contain routes. It will NOT be added to the schedule");
+                continue;
+            }
+
+            transitScheduleNew.addTransitLine(lineNew);
+
+        }
+
+        log.info("Old schedule contained " + transitScheduleOld.getTransitLines().values().size() + " lines.");
+        log.info("New schedule contains " + transitScheduleNew.getTransitLines().values().size() + " lines.");
+
+        TransitRouteTrimmerUtils.countLinesInOut(transitScheduleNew, stopsInZone);
+    }
+
+    public void xxxSplitRoute(Set<Id<TransitLine>> linesToModify) {
+
+        copyFacilitiesToNewSchedule();
+
+        for (TransitLine line : transitScheduleOld.getTransitLines().values()) {
+            if (!linesToModify.contains(line.getId())) {
+                transitScheduleNew.addTransitLine(line);
+                continue;
+            }
+
+            TransitLine lineNew = transitScheduleOld.getFactory().createTransitLine(line.getId());
+
+            for (TransitRoute route : line.getRoutes().values()) {
+
+                // Only handles specified routes.
+                if (!this.modes2Trim.isEmpty()) {
+                    if (!this.modes2Trim.contains(route.getTransportMode())) {
+                        lineNew.addRoute(route);
+                        continue;
+                    }
+                }
+
+                // Only handle routes that interact with zone
+                if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 0.0) {
+                    lineNew.addRoute(route);
+                    continue;
+                }
+
+                ArrayList<TransitRoute> routesNew = modifyRouteSplitRoute(route);
+                for (TransitRoute rt : routesNew) {
+                    lineNew.addRoute(rt);
+                }
+
+            }
+
+            if (lineNew.getRoutes().size() == 0 && removeEmptyLines) {
+                log.info(lineNew.getId() + " does not contain routes. It will NOT be added to the schedule");
+                continue;
+            }
+
+            transitScheduleNew.addTransitLine(lineNew);
+
+        }
+
+        log.info("Old schedule contained " + transitScheduleOld.getTransitLines().values().size() + " lines.");
+        log.info("New schedule contains " + transitScheduleNew.getTransitLines().values().size() + " lines.");
+
+        TransitRouteTrimmerUtils.countLinesInOut(transitScheduleNew, stopsInZone);
+    }
+
+    private void copyFacilitiesToNewSchedule() {
+        for (TransitStopFacility stop : transitScheduleOld.getFacilities().values()) {
+            transitScheduleNew.addStopFacility(stop);
+        }
     }
 
 
