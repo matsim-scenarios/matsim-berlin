@@ -141,7 +141,7 @@ public class RunTransitRouteTrimmerBerlin {
         // Run Trimmer
         Set<Id<TransitLine>> linesToModify = scenario.getTransitSchedule().getTransitLines().keySet();
 
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitRoute);
+        transitRouteTrimmer.xxxSplitRoute(linesToModify);
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
         Vehicles vehiclesNew = transitRouteTrimmer.getVehicles();
 

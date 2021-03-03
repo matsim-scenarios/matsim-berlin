@@ -82,12 +82,7 @@ public class TransitRouteTrimmer {
     }
 
 
-    /**
-     * @param linesToModify
-     * @param modifyMethod
-     */
-
-    public void modifyTransitLinesFromTransitSchedule(Set<Id<TransitLine>> linesToModify, modMethod modifyMethod) {
+    public void xxxDeleteRoutesEntirelyInsideZone(Set<Id<TransitLine>> linesToModify) {
 
         copyFacilitiesToNewSchedule();
 
@@ -100,7 +95,6 @@ public class TransitRouteTrimmer {
             TransitLine lineNew = transitScheduleOld.getFactory().createTransitLine(line.getId());
 
             for (TransitRoute route : line.getRoutes().values()) {
-                TransitRoute routeNew = null;
 
                 // Only handles specified routes.
                 if (!this.modes2Trim.isEmpty()) {
@@ -110,31 +104,12 @@ public class TransitRouteTrimmer {
                     }
                 }
 
-                // Only handle routes that interact with zone
-                if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 0.0) {
-                    lineNew.addRoute(route);
+                if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 1.0) {
                     continue;
                 }
 
-                if (modifyMethod.equals(modMethod.DeleteRoutesEntirelyInsideZone)) {
-                    if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 1.0) {
-                        continue;
-                    }
-                    routeNew = route;
-                } else if (modifyMethod.equals(modMethod.TrimEnds)) {
-                    routeNew = modifyRouteTrimEnds(route);
-                } else if (modifyMethod.equals((modMethod.SkipStopsWithinZone))) {
-                    routeNew = modifyRouteSkipStopsWithinZone(route);
-                } else if (modifyMethod.equals(modMethod.SplitRoute)) {
-                    ArrayList<TransitRoute> routesNew = modifyRouteSplitRoute(route);
-                    for (TransitRoute rt : routesNew) {
-                        lineNew.addRoute(rt);
-                    }
-                }
 
-                if (routeNew != null) {
-                    lineNew.addRoute(routeNew);
-                }
+                lineNew.addRoute(route);
 
             }
 
@@ -203,8 +178,6 @@ public class TransitRouteTrimmer {
 
         TransitRouteTrimmerUtils.countLinesInOut(transitScheduleNew, stopsInZone);
     }
-
-
 
 
     public void xxxTrimEnds(Set<Id<TransitLine>> linesToModify) {
@@ -759,5 +732,80 @@ public class TransitRouteTrimmer {
     }
 
 
+
+    //
+    /**
+     * @param linesToModify
+     * @param modifyMethod
+     */
+
+//    public void modifyTransitLinesFromTransitSchedule(Set<Id<TransitLine>> linesToModify, modMethod modifyMethod) {
+//
+//        copyFacilitiesToNewSchedule();
+//
+//        for (TransitLine line : transitScheduleOld.getTransitLines().values()) {
+//            if (!linesToModify.contains(line.getId())) {
+//                transitScheduleNew.addTransitLine(line);
+//                continue;
+//            }
+//
+//            TransitLine lineNew = transitScheduleOld.getFactory().createTransitLine(line.getId());
+//
+//            for (TransitRoute route : line.getRoutes().values()) {
+//                TransitRoute routeNew = null;
+//
+//                // Only handles specified routes.
+//                if (!this.modes2Trim.isEmpty()) {
+//                    if (!this.modes2Trim.contains(route.getTransportMode())) {
+//                        lineNew.addRoute(route);
+//                        continue;
+//                    }
+//                }
+//
+//                // Only handle routes that interact with zone
+//                if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 0.0) {
+//                    lineNew.addRoute(route);
+//                    continue;
+//                }
+//
+//                if (modifyMethod.equals(modMethod.DeleteRoutesEntirelyInsideZone)) {
+//                    if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 1.0) {
+//                        continue;
+//                    }
+//                    routeNew = route;
+//                } else if (modifyMethod.equals(modMethod.TrimEnds)) {
+//                    routeNew = modifyRouteTrimEnds(route);
+//                } else if (modifyMethod.equals((modMethod.SkipStopsWithinZone))) {
+//                    routeNew = modifyRouteSkipStopsWithinZone(route);
+//                } else if (modifyMethod.equals(modMethod.SplitRoute)) {
+//                    ArrayList<TransitRoute> routesNew = modifyRouteSplitRoute(route);
+//                    for (TransitRoute rt : routesNew) {
+//                        lineNew.addRoute(rt);
+//                    }
+//                }
+//
+//                if (routeNew != null) {
+//                    lineNew.addRoute(routeNew);
+//                }
+//
+//            }
+//
+//            if (lineNew.getRoutes().size() == 0 && removeEmptyLines) {
+//                log.info(lineNew.getId() + " does not contain routes. It will NOT be added to the schedule");
+//                continue;
+//            }
+//
+//            transitScheduleNew.addTransitLine(lineNew);
+//
+//        }
+//
+//        log.info("Old schedule contained " + transitScheduleOld.getTransitLines().values().size() + " lines.");
+//        log.info("New schedule contains " + transitScheduleNew.getTransitLines().values().size() + " lines.");
+//
+//        TransitRouteTrimmerUtils.countLinesInOut(transitScheduleNew, stopsInZone);
+//    }
+
 }
+
+
 

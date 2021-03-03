@@ -162,7 +162,7 @@ public class TransitRouteTrimmerTest {
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
         transitRouteTrimmer.removeEmptyLines = false;
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.DeleteRoutesEntirelyInsideZone);
+        transitRouteTrimmer.xxxDeleteRoutesEntirelyInsideZone(linesToModify);
 
         // After Trim
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
@@ -192,7 +192,7 @@ public class TransitRouteTrimmerTest {
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
         transitRouteTrimmer.removeEmptyLines = false;
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.DeleteRoutesEntirelyInsideZone);
+        transitRouteTrimmer.xxxDeleteRoutesEntirelyInsideZone(linesToModify);
 
         // After trim
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
@@ -230,7 +230,7 @@ public class TransitRouteTrimmerTest {
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
         transitRouteTrimmer.removeEmptyLines = false;
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.DeleteRoutesEntirelyInsideZone);
+        transitRouteTrimmer.xxxDeleteRoutesEntirelyInsideZone(linesToModify);
 
         // Aftre trim
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
@@ -372,7 +372,7 @@ public class TransitRouteTrimmerTest {
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
         transitRouteTrimmer.removeEmptyLines = false;
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SkipStopsWithinZone);
+        transitRouteTrimmer.xxxSkipStops(linesToModify);
 
         // After trim
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
@@ -398,7 +398,7 @@ public class TransitRouteTrimmerTest {
 
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SkipStopsWithinZone);
+        transitRouteTrimmer.xxxSkipStops(linesToModify);
 
         // After Trim
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
@@ -439,7 +439,7 @@ public class TransitRouteTrimmerTest {
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
         transitRouteTrimmer.removeEmptyLines = false;
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SkipStopsWithinZone);
+        transitRouteTrimmer.xxxSkipStops(linesToModify);
 
         // After trim
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
@@ -472,7 +472,7 @@ public class TransitRouteTrimmerTest {
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
         transitRouteTrimmer.removeEmptyLines = false;
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitRoute);
+        transitRouteTrimmer.xxxSplitRoute(linesToModify);
 
         // After trim
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
@@ -540,7 +540,7 @@ public class TransitRouteTrimmerTest {
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
         transitRouteTrimmer.removeEmptyLines = false;
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitRoute);
+        transitRouteTrimmer.xxxSplitRoute(linesToModify);
 
         // After trim
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
@@ -608,7 +608,7 @@ public class TransitRouteTrimmerTest {
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
 
         transitRouteTrimmer.removeEmptyLines = false;
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitRoute);
+        transitRouteTrimmer.xxxSplitRoute(linesToModify);
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
 
         assertTrue("line should still exist", transitScheduleNew.getTransitLines().containsKey(transitLineId));
@@ -665,7 +665,7 @@ public class TransitRouteTrimmerTest {
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
         transitRouteTrimmer.includeFirstHubInZone = true;
         transitRouteTrimmer.removeEmptyLines = false;
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitRoute);
+        transitRouteTrimmer.xxxSplitRoute(linesToModify);
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
 
         assertTrue("line should still exist", transitScheduleNew.getTransitLines().containsKey(transitLineId));
@@ -737,7 +737,7 @@ public class TransitRouteTrimmerTest {
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
         transitRouteTrimmer.removeEmptyLines = false;
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitRoute);
+        transitRouteTrimmer.xxxSplitRoute(linesToModify);
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
 
         assertTrue("line should still exist", transitScheduleNew.getTransitLines().containsKey(transitLineId));
@@ -787,7 +787,7 @@ public class TransitRouteTrimmerTest {
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
         transitRouteTrimmer.removeEmptyLines = false;
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitRoute);
+        transitRouteTrimmer.xxxSplitRoute(linesToModify);
 
         // After trim
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
@@ -836,7 +836,7 @@ public class TransitRouteTrimmerTest {
         transitRouteTrimmer.removeEmptyLines = false;
         transitRouteTrimmer.includeFirstStopWithinZone = false;
         transitRouteTrimmer.allowableStopsWithinZone = 19;
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitRoute);
+        transitRouteTrimmer.xxxSplitRoute(linesToModify);
 
         // After trim
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();

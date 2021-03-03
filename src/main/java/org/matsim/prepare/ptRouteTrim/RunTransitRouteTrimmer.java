@@ -71,7 +71,7 @@ public class RunTransitRouteTrimmer {
 
         System.out.println("\n Modify Routes: SplitRoute");
         TransitRouteTrimmer transitRouteTrimmer = new TransitRouteTrimmer(scenario.getTransitSchedule(), scenario.getVehicles(), geometries);
-        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule(linesToModify, TransitRouteTrimmer.modMethod.SplitRoute);
+        transitRouteTrimmer.xxxSplitRoute(linesToModify);
         TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
         Vehicles vehiclesNew = transitRouteTrimmer.getVehicles();
 
