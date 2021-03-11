@@ -1,5 +1,6 @@
 package org.matsim.prepare.ptRouteTrim;
 
+import javafx.util.Pair;
 import org.geotools.feature.SchemaException;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.matsim.api.core.v01.Id;
@@ -44,20 +45,12 @@ public class RunTransitRouteTrimmer {
 
         TransitSchedule transitSchedule = scenario.getTransitSchedule();
 
-//        // add attribute
-//        for (TransitStopFacility facility : transitSchedule.getFacilities().values()) {
-//            facility.getAttributes().putAttribute("hub", 0);
-//        }
-
-
-
 
         Set<String> modes2Trim = new HashSet<>();
         modes2Trim.add("bus");
         Set<Id<TransitLine>> linesToModify = TransitRouteTrimmerUtils
                 .filterTransitLinesForMode(transitSchedule.getTransitLines().values(), modes2Trim);
 
-//        Set<Id<TransitLine>> linesToModify = new HashSet<>(transitSchedule.getTransitLines().keySet());
 
         Set<Id<TransitLine>> linesSB = transitSchedule.getTransitLines().values().stream()
                 .filter(v -> v.getId().toString().contains("SB"))
@@ -67,15 +60,16 @@ public class RunTransitRouteTrimmer {
 
         linesToModify.removeAll(linesSB);
 
-        List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new File(zoneShpFile).toURI().toURL());
-
         System.out.println("\n Modify Routes: SplitRoute");
-        TransitRouteTrimmer transitRouteTrimmer = new TransitRouteTrimmer(scenario.getTransitSchedule(), scenario.getVehicles(), geometries);
-        transitRouteTrimmer.xxxSplitRoute(linesToModify);
-        TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
-        Vehicles vehiclesNew = transitRouteTrimmer.getVehicles();
 
-//        TransitSchedule tScleaned = TransitScheduleCleaner.removeStopsNotUsed(transitScheduleNew);
+        Set<Id<TransitStopFacility>> stopsInZone = TransitRouteTrimmerUtils.getStopsInZone(scenario.getTransitSchedule(), new File(zoneShpFile).toURI().toURL());
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxSplitRoute(scenario.getTransitSchedule(), scenario.getVehicles(), stopsInZone,
+                linesToModify, true, modes2Trim, 2, true, false, false, 0);
+
+
+        TransitSchedule transitScheduleNew = results.getKey();
+        Vehicles vehiclesNew = results.getValue();
+
         TransitScheduleValidator.ValidationResult validationResult = TransitScheduleValidator.validateAll(transitScheduleNew, scenario.getNetwork());
         System.out.println(validationResult.getErrors());
 

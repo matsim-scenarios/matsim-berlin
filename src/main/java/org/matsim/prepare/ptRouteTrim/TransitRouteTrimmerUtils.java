@@ -16,6 +16,7 @@ import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -23,6 +24,7 @@ import org.matsim.api.core.v01.population.*;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.pt.transitSchedule.api.*;
+import org.matsim.utils.gis.shp2matsim.ShpGeometryUtils;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.Vehicles;
@@ -32,6 +34,8 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -235,4 +239,35 @@ public class TransitRouteTrimmerUtils {
         System.out.printf("in: %d, out: %d, half: %d, wrong: %d, total: %d %n", inCount, outCount, halfCount, wrongCount, totalCount);
 
     }
+
+    static Set<Id<TransitStopFacility>> getStopsInZone(TransitSchedule transitSchedule, String zoneShpFile) {
+        List<PreparedGeometry> geometries = null;
+        try {
+            geometries = ShpGeometryUtils.loadPreparedGeometries(new URL(zoneShpFile));
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Wrong Filename!");
+        }
+        Set<Id<TransitStopFacility>> stopsInZone = new HashSet<>();
+        for (TransitStopFacility stop : transitSchedule.getFacilities().values()) {
+            if (ShpGeometryUtils.isCoordInPreparedGeometries(stop.getCoord(), geometries)) {
+                stopsInZone.add(stop.getId());
+            }
+        }
+
+        return stopsInZone;
+    }
+
+    static Set<Id<TransitStopFacility>> getStopsInZone(TransitSchedule transitSchedule, URL zoneShpFileUrl) {
+        List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(zoneShpFileUrl);
+        Set<Id<TransitStopFacility>> stopsInZone = new HashSet<>();
+        for (TransitStopFacility stop : transitSchedule.getFacilities().values()) {
+            if (ShpGeometryUtils.isCoordInPreparedGeometries(stop.getCoord(), geometries)) {
+                stopsInZone.add(stop.getId());
+            }
+        }
+
+        return stopsInZone;
+    }
+
 }
