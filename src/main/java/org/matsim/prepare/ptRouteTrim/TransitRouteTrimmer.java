@@ -1,17 +1,17 @@
 package org.matsim.prepare.ptRouteTrim;
 
+import javafx.util.Pair;
 import org.apache.log4j.Logger;
-import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.population.routes.RouteUtils;
 import org.matsim.pt.transitSchedule.TransitScheduleFactoryImpl;
 import org.matsim.pt.transitSchedule.api.*;
-import org.matsim.utils.gis.shp2matsim.ShpGeometryUtils;
 import org.matsim.vehicles.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This tool creates a trims TransitRoutes, so as not to enter a user-specified ESRI shape file.
@@ -28,63 +28,18 @@ import java.util.*;
 public class TransitRouteTrimmer {
     private static final Logger log = Logger.getLogger(TransitRouteTrimmer.class);
 
-    // Parameters
-    boolean removeEmptyLines = true; // all
-    boolean includeFirstStopWithinZone = true; // 3
-    boolean allowHubsWithinZone = true; // split und trim, skip stops at intermediary
-    int minimumRouteLength = 2; // 3
-    int allowableStopsWithinZone = 3; // split, skip
-    boolean includeFirstHubInZone = false; // split und trim
-    Set<String> modes2Trim = new HashSet<>();  // all
+    public static Pair<TransitSchedule, Vehicles> xxxDeleteRoutesEntirelyInsideZone(TransitSchedule transitScheduleOld, Vehicles vehiclesOld, Set<Id<TransitStopFacility>> stopsInZone, Set<Id<TransitLine>> linesToModify, Set<String> modes2Trim, boolean removeEmptyLines) {
 
-
-    private Vehicles vehicles;
-    private TransitSchedule transitScheduleOld;
-    private TransitSchedule transitScheduleNew;
-    private static Set<Id<TransitStopFacility>> stopsInZone;
-    private TransitScheduleFactory tsf;
-
-    //TODO: Vehicles new
-
-
-    enum modMethod {
-        SplitRoute,
-        SkipStopsWithinZone,
-        DeleteRoutesEntirelyInsideZone,
-        TrimEnds
-    }
-
-
-    public TransitRouteTrimmer(TransitSchedule transitSchedule, Vehicles vehicles, List<PreparedGeometry> geometries) {
-        this.transitScheduleOld = transitSchedule;
-        this.transitScheduleNew = (new TransitScheduleFactoryImpl()).createTransitSchedule(); // TODO: Is this okay?
-        this.vehicles = vehicles;
-        this.tsf = transitScheduleNew.getFactory(); //TODO: ???
-        stopsInZone = new HashSet<>();
-        for (TransitStopFacility stop : transitSchedule.getFacilities().values()) {
-            if (ShpGeometryUtils.isCoordInPreparedGeometries(stop.getCoord(), geometries)) {
-                this.stopsInZone.add(stop.getId());
-            }
+        // make new TransitSchedule
+        TransitSchedule transitScheduleNew = (new TransitScheduleFactoryImpl()).createTransitSchedule();
+        for (TransitStopFacility stop : transitScheduleOld.getFacilities().values()) {
+            transitScheduleNew.addStopFacility(stop);
         }
-    }
 
-    public TransitRouteTrimmer(TransitSchedule transitSchedule, Vehicles vehicles, Set<Id<TransitStopFacility>> stopsInZone) {
-        this.transitScheduleOld = transitSchedule;
-        this.transitScheduleNew = (new TransitScheduleFactoryImpl()).createTransitSchedule(); // TODO: Is this okay?
-        this.tsf = transitScheduleNew.getFactory(); //TODO: ???
-        this.vehicles = vehicles;
-        this.stopsInZone = stopsInZone;
+        // make new Vehicles as copy of old vehicles file
+        Vehicles vehiclesNew = copyVehicles(vehiclesOld);
+        Set<Id<Vehicle>> vehiclesAffectedByTrim = new HashSet<>();
 
-    }
-
-    public Set<Id<TransitStopFacility>> getStopsInZone() {
-        return stopsInZone;
-    }
-
-
-    public void xxxDeleteRoutesEntirelyInsideZone(Set<Id<TransitLine>> linesToModify) {
-
-        copyFacilitiesToNewSchedule();
 
         for (TransitLine line : transitScheduleOld.getTransitLines().values()) {
             if (!linesToModify.contains(line.getId())) {
@@ -97,14 +52,16 @@ public class TransitRouteTrimmer {
             for (TransitRoute route : line.getRoutes().values()) {
 
                 // Only handles specified routes.
-                if (!this.modes2Trim.isEmpty()) {
-                    if (!this.modes2Trim.contains(route.getTransportMode())) {
+                if (modes2Trim != null && !modes2Trim.isEmpty()) {
+                    if (!modes2Trim.contains(route.getTransportMode())) {
                         lineNew.addRoute(route);
                         continue;
                     }
                 }
 
+
                 if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 1.0) {
+                    vehiclesAffectedByTrim.addAll(route.getDepartures().values().stream().map(Departure::getVehicleId).collect(Collectors.toSet()));
                     continue;
                 }
 
@@ -125,181 +82,227 @@ public class TransitRouteTrimmer {
         log.info("Old schedule contained " + transitScheduleOld.getTransitLines().values().size() + " lines.");
         log.info("New schedule contains " + transitScheduleNew.getTransitLines().values().size() + " lines.");
 
-        TransitRouteTrimmerUtils.countLinesInOut(transitScheduleNew, stopsInZone);
-    }
+        Vehicles vehiclesNew2 = removeExtraVehicles(transitScheduleNew, vehiclesNew, vehiclesAffectedByTrim);
 
-    public void xxxSkipStops(Set<Id<TransitLine>> linesToModify) {
-
-        copyFacilitiesToNewSchedule();
-
-        for (TransitLine line : transitScheduleOld.getTransitLines().values()) {
-            if (!linesToModify.contains(line.getId())) {
-                transitScheduleNew.addTransitLine(line);
-                continue;
-            }
-
-            TransitLine lineNew = transitScheduleOld.getFactory().createTransitLine(line.getId());
-
-            for (TransitRoute route : line.getRoutes().values()) {
-                TransitRoute routeNew = null;
-
-                // Only handles specified routes.
-                if (!this.modes2Trim.isEmpty()) {
-                    if (!this.modes2Trim.contains(route.getTransportMode())) {
-                        lineNew.addRoute(route);
-                        continue;
-                    }
-                }
-
-                // Only handle routes that interact with zone
-                if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 0.0) {
-                    lineNew.addRoute(route);
-                    continue;
-                }
-
-                routeNew = modifyRouteSkipStopsWithinZone(route);
-
-                if (routeNew != null) {
-                    lineNew.addRoute(routeNew);
-                }
-            }
-
-            if (lineNew.getRoutes().size() == 0 && removeEmptyLines) {
-                log.info(lineNew.getId() + " does not contain routes. It will NOT be added to the schedule");
-                continue;
-            }
-
-            transitScheduleNew.addTransitLine(lineNew);
-
-        }
-
-        log.info("Old schedule contained " + transitScheduleOld.getTransitLines().values().size() + " lines.");
-        log.info("New schedule contains " + transitScheduleNew.getTransitLines().values().size() + " lines.");
-
-        TransitRouteTrimmerUtils.countLinesInOut(transitScheduleNew, stopsInZone);
+        return new Pair<>(transitScheduleNew, vehiclesNew2);
     }
 
 
-    public void xxxTrimEnds(Set<Id<TransitLine>> linesToModify) {
+    public static Pair<TransitSchedule, Vehicles> xxxTrimEnds(TransitSchedule transitScheduleOld, Vehicles vehiclesOld,
+                                                              Set<Id<TransitStopFacility>> stopsInZone,
+                                                              Set<Id<TransitLine>> linesToModify, boolean removeEmptyLines,
+                                                              Set<String> modes2Trim, int minimumRouteLength,
+                                                              boolean includeFirstStopWithinZone) {
 
-        copyFacilitiesToNewSchedule();
-
-        for (TransitLine line : transitScheduleOld.getTransitLines().values()) {
-            if (!linesToModify.contains(line.getId())) {
-                transitScheduleNew.addTransitLine(line);
-                continue;
-            }
-
-            TransitLine lineNew = transitScheduleOld.getFactory().createTransitLine(line.getId());
-
-            for (TransitRoute route : line.getRoutes().values()) {
-                TransitRoute routeNew = null;
-
-                // Only handles specified routes.
-                if (!this.modes2Trim.isEmpty()) {
-                    if (!this.modes2Trim.contains(route.getTransportMode())) {
-                        lineNew.addRoute(route);
-                        continue;
-                    }
-                }
-
-                // Only handle routes that interact with zone
-                if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 0.0) {
-                    lineNew.addRoute(route);
-                    continue;
-                }
-
-                routeNew = modifyRouteTrimEnds(route);
-
-                if (routeNew != null) {
-                    lineNew.addRoute(routeNew);
-                }
-
-            }
-
-            if (lineNew.getRoutes().size() == 0 && removeEmptyLines) {
-                log.info(lineNew.getId() + " does not contain routes. It will NOT be added to the schedule");
-                continue;
-            }
-
-            transitScheduleNew.addTransitLine(lineNew);
-
-        }
-
-        log.info("Old schedule contained " + transitScheduleOld.getTransitLines().values().size() + " lines.");
-        log.info("New schedule contains " + transitScheduleNew.getTransitLines().values().size() + " lines.");
-
-        TransitRouteTrimmerUtils.countLinesInOut(transitScheduleNew, stopsInZone);
-    }
-
-    public void xxxSplitRoute(Set<Id<TransitLine>> linesToModify) {
-
-        copyFacilitiesToNewSchedule();
-
-        for (TransitLine line : transitScheduleOld.getTransitLines().values()) {
-            if (!linesToModify.contains(line.getId())) {
-                transitScheduleNew.addTransitLine(line);
-                continue;
-            }
-
-            TransitLine lineNew = transitScheduleOld.getFactory().createTransitLine(line.getId());
-
-            for (TransitRoute route : line.getRoutes().values()) {
-
-                // Only handles specified routes.
-                if (!this.modes2Trim.isEmpty()) {
-                    if (!this.modes2Trim.contains(route.getTransportMode())) {
-                        lineNew.addRoute(route);
-                        continue;
-                    }
-                }
-
-                // Only handle routes that interact with zone
-                if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 0.0) {
-                    lineNew.addRoute(route);
-                    continue;
-                }
-
-                ArrayList<TransitRoute> routesNew = modifyRouteSplitRoute(route);
-                for (TransitRoute rt : routesNew) {
-                    lineNew.addRoute(rt);
-                }
-
-            }
-
-            if (lineNew.getRoutes().size() == 0 && removeEmptyLines) {
-                log.info(lineNew.getId() + " does not contain routes. It will NOT be added to the schedule");
-                continue;
-            }
-
-            transitScheduleNew.addTransitLine(lineNew);
-
-        }
-
-        log.info("Old schedule contained " + transitScheduleOld.getTransitLines().values().size() + " lines.");
-        log.info("New schedule contains " + transitScheduleNew.getTransitLines().values().size() + " lines.");
-
-        TransitRouteTrimmerUtils.countLinesInOut(transitScheduleNew, stopsInZone);
-    }
-
-    private void copyFacilitiesToNewSchedule() {
+        // make new TransitSchedule
+        TransitSchedule transitScheduleNew = (new TransitScheduleFactoryImpl()).createTransitSchedule();
         for (TransitStopFacility stop : transitScheduleOld.getFacilities().values()) {
             transitScheduleNew.addStopFacility(stop);
         }
+
+        Vehicles vehiclesNew = copyVehicles(vehiclesOld);
+
+        for (TransitLine line : transitScheduleOld.getTransitLines().values()) {
+            if (!linesToModify.contains(line.getId())) {
+                transitScheduleNew.addTransitLine(line);
+                continue;
+            }
+
+            TransitLine lineNew = transitScheduleOld.getFactory().createTransitLine(line.getId());
+
+            for (TransitRoute route : line.getRoutes().values()) {
+                TransitRoute routeNew = null;
+
+                // Only handles specified routes.
+                if (modes2Trim != null && !modes2Trim.isEmpty()) {
+
+                    if (!modes2Trim.contains(route.getTransportMode())) {
+                        lineNew.addRoute(route);
+                        continue;
+                    }
+                }
+
+                // Only handle routes that interact with zone
+                if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 0.0) {
+                    lineNew.addRoute(route);
+                    continue;
+                }
+
+                routeNew = modifyRouteTrimEnds(route, minimumRouteLength, stopsInZone, includeFirstStopWithinZone, vehiclesNew);
+
+                if (routeNew != null) {
+                    lineNew.addRoute(routeNew);
+                }
+
+            }
+
+            if (lineNew.getRoutes().size() == 0 && removeEmptyLines) {
+                log.info(lineNew.getId() + " does not contain routes. It will NOT be added to the schedule");
+                continue;
+            }
+
+            transitScheduleNew.addTransitLine(lineNew);
+
+        }
+
+        log.info("Old schedule contained " + transitScheduleOld.getTransitLines().values().size() + " lines.");
+        log.info("New schedule contains " + transitScheduleNew.getTransitLines().values().size() + " lines.");
+
+        TransitRouteTrimmerUtils.countLinesInOut(transitScheduleNew, stopsInZone);
+
+//        Vehicles vehiclesNew = removeExtraVehicles(transitScheduleNew, vehiclesOld, vehiclesAffectedByTrim);
+
+        return new Pair<>(transitScheduleNew, vehiclesNew);
+
     }
 
+    public static Pair<TransitSchedule, Vehicles> xxxSkipStops(TransitSchedule transitScheduleOld, Vehicles vehiclesOld,
+                                                               Set<Id<TransitStopFacility>> stopsInZone,
+                                                               Set<Id<TransitLine>> linesToModify, boolean removeEmptyLines,
+                                                               Set<String> modes2Trim,
+                                                               int minimumRouteLength,
+                                                               boolean includeFirstStopWithinZone) {
 
-    public Vehicles getVehicles() {
-        return vehicles;
+        // make new TransitSchedule
+        TransitSchedule transitScheduleNew = (new TransitScheduleFactoryImpl()).createTransitSchedule();
+        for (TransitStopFacility stop : transitScheduleOld.getFacilities().values()) {
+            transitScheduleNew.addStopFacility(stop);
+        }
+
+        Vehicles vehiclesNew = copyVehicles(vehiclesOld);
+
+//        Set<Id<Vehicle>> vehiclesAffectedByTrim = new HashSet<>();
+
+        for (TransitLine line : transitScheduleOld.getTransitLines().values()) {
+            if (!linesToModify.contains(line.getId())) {
+                transitScheduleNew.addTransitLine(line);
+                continue;
+            }
+
+            TransitLine lineNew = transitScheduleOld.getFactory().createTransitLine(line.getId());
+
+            for (TransitRoute route : line.getRoutes().values()) {
+                TransitRoute routeNew = null;
+
+                // Only handles specified routes.
+                if (modes2Trim != null && !modes2Trim.isEmpty()) {
+                    if (!modes2Trim.contains(route.getTransportMode())) {
+                        lineNew.addRoute(route);
+                        continue;
+                    }
+                }
+
+                // Only handle routes that interact with zone
+                if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 0.0) {
+                    lineNew.addRoute(route);
+                    continue;
+                }
+
+                routeNew = modifyRouteSkipStopsWithinZone(route, minimumRouteLength, stopsInZone, includeFirstStopWithinZone, vehiclesNew);
+
+                if (routeNew != null) {
+                    lineNew.addRoute(routeNew);
+                }
+            }
+
+            if (lineNew.getRoutes().size() == 0 && removeEmptyLines) {
+                log.info(lineNew.getId() + " does not contain routes. It will NOT be added to the schedule");
+                continue;
+            }
+
+            transitScheduleNew.addTransitLine(lineNew);
+
+        }
+
+        log.info("Old schedule contained " + transitScheduleOld.getTransitLines().values().size() + " lines.");
+        log.info("New schedule contains " + transitScheduleNew.getTransitLines().values().size() + " lines.");
+
+//        Vehicles vehiclesNew = removeExtraVehicles(transitScheduleNew, vehiclesOld, vehiclesAffectedByTrim);
+        return new Pair<>(transitScheduleNew, vehiclesNew);
+
     }
 
-    public TransitSchedule getTransitScheduleNew() {
-        return transitScheduleNew;
-    }
+    public static Pair<TransitSchedule, Vehicles> xxxSplitRoute(TransitSchedule transitScheduleOld, Vehicles vehiclesOld,
+                                                                Set<Id<TransitStopFacility>> stopsInZone,
+                                                                Set<Id<TransitLine>> linesToModify, boolean removeEmptyLines, Set<String> modes2Trim, int minimumRouteLength,
+                                                                boolean includeFirstStopWithinZone,
+                                                                boolean allowHubsWithinZone,
+                                                                boolean includeFirstHubInZone,
+                                                                int allowableStopsWithinZone) {
 
+        // make new TransitSchedule
+        TransitSchedule transitScheduleNew = (new TransitScheduleFactoryImpl()).createTransitSchedule();
+        for (TransitStopFacility stop : transitScheduleOld.getFacilities().values()) {
+            transitScheduleNew.addStopFacility(stop);
+        }
+
+        Vehicles vehiclesNew = copyVehicles(vehiclesOld);
+
+
+        for (TransitLine line : transitScheduleOld.getTransitLines().values()) {
+            if (!linesToModify.contains(line.getId())) {
+                transitScheduleNew.addTransitLine(line);
+                continue;
+            }
+
+            TransitLine lineNew = transitScheduleOld.getFactory().createTransitLine(line.getId());
+
+            for (TransitRoute route : line.getRoutes().values()) {
+
+                // Only handles specified routes.
+                if (modes2Trim!=null && !modes2Trim.isEmpty()) {
+                    if (!modes2Trim.contains(route.getTransportMode())) {
+                        lineNew.addRoute(route);
+                        continue;
+                    }
+                }
+
+                // Only handle routes that interact with zone
+                if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 0.0) {
+                    lineNew.addRoute(route);
+                    continue;
+                }
+
+                ArrayList<TransitRoute> routesNew = modifyRouteSplitRoute(route, stopsInZone, includeFirstStopWithinZone, allowHubsWithinZone,
+                        includeFirstHubInZone, allowableStopsWithinZone, vehiclesNew);
+
+
+                for (TransitRoute rt : routesNew) {
+
+                    int routeLength = rt.getStops().size(); // TODO:check
+
+                    if (routeLength >= minimumRouteLength && routeLength > 0) {
+                        lineNew.addRoute(rt);
+                    }
+                }
+
+            }
+
+            if (lineNew.getRoutes().size() == 0 && removeEmptyLines) {
+                log.info(lineNew.getId() + " does not contain routes. It will NOT be added to the schedule");
+                continue;
+            }
+
+            transitScheduleNew.addTransitLine(lineNew);
+
+        }
+
+        log.info("Old schedule contained " + transitScheduleOld.getTransitLines().values().size() + " lines.");
+        log.info("New schedule contains " + transitScheduleNew.getTransitLines().values().size() + " lines.");
+
+        TransitRouteTrimmerUtils.countLinesInOut(transitScheduleNew, stopsInZone);
+
+
+//        Vehicles vehiclesNew = removeExtraVehicles(transitScheduleNew, vehiclesOld, vehiclesAffectedByTrim);
+
+        return new Pair<>(transitScheduleNew, vehiclesNew);
+
+    }
 
     // This will skip stops within zone. If beginning or end of route is within zone, it will cut those ends off.
-    private TransitRoute modifyRouteSkipStopsWithinZone(TransitRoute routeOld) {
+    private static TransitRoute modifyRouteSkipStopsWithinZone(TransitRoute routeOld, int minimumRouteLength,
+                                                               Set<Id<TransitStopFacility>> stopsInZone, boolean includeFirstStopWithinZone,
+                                                               Vehicles vehiclesNew) {
         List<TransitRouteStop> stops2Keep = new ArrayList<>();
         List<TransitRouteStop> stopsOld = new ArrayList<>(routeOld.getStops());
 
@@ -334,14 +337,18 @@ public class TransitRouteTrimmer {
 
 
         if (stops2Keep.size() >= minimumRouteLength && stops2Keep.size() > 0) {
-            return createNewRoute(routeOld, stops2Keep, 1);
+            return createNewRoute(routeOld, stops2Keep, 1, vehiclesNew);
         }
 
         return null; // TODO: Check this
 
     }
 
-    private TransitRoute modifyRouteTrimEnds(TransitRoute routeOld) {
+    private static TransitRoute modifyRouteTrimEnds(TransitRoute routeOld,
+                                                    int minimumRouteLength,
+                                                    Set<Id<TransitStopFacility>> stopsInZone,
+                                                    boolean includeFirstStopWithinZone,
+                                                    Vehicles vehiclesNew) {
 
         List<TransitRouteStop> stops2Keep = new ArrayList<>();
         List<TransitRouteStop> stopsOld = new ArrayList<>(routeOld.getStops());
@@ -402,14 +409,18 @@ public class TransitRouteTrimmer {
         }
 
         if (stops2Keep.size() >= minimumRouteLength && stops2Keep.size() > 0) {
-            return createNewRoute(routeOld, stops2Keep, 1);
+            return createNewRoute(routeOld, stops2Keep, 1, vehiclesNew);
         }
 
         return null; // TODO: Check this
 
     }
 
-    private ArrayList<TransitRoute> modifyRouteSplitRoute(TransitRoute routeOld) {
+    private static ArrayList<TransitRoute> modifyRouteSplitRoute(TransitRoute routeOld,
+                                                                 Set<Id<TransitStopFacility>> stopsInZone, boolean includeFirstStopWithinZone,
+                                                                 boolean allowHubsWithinZone, boolean includeFirstHubInZone, int allowableStopsWithinZone,
+                                                                 Vehicles vehiclesNew) {
+
         ArrayList<TransitRoute> resultRoutes = new ArrayList<>();
         List<TransitRouteStop> stopsOld = new ArrayList<>(routeOld.getStops());
 
@@ -527,7 +538,7 @@ public class TransitRouteTrimmer {
         // create transit routes
         int newRouteCnt = 1;
         for (Integer[] pair : routeIndices2) {
-            resultRoutes.add(createNewRoute(routeOld, pair[0], pair[1], newRouteCnt));
+            resultRoutes.add(createNewRoute(routeOld, pair[0], pair[1], newRouteCnt, vehiclesNew));
             newRouteCnt++;
         }
 
@@ -535,7 +546,39 @@ public class TransitRouteTrimmer {
 
     }
 
-    private List<int[]> getHubList(List<TransitRouteStop> stopsOld) {
+    private static Vehicles copyVehicles(Vehicles vehiclesOld) {
+        Vehicles vehiclesNew = VehicleUtils.createVehiclesContainer();
+        for (VehicleType vehicleType : vehiclesOld.getVehicleTypes().values()) {
+            vehiclesNew.addVehicleType(vehicleType);
+        }
+
+        for (Vehicle vehicle : vehiclesOld.getVehicles().values()) {
+            vehiclesNew.addVehicle(vehicle);
+        }
+
+        return vehiclesNew;
+    }
+
+    private static Vehicles removeExtraVehicles(TransitSchedule transitScheduleNew, Vehicles vehicles, Set<Id<Vehicle>> vehiclesAffectedByTrim) {
+        // Delete vehicles affected by trim that are not used by other lines
+        Set<Id<Vehicle>> vehiclesUsedInTransitSchedule = transitScheduleNew.getTransitLines().values().stream()
+                .flatMap(x -> x.getRoutes().values().stream()
+                        .flatMap(y -> y.getDepartures().values().stream()
+                                .map(Departure::getVehicleId))).collect(Collectors.toSet());
+
+        int vehiclesRemoved = 0;
+        for (Id<Vehicle> vehId : vehiclesAffectedByTrim) {
+            if (!vehiclesUsedInTransitSchedule.contains(vehId)) {
+                vehicles.removeVehicle(vehId);
+                vehiclesRemoved++;
+            }
+        }
+        log.info(vehiclesRemoved + " vehicles removed");
+
+        return vehicles;
+    }
+
+    private static List<int[]> getHubList(List<TransitRouteStop> stopsOld) {
         List<int[]> hubs = new ArrayList<>();
 
         for (int i = 0; i < stopsOld.size(); i++) {
@@ -551,7 +594,7 @@ public class TransitRouteTrimmer {
         return hubs;
     }
 
-    private List<Integer[]> findStartEndIndicesForAllRoutes(boolean[] stops2Keep) {
+    private static List<Integer[]> findStartEndIndicesForAllRoutes(boolean[] stops2Keep) {
         List<Integer[]> routeIndicies = new ArrayList<>();
         Integer startIndex = null;
         Integer endIndex = null;
@@ -587,38 +630,20 @@ public class TransitRouteTrimmer {
     }
 
 
-    private boolean checkIntersection(Integer[] pair1, Integer[] pair2) {
-        Integer pair1Left = pair1[0];
-        Integer pair1Right = pair1[1];
-        if (pair1Left >= pair2[0] && pair1Left <= pair2[1]) {
-            return true;
-        } else if (pair1Right >= pair2[0] && pair1Right <= pair2[1]) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private Integer[] intersectPairs(Integer[] pair1, Integer[] pair2) {
-        int newLeft = Math.min(pair1[0], pair2[0]);
-        int newRight = Math.max(pair1[1], pair2[1]);
-        return new Integer[]{newLeft, newRight};
-    }
-
-
-    private TransitRoute createNewRoute(TransitRoute routeOld, Integer startIndex, Integer endIndex, int modNumber) {
+    private static TransitRoute createNewRoute(TransitRoute routeOld, Integer startIndex, Integer endIndex, int modNumber, Vehicles vehiclesNew) {
         List<TransitRouteStop> stopsInNewRoute = new ArrayList<>();
         for (int i = startIndex; i <= endIndex; i++) {
             stopsInNewRoute.add(routeOld.getStops().get(i));
         }
 
-        return createNewRoute(routeOld, stopsInNewRoute, modNumber);
+        return createNewRoute(routeOld, stopsInNewRoute, modNumber, vehiclesNew);
     }
 
-    private TransitRoute createNewRoute(TransitRoute routeOld, List<TransitRouteStop> stopsInNewRoute,
-                                        int modNumber) {
+    private static TransitRoute createNewRoute(TransitRoute routeOld, List<TransitRouteStop> stopsInNewRoute,
+                                               int modNumber, Vehicles vehiclesNew) {
 
         TransitRoute routeNew;
+        TransitScheduleFactory tsf = new TransitScheduleFactoryImpl();
 
         List<Id<Link>> linksOld = new ArrayList<>();
         linksOld.add(routeOld.getRoute().getStartLinkId());
@@ -665,7 +690,7 @@ public class TransitRouteTrimmer {
         double departureOffset = stopsInNewRoute.get(0).getDepartureOffset().seconds() - initialDepartureOffset;
 
         // double initialArrivalOffset = transitRouteStop.getArrivalOffset().seconds();
-        double arrivalOffset = departureOffset;
+        double arrivalOffset = departureOffset; //TODO: OFFSETS
         // double arrivalOffset = stopsInNewRoute.get(0).getArrivalOffset().seconds() - initialArrivalOffset;
 
         List<TransitRouteStop> stopsNew = new ArrayList<>(copyStops(stopsInNewRoute, departureOffset, arrivalOffset));
@@ -678,31 +703,36 @@ public class TransitRouteTrimmer {
         routeNew = tsf.createTransitRoute(routeIdNew, networkRouteNew, stopsNew, routeOld.getTransportMode());
         routeNew.setDescription(routeOld.getDescription());
 
-        VehiclesFactory vf = this.vehicles.getFactory();
+        VehiclesFactory vf = vehiclesNew.getFactory();
 
         for (Departure departure : routeOld.getDepartures().values()) {
             Id<Vehicle> vehIdOld = departure.getVehicleId();
             Id<Vehicle> vehIdNew = Id.createVehicleId(vehIdOld.toString() + "_mod" + modNumber);
-            VehicleType vehType = this.vehicles.getVehicles().get(vehIdOld).getType();
+            VehicleType vehType = vehiclesNew.getVehicles().get(vehIdOld).getType();
             // this.vehicles.removeVehicle(departure.getVehicleId()); //TODO VEH MUST BE REMOVED LATER ON IF UNUSED
             Vehicle vehicle = vf.createVehicle(vehIdNew, vehType);
-            this.vehicles.addVehicle(vehicle);
+            vehiclesNew.addVehicle(vehicle);
 
             String depIdOld = departure.getId().toString();
             Departure departureNew = tsf.createDeparture(Id.create(depIdOld + "_mod" + modNumber, Departure.class), departure.getDepartureTime() + departureOffset);
             departureNew.setVehicleId(vehIdNew);
             routeNew.addDeparture(departureNew);
         }
+
         return routeNew;
+
     }
 
 
     // TODO: how to deal with arrival and departure offsets? I don't know the conventions...
     // TODO: first stop can have no arr offset, last stop no dep offset
-    private Collection<? extends TransitRouteStop> copyStops(List<TransitRouteStop> s, Double
+    private static Collection<? extends TransitRouteStop> copyStops(List<TransitRouteStop> s, Double
             departureOffset, Double arrivalOffset) {
         List<TransitRouteStop> stops = new ArrayList<>();
         TransitRouteStop newStop;
+
+        TransitScheduleFactory tsf = new TransitScheduleFactoryImpl();
+
         for (TransitRouteStop oldStop : s) {
 
             //            newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
@@ -731,81 +761,4 @@ public class TransitRouteTrimmer {
         return stops;
     }
 
-
-
-    //
-    /**
-     * @param linesToModify
-     * @param modifyMethod
-     */
-
-//    public void modifyTransitLinesFromTransitSchedule(Set<Id<TransitLine>> linesToModify, modMethod modifyMethod) {
-//
-//        copyFacilitiesToNewSchedule();
-//
-//        for (TransitLine line : transitScheduleOld.getTransitLines().values()) {
-//            if (!linesToModify.contains(line.getId())) {
-//                transitScheduleNew.addTransitLine(line);
-//                continue;
-//            }
-//
-//            TransitLine lineNew = transitScheduleOld.getFactory().createTransitLine(line.getId());
-//
-//            for (TransitRoute route : line.getRoutes().values()) {
-//                TransitRoute routeNew = null;
-//
-//                // Only handles specified routes.
-//                if (!this.modes2Trim.isEmpty()) {
-//                    if (!this.modes2Trim.contains(route.getTransportMode())) {
-//                        lineNew.addRoute(route);
-//                        continue;
-//                    }
-//                }
-//
-//                // Only handle routes that interact with zone
-//                if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 0.0) {
-//                    lineNew.addRoute(route);
-//                    continue;
-//                }
-//
-//                if (modifyMethod.equals(modMethod.DeleteRoutesEntirelyInsideZone)) {
-//                    if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 1.0) {
-//                        continue;
-//                    }
-//                    routeNew = route;
-//                } else if (modifyMethod.equals(modMethod.TrimEnds)) {
-//                    routeNew = modifyRouteTrimEnds(route);
-//                } else if (modifyMethod.equals((modMethod.SkipStopsWithinZone))) {
-//                    routeNew = modifyRouteSkipStopsWithinZone(route);
-//                } else if (modifyMethod.equals(modMethod.SplitRoute)) {
-//                    ArrayList<TransitRoute> routesNew = modifyRouteSplitRoute(route);
-//                    for (TransitRoute rt : routesNew) {
-//                        lineNew.addRoute(rt);
-//                    }
-//                }
-//
-//                if (routeNew != null) {
-//                    lineNew.addRoute(routeNew);
-//                }
-//
-//            }
-//
-//            if (lineNew.getRoutes().size() == 0 && removeEmptyLines) {
-//                log.info(lineNew.getId() + " does not contain routes. It will NOT be added to the schedule");
-//                continue;
-//            }
-//
-//            transitScheduleNew.addTransitLine(lineNew);
-//
-//        }
-//
-//        log.info("Old schedule contained " + transitScheduleOld.getTransitLines().values().size() + " lines.");
-//        log.info("New schedule contains " + transitScheduleNew.getTransitLines().values().size() + " lines.");
-//
-//        TransitRouteTrimmerUtils.countLinesInOut(transitScheduleNew, stopsInZone);
-//    }
-
 }
-
-
-
