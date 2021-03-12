@@ -1,5 +1,6 @@
 package org.matsim.prepare.ptRouteTrim;
 
+import javafx.util.Pair;
 import org.geotools.data.shapefile.shp.ShapeType;
 import org.geotools.data.shapefile.shp.ShapefileWriter;
 import org.geotools.feature.SchemaException;
@@ -23,7 +24,6 @@ import org.matsim.vehicles.Vehicles;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,9 +35,9 @@ public class RunTransitRouteTrimmerBerlin {
         final String inScheduleFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz";
         final String inVehiclesFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-transit-vehicles.xml.gz";
         final String inNetworkFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz";
-//        final String zoneShpFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlin-hundekopf-areas/berlin_hundekopf.shp";
+        final String zoneShpFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlin-hundekopf-areas/berlin_hundekopf.shp";
 //        final String zoneShpFile = "C:\\Users\\jakob\\tubCloud\\Shared\\DRT\\PolicyCase\\Frohnau\\Frohnau-1.shp";
-        final String zoneShpFile = "D:/Dropbox/Documents/VSP/zehlendorfPLUS/zehlendorfPlus.shp";
+//        final String zoneShpFile = "D:/Dropbox/Documents/VSP/zehlendorfPLUS/zehlendorfPlus.shp";
         final String outputPath = "src/main/java/org/matsim/prepare/ptRouteTrim/output/";
         Config config = ConfigUtils.createConfig();
         config.transit().setTransitScheduleFile(inScheduleFile);
@@ -50,21 +50,6 @@ public class RunTransitRouteTrimmerBerlin {
 
         Scenario scenario = ScenarioUtils.loadScenario(config);
         TransitSchedule transitScheduleOld = scenario.getTransitSchedule();
-
-        // TRIMMER SETUP
-        List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new File(zoneShpFile).toURI().toURL()); //new URL(
-
-        System.out.println("\n Modify Routes: SplitRoute");
-        TransitRouteTrimmer transitRouteTrimmer = new TransitRouteTrimmer(scenario.getTransitSchedule(), scenario.getVehicles(), geometries);
-//        transitRouteTrimmer.modifyTransitLinesFromTransitSchedule();
-        transitRouteTrimmer.includeFirstStopWithinZone = true; //
-        transitRouteTrimmer.includeFirstHubInZone = true; //
-        transitRouteTrimmer.allowHubsWithinZone = true;
-        transitRouteTrimmer.allowableStopsWithinZone = 0;
-        transitRouteTrimmer.modes2Trim = Collections.singleton("bus");
-
-
-
 
 
         // Collect all rail stations
@@ -141,9 +126,18 @@ public class RunTransitRouteTrimmerBerlin {
         // Run Trimmer
         Set<Id<TransitLine>> linesToModify = scenario.getTransitSchedule().getTransitLines().keySet();
 
-        transitRouteTrimmer.xxxSplitRoute(linesToModify);
-        TransitSchedule transitScheduleNew = transitRouteTrimmer.getTransitScheduleNew();
-        Vehicles vehiclesNew = transitRouteTrimmer.getVehicles();
+        // TRIMMER SETUP
+        List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(new File(zoneShpFile).toURI().toURL()); //new URL(
+
+        System.out.println("\n Modify Routes: SplitRoute");
+
+
+        Set<Id<TransitStopFacility>> stopsInZone = TransitRouteTrimmerUtils.getStopsInZone(scenario.getTransitSchedule(),zoneShpFile);
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxSplitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(), stopsInZone, linesToModify,
+                true, Collections.singleton("bus"), 3, true, true, true, 0);
+
+        TransitSchedule transitScheduleNew = results.getKey();
+        Vehicles vehiclesNew = results.getValue();
 
         TransitScheduleValidator.ValidationResult validationResult = TransitScheduleValidator.validateAll(transitScheduleNew, scenario.getNetwork());
         System.out.println(validationResult.getErrors());
