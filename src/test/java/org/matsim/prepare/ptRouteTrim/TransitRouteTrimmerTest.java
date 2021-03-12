@@ -1021,16 +1021,16 @@ public class TransitRouteTrimmerTest {
 
         //Start of second route
         TransitRouteStop routeNew2Start = transitRouteNew2.getStops().get(0);
-        TransitRouteStop routeOld2Start = transitRouteOld.getStops().get(routeOldSize - routeNew2Size - 1);
+        TransitRouteStop routeOld2Start = transitRouteOld.getStops().get(routeOldSize - routeNew2Size);
 
-//        Assert.assertEquals(routeOld2Start.getDepartureOffset(), routeNew2Start.getDepartureOffset());
-//        Assert.assertEquals(routeOld2Start.getArrivalOffset(), routeNew2Start.getArrivalOffset());
+        Assert.assertEquals(routeOld2Start.getDepartureOffset(), routeNew2Start.getDepartureOffset());
+        Assert.assertEquals(routeOld2Start.getArrivalOffset(), routeNew2Start.getArrivalOffset());
 
         //End of second route
-        TransitRouteStop routeNew2End = transitRouteNew2.getStops().get(routeNew2Size-1);
+        TransitRouteStop routeNew2End = transitRouteNew2.getStops().get(routeNew2Size - 1);
         TransitRouteStop routeOld2End = transitRouteOld.getStops().get(routeOldSize - 1);
 
-//        Assert.assertEquals(routeOld2End.getDepartureOffset(), routeNew2End.getDepartureOffset());
+        Assert.assertEquals(routeOld2End.getDepartureOffset(), routeNew2End.getDepartureOffset());
         Assert.assertEquals(routeOld2End.getArrivalOffset(), routeNew2End.getArrivalOffset());
 
     }

@@ -683,24 +683,24 @@ public class TransitRouteTrimmer {
         }
 
         // Modify arrivalOffset and departureOffset for each stop
-        TransitRouteStop transitRouteStop = routeOld.getStops().get(0);
-
-
-        double initialDepartureOffset = transitRouteStop.getDepartureOffset().seconds();
-        double departureOffset = stopsInNewRoute.get(0).getDepartureOffset().seconds() - initialDepartureOffset;
-
-        // double initialArrivalOffset = transitRouteStop.getArrivalOffset().seconds();
-        double arrivalOffset = departureOffset; //TODO: OFFSETS
+//        TransitRouteStop transitRouteStop = routeOld.getStops().get(0);
+//
+//
+//        double initialDepartureOffset = transitRouteStop.getDepartureOffset().seconds();
+//        double departureOffset = stopsInNewRoute.get(0).getDepartureOffset().seconds() - initialDepartureOffset;
+//
+//         double initialArrivalOffset = transitRouteStop.getArrivalOffset().seconds();
+//        double arrivalOffset = departureOffset; //TODO: OFFSETS
         // double arrivalOffset = stopsInNewRoute.get(0).getArrivalOffset().seconds() - initialArrivalOffset;
 
-        List<TransitRouteStop> stopsNew = new ArrayList<>(copyStops(stopsInNewRoute, departureOffset, arrivalOffset));
+//        List<TransitRouteStop> stopsNew = new ArrayList<>(copyStops(stopsInNewRoute, departureOffset, arrivalOffset));
 
 
         // make route.
         NetworkRoute networkRouteNew = RouteUtils.createLinkNetworkRouteImpl(startLinkNew, midLinksNew, endLinkNew);
         String routeIdOld = routeOld.getId().toString();
         Id<TransitRoute> routeIdNew = Id.create(routeIdOld + "_mod" + modNumber, TransitRoute.class);
-        routeNew = tsf.createTransitRoute(routeIdNew, networkRouteNew, stopsNew, routeOld.getTransportMode());
+        routeNew = tsf.createTransitRoute(routeIdNew, networkRouteNew, stopsInNewRoute, routeOld.getTransportMode());
         routeNew.setDescription(routeOld.getDescription());
 
         VehiclesFactory vf = vehiclesNew.getFactory();
@@ -714,7 +714,7 @@ public class TransitRouteTrimmer {
             vehiclesNew.addVehicle(vehicle);
 
             String depIdOld = departure.getId().toString();
-            Departure departureNew = tsf.createDeparture(Id.create(depIdOld + "_mod" + modNumber, Departure.class), departure.getDepartureTime() + departureOffset);
+            Departure departureNew = tsf.createDeparture(Id.create(depIdOld + "_mod" + modNumber, Departure.class), departure.getDepartureTime() );
             departureNew.setVehicleId(vehIdNew);
             routeNew.addDeparture(departureNew);
         }
