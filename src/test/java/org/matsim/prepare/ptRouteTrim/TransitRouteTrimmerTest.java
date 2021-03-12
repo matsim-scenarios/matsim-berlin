@@ -9,21 +9,19 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.core.utils.misc.OptionalTime;
 import org.matsim.pt.transitSchedule.api.*;
 import org.matsim.utils.gis.shp2matsim.ShpGeometryUtils;
+import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.Vehicles;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
 public class TransitRouteTrimmerTest {
-
-    //    private TransitRouteTrimmer transitRouteTrimmer;
-    //    private Scenario scenario;
 
     final String inZoneShpFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlin-hundekopf-areas/berlin_hundekopf.shp";
     final String inScheduleFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz";
@@ -54,43 +52,6 @@ public class TransitRouteTrimmerTest {
             this.transitLineId = transitLineId;
             this.transitRouteId = transitRouteId;
         }
-    }
-
-    //    @Before
-    //    public void prepare() throws MalformedURLException {
-    //        Scenario scenario = createScenario(this.inScheduleFile, this.inNetworkFile, this.inVehiclesFile);
-    //
-    //        Set<Id<TransitStopFacility>> stopsInZone = getStopsInZone(scenario.getTransitSchedule(), inZoneShpFile);
-    //        //        transitRouteTrimmer = new TransitRouteTrimmer(scenario.getTransitSchedule(), scenario.getVehicles(), geometries);
-    //
-    //    }
-
-    private Set<Id<TransitStopFacility>> getStopsInZone(TransitSchedule transitSchedule, String zoneShpFile) {
-        List<PreparedGeometry> geometries = null;
-        try {
-            geometries = ShpGeometryUtils.loadPreparedGeometries(new URL(zoneShpFile));
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Wrong Filename!");
-        }
-        Set<Id<TransitStopFacility>> stopsInZone = new HashSet<>();
-        for (TransitStopFacility stop : transitSchedule.getFacilities().values()) {
-            if (ShpGeometryUtils.isCoordInPreparedGeometries(stop.getCoord(), geometries)) {
-                stopsInZone.add(stop.getId());
-            }
-        }
-
-        return stopsInZone;
-    }
-
-    private Scenario createScenario(String scheduleFile, String networkFile, String vehiclesFile) {
-
-        Config config = ConfigUtils.createConfig();
-        config.transit().setTransitScheduleFile(scheduleFile);
-        config.network().setInputFile(networkFile);
-        config.transit().setVehiclesFile(vehiclesFile);
-
-        return ScenarioUtils.loadScenario(config);
     }
 
 
@@ -201,7 +162,7 @@ public class TransitRouteTrimmerTest {
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
 
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxDeleteRoutesEntirelyInsideZone(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.deleteRoutesEntirelyInsideZone(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
                 stopsInZone, linesToModify, null, false);
 
         // After Trim
@@ -211,9 +172,11 @@ public class TransitRouteTrimmerTest {
         assertEquals("transitLine should no longer contain any routes",
                 transitScheduleNew.getTransitLines().get(transitLineId).getRoutes().size(), 0);
 
-        Vehicles vehiclesNew = results.getValue();
-        assertTrue("new vehicle count should be less than or equal to old vehicle count",
-                vehiclesNew.getVehicles().size() <= scenario.getTransitVehicles().getVehicles().size());
+        // Test vehicles
+        Set<Id<Vehicle>> vehiclesUsedInTransitSchedule = getVehiclesUsedInTransitSchedule(transitScheduleNew);
+        Set<Id<Vehicle>> vehiclesInVehiclesNew = results.getValue().getVehicles().keySet();
+        Assert.assertTrue("TransitVehicles should contain all vehicles used in new TransitSchedule",
+                vehiclesInVehiclesNew.containsAll(vehiclesUsedInTransitSchedule));
 
     }
 
@@ -238,7 +201,7 @@ public class TransitRouteTrimmerTest {
 
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxDeleteRoutesEntirelyInsideZone(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.deleteRoutesEntirelyInsideZone(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
                 stopsInZone, linesToModify, null, false);
 
         // After trim
@@ -255,6 +218,12 @@ public class TransitRouteTrimmerTest {
         int stopCntNew = transitRoute.getStops().size();
         assertEquals("transitRoute should contain same number of stops as before modification",
                 stopCntOld, stopCntNew);
+
+        // Test vehicles
+        Set<Id<Vehicle>> vehiclesUsedInTransitSchedule = getVehiclesUsedInTransitSchedule(transitScheduleNew);
+        Set<Id<Vehicle>> vehiclesInVehiclesNew = results.getValue().getVehicles().keySet();
+        Assert.assertTrue("TransitVehicles should contain all vehicles used in new TransitSchedule",
+                vehiclesInVehiclesNew.containsAll(vehiclesUsedInTransitSchedule));
 
     }
 
@@ -279,10 +248,10 @@ public class TransitRouteTrimmerTest {
 
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxDeleteRoutesEntirelyInsideZone(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.deleteRoutesEntirelyInsideZone(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
                 stopsInZone, linesToModify, null, false);
 
-        // Aftre trim
+        // After trim
         TransitSchedule transitScheduleNew = results.getKey();
 
         assertTrue("Schedule should include transit line",
@@ -296,6 +265,12 @@ public class TransitRouteTrimmerTest {
         int stopCntNew = transitRoute.getStops().size();
         assertEquals("transitRoute should contain same number of stops as before modification",
                 stopCntOld, stopCntNew);
+
+        // Test vehicles
+        Set<Id<Vehicle>> vehiclesUsedInTransitSchedule = getVehiclesUsedInTransitSchedule(transitScheduleNew);
+        Set<Id<Vehicle>> vehiclesInVehiclesNew = results.getValue().getVehicles().keySet();
+        Assert.assertTrue("TransitVehicles should contain all vehicles used in new TransitSchedule",
+                vehiclesInVehiclesNew.containsAll(vehiclesUsedInTransitSchedule));
 
     }
 
@@ -314,7 +289,7 @@ public class TransitRouteTrimmerTest {
 
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxTrimEnds(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.trimEnds(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
                 stopsInZone, linesToModify, false, null, 3, true);
 
         // After trim
@@ -325,12 +300,18 @@ public class TransitRouteTrimmerTest {
         assertEquals("transitLine should no longer contain any routes",
                 transitScheduleNew.getTransitLines().get(transitLineId).getRoutes().size(), 0);
 
+        // Test vehicles
+        Set<Id<Vehicle>> vehiclesUsedInTransitSchedule = getVehiclesUsedInTransitSchedule(transitScheduleNew);
+        Set<Id<Vehicle>> vehiclesInVehiclesNew = results.getValue().getVehicles().keySet();
+        Assert.assertTrue("TransitVehicles should contain all vehicles used in new TransitSchedule",
+                vehiclesInVehiclesNew.containsAll(vehiclesUsedInTransitSchedule));
+
     }
 
     /**
      * trimming method: TrimEnds.
      * route scenario: HalfIn
-     * The second half of the route is outsie the zone and should be trimmed
+     * The second half of the route is outside the zone and should be trimmed
      */
     @Test
     public void testTrimEnds_HalfIn() {
@@ -351,7 +332,7 @@ public class TransitRouteTrimmerTest {
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
 
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxTrimEnds(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.trimEnds(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
                 stopsInZone, linesToModify, false, null, 3, false);
 
 
@@ -375,6 +356,12 @@ public class TransitRouteTrimmerTest {
                 firstStopOld, firstStopNew);
         assertNotEquals("last stop of old and new route should be different",
                 lastStopOld, lastStopNew);
+
+        // Test vehicles
+        Set<Id<Vehicle>> vehiclesUsedInTransitSchedule = getVehiclesUsedInTransitSchedule(transitScheduleNew);
+        Set<Id<Vehicle>> vehiclesInVehiclesNew = results.getValue().getVehicles().keySet();
+        Assert.assertTrue("TransitVehicles should contain all vehicles used in new TransitSchedule",
+                vehiclesInVehiclesNew.containsAll(vehiclesUsedInTransitSchedule));
     }
 
     /**
@@ -400,7 +387,7 @@ public class TransitRouteTrimmerTest {
 
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxTrimEnds(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.trimEnds(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
                 stopsInZone, linesToModify, false, null, 3, true);
 
         // After trim
@@ -415,6 +402,12 @@ public class TransitRouteTrimmerTest {
                 numStopsOld, numStopsNew);
         Assert.assertEquals("new route should contain same number of links as old one",
                 numLinksOld, numLinksNew);
+
+        // Test vehicles
+        Set<Id<Vehicle>> vehiclesUsedInTransitSchedule = getVehiclesUsedInTransitSchedule(transitScheduleNew);
+        Set<Id<Vehicle>> vehiclesInVehiclesNew = results.getValue().getVehicles().keySet();
+        Assert.assertTrue("TransitVehicles should contain all vehicles used in new TransitSchedule",
+                vehiclesInVehiclesNew.containsAll(vehiclesUsedInTransitSchedule));
     }
 
 
@@ -433,13 +426,19 @@ public class TransitRouteTrimmerTest {
 
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxSkipStops(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.skipStops(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
                 stopsInZone, linesToModify, false, null, 3, true);
 
         // After trim
         TransitSchedule transitScheduleNew = results.getKey();
         assertTrue("sched should include empty transit line", transitScheduleNew.getTransitLines().containsKey(transitLineId));
         assertEquals("transitLine should not longer contain any routes", transitScheduleNew.getTransitLines().get(transitLineId).getRoutes().size(), 0);
+
+        // Test vehicles
+        Set<Id<Vehicle>> vehiclesUsedInTransitSchedule = getVehiclesUsedInTransitSchedule(transitScheduleNew);
+        Set<Id<Vehicle>> vehiclesInVehiclesNew = results.getValue().getVehicles().keySet();
+        Assert.assertTrue("TransitVehicles should contain all vehicles used in new TransitSchedule",
+                vehiclesInVehiclesNew.containsAll(vehiclesUsedInTransitSchedule));
 
     }
 
@@ -465,7 +464,7 @@ public class TransitRouteTrimmerTest {
 
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxSkipStops(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.skipStops(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
                 stopsInZone, linesToModify, true, null, 3, true);
 
         // After trim
@@ -476,7 +475,7 @@ public class TransitRouteTrimmerTest {
         int outCntNew = countStopsOutsideZone(transitRouteNew, stopsInZone);
         int numLinksNew = transitRouteNew.getRoute().getLinkIds().size();
 
-        Assert.assertTrue("there should be less stops after the modificaton",
+        Assert.assertTrue("there should be less stops after the modification",
                 sizeOld > sizeNew);
         assertTrue("new route should have less links than old route",
                 numLinksNew < numLinksOld);
@@ -484,6 +483,12 @@ public class TransitRouteTrimmerTest {
                 1, inCntNew);
         assertEquals("the number of stops outside of zone should remain same",
                 outCntOld, outCntNew);
+
+        // Test vehicles
+        Set<Id<Vehicle>> vehiclesUsedInTransitSchedule = getVehiclesUsedInTransitSchedule(transitScheduleNew);
+        Set<Id<Vehicle>> vehiclesInVehiclesNew = results.getValue().getVehicles().keySet();
+        Assert.assertTrue("TransitVehicles should contain all vehicles used in new TransitSchedule",
+                vehiclesInVehiclesNew.containsAll(vehiclesUsedInTransitSchedule));
 
     }
 
@@ -510,7 +515,7 @@ public class TransitRouteTrimmerTest {
 
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxSkipStops(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.skipStops(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
                 stopsInZone, linesToModify, true, null, 3, true);
 
         // After trim
@@ -529,6 +534,12 @@ public class TransitRouteTrimmerTest {
         Assert.assertEquals("new route should only have two stops within zone, one per zone entrance/exit",
                 2, inCntNew);
 
+
+        // Test vehicles
+        Set<Id<Vehicle>> vehiclesUsedInTransitSchedule = getVehiclesUsedInTransitSchedule(transitScheduleNew);
+        Set<Id<Vehicle>> vehiclesInVehiclesNew = results.getValue().getVehicles().keySet();
+        Assert.assertTrue("TransitVehicles should contain all vehicles used in new TransitSchedule",
+                vehiclesInVehiclesNew.containsAll(vehiclesUsedInTransitSchedule));
     }
 
     /**
@@ -546,7 +557,7 @@ public class TransitRouteTrimmerTest {
 
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxSplitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.splitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
                 stopsInZone, linesToModify, false, null, 3,
                 true, false, false, 0);
 
@@ -558,6 +569,11 @@ public class TransitRouteTrimmerTest {
         assertEquals("transitLine should not longer contain any routes",
                 0, transitScheduleNew.getTransitLines().get(transitLineId).getRoutes().size());
 
+        // Test vehicles
+        Set<Id<Vehicle>> vehiclesUsedInTransitSchedule = getVehiclesUsedInTransitSchedule(transitScheduleNew);
+        Set<Id<Vehicle>> vehiclesInVehiclesNew = results.getValue().getVehicles().keySet();
+        Assert.assertTrue("TransitVehicles should contain all vehicles used in new TransitSchedule",
+                vehiclesInVehiclesNew.containsAll(vehiclesUsedInTransitSchedule));
     }
 
     /**
@@ -579,7 +595,7 @@ public class TransitRouteTrimmerTest {
 
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxSplitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.splitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
                 stopsInZone, linesToModify, true, null, 3,
                 true, false, false, 0);
 
@@ -603,6 +619,11 @@ public class TransitRouteTrimmerTest {
         assertEquals("# of stops outside of zone should remain same",
                 outCntOld, outCntNew);
 
+        // Test vehicles
+        Set<Id<Vehicle>> vehiclesUsedInTransitSchedule = getVehiclesUsedInTransitSchedule(transitScheduleNew);
+        Set<Id<Vehicle>> vehiclesInVehiclesNew = results.getValue().getVehicles().keySet();
+        Assert.assertTrue("TransitVehicles should contain all vehicles used in new TransitSchedule",
+                vehiclesInVehiclesNew.containsAll(vehiclesUsedInTransitSchedule));
     }
 
     /**
@@ -623,7 +644,7 @@ public class TransitRouteTrimmerTest {
 
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxSplitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.splitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
                 stopsInZone, linesToModify, true, null, 3,
                 true, false, false, 0);
 
@@ -652,6 +673,12 @@ public class TransitRouteTrimmerTest {
 
         Assert.assertEquals("new route #1 should only have one stop within zone", 1, inCntNew1);
         Assert.assertEquals("new route #2 should only have one stop within zone", 1, inCntNew2);
+
+        // Test vehicles
+        Set<Id<Vehicle>> vehiclesUsedInTransitSchedule = getVehiclesUsedInTransitSchedule(transitScheduleNew);
+        Set<Id<Vehicle>> vehiclesInVehiclesNew = results.getValue().getVehicles().keySet();
+        Assert.assertTrue("TransitVehicles should contain all vehicles used in new TransitSchedule",
+                vehiclesInVehiclesNew.containsAll(vehiclesUsedInTransitSchedule));
 
     }
 
@@ -686,7 +713,7 @@ public class TransitRouteTrimmerTest {
         Id<TransitStopFacility> facIdLeft = Id.create("070101005700", TransitStopFacility.class);
         scenario.getTransitSchedule().getFacilities().get(facIdLeft).getAttributes().putAttribute("hub-reach", 3);
 
-        // Stop 070101006207 is a hub with reach of 3. This stop is therfore just out of range for route 2
+        // Stop 070101006207 is a hub with reach of 3. This stop is therefore just out of range for route 2
         // Therefore it should not be included.
         Id<TransitStopFacility> facIdRight = Id.create("070101006207", TransitStopFacility.class);
         scenario.getTransitSchedule().getFacilities().get(facIdRight).getAttributes().putAttribute("hub-reach", 3);
@@ -695,7 +722,7 @@ public class TransitRouteTrimmerTest {
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
 
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxSplitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.splitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
                 stopsInZone, linesToModify, true, null, 3,
                 true, true, false, 0);
 
@@ -724,6 +751,11 @@ public class TransitRouteTrimmerTest {
         assertEquals("new route #1 should have three stop within zone", 3, inCntNew1);
         assertEquals("new route #2 should have one stop within zone", 1, inCntNew2);
 
+        // Test vehicles
+        Set<Id<Vehicle>> vehiclesUsedInTransitSchedule = getVehiclesUsedInTransitSchedule(transitScheduleNew);
+        Set<Id<Vehicle>> vehiclesInVehiclesNew = results.getValue().getVehicles().keySet();
+        Assert.assertTrue("TransitVehicles should contain all vehicles used in new TransitSchedule",
+                vehiclesInVehiclesNew.containsAll(vehiclesUsedInTransitSchedule));
     }
 
     /**
@@ -756,7 +788,7 @@ public class TransitRouteTrimmerTest {
 
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxSplitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.splitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
                 stopsInZone, linesToModify, true, null, 3,
                 true, true, true, 0);
 
@@ -796,6 +828,11 @@ public class TransitRouteTrimmerTest {
         assertEquals("first stop of route #2 should be the right hub",
                 facIdRight, idRoute2);
 
+        // Test vehicles
+        Set<Id<Vehicle>> vehiclesUsedInTransitSchedule = getVehiclesUsedInTransitSchedule(transitScheduleNew);
+        Set<Id<Vehicle>> vehiclesInVehiclesNew = results.getValue().getVehicles().keySet();
+        Assert.assertTrue("TransitVehicles should contain all vehicles used in new TransitSchedule",
+                vehiclesInVehiclesNew.containsAll(vehiclesUsedInTransitSchedule));
     }
 
     /**
@@ -825,7 +862,7 @@ public class TransitRouteTrimmerTest {
         Id<TransitStopFacility> facIdLeft = Id.create("070101005700", TransitStopFacility.class);
         scenario.getTransitSchedule().getFacilities().get(facIdLeft).getAttributes().putAttribute("hub-reach", 3);
 
-        // Stop 070101006207 is a hub with reach of 5. This stop is therfore in range for route 1
+        // Stop 070101006207 is a hub with reach of 5. This stop is therefore in range for route 1
         // Therefore it should not be included.
         Id<TransitStopFacility> facIdRight = Id.create("070101005702", TransitStopFacility.class);
         scenario.getTransitSchedule().getFacilities().get(facIdRight).getAttributes().putAttribute("hub-reach", 5);
@@ -833,7 +870,7 @@ public class TransitRouteTrimmerTest {
 
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxSplitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.splitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
                 stopsInZone, linesToModify, true, null, 3,
                 true, true, false, 0);
 
@@ -889,7 +926,7 @@ public class TransitRouteTrimmerTest {
 
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxSplitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.splitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
                 stopsInZone, linesToModify, true, null, 3,
                 true, true, false, 0);
 
@@ -939,7 +976,7 @@ public class TransitRouteTrimmerTest {
 
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxSplitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.splitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
                 stopsInZone, linesToModify, true, null, 3,
                 false, true, false, 19);
 
@@ -970,7 +1007,7 @@ public class TransitRouteTrimmerTest {
 
 
     @Test
-    public void testDeparture() {
+    public void testDepartures() {
 
         Scenario scenario = createScenario(this.inScheduleFile, this.inNetworkFile, this.inVehiclesFile);
         Set<Id<TransitStopFacility>> stopsInZone = getStopsInZone(scenario.getTransitSchedule(), inZoneShpFile);
@@ -983,7 +1020,7 @@ public class TransitRouteTrimmerTest {
 
         // Modification
         Set<Id<TransitLine>> linesToModify = Collections.singleton(transitLineId);
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxSplitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.splitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(),
                 stopsInZone, linesToModify, true, null, 3,
                 true, false, false, 0);
 
@@ -1013,8 +1050,8 @@ public class TransitRouteTrimmerTest {
         Assert.assertEquals(routeOld1Start.getArrivalOffset(), routeNew1Start.getArrivalOffset());
 
         //End of first route
-        TransitRouteStop routeNew1End = transitRouteNew1.getStops().get(routeNew1size-1);
-        TransitRouteStop routeOld1End = transitRouteOld.getStops().get(routeNew1size-1);
+        TransitRouteStop routeNew1End = transitRouteNew1.getStops().get(routeNew1size - 1);
+        TransitRouteStop routeOld1End = transitRouteOld.getStops().get(routeNew1size - 1);
 
         Assert.assertEquals(routeOld1End.getDepartureOffset(), routeNew1End.getDepartureOffset());
         Assert.assertEquals(routeOld1End.getArrivalOffset(), routeNew1End.getArrivalOffset());
@@ -1033,6 +1070,42 @@ public class TransitRouteTrimmerTest {
         Assert.assertEquals(routeOld2End.getDepartureOffset(), routeNew2End.getDepartureOffset());
         Assert.assertEquals(routeOld2End.getArrivalOffset(), routeNew2End.getArrivalOffset());
 
+    }
+
+
+    private Set<Id<TransitStopFacility>> getStopsInZone(TransitSchedule transitSchedule, String zoneShpFile) {
+        List<PreparedGeometry> geometries;
+        try {
+            geometries = ShpGeometryUtils.loadPreparedGeometries(new URL(zoneShpFile));
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Wrong Filename!");
+        }
+        Set<Id<TransitStopFacility>> stopsInZone = new HashSet<>();
+        for (TransitStopFacility stop : transitSchedule.getFacilities().values()) {
+            if (ShpGeometryUtils.isCoordInPreparedGeometries(stop.getCoord(), geometries)) {
+                stopsInZone.add(stop.getId());
+            }
+        }
+
+        return stopsInZone;
+    }
+
+    private Scenario createScenario(String scheduleFile, String networkFile, String vehiclesFile) {
+
+        Config config = ConfigUtils.createConfig();
+        config.transit().setTransitScheduleFile(scheduleFile);
+        config.network().setInputFile(networkFile);
+        config.transit().setVehiclesFile(vehiclesFile);
+
+        return ScenarioUtils.loadScenario(config);
+    }
+
+    private Set<Id<Vehicle>> getVehiclesUsedInTransitSchedule(TransitSchedule transitScheduleNew) {
+        return transitScheduleNew.getTransitLines().values().stream()
+                .flatMap(x -> x.getRoutes().values().stream()
+                        .flatMap(y -> y.getDepartures().values().stream()
+                                .map(Departure::getVehicleId))).collect(Collectors.toSet());
     }
 
 

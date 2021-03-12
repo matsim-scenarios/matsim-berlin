@@ -133,7 +133,7 @@ public class RunTransitRouteTrimmerBerlin {
 
 
         Set<Id<TransitStopFacility>> stopsInZone = TransitRouteTrimmerUtils.getStopsInZone(scenario.getTransitSchedule(),zoneShpFile);
-        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.xxxSplitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(), stopsInZone, linesToModify,
+        Pair<TransitSchedule, Vehicles> results = TransitRouteTrimmer.splitRoute(scenario.getTransitSchedule(), scenario.getTransitVehicles(), stopsInZone, linesToModify,
                 true, Collections.singleton("bus"), 3, true, true, true, 0);
 
         TransitSchedule transitScheduleNew = results.getKey();

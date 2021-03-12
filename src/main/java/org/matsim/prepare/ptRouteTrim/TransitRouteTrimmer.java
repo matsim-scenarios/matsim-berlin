@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 public class TransitRouteTrimmer {
     private static final Logger log = Logger.getLogger(TransitRouteTrimmer.class);
 
-    public static Pair<TransitSchedule, Vehicles> xxxDeleteRoutesEntirelyInsideZone(TransitSchedule transitScheduleOld, Vehicles vehiclesOld, Set<Id<TransitStopFacility>> stopsInZone, Set<Id<TransitLine>> linesToModify, Set<String> modes2Trim, boolean removeEmptyLines) {
+    public static Pair<TransitSchedule, Vehicles> deleteRoutesEntirelyInsideZone(TransitSchedule transitScheduleOld, Vehicles vehiclesOld, Set<Id<TransitStopFacility>> stopsInZone, Set<Id<TransitLine>> linesToModify, Set<String> modes2Trim, boolean removeEmptyLines) {
 
         // make new TransitSchedule
         TransitSchedule transitScheduleNew = (new TransitScheduleFactoryImpl()).createTransitSchedule();
@@ -84,11 +84,11 @@ public class TransitRouteTrimmer {
     }
 
 
-    public static Pair<TransitSchedule, Vehicles> xxxTrimEnds(TransitSchedule transitScheduleOld, Vehicles vehiclesOld,
-                                                              Set<Id<TransitStopFacility>> stopsInZone,
-                                                              Set<Id<TransitLine>> linesToModify, boolean removeEmptyLines,
-                                                              Set<String> modes2Trim, int minimumRouteLength,
-                                                              boolean includeFirstStopWithinZone) {
+    public static Pair<TransitSchedule, Vehicles> trimEnds(TransitSchedule transitScheduleOld, Vehicles vehiclesOld,
+                                                           Set<Id<TransitStopFacility>> stopsInZone,
+                                                           Set<Id<TransitLine>> linesToModify, boolean removeEmptyLines,
+                                                           Set<String> modes2Trim, int minimumRouteLength,
+                                                           boolean includeFirstStopWithinZone) {
 
         // make new TransitSchedule
         TransitSchedule transitScheduleNew = (new TransitScheduleFactoryImpl()).createTransitSchedule();
@@ -152,12 +152,12 @@ public class TransitRouteTrimmer {
 
     }
 
-    public static Pair<TransitSchedule, Vehicles> xxxSkipStops(TransitSchedule transitScheduleOld, Vehicles vehiclesOld,
-                                                               Set<Id<TransitStopFacility>> stopsInZone,
-                                                               Set<Id<TransitLine>> linesToModify, boolean removeEmptyLines,
-                                                               Set<String> modes2Trim,
-                                                               int minimumRouteLength,
-                                                               boolean includeFirstStopWithinZone) {
+    public static Pair<TransitSchedule, Vehicles> skipStops(TransitSchedule transitScheduleOld, Vehicles vehiclesOld,
+                                                            Set<Id<TransitStopFacility>> stopsInZone,
+                                                            Set<Id<TransitLine>> linesToModify, boolean removeEmptyLines,
+                                                            Set<String> modes2Trim,
+                                                            int minimumRouteLength,
+                                                            boolean includeFirstStopWithinZone) {
 
         // make new TransitSchedule
         TransitSchedule transitScheduleNew = (new TransitScheduleFactoryImpl()).createTransitSchedule();
@@ -217,13 +217,13 @@ public class TransitRouteTrimmer {
 
     }
 
-    public static Pair<TransitSchedule, Vehicles> xxxSplitRoute(TransitSchedule transitScheduleOld, Vehicles vehiclesOld,
-                                                                Set<Id<TransitStopFacility>> stopsInZone,
-                                                                Set<Id<TransitLine>> linesToModify, boolean removeEmptyLines, Set<String> modes2Trim, int minimumRouteLength,
-                                                                boolean includeFirstStopWithinZone,
-                                                                boolean allowHubsWithinZone,
-                                                                boolean includeFirstHubInZone,
-                                                                int allowableStopsWithinZone) {
+    public static Pair<TransitSchedule, Vehicles> splitRoute(TransitSchedule transitScheduleOld, Vehicles vehiclesOld,
+                                                             Set<Id<TransitStopFacility>> stopsInZone,
+                                                             Set<Id<TransitLine>> linesToModify, boolean removeEmptyLines, Set<String> modes2Trim, int minimumRouteLength,
+                                                             boolean includeFirstStopWithinZone,
+                                                             boolean allowHubsWithinZone,
+                                                             boolean includeFirstHubInZone,
+                                                             int allowableStopsWithinZone) {
 
         // make new TransitSchedule
         TransitSchedule transitScheduleNew = (new TransitScheduleFactoryImpl()).createTransitSchedule();
@@ -232,7 +232,6 @@ public class TransitRouteTrimmer {
         }
 
         Vehicles vehiclesNew = copyVehicles(vehiclesOld);
-
 
         for (TransitLine line : transitScheduleOld.getTransitLines().values()) {
             if (!linesToModify.contains(line.getId())) {
