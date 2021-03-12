@@ -337,7 +337,7 @@ public class TransitRouteTrimmer {
 
 
         if (stops2Keep.size() >= minimumRouteLength && stops2Keep.size() > 0) {
-            return createNewRoute(routeOld, stops2Keep, 1, vehiclesNew);
+            return createNewRoute(routeOld, stops2Keep, null, vehiclesNew);
         }
 
         return null; // TODO: Check this
@@ -409,7 +409,7 @@ public class TransitRouteTrimmer {
         }
 
         if (stops2Keep.size() >= minimumRouteLength && stops2Keep.size() > 0) {
-            return createNewRoute(routeOld, stops2Keep, 1, vehiclesNew);
+            return createNewRoute(routeOld, stops2Keep, null, vehiclesNew);
         }
 
         return null; // TODO: Check this
@@ -640,7 +640,7 @@ public class TransitRouteTrimmer {
     }
 
     private static TransitRoute createNewRoute(TransitRoute routeOld, List<TransitRouteStop> stopsInNewRoute,
-                                               int modNumber, Vehicles vehiclesNew) {
+                                               Integer splitNumber, Vehicles vehiclesNew) {
 
         TransitRoute routeNew;
         TransitScheduleFactory tsf = new TransitScheduleFactoryImpl();
@@ -682,6 +682,8 @@ public class TransitRouteTrimmer {
 
         }
 
+        //modified logic for departure and arrival offsets for stops: now stops on new routes will have exact same offsets as stops in old route (meaning the offsets of the first stop don't have to be zero)
+
         // Modify arrivalOffset and departureOffset for each stop
 //        TransitRouteStop transitRouteStop = routeOld.getStops().get(0);
 //
@@ -698,67 +700,79 @@ public class TransitRouteTrimmer {
 
         // make route.
         NetworkRoute networkRouteNew = RouteUtils.createLinkNetworkRouteImpl(startLinkNew, midLinksNew, endLinkNew);
-        String routeIdOld = routeOld.getId().toString();
-        Id<TransitRoute> routeIdNew = Id.create(routeIdOld + "_mod" + modNumber, TransitRoute.class);
+        Id<TransitRoute> routeIdOld = routeOld.getId();
+        Id<TransitRoute> routeIdNew = routeIdOld;
+
+        if (splitNumber != null) {
+            routeIdNew = Id.create(routeIdOld.toString() + "_split" + splitNumber, TransitRoute.class);
+        }
+
         routeNew = tsf.createTransitRoute(routeIdNew, networkRouteNew, stopsInNewRoute, routeOld.getTransportMode());
         routeNew.setDescription(routeOld.getDescription());
 
         VehiclesFactory vf = vehiclesNew.getFactory();
 
-        for (Departure departure : routeOld.getDepartures().values()) {
-            Id<Vehicle> vehIdOld = departure.getVehicleId();
-            Id<Vehicle> vehIdNew = Id.createVehicleId(vehIdOld.toString() + "_mod" + modNumber);
-            VehicleType vehType = vehiclesNew.getVehicles().get(vehIdOld).getType();
-            // this.vehicles.removeVehicle(departure.getVehicleId()); //TODO VEH MUST BE REMOVED LATER ON IF UNUSED
-            Vehicle vehicle = vf.createVehicle(vehIdNew, vehType);
-            vehiclesNew.addVehicle(vehicle);
-
-            String depIdOld = departure.getId().toString();
-            Departure departureNew = tsf.createDeparture(Id.create(depIdOld + "_mod" + modNumber, Departure.class), departure.getDepartureTime() );
-            departureNew.setVehicleId(vehIdNew);
-            routeNew.addDeparture(departureNew);
+        if (splitNumber == null) {
+            for (Departure departure : routeOld.getDepartures().values()) {
+                routeNew.addDeparture(departure);
+            }
         }
+        else {
+            for (Departure departure : routeOld.getDepartures().values()) {
+                Id<Vehicle> vehIdOld = departure.getVehicleId();
+                Id<Vehicle> vehIdNew = Id.createVehicleId(vehIdOld.toString() + "_split" + splitNumber);
+                VehicleType vehType = vehiclesNew.getVehicles().get(vehIdOld).getType();
+                Vehicle vehicle = vf.createVehicle(vehIdNew, vehType);
+                vehiclesNew.addVehicle(vehicle);
+
+                String depIdOld = departure.getId().toString();
+                Departure departureNew = tsf.createDeparture(Id.create(depIdOld + "_split" + splitNumber, Departure.class), departure.getDepartureTime() );
+                departureNew.setVehicleId(vehIdNew);
+                routeNew.addDeparture(departureNew);
+            }
+        }
+
 
         return routeNew;
 
     }
 
 
-    // TODO: how to deal with arrival and departure offsets? I don't know the conventions...
-    // TODO: first stop can have no arr offset, last stop no dep offset
-    private static Collection<? extends TransitRouteStop> copyStops(List<TransitRouteStop> s, Double
-            departureOffset, Double arrivalOffset) {
-        List<TransitRouteStop> stops = new ArrayList<>();
-        TransitRouteStop newStop;
-
-        TransitScheduleFactory tsf = new TransitScheduleFactoryImpl();
-
-        for (TransitRouteStop oldStop : s) {
-
-            //            newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
-            //                    oldStop.getDepartureOffset().seconds() - departureOffset,
-            //                    oldStop.getDepartureOffset().seconds() - departureOffset);
-            if (oldStop.getDepartureOffset().isDefined() && oldStop.getArrivalOffset().isDefined()) {
-                newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
-                        oldStop.getDepartureOffset().seconds() - departureOffset,
-                        oldStop.getArrivalOffset().seconds() - arrivalOffset);
-            } else if (oldStop.getDepartureOffset().isDefined()) {
-                newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
-                        oldStop.getDepartureOffset().seconds() - departureOffset,
-                        oldStop.getDepartureOffset().seconds() - departureOffset);
-            } else if (oldStop.getArrivalOffset().isDefined()) {
-                newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
-                        oldStop.getArrivalOffset().seconds() - arrivalOffset,
-                        oldStop.getArrivalOffset().seconds() - arrivalOffset);
-            } else {
-                newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(), 0, 0);
-            }
-
-            newStop.setAwaitDepartureTime(oldStop.isAwaitDepartureTime());
-            stops.add(newStop);
-
-        }
-        return stops;
-    }
+//    // TODO: how to deal with arrival and departure offsets? I don't know the conventions...
+//    // TODO: first stop can have no arr offset, last stop no dep offset
+//    private static Collection<? extends TransitRouteStop> copyStops(List<TransitRouteStop> s, Double
+//            departureOffset, Double arrivalOffset) {
+//        List<TransitRouteStop> stops = new ArrayList<>();
+//        TransitRouteStop newStop;
+//
+//        TransitScheduleFactory tsf = new TransitScheduleFactoryImpl();
+//
+//        for (TransitRouteStop oldStop : s) {
+//
+//            //            newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
+//            //                    oldStop.getDepartureOffset().seconds() - departureOffset,
+//            //                    oldStop.getDepartureOffset().seconds() - departureOffset);
+//            if (oldStop.getDepartureOffset().isDefined() && oldStop.getArrivalOffset().isDefined()) {
+//                newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
+//                        oldStop.getDepartureOffset().seconds() - departureOffset,
+//                        oldStop.getArrivalOffset().seconds() - arrivalOffset);
+//            } else if (oldStop.getDepartureOffset().isDefined()) {
+//                newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
+//                        oldStop.getDepartureOffset().seconds() - departureOffset,
+//                        oldStop.getDepartureOffset().seconds() - departureOffset);
+//            } else if (oldStop.getArrivalOffset().isDefined()) {
+//                newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
+//                        oldStop.getArrivalOffset().seconds() - arrivalOffset,
+//                        oldStop.getArrivalOffset().seconds() - arrivalOffset);
+//            } else {
+//                newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(), 0, 0);
+//            }
+//
+//            newStop.setAwaitDepartureTime(oldStop.isAwaitDepartureTime());
+//            stops.add(newStop);
+//
+//        }
+//        return stops;
+//    }
 
 }

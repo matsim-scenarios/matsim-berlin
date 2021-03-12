@@ -357,8 +357,7 @@ public class TransitRouteTrimmerTest {
 
         // After trim
         TransitSchedule transitScheduleNew = results.getKey();
-        Id<TransitRoute> transitRouteIdNew = Id.create(transitRouteId.toString() + "_mod1", TransitRoute.class);
-        TransitRoute transitRouteNew = transitScheduleNew.getTransitLines().get(transitLineId).getRoutes().get(transitRouteIdNew);
+        TransitRoute transitRouteNew = transitScheduleNew.getTransitLines().get(transitLineId).getRoutes().get(transitRouteId);
 
         int sizeNew = transitRouteNew.getStops().size();
         int inCntNew = countStopsInZone(transitRouteNew, stopsInZone);
@@ -406,8 +405,7 @@ public class TransitRouteTrimmerTest {
 
         // After trim
         TransitSchedule transitScheduleNew = results.getKey();
-        Id<TransitRoute> transitRouteIdNew = Id.create(transitRouteId.toString() + "_mod1", TransitRoute.class);
-        TransitRoute routeNew = transitScheduleNew.getTransitLines().get(transitLineId).getRoutes().get(transitRouteIdNew);
+        TransitRoute routeNew = transitScheduleNew.getTransitLines().get(transitLineId).getRoutes().get(transitRouteId);
         int numStopsNew = routeNew.getStops().size();
         int numLinksNew = routeNew.getRoute().getLinkIds().size();
 
@@ -458,7 +456,9 @@ public class TransitRouteTrimmerTest {
 
         // Before trim
         Id<TransitLine> transitLineId = routeType.halfIn.transitLineId;
-        TransitRoute transitRouteOld = scenario.getTransitSchedule().getTransitLines().get(transitLineId).getRoutes().get(Id.create("184---17340_700_15", TransitRoute.class));
+        Id<TransitRoute> transitRouteId = routeType.halfIn.transitRouteId;
+
+        TransitRoute transitRouteOld = scenario.getTransitSchedule().getTransitLines().get(transitLineId).getRoutes().get(transitRouteId);
         int sizeOld = transitRouteOld.getStops().size();
         int outCntOld = countStopsOutsideZone(transitRouteOld, stopsInZone);
         int numLinksOld = transitRouteOld.getRoute().getLinkIds().size();
@@ -470,7 +470,7 @@ public class TransitRouteTrimmerTest {
 
         // After trim
         TransitSchedule transitScheduleNew = results.getKey();
-        TransitRoute transitRouteNew = transitScheduleNew.getTransitLines().get(transitLineId).getRoutes().get(Id.create("184---17340_700_15_mod1", TransitRoute.class));
+        TransitRoute transitRouteNew = transitScheduleNew.getTransitLines().get(transitLineId).getRoutes().get(transitRouteId);
         int sizeNew = transitRouteNew.getStops().size();
         int inCntNew = countStopsInZone(transitRouteNew, stopsInZone);
         int outCntNew = countStopsOutsideZone(transitRouteNew, stopsInZone);
@@ -515,7 +515,7 @@ public class TransitRouteTrimmerTest {
 
         // After trim
         TransitSchedule transitScheduleNew = results.getKey();
-        TransitRoute transitRouteNew = transitScheduleNew.getTransitLines().get(transitLineId).getRoutes().get(Id.create("161---17326_700_21_mod1", TransitRoute.class));
+        TransitRoute transitRouteNew = transitScheduleNew.getTransitLines().get(transitLineId).getRoutes().get(transitRouteId);
         int numStopsNew = transitRouteNew.getStops().size();
         int numLinksNew = transitRouteNew.getRoute().getLinkIds().size();
         int inCntNew = countStopsInZone(transitRouteNew, stopsInZone);
@@ -589,9 +589,9 @@ public class TransitRouteTrimmerTest {
 
         assertTrue(transitScheduleNew.getTransitLines().containsKey(transitLineId));
         TransitLine transitLine = transitScheduleNew.getTransitLines().get(transitLineId);
-        assertTrue(transitLine.getRoutes().containsKey(Id.create("184---17340_700_15_mod1", TransitRoute.class)));
+        assertTrue(transitLine.getRoutes().containsKey(Id.create("184---17340_700_15_split1", TransitRoute.class)));
 
-        TransitRoute transitRouteNew = transitScheduleNew.getTransitLines().get(Id.create("184---17340_700", TransitLine.class)).getRoutes().get(Id.create("184---17340_700_15_mod1", TransitRoute.class));
+        TransitRoute transitRouteNew = transitScheduleNew.getTransitLines().get(Id.create("184---17340_700", TransitLine.class)).getRoutes().get(Id.create("184---17340_700_15_split1", TransitRoute.class));
         int sizeNew = transitRouteNew.getStops().size();
         int inCntNew = countStopsInZone(transitRouteNew, stopsInZone);
         int outCntNew = countStopsOutsideZone(transitRouteNew, stopsInZone);
@@ -634,15 +634,15 @@ public class TransitRouteTrimmerTest {
         assertTrue("line should still exist", transitScheduleNew.getTransitLines().containsKey(transitLineId));
         TransitLine transitLineNew = transitScheduleNew.getTransitLines().get(transitLineId);
 
-        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod1", TransitRoute.class)));
-        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod2", TransitRoute.class)));
-        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod0", TransitRoute.class)));
-        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod3", TransitRoute.class)));
+        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split1", TransitRoute.class)));
+        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split2", TransitRoute.class)));
+        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split0", TransitRoute.class)));
+        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split3", TransitRoute.class)));
         assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21", TransitRoute.class)));
 
 
-        TransitRoute transitRouteNew1 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_mod1", TransitRoute.class));
-        TransitRoute transitRouteNew2 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_mod2", TransitRoute.class));
+        TransitRoute transitRouteNew1 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_split1", TransitRoute.class));
+        TransitRoute transitRouteNew2 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_split2", TransitRoute.class));
 
         assertNotEquals(transitRouteOld.getStops().size(), transitRouteNew1.getStops().size() + transitRouteNew2.getStops().size());
         assertNotEquals(transitRouteNew1.getStops().size(), transitRouteNew2.getStops().size());
@@ -705,15 +705,15 @@ public class TransitRouteTrimmerTest {
         assertTrue("line should still exist", transitScheduleNew.getTransitLines().containsKey(transitLineId));
         TransitLine transitLineNew = transitScheduleNew.getTransitLines().get(transitLineId);
 
-        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod1", TransitRoute.class)));
-        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod2", TransitRoute.class)));
-        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod0", TransitRoute.class)));
-        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod3", TransitRoute.class)));
+        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split1", TransitRoute.class)));
+        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split2", TransitRoute.class)));
+        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split0", TransitRoute.class)));
+        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split3", TransitRoute.class)));
         assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21", TransitRoute.class)));
 
 
-        TransitRoute transitRouteNew1 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_mod1", TransitRoute.class));
-        TransitRoute transitRouteNew2 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_mod2", TransitRoute.class));
+        TransitRoute transitRouteNew1 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_split1", TransitRoute.class));
+        TransitRoute transitRouteNew2 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_split2", TransitRoute.class));
 
         assertNotEquals(transitRouteOld.getStops().size(), transitRouteNew1.getStops().size() + transitRouteNew2.getStops().size());
         assertNotEquals(transitRouteNew1.getStops().size(), transitRouteNew2.getStops().size());
@@ -767,15 +767,15 @@ public class TransitRouteTrimmerTest {
         assertTrue("line should still exist", transitScheduleNew.getTransitLines().containsKey(transitLineId));
         TransitLine transitLineNew = transitScheduleNew.getTransitLines().get(transitLineId);
 
-        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod1", TransitRoute.class)));
-        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod2", TransitRoute.class)));
-        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod0", TransitRoute.class)));
-        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod3", TransitRoute.class)));
+        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split1", TransitRoute.class)));
+        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split2", TransitRoute.class)));
+        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split0", TransitRoute.class)));
+        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split3", TransitRoute.class)));
         assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21", TransitRoute.class)));
 
 
-        TransitRoute transitRouteNew1 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_mod1", TransitRoute.class));
-        TransitRoute transitRouteNew2 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_mod2", TransitRoute.class));
+        TransitRoute transitRouteNew1 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_split1", TransitRoute.class));
+        TransitRoute transitRouteNew2 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_split2", TransitRoute.class));
 
         assertNotEquals(transitRouteOld.getStops().size(), transitRouteNew1.getStops().size() + transitRouteNew2.getStops().size());
         assertNotEquals(transitRouteNew1.getStops().size(), transitRouteNew2.getStops().size());
@@ -844,15 +844,15 @@ public class TransitRouteTrimmerTest {
         assertTrue("line should still exist", transitScheduleNew.getTransitLines().containsKey(transitLineId));
         TransitLine transitLineNew = transitScheduleNew.getTransitLines().get(transitLineId);
 
-        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod1", TransitRoute.class)));
-        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod2", TransitRoute.class)));
-        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod0", TransitRoute.class)));
-        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod3", TransitRoute.class)));
+        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split1", TransitRoute.class)));
+        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split2", TransitRoute.class)));
+        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split0", TransitRoute.class)));
+        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split3", TransitRoute.class)));
         assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21", TransitRoute.class)));
 
 
-        TransitRoute transitRouteNew1 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_mod1", TransitRoute.class));
-        TransitRoute transitRouteNew2 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_mod2", TransitRoute.class));
+        TransitRoute transitRouteNew1 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_split1", TransitRoute.class));
+        TransitRoute transitRouteNew2 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_split2", TransitRoute.class));
 
         assertNotEquals(transitRouteOld.getStops().size(), transitRouteNew1.getStops().size() + transitRouteNew2.getStops().size());
         assertNotEquals(transitRouteNew1.getStops().size(), transitRouteNew2.getStops().size());
@@ -900,14 +900,14 @@ public class TransitRouteTrimmerTest {
         assertTrue("line should still exist", transitScheduleNew.getTransitLines().containsKey(transitLineId));
         TransitLine transitLineNew = transitScheduleNew.getTransitLines().get(transitLineId);
 
-        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod1", TransitRoute.class)));
-        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod2", TransitRoute.class)));
-        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod0", TransitRoute.class)));
-        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod3", TransitRoute.class)));
+        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split1", TransitRoute.class)));
+        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split2", TransitRoute.class)));
+        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split0", TransitRoute.class)));
+        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split3", TransitRoute.class)));
         assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21", TransitRoute.class)));
 
 
-        TransitRoute transitRouteNew1 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_mod1", TransitRoute.class));
+        TransitRoute transitRouteNew1 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_split1", TransitRoute.class));
         assertEquals(transitRouteOld.getStops().size(), transitRouteNew1.getStops().size());
 
         int inCntNew1 = countStopsInZone(transitRouteNew1, stopsInZone);
@@ -950,14 +950,14 @@ public class TransitRouteTrimmerTest {
         assertTrue("line should still exist", transitScheduleNew.getTransitLines().containsKey(transitLineId));
         TransitLine transitLineNew = transitScheduleNew.getTransitLines().get(transitLineId);
 
-        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod1", TransitRoute.class)));
-        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod2", TransitRoute.class)));
-        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod0", TransitRoute.class)));
-        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod3", TransitRoute.class)));
+        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split1", TransitRoute.class)));
+        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split2", TransitRoute.class)));
+        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split0", TransitRoute.class)));
+        assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split3", TransitRoute.class)));
         assertFalse(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21", TransitRoute.class)));
 
 
-        TransitRoute routeNew1 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_mod1", TransitRoute.class));
+        TransitRoute routeNew1 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_split1", TransitRoute.class));
 
         assertEquals(transitRouteOld.getStops().size(), routeNew1.getStops().size());
 
@@ -994,11 +994,11 @@ public class TransitRouteTrimmerTest {
         assertTrue("line should still exist", transitScheduleNew.getTransitLines().containsKey(transitLineId));
         TransitLine transitLineNew = transitScheduleNew.getTransitLines().get(transitLineId);
 
-        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod1", TransitRoute.class)));
-        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_mod2", TransitRoute.class)));
+        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split1", TransitRoute.class)));
+        assertTrue(transitLineNew.getRoutes().containsKey(Id.create("161---17326_700_21_split2", TransitRoute.class)));
 
-        TransitRoute transitRouteNew1 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_mod1", TransitRoute.class));
-        TransitRoute transitRouteNew2 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_mod2", TransitRoute.class));
+        TransitRoute transitRouteNew1 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_split1", TransitRoute.class));
+        TransitRoute transitRouteNew2 = transitLineNew.getRoutes().get(Id.create("161---17326_700_21_split2", TransitRoute.class));
 
         int routeOldSize = transitRouteOld.getStops().size();
         int routeNew1size = transitRouteNew1.getStops().size();
