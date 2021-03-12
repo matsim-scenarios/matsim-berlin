@@ -36,11 +36,6 @@ public class TransitRouteTrimmer {
             transitScheduleNew.addStopFacility(stop);
         }
 
-        // make new Vehicles as copy of old vehicles file
-        Vehicles vehiclesNew = copyVehicles(vehiclesOld);
-        Set<Id<Vehicle>> vehiclesAffectedByTrim = new HashSet<>();
-
-
         for (TransitLine line : transitScheduleOld.getTransitLines().values()) {
             if (!linesToModify.contains(line.getId())) {
                 transitScheduleNew.addTransitLine(line);
@@ -61,7 +56,6 @@ public class TransitRouteTrimmer {
 
 
                 if (TransitRouteTrimmerUtils.pctOfStopsInZone(route, stopsInZone) == 1.0) {
-                    vehiclesAffectedByTrim.addAll(route.getDepartures().values().stream().map(Departure::getVehicleId).collect(Collectors.toSet()));
                     continue;
                 }
 
@@ -82,9 +76,11 @@ public class TransitRouteTrimmer {
         log.info("Old schedule contained " + transitScheduleOld.getTransitLines().values().size() + " lines.");
         log.info("New schedule contains " + transitScheduleNew.getTransitLines().values().size() + " lines.");
 
-        Vehicles vehiclesNew2 = removeExtraVehicles(transitScheduleNew, vehiclesNew, vehiclesAffectedByTrim);
+        // Make copy of vehicles and then delete superfluous ones
+        Vehicles vehiclesCopy= copyVehicles(vehiclesOld);
+        Vehicles vehiclesNew = removeExtraVehicles(transitScheduleNew, vehiclesCopy);
 
-        return new Pair<>(transitScheduleNew, vehiclesNew2);
+        return new Pair<>(transitScheduleNew, vehiclesNew);
     }
 
 
@@ -99,8 +95,6 @@ public class TransitRouteTrimmer {
         for (TransitStopFacility stop : transitScheduleOld.getFacilities().values()) {
             transitScheduleNew.addStopFacility(stop);
         }
-
-        Vehicles vehiclesNew = copyVehicles(vehiclesOld);
 
         for (TransitLine line : transitScheduleOld.getTransitLines().values()) {
             if (!linesToModify.contains(line.getId())) {
@@ -128,7 +122,7 @@ public class TransitRouteTrimmer {
                     continue;
                 }
 
-                routeNew = modifyRouteTrimEnds(route, minimumRouteLength, stopsInZone, includeFirstStopWithinZone, vehiclesNew);
+                routeNew = modifyRouteTrimEnds(route, minimumRouteLength, stopsInZone, includeFirstStopWithinZone);
 
                 if (routeNew != null) {
                     lineNew.addRoute(routeNew);
@@ -150,7 +144,9 @@ public class TransitRouteTrimmer {
 
         TransitRouteTrimmerUtils.countLinesInOut(transitScheduleNew, stopsInZone);
 
-//        Vehicles vehiclesNew = removeExtraVehicles(transitScheduleNew, vehiclesOld, vehiclesAffectedByTrim);
+        // Make copy of vehicles and then delete superfluous ones
+        Vehicles vehiclesCopy= copyVehicles(vehiclesOld);
+        Vehicles vehiclesNew = removeExtraVehicles(transitScheduleNew, vehiclesCopy);
 
         return new Pair<>(transitScheduleNew, vehiclesNew);
 
@@ -168,10 +164,6 @@ public class TransitRouteTrimmer {
         for (TransitStopFacility stop : transitScheduleOld.getFacilities().values()) {
             transitScheduleNew.addStopFacility(stop);
         }
-
-        Vehicles vehiclesNew = copyVehicles(vehiclesOld);
-
-//        Set<Id<Vehicle>> vehiclesAffectedByTrim = new HashSet<>();
 
         for (TransitLine line : transitScheduleOld.getTransitLines().values()) {
             if (!linesToModify.contains(line.getId())) {
@@ -198,7 +190,7 @@ public class TransitRouteTrimmer {
                     continue;
                 }
 
-                routeNew = modifyRouteSkipStopsWithinZone(route, minimumRouteLength, stopsInZone, includeFirstStopWithinZone, vehiclesNew);
+                routeNew = modifyRouteSkipStopsWithinZone(route, minimumRouteLength, stopsInZone, includeFirstStopWithinZone);
 
                 if (routeNew != null) {
                     lineNew.addRoute(routeNew);
@@ -217,7 +209,10 @@ public class TransitRouteTrimmer {
         log.info("Old schedule contained " + transitScheduleOld.getTransitLines().values().size() + " lines.");
         log.info("New schedule contains " + transitScheduleNew.getTransitLines().values().size() + " lines.");
 
-//        Vehicles vehiclesNew = removeExtraVehicles(transitScheduleNew, vehiclesOld, vehiclesAffectedByTrim);
+        // Make copy of vehicles and then delete superfluous ones
+        Vehicles vehiclesCopy= copyVehicles(vehiclesOld);
+        Vehicles vehiclesNew = removeExtraVehicles(transitScheduleNew, vehiclesCopy);
+
         return new Pair<>(transitScheduleNew, vehiclesNew);
 
     }
@@ -250,7 +245,7 @@ public class TransitRouteTrimmer {
             for (TransitRoute route : line.getRoutes().values()) {
 
                 // Only handles specified routes.
-                if (modes2Trim!=null && !modes2Trim.isEmpty()) {
+                if (modes2Trim != null && !modes2Trim.isEmpty()) {
                     if (!modes2Trim.contains(route.getTransportMode())) {
                         lineNew.addRoute(route);
                         continue;
@@ -293,16 +288,15 @@ public class TransitRouteTrimmer {
         TransitRouteTrimmerUtils.countLinesInOut(transitScheduleNew, stopsInZone);
 
 
-//        Vehicles vehiclesNew = removeExtraVehicles(transitScheduleNew, vehiclesOld, vehiclesAffectedByTrim);
+        Vehicles vehiclesNew2 = removeExtraVehicles(transitScheduleNew, vehiclesNew);
 
-        return new Pair<>(transitScheduleNew, vehiclesNew);
+        return new Pair<>(transitScheduleNew, vehiclesNew2);
 
     }
 
     // This will skip stops within zone. If beginning or end of route is within zone, it will cut those ends off.
     private static TransitRoute modifyRouteSkipStopsWithinZone(TransitRoute routeOld, int minimumRouteLength,
-                                                               Set<Id<TransitStopFacility>> stopsInZone, boolean includeFirstStopWithinZone,
-                                                               Vehicles vehiclesNew) {
+                                                               Set<Id<TransitStopFacility>> stopsInZone, boolean includeFirstStopWithinZone) {
         List<TransitRouteStop> stops2Keep = new ArrayList<>();
         List<TransitRouteStop> stopsOld = new ArrayList<>(routeOld.getStops());
 
@@ -337,7 +331,7 @@ public class TransitRouteTrimmer {
 
 
         if (stops2Keep.size() >= minimumRouteLength && stops2Keep.size() > 0) {
-            return createNewRoute(routeOld, stops2Keep, null, vehiclesNew);
+            return createNewRoute(routeOld, stops2Keep);
         }
 
         return null; // TODO: Check this
@@ -347,8 +341,7 @@ public class TransitRouteTrimmer {
     private static TransitRoute modifyRouteTrimEnds(TransitRoute routeOld,
                                                     int minimumRouteLength,
                                                     Set<Id<TransitStopFacility>> stopsInZone,
-                                                    boolean includeFirstStopWithinZone,
-                                                    Vehicles vehiclesNew) {
+                                                    boolean includeFirstStopWithinZone) {
 
         List<TransitRouteStop> stops2Keep = new ArrayList<>();
         List<TransitRouteStop> stopsOld = new ArrayList<>(routeOld.getStops());
@@ -409,7 +402,7 @@ public class TransitRouteTrimmer {
         }
 
         if (stops2Keep.size() >= minimumRouteLength && stops2Keep.size() > 0) {
-            return createNewRoute(routeOld, stops2Keep, null, vehiclesNew);
+            return createNewRoute(routeOld, stops2Keep);
         }
 
         return null; // TODO: Check this
@@ -538,7 +531,7 @@ public class TransitRouteTrimmer {
         // create transit routes
         int newRouteCnt = 1;
         for (Integer[] pair : routeIndices2) {
-            resultRoutes.add(createNewRoute(routeOld, pair[0], pair[1], newRouteCnt, vehiclesNew));
+            resultRoutes.add(createNewRouteModifiedId(routeOld, pair[0], pair[1], newRouteCnt, vehiclesNew));
             newRouteCnt++;
         }
 
@@ -559,15 +552,17 @@ public class TransitRouteTrimmer {
         return vehiclesNew;
     }
 
-    private static Vehicles removeExtraVehicles(TransitSchedule transitScheduleNew, Vehicles vehicles, Set<Id<Vehicle>> vehiclesAffectedByTrim) {
-        // Delete vehicles affected by trim that are not used by other lines
+    private static Vehicles removeExtraVehicles(TransitSchedule transitScheduleNew, Vehicles vehicles) {
+
         Set<Id<Vehicle>> vehiclesUsedInTransitSchedule = transitScheduleNew.getTransitLines().values().stream()
                 .flatMap(x -> x.getRoutes().values().stream()
                         .flatMap(y -> y.getDepartures().values().stream()
                                 .map(Departure::getVehicleId))).collect(Collectors.toSet());
 
+        Set<Id<Vehicle>> vehiclesInVehicles = vehicles.getVehicles().keySet();
+
         int vehiclesRemoved = 0;
-        for (Id<Vehicle> vehId : vehiclesAffectedByTrim) {
+        for (Id<Vehicle> vehId : vehiclesInVehicles) {
             if (!vehiclesUsedInTransitSchedule.contains(vehId)) {
                 vehicles.removeVehicle(vehId);
                 vehiclesRemoved++;
@@ -630,21 +625,59 @@ public class TransitRouteTrimmer {
     }
 
 
-    private static TransitRoute createNewRoute(TransitRoute routeOld, Integer startIndex, Integer endIndex, int modNumber, Vehicles vehiclesNew) {
+    private static TransitRoute createNewRouteModifiedId(TransitRoute routeOld, Integer startIndex, Integer endIndex, int splitNumber, Vehicles vehiclesNew) {
+
         List<TransitRouteStop> stopsInNewRoute = new ArrayList<>();
         for (int i = startIndex; i <= endIndex; i++) {
             stopsInNewRoute.add(routeOld.getStops().get(i));
         }
 
-        return createNewRoute(routeOld, stopsInNewRoute, modNumber, vehiclesNew);
-    }
-
-    private static TransitRoute createNewRoute(TransitRoute routeOld, List<TransitRouteStop> stopsInNewRoute,
-                                               Integer splitNumber, Vehicles vehiclesNew) {
-
-        TransitRoute routeNew;
         TransitScheduleFactory tsf = new TransitScheduleFactoryImpl();
 
+        NetworkRoute networkRouteNew = buildNetworkRoute(routeOld, stopsInNewRoute);
+
+        Id<TransitRoute> routeIdOld = routeOld.getId();
+        Id<TransitRoute> routeIdNew = Id.create(routeIdOld.toString() + "_split" + splitNumber, TransitRoute.class);
+
+        TransitRoute routeNew = tsf.createTransitRoute(routeIdNew, networkRouteNew, stopsInNewRoute, routeOld.getTransportMode());
+        routeNew.setDescription(routeOld.getDescription());
+
+        VehiclesFactory vf = vehiclesNew.getFactory();
+
+        for (Departure departure : routeOld.getDepartures().values()) {
+            Id<Vehicle> vehIdOld = departure.getVehicleId();
+            Id<Vehicle> vehIdNew = Id.createVehicleId(vehIdOld.toString() + "_split" + splitNumber);
+            VehicleType vehType = vehiclesNew.getVehicles().get(vehIdOld).getType();
+            Vehicle vehicle = vf.createVehicle(vehIdNew, vehType);
+            vehiclesNew.addVehicle(vehicle);
+
+            String depIdOld = departure.getId().toString();
+            Departure departureNew = tsf.createDeparture(Id.create(depIdOld + "_split" + splitNumber, Departure.class), departure.getDepartureTime());
+            departureNew.setVehicleId(vehIdNew);
+            routeNew.addDeparture(departureNew);
+        }
+
+        return routeNew;
+    }
+
+    private static TransitRoute createNewRoute(TransitRoute routeOld, List<TransitRouteStop> stopsInNewRoute) {
+
+        TransitScheduleFactory tsf = new TransitScheduleFactoryImpl();
+
+        NetworkRoute networkRouteNew = buildNetworkRoute(routeOld, stopsInNewRoute);
+
+        TransitRoute routeNew = tsf.createTransitRoute(routeOld.getId(), networkRouteNew, stopsInNewRoute, routeOld.getTransportMode());
+        routeNew.setDescription(routeOld.getDescription());
+
+        for (Departure departure : routeOld.getDepartures().values()) {
+            routeNew.addDeparture(departure);
+        }
+
+        return routeNew;
+
+    }
+
+    private static NetworkRoute buildNetworkRoute(TransitRoute routeOld, List<TransitRouteStop> stopsInNewRoute) {
         List<Id<Link>> linksOld = new ArrayList<>();
         linksOld.add(routeOld.getRoute().getStartLinkId());
         linksOld.addAll(routeOld.getRoute().getLinkIds());
@@ -682,97 +715,7 @@ public class TransitRouteTrimmer {
 
         }
 
-        //modified logic for departure and arrival offsets for stops: now stops on new routes will have exact same offsets as stops in old route (meaning the offsets of the first stop don't have to be zero)
-
-        // Modify arrivalOffset and departureOffset for each stop
-//        TransitRouteStop transitRouteStop = routeOld.getStops().get(0);
-//
-//
-//        double initialDepartureOffset = transitRouteStop.getDepartureOffset().seconds();
-//        double departureOffset = stopsInNewRoute.get(0).getDepartureOffset().seconds() - initialDepartureOffset;
-//
-//         double initialArrivalOffset = transitRouteStop.getArrivalOffset().seconds();
-//        double arrivalOffset = departureOffset; //TODO: OFFSETS
-        // double arrivalOffset = stopsInNewRoute.get(0).getArrivalOffset().seconds() - initialArrivalOffset;
-
-//        List<TransitRouteStop> stopsNew = new ArrayList<>(copyStops(stopsInNewRoute, departureOffset, arrivalOffset));
-
-
-        // make route.
-        NetworkRoute networkRouteNew = RouteUtils.createLinkNetworkRouteImpl(startLinkNew, midLinksNew, endLinkNew);
-        Id<TransitRoute> routeIdOld = routeOld.getId();
-        Id<TransitRoute> routeIdNew = routeIdOld;
-
-        if (splitNumber != null) {
-            routeIdNew = Id.create(routeIdOld.toString() + "_split" + splitNumber, TransitRoute.class);
-        }
-
-        routeNew = tsf.createTransitRoute(routeIdNew, networkRouteNew, stopsInNewRoute, routeOld.getTransportMode());
-        routeNew.setDescription(routeOld.getDescription());
-
-        VehiclesFactory vf = vehiclesNew.getFactory();
-
-        if (splitNumber == null) {
-            for (Departure departure : routeOld.getDepartures().values()) {
-                routeNew.addDeparture(departure);
-            }
-        }
-        else {
-            for (Departure departure : routeOld.getDepartures().values()) {
-                Id<Vehicle> vehIdOld = departure.getVehicleId();
-                Id<Vehicle> vehIdNew = Id.createVehicleId(vehIdOld.toString() + "_split" + splitNumber);
-                VehicleType vehType = vehiclesNew.getVehicles().get(vehIdOld).getType();
-                Vehicle vehicle = vf.createVehicle(vehIdNew, vehType);
-                vehiclesNew.addVehicle(vehicle);
-
-                String depIdOld = departure.getId().toString();
-                Departure departureNew = tsf.createDeparture(Id.create(depIdOld + "_split" + splitNumber, Departure.class), departure.getDepartureTime() );
-                departureNew.setVehicleId(vehIdNew);
-                routeNew.addDeparture(departureNew);
-            }
-        }
-
-
-        return routeNew;
-
+        return RouteUtils.createLinkNetworkRouteImpl(startLinkNew, midLinksNew, endLinkNew);
     }
-
-
-//    // TODO: how to deal with arrival and departure offsets? I don't know the conventions...
-//    // TODO: first stop can have no arr offset, last stop no dep offset
-//    private static Collection<? extends TransitRouteStop> copyStops(List<TransitRouteStop> s, Double
-//            departureOffset, Double arrivalOffset) {
-//        List<TransitRouteStop> stops = new ArrayList<>();
-//        TransitRouteStop newStop;
-//
-//        TransitScheduleFactory tsf = new TransitScheduleFactoryImpl();
-//
-//        for (TransitRouteStop oldStop : s) {
-//
-//            //            newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
-//            //                    oldStop.getDepartureOffset().seconds() - departureOffset,
-//            //                    oldStop.getDepartureOffset().seconds() - departureOffset);
-//            if (oldStop.getDepartureOffset().isDefined() && oldStop.getArrivalOffset().isDefined()) {
-//                newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
-//                        oldStop.getDepartureOffset().seconds() - departureOffset,
-//                        oldStop.getArrivalOffset().seconds() - arrivalOffset);
-//            } else if (oldStop.getDepartureOffset().isDefined()) {
-//                newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
-//                        oldStop.getDepartureOffset().seconds() - departureOffset,
-//                        oldStop.getDepartureOffset().seconds() - departureOffset);
-//            } else if (oldStop.getArrivalOffset().isDefined()) {
-//                newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(),
-//                        oldStop.getArrivalOffset().seconds() - arrivalOffset,
-//                        oldStop.getArrivalOffset().seconds() - arrivalOffset);
-//            } else {
-//                newStop = tsf.createTransitRouteStop(oldStop.getStopFacility(), 0, 0);
-//            }
-//
-//            newStop.setAwaitDepartureTime(oldStop.isAwaitDepartureTime());
-//            stops.add(newStop);
-//
-//        }
-//        return stops;
-//    }
 
 }
