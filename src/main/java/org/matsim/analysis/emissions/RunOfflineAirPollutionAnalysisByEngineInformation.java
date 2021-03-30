@@ -69,6 +69,19 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 
 	private final static double shareOfPrivateVehiclesChangedToElectric = 0.0; // in addition to electric vehicle share in the reference case!
 
+	/*
+		Auswahl des Analyse-Runs für die Elktrifizierung der Autos - Ziel ist immer, dass man so viele elektrifiziert, bis 50% der Autos elektrisch sind:
+		none: BaseCase --> Keine weiteren Elektrfahrzeuge
+		random: Ziehe zufällig Fahrzeuge
+		milageDrivenIncreasing: Tagesfahrleistung: von niedrig nach viel --> Zuerst werden die Fahrzeuge mit den geringsten Tageskilometern elektrifiziert
+		tripDistanceIncreasing: Nach Länge des jeweils längsten Auto-Trips am Tag sortieren und diese Fahrzeuge entsprechend elektrifizieren von kurz nach weit
+		popDensityIncreasing: Nach Bevölkerungsdichte (Home-locations): je dünner besioedelt um so eher elektro. --> Idee ist dies gewichtet nach der Zonenbesetzung zu machen,
+							damit nicht nur Elektrofahrzeuge in dünner besioedleten Bereichen (und dort vollständig), sondern auch in (wohlhabenden) Innenstadtgegenden zu finden sind.
+		distanceFromCenterDesx: Nach Entfernung vom Stadtzentrum (Home-locations -- Beeline): je weiter weg um so eher elektro. --> Idee ist dies gewichtet nach der Entfernung zu machen,
+							damit nicht nur Elektrofahrzeuge am Stadtrand, sondern auch in (wohlhabenden) Innenstadtgegenden das sind.
+	 */
+	private enum electrificationStrategy {none, random, milageDrivenIncreasing, tripDistanceIncreasing, popDensityIncreasing, distanceFromCenterDesc};
+
 	public RunOfflineAirPollutionAnalysisByEngineInformation(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
 		this.runDirectory = runDirectory;
 		this.runId = runId;
