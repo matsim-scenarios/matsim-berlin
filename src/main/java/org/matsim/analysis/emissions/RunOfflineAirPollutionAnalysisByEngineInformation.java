@@ -118,26 +118,9 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 	}
 	
 	void run() throws IOException {
-					
-		Config config = ConfigUtils.createConfig();		
-		config.vehicles().setVehiclesFile(runDirectory + runId + ".output_vehicles.xml.gz");
-		config.network().setInputFile(runDirectory + runId + ".output_network.xml.gz");
-		config.transit().setTransitScheduleFile(runDirectory + runId + ".output_transitSchedule.xml.gz");
-		config.transit().setVehiclesFile(runDirectory + runId + ".output_transitVehicles.xml.gz");
-		config.global().setCoordinateSystem("GK4");
-		config.plans().setInputFile(null);
-		config.parallelEventHandling().setNumberOfThreads(null);
-		config.parallelEventHandling().setEstimatedNumberOfEvents(null);
-		config.global().setNumberOfThreads(1);
-		
-		EmissionsConfigGroup eConfig = ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
-		eConfig.setDetailedVsAverageLookupBehavior(DetailedVsAverageLookupBehavior.tryDetailedThenTechnologyAverageElseAbort);
-		eConfig.setDetailedColdEmissionFactorsFile(hbefaColdFile);
-		eConfig.setDetailedWarmEmissionFactorsFile(hbefaWarmFile);
-		eConfig.setHbefaRoadTypeSource(HbefaRoadTypeSource.fromLinkAttributes);
-		eConfig.setNonScenarioVehicles(NonScenarioVehicles.ignore);
-		eConfig.setWritingEmissionsEvents(true);
-		
+
+		Config config = prepareConfig();
+
 		File folder = new File(analysisOutputDirectory);			
 		folder.mkdirs();
 
@@ -149,118 +132,21 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		final String vehicleTypeFile = analysisOutputDirectory + runId + ".emissionVehicleInformation.csv";
 
 		Scenario scenario = ScenarioUtils.loadScenario(config);
-		
-		// network
-		for (Link link : scenario.getNetwork().getLinks().values()) {
+		assignHBEFARoadTypeToNetwork(scenario);
 
-			double freespeed = Double.NaN;
-
-			if (link.getFreespeed() <= 13.888889) {
-				freespeed = link.getFreespeed() * 2;
-				// for non motorway roads, the free speed level was reduced
-			} else {
-				freespeed = link.getFreespeed();
-				// for motorways, the original speed levels seems ok.
-			}
-			
-			if(freespeed <= 8.333333333){ //30kmh
-				link.getAttributes().putAttribute("hbefa_road_type", "URB/Access/30");
-			} else if(freespeed <= 11.111111111){ //40kmh
-				link.getAttributes().putAttribute("hbefa_road_type", "URB/Access/40");
-			} else if(freespeed <= 13.888888889){ //50kmh
-				double lanes = link.getNumberOfLanes();
-				if(lanes <= 1.0){
-					link.getAttributes().putAttribute("hbefa_road_type", "URB/Local/50");
-				} else if(lanes <= 2.0){
-					link.getAttributes().putAttribute("hbefa_road_type", "URB/Distr/50");
-				} else if(lanes > 2.0){
-					link.getAttributes().putAttribute("hbefa_road_type", "URB/Trunk-City/50");
-				} else{
-					throw new RuntimeException("NoOfLanes not properly defined");
-				}
-			} else if(freespeed <= 16.666666667){ //60kmh
-				double lanes = link.getNumberOfLanes();
-				if(lanes <= 1.0){
-					link.getAttributes().putAttribute("hbefa_road_type", "URB/Local/60");
-				} else if(lanes <= 2.0){
-					link.getAttributes().putAttribute("hbefa_road_type", "URB/Trunk-City/60");
-				} else if(lanes > 2.0){
-					link.getAttributes().putAttribute("hbefa_road_type", "URB/MW-City/60");
-				} else{
-					throw new RuntimeException("NoOfLanes not properly defined");
-				}
-			} else if(freespeed <= 19.444444444){ //70kmh
-				link.getAttributes().putAttribute("hbefa_road_type", "URB/MW-City/70");
-			} else if(freespeed <= 22.222222222){ //80kmh
-				link.getAttributes().putAttribute("hbefa_road_type", "URB/MW-Nat./80");
-			} else if(freespeed > 22.222222222){ //faster
-				link.getAttributes().putAttribute("hbefa_road_type", "RUR/MW/>130");
-			} else{
-				throw new RuntimeException("Link not considered...");
-			}			
-		}
-				
-		// car vehicles
-		
-		VehicleType petrolCarVehicleType = scenario.getVehicles().getFactory().createVehicleType(Id.create("petrolCar", VehicleType.class));
-		scenario.getVehicles().addVehicleType(petrolCarVehicleType);
-		EngineInformation petrolCarEngineInformation = petrolCarVehicleType.getEngineInformation();
-		VehicleUtils.setHbefaVehicleCategory( petrolCarEngineInformation, HbefaVehicleCategory.PASSENGER_CAR.toString());
-		VehicleUtils.setHbefaTechnology( petrolCarEngineInformation, "average" );
-		VehicleUtils.setHbefaSizeClass( petrolCarEngineInformation, "average" );
-		VehicleUtils.setHbefaEmissionsConcept( petrolCarEngineInformation, "petrol (4S)" );
-		
-		VehicleType dieselCarVehicleType = scenario.getVehicles().getFactory().createVehicleType(Id.create("dieselCar", VehicleType.class));
-		scenario.getVehicles().addVehicleType(dieselCarVehicleType);
-		EngineInformation dieselCarEngineInformation = dieselCarVehicleType.getEngineInformation();
-		VehicleUtils.setHbefaVehicleCategory( dieselCarEngineInformation, HbefaVehicleCategory.PASSENGER_CAR.toString());
-		VehicleUtils.setHbefaTechnology( dieselCarEngineInformation, "average" );
-		VehicleUtils.setHbefaSizeClass( dieselCarEngineInformation, "average" );
-		VehicleUtils.setHbefaEmissionsConcept( dieselCarEngineInformation, "diesel" );
-		
-		VehicleType cngVehicleType = scenario.getVehicles().getFactory().createVehicleType(Id.create("cngCar", VehicleType.class));
-		scenario.getVehicles().addVehicleType(cngVehicleType);
-		EngineInformation cngCarEngineInformation = cngVehicleType.getEngineInformation();
-		VehicleUtils.setHbefaVehicleCategory( cngCarEngineInformation, HbefaVehicleCategory.PASSENGER_CAR.toString());
-		VehicleUtils.setHbefaTechnology( cngCarEngineInformation, "average" );
-		VehicleUtils.setHbefaSizeClass( cngCarEngineInformation, "average" );
-		VehicleUtils.setHbefaEmissionsConcept( cngCarEngineInformation, "bifuel CNG/petrol" );
-		
-		VehicleType lpgVehicleType = scenario.getVehicles().getFactory().createVehicleType(Id.create("lpgCar", VehicleType.class));
-		scenario.getVehicles().addVehicleType(lpgVehicleType);
-		EngineInformation lpgCarEngineInformation = lpgVehicleType.getEngineInformation();
-		VehicleUtils.setHbefaVehicleCategory( lpgCarEngineInformation, HbefaVehicleCategory.PASSENGER_CAR.toString());
-		VehicleUtils.setHbefaTechnology( lpgCarEngineInformation, "average" );
-		VehicleUtils.setHbefaSizeClass( lpgCarEngineInformation, "average" );
-		VehicleUtils.setHbefaEmissionsConcept( lpgCarEngineInformation, "bifuel LPG/petrol" );
-		
+		// combustion vehicles
+		VehicleType petrolCarVehicleType = prepareVehicleType(scenario, "petrolCar", "petrol (4S)");
+		VehicleType dieselCarVehicleType = prepareVehicleType(scenario, "dieselCar", "diesel");
+		VehicleType cngVehicleType = prepareVehicleType(scenario, "cngCar", "bifuel CNG/petrol");
+		VehicleType lpgVehicleType = prepareVehicleType(scenario, "lpgCar", "bifuel LPG/petrol");
 		// electric vehicles
-		VehicleType electricVehicleType = scenario.getVehicles().getFactory().createVehicleType(Id.create("electricCar", VehicleType.class));
-		scenario.getVehicles().addVehicleType(electricVehicleType);
-		EngineInformation electricEngineInformation = electricVehicleType.getEngineInformation();
-		VehicleUtils.setHbefaVehicleCategory( electricEngineInformation, HbefaVehicleCategory.PASSENGER_CAR.toString());
-		VehicleUtils.setHbefaTechnology( electricEngineInformation, "average" );
-		VehicleUtils.setHbefaSizeClass( electricEngineInformation, "average" );
-		VehicleUtils.setHbefaEmissionsConcept( electricEngineInformation, "electricity" );
-		
+		VehicleType electricVehicleType = prepareVehicleType(scenario, "electricCar", "electricity");
 		// plug-in hybrid petrol vehicles
-		VehicleType pluginHybridPetrolVehicleType = scenario.getVehicles().getFactory().createVehicleType(Id.create("pluginHybridPetrol", VehicleType.class));
-		scenario.getVehicles().addVehicleType(pluginHybridPetrolVehicleType);
-		EngineInformation pluginHybridPetrolEngineInformation = pluginHybridPetrolVehicleType.getEngineInformation();
-		VehicleUtils.setHbefaVehicleCategory( pluginHybridPetrolEngineInformation, HbefaVehicleCategory.PASSENGER_CAR.toString());
-		VehicleUtils.setHbefaTechnology( pluginHybridPetrolEngineInformation, "average" );
-		VehicleUtils.setHbefaSizeClass( pluginHybridPetrolEngineInformation, "average" );
-		VehicleUtils.setHbefaEmissionsConcept( pluginHybridPetrolEngineInformation, "Plug-in Hybrid petrol/electric" );
-		
+		VehicleType pluginHybridPetrolVehicleType = prepareVehicleType(scenario, "pluginHybridPetrol", "Plug-in Hybrid petrol/electric");
 		// plug-in hybrid petrol vehicles
-		VehicleType pluginHybridDieselVehicleType = scenario.getVehicles().getFactory().createVehicleType(Id.create("pluginHybridDiesel", VehicleType.class));
-		scenario.getVehicles().addVehicleType(pluginHybridDieselVehicleType);
-		EngineInformation pluginHybridDieselEngineInformation = pluginHybridDieselVehicleType.getEngineInformation();
-		VehicleUtils.setHbefaVehicleCategory( pluginHybridDieselEngineInformation, HbefaVehicleCategory.PASSENGER_CAR.toString());
-		VehicleUtils.setHbefaTechnology( pluginHybridDieselEngineInformation, "average" );
-		VehicleUtils.setHbefaSizeClass( pluginHybridDieselEngineInformation, "average" );
-		VehicleUtils.setHbefaEmissionsConcept( pluginHybridDieselEngineInformation, "Plug-in Hybrid diesel/electric" );
-			
+		VehicleType pluginHybridDieselVehicleType = prepareVehicleType(scenario, "pluginHybridDiesel", "Plug-in Hybrid diesel/electric");
+
+
 		// ignore default car vehicles
 
 		VehicleType defaultCarVehicleType = scenario.getVehicles().getVehicleTypes().get(Id.create("car", VehicleType.class));
@@ -485,6 +371,91 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 			log.info("Output written to " + vehicleTypeFile);
 		}
 		
+	}
+
+	private VehicleType prepareVehicleType(Scenario scenario, String vehicleTypeId, String emissionsConcept) {
+		VehicleType carVehicleType = scenario.getVehicles().getFactory().createVehicleType(Id.create(vehicleTypeId, VehicleType.class));
+		EngineInformation engineInformation = carVehicleType.getEngineInformation();
+		VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.PASSENGER_CAR.toString());
+		VehicleUtils.setHbefaTechnology(engineInformation, "average");
+		VehicleUtils.setHbefaSizeClass(engineInformation, "average");
+		VehicleUtils.setHbefaEmissionsConcept(engineInformation, emissionsConcept);
+		scenario.getVehicles().addVehicleType(carVehicleType);
+		return carVehicleType;
+	}
+
+	private void assignHBEFARoadTypeToNetwork(Scenario scenario) {
+		// network
+		for (Link link : scenario.getNetwork().getLinks().values()) {
+
+			double freespeed = Double.NaN;
+
+			if (link.getFreespeed() <= 13.888889) {
+				freespeed = link.getFreespeed() * 2;
+				// for non motorway roads, the free speed level was reduced
+			} else {
+				freespeed = link.getFreespeed();
+				// for motorways, the original speed levels seems ok.
+			}
+
+			if(freespeed <= 8.333333333){ //30kmh
+				link.getAttributes().putAttribute("hbefa_road_type", "URB/Access/30");
+			} else if(freespeed <= 11.111111111){ //40kmh
+				link.getAttributes().putAttribute("hbefa_road_type", "URB/Access/40");
+			} else if(freespeed <= 13.888888889){ //50kmh
+				double lanes = link.getNumberOfLanes();
+				if(lanes <= 1.0){
+					link.getAttributes().putAttribute("hbefa_road_type", "URB/Local/50");
+				} else if(lanes <= 2.0){
+					link.getAttributes().putAttribute("hbefa_road_type", "URB/Distr/50");
+				} else if(lanes > 2.0){
+					link.getAttributes().putAttribute("hbefa_road_type", "URB/Trunk-City/50");
+				} else{
+					throw new RuntimeException("NoOfLanes not properly defined");
+				}
+			} else if(freespeed <= 16.666666667){ //60kmh
+				double lanes = link.getNumberOfLanes();
+				if(lanes <= 1.0){
+					link.getAttributes().putAttribute("hbefa_road_type", "URB/Local/60");
+				} else if(lanes <= 2.0){
+					link.getAttributes().putAttribute("hbefa_road_type", "URB/Trunk-City/60");
+				} else if(lanes > 2.0){
+					link.getAttributes().putAttribute("hbefa_road_type", "URB/MW-City/60");
+				} else{
+					throw new RuntimeException("NoOfLanes not properly defined");
+				}
+			} else if(freespeed <= 19.444444444){ //70kmh
+				link.getAttributes().putAttribute("hbefa_road_type", "URB/MW-City/70");
+			} else if(freespeed <= 22.222222222){ //80kmh
+				link.getAttributes().putAttribute("hbefa_road_type", "URB/MW-Nat./80");
+			} else if(freespeed > 22.222222222){ //faster
+				link.getAttributes().putAttribute("hbefa_road_type", "RUR/MW/>130");
+			} else{
+				throw new RuntimeException("Link not considered...");
+			}
+		}
+	}
+
+	private Config prepareConfig() {
+		Config config = ConfigUtils.createConfig();
+		config.vehicles().setVehiclesFile(runDirectory + runId + ".output_vehicles.xml.gz");
+		config.network().setInputFile(runDirectory + runId + ".output_network.xml.gz");
+		config.transit().setTransitScheduleFile(runDirectory + runId + ".output_transitSchedule.xml.gz");
+		config.transit().setVehiclesFile(runDirectory + runId + ".output_transitVehicles.xml.gz");
+		config.global().setCoordinateSystem("GK4");
+		config.plans().setInputFile(null);
+		config.parallelEventHandling().setNumberOfThreads(null);
+		config.parallelEventHandling().setEstimatedNumberOfEvents(null);
+		config.global().setNumberOfThreads(1);
+
+		EmissionsConfigGroup eConfig = ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
+		eConfig.setDetailedVsAverageLookupBehavior(DetailedVsAverageLookupBehavior.tryDetailedThenTechnologyAverageElseAbort);
+		eConfig.setDetailedColdEmissionFactorsFile(hbefaColdFile);
+		eConfig.setDetailedWarmEmissionFactorsFile(hbefaWarmFile);
+		eConfig.setHbefaRoadTypeSource(HbefaRoadTypeSource.fromLinkAttributes);
+		eConfig.setNonScenarioVehicles(NonScenarioVehicles.ignore);
+		eConfig.setWritingEmissionsEvents(true);
+		return config;
 	}
 
 }
