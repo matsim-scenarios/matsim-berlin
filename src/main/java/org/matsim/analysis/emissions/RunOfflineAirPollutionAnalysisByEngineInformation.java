@@ -148,22 +148,17 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 
 
 		// ignore default car vehicles
-
 		VehicleType defaultCarVehicleType = scenario.getVehicles().getVehicleTypes().get(Id.create("car", VehicleType.class));
-		EngineInformation carEngineInformation = defaultCarVehicleType.getEngineInformation();
-		VehicleUtils.setHbefaVehicleCategory( carEngineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
+		VehicleUtils.setHbefaVehicleCategory(defaultCarVehicleType.getEngineInformation(), HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
 		
 		// ignore freight vehicles
-
 		VehicleType freightVehicleType = scenario.getVehicles().getVehicleTypes().get(Id.create("freight", VehicleType.class));
-		EngineInformation freightEngineInformation = freightVehicleType.getEngineInformation();
-		VehicleUtils.setHbefaVehicleCategory( freightEngineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
+		VehicleUtils.setHbefaVehicleCategory(freightVehicleType.getEngineInformation(), HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
 		
 		// ignore public transit vehicles
 		
-		for (VehicleType type : scenario.getTransitVehicles().getVehicleTypes().values()) {
-			EngineInformation engineInformation = type.getEngineInformation();
-			VehicleUtils.setHbefaVehicleCategory( engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());		
+		for (VehicleType transitVehicleType : scenario.getTransitVehicles().getVehicleTypes().values()) {
+			VehicleUtils.setHbefaVehicleCategory(transitVehicleType.getEngineInformation(), HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
 		}
 		
 		List<Id<Vehicle>> vehiclesToChangeToElectric = new ArrayList<>();
@@ -177,7 +172,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 			totalVehiclesCounter++;
 			if (vehicle.getId().toString().contains("freight")) {
 				// some freight vehicles have the type "car", skip them...
-				
+
 			} else if (vehicle.getType().getId().toString().equals(defaultCarVehicleType.getId().toString())) {
 				
 				carVehiclesToChangeToSpecificType.add(vehicle.getId());
@@ -438,7 +433,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 
 	private Config prepareConfig() {
 		Config config = ConfigUtils.createConfig();
-		config.vehicles().setVehiclesFile(runDirectory + runId + ".output_vehicles.xml.gz");
+		config.vehicles().setVehiclesFile(runDirectory + runId + ".output_allVehicles.xml.gz");
 		config.network().setInputFile(runDirectory + runId + ".output_network.xml.gz");
 		config.transit().setTransitScheduleFile(runDirectory + runId + ".output_transitSchedule.xml.gz");
 		config.transit().setVehiclesFile(runDirectory + runId + ".output_transitVehicles.xml.gz");
