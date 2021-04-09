@@ -55,12 +55,14 @@ import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 
 /**
-* @author ikaddoura
-*/
+ * @author ikaddoura, kturner
+ */
 
 public class RunOfflineAirPollutionAnalysisByEngineInformation {
+	//TODO: am Anfang einmal durch die Events gehen und nur die Fahrzeuge nehmen, die dann auch tatsächlich "vorkommen"? Derzeit müssten wir auch Fahrzeuge umwandeln, die gar nicht rum fahren.
+
 	private static final Logger log = Logger.getLogger(RunOfflineAirPollutionAnalysisByEngineInformation.class);
-	
+
 	private final String runDirectory;
 	private final String runId;
 	private final String hbefaWarmFile;
@@ -73,27 +75,27 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		Auswahl des Analyse-Runs für die Elktrifizierung der Autos - Ziel ist immer, dass man so viele elektrifiziert, bis 50% der Autos elektrisch sind:
 		none: BaseCase --> Keine weiteren Elektrfahrzeuge
 		random: Ziehe zufällig Fahrzeuge
-		milageDrivenIncreasing: Tagesfahrleistung: von niedrig nach viel --> Zuerst werden die Fahrzeuge mit den geringsten Tageskilometern elektrifiziert
+		mileageDrivenIncreasing: Tagesfahrleistung: von niedrig nach viel --> Zuerst werden die Fahrzeuge mit den geringsten Tageskilometern elektrifiziert
 		tripDistanceIncreasing: Nach Länge des jeweils längsten Auto-Trips am Tag sortieren und diese Fahrzeuge entsprechend elektrifizieren von kurz nach weit
 		popDensityIncreasing: Nach Bevölkerungsdichte (Home-locations): je dünner besioedelt um so eher elektro. --> Idee ist dies gewichtet nach der Zonenbesetzung zu machen,
 							damit nicht nur Elektrofahrzeuge in dünner besioedleten Bereichen (und dort vollständig), sondern auch in (wohlhabenden) Innenstadtgegenden zu finden sind.
 		distanceFromCenterDesx: Nach Entfernung vom Stadtzentrum (Home-locations -- Beeline): je weiter weg um so eher elektro. --> Idee ist dies gewichtet nach der Entfernung zu machen,
 							damit nicht nur Elektrofahrzeuge am Stadtrand, sondern auch in (wohlhabenden) Innenstadtgegenden das sind.
 	 */
-	private enum electrificationStrategy {none, random, milageDrivenIncreasing, tripDistanceIncreasing, popDensityIncreasing, distanceFromCenterDesc};
+	private enum electrificationStrategy {none, random, mileageDrivenIncreasing, tripDistanceIncreasing, popDensityIncreasing, distanceFromCenterDesc};
 
 	public RunOfflineAirPollutionAnalysisByEngineInformation(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
 		this.runDirectory = runDirectory;
 		this.runId = runId;
 		this.hbefaWarmFile = hbefaFileWarm;
 		this.hbefaColdFile = hbefaFileCold;
-		
+
 		if (!analysisOutputDirectory.endsWith("/")) analysisOutputDirectory = analysisOutputDirectory + "/";
 		this.analysisOutputDirectory = analysisOutputDirectory;
 	}
-	
+
 	public static void main(String[] args) throws IOException {
-		
+
 		if (args.length == 1) {
 			String rootDirectory = args[0];
 			if (!rootDirectory.endsWith("/")) rootDirectory = rootDirectory + "/";
@@ -111,17 +113,17 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 					rootDirectory + hbefaFileCold,
 					rootDirectory + runDirectory + "emission-analysis-hbefa-v4.1");
 			analysis.run();
-			
+
 		} else {
 			throw new RuntimeException("Please set the root directory. Aborting...");
 		}
 	}
-	
+
 	void run() throws IOException {
 
 		Config config = prepareConfig();
 
-		File folder = new File(analysisOutputDirectory);			
+		File folder = new File(analysisOutputDirectory);
 		folder.mkdirs();
 
 		final String eventsFile = runDirectory + runId + ".output_events.xml.gz";
@@ -147,93 +149,104 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		VehicleType pluginHybridDieselVehicleType = prepareVehicleType(scenario, "pluginHybridDiesel", "Plug-in Hybrid diesel/electric");
 
 
-		// ignore default car vehicles
-		VehicleType defaultCarVehicleType = scenario.getVehicles().getVehicleTypes().get(Id.create("car", VehicleType.class));
-		VehicleUtils.setHbefaVehicleCategory(defaultCarVehicleType.getEngineInformation(), HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
-		
-		// ignore freight vehicles
-		VehicleType freightVehicleType = scenario.getVehicles().getVehicleTypes().get(Id.create("freight", VehicleType.class));
-		VehicleUtils.setHbefaVehicleCategory(freightVehicleType.getEngineInformation(), HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
-		
-		// ignore public transit vehicles
-		
-		for (VehicleType transitVehicleType : scenario.getTransitVehicles().getVehicleTypes().values()) {
-			VehicleUtils.setHbefaVehicleCategory(transitVehicleType.getEngineInformation(), HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
+		//Set all vehicles to NON_HBEFA_VEHICLE and ignore them in the analysis. In the next steps we will assign HBEFA types to the cars.
+		for (VehicleType vehicleType : scenario.getVehicles().getVehicleTypes().values()) {
+			VehicleUtils.setHbefaVehicleCategory(vehicleType.getEngineInformation(), HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
 		}
-		
+
+		VehicleType defaultCarVehicleType = scenario.getVehicles().getVehicleTypes().get(Id.create("car", VehicleType.class));
+
 		List<Id<Vehicle>> vehiclesToChangeToElectric = new ArrayList<>();
 		List<Id<Vehicle>> carVehiclesToChangeToSpecificType = new ArrayList<>();
 
 		final Random rnd = MatsimRandom.getLocalInstance();
-
 		int totalVehiclesCounter = 0;
-		// randomly change some vehicle types
-		for (Vehicle vehicle : scenario.getVehicles().getVehicles().values()) {
-			totalVehiclesCounter++;
-			if (vehicle.getId().toString().contains("freight")) {
-				// some freight vehicles have the type "car", skip them...
 
-			} else if (vehicle.getType().getId().toString().equals(defaultCarVehicleType.getId().toString())) {
-				
-				carVehiclesToChangeToSpecificType.add(vehicle.getId());
-				
-				if (rnd.nextDouble() < shareOfPrivateVehiclesChangedToElectric) {
-					vehiclesToChangeToElectric.add(vehicle.getId());
+		/**
+		 * Lege fest,
+		 * a) welche Fahrzeuge hier überhaupt betrachtete werden sollen --> carVehiclesToChangeToSpecificType
+		 * b) welche Fahrzeuge dann noch in Elektrofahrzeuge umgewandelt werden sollen.  --> ehiclesToChangeToElectric
+		 * TODO: b)  muss eigentlich in einem späteren Schritt erfolgen und in abhängigkeit von der oben gewählten Strategie
+		 */
+		{
+
+			// randomly change some vehicle types
+			for (Vehicle vehicle : scenario.getVehicles().getVehicles().values()) {
+				totalVehiclesCounter++;
+				if (vehicle.getId().toString().contains("freight")) {
+					// some freight vehicles have the type "car", skip them...
+
+				} else if (vehicle.getType().getId().toString().equals(defaultCarVehicleType.getId().toString())) {
+
+					carVehiclesToChangeToSpecificType.add(vehicle.getId());
+
+					if (rnd.nextDouble() < shareOfPrivateVehiclesChangedToElectric) {
+						vehiclesToChangeToElectric.add(vehicle.getId());
+					}
+				} else {
+					// ignore all other vehicles
 				}
-			} else {
-				// ignore all other vehicles
 			}
 		}
-		
-		final double petrolShare = 0.512744724750519;
-		final double dieselShare = 0.462841421365738;
-		final double lpgShare = 0.011381645;
-		final double cngShare = 0.0038579236716032;
-		final double hybridPetrolShare = 0.005743607878685;
-		final double hybridDieselShare = 0.00014232617104426;
 
-		for (Id<Vehicle> id : carVehiclesToChangeToSpecificType) {
-			scenario.getVehicles().removeVehicle(id);
-			
-			VehicleType vehicleType;
-			double rndNumber = rnd.nextDouble();
-			if (rndNumber < petrolShare) {
-				// petrol
-				vehicleType = petrolCarVehicleType;
-			} else if (rndNumber >= petrolShare && rndNumber < petrolShare + dieselShare) {
-				// diesel
-				vehicleType = dieselCarVehicleType;
-			} else if (rndNumber >= petrolShare + dieselShare && rndNumber < petrolShare + dieselShare + lpgShare) {
-				// lpg
-				vehicleType = lpgVehicleType;
-			} else if (rndNumber >= petrolShare + dieselShare + lpgShare && rndNumber < petrolShare + dieselShare + lpgShare + cngShare) {
-				// cng
-				vehicleType = cngVehicleType;
-			} else if (rndNumber >= petrolShare + dieselShare + lpgShare + cngShare && rndNumber < petrolShare + dieselShare + lpgShare + cngShare + hybridPetrolShare) {
-				// hybrid petrol
-				vehicleType = pluginHybridPetrolVehicleType;
-			} else if (rndNumber >= petrolShare + dieselShare + lpgShare + cngShare + hybridPetrolShare && rndNumber < petrolShare + dieselShare + lpgShare + cngShare + hybridPetrolShare + hybridDieselShare) {
-				// hybrid diesel
-				vehicleType = pluginHybridDieselVehicleType;
-			} else {
-				// electric
-				vehicleType = electricVehicleType;
+		//Teile die Fahrzeuge entsprechend der Wahrscheinlichkeiten auf - das ist der Basisfall
+		{
+			final double petrolShare = 0.512744724750519;
+			final double dieselShare = 0.462841421365738;
+			final double lpgShare = 0.011381645;
+			final double cngShare = 0.0038579236716032;
+			final double hybridPetrolShare = 0.005743607878685;
+			final double hybridDieselShare = 0.00014232617104426;
+
+			for (Id<Vehicle> id : carVehiclesToChangeToSpecificType) {
+				scenario.getVehicles().removeVehicle(id);
+
+				VehicleType vehicleType;
+				double rndNumber = rnd.nextDouble();
+				if (rndNumber < petrolShare) {
+					// petrol
+					vehicleType = petrolCarVehicleType;
+				} else if (rndNumber >= petrolShare && rndNumber < petrolShare + dieselShare) {
+					// diesel
+					vehicleType = dieselCarVehicleType;
+				} else if (rndNumber >= petrolShare + dieselShare && rndNumber < petrolShare + dieselShare + lpgShare) {
+					// lpg
+					vehicleType = lpgVehicleType;
+				} else if (rndNumber >= petrolShare + dieselShare + lpgShare && rndNumber < petrolShare + dieselShare + lpgShare + cngShare) {
+					// cng
+					vehicleType = cngVehicleType;
+				} else if (rndNumber >= petrolShare + dieselShare + lpgShare + cngShare && rndNumber < petrolShare + dieselShare + lpgShare + cngShare + hybridPetrolShare) {
+					// hybrid petrol
+					vehicleType = pluginHybridPetrolVehicleType;
+				} else if (rndNumber >= petrolShare + dieselShare + lpgShare + cngShare + hybridPetrolShare && rndNumber < petrolShare + dieselShare + lpgShare + cngShare + hybridPetrolShare + hybridDieselShare) {
+					// hybrid diesel
+					vehicleType = pluginHybridDieselVehicleType;
+				} else {
+					// electric
+					vehicleType = electricVehicleType;
+				}
+
+				Vehicle vehicleNew = scenario.getVehicles().getFactory().createVehicle(id, vehicleType);
+				scenario.getVehicles().addVehicle(vehicleNew);
+				log.info("Type for vehicle " + id + " changed to: " + vehicleType.getId().toString());
 			}
-			
-			Vehicle vehicleNew = scenario.getVehicles().getFactory().createVehicle(id, vehicleType);
-			scenario.getVehicles().addVehicle(vehicleNew);
-			log.info("Type for vehicle " + id + " changed to: " + vehicleType.getId().toString());
 		}
-				
-		for (Id<Vehicle> id : vehiclesToChangeToElectric) {
-			scenario.getVehicles().removeVehicle(id);
-			Vehicle vehicleNew = scenario.getVehicles().getFactory().createVehicle(id, electricVehicleType);
-			scenario.getVehicles().addVehicle(vehicleNew);
-			log.info("Type for vehicle " + id + " changed to electric.");
+
+		//Nun wandle Fahrzeuge zu die ausgewählten Elektrofahrzeugen um
+		{
+			for (Id<Vehicle> id : vehiclesToChangeToElectric) {
+				scenario.getVehicles().removeVehicle(id);
+				Vehicle vehicleNew = scenario.getVehicles().getFactory().createVehicle(id, electricVehicleType);
+				scenario.getVehicles().addVehicle(vehicleNew);
+				log.info("Type for vehicle " + id + " changed to electric.");
+			}
 		}
-		
+
+
 		// the following is copy paste from the example...
-		
+
+		log.info("Start emission analysis");
+
 		EventsManager eventsManager = EventsUtils.createEventsManager();
 
 		AbstractModule module = new AbstractModule(){
@@ -247,125 +260,126 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 
 		com.google.inject.Injector injector = Injector.createInjector(config, module);
 
-        EmissionModule emissionModule = injector.getInstance(EmissionModule.class);
-        
-        EventWriterXML emissionEventWriter = new EventWriterXML(emissionEventOutputFile);
-        emissionModule.getEmissionEventsManager().addHandler(emissionEventWriter);
+		EmissionModule emissionModule = injector.getInstance(EmissionModule.class);
 
-        EmissionsOnLinkHandler emissionsEventHandler = new EmissionsOnLinkHandler();
+		EventWriterXML emissionEventWriter = new EventWriterXML(emissionEventOutputFile);
+		emissionModule.getEmissionEventsManager().addHandler(emissionEventWriter);
+
+		EmissionsOnLinkHandler emissionsEventHandler = new EmissionsOnLinkHandler();
 		eventsManager.addHandler(emissionsEventHandler);
-        
-        eventsManager.initProcessing();
-        
-        MatsimEventsReader matsimEventsReader = new MatsimEventsReader(eventsManager);
-        matsimEventsReader.readFile(eventsFile);
-       
-        log.info("Done reading the events file.");
-        log.info("Finish processing...");   
-        eventsManager.finishProcessing();
-        
-        log.info("Closing events file...");
-        emissionEventWriter.closeFile();
-        
-        log.info("Total number of vehicles: " + totalVehiclesCounter);
-		log.info("Number of passenger car vehicles: " + carVehiclesToChangeToSpecificType.size());
+
+		eventsManager.initProcessing();
+
+		MatsimEventsReader matsimEventsReader = new MatsimEventsReader(eventsManager);
+		matsimEventsReader.readFile(eventsFile);
+
+		log.info("Done reading the events file.");
+		log.info("Finish processing...");
+		eventsManager.finishProcessing();
+
+		log.info("Closing events file...");
+		emissionEventWriter.closeFile();
+
+		log.info("Total number of vehicles in scenario: " + totalVehiclesCounter);
+		log.info("Number of passenger car vehicles for analysis: " + carVehiclesToChangeToSpecificType.size());
 		log.info("Number of passenger car vehicles that are changed to electric vehicles: " + vehiclesToChangeToElectric.size());
+		log.info("This is NOT the number of all electric cars, since there might be some electric vehicles before changing.");
 
-        log.info("Emission analysis completed.");
-        
-        log.info("Writing output..."); 
-		
-        {
-    		File file1 = new File(linkEmissionAnalysisFile);
-    		
-    		BufferedWriter bw1 = new BufferedWriter(new FileWriter(file1));
+		log.info("Emission analysis completed.");
 
-    		bw1.write("linkId");
-    		
-    		for (Pollutant pollutant : Pollutant.values()) {
-    			bw1.write(";" + pollutant + " [g]");
-    		}
-    		bw1.newLine();
-    		
-    		Map<Id<Link>, Map<Pollutant, Double>> link2pollutants = emissionsEventHandler.getLink2pollutants();
-    		
-    		for (Id<Link> linkId : link2pollutants.keySet()) {
-    			bw1.write(linkId.toString());
+		{
+			log.info("Writing output...");
 
-    			for (Pollutant pollutant : Pollutant.values()) {
-    				double value = 0.;
-    				if (link2pollutants.get(linkId).get(pollutant) != null) {
-    					value = link2pollutants.get(linkId).get(pollutant);
-    				}
-    				bw1.write(";" + value);
-    			}
-    			bw1.newLine();
-    		}
-    		
-    		bw1.close();
-    		log.info("Output written to " + linkEmissionAnalysisFile);
-        }
-        
-        {
-    		File file1 = new File(linkEmissionPerMAnalysisFile);
-    		
-    		BufferedWriter bw1 = new BufferedWriter(new FileWriter(file1));
+			File file1 = new File(linkEmissionAnalysisFile);
 
-    		bw1.write("linkId");
-    		
-    		for (Pollutant pollutant : Pollutant.values()) {
-    			bw1.write(";" + pollutant + " [g/m]");
-    		}
-    		bw1.newLine();
-    		
-    		Map<Id<Link>, Map<Pollutant, Double>> link2pollutants = emissionsEventHandler.getLink2pollutants();
-    		
-    		for (Id<Link> linkId : link2pollutants.keySet()) {
-    			bw1.write(linkId.toString());
+			BufferedWriter bw1 = new BufferedWriter(new FileWriter(file1));
 
-    			for (Pollutant pollutant : Pollutant.values()) {
-    				double emission = 0.;
-    				if (link2pollutants.get(linkId).get(pollutant) != null) {
-    					emission = link2pollutants.get(linkId).get(pollutant);
-    				}
-    				
-    				double emissionPerM = Double.NaN;
-    				Link link = scenario.getNetwork().getLinks().get(linkId);
-    				if (link != null) {
-    					emissionPerM = emission / link.getLength();
-    				}
-    				
-    				bw1.write(";" + emissionPerM);
-    			}
-    			bw1.newLine();
-    		}
-    		
-    		bw1.close();
-    		log.info("Output written to " + linkEmissionPerMAnalysisFile);
-        }
-		
+			bw1.write("linkId");
+
+			for (Pollutant pollutant : Pollutant.values()) {
+				bw1.write(";" + pollutant + " [g]");
+			}
+			bw1.newLine();
+
+			Map<Id<Link>, Map<Pollutant, Double>> link2pollutants = emissionsEventHandler.getLink2pollutants();
+
+			for (Id<Link> linkId : link2pollutants.keySet()) {
+				bw1.write(linkId.toString());
+
+				for (Pollutant pollutant : Pollutant.values()) {
+					double value = 0.;
+					if (link2pollutants.get(linkId).get(pollutant) != null) {
+						value = link2pollutants.get(linkId).get(pollutant);
+					}
+					bw1.write(";" + value);
+				}
+				bw1.newLine();
+			}
+
+			bw1.close();
+			log.info("Output written to " + linkEmissionAnalysisFile);
+		}
+
+		{
+			File file1 = new File(linkEmissionPerMAnalysisFile);
+
+			BufferedWriter bw1 = new BufferedWriter(new FileWriter(file1));
+
+			bw1.write("linkId");
+
+			for (Pollutant pollutant : Pollutant.values()) {
+				bw1.write(";" + pollutant + " [g/m]");
+			}
+			bw1.newLine();
+
+			Map<Id<Link>, Map<Pollutant, Double>> link2pollutants = emissionsEventHandler.getLink2pollutants();
+
+			for (Id<Link> linkId : link2pollutants.keySet()) {
+				bw1.write(linkId.toString());
+
+				for (Pollutant pollutant : Pollutant.values()) {
+					double emission = 0.;
+					if (link2pollutants.get(linkId).get(pollutant) != null) {
+						emission = link2pollutants.get(linkId).get(pollutant);
+					}
+
+					double emissionPerM = Double.NaN;
+					Link link = scenario.getNetwork().getLinks().get(linkId);
+					if (link != null) {
+						emissionPerM = emission / link.getLength();
+					}
+
+					bw1.write(";" + emissionPerM);
+				}
+				bw1.newLine();
+			}
+
+			bw1.close();
+			log.info("Output written to " + linkEmissionPerMAnalysisFile);
+		}
+
 		{
 			File file2 = new File(vehicleTypeFile);
-			
+
 			BufferedWriter bw2 = new BufferedWriter(new FileWriter(file2));
 
-			bw2.write("vehicleId;vehicleType;emissionsConcept");	
+			bw2.write("vehicleId;vehicleType;emissionsConcept");
 			bw2.newLine();
-			
+
 			for (Vehicle vehicle : scenario.getVehicles().getVehicles().values()) {
 				String emissionsConcept = "null";
 				if (vehicle.getType().getEngineInformation() != null && VehicleUtils.getHbefaEmissionsConcept(vehicle.getType().getEngineInformation()) != null) {
 					emissionsConcept = VehicleUtils.getHbefaEmissionsConcept(vehicle.getType().getEngineInformation()).toString();
 				}
-				
+
 				bw2.write(vehicle.getId() + ";" + vehicle.getType().getId().toString() + ";" + emissionsConcept);
 				bw2.newLine();
 			}
-			
+
 			bw2.close();
 			log.info("Output written to " + vehicleTypeFile);
 		}
-		
+
 	}
 
 	private VehicleType prepareVehicleType(Scenario scenario, String vehicleTypeId, String emissionsConcept) {
@@ -435,8 +449,8 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		Config config = ConfigUtils.createConfig();
 		config.vehicles().setVehiclesFile(runDirectory + runId + ".output_allVehicles.xml.gz");
 		config.network().setInputFile(runDirectory + runId + ".output_network.xml.gz");
-		config.transit().setTransitScheduleFile(runDirectory + runId + ".output_transitSchedule.xml.gz");
-		config.transit().setVehiclesFile(runDirectory + runId + ".output_transitVehicles.xml.gz");
+//		config.transit().setTransitScheduleFile(runDirectory + runId + ".output_transitSchedule.xml.gz");
+//		config.transit().setVehiclesFile(runDirectory + runId + ".output_transitVehicles.xml.gz");
 		config.global().setCoordinateSystem("GK4");
 		config.plans().setInputFile(null);
 		config.parallelEventHandling().setNumberOfThreads(null);
