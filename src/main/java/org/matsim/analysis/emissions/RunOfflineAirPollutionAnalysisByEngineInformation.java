@@ -23,10 +23,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -137,16 +134,16 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		assignHBEFARoadTypeToNetwork(scenario);
 
 		// combustion vehicles
-		VehicleType petrolCarVehicleType = prepareVehicleType(scenario, "petrolCar", "petrol (4S)");
-		VehicleType dieselCarVehicleType = prepareVehicleType(scenario, "dieselCar", "diesel");
-		VehicleType cngVehicleType = prepareVehicleType(scenario, "cngCar", "bifuel CNG/petrol");
-		VehicleType lpgVehicleType = prepareVehicleType(scenario, "lpgCar", "bifuel LPG/petrol");
+		VehicleType petrolCarVehicleType = prepareVehicleType(scenario, "car_petrol", "petrol (4S)");
+		VehicleType dieselCarVehicleType = prepareVehicleType(scenario, "car_diesel", "diesel");
+		VehicleType cngVehicleType = prepareVehicleType(scenario, "car_cng", "bifuel CNG/petrol");
+		VehicleType lpgVehicleType = prepareVehicleType(scenario, "car_lpg", "bifuel LPG/petrol");
 		// electric vehicles
-		VehicleType electricVehicleType = prepareVehicleType(scenario, "electricCar", "electricity");
+		VehicleType electricVehicleType = prepareVehicleType(scenario, "car_electric", "electricity");
 		// plug-in hybrid petrol vehicles
-		VehicleType pluginHybridPetrolVehicleType = prepareVehicleType(scenario, "pluginHybridPetrol", "Plug-in Hybrid petrol/electric");
+		VehicleType pluginHybridPetrolVehicleType = prepareVehicleType(scenario, "car_pluginHybridPetrol", "Plug-in Hybrid petrol/electric");
 		// plug-in hybrid petrol vehicles
-		VehicleType pluginHybridDieselVehicleType = prepareVehicleType(scenario, "pluginHybridDiesel", "Plug-in Hybrid diesel/electric");
+		VehicleType pluginHybridDieselVehicleType = prepareVehicleType(scenario, "car_pluginHybridDiesel", "Plug-in Hybrid diesel/electric");
 
 
 		//Set all vehicles to NON_HBEFA_VEHICLE and ignore them in the analysis. In the next steps we will assign HBEFA types to the cars.
@@ -232,6 +229,17 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 			}
 		}
 
+		//Count vehicles per Type
+		LinkedHashMap<VehicleType, Integer> numberOfVehiclesPerType = new LinkedHashMap<VehicleType, Integer>();
+		for (Vehicle vehicle : scenario.getVehicles().getVehicles().values()) {
+			numberOfVehiclesPerType.merge(vehicle.getType(), 1, Integer::sum );
+		}
+
+		log.info("Number of vehicles per Type: ");
+		for (VehicleType vehicleType : numberOfVehiclesPerType.keySet()) {
+			log.info(vehicleType.getId().toString() + " : " + numberOfVehiclesPerType.get(vehicleType));
+		}
+
 		//Nun wandle Fahrzeuge zu die ausgewählten Elektrofahrzeugen um
 		{
 			for (Id<Vehicle> id : vehiclesToChangeToElectric) {
@@ -280,12 +288,20 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		log.info("Closing events file...");
 		emissionEventWriter.closeFile();
 
+		log.info("Emission analysis completed.");
+
 		log.info("Total number of vehicles in scenario: " + totalVehiclesCounter);
 		log.info("Number of passenger car vehicles for analysis: " + carVehiclesToChangeToSpecificType.size());
 		log.info("Number of passenger car vehicles that are changed to electric vehicles: " + vehiclesToChangeToElectric.size());
 		log.info("This is NOT the number of all electric cars, since there might be some electric vehicles before changing.");
 
-		log.info("Emission analysis completed.");
+		writeOutput(linkEmissionAnalysisFile, linkEmissionPerMAnalysisFile, vehicleTypeFile, scenario, emissionsEventHandler);
+
+		log.info("### Done. ###");
+
+	}
+
+	private void writeOutput(String linkEmissionAnalysisFile, String linkEmissionPerMAnalysisFile, String vehicleTypeFile, Scenario scenario, EmissionsOnLinkHandler emissionsEventHandler) throws IOException {
 
 		{
 			log.info("Writing output...");
@@ -379,7 +395,6 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 			bw2.close();
 			log.info("Output written to " + vehicleTypeFile);
 		}
-
 	}
 
 	private VehicleType prepareVehicleType(Scenario scenario, String vehicleTypeId, String emissionsConcept) {
@@ -451,7 +466,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		config.network().setInputFile(runDirectory + runId + ".output_network.xml.gz");
 //		config.transit().setTransitScheduleFile(runDirectory + runId + ".output_transitSchedule.xml.gz");
 //		config.transit().setVehiclesFile(runDirectory + runId + ".output_transitVehicles.xml.gz");
-		config.global().setCoordinateSystem("GK4");
+		config.global().setCoordinateSystem("EPSG:31468");
 		config.plans().setInputFile(null);
 		config.parallelEventHandling().setNumberOfThreads(null);
 		config.parallelEventHandling().setEstimatedNumberOfEvents(null);
