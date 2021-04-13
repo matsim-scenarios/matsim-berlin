@@ -125,6 +125,13 @@ public final class RunBerlinScenario {
 
 				//use income-dependent marginal utility of money for scoring
 				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class).in(Singleton.class);
+
+				// set Plantypes to keep the initial selected plan up to the last iteration
+				BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(controler.getConfig(), BerlinExperimentalConfigGroup.class);
+				if (!berlinCfg.getPlanTypeOverwriting().equals(BerlinExperimentalConfigGroup.PlanTypeOverwriting.NO_OVERWRITE)) {
+					PlanTypeOverwriter overwriter = new PlanTypeOverwriter(berlinCfg, scenario.getPopulation());
+					addControlerListenerBinding().toInstance(overwriter);
+				}
 			}
 		} );
 

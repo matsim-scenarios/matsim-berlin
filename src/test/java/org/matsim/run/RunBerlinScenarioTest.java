@@ -18,10 +18,6 @@
  * *********************************************************************** */
 package org.matsim.run;
 
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -30,9 +26,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.population.Person;
-import org.matsim.api.core.v01.population.Plan;
-import org.matsim.api.core.v01.population.Population;
+import org.matsim.api.core.v01.population.*;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
@@ -40,7 +34,10 @@ import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.router.MainModeIdentifierImpl;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
+import org.matsim.core.utils.collections.Tuple;
 import org.matsim.testcases.MatsimTestUtils;
+
+import java.util.*;
 
 /**
  * part 2 of tests for {@link org.matsim.run.RunBerlinScenario}
@@ -132,6 +129,91 @@ public class RunBerlinScenarioTest {
 		} catch ( Exception ee ) {
 			ee.printStackTrace();
 			throw new RuntimeException(ee) ;
+		}
+	}
+
+	@Test
+	public final void testTaggingAndKeepingInitialPlans() {
+		try {
+			final String[] args = {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml"};
+
+			Config config = RunBerlinScenario.prepareConfig(args);
+			// should be enough iterations to exceed 2 new plans per agent (given maximum 3 plans memory per agent)
+			// -> check that the initial plan is not deleted
+			config.controler().setLastIteration(15);
+			config.strategy().setFractionOfIterationsToDisableInnovation(1);
+			config.strategy().setMaxAgentPlanMemorySize(3);
+			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
+			config.controler().setOutputDirectory(utils.getOutputDirectory());
+			config.plans().setInputFile("../../../test/input/test-agents.xml");
+			config.transit().setUsingTransitInMobsim(false); // not relevant for the test, speeds up
+
+			BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
+			berlinCfg.setPlanTypeOverwriting(BerlinExperimentalConfigGroup.PlanTypeOverwriting.TAG_INITIAL_SELECTED_PLAN_AND_MODIFIED_PLANS_DIFFERENTLY);
+
+			Scenario scenario = RunBerlinScenario.prepareScenario(config);
+
+			Map<Id<Person>, List<Tuple<String, Double>>> person2initialPlanModesAndDepartureTimes = new HashMap<>();
+			for (Person person : scenario.getPopulation().getPersons().values()) {
+				Plan selectedPlan = person.getSelectedPlan();
+				List<Tuple<String, Double>> modesAndDepartureTimes = new ArrayList<>();
+				for (PlanElement planElement : selectedPlan.getPlanElements()) {
+					if (planElement instanceof Leg) {
+						Leg leg = (Leg) planElement;
+						modesAndDepartureTimes.add(new Tuple(leg.getMode(), leg.getDepartureTime()));
+					}
+				}
+				person2initialPlanModesAndDepartureTimes.put(person.getId(), modesAndDepartureTimes);
+			}
+
+			Controler controler = RunBerlinScenario.prepareControler(scenario);
+
+			controler.run();
+
+			for (Person person : scenario.getPopulation().getPersons().values()) {
+				int countInitialPlans = 0;
+				Plan initialPlan = null;
+				for (Plan plan : person.getPlans()) {
+					if (plan.getType().equals(PlanTypeOverwriter.initialPlanType)) {
+						countInitialPlans++;
+						initialPlan = plan;
+					}
+				}
+				Assert.assertEquals("Found " + countInitialPlans + " plans of type " +
+								PlanTypeOverwriter.initialPlanType + " for person " + person.getId().toString() +
+								" but should be exactly one plan of that type.",
+						1, countInitialPlans);
+
+				/*
+				 * Check the initial plan is really the initial plan we read in before iteration 0. This might give false alarms if
+				 * legs are routed or otherwise added in PrepareForSim step or similar. We do not compare routes or
+				 * activities, this might be added later.
+				 */
+				int legCounter = 0;
+				List<Tuple<String, Double>> initialModesAndDepartureTimes = person2initialPlanModesAndDepartureTimes.get(person.getId());
+				for (PlanElement planElement : initialPlan.getPlanElements()) {
+					if (planElement instanceof Leg) {
+						Leg leg = (Leg) planElement;
+						Assert.assertEquals("Initial plan read in in iteration 0 has different leg mode at " +
+										legCounter + "th leg than plan marked initial at the last iteration for person " +
+										person.getId().toString(),
+								initialModesAndDepartureTimes.get(legCounter).getFirst(), leg.getMode());
+						Assert.assertEquals("Initial plan read in in iteration 0 has different leg departure time at " +
+										legCounter + "th leg than plan marked initial at the last iteration for person " +
+										person.getId().toString(),
+								initialModesAndDepartureTimes.get(legCounter).getSecond(), leg.getDepartureTime());
+						legCounter++;
+					}
+				}
+			}
+
+			log.info("Done with testTaggingAndKeepingInitialPlans");
+			log.info("");
+
+
+		} catch (Exception ee) {
+			ee.printStackTrace();
+			throw new RuntimeException(ee);
 		}
 	}
 	

@@ -35,6 +35,9 @@ public class BerlinExperimentalConfigGroup extends ReflectiveConfigGroup {
 
     private static final String POPULATION_DOWNSAMPLE_FACTOR = "populationDownsampleFactor";
     private static final String TAG_DRT_LINKS_BUFFER_AROUND_SERVICE_AREA_SHP = "tagDrtLinksBufferAroundServiceAreaShp";
+    private static final String PLAN_TYPE_OVERWRITING = "planTypeOverwriting";
+
+    enum PlanTypeOverwriting {NO_OVERWRITE, TAG_INITIAL_SELECTED_PLAN_AND_MODIFIED_PLANS_DIFFERENTLY};
 	
 	public BerlinExperimentalConfigGroup() {
 		super(GROUP_NAME);
@@ -46,6 +49,7 @@ public class BerlinExperimentalConfigGroup extends ReflectiveConfigGroup {
 	
 	private double populationDownsampleFactor = 1.0;
     private double tagDrtLinksBufferAroundServiceAreaShp = 2000.0;
+    private PlanTypeOverwriting planTypeOverwriting = PlanTypeOverwriting.NO_OVERWRITE;
 	
     @StringGetter(POPULATION_DOWNSAMPLE_FACTOR)
     public double getPopulationDownsampleFactor() {
@@ -65,6 +69,16 @@ public class BerlinExperimentalConfigGroup extends ReflectiveConfigGroup {
     @StringSetter(TAG_DRT_LINKS_BUFFER_AROUND_SERVICE_AREA_SHP)
     public void setTagDrtLinksBufferAroundServiceAreaShp(double tagDrtLinksBufferAroundServiceAreaShp) {
         this.tagDrtLinksBufferAroundServiceAreaShp = tagDrtLinksBufferAroundServiceAreaShp;
+    }
+
+    @StringGetter(PLAN_TYPE_OVERWRITING)
+    public PlanTypeOverwriting getPlanTypeOverwriting () {
+        return planTypeOverwriting;
+    }
+
+    @StringSetter(PLAN_TYPE_OVERWRITING)
+    public void setPlanTypeOverwriting (PlanTypeOverwriting planTypeOverwriting) {
+        this.planTypeOverwriting = planTypeOverwriting;
     }
 			
 }
