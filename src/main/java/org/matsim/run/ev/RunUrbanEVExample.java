@@ -30,6 +30,7 @@ import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.PlansCalcRouteConfigGroup;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.urbanEV.UrbanEVConfigGroup;
 import org.matsim.urbanEV.UrbanEVModule;
 import org.matsim.urbanEV.UrbanVehicleChargingHandler;
 
@@ -63,6 +64,9 @@ public class RunUrbanEVExample {
 	}
 
 	public static void prepareConfig(Config config) {
+		UrbanEVConfigGroup evReplanningCfg = new UrbanEVConfigGroup();
+		config.addModule(evReplanningCfg);
+
 		//TODO actually, should also work with all AccessEgressTypes but we have to check (write JUnit test)
 		config.plansCalcRoute().setAccessEgressType(PlansCalcRouteConfigGroup.AccessEgressType.none);
 
