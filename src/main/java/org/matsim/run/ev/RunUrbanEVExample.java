@@ -70,7 +70,7 @@ public class RunUrbanEVExample {
 		Controler controler = new Controler(scenario);
 		//plug in UrbanEVModule
 		//TODO Test activities while charging
-		controler.addOverridingModule(new UrbanEVModule(new ActivityWhileChargingFinder(possibleWhileCharging)));
+		controler.addOverridingModule(new UrbanEVModule());
 		//register EV qsim components
 		controler.configureQSimComponents(components -> components.addNamedComponent(EvModule.EV_COMPONENT));
 		return controler;
