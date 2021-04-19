@@ -25,6 +25,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
+import jdk.jshell.spi.ExecutionControl;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -79,7 +80,8 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		distanceFromCenterDesx: Nach Entfernung vom Stadtzentrum (Home-locations -- Beeline): je weiter weg um so eher elektro. --> Idee ist dies gewichtet nach der Entfernung zu machen,
 							damit nicht nur Elektrofahrzeuge am Stadtrand, sondern auch in (wohlhabenden) Innenstadtgegenden das sind.
 	 */
-	private enum electrificationStrategy {none, random, mileageDrivenIncreasing, tripDistanceIncreasing, popDensityIncreasing, distanceFromCenterDesc};
+	private enum ElectrificationStrategy {none, random, mileageDrivenIncreasing, tripDistanceIncreasing, popDensityIncreasing, distanceFromCenterDesc};
+	private final ElectrificationStrategy electrificationStrategy = ElectrificationStrategy.none;
 
 	public RunOfflineAirPollutionAnalysisByEngineInformation(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
 		this.runDirectory = runDirectory;
@@ -155,6 +157,8 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 
 		List<Id<Vehicle>> vehiclesToChangeToElectric = new ArrayList<>();
 		List<Id<Vehicle>> carVehiclesToChangeToSpecificType = new ArrayList<>();
+		List<Id<Vehicle>> carNonElectricType = new ArrayList<>();
+		List<Id<Vehicle>> carElectricType = new ArrayList<>();
 
 		final Random rnd = MatsimRandom.getLocalInstance();
 		int totalVehiclesCounter = 0;
@@ -177,9 +181,6 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 
 					carVehiclesToChangeToSpecificType.add(vehicle.getId());
 
-					if (rnd.nextDouble() < shareOfPrivateVehiclesChangedToElectric) {
-						vehiclesToChangeToElectric.add(vehicle.getId());
-					}
 				} else {
 					// ignore all other vehicles
 				}
@@ -203,24 +204,31 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 				if (rndNumber < petrolShare) {
 					// petrol
 					vehicleType = petrolCarVehicleType;
+					carNonElectricType.add(id);
 				} else if (rndNumber >= petrolShare && rndNumber < petrolShare + dieselShare) {
 					// diesel
 					vehicleType = dieselCarVehicleType;
+					carNonElectricType.add(id);
 				} else if (rndNumber >= petrolShare + dieselShare && rndNumber < petrolShare + dieselShare + lpgShare) {
 					// lpg
 					vehicleType = lpgVehicleType;
+					carNonElectricType.add(id);
 				} else if (rndNumber >= petrolShare + dieselShare + lpgShare && rndNumber < petrolShare + dieselShare + lpgShare + cngShare) {
 					// cng
 					vehicleType = cngVehicleType;
+					carNonElectricType.add(id);
 				} else if (rndNumber >= petrolShare + dieselShare + lpgShare + cngShare && rndNumber < petrolShare + dieselShare + lpgShare + cngShare + hybridPetrolShare) {
 					// hybrid petrol
 					vehicleType = pluginHybridPetrolVehicleType;
+					carNonElectricType.add(id);
 				} else if (rndNumber >= petrolShare + dieselShare + lpgShare + cngShare + hybridPetrolShare && rndNumber < petrolShare + dieselShare + lpgShare + cngShare + hybridPetrolShare + hybridDieselShare) {
 					// hybrid diesel
 					vehicleType = pluginHybridDieselVehicleType;
+					carNonElectricType.add(id);
 				} else {
 					// electric
 					vehicleType = electricVehicleType;
+					carElectricType.add(id);
 				}
 
 				Vehicle vehicleNew = scenario.getVehicles().getFactory().createVehicle(id, vehicleType);
@@ -232,12 +240,43 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		//Count vehicles per Type
 		LinkedHashMap<VehicleType, Integer> numberOfVehiclesPerType = new LinkedHashMap<VehicleType, Integer>();
 		for (Vehicle vehicle : scenario.getVehicles().getVehicles().values()) {
-			numberOfVehiclesPerType.merge(vehicle.getType(), 1, Integer::sum );
+			numberOfVehiclesPerType.merge(vehicle.getType(), 1, Integer::sum);
 		}
 
 		log.info("Number of vehicles per Type: ");
 		for (VehicleType vehicleType : numberOfVehiclesPerType.keySet()) {
 			log.info(vehicleType.getId().toString() + " : " + numberOfVehiclesPerType.get(vehicleType));
+		}
+
+		//Define vehicle that has to be changed to electric - dependend of the Stateg<
+		{
+			for (Id<Vehicle> vehicleId : carNonElectricType) {
+
+				switch (electrificationStrategy) {
+					case none:
+						//do nothing
+						break;
+					case random:
+						if (rnd.nextDouble() < shareOfPrivateVehiclesChangedToElectric) { // Todo: Noch einbeziehen, dass es am ende 50% anteil seien soll.
+							vehiclesToChangeToElectric.add(vehicleId);
+						}
+						break;
+					case mileageDrivenIncreasing:
+						throw new RuntimeException("Strategy not implemented: " + electrificationStrategy);
+						//break;
+					case tripDistanceIncreasing:
+						throw new RuntimeException("Strategy not implemented: " + electrificationStrategy);
+						//break;
+					case popDensityIncreasing:
+						throw new RuntimeException("Strategy not implemented: " + electrificationStrategy);
+						//break;
+					case distanceFromCenterDesc:
+						throw new RuntimeException("Strategy not implemented: " + electrificationStrategy);
+						//break;
+					default:
+						throw new IllegalStateException("Unexpected value: " + electrificationStrategy);
+				}
+			}
 		}
 
 		//Nun wandle Fahrzeuge zu die ausgewählten Elektrofahrzeugen um
