@@ -25,11 +25,17 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
-import jdk.jshell.spi.ExecutionControl;
+import org.apache.commons.math3.distribution.EnumeratedDistribution;
+import org.apache.commons.math3.util.Pair;
 import org.apache.log4j.Logger;
+import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Activity;
+import org.matsim.api.core.v01.population.Leg;
+import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.contrib.emissions.EmissionModule;
 import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.Pollutant;
@@ -46,7 +52,9 @@ import org.matsim.core.events.EventsUtils;
 import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.events.algorithms.EventWriterXML;
 import org.matsim.core.gbl.MatsimRandom;
+import org.matsim.core.population.io.PopulationReader;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.vehicles.EngineInformation;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
@@ -67,7 +75,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 	private final String hbefaColdFile;
 	private final String analysisOutputDirectory;
 
-	private final static double shareOfPrivateVehiclesChangedToElectric = 0.0; // in addition to electric vehicle share in the reference case!
+	private final static double shareOfPrivateElectricVehicles = 0.50; // in total. if this number is below the number f electric vehicles in base scenario, nothing will happen
 
 	/*
 		Auswahl des Analyse-Runs für die Elktrifizierung der Autos - Ziel ist immer, dass man so viele elektrifiziert, bis 50% der Autos elektrisch sind:
@@ -81,7 +89,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 							damit nicht nur Elektrofahrzeuge am Stadtrand, sondern auch in (wohlhabenden) Innenstadtgegenden das sind.
 	 */
 	private enum ElectrificationStrategy {none, random, mileageDrivenIncreasing, tripDistanceIncreasing, popDensityIncreasing, distanceFromCenterDesc};
-	private final ElectrificationStrategy electrificationStrategy = ElectrificationStrategy.none;
+	private static final ElectrificationStrategy electrificationStrategy = ElectrificationStrategy.distanceFromCenterDesc;
 
 	public RunOfflineAirPollutionAnalysisByEngineInformation(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
 		this.runDirectory = runDirectory;
@@ -110,7 +118,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 					runId,
 					rootDirectory + hbefaFileWarm,
 					rootDirectory + hbefaFileCold,
-					rootDirectory + runDirectory + "emission-analysis-hbefa-v4.1");
+					rootDirectory + runDirectory + "emission-analysis-hbefa-v4.1_" + electrificationStrategy.name());
 			analysis.run();
 
 		} else {
@@ -237,6 +245,148 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 			}
 		}
 
+		writeCountsPerVehicleType(scenario);
+
+		//Define vehicle that has to be changed to electric - dependend of the Stategy
+		{
+			final int totalNumberOfVehicles = (carNonElectricType.size() + carElectricType.size());
+			final int numberVehiclesSwitchToElectric = (int) Math.round( totalNumberOfVehicles * shareOfPrivateElectricVehicles) - carElectricType.size();
+
+			switch (electrificationStrategy) {
+				case none:
+					//do nothing
+					break;
+				case random:
+					final List<Id<Vehicle>> carNonElectricType2 = new ArrayList<>(carNonElectricType); 	//List for shuffeling and getting the first n (=numberVehiclesSwitchToElectric) objects.
+					Collections.shuffle(carNonElectricType2, MatsimRandom.getLocalInstance());
+					vehiclesToChangeToElectric = carNonElectricType2.subList(0, numberVehiclesSwitchToElectric -1);
+					break;
+				case mileageDrivenIncreasing:
+					throw new RuntimeException("Strategy not implemented: " + electrificationStrategy);
+					//break;
+				case tripDistanceIncreasing:
+					throw new RuntimeException("Strategy not implemented: " + electrificationStrategy);
+					//break;
+				case popDensityIncreasing:
+					throw new RuntimeException("Strategy not implemented: " + electrificationStrategy);
+					//break;
+				case distanceFromCenterDesc:
+					//Load Population:
+					new PopulationReader(scenario).readFile(runDirectory + "../input/berlin-v5.5-10pct.plans.xml.gz");
+
+					log.info("Getting persons' home coordinates...");
+					final Map<Id<Person>, Coord> personId2homeCoord = new HashMap<>();
+					for (Person person : scenario.getPopulation().getPersons().values()) {
+						boolean foundHome = false;
+						for (PlanElement planElement : person.getSelectedPlan().getPlanElements()) {
+							if (planElement instanceof Activity){
+								Activity act = (Activity) planElement;
+								if (act.getType().startsWith("home") && foundHome == false) {
+									personId2homeCoord.put(person.getId(), act.getCoord());
+									foundHome = true;
+								}
+							}
+						}
+					}
+					if (personId2homeCoord.isEmpty()) {
+						log.warn("No person with home activity.");
+						break;
+					}
+
+					log.info("Getting persons' home coordinates... Done.");
+					log.info("Calculate Distance Home location from Berlin City Center");
+					final Map<Id<Person>, Double> personId2DistanceFromCenter = new HashMap<>();
+					for (Id<Person> personId :personId2homeCoord.keySet()){
+						//Calculate BeelineDistance from CityCenter //TODO Cont. here
+						Coord berlinCenterCoord = CoordUtils.createCoord(4595453.826028743,5819787.277826164);
+						double distance = CoordUtils.calcEuclideanDistance(personId2homeCoord.get(personId), berlinCenterCoord);
+						personId2DistanceFromCenter.put(personId, distance);
+					}
+
+					//Ziehe zufällig Anzahl der Fahrzeuge aus der Liste
+					List<Pair> vehicleId2DistanceFromCenter = new ArrayList<>();
+					for (Id<Vehicle> vehicleId : carNonElectricType) {
+						vehicleId2DistanceFromCenter.add(new Pair(vehicleId.toString(), personId2DistanceFromCenter.get(Id.createPersonId(vehicleId.toString()))));
+					}
+					log.info("# of non-electric Vehicles: " + carNonElectricType.size() + " ; Map vehicleId2DistanceFromCenter.size: " + vehicleId2DistanceFromCenter.size() );
+					List listOfExtractedVehicleIds = Arrays.asList(new EnumeratedDistribution(vehicleId2DistanceFromCenter).sample(numberVehiclesSwitchToElectric));
+					for (Object vehIdString : listOfExtractedVehicleIds) {
+						vehiclesToChangeToElectric.add(Id.createVehicleId(vehIdString.toString()));
+					}
+					break;
+				default:
+					throw new IllegalStateException("Unexpected value: " + electrificationStrategy);
+			}
+			log.info("# of vehicles that should be  change to electric: " + numberVehiclesSwitchToElectric);
+			log.info("# of vehicles that are planned for change to electric: " + vehiclesToChangeToElectric.size());
+		}
+
+
+
+//		//Nun wandle Fahrzeuge zu die ausgewählten Elektrofahrzeugen um
+//		{
+//			for (Id<Vehicle> id : vehiclesToChangeToElectric) {
+//				scenario.getVehicles().removeVehicle(id);
+//				Vehicle vehicleNew = scenario.getVehicles().getFactory().createVehicle(id, electricVehicleType);
+//				scenario.getVehicles().addVehicle(vehicleNew);
+//				log.info("Type for vehicle " + id + " changed to electric.");
+//			}
+//		}
+
+
+		// the following is copy paste from the example...
+
+//		log.info("Start emission analysis");
+//
+//		EventsManager eventsManager = EventsUtils.createEventsManager();
+//
+//		AbstractModule module = new AbstractModule(){
+//			@Override
+//			public void install(){
+//				bind( Scenario.class ).toInstance( scenario );
+//				bind( EventsManager.class ).toInstance( eventsManager );
+//				bind( EmissionModule.class ) ;
+//			}
+//		};
+//
+//		com.google.inject.Injector injector = Injector.createInjector(config, module);
+//
+//		EmissionModule emissionModule = injector.getInstance(EmissionModule.class);
+//
+//		EventWriterXML emissionEventWriter = new EventWriterXML(emissionEventOutputFile);
+//		emissionModule.getEmissionEventsManager().addHandler(emissionEventWriter);
+//
+//		EmissionsOnLinkHandler emissionsEventHandler = new EmissionsOnLinkHandler();
+//		eventsManager.addHandler(emissionsEventHandler);
+//
+//		eventsManager.initProcessing();
+//
+//		MatsimEventsReader matsimEventsReader = new MatsimEventsReader(eventsManager);
+//		matsimEventsReader.readFile(eventsFile);
+//
+//		log.info("Done reading the events file.");
+//		log.info("Finish processing...");
+//		eventsManager.finishProcessing();
+//
+//		log.info("Closing events file...");
+//		emissionEventWriter.closeFile();
+//
+//		log.info("Emission analysis completed.");
+//
+//		log.info("Total number of vehicles in scenario: " + totalVehiclesCounter);
+//		log.info("Number of passenger car vehicles for analysis: " + carVehiclesToChangeToSpecificType.size());
+//		log.info("Number of passenger car vehicles that has been changed to electric vehicles: " + vehiclesToChangeToElectric.size());
+//		log.info("This is NOT the number of all electric cars, since there might be some electric vehicles before changing.");
+//
+//		writeCountsPerVehicleType(scenario);
+//
+//		writeOutput(linkEmissionAnalysisFile, linkEmissionPerMAnalysisFile, vehicleTypeFile, scenario, emissionsEventHandler);
+
+		log.info("### Done. ###");
+
+	}
+
+	private void writeCountsPerVehicleType(Scenario scenario) {
 		//Count vehicles per Type
 		LinkedHashMap<VehicleType, Integer> numberOfVehiclesPerType = new LinkedHashMap<VehicleType, Integer>();
 		for (Vehicle vehicle : scenario.getVehicles().getVehicles().values()) {
@@ -247,97 +397,6 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		for (VehicleType vehicleType : numberOfVehiclesPerType.keySet()) {
 			log.info(vehicleType.getId().toString() + " : " + numberOfVehiclesPerType.get(vehicleType));
 		}
-
-		//Define vehicle that has to be changed to electric - dependend of the Stateg<
-		{
-			for (Id<Vehicle> vehicleId : carNonElectricType) {
-
-				switch (electrificationStrategy) {
-					case none:
-						//do nothing
-						break;
-					case random:
-						if (rnd.nextDouble() < shareOfPrivateVehiclesChangedToElectric) { // Todo: Noch einbeziehen, dass es am ende 50% anteil seien soll.
-							vehiclesToChangeToElectric.add(vehicleId);
-						}
-						break;
-					case mileageDrivenIncreasing:
-						throw new RuntimeException("Strategy not implemented: " + electrificationStrategy);
-						//break;
-					case tripDistanceIncreasing:
-						throw new RuntimeException("Strategy not implemented: " + electrificationStrategy);
-						//break;
-					case popDensityIncreasing:
-						throw new RuntimeException("Strategy not implemented: " + electrificationStrategy);
-						//break;
-					case distanceFromCenterDesc:
-						throw new RuntimeException("Strategy not implemented: " + electrificationStrategy);
-						//break;
-					default:
-						throw new IllegalStateException("Unexpected value: " + electrificationStrategy);
-				}
-			}
-		}
-
-		//Nun wandle Fahrzeuge zu die ausgewählten Elektrofahrzeugen um
-		{
-			for (Id<Vehicle> id : vehiclesToChangeToElectric) {
-				scenario.getVehicles().removeVehicle(id);
-				Vehicle vehicleNew = scenario.getVehicles().getFactory().createVehicle(id, electricVehicleType);
-				scenario.getVehicles().addVehicle(vehicleNew);
-				log.info("Type for vehicle " + id + " changed to electric.");
-			}
-		}
-
-
-		// the following is copy paste from the example...
-
-		log.info("Start emission analysis");
-
-		EventsManager eventsManager = EventsUtils.createEventsManager();
-
-		AbstractModule module = new AbstractModule(){
-			@Override
-			public void install(){
-				bind( Scenario.class ).toInstance( scenario );
-				bind( EventsManager.class ).toInstance( eventsManager );
-				bind( EmissionModule.class ) ;
-			}
-		};
-
-		com.google.inject.Injector injector = Injector.createInjector(config, module);
-
-		EmissionModule emissionModule = injector.getInstance(EmissionModule.class);
-
-		EventWriterXML emissionEventWriter = new EventWriterXML(emissionEventOutputFile);
-		emissionModule.getEmissionEventsManager().addHandler(emissionEventWriter);
-
-		EmissionsOnLinkHandler emissionsEventHandler = new EmissionsOnLinkHandler();
-		eventsManager.addHandler(emissionsEventHandler);
-
-		eventsManager.initProcessing();
-
-		MatsimEventsReader matsimEventsReader = new MatsimEventsReader(eventsManager);
-		matsimEventsReader.readFile(eventsFile);
-
-		log.info("Done reading the events file.");
-		log.info("Finish processing...");
-		eventsManager.finishProcessing();
-
-		log.info("Closing events file...");
-		emissionEventWriter.closeFile();
-
-		log.info("Emission analysis completed.");
-
-		log.info("Total number of vehicles in scenario: " + totalVehiclesCounter);
-		log.info("Number of passenger car vehicles for analysis: " + carVehiclesToChangeToSpecificType.size());
-		log.info("Number of passenger car vehicles that are changed to electric vehicles: " + vehiclesToChangeToElectric.size());
-		log.info("This is NOT the number of all electric cars, since there might be some electric vehicles before changing.");
-
-		writeOutput(linkEmissionAnalysisFile, linkEmissionPerMAnalysisFile, vehicleTypeFile, scenario, emissionsEventHandler);
-
-		log.info("### Done. ###");
-
 	}
 
 	private void writeOutput(String linkEmissionAnalysisFile, String linkEmissionPerMAnalysisFile, String vehicleTypeFile, Scenario scenario, EmissionsOnLinkHandler emissionsEventHandler) throws IOException {
@@ -506,7 +565,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 //		config.transit().setTransitScheduleFile(runDirectory + runId + ".output_transitSchedule.xml.gz");
 //		config.transit().setVehiclesFile(runDirectory + runId + ".output_transitVehicles.xml.gz");
 		config.global().setCoordinateSystem("EPSG:31468");
-		config.plans().setInputFile(null);
+//		config.plans().setInputFile(runDirectory + runId + ".output_plans.xml.gz");
 		config.parallelEventHandling().setNumberOfThreads(null);
 		config.parallelEventHandling().setEstimatedNumberOfEvents(null);
 		config.global().setNumberOfThreads(1);
