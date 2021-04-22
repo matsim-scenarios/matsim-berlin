@@ -9,9 +9,15 @@
 	<name>MATSim Open Berlin scenario project</name>
 	<description>MATSim Open Berlin scenario project</description>
 
-	<properties>
-		<!--		<matsim.version>13.0-SNAPSHOT</matsim.version>-->
-		<matsim.version>13.0-2021w14-SNAPSHOT</matsim.version>
+	<properties>		
+		<!-- release -->
+		<!--<matsim.version>13.0</matsim.version>-->
+
+		<!-- PR-labelled release -->
+		<matsim.version>14.0-PR1452</matsim.version>
+
+		<!-- snapshot == not recommended: rather use PR-labelled release!-->
+		<!--<matsim.version>14.0-SNAPSHOT</matsim.version>-->
 	</properties>
 
 	<repositories>
@@ -19,7 +25,7 @@
 		<!-- Repository for MATSim releases (MATSim is not on Maven central) -->
 		<repository>
 			<id>matsim</id>
-			<url>https://dl.bintray.com/matsim/matsim</url>
+			<url>https://repo.matsim.org/repository/matsim</url>
 		</repository>
 
 		<repository>
