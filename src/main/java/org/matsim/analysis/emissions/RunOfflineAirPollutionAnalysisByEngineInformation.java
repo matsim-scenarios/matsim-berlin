@@ -89,7 +89,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 							damit nicht nur Elektrofahrzeuge am Stadtrand, sondern auch in (wohlhabenden) Innenstadtgegenden das sind.
 	 */
 	private enum ElectrificationStrategy {none, random, mileageDrivenIncreasing, tripDistanceIncreasing, popDensityIncreasing, distanceFromCenterDesc};
-	private static final ElectrificationStrategy electrificationStrategy = ElectrificationStrategy.distanceFromCenterDesc;
+	private static final ElectrificationStrategy electrificationStrategy = ElectrificationStrategy.none;
 
 	public RunOfflineAirPollutionAnalysisByEngineInformation(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
 		this.runDirectory = runDirectory;
@@ -323,64 +323,64 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 
 
 
-//		//Nun wandle Fahrzeuge zu die ausgewählten Elektrofahrzeugen um
-//		{
-//			for (Id<Vehicle> id : vehiclesToChangeToElectric) {
-//				scenario.getVehicles().removeVehicle(id);
-//				Vehicle vehicleNew = scenario.getVehicles().getFactory().createVehicle(id, electricVehicleType);
-//				scenario.getVehicles().addVehicle(vehicleNew);
-//				log.info("Type for vehicle " + id + " changed to electric.");
-//			}
-//		}
+		//Nun wandle Fahrzeuge zu die ausgewählten Elektrofahrzeugen um
+		{
+			for (Id<Vehicle> id : vehiclesToChangeToElectric) {
+				scenario.getVehicles().removeVehicle(id);
+				Vehicle vehicleNew = scenario.getVehicles().getFactory().createVehicle(id, electricVehicleType);
+				scenario.getVehicles().addVehicle(vehicleNew);
+				log.info("Type for vehicle " + id + " changed to electric.");
+			}
+		}
 
 
 		// the following is copy paste from the example...
 
-//		log.info("Start emission analysis");
-//
-//		EventsManager eventsManager = EventsUtils.createEventsManager();
-//
-//		AbstractModule module = new AbstractModule(){
-//			@Override
-//			public void install(){
-//				bind( Scenario.class ).toInstance( scenario );
-//				bind( EventsManager.class ).toInstance( eventsManager );
-//				bind( EmissionModule.class ) ;
-//			}
-//		};
-//
-//		com.google.inject.Injector injector = Injector.createInjector(config, module);
-//
-//		EmissionModule emissionModule = injector.getInstance(EmissionModule.class);
-//
-//		EventWriterXML emissionEventWriter = new EventWriterXML(emissionEventOutputFile);
-//		emissionModule.getEmissionEventsManager().addHandler(emissionEventWriter);
-//
-//		EmissionsOnLinkHandler emissionsEventHandler = new EmissionsOnLinkHandler();
-//		eventsManager.addHandler(emissionsEventHandler);
-//
-//		eventsManager.initProcessing();
-//
-//		MatsimEventsReader matsimEventsReader = new MatsimEventsReader(eventsManager);
-//		matsimEventsReader.readFile(eventsFile);
-//
-//		log.info("Done reading the events file.");
-//		log.info("Finish processing...");
-//		eventsManager.finishProcessing();
-//
-//		log.info("Closing events file...");
-//		emissionEventWriter.closeFile();
-//
-//		log.info("Emission analysis completed.");
-//
-//		log.info("Total number of vehicles in scenario: " + totalVehiclesCounter);
-//		log.info("Number of passenger car vehicles for analysis: " + carVehiclesToChangeToSpecificType.size());
-//		log.info("Number of passenger car vehicles that has been changed to electric vehicles: " + vehiclesToChangeToElectric.size());
-//		log.info("This is NOT the number of all electric cars, since there might be some electric vehicles before changing.");
-//
-//		writeCountsPerVehicleType(scenario);
-//
-//		writeOutput(linkEmissionAnalysisFile, linkEmissionPerMAnalysisFile, vehicleTypeFile, scenario, emissionsEventHandler);
+		log.info("Start emission analysis");
+
+		EventsManager eventsManager = EventsUtils.createEventsManager();
+
+		AbstractModule module = new AbstractModule(){
+			@Override
+			public void install(){
+				bind( Scenario.class ).toInstance( scenario );
+				bind( EventsManager.class ).toInstance( eventsManager );
+				bind( EmissionModule.class ) ;
+			}
+		};
+
+		com.google.inject.Injector injector = Injector.createInjector(config, module);
+
+		EmissionModule emissionModule = injector.getInstance(EmissionModule.class);
+
+		EventWriterXML emissionEventWriter = new EventWriterXML(emissionEventOutputFile);
+		emissionModule.getEmissionEventsManager().addHandler(emissionEventWriter);
+
+		EmissionsOnLinkHandler emissionsEventHandler = new EmissionsOnLinkHandler();
+		eventsManager.addHandler(emissionsEventHandler);
+
+		eventsManager.initProcessing();
+
+		MatsimEventsReader matsimEventsReader = new MatsimEventsReader(eventsManager);
+		matsimEventsReader.readFile(eventsFile);
+
+		log.info("Done reading the events file.");
+		log.info("Finish processing...");
+		eventsManager.finishProcessing();
+
+		log.info("Closing events file...");
+		emissionEventWriter.closeFile();
+
+		log.info("Emission analysis completed.");
+
+		log.info("Total number of vehicles in scenario: " + totalVehiclesCounter);
+		log.info("Number of passenger car vehicles for analysis: " + carVehiclesToChangeToSpecificType.size());
+		log.info("Number of passenger car vehicles that has been changed to electric vehicles: " + vehiclesToChangeToElectric.size());
+		log.info("This is NOT the number of all electric cars, since there might be some electric vehicles before changing.");
+
+		writeCountsPerVehicleType(scenario);
+
+		writeOutput(linkEmissionAnalysisFile, linkEmissionPerMAnalysisFile, vehicleTypeFile, scenario, emissionsEventHandler);
 
 		log.info("### Done. ###");
 
