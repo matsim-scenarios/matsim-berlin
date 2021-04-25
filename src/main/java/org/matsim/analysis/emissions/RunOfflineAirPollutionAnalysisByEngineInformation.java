@@ -143,6 +143,11 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		Scenario scenario = ScenarioUtils.loadScenario(config);
 		assignHBEFARoadTypeToNetwork(scenario);
 
+		//Set all vehicles to NON_HBEFA_VEHICLE and ignore them in the analysis. In the next steps we will assign HBEFA types to the cars.
+		for (VehicleType vehicleType : scenario.getVehicles().getVehicleTypes().values()) {
+			VehicleUtils.setHbefaVehicleCategory(vehicleType.getEngineInformation(), HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
+		}
+
 		// combustion vehicles
 		VehicleType petrolCarVehicleType = prepareVehicleType(scenario, "car_petrol", "petrol (4S)");
 		VehicleType dieselCarVehicleType = prepareVehicleType(scenario, "car_diesel", "diesel");
@@ -155,11 +160,6 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		// plug-in hybrid petrol vehicles
 		VehicleType pluginHybridDieselVehicleType = prepareVehicleType(scenario, "car_pluginHybridDiesel", "Plug-in Hybrid diesel/electric");
 
-
-		//Set all vehicles to NON_HBEFA_VEHICLE and ignore them in the analysis. In the next steps we will assign HBEFA types to the cars.
-		for (VehicleType vehicleType : scenario.getVehicles().getVehicleTypes().values()) {
-			VehicleUtils.setHbefaVehicleCategory(vehicleType.getEngineInformation(), HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
-		}
 
 		VehicleType defaultCarVehicleType = scenario.getVehicles().getVehicleTypes().get(Id.create("car", VehicleType.class));
 
