@@ -55,6 +55,7 @@ import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.population.io.PopulationReader;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
+import org.matsim.core.utils.io.IOUtils;
 import org.matsim.vehicles.EngineInformation;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
@@ -89,7 +90,10 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 							damit nicht nur Elektrofahrzeuge am Stadtrand, sondern auch in (wohlhabenden) Innenstadtgegenden das sind.
 	 */
 	private enum ElectrificationStrategy {none, random, mileageDrivenIncreasing, tripDistanceIncreasing, popDensityIncreasing, distanceFromCenterDesc};
-	private static final ElectrificationStrategy electrificationStrategy = ElectrificationStrategy.none;
+	private static final ElectrificationStrategy electrificationStrategy = ElectrificationStrategy.distanceFromCenterDesc;
+
+	private enum ScenarioSize {OnePct, TenPct};
+	private static final ScenarioSize scenarioSize = ScenarioSize.OnePct;
 
 	public RunOfflineAirPollutionAnalysisByEngineInformation(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
 		this.runDirectory = runDirectory;
@@ -107,8 +111,24 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 			String rootDirectory = args[0];
 			if (!rootDirectory.endsWith("/")) rootDirectory = rootDirectory + "/";
 
-			final String runDirectory = "public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/output-berlinv5.5/";
-			final String runId = "berlin-v5.5-10pct";
+			final String runDirectory;
+			final String runId;
+
+			switch (scenarioSize) {
+				case OnePct:
+					//1pct
+					runDirectory = "public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/output-berlin-v5.5-1pct/";
+					runId = "berlin-v5.5-1pct-1It";
+					break;
+				case TenPct:
+					//10pct
+					runDirectory = "public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/output-berlinv5.5/";
+					runId = "berlin-v5.5-10pct";
+					break;
+				default:
+					throw new IllegalStateException("Unexpected value: " + scenarioSize);
+			}
+
 
 			final String hbefaFileCold = "shared-svn/projects/matsim-germany/hbefa/hbefa-files/v4.1/EFA_ColdStart_Concept_2020_detailed_perTechAverage_Bln_carOnly.csv";
 			final String hbefaFileWarm = "shared-svn/projects/matsim-germany/hbefa/hbefa-files/v4.1/EFA_HOT_Concept_2020_detailed_perTechAverage_Bln_carOnly.csv";
@@ -245,7 +265,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 			}
 		}
 
-		writeCountsPerVehicleType(scenario);
+		writeCountsPerVehicleType(scenario, "###Statistics base case");
 
 		//Define vehicle that has to be changed to electric - dependend of the Stategy
 		{
@@ -272,7 +292,18 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 					//break;
 				case distanceFromCenterDesc:
 					//Load Population:
-					new PopulationReader(scenario).readFile(runDirectory + "../input/berlin-v5.5-10pct.plans.xml.gz");
+					final String plansFileName;
+					switch (scenarioSize) {
+						case OnePct:
+							plansFileName = runDirectory + "../input/berlin-v5.5-1pct.plans.xml.gz";
+							break;
+						case TenPct:
+							plansFileName = runDirectory + "../input/berlin-v5.5-10pct.plans.xml.gz";
+							break;
+						default:
+							throw new IllegalStateException("Unexpected value: " + scenarioSize);
+					}
+					new PopulationReader(scenario).readFile(plansFileName);
 
 					log.info("Getting persons' home coordinates...");
 					final Map<Id<Person>, Coord> personId2homeCoord = new HashMap<>();
@@ -378,7 +409,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		log.info("Number of passenger car vehicles that has been changed to electric vehicles: " + vehiclesToChangeToElectric.size());
 		log.info("This is NOT the number of all electric cars, since there might be some electric vehicles before changing.");
 
-		writeCountsPerVehicleType(scenario);
+		writeCountsPerVehicleType(scenario, "###Final statistics");
 
 		writeOutput(linkEmissionAnalysisFile, linkEmissionPerMAnalysisFile, vehicleTypeFile, scenario, emissionsEventHandler);
 
@@ -386,17 +417,31 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 
 	}
 
-	private void writeCountsPerVehicleType(Scenario scenario) {
+	private void writeCountsPerVehicleType(Scenario scenario, String infotext) throws IOException {
+		log.info("Writing Number of vehicles per Type");
 		//Count vehicles per Type
 		LinkedHashMap<VehicleType, Integer> numberOfVehiclesPerType = new LinkedHashMap<VehicleType, Integer>();
 		for (Vehicle vehicle : scenario.getVehicles().getVehicles().values()) {
 			numberOfVehiclesPerType.merge(vehicle.getType(), 1, Integer::sum);
 		}
 
-		log.info("Number of vehicles per Type: ");
+		BufferedWriter writer = IOUtils.getBufferedWriter( analysisOutputDirectory + "/vehiclesPerType.txt" );
+
+		log.info(infotext);
+		writer.write(infotext);
+		writer.newLine();
+		final String headline = "Number of vehicles per Type: ";
+		log.info(headline);
+		writer.write(headline);
+		writer.newLine();
+
 		for (VehicleType vehicleType : numberOfVehiclesPerType.keySet()) {
-			log.info(vehicleType.getId().toString() + " : " + numberOfVehiclesPerType.get(vehicleType));
+			final String message = vehicleType.getId().toString() + ": \t \t" + numberOfVehiclesPerType.get(vehicleType);
+			log.info(message);
+			writer.write(message);
 		}
+		writer.newLine();
+		writer.close();
 	}
 
 	private void writeOutput(String linkEmissionAnalysisFile, String linkEmissionPerMAnalysisFile, String vehicleTypeFile, Scenario scenario, EmissionsOnLinkHandler emissionsEventHandler) throws IOException {
