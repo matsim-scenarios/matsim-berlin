@@ -90,7 +90,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 							damit nicht nur Elektrofahrzeuge am Stadtrand, sondern auch in (wohlhabenden) Innenstadtgegenden das sind.
 	 */
 	private enum ElectrificationStrategy {none, random, mileageDrivenIncreasing, tripDistanceIncreasing, popDensityIncreasing, distanceFromCenterDesc};
-	private static final ElectrificationStrategy electrificationStrategy = ElectrificationStrategy.none;
+	private static final ElectrificationStrategy electrificationStrategy = ElectrificationStrategy.distanceFromCenterDesc;
 
 	private enum ScenarioSize {OnePct, TenPct};
 	private static final ScenarioSize scenarioSize = ScenarioSize.OnePct;
@@ -187,10 +187,10 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 
 		VehicleType defaultCarVehicleType = scenario.getVehicles().getVehicleTypes().get(Id.create("car", VehicleType.class));
 
-		List<Id<Vehicle>> vehiclesToChangeToElectric = new ArrayList<>();
-		List<Id<Vehicle>> carVehiclesToChangeToSpecificType = new ArrayList<>();
-		List<Id<Vehicle>> carNonElectricType = new ArrayList<>();
-		List<Id<Vehicle>> carElectricType = new ArrayList<>();
+		Set<Id<Vehicle>> vehiclesToChangeToElectric = new TreeSet<>();
+		Set<Id<Vehicle>> carVehiclesToChangeToSpecificType = new TreeSet<>();
+		Set<Id<Vehicle>> carNonElectricType = new TreeSet<>();
+		Set<Id<Vehicle>> carElectricType = new TreeSet<>();
 
 		final Random rnd = MatsimRandom.getLocalInstance();
 		int totalVehiclesCounter = 0;
@@ -283,7 +283,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 				case random:
 					final List<Id<Vehicle>> carNonElectricType2 = new ArrayList<>(carNonElectricType); 	//List for shuffeling and getting the first n (=numberVehiclesSwitchToElectric) objects.
 					Collections.shuffle(carNonElectricType2, MatsimRandom.getLocalInstance());
-					vehiclesToChangeToElectric = carNonElectricType2.subList(0, numberVehiclesSwitchToElectric -1);
+					vehiclesToChangeToElectric = new HashSet<>(carNonElectricType2.subList(0, numberVehiclesSwitchToElectric -1));
 					break;
 				case mileageDrivenIncreasing:
 					throw new RuntimeException("Strategy not implemented: " + electrificationStrategy);
@@ -344,7 +344,8 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 						vehicleId2DistanceFromCenter.add(new Pair(vehicleId.toString(), personId2DistanceFromCenter.get(Id.createPersonId(vehicleId.toString()))));
 					}
 					log.info("# of non-electric Vehicles: " + carNonElectricType.size() + " ; Map vehicleId2DistanceFromCenter.size: " + vehicleId2DistanceFromCenter.size() );
-					List listOfExtractedVehicleIds = Arrays.asList(new EnumeratedDistribution(vehicleId2DistanceFromCenter).sample(numberVehiclesSwitchToElectric));
+					//TODO: Irgendwo hier passiert was komisches: Die List of ExtractedVehicleIds ist signifikant kleiner als das Sample, was er eigentlich ziehen soll (numberOfVehicleSwitchToElectric.
+					Set listOfExtractedVehicleIds = new HashSet(Arrays.asList(new EnumeratedDistribution(vehicleId2DistanceFromCenter).sample(numberVehiclesSwitchToElectric)));
 					for (Object vehIdString : listOfExtractedVehicleIds) {
 						vehiclesToChangeToElectric.add(Id.createVehicleId(vehIdString.toString()));
 					}
@@ -356,17 +357,18 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 			log.info("# of vehicles that are planned for change to electric: " + vehiclesToChangeToElectric.size());
 		}
 
-
-
 		//Nun wandle Fahrzeuge zu die ausgewählten Elektrofahrzeugen um
 		{
 			for (Id<Vehicle> id : vehiclesToChangeToElectric) {
 				scenario.getVehicles().removeVehicle(id);
-				Vehicle vehicleNew = scenario.getVehicles().getFactory().createVehicle(id, electricVehicleType);
+//				Vehicle vehicleNew = scenario.getVehicles().getFactory().createVehicle(id, electricVehicleType);
+				Vehicle vehicleNew = VehicleUtils.createVehicle(id, electricVehicleType);
 				scenario.getVehicles().addVehicle(vehicleNew);
 				log.debug("Type for vehicle " + id + " changed to electric.");
 			}
 		}
+
+		writeCountsPerVehicleType(scenario, "### Intermediate step: after change to electric, before emission calculation");
 
 		// the following is copy paste from the example...
 
