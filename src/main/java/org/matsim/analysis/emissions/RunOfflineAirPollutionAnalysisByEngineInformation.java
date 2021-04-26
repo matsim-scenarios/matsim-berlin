@@ -90,7 +90,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 							damit nicht nur Elektrofahrzeuge am Stadtrand, sondern auch in (wohlhabenden) Innenstadtgegenden das sind.
 	 */
 	private enum ElectrificationStrategy {none, random, mileageDrivenIncreasing, tripDistanceIncreasing, popDensityIncreasing, distanceFromCenterDesc};
-	private static final ElectrificationStrategy electrificationStrategy = ElectrificationStrategy.distanceFromCenterDesc;
+	private static final ElectrificationStrategy electrificationStrategy = ElectrificationStrategy.none;
 
 	private enum ScenarioSize {OnePct, TenPct};
 	private static final ScenarioSize scenarioSize = ScenarioSize.OnePct;
@@ -151,6 +151,10 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		Config config = prepareConfig();
 
 		File folder = new File(analysisOutputDirectory);
+		if (folder.exists()){
+			log.warn("Deleting existing results in folder ... now: " + folder.toString());
+			IOUtils.deleteDirectoryRecursively(folder.toPath());
+		}
 		folder.mkdirs();
 
 		final String eventsFile = runDirectory + runId + ".output_events.xml.gz";
@@ -261,7 +265,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 
 				Vehicle vehicleNew = scenario.getVehicles().getFactory().createVehicle(id, vehicleType);
 				scenario.getVehicles().addVehicle(vehicleNew);
-				log.info("Type for vehicle " + id + " changed to: " + vehicleType.getId().toString());
+				log.debug("Type for vehicle " + id + " changed to: " + vehicleType.getId().toString());
 			}
 		}
 
@@ -269,8 +273,8 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 
 		//Define vehicle that has to be changed to electric - dependend of the Stategy
 		{
-			final int totalNumberOfVehicles = (carNonElectricType.size() + carElectricType.size());
-			final int numberVehiclesSwitchToElectric = (int) Math.round( totalNumberOfVehicles * shareOfPrivateElectricVehicles) - carElectricType.size();
+			final int totalNumberOfCars = (carNonElectricType.size() + carElectricType.size());
+			final int numberVehiclesSwitchToElectric = (int) Math.round( totalNumberOfCars * shareOfPrivateElectricVehicles) - carElectricType.size();
 
 			switch (electrificationStrategy) {
 				case none:
@@ -360,10 +364,9 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 				scenario.getVehicles().removeVehicle(id);
 				Vehicle vehicleNew = scenario.getVehicles().getFactory().createVehicle(id, electricVehicleType);
 				scenario.getVehicles().addVehicle(vehicleNew);
-				log.info("Type for vehicle " + id + " changed to electric.");
+				log.debug("Type for vehicle " + id + " changed to electric.");
 			}
 		}
-
 
 		// the following is copy paste from the example...
 
@@ -420,13 +423,13 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 	private void writeCountsPerVehicleType(Scenario scenario, String infotext) throws IOException {
 		log.info("Writing Number of vehicles per Type");
 		//Count vehicles per Type
-		LinkedHashMap<VehicleType, Integer> numberOfVehiclesPerType = new LinkedHashMap<VehicleType, Integer>();
+		TreeMap<Id<VehicleType>, Integer> numberOfVehiclesPerType = new TreeMap<>();
 		for (Vehicle vehicle : scenario.getVehicles().getVehicles().values()) {
-			numberOfVehiclesPerType.merge(vehicle.getType(), 1, Integer::sum);
+			Id<VehicleType> vehicleTypeId = vehicle.getType().getId();
+			numberOfVehiclesPerType.merge(vehicleTypeId, 1, Integer::sum);
 		}
 
-		BufferedWriter writer = IOUtils.getBufferedWriter( analysisOutputDirectory + "/vehiclesPerType.txt" );
-
+		BufferedWriter writer = IOUtils.getAppendingBufferedWriter( analysisOutputDirectory + "/vehiclesPerType.txt" );
 		log.info(infotext);
 		writer.write(infotext);
 		writer.newLine();
@@ -435,10 +438,11 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		writer.write(headline);
 		writer.newLine();
 
-		for (VehicleType vehicleType : numberOfVehiclesPerType.keySet()) {
-			final String message = vehicleType.getId().toString() + ": \t \t" + numberOfVehiclesPerType.get(vehicleType);
+		for (Id<VehicleType> vehicleTypeId : numberOfVehiclesPerType.keySet()) {
+			final String message = vehicleTypeId.toString() + ": \t \t" + numberOfVehiclesPerType.get(vehicleTypeId);
 			log.info(message);
 			writer.write(message);
+			writer.newLine();
 		}
 		writer.newLine();
 		writer.close();
