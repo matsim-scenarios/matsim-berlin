@@ -30,10 +30,10 @@ import org.apache.commons.math3.util.Pair;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.IdMap;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Activity;
-import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.contrib.emissions.EmissionModule;
@@ -93,7 +93,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 	private static final ElectrificationStrategy electrificationStrategy = ElectrificationStrategy.distanceFromCenterDesc;
 
 	private enum ScenarioSize {OnePct, TenPct};
-	private static final ScenarioSize scenarioSize = ScenarioSize.OnePct;
+	private static final ScenarioSize scenarioSize = ScenarioSize.TenPct;
 
 	public RunOfflineAirPollutionAnalysisByEngineInformation(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
 		this.runDirectory = runDirectory;
@@ -283,7 +283,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 				case random:
 					final List<Id<Vehicle>> carNonElectricType2 = new ArrayList<>(carNonElectricType); 	//List for shuffeling and getting the first n (=numberVehiclesSwitchToElectric) objects.
 					Collections.shuffle(carNonElectricType2, MatsimRandom.getLocalInstance());
-					vehiclesToChangeToElectric = new HashSet<>(carNonElectricType2.subList(0, numberVehiclesSwitchToElectric -1));
+					vehiclesToChangeToElectric = new TreeSet<>(carNonElectricType2.subList(0, numberVehiclesSwitchToElectric -1));
 					break;
 				case mileageDrivenIncreasing:
 					throw new RuntimeException("Strategy not implemented: " + electrificationStrategy);
@@ -339,15 +339,30 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 					}
 
 					//Ziehe zufällig Anzahl der Fahrzeuge aus der Liste
-					List<Pair> vehicleId2DistanceFromCenter = new ArrayList<>();
+					Map<Id<Vehicle>, Pair> vehicleId2DistanceFromCenter = new LinkedHashMap<>();
 					for (Id<Vehicle> vehicleId : carNonElectricType) {
-						vehicleId2DistanceFromCenter.add(new Pair(vehicleId.toString(), personId2DistanceFromCenter.get(Id.createPersonId(vehicleId.toString()))));
+						vehicleId2DistanceFromCenter.put(vehicleId, new Pair(vehicleId.toString(), personId2DistanceFromCenter.get(Id.createPersonId(vehicleId.toString()))));
 					}
 					log.info("# of non-electric Vehicles: " + carNonElectricType.size() + " ; Map vehicleId2DistanceFromCenter.size: " + vehicleId2DistanceFromCenter.size() );
-					//TODO: Irgendwo hier passiert was komisches: Die List of ExtractedVehicleIds ist signifikant kleiner als das Sample, was er eigentlich ziehen soll (numberOfVehicleSwitchToElectric.
-					Set listOfExtractedVehicleIds = new HashSet(Arrays.asList(new EnumeratedDistribution(vehicleId2DistanceFromCenter).sample(numberVehiclesSwitchToElectric)));
+					//TODO: Ziehung ist nun repariert, aber für das 1ßpct Szenario viel zu langsma (muss fast 400k Fahrzeuge behandeln) --> Hier ist sicherlich noch richtig optimierungspotenzial drin
+					// TODO (und vermutlich auch noch etwas was die Lösung "besser" macht), wenn man sich nur auf die tatsächlich in den Events vorkommenden Fahrzeuge stürzt
+					//  --> Das müsste man irgendwo weiter oben machen
+					List listOfExtractedVehicleIds = new ArrayList();
+					for (int i = 0; i < numberVehiclesSwitchToElectric; i++) {
+						final EnumeratedDistribution enumeratedDistribution = new EnumeratedDistribution(Arrays.asList(vehicleId2DistanceFromCenter.values().toArray()));
+						Object vIdString = enumeratedDistribution.sample();
+						vehicleId2DistanceFromCenter.remove(Id.createVehicleId((String) vIdString));
+						listOfExtractedVehicleIds.add(vIdString);
+					}
+
+					log.info("Size of ListOfExtractedVehicles: " + listOfExtractedVehicleIds.size());
+
 					for (Object vehIdString : listOfExtractedVehicleIds) {
 						vehiclesToChangeToElectric.add(Id.createVehicleId(vehIdString.toString()));
+					}
+
+					if (vehiclesToChangeToElectric.size() != numberVehiclesSwitchToElectric){
+						throw new RuntimeException("vehiclesToChangeToElectric should have the size " + numberVehiclesSwitchToElectric + " but it was " +vehiclesToChangeToElectric.size());
 					}
 					break;
 				default:
