@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.apache.commons.math3.distribution.EnumeratedDistribution;
 import org.apache.commons.math3.util.Pair;
@@ -344,15 +345,13 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 						vehicleId2DistanceFromCenter.put(vehicleId, new Pair(vehicleId.toString(), personId2DistanceFromCenter.get(Id.createPersonId(vehicleId.toString()))));
 					}
 					log.info("# of non-electric Vehicles: " + carNonElectricType.size() + " ; Map vehicleId2DistanceFromCenter.size: " + vehicleId2DistanceFromCenter.size() );
-					//TODO: Ziehung ist nun repariert, aber für das 1ßpct Szenario viel zu langsma (muss fast 400k Fahrzeuge behandeln) --> Hier ist sicherlich noch richtig optimierungspotenzial drin
-					// TODO (und vermutlich auch noch etwas was die Lösung "besser" macht), wenn man sich nur auf die tatsächlich in den Events vorkommenden Fahrzeuge stürzt
-					//  --> Das müsste man irgendwo weiter oben machen
-					List listOfExtractedVehicleIds = new ArrayList();
-					for (int i = 0; i < numberVehiclesSwitchToElectric; i++) {
-						final EnumeratedDistribution enumeratedDistribution = new EnumeratedDistribution(Arrays.asList(vehicleId2DistanceFromCenter.values().toArray()));
-						Object vIdString = enumeratedDistribution.sample();
-						vehicleId2DistanceFromCenter.remove(Id.createVehicleId((String) vIdString));
-						listOfExtractedVehicleIds.add(vIdString);
+					//New try: Ziehe mehr als benötigt auf einmal und nehme nur soviel wie benötigt werden. Sollte es nicht reichen, ziehe nochmal etwas nach.
+					Set listOfExtractedVehicleIds = new LinkedHashSet();
+					int sampleSize = (int) Math.round(numberVehiclesSwitchToElectric * 1.5) ;
+					while (listOfExtractedVehicleIds.size() < numberVehiclesSwitchToElectric) {
+						Set sampleOfVehicleIds = new LinkedHashSet(Arrays.asList(new EnumeratedDistribution(Arrays.asList(vehicleId2DistanceFromCenter.values().toArray())).sample(sampleSize)));
+						listOfExtractedVehicleIds.addAll((Collection) sampleOfVehicleIds.stream().limit(numberVehiclesSwitchToElectric - listOfExtractedVehicleIds.size()).collect(Collectors.toSet()));
+						sampleSize = (int) Math.round((numberVehiclesSwitchToElectric - listOfExtractedVehicleIds.size())*1.5);
 					}
 
 					log.info("Size of ListOfExtractedVehicles: " + listOfExtractedVehicleIds.size());
