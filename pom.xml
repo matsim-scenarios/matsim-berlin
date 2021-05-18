@@ -4,14 +4,13 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.matsim-scenarios</groupId>
 	<artifactId>matsim-berlin</artifactId>
-	<version>5.5.2</version>
+	<version>5.5.3</version>
 
 	<name>MATSim Open Berlin scenario project</name>
 	<description>MATSim Open Berlin scenario project</description>
 
 	<properties>
-<!--				<matsim.version>13.0-SNAPSHOT</matsim.version>-->
-		<matsim.version>13.0-2020w51-SNAPSHOT</matsim.version>
+		<matsim.version>14.0-PR1512</matsim.version> <!-- 18.05.2021-->
 	</properties>
 
 	<repositories>
@@ -19,7 +18,7 @@
 		<!-- Repository for MATSim releases (MATSim is not on Maven central) -->
 		<repository>
 			<id>matsim</id>
-			<url>https://dl.bintray.com/matsim/matsim</url>
+			<url>https://repo.matsim.org/repository/matsim</url>
 		</repository>
 
 		<repository>
@@ -274,6 +273,16 @@
 								<!-- This bit merges the various GeoTools META-INF/services files         -->
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
 							</transformers>
+							<filters>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/*.SF</exclude>
+										<exclude>META-INF/*.DSA</exclude>
+										<exclude>META-INF/*.RSA</exclude>
+									</excludes>
+								</filter>
+							</filters>
 						</configuration>
 					</execution>
 				</executions>
