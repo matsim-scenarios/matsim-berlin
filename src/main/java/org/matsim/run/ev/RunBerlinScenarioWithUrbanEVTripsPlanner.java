@@ -32,6 +32,7 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.run.RunBerlinScenario;
 import org.matsim.urbanEV.EVUtils;
+import org.matsim.urbanEV.UrbanEVConfigGroup;
 import org.matsim.urbanEV.UrbanEVModule;
 import org.matsim.urbanEV.UrbanVehicleChargingHandler;
 import org.matsim.vehicles.VehicleType;
@@ -45,15 +46,16 @@ class RunBerlinScenarioWithUrbanEVTripsPlanner {
 	public static void main(String[] args) {
 		if(args.length == 0){
 			args = new String[1];
-			args[0] = "scenarios/berlin-v5.5-1pct/input/ev/berlin-v5.5-1pct.config-ev-test.xml";
+			args[0] = "scenarios/berlin-v5.5-1pct/input/ev/berlin-v5.5-1pct.config-ev-test2.xml";
 		}
 		Config config = RunBerlinScenario.prepareConfig(args, new EvConfigGroup());
 
 		config.controler().setOutputDirectory("./output-berlin-v5.5-1pct/evTest-withMobsimInitialitzedListener");
 		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
 		config.controler().setLastIteration(1);
-
-		config.plansCalcRoute().setAccessEgressType(PlansCalcRouteConfigGroup.AccessEgressType.none);
+		UrbanEVConfigGroup urbanEVConfigGroup = new UrbanEVConfigGroup();
+		config.addModule(urbanEVConfigGroup);
+		config.plansCalcRoute().setAccessEgressType(PlansCalcRouteConfigGroup.AccessEgressType.accessEgressModeToLink);
 
 		//register charging interaction activities for car
 		config.planCalcScore().addActivityParams(
