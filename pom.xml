@@ -278,6 +278,7 @@
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<!--Presumably, you can run this by mvn assembly:assembly (?)-->
+				<version>3.3.0</version>
 
 				<configuration>
 					<descriptorRefs>
@@ -285,8 +286,14 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
 							<mainClass>org.matsim.gui.RunBerlinScenarioGUI</mainClass>
 						</manifest>
+						<manifestEntries>
+							<Specification-Vendor>MyCompany</Specification-Vendor>
+							<Implementation-Vendor>MyCompany</Implementation-Vendor>
+						</manifestEntries>
 					</archive>
 				</configuration>
 				<executions>
