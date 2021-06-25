@@ -51,9 +51,9 @@ class RunUrbanEVBerlinScenario {
         Controler controler = RunBerlinScenario.prepareControler(scenario);
 
 //        config.controler().setOutputDirectory("./output-berlin-v5.5-1pct/evTest/1person");
-        config.controler().setOutputDirectory("./output-berlin-v5.5-1pct/evTest");
+        config.controler().setOutputDirectory("./output-berlin-v5.5-1pct/EVFinal");
         config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
-        config.controler().setLastIteration(1);
+        config.controler().setLastIteration(3);
 
 
         //plug in UrbanEVModule
@@ -131,9 +131,9 @@ class RunUrbanEVBerlinScenario {
                 Id<Vehicle> vehicleId = Id.createVehicleId(person.getId().toString());
                // VehicleUtils.createVehiclesContainer().addVehicleType(evVehicleType);
                 VehicleUtils.setHbefaTechnology(evVehicleType.getEngineInformation(), "electricity");
-                VehicleUtils.setEnergyCapacity(evVehicleType.getEngineInformation(), 40);
-                EVUtils.setInitialEnergy(evVehicleType.getEngineInformation(), 40);
-                EVUtils.setChargerTypes(evVehicleType.getEngineInformation(), Arrays.asList("3.7kW", "11kW", "22kW", "50kW", "150kW", "default"));
+                VehicleUtils.setEnergyCapacity(evVehicleType.getEngineInformation(), 60);
+                EVUtils.setInitialEnergy(evVehicleType.getEngineInformation(), 50);
+                EVUtils.setChargerTypes(evVehicleType.getEngineInformation(), Arrays.asList("3.7kW", "11kW", "22kW", "50kW", "150kW", person.getId().toString()));
 
                 Vehicle vehicle = vehiclesFactory.createVehicle(vehicleId, evVehicleType);
                 scenario.getVehicles().addVehicleType(evVehicleType);
