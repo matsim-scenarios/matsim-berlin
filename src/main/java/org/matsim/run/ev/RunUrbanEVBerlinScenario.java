@@ -1,5 +1,6 @@
 package org.matsim.run.ev;
 
+import com.google.inject.Inject;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -9,6 +10,7 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.ev.EvConfigGroup;
 import org.matsim.contrib.ev.EvModule;
 import org.matsim.contrib.ev.infrastructure.ChargingInfrastructure;
+import org.matsim.contrib.ev.infrastructure.ChargingInfrastructureSpecification;
 import org.matsim.contrib.ev.routing.EvNetworkRoutingModule;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -32,6 +34,9 @@ import java.util.*;
 
 class RunUrbanEVBerlinScenario {
 
+    @Inject
+    private ChargingInfrastructureSpecification chargingInfrastructureSpecification;
+
     private static final Logger log = Logger.getLogger(RunBerlinScenario.class);
 
     public static void main(String[] args) {
@@ -51,7 +56,7 @@ class RunUrbanEVBerlinScenario {
         Controler controler = RunBerlinScenario.prepareControler(scenario);
 
 //        config.controler().setOutputDirectory("./output-berlin-v5.5-1pct/evTest/1person");
-        config.controler().setOutputDirectory("./output-berlin-v5.5-1pct/EVFinal");
+        config.controler().setOutputDirectory("./output-berlin-v5.5-1pct/EVHomeChargers");
         config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
         config.controler().setLastIteration(3);
 
@@ -95,12 +100,14 @@ class RunUrbanEVBerlinScenario {
         QSimConfigGroup qSimConfigGroup = scenario.getConfig().qsim();
         VehiclesFactory vehiclesFactory = scenario.getVehicles().getFactory();
 
+
         Set<String> modes = new HashSet<>(qSimConfigGroup.getMainModes());
         modes.add(TransportMode.walk);
         modes.add(TransportMode.pt);
         modes.add("bicycle");
         modes.addAll(qSimConfigGroup.getSeepModes());
         modes.addAll(scenario.getConfig().plansCalcRoute().getNetworkModes());
+
 
 
         for (Person person : scenario.getPopulation().getPersons().values()) {
@@ -133,7 +140,7 @@ class RunUrbanEVBerlinScenario {
                 VehicleUtils.setHbefaTechnology(evVehicleType.getEngineInformation(), "electricity");
                 VehicleUtils.setEnergyCapacity(evVehicleType.getEngineInformation(), 60);
                 EVUtils.setInitialEnergy(evVehicleType.getEngineInformation(), 50);
-                EVUtils.setChargerTypes(evVehicleType.getEngineInformation(), Arrays.asList("3.7kW", "11kW", "22kW", "50kW", "150kW", person.getId().toString()));
+                EVUtils.setChargerTypes(evVehicleType.getEngineInformation(), Arrays.asList("3.7kW", "11kW", "22kW", "50kW", "150kW", "44kW","43kW", "110kW", "93kW", "39.6kW", "88kW", "28kW", "100kW", "75kW", "45kW", "110kW", "350kW", "320kW", person.getId().toString()));
 
                 Vehicle vehicle = vehiclesFactory.createVehicle(vehicleId, evVehicleType);
                 scenario.getVehicles().addVehicleType(evVehicleType);
