@@ -18,7 +18,7 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.run.drt.substitutePT;
+package org.matsim.analysis.substitutePT;
 
 import org.apache.log4j.Logger;
 import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
@@ -32,23 +32,23 @@ import org.matsim.run.accessibility.RunBerlinScenarioWithAccessibilities;
 
 /**
  *
- * (example) run script to obtain metrics from matsim-berlin that help understanding where pt is ineffiecient and drt might be a better fit.
+ * (example) script to obtain metrics from matsim-berlin that help understanding where pt is ineffiecient and drt might be a better fit.
+ * runs MATSim for one iteration (necessary to obtain accessibility).<p>
  *
- * metrics can be visualised with aftersim and include:
- *
- * DRT operator costs		(will be not 0 or not available as there is no drt in the base case)
- * DRT operator income		(will be not 0 or not available as there is no drt in the base case)
- * PT operator costs
- * PT occupancy
- * PT accessibility
- * Demand Potential (trip origins and destinations from the trips.csv)
+ * Metrics can be visualised with the aftersim UI and include: <ul>
+ * <li> DRT operator costs		(will be not 0 or not available as there is no drt in the base case)
+ * <li> DRT operator income		(will be not 0 or not available as there is no drt in the base case)
+ * <li> PT operator costs
+ * <li> PT occupancy
+ * <li> PT accessibility
+ * <li> Demand Potential (trip origins and destinations from the trips.csv)
  *
  */
 
 //TODO maybe call this *Analysis and move it to the analysis package?
-public class RunDRTSubstitutesPTBerlinScenario {
+class DrtSubstitutesAnalysisRunner {
 
-	private static final Logger log = Logger.getLogger(RunDRTSubstitutesPTBerlinScenario.class);
+	private static final Logger log = Logger.getLogger(DrtSubstitutesAnalysisRunner.class);
 
 	public static void main(String[] args) {
 
