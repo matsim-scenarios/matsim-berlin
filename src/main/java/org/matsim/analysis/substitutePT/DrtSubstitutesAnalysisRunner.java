@@ -40,13 +40,11 @@ import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
 import org.matsim.extensions.pt.routing.ptRoutingModes.PtIntermodalRoutingModesModule;
-import org.matsim.optDRT.MultiModeOptDrtConfigGroup;
 import org.matsim.run.RunBerlinScenario;
 import org.matsim.run.accessibility.RunBerlinScenarioWithAccessibilities;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
-import org.matsim.run.dynamicShutdown.DynamicShutdownConfigGroup;
 
 /**
  *
@@ -63,7 +61,6 @@ import org.matsim.run.dynamicShutdown.DynamicShutdownConfigGroup;
  *
  */
 
-//TODO restructure this such that it has the structure of a run class (prepareConfig+ prepareScenario + prepareControler) and it configures everything needed (dependent of whether drt is used in the underlying run)
 class DrtSubstitutesAnalysisRunner {
 
 	private static final Logger log = Logger.getLogger(DrtSubstitutesAnalysisRunner.class);
@@ -90,8 +87,6 @@ class DrtSubstitutesAnalysisRunner {
 		controler.run();
 	}
 
-	//TODO allow more custom modules to add?
-	//TODO could think of making AccessibilityCfg the 3rd parameter and copy everything into the config created/loaded here (so the user can configure the accessibility outside)
 	/*package */
 	 Config prepareConfigBasedOnOutputConfig(String pathToOutputConfig, ConfigGroup... customModules ){
 
@@ -136,10 +131,10 @@ class DrtSubstitutesAnalysisRunner {
 		 //set output plans from underlying run as input plans for our analysis run
 		 String runId = config.controler().getRunId() == null ? "" : config.controler().getRunId() + ".";
 		 config.plans().setInputFile(runId + "output_plans.xml.gz");
-//		config.plans().setInputFile("D:/svn/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/input/berlin-v5.5-1pct.plans.xml.gz"); //TODO
+//		config.plans().setInputFile("D:/svn/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/input/berlin-v5.5-1pct.plans.xml.gz");
 
 		config.controler().setOutputDirectory(pathToOutputConfig.substring(0, pathToOutputConfig.lastIndexOf("/") + 1) + "drtSubstitutesPTAnalysis");
-		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles); //TODO change to failIfDirectoryExists
+		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.failIfDirectoryExists);
 
 		config.controler().setWriteEventsInterval(0);
 		config.controler().setWritePlansInterval(0);
