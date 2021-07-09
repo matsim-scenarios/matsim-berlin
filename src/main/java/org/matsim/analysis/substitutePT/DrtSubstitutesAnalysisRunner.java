@@ -20,6 +20,7 @@
 
 package org.matsim.analysis.substitutePT;
 
+import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
 import org.apache.log4j.Logger;
 import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
 import org.matsim.analysis.pt.stop2stop.PtStop2StopAnalysisModule;
@@ -30,6 +31,7 @@ import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.contrib.drt.run.MultiModeDrtModule;
 import org.matsim.contrib.dvrp.run.DvrpModule;
 import org.matsim.contrib.dvrp.run.DvrpQSimComponents;
+import org.matsim.contrib.util.PopulationUtils;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
@@ -40,11 +42,13 @@ import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
 import org.matsim.extensions.pt.routing.ptRoutingModes.PtIntermodalRoutingModesModule;
+import org.matsim.optDRT.MultiModeOptDrtConfigGroup;
 import org.matsim.run.RunBerlinScenario;
 import org.matsim.run.accessibility.RunBerlinScenarioWithAccessibilities;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
+import org.matsim.run.dynamicShutdown.DynamicShutdownConfigGroup;
 
 /**
  *
@@ -73,15 +77,15 @@ class DrtSubstitutesAnalysisRunner {
 	public static void main(String[] args) {
 
 //		DrtSubstitutesAnalysisRunner analysisRunner = new DrtSubstitutesAnalysisRunner(true);
-//		Config config = analysisRunner.prepareConfigBasedOnOutputConfig("D:/VW/test/i501.output_config.xml", new DynamicShutdownConfigGroup(), new MultiModeOptDrtConfigGroup());
+//		Config config = analysisRunner.prepareConfigBasedOnOutputConfig("D:/VW/AP3/i501/i501.output_config.xml", new DynamicShutdownConfigGroup(), new MultiModeOptDrtConfigGroup());
 
 		DrtSubstitutesAnalysisRunner analysisRunner = new DrtSubstitutesAnalysisRunner(false);
 		Config config = analysisRunner.prepareConfigBasedOnOutputConfig("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/output-berlin-v5.5-1pct/berlin-v5.5.3-1pct.output_config.xml");
-		config.controler().setOutputDirectory("D:/VW/test-berlin-1pct");
-
-
+		config.controler().setOutputDirectory("you can not write to public svn!");
+		ConfigUtils.addOrGetModule(config, SwissRailRaptorConfigGroup.class).setUseIntermodalAccessEgress(false); //TODO currently not compatible with accessibility computation...
 
 		Scenario scenario = analysisRunner.prepareScenario(config);
+
 		Controler controler = analysisRunner.prepareControler(scenario);
 
 		controler.run();
@@ -131,14 +135,14 @@ class DrtSubstitutesAnalysisRunner {
 		 //set output plans from underlying run as input plans for our analysis run
 		 String runId = config.controler().getRunId() == null ? "" : config.controler().getRunId() + ".";
 		 config.plans().setInputFile(runId + "output_plans.xml.gz");
-//		config.plans().setInputFile("D:/svn/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/input/berlin-v5.5-1pct.plans.xml.gz");
 
 		config.controler().setOutputDirectory(pathToOutputConfig.substring(0, pathToOutputConfig.lastIndexOf("/") + 1) + "drtSubstitutesPTAnalysis");
 		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.failIfDirectoryExists);
 
 		config.controler().setWriteEventsInterval(0);
 		config.controler().setWritePlansInterval(0);
-		config.controler().setDumpDataAtEnd(false);
+		config.controler().setDumpDataAtEnd(true);
+		config.planCalcScore().setWriteExperiencedPlans(false);
 		return config;
 	}
 
