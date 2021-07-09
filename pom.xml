@@ -178,7 +178,7 @@
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>opt-drt</artifactId>
-			<version>0a4ad0fe73</version>
+			<version>d61d2c8</version>
 		</dependency>
 		
 		<dependency>
