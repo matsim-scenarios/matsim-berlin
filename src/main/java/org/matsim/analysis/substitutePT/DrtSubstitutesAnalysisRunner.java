@@ -26,17 +26,27 @@ import org.matsim.analysis.pt.stop2stop.PtStop2StopAnalysisModule;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.contrib.accessibility.AccessibilityConfigGroup;
 import org.matsim.contrib.accessibility.Modes4Accessibility;
+import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
+import org.matsim.contrib.drt.run.MultiModeDrtModule;
+import org.matsim.contrib.dvrp.run.DvrpModule;
+import org.matsim.contrib.dvrp.run.DvrpQSimComponents;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
-import org.matsim.core.utils.io.IOUtils;
+import org.matsim.core.controler.OutputDirectoryHierarchy;
+import org.matsim.core.router.AnalysisMainModeIdentifier;
+import org.matsim.core.router.MainModeIdentifier;
+import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
+import org.matsim.extensions.pt.routing.ptRoutingModes.PtIntermodalRoutingModesModule;
+import org.matsim.optDRT.MultiModeOptDrtConfigGroup;
 import org.matsim.run.RunBerlinScenario;
 import org.matsim.run.accessibility.RunBerlinScenarioWithAccessibilities;
+import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier;
+import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
-
-import java.io.File;
+import org.matsim.run.dynamicShutdown.DynamicShutdownConfigGroup;
 
 /**
  *
@@ -53,83 +63,137 @@ import java.io.File;
  *
  */
 
-//TODO restructure this such that it has the structure of a run class (prepareConfig+ prepareScenario + prepareControler) and it configures everything (independently of whether drt is used in the underlying run)
+//TODO restructure this such that it has the structure of a run class (prepareConfig+ prepareScenario + prepareControler) and it configures everything needed (dependent of whether drt is used in the underlying run)
 class DrtSubstitutesAnalysisRunner {
 
 	private static final Logger log = Logger.getLogger(DrtSubstitutesAnalysisRunner.class);
+	private final boolean drtUsed;
+
+	public DrtSubstitutesAnalysisRunner(boolean drtUsedInUnderlyingRun){
+		this.drtUsed = drtUsedInUnderlyingRun;
+	}
 
 	public static void main(String[] args) {
 
-		//TODO should we really do this?
-		log.warn("overwriting program arguments!!");
-		args = new String[1];
-		args[0] = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/output-berlinv5.5/berlin-v5.5.3-10pct.output_config.xml";
+//		DrtSubstitutesAnalysisRunner analysisRunner = new DrtSubstitutesAnalysisRunner(true);
+//		Config config = analysisRunner.prepareConfigBasedOnOutputConfig("D:/VW/test/i501.output_config.xml", new DynamicShutdownConfigGroup(), new MultiModeOptDrtConfigGroup());
 
-		//compute accessibilities. will result in a shape file
-		Config config = RunBerlinScenarioWithAccessibilities.prepareConfig(args);
+		DrtSubstitutesAnalysisRunner analysisRunner = new DrtSubstitutesAnalysisRunner(false);
+		Config config = analysisRunner.prepareConfigBasedOnOutputConfig("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/output-berlin-v5.5-1pct/berlin-v5.5.3-1pct.output_config.xml");
+		config.controler().setOutputDirectory("D:/VW/test-berlin-1pct");
 
-		//use existing matsim-berlin run output and only run for one iteration in order to create new/additional output
-		config.controler().setLastIteration(0); //actually also set in RunBerlinScenarioWithAccessibilities.prepareConfig
-		config.plans().setInputFile("berlin-v5.5.3-10pct.output_plans.xml.gz");
-		config.controler().setOutputDirectory("../../projects/drtSubstitutesPT");
 
-		Scenario scenario = RunBerlinScenario.prepareScenario(config);
 
-		Controler controler = RunBerlinScenarioWithAccessibilities.prepareControler(scenario);
-
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-
-				//creates output table containing drt operator KPIs
-				install(new PersonMoneyEventsAnalysisModule());
-				//creates output on pt occupancy
-				install(new PtStop2StopAnalysisModule());
-
-				//TODO install pt fare computation
-			}
-		});
+		Scenario scenario = analysisRunner.prepareScenario(config);
+		Controler controler = analysisRunner.prepareControler(scenario);
 
 		controler.run();
 	}
 
 	//TODO allow more custom modules to add?
-	static Config prepareConfigBasedOnOutputConfig(String pathToOutputConfig, boolean drtUsed){
+	//TODO could think of making AccessibilityCfg the 3rd parameter and copy everything into the config created/loaded here (so the user can configure the accessibility outside)
+	/*package */
+	 Config prepareConfigBasedOnOutputConfig(String pathToOutputConfig, ConfigGroup... customModules ){
 
 		String[] args = new String[1];
 		args[0] = pathToOutputConfig;
 		Config config;
-		if(drtUsed){
-			config = RunDrtOpenBerlinScenario.prepareConfig(args);
-		} else {
-			ConfigGroup[] customModulesToAdd = new ConfigGroup[]{new AccessibilityConfigGroup()};
-			config = RunBerlinScenario.prepareConfig(args, customModulesToAdd);
-		}
+		ConfigGroup[] customModulesToAdd = new ConfigGroup[]{new AccessibilityConfigGroup()};
+		 ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
+		 int counter = 0;
+		 for (ConfigGroup customModule : customModules) {
+			 customModulesAll[counter] = customModule;
+			 counter++;
+		 }
+		 for (ConfigGroup customModule : customModulesToAdd) {
+			 customModulesAll[counter] = customModule;
+			 counter++;
+		 }
+		 if(drtUsed){
+			 config = RunDrtOpenBerlinScenario.prepareConfig(args, customModulesAll);
+		 } else {
+			 config = RunBerlinScenario.prepareConfig(args, customModulesAll);
+		 }
 
 		//now do everything that RunBerlinScenarioWithAccessibilities.prepareConfig does
 		{
-			File opportunitiesFile = new File("../../shared-svn/projects/accessibility-berlin/osm/berlin/amenities/2018-05-30/facilities_classified.xml");
-			config.facilities().setInputFile(opportunitiesFile.getAbsolutePath());
+			String opportunitiesFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/drtSubstitutesPT/input/accessibility/amenities/2018-05-30/facilities_classified.xml";
+			config.facilities().setInputFile(opportunitiesFile);
 
 			AccessibilityConfigGroup acg = ConfigUtils.addOrGetModule(config, AccessibilityConfigGroup.class);
-			acg.setTimeOfDay((8*60.+5.)*60.);
+			acg.setTimeOfDay((8*60.+5.)*60.); //8.05 am
 			acg.setAreaOfAccessibilityComputation(AccessibilityConfigGroup.AreaOfAccesssibilityComputation.fromShapeFile);
-			acg.setShapeFileCellBasedAccessibility("../../shared-svn/studies/countries/de/open_berlin_scenario/input/shapefiles/2013/Berlin_DHDN_GK4.shp");
-			acg.setTileSize_m(5000);
+			acg.setShapeFileCellBasedAccessibility("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-shp/berlin.shp");
+			acg.setTileSize_m(1000);
 			acg.setComputingAccessibilityForMode(Modes4Accessibility.freespeed, false);
 			acg.setComputingAccessibilityForMode(Modes4Accessibility.car, false);
 			acg.setComputingAccessibilityForMode(Modes4Accessibility.pt, true);
 			acg.setOutputCrs(config.global().getCoordinateSystem());
 		}
 
-
 		config.controler().setLastIteration(0);
-		config.plans().setInputFile(""); //TODO output plans file from the given config (think there is some utility method hidden somewhere for that)
-		config.controler().setOutputDirectory("drtSubstitutesPTAnalysis");//TODO probably will have to be adjusted after this method is called. can only set this such that nothing from the original run will be overwritten
+
+		 //set output plans from underlying run as input plans for our analysis run
+		 String runId = config.controler().getRunId() == null ? "" : config.controler().getRunId() + ".";
+		 config.plans().setInputFile(runId + "output_plans.xml.gz");
+//		config.plans().setInputFile("D:/svn/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/input/berlin-v5.5-1pct.plans.xml.gz"); //TODO
+
+		config.controler().setOutputDirectory(pathToOutputConfig.substring(0, pathToOutputConfig.lastIndexOf("/") + 1) + "drtSubstitutesPTAnalysis");
+		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles); //TODO change to failIfDirectoryExists
 
 		config.controler().setWriteEventsInterval(0);
 		config.controler().setWritePlansInterval(0);
-		config.controler().setDumpDataAtEnd(false); //TODO check! (idea is to minimize output as much as possible to our specific analysis. but we need trips.csv.gz)
+		config.controler().setDumpDataAtEnd(false);
 		return config;
 	}
+
+	/*package */
+ 	Scenario prepareScenario(Config config){
+		if(drtUsed){
+			return RunDrtOpenBerlinScenario.prepareScenario(config);
+		} else {
+			return RunBerlinScenario.prepareScenario(config);
+		}
+	}
+
+	Controler prepareControler(Scenario scenario){
+		Controler controler = RunBerlinScenarioWithAccessibilities.prepareControler(scenario);
+
+		//now bind our custom analysis modules
+		controler.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+//				creates output table containing drt operator KPIs
+				install(new PersonMoneyEventsAnalysisModule());
+//				creates output on pt occupancy
+				install(new PtStop2StopAnalysisModule());
+
+			}
+		});
+
+		if(drtUsed) {
+			// drt + dvrp module
+			controler.addOverridingModule(new MultiModeDrtModule());
+			controler.addOverridingModule(new DvrpModule());
+			controler.configureQSimComponents(DvrpQSimComponents.activateAllModes(MultiModeDrtConfigGroup.get(controler.getConfig())));
+
+			controler.addOverridingModule(new AbstractModule() {
+
+				@Override
+				public void install() {
+					// use a main mode identifier which knows how to handle intermodal trips generated by the used sbb pt raptor router
+					// the SwissRailRaptor already binds its IntermodalAwareRouterModeIdentifier, however drt obviuosly replaces it
+					// with its own implementation
+					// So we need our own main mode indentifier which replaces both :-(
+					bind(MainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifier.class);
+					bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier.class);
+				}
+			});
+			controler.addOverridingModule(new IntermodalTripFareCompensatorsModule());
+			controler.addOverridingModule(new PtIntermodalRoutingModesModule());
+		}
+
+		return controler;
+	}
+
 }
