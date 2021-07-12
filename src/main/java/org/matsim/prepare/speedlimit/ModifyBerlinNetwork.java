@@ -1,4 +1,4 @@
-package org.matsim.prepare.tempo30;
+package org.matsim.prepare.speedlimit;
 
 import org.locationtech.jts.geom.Geometry;
 import org.matsim.api.core.v01.Coord;
@@ -19,21 +19,23 @@ import java.util.Map;
 
 public class ModifyBerlinNetwork {
 
+    private static double freespeed = 30; // dont use SI-Einheiten hier
+    private static int freespeedChangedCounter = 0;
+
     private static final String networkFilePath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Berlin_Scenario_output\\berlin" +
             "-v5.5-1pct.output_network.xml.gz";
     private static final String shapeFilePath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Bezirk" +
             "e_-_Berlin-shp\\Berlin_Bezirke.shp";
-    private static final String outputNetworkFileName = "test.xml.gz";
+    private static final String outputNetworkFileName = "berlin-speedlimit-" + freespeed + ".xml.gz";
 
     private static final Network network = NetworkUtils.readNetwork(networkFilePath);
     private static final List<Geometry> geometries = getGeometry();
 
-    private static final double freespeed = 30/3.6;
-    private static int freespeedChangedCounter = 0;
-
     private static final CoordinateTransformation transformation = TransformationFactory.getCoordinateTransformation("EPSG:31468", "EPSG:3857");
 
     public static void main(String[] args) {
+
+        freespeed /= 3.6; //in metres per hour
 
         {
             var links = network.getLinks();
