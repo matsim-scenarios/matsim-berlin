@@ -19,7 +19,7 @@ import java.util.Map;
 
 public class ModifyBerlinNetwork {
 
-    private static double freespeed = 30; // dont use SI-Einheiten hier
+    private static double freespeed = 30; // dont use SI-Einheiten hier, in kilometres per hour
     private static int freespeedChangedCounter = 0;
 
     private static final String networkFilePath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Berlin_Scenario_output\\berlin" +
@@ -50,6 +50,7 @@ public class ModifyBerlinNetwork {
         }
 
         System.out.println("Changed freespeed " + freespeedChangedCounter + " times to " + freespeed);
+        System.out.println("New network can be found as: " + outputNetworkFileName);
 
         NetworkWriter networkWriter = new NetworkWriter(network);
         networkWriter.write("C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_2\\Input\\" + outputNetworkFileName);
@@ -85,16 +86,14 @@ public class ModifyBerlinNetwork {
 
         String linkID = link.getId().toString();
 
-        if (linkID.contains("pt")) return true;
-        return false;
+        return linkID.contains("pt");
     }
 
     private static boolean isLinkMotorway (Link link){
         //difficult, a link is assumed to be a motorway, if the freespeed is at least 80/3.6 metres per second
 
-        if (NetworkUtils.getType(link).contains("motorway")) return true;
+        return NetworkUtils.getType(link).contains("motorway");
        // if (link.getFreespeed() >= 80/3.6) return true;
-        return false;
     }
 
     private static List<Geometry> getGeometry(){
@@ -140,8 +139,7 @@ public class ModifyBerlinNetwork {
         var fromNodeCoord = link.getFromNode().getCoord();
         var toNodeCoord = link.getToNode().getCoord();
 
-        if (!isInGeometry(fromNodeCoord) && !isInGeometry(toNodeCoord)) return true;
-        return false;
+        return isInGeometry(fromNodeCoord) && isInGeometry(toNodeCoord);
     }
 
     private static boolean isInGeometry(Coord coord, Geometry geometry) {
