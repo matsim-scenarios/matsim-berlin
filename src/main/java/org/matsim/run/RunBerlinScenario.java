@@ -47,13 +47,9 @@ import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
-import org.matsim.extensions.pt.PtExtensionsConfigGroup;
-import org.matsim.extensions.pt.routing.EnhancedRaptorIntermodalAccessEgress;
 import org.matsim.prepare.population.AssignIncome;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
-import org.matsim.extensions.pt.replanning.singleTripStrategies.ChangeSingleTripModeAndRoute;
-import org.matsim.extensions.pt.replanning.singleTripStrategies.RandomSingleTripReRoute;
 import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
 import java.io.IOException;
@@ -118,11 +114,6 @@ public final class RunBerlinScenario {
 				addTravelDisutilityFactoryBinding( TransportMode.ride ).to( carTravelDisutilityFactoryKey() );
 				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifier.class);
 				
-				addPlanStrategyBinding("RandomSingleTripReRoute").toProvider(RandomSingleTripReRoute.class);
-				addPlanStrategyBinding("ChangeSingleTripModeAndRoute").toProvider(ChangeSingleTripModeAndRoute.class);
-
-				bind(RaptorIntermodalAccessEgress.class).to(EnhancedRaptorIntermodalAccessEgress.class);
-
 				//use income-dependent marginal utility of money for scoring
 				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class).in(Singleton.class);
 
@@ -175,13 +166,11 @@ public final class RunBerlinScenario {
 		
 		String[] typedArgs = Arrays.copyOfRange( args, 1, args.length );
 		
-		ConfigGroup[] customModulesToAdd = null ;
+		ConfigGroup[] customModulesToAdd;
 		if (additionalInformation == RunDrtOpenBerlinScenario.AdditionalInformation.acceptUnknownParamsBerlinConfig) {
-			customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(true),
-					new PtExtensionsConfigGroup()};
+			customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(true)};
 		} else {
-			customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(false),
-					new PtExtensionsConfigGroup()};
+			customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(false)};
 		}
 		ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
 		

@@ -1,9 +1,9 @@
 /* *********************************************************************** *
- * project: org.matsim.*												   *
+ * project: org.matsim.*
  *                                                                         *
  * *********************************************************************** *
  *                                                                         *
- * copyright       : (C) 2008 by the members listed in the COPYING,        *
+ * copyright       : (C) 2020 by the members listed in the COPYING,        *
  *                   LICENSE and WARRANTY file.                            *
  * email           : info at matsim dot org                                *
  *                                                                         *
@@ -16,53 +16,32 @@
  *   See also COPYING, LICENSE and WARRANTY file                           *
  *                                                                         *
  * *********************************************************************** */
-package org.matsim.run;
 
-import org.apache.log4j.Logger;
-import org.junit.FixMethodOrder;
+package org.matsim.analysis;
+
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runners.MethodSorters;
-import org.matsim.api.core.v01.Scenario;
-import org.matsim.core.config.Config;
-import org.matsim.core.controler.Controler;
-import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.testcases.MatsimTestUtils;
 
-/**
- * @author ikaddoura
- *
- */
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class RunBerlinScenarioSingleTripStrategiesTest {
-	private static final Logger log = Logger.getLogger( RunBerlinScenarioSingleTripStrategiesTest.class ) ;
-	
+public class RunOfflineAirPollutionAnalysisTest{
+
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
-	
+
+	// to run this test an environment variable needs to be set in your IDE and on the server...
 	@Test
 	public final void test1() {
 		try {
-			final String[] args = {"./test/input/berlin-v5.5-1pct.config_singleTripStrategies.xml"};
+			String runDirectory = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-0.1pct/output-berlin-v5.4-0.1pct/";
+			String runId = "berlin-v5.4-0.1pct";
+			String hbefaFileWarm = "https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/0e73947443d68f95202b71a156b337f7f71604ae/7eff8f308633df1b8ac4d06d05180dd0c5fdf577.enc";
+			String hbefaFileCold = "https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/0e73947443d68f95202b71a156b337f7f71604ae/22823adc0ee6a0e231f35ae897f7b224a86f3a7a.enc";
 			
-			Config config =  RunBerlinScenario.prepareConfig( args );
-			config.controler().setLastIteration(1);
-			config.strategy().setFractionOfIterationsToDisableInnovation(1.0);
-			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
-			config.controler().setOutputDirectory( utils.getOutputDirectory() );
-			config.plans().setInputFile("test-agents.xml");
-			
-			Scenario scenario = RunBerlinScenario.prepareScenario( config );
-			
-			Controler controler = RunBerlinScenario.prepareControler( scenario ) ;
-			
-			controler.run() ;
-			
-			log.info("") ;
-			
+			RunOfflineAirPollutionAnalysis analysis = new RunOfflineAirPollutionAnalysis(runDirectory, runId, hbefaFileWarm, hbefaFileCold, utils.getOutputDirectory());
+			analysis.run();
 			
 		} catch ( Exception ee ) {
-			ee.printStackTrace();
 			throw new RuntimeException(ee) ;
 		}
 	}
+
 }
