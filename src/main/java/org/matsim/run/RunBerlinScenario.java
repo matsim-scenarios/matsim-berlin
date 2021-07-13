@@ -47,6 +47,7 @@ import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
+import org.matsim.extensions.pt.PtExtensionsConfigGroup;
 import org.matsim.extensions.pt.replanning.singleTripStrategies.ChangeSingleTripModeAndRoute;
 import org.matsim.extensions.pt.replanning.singleTripStrategies.RandomSingleTripReRoute;
 import org.matsim.extensions.pt.routing.EnhancedRaptorIntermodalAccessEgress;
@@ -176,9 +177,11 @@ public final class RunBerlinScenario {
 		
 		ConfigGroup[] customModulesToAdd;
 		if (additionalInformation == RunDrtOpenBerlinScenario.AdditionalInformation.acceptUnknownParamsBerlinConfig) {
-			customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(true)};
+			customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(true),
+					new PtExtensionsConfigGroup()};
 		} else {
-			customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(false)};
+			customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(false),
+					new PtExtensionsConfigGroup()};
 		}
 		ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
 		
