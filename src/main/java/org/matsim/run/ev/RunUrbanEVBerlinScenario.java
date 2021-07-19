@@ -56,9 +56,8 @@ class RunUrbanEVBerlinScenario {
         Controler controler = RunBerlinScenario.prepareControler(scenario);
 
 //        config.controler().setOutputDirectory("./output-berlin-v5.5-1pct/evTest/1person");
-        config.controler().setOutputDirectory("./output-berlin-v5.5-10pct/EVHomeChargers+MPM_Mittel");
         config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
-        config.controler().setLastIteration(3);
+
 
 
         //plug in UrbanEVModule
