@@ -3,18 +3,18 @@ package org.matsim.analysis.speedlimit;
 import org.matsim.api.core.v01.Coord;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class FilterTripsCSV {
 
-    private static final String filepath = "";
-    private static final String shapeFilePath = "";
-    private static final String outputFilePath0 = "";
-    private static final String outputFilePath1 = "";
-    private static final String outputFilePath2 = "";
+    private static final String workingDirectory = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_1\\Kalibrierung\\V54\\";
+    private static final String filepath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_2\\Analyse\\berlin.o" +
+            "utput_trips.csv\\berlin.output_trips.csv";
+    private static final String shapeFilePath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Bezirke_-_Berli" +
+            "n-shp\\Berlin_Bezirke.shp";
+    private static final String outputFilePath0 = "tripsWithinZone";
+    private static final String outputFilePath1 = "tripsIntoZone";
+    private static final String outputFilePath2 = "tripsOutoZone";
 
     private static String csvHeader;
 
@@ -40,6 +40,8 @@ public class FilterTripsCSV {
 
         }
 
+        printCSV(workingDirectory+outputFilePath0+".csv.gz",tripsWithinZone);
+
 
     }
 
@@ -57,7 +59,7 @@ public class FilterTripsCSV {
 
                 HashMap<String, String> currentTrip = new HashMap<>();
 
-                for (int i = 0; i < header.length; i++){
+                for (int i = 0; i < header.length-2; i++){
                     currentTrip.put(header[i],trip_attributes[i]);
                 }
 
@@ -122,14 +124,42 @@ public class FilterTripsCSV {
         }
 
         public Trip(HashMap<String,String> tripAsHashMap){
+            String tempStartX = new String();
+            String tempStartY = new String();
+            String tempEndX = new String();
+            String tempEndY = new String();
+
             trip_attributes.put("personID",tripAsHashMap.get("person"));
             trip_attributes.put("traveled_distance", tripAsHashMap.get("traveled_distance"));
             trip_attributes.put("mainMode",tripAsHashMap.get("longest_distance_mode"));
             trip_attributes.put("legList",tripAsHashMap.get("modes"));
+
+            /*
+            if (tripAsHashMap.get("start_x").contains(".")) {
+                tempStartX = tripAsHashMap.get("start_x").replaceFirst("\\.","");
+            }
+            if (tripAsHashMap.get("start_y").contains(".")){
+                tempStartY = tripAsHashMap.get("start_y").replaceFirst("\\.","");
+            }
+            if (tripAsHashMap.get("end_x").contains(".")) {
+                tempEndX = tripAsHashMap.get("end_x").replaceFirst("\\.","");
+            }
+            if (tripAsHashMap.get("end_y").contains(".")) {
+                tempEndY = tripAsHashMap.get("end_y").replaceFirst("\\.","");
+            }
+             */
+
             trip_attributes.put("start_x", tripAsHashMap.get("start_x"));
             trip_attributes.put("start_y", tripAsHashMap.get("start_y"));
             trip_attributes.put("end_x", tripAsHashMap.get("end_x"));
-            trip_attributes.put("end_y",tripAsHashMap.get("end_y"));
+            trip_attributes.put("end_y", tripAsHashMap.get("end_y"));
+
+            /*
+            trip_attributes.put("start_x", tempStartX);
+            trip_attributes.put("start_y", tempStartY);
+            trip_attributes.put("end_x", tempEndX);
+            trip_attributes.put("end_y", tempEndY);
+             */
         }
 
         public HashMap<String, String> getTrip_attributes() {
