@@ -38,6 +38,7 @@ public class FilterTripsCSV {
                 case -1: tripsOutoZone.add(trip.toString()); break;
                 case 0: tripsWithinZone.add(trip.toString()); break;
                 case 1: tripsIntoZone.add(trip.toString()); break;
+                case 2: System.out.println("Trip ist außerhalb von Berlin"); break;
 
                 default: break;
             }
@@ -46,8 +47,8 @@ public class FilterTripsCSV {
         }
 
         printCSV(workingDirectory+outputFilePath0+".csv",tripsWithinZone);
-
-
+        printCSV(workingDirectory+outputFilePath1+".csv",tripsWithinZone);
+        printCSV(workingDirectory+outputFilePath2+".csv",tripsWithinZone);
     }
 
     private static List<Trip> readFile(String filepath) {
@@ -76,7 +77,13 @@ public class FilterTripsCSV {
         return trips;
     }
 
-    private static void printCSV(String outputFilePath, ArrayList tripsList){
+    private static void printCSV(String outputFilePath, ArrayList tripsList) {
+
+        if (tripsList.isEmpty()) {
+
+            System.out.println("ARRAY IS EMPTY");
+            return;
+        }
 
         PrintWriter pWriter = null;
         try {
