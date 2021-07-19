@@ -8,13 +8,15 @@ import java.util.*;
 public class FilterTripsCSV {
 
     private static final String workingDirectory = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_1\\Kalibrierung\\V54\\";
-    private static final String filepath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_2\\Analyse\\berlin.o" +
+    private static final String tripsFilepath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_2\\Analyse\\berlin.o" +
             "utput_trips.csv\\berlin.output_trips.csv";
     private static final String shapeFilePath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Bezirke_-_Berli" +
             "n-shp\\Berlin_Bezirke.shp";
     private static final String outputFilePath0 = "tripsWithinZone";
     private static final String outputFilePath1 = "tripsIntoZone";
     private static final String outputFilePath2 = "tripsOutoZone";
+
+    private static  ShapeFileAnalyzer analyzer = new ShapeFileAnalyzer(shapeFilePath);
 
     private static String csvHeader;
 
@@ -23,9 +25,11 @@ public class FilterTripsCSV {
     private static ArrayList tripsIntoZone = new ArrayList();
     private static ArrayList tripsOutoZone = new ArrayList();
 
+    private static int counter = 0;
+
     public static void main(String[] args) {
 
-        var tripList = readFile(filepath);
+        var tripList = readFile(tripsFilepath);
 
         for (var trip: tripList){
             int direction = getDirection(trip);
@@ -38,9 +42,10 @@ public class FilterTripsCSV {
                 default: break;
             }
 
+            System.out.println("Actual trip number: " + counter++);
         }
 
-        printCSV(workingDirectory+outputFilePath0+".csv.gz",tripsWithinZone);
+        printCSV(workingDirectory+outputFilePath0+".csv",tripsWithinZone);
 
 
     }
@@ -92,7 +97,6 @@ public class FilterTripsCSV {
     }
 
     private static int getDirection(Trip trip){
-        ShapeFileAnalyzer analyzer = new ShapeFileAnalyzer(shapeFilePath);
         HashMap<String, String> tripAttributes = trip.trip_attributes;
 
         var deptCoord = new Coord(Double.parseDouble(tripAttributes.get("start_x")),
