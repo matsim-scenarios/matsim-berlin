@@ -7,23 +7,20 @@ import java.util.*;
 
 public class FilterTripsCSV {
 
-    private static final String workingDirectory = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_1\\Kalibrierung\\V54\\";
-    private static final String tripsFilepath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_2\\Analyse\\berlin.o" +
-            "utput_trips.csv\\berlin.output_trips.csv";
-    private static final String shapeFilePath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Bezirke_-_Berli" +
-            "n-shp\\Berlin_Bezirke.shp";
+    private static final String workingDirectory = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_2\\Analyse\\";
+    private static final String tripsFilepath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_2\\Analyse\\ber" +
+            "lin.output_trips.csv\\berlin.output_trips.csv";
+    private static final String shapeFilePath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Bezirke_-_Berlin-shp\\Berlin_Bezirke.shp";
     private static final String outputFilePath0 = "tripsWithinZone";
     private static final String outputFilePath1 = "tripsIntoZone";
     private static final String outputFilePath2 = "tripsOutoZone";
 
     private static  ShapeFileAnalyzer analyzer = new ShapeFileAnalyzer(shapeFilePath);
 
-    private static String csvHeader;
-
-    private static ArrayList tripsList = new ArrayList();
-    private static ArrayList tripsWithinZone = new ArrayList();
-    private static ArrayList tripsIntoZone = new ArrayList();
-    private static ArrayList tripsOutoZone = new ArrayList();
+    private static ArrayList<Trip> tripsList = new ArrayList();
+    private static ArrayList<Trip> tripsWithinZone = new ArrayList();
+    private static ArrayList<Trip> tripsIntoZone = new ArrayList();
+    private static ArrayList<Trip> tripsOutoZone = new ArrayList();
 
     private static int counter = 0;
 
@@ -35,30 +32,33 @@ public class FilterTripsCSV {
             int direction = getDirection(trip);
 
             switch (direction) {
-                case -1: tripsOutoZone.add(trip.toString()); break;
-                case 0: tripsWithinZone.add(trip.toString()); break;
-                case 1: tripsIntoZone.add(trip.toString()); break;
-                case 2: System.out.println("Trip ist außerhalb von Berlin"); break;
+                case -1: tripsOutoZone.add(trip); break;
+                case 0: tripsWithinZone.add(trip); break;
+                case 1: tripsIntoZone.add(trip); break;
 
                 default: break;
             }
 
-            System.out.println("Actual trip number: " + counter++);
+            if (counter++ % 10000 == 0) {
+                System.out.println("Actual trip number: " + counter + "\n" + (tripList.size() - counter) +
+                        " trips left.");
+            }
         }
 
         printCSV(workingDirectory+outputFilePath0+".csv",tripsWithinZone);
-        printCSV(workingDirectory+outputFilePath1+".csv",tripsWithinZone);
-        printCSV(workingDirectory+outputFilePath2+".csv",tripsWithinZone);
+        printCSV(workingDirectory+outputFilePath1+".csv",tripsIntoZone);
+        printCSV(workingDirectory+outputFilePath2+".csv",tripsOutoZone);
     }
 
     private static List<Trip> readFile(String filepath) {
+        //refers to OOP TUT #11 or 12
+
         File inputFile = new File(filepath);
         List<Trip> trips = new ArrayList<>();
 
         try (BufferedReader in = new BufferedReader(new FileReader(inputFile))) {
 
-            csvHeader = in.readLine();
-            String[] header = csvHeader.split(";");
+            String[] header = in.readLine().split(";"); //read in the headline
             String line ;
             while ((line = in.readLine()) != null) {
                 String[] trip_attributes = line.split(";");
@@ -66,6 +66,7 @@ public class FilterTripsCSV {
                 HashMap<String, String> currentTrip = new HashMap<>();
 
                 for (int i = 0; i < header.length-2; i++){
+                    //we create a hashmap, so we can later decide which attributes we want to have in the later csv
                     currentTrip.put(header[i],trip_attributes[i]);
                 }
 
@@ -77,12 +78,22 @@ public class FilterTripsCSV {
         return trips;
     }
 
-    private static void printCSV(String outputFilePath, ArrayList tripsList) {
+    private static void printCSV(String outputFilePath, ArrayList<Trip> tripsList) {
 
         if (tripsList.isEmpty()) {
 
             System.out.println("ARRAY IS EMPTY");
             return;
+        }
+
+        String header = new String();
+
+        //get the whole keySet as a String with ';' for the csv data
+
+        for (String key: tripsList.get(0).getTrip_attributes().keySet()){
+            if (!key.contains("x") && !key.contains("y")) {
+                header += key + ";";
+            }
         }
 
         PrintWriter pWriter = null;
@@ -95,11 +106,12 @@ public class FilterTripsCSV {
             e.printStackTrace();
         }
 
-        pWriter.println(csvHeader);
+        pWriter.println(header);
+
         for (var trip: tripsList){
             pWriter.println(trip.toString());
         }
-        /**Reicht das so?*/
+
         pWriter.close();
     }
 
@@ -114,9 +126,9 @@ public class FilterTripsCSV {
         boolean tripStartsInZone = analyzer.isInGeometry(deptCoord);
         boolean tripEndsInZone = analyzer.isInGeometry(arrCoord);
 
-        if (tripStartsInZone && tripEndsInZone) return 0;
-        if (tripStartsInZone && !tripEndsInZone) return -1;
-        if (!tripStartsInZone && tripEndsInZone) return 1;
+        if (tripStartsInZone && tripEndsInZone) return 0; // if trip is completly inside the zone
+        if (tripStartsInZone && tripEndsInZone == false) return -1; //if trip ends outside the zone but starts inside
+        if (tripStartsInZone == false && tripEndsInZone) return 1; //if trip ends within in the zone but starts outside
         return 2; //return 2 if trip is happening outside the shapefile area
     }
 
@@ -124,6 +136,8 @@ public class FilterTripsCSV {
         private HashMap<String,String> trip_attributes = new HashMap();
 
         public Trip(String personID, double distance, String mainMode, String legList, Coord deptCoord, Coord arrCoord){
+            //old constructor, probably without any use by now
+
             trip_attributes.put("personID",personID);
             trip_attributes.put("traveled_distance", Double.toString(distance));
             trip_attributes.put("mainMode",mainMode);
@@ -135,42 +149,17 @@ public class FilterTripsCSV {
         }
 
         public Trip(HashMap<String,String> tripAsHashMap){
-            String tempStartX = new String();
-            String tempStartY = new String();
-            String tempEndX = new String();
-            String tempEndY = new String();
 
             trip_attributes.put("personID",tripAsHashMap.get("person"));
             trip_attributes.put("traveled_distance", tripAsHashMap.get("traveled_distance"));
             trip_attributes.put("mainMode",tripAsHashMap.get("longest_distance_mode"));
             trip_attributes.put("legList",tripAsHashMap.get("modes"));
 
-            /*
-            if (tripAsHashMap.get("start_x").contains(".")) {
-                tempStartX = tripAsHashMap.get("start_x").replaceFirst("\\.","");
-            }
-            if (tripAsHashMap.get("start_y").contains(".")){
-                tempStartY = tripAsHashMap.get("start_y").replaceFirst("\\.","");
-            }
-            if (tripAsHashMap.get("end_x").contains(".")) {
-                tempEndX = tripAsHashMap.get("end_x").replaceFirst("\\.","");
-            }
-            if (tripAsHashMap.get("end_y").contains(".")) {
-                tempEndY = tripAsHashMap.get("end_y").replaceFirst("\\.","");
-            }
-             */
-
             trip_attributes.put("start_x", tripAsHashMap.get("start_x"));
             trip_attributes.put("start_y", tripAsHashMap.get("start_y"));
             trip_attributes.put("end_x", tripAsHashMap.get("end_x"));
             trip_attributes.put("end_y", tripAsHashMap.get("end_y"));
 
-            /*
-            trip_attributes.put("start_x", tempStartX);
-            trip_attributes.put("start_y", tempStartY);
-            trip_attributes.put("end_x", tempEndX);
-            trip_attributes.put("end_y", tempEndY);
-             */
         }
 
         public HashMap<String, String> getTrip_attributes() {
@@ -181,8 +170,17 @@ public class FilterTripsCSV {
         public String toString() {
             String tripAsStringForCSV = "";
 
-            for (String attribute: trip_attributes.values()){
-                tripAsStringForCSV += attribute + ";";
+            //its important, that we iterate by the order of the keys, otherwise the attributes will be in the wrong column in the csv later
+
+            for (String key: trip_attributes.keySet()){
+                if (!key.contains("x") && !key.contains("y")) {
+
+                    if (trip_attributes.get(key).length() == 0){
+                        tripAsStringForCSV += "NA"; continue;
+                    }
+
+                    tripAsStringForCSV += trip_attributes.get(key) + ";";
+                }
             }
 
             return tripAsStringForCSV;

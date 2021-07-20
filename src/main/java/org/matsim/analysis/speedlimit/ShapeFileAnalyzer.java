@@ -22,11 +22,12 @@ public class ShapeFileAnalyzer {
 
     private String shapeFilePath;
 
-    private HashMap<String, Geometry> geometries = new HashMap<>();
+    private ArrayList<String> plz = new ArrayList<>();
+    private ArrayList<Geometry> geometries = new ArrayList<>();
 
     public ShapeFileAnalyzer(String shapeFilePath){
         this.shapeFilePath = shapeFilePath;
-        getGeometry();
+        this.geometries = getGeometry();
     }
 
     public ShapeFileAnalyzer(String shapeFilePath, String epsgFrom, String epsgTo){
@@ -40,13 +41,39 @@ public class ShapeFileAnalyzer {
         this.epsgFrom = epsgFrom;
     }
 
+    public ArrayList<String> getPlz() {
+        return plz;
+    }
+
+    public void setPlz(ArrayList<String> plz) {
+        this.plz = plz;
+    }
+
+    public void addPlz(String plz){
+
+        if (!this.plz.contains(plz)) this.plz.add(plz);
+    }
+
     private void setEpsgTo(String epsgTo){
         this.epsgTo = epsgTo;
     }
 
-    private List<Geometry> getGeometry(){
+    private ArrayList<Geometry> getGeometry(){
         var features = ShapeFileReader.getAllFeatures(this.shapeFilePath);
-        List<Geometry> res = new ArrayList<>();
+        ArrayList<Geometry> res = new ArrayList<>();
+
+        for (var feature: features){
+
+            var geometry = (Geometry) feature.getDefaultGeometry();
+            res.add(geometry);
+        }
+
+        return res;
+    }
+
+    private ArrayList<Geometry> getGeometryFromPlz(){
+        var features = ShapeFileReader.getAllFeatures(this.shapeFilePath);
+        ArrayList<Geometry> res = new ArrayList<>();
 
         for (var feature: features){
 
@@ -74,7 +101,7 @@ public class ShapeFileAnalyzer {
     public boolean isInGeometry(Coord coord) {
         //selbe Funktion, nur überprüft die Methode gleich alle Geometrien
 
-        for (var geometry: this.geometries.values()){
+        for (var geometry: geometries){
 
             var transformed = transformation.transform(coord);
             if (geometry.covers(MGC.coord2Point(transformed))) return true;
