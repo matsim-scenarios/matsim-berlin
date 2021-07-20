@@ -101,9 +101,10 @@ public class MainModeHandler implements TransitDriverStartsEventHandler, PersonD
 
         if (geometry.covers(MGC.coord2Point(coord))) {
             return true;
-        else{
+        } else{
                 return false;
             }
         }
     }
+
 
