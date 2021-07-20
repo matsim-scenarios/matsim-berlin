@@ -7,11 +7,9 @@ import java.util.*;
 
 public class FilterTripsCSV {
 
-    private static final String workingDirectory = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_1\\Kalibrierung\\V54\\";
-    private static final String filepath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_2\\Analyse\\berlin.o" +
-            "utput_trips.csv\\berlin.output_trips.csv";
-    private static final String shapeFilePath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Bezirke_-_Berli" +
-            "n-shp\\Berlin_Bezirke.shp";
+    private static final String workingDirectory = "C:\\Users\\anton\\IdeaProjects\\Hausaufgaben\\HA2\\Analysis";
+    private static final String filepath = "C:\\Users\\anton\\IdeaProjects\\Hausaufgaben\\HA2\\Analysis\\Berlin_1\\trips.csv";
+    private static final String shapeFilePath = "C:\\Users\\anton\\IdeaProjects\\Hausaufgaben\\HA2\\Analysis\\shapefiles\\bezirksgrenzen.shp";
     private static final String outputFilePath0 = "tripsWithinZone";
     private static final String outputFilePath1 = "tripsIntoZone";
     private static final String outputFilePath2 = "tripsOutoZone";
@@ -37,12 +35,8 @@ public class FilterTripsCSV {
 
                 default: break;
             }
-
         }
-
-        printCSV(workingDirectory+outputFilePath0+".csv.gz",tripsWithinZone);
-
-
+        printCSV(workingDirectory,tripsWithinZone);
     }
 
     private static List<Trip> readFile(String filepath) {
@@ -62,7 +56,6 @@ public class FilterTripsCSV {
                 for (int i = 0; i < header.length-2; i++){
                     currentTrip.put(header[i],trip_attributes[i]);
                 }
-
                 trips.add(new Trip(currentTrip));
             }
         } catch (IOException e) {
