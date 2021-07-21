@@ -26,24 +26,23 @@ import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.PlanElement;
+import org.matsim.core.mobsim.framework.MobsimAgent;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.utils.collections.Tuple;
+import org.matsim.withinday.utils.EditPlans;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
-class ActivityWhileChargingFinder {
+public class ActivityWhileChargingFinder {
 
 	private final Collection<String> activityTypes;
 	private final double minimumActDuration;
 
 	private Logger log = Logger.getLogger(ActivityWhileChargingFinder.class);
 
-	ActivityWhileChargingFinder(Collection<String> possibleWhileChargingStartActTypes, double minimumActDuration){
+	public ActivityWhileChargingFinder(Collection<String> possibleWhileChargingStartActTypes, double minimumActDuration){
 		this.activityTypes = possibleWhileChargingStartActTypes;
 		this.minimumActDuration = minimumActDuration;
 	}
@@ -56,21 +55,32 @@ class ActivityWhileChargingFinder {
 	 * @return null if no suitable activity was found
 	 */
 	@Nullable
-	Activity findActivityWhileChargingBeforeLeg(Plan plan, Leg leg){
+	Activity findActivityWhileChargingBeforeLeg(MobsimAgent mobsimAgent, Plan plan, Leg leg){
 		String evRoutingMode = TripStructureUtils.getRoutingMode(leg);
 		Preconditions.checkState(plan.getPlanElements().contains(leg));
 		List<PlanElement> planElementsBeforeLeg = plan.getPlanElements().subList(0, plan.getPlanElements().indexOf(leg));
+
+		List<PlanElement> precedentPluginInteractions = planElementsBeforeLeg.stream().filter(planElement -> planElement.toString().contains((UrbanVehicleChargingHandler.PLUGIN_IDENTIFIER))).collect(Collectors.toList());
+		List<Activity> precedentActsWhileCharging = new ArrayList<>();
+
+		for (PlanElement precedentPluginInteraction : precedentPluginInteractions) {
+
+		int index = plan.getPlanElements().indexOf(precedentPluginInteraction);
+		precedentActsWhileCharging.add(EditPlans.findRealActAfter(mobsimAgent, index));
+
+		}
 
 		List<Activity> activities = TripStructureUtils.getActivities(planElementsBeforeLeg, TripStructureUtils.StageActivityHandling.ExcludeStageActivities);
 		List<Tuple<Leg, Activity>> evLegsWithFollowingActs = activities.stream()
 				.filter(activity -> activityTypes.contains(activity.getType()))
 				.map(activity -> planElementsBeforeLeg.indexOf(activity))
 				.filter(idx -> idx > 0)
-				.map(idx -> new Tuple<>((Leg) planElementsBeforeLeg.get(idx - 1), (Activity) planElementsBeforeLeg.get(idx)))
-				.filter(tuple -> TripStructureUtils.getRoutingMode(tuple.getFirst()).equals(evRoutingMode))
+				.map(idx -> new Tuple<>(getEvLegBeforeActivity(planElementsBeforeLeg, (Activity) planElementsBeforeLeg.get(idx), evRoutingMode), (Activity) planElementsBeforeLeg.get(idx)))
+//				.filter(tuple -> TripStructureUtils.getRoutingMode(tuple.getFirst()).equals(evRoutingMode))
 				.collect(Collectors.toList());
 
 		if(evLegsWithFollowingActs.isEmpty()) return null;
+		evLegsWithFollowingActs.removeIf(legActivityTuple -> legActivityTuple.getFirst() == null);
 		evLegsWithFollowingActs.sort(Comparator.comparingDouble(tuple -> tuple.getFirst().getDepartureTime().seconds()));
 
 		for (int i = evLegsWithFollowingActs.size() - 1; i >= 0; i--) {
@@ -80,9 +90,9 @@ class ActivityWhileChargingFinder {
 			Leg nextEVLeg = getNextLegOfRoutingModeAfterActivity(plan.getPlanElements(), tuple.getSecond(), evRoutingMode);
 			Preconditions.checkNotNull(nextEVLeg, "should not happen");
 			double end = nextEVLeg.getDepartureTime().seconds();
-			if(end - begin >= minimumActDuration) return tuple.getSecond();
+			if(end - begin >= minimumActDuration && !precedentActsWhileCharging.contains(tuple.getSecond())) return tuple.getSecond();
 		}
-		return null;
+		return null ;
 	}
 
 	/**
@@ -105,8 +115,29 @@ class ActivityWhileChargingFinder {
 		}
 		for (int ii = actIndex + 1; ii < planElements.size(); ii++){
 			PlanElement element = planElements.get(ii);
-			if(element instanceof Leg && TripStructureUtils.getRoutingMode((Leg) element).equals(routingMode)){
-				return (Leg) element;
+			if(element instanceof Leg)
+				if(((Leg) element).getMode().equals(routingMode)){
+					return (Leg) element;
+			}
+		}
+		return null;
+	}
+
+	Leg getEvLegBeforeActivity (List<PlanElement> planElements, Activity activity, String routingMode){
+		int actIndex = planElements.indexOf(activity);
+		if(actIndex < 0){
+			log.warn("could not find activity within given list of plan elements");
+			return null;
+		}
+		if(actIndex == planElements.size() - 1) {
+			log.warn("the given activity is the last activity in the given list of plan elements");
+			return null;
+		}
+		for (int ii = actIndex ; ii > 0 ; ii--){
+			PlanElement element = planElements.get(ii);
+			if(element instanceof Leg)
+				if(((Leg) element).getMode().equals(routingMode)){
+					return (Leg) element;
 			}
 		}
 		return null;

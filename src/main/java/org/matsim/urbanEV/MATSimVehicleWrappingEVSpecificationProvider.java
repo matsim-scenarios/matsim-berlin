@@ -29,6 +29,7 @@ import javax.inject.Provider;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
+import org.matsim.contrib.ev.EvUnits;
 import org.matsim.contrib.ev.fleet.ElectricFleetSpecification;
 import org.matsim.contrib.ev.fleet.ElectricFleetSpecificationImpl;
 import org.matsim.contrib.ev.fleet.ElectricVehicle;
@@ -84,8 +85,8 @@ class MATSimVehicleWrappingEVSpecificationProvider implements Provider<ElectricF
 		var electricVehicleSpecification = ImmutableElectricVehicleSpecification.newBuilder()
 				.vehicleType(vehicle.getType().getId().toString())
 				.chargerTypes(EVUtils.getChargerTypes(vehicle.getType().getEngineInformation()))
-				.initialSoc(EVUtils.getInitialEnergy(vehicle.getType().getEngineInformation()) * 3_600_000)
-				.batteryCapacity(VehicleUtils.getEnergyCapacity(vehicle.getType().getEngineInformation()) * 3_600_000)
+				.initialSoc(EVUtils.getInitialEnergy(vehicle.getType().getEngineInformation()) * EvUnits.J_PER_kWh)
+				.batteryCapacity(VehicleUtils.getEnergyCapacity(vehicle.getType().getEngineInformation()) * EvUnits.J_PER_kWh)
 				.id(getWrappedElectricVehicleId(vehicle.getId()))
 				.build();
 		this.fleetSpecification.addVehicleSpecification(electricVehicleSpecification);
