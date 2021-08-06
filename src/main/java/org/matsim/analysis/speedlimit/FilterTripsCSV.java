@@ -8,12 +8,12 @@ import java.util.*;
 public class FilterTripsCSV {
 
     private static final String workingDirectory = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_2\\Analyse\\";
-    private static final String tripsFilepath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_2\\Analyse\\ber" +
-            "lin.output_trips.csv\\berlin.output_trips.csv";
-    private static final String shapeFilePath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Bezirke_-_Berlin-shp\\Berlin_Bezirke.shp";
-    private static final String outputFilePath0 = "tripsWithinZone";
-    private static final String outputFilePath1 = "tripsIntoZone";
-    private static final String outputFilePath2 = "tripsOutoZone";
+    private static final String tripsFilepath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_2\\Output\\" +
+            "S-ring_trips.csv\\berlin-30kmh-ring.output_trips.csv";
+    private static final String shapeFilePath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_2\\Input\\Shapefile\\Berlin_S-Bahn-Ring.shp";
+    private static final String outputFilePath0 = "tripsWithinZone_S-ring-only";
+    private static final String outputFilePath1 = "tripsIntoZone_S-ring-only";
+    private static final String outputFilePath2 = "tripsOutoZone_S-ring-only";
 
     private static  ShapeFileAnalyzer analyzer = new ShapeFileAnalyzer(shapeFilePath);
 
@@ -154,12 +154,27 @@ public class FilterTripsCSV {
             trip_attributes.put("traveled_distance", tripAsHashMap.get("traveled_distance"));
             trip_attributes.put("mainMode",tripAsHashMap.get("longest_distance_mode"));
             trip_attributes.put("legList",tripAsHashMap.get("modes"));
+            trip_attributes.put("traveltime", computeTimeInSeconds(tripAsHashMap.get("trav_time")));
 
             trip_attributes.put("start_x", tripAsHashMap.get("start_x"));
             trip_attributes.put("start_y", tripAsHashMap.get("start_y"));
             trip_attributes.put("end_x", tripAsHashMap.get("end_x"));
             trip_attributes.put("end_y", tripAsHashMap.get("end_y"));
 
+        }
+
+        private String computeTimeInSeconds(String travelTimeInOrginalFormat){
+            if(!travelTimeInOrginalFormat.contains("")) return "-1";
+
+            String[] s = travelTimeInOrginalFormat.split(":");
+
+            int timeInSeconds = 0;
+
+            for (int i = 0; i < s.length; i++){
+                timeInSeconds += Integer.parseInt(s[i])*60^(2-i);
+            }
+
+            return String.valueOf(timeInSeconds);
         }
 
         public HashMap<String, String> getTrip_attributes() {

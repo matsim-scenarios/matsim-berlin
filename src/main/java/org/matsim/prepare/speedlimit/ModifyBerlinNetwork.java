@@ -24,8 +24,10 @@ public class ModifyBerlinNetwork {
 
     private static final String networkFilePath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Berlin_Scenario_output\\berlin" +
             "-v5.5-1pct.output_network.xml.gz";
-    private static final String shapeFilePath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Bezirk" +
+    private static final String berlinGesShapeFile = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Bezirk" +
             "e_-_Berlin-shp\\Berlin_Bezirke.shp";
+    private static final String shapeFilePath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_2\\Input" +
+            "\\Shapefile\\Berlin_S-Bahn-Ring.shp";
     private static final String outputNetworkFileName = "berlin-speedlimit-" + freespeed + ".xml.gz";
 
     private static final Network network = NetworkUtils.readNetwork(networkFilePath);
@@ -35,7 +37,7 @@ public class ModifyBerlinNetwork {
 
     public static void main(String[] args) {
 
-        freespeed /= 3.6; //in metres per hour
+        freespeed = 15/3.6; //in metres per second
 
         {
             var links = network.getLinks();
@@ -51,6 +53,8 @@ public class ModifyBerlinNetwork {
 
         System.out.println("Changed freespeed " + freespeedChangedCounter + " times to " + freespeed);
         System.out.println("New network can be found as: " + outputNetworkFileName);
+
+        if (freespeedChangedCounter == 0) return;
 
         NetworkWriter networkWriter = new NetworkWriter(network);
         networkWriter.write("C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_2\\Input\\" + outputNetworkFileName);
@@ -104,6 +108,7 @@ public class ModifyBerlinNetwork {
 
             var geometry = (Geometry) feature.getDefaultGeometry();
             res.add(geometry);
+            System.out.println("Geometry geladen, Größe: " + geometry.getArea());
         }
 
         return res;
