@@ -85,7 +85,7 @@ public class RunBerlinForEmissionAnalysis {
         controler.addOverridingModule(new AbstractModule() {
             @Override
             public void install() {
-                bind(EmissionModule.class).asEagerSingleton();
+                bind(EmissionModule.class);
             }
         });
 
@@ -142,26 +142,27 @@ public class RunBerlinForEmissionAnalysis {
 
         String[] typedArgs = Arrays.copyOfRange( args, 1, args.length );
 
-//        ConfigGroup[] customModulesToAdd;
-//        if (additionalInformation == RunDrtOpenBerlinScenario.AdditionalInformation.acceptUnknownParamsBerlinConfig) {
-//            customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(true)};
-//        } else {
-//            customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(false)};
-//        }
-//        ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
-//
-//        int counter = 0;
-//        for (ConfigGroup customModule : customModules) {
-//            customModulesAll[counter] = customModule;
-//            counter++;
-//        }
-//
-//        for (ConfigGroup customModule : customModulesToAdd) {
-//            customModulesAll[counter] = customModule;
-//            counter++;
-//        }
+        ConfigGroup[] customModulesToAdd;
+        if (additionalInformation == RunDrtOpenBerlinScenario.AdditionalInformation.acceptUnknownParamsBerlinConfig) {
+            customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(true), new EmissionsConfigGroup()};
+        } else {
+            customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(false), new EmissionsConfigGroup()};
 
-        final Config config = ConfigUtils.loadConfig( args[ 0 ], /*customModulesAll,*/ new EmissionsConfigGroup());
+        }
+        ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
+
+        int counter = 0;
+        for (ConfigGroup customModule : customModules) {
+            customModulesAll[counter] = customModule;
+            counter++;
+        }
+
+        for (ConfigGroup customModule : customModulesToAdd) {
+            customModulesAll[counter] = customModule;
+            counter++;
+        }
+
+        final Config config = ConfigUtils.loadConfig( args[ 0 ], customModulesAll);
 
         config.controler().setRoutingAlgorithmType( FastAStarLandmarks );
 
