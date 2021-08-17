@@ -7,10 +7,10 @@ import org.matsim.core.network.io.MatsimNetworkReader;
 
 public class AddRoadtype {
     public void run() {
-        final String workingDirectory="C:\\Users\\anton\\OneDrive\\uni\\MATSim\\tests\\output\\";
-        final String version="";
-        final String networkInputPath=workingDirectory+version+"network.xml";
-        final String networkOutputPath=workingDirectory+version+"network_with_hbefa.xml";
+        final String workingDirectory="C:\\Users\\anton\\OneDrive\\uni\\MATSim\\HW2\\cluster output\\";
+        final String runID="ring\\";
+        final String networkInputPath=workingDirectory+runID+"berlin-30kmh-ring.output_network.xml.gz";
+        final String networkOutputPath=workingDirectory+runID+"berlin.output_network_with_hbefa.xml";
         Network network = NetworkUtils.createNetwork();
         new MatsimNetworkReader(network).readFile(networkInputPath);
         for (Link link : network.getLinks().values()) {
