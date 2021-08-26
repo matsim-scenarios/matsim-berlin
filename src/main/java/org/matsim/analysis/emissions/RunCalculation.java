@@ -22,6 +22,8 @@ public class RunCalculation {
         manager.addHandler(pollutionHandler);
 
         new EmissionEventsReader(manager).readFile(eventsFile);
-        System.out.println(totalValue);
+        System.out.println(pollutionHandler.totalValue);
+
+        System.out.println("CO2_TOTAL on link 160133: "+pollutionHandler.getPollutionOnLinks().get("160133"));
     }
 }

@@ -1,10 +1,14 @@
 package org.matsim.analysis.emissions;
 
+import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.emissions.Pollutant;
 import org.matsim.contrib.emissions.events.ColdEmissionEvent;
 import org.matsim.contrib.emissions.events.ColdEmissionEventHandler;
 import org.matsim.contrib.emissions.events.WarmEmissionEvent;
 import org.matsim.contrib.emissions.events.WarmEmissionEventHandler;
+
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -17,19 +21,29 @@ public class CalculateTotalPollution implements WarmEmissionEventHandler, ColdEm
     int counter=0;
     public double totalValue=0;
 
+    private HashMap<Id<Link>,Double> pollutionOnLinks = new HashMap<>();
+
     @Override
     public void handleEvent (WarmEmissionEvent warmEvent) {
+
+        Double pollution = 0.0;
+
         for (Map.Entry<Pollutant, Double> pollutant : warmEvent.getWarmEmissions().entrySet()) {
                 var key = pollutant.getKey();
-                var value = pollutant.getValue();
+                pollution = pollutant.getValue();
                 counter++;
                 if (emissionType.equals(key.toString())) {
-                    totalValue = totalValue+value;
+                    totalValue = totalValue+pollution;
                 }
         }
+
+        pollutionOnLinks.put(warmEvent.getLinkId(),pollution);
     }
     @Override
     public void handleEvent (ColdEmissionEvent coldEvent) {
+
+        Double pollution = 0.0;
+
         for (Map.Entry<Pollutant, Double> pollutant : coldEvent.getColdEmissions().entrySet()) {
             var key = pollutant.getKey();
             var value = pollutant.getValue();
@@ -38,5 +52,11 @@ public class CalculateTotalPollution implements WarmEmissionEventHandler, ColdEm
                 totalValue = totalValue+value;
             }
         }
+
+        pollutionOnLinks.put(coldEvent.getLinkId(),pollution);
+    }
+
+    public HashMap<Id<Link>, Double> getPollutionOnLinks() {
+        return pollutionOnLinks;
     }
 }
