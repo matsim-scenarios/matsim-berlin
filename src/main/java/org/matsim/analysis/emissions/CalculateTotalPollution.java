@@ -1,13 +1,10 @@
 package org.matsim.analysis.emissions;
 
-import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.emissions.Pollutant;
 import org.matsim.contrib.emissions.events.ColdEmissionEvent;
 import org.matsim.contrib.emissions.events.ColdEmissionEventHandler;
 import org.matsim.contrib.emissions.events.WarmEmissionEvent;
 import org.matsim.contrib.emissions.events.WarmEmissionEventHandler;
-import org.matsim.core.network.NetworkUtils;
-
 import java.util.Map;
 
 /**
@@ -15,11 +12,10 @@ import java.util.Map;
  */
 
 public class CalculateTotalPollution implements WarmEmissionEventHandler, ColdEmissionEventHandler {
-
     //set the emission type of interest e.g. "CO", "CO2_TOTAL", "NOx" etc.
     static final String emissionType ="CO2_TOTAL";
     int counter=0;
-    double emissionCounter=0;
+    public double totalValue=0;
 
     @Override
     public void handleEvent (WarmEmissionEvent warmEvent) {
@@ -28,7 +24,7 @@ public class CalculateTotalPollution implements WarmEmissionEventHandler, ColdEm
                 var value = pollutant.getValue();
                 counter++;
                 if (emissionType.equals(key.toString())) {
-                    emissionCounter = emissionCounter+value;
+                    totalValue = totalValue+value;
                 }
         }
     }
@@ -39,7 +35,7 @@ public class CalculateTotalPollution implements WarmEmissionEventHandler, ColdEm
             var value = pollutant.getValue();
             counter++;
             if (emissionType.equals(key.toString())) {
-                emissionCounter = emissionCounter+value;
+                totalValue = totalValue+value;
             }
         }
     }
