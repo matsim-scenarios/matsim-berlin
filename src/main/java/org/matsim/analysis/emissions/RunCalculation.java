@@ -1,5 +1,6 @@
 package org.matsim.analysis.emissions;
 
+import org.matsim.api.core.v01.Id;
 import org.matsim.contrib.emissions.events.EmissionEventsReader;
 import org.matsim.core.events.EventsUtils;
 
@@ -22,8 +23,10 @@ public class RunCalculation {
         manager.addHandler(pollutionHandler);
 
         new EmissionEventsReader(manager).readFile(eventsFile);
-        System.out.println(pollutionHandler.totalValue);
+        System.out.println(pollutionHandler.totalValueOnePercentSample);
 
-        System.out.println("CO2_TOTAL on link 160133: "+pollutionHandler.getPollutionOnLinks().get("160133"));
+        var linkOfInterest = Id.createLinkId("160133");
+
+        System.out.println("CO2_TOTAL on link 160133: "+pollutionHandler.getPollutionOnLinks().get(linkOfInterest));
     }
 }

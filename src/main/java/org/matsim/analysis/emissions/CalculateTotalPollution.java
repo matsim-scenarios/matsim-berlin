@@ -19,7 +19,7 @@ public class CalculateTotalPollution implements WarmEmissionEventHandler, ColdEm
     //set the emission type of interest e.g. "CO", "CO2_TOTAL", "NOx" etc.
     static final String emissionType ="CO2_TOTAL";
     int counter=0;
-    public double totalValue=0;
+    public double totalValueOnePercentSample =0;
 
     private HashMap<Id<Link>,Double> pollutionOnLinks = new HashMap<>();
 
@@ -33,7 +33,7 @@ public class CalculateTotalPollution implements WarmEmissionEventHandler, ColdEm
                 pollution = pollutant.getValue();
                 counter++;
                 if (emissionType.equals(key.toString())) {
-                    totalValue = totalValue+pollution;
+                    totalValueOnePercentSample = totalValueOnePercentSample +pollution;
                 }
         }
 
@@ -49,7 +49,7 @@ public class CalculateTotalPollution implements WarmEmissionEventHandler, ColdEm
             var value = pollutant.getValue();
             counter++;
             if (emissionType.equals(key.toString())) {
-                totalValue = totalValue+value;
+                totalValueOnePercentSample = totalValueOnePercentSample +value;
             }
         }
 
