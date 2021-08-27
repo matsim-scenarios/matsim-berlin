@@ -21,7 +21,8 @@ import java.util.Map;
 public class CalculateTotalPollution implements WarmEmissionEventHandler, ColdEmissionEventHandler {
     //set the emission type of interest e.g. "CO", "CO2_TOTAL", "NOx" etc.
     static final String emissionType ="CO2_TOTAL";
-    private int counter=0;
+    private int warmEventCounter =0;
+    private int coldEventCounter = 0;
     private double totalValueOnePercentSample =0;
     private String shapeFilePath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Bezirke_-_Berlin-shp\\Berlin_Bezirke.shp";
     private String networkFilePath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Berlin_Scenario_output\\berlin-v5.5-1p" +
@@ -34,59 +35,63 @@ public class CalculateTotalPollution implements WarmEmissionEventHandler, ColdEm
     @Override
     public void handleEvent (WarmEmissionEvent warmEvent) {
 
-        if (!shapeFileAnalyzer.isLinkInGeometry(findLinkbyId(warmEvent.getLinkId()))){
-            return;
-        }
-
         for (Map.Entry<Pollutant, Double> pollutant : warmEvent.getWarmEmissions().entrySet()) {
 
             var key = pollutant.getKey();
             Double pollution = pollutant.getValue();
-            counter++;
+            warmEventCounter++;
             if (emissionType.equals(key.toString())) {
-                totalValueOnePercentSample = totalValueOnePercentSample +pollution;
 
+                if (!shapeFileAnalyzer.isLinkInGeometry(findLinkbyId(warmEvent.getLinkId()))){
+                    return;
+                }
+
+                totalValueOnePercentSample = totalValueOnePercentSample +pollution;
                 pollutionOnLinks.merge(warmEvent.getLinkId(), pollution, Double::sum);
             }
         }
 
-        if (counter % 1000 == 0) System.out.println("Counter: " + counter);
+        if (warmEventCounter % 1000000 == 0) System.out.println("WarmEventCounter: " + warmEventCounter);
     }
 
     @Override
     public void handleEvent (ColdEmissionEvent coldEvent) {
 
-        if (!shapeFileAnalyzer.isLinkInGeometry(findLinkbyId(coldEvent.getLinkId()))){
-            return;
-        }
-
         for (Map.Entry<Pollutant, Double> pollutant : coldEvent.getColdEmissions().entrySet()) {
 
             var key = pollutant.getKey();
             Double pollution  = pollutant.getValue();
-            counter++;
+            coldEventCounter++;
             if (emissionType.equals(key.toString())) {
-                totalValueOnePercentSample = totalValueOnePercentSample + pollution;
 
+                if (!shapeFileAnalyzer.isLinkInGeometry(findLinkbyId(coldEvent.getLinkId()))){
+                    return;
+                }
+
+                totalValueOnePercentSample = totalValueOnePercentSample + pollution;
                 pollutionOnLinks.merge(coldEvent.getLinkId(), pollution, Double::sum);
             }
         }
 
-        if (counter % 1000 == 0) System.out.println("Counter: " + counter);
+        if (coldEventCounter % 10000 == 0) System.out.println("ColdEventCounter: " + coldEventCounter);
     }
 
     public void printSummary(){
 
         System.out.println("+++++++Sumary of Pollution Analysis+++++++");
-        System.out.println("Total number of Emission Events: " + counter);
+        System.out.println("Total number of Emission Events: " + warmEventCounter);
         System.out.println("Total emissions in g: " + totalValueOnePercentSample);
         System.out.println("Total emissions according to the HashMap: " + sumUp());
         System.out.println("totalValueOnePercentSample == sumUp() ? --> " + ((Double) totalValueOnePercentSample).equals(sumUp()));
         System.out.println("++++++++++++++++++++++++++++++++++++++++++");
     }
 
-    public int getCounter() {
-        return counter;
+    public int getWarmEventCounter() {
+        return warmEventCounter;
+    }
+
+    public int getColdEventCounter() {
+        return coldEventCounter;
     }
 
     public double getTotalValueOnePercentSample() {
