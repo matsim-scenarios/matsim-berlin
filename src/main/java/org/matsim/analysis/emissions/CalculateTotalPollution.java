@@ -34,12 +34,12 @@ public class CalculateTotalPollution implements WarmEmissionEventHandler, ColdEm
     @Override
     public void handleEvent (WarmEmissionEvent warmEvent) {
 
+        if (!shapeFileAnalyzer.isLinkInGeometry(findLinkbyId(warmEvent.getLinkId()))){
+            return;
+        }
+
         for (Map.Entry<Pollutant, Double> pollutant : warmEvent.getWarmEmissions().entrySet()) {
 
-            if (!shapeFileAnalyzer.isLinkInGeometry(findLinkbyId(warmEvent.getLinkId()))){
-                continue;
-            }
-            
             var key = pollutant.getKey();
             Double pollution = pollutant.getValue();
             counter++;
@@ -56,11 +56,11 @@ public class CalculateTotalPollution implements WarmEmissionEventHandler, ColdEm
     @Override
     public void handleEvent (ColdEmissionEvent coldEvent) {
 
-        for (Map.Entry<Pollutant, Double> pollutant : coldEvent.getColdEmissions().entrySet()) {
+        if (!shapeFileAnalyzer.isLinkInGeometry(findLinkbyId(coldEvent.getLinkId()))){
+            return;
+        }
 
-            if (!shapeFileAnalyzer.isLinkInGeometry(findLinkbyId(coldEvent.getLinkId()))){
-                continue;
-            }
+        for (Map.Entry<Pollutant, Double> pollutant : coldEvent.getColdEmissions().entrySet()) {
 
             var key = pollutant.getKey();
             Double pollution  = pollutant.getValue();
