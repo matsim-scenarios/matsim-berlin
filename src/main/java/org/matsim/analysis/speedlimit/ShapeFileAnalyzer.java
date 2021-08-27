@@ -41,6 +41,11 @@ public class ShapeFileAnalyzer {
         this.epsgFrom = epsgFrom;
     }
 
+    public void setShapeFilePath(String shapeFilePath) {
+        this.shapeFilePath = shapeFilePath;
+        getGeometry();
+    }
+
     public ArrayList<String> getPlz() {
         return plz;
     }

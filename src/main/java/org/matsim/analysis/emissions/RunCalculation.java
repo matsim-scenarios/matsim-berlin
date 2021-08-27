@@ -19,6 +19,7 @@ public class RunCalculation {
     public static void main(String[] args) throws IOException {
         var manager = EventsUtils.createEventsManager();
         var pollutionHandler = new CalculateTotalPollution();
+        //use the setter methods to set filepaths to the shapefile and network data!
 
         manager.addHandler(pollutionHandler);
 
