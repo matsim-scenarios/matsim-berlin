@@ -14,7 +14,7 @@ import java.io.IOException;
 public class RunCalculation {
 
     //events file
-    private static final String eventsFile = "C:\\Users\\anton\\OneDrive\\uni\\MATSim\\HW2\\cluster output\\nullfall\\berlin.emission.events.offline.xml.gz";
+    private static final String eventsFile = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_2\\Output\\berlin-30kmh-gesBLN.emission.events.offline.xml.gz";
 
     public static void main(String[] args) throws IOException {
         var manager = EventsUtils.createEventsManager();
@@ -23,9 +23,10 @@ public class RunCalculation {
         manager.addHandler(pollutionHandler);
 
         new EmissionEventsReader(manager).readFile(eventsFile);
-        System.out.println(pollutionHandler.totalValueOnePercentSample);
 
         var linkOfInterest = Id.createLinkId("160133");
+
+        pollutionHandler.printSummary();
 
         System.out.println("CO2_TOTAL on link 160133: "+pollutionHandler.getPollutionOnLinks().get(linkOfInterest));
     }

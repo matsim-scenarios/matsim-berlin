@@ -18,45 +18,71 @@ import java.util.Map;
 public class CalculateTotalPollution implements WarmEmissionEventHandler, ColdEmissionEventHandler {
     //set the emission type of interest e.g. "CO", "CO2_TOTAL", "NOx" etc.
     static final String emissionType ="CO2_TOTAL";
-    int counter=0;
-    public double totalValueOnePercentSample =0;
+    private int counter=0;
+    private double totalValueOnePercentSample =0;
 
     private HashMap<Id<Link>,Double> pollutionOnLinks = new HashMap<>();
 
     @Override
     public void handleEvent (WarmEmissionEvent warmEvent) {
 
-        Double pollution = 0.0;
-
         for (Map.Entry<Pollutant, Double> pollutant : warmEvent.getWarmEmissions().entrySet()) {
                 var key = pollutant.getKey();
-                pollution = pollutant.getValue();
+                Double pollution = pollutant.getValue();
                 counter++;
                 if (emissionType.equals(key.toString())) {
                     totalValueOnePercentSample = totalValueOnePercentSample +pollution;
+
+                    pollutionOnLinks.merge(warmEvent.getLinkId(), pollution, Double::sum);
                 }
         }
-
-        pollutionOnLinks.put(warmEvent.getLinkId(),pollution);
     }
+
     @Override
     public void handleEvent (ColdEmissionEvent coldEvent) {
 
-        Double pollution = 0.0;
-
         for (Map.Entry<Pollutant, Double> pollutant : coldEvent.getColdEmissions().entrySet()) {
             var key = pollutant.getKey();
-            var value = pollutant.getValue();
+            Double pollution  = pollutant.getValue();
             counter++;
             if (emissionType.equals(key.toString())) {
-                totalValueOnePercentSample = totalValueOnePercentSample +value;
+                totalValueOnePercentSample = totalValueOnePercentSample + pollution;
+
+                pollutionOnLinks.merge(coldEvent.getLinkId(), pollution, Double::sum);
             }
         }
+    }
 
-        pollutionOnLinks.put(coldEvent.getLinkId(),pollution);
+    public void printSummary(){
+
+        System.out.println("+++++++Sumary of Pollution Analysis+++++++");
+        System.out.println("Total number of Emission Events: " + counter);
+        System.out.println("Total emissions in g: " + totalValueOnePercentSample);
+        System.out.println("Total emissions according to the HashMap: " + sumUp());
+        System.out.println("totalValueOnePercentSample == sumUp() ? --> " + ((Double) totalValueOnePercentSample).equals(sumUp()));
+        System.out.println("++++++++++++++++++++++++++++++++++++++++++");
+    }
+
+    public int getCounter() {
+        return counter;
+    }
+
+    public double getTotalValueOnePercentSample() {
+        return totalValueOnePercentSample;
     }
 
     public HashMap<Id<Link>, Double> getPollutionOnLinks() {
         return pollutionOnLinks;
+    }
+
+    private double sumUp(){
+
+        double total = 0.0;
+
+        for (Double emission: pollutionOnLinks.values()){
+            total += emission;
+        }
+
+        return total;
     }
 }
