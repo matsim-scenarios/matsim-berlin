@@ -17,6 +17,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * by hzoerner
+ */
+
 public class ModifyBerlinNetwork {
 
     private static double freespeed = 30; // dont use SI-Einheiten hier, in kilometres per hour

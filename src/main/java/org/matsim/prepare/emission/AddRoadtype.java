@@ -5,6 +5,10 @@ import org.matsim.api.core.v01.network.NetworkWriter;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.io.MatsimNetworkReader;
 
+/**
+ * by antonstock
+ */
+
 public class AddRoadtype {
     public void run() {
         final String workingDirectory="C:\\Users\\anton\\OneDrive\\uni\\MATSim\\HW2\\cluster output\\";

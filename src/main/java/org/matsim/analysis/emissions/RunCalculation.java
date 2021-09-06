@@ -8,7 +8,7 @@ import java.io.IOException;
 
 
 /**
- * by antonstock
+ * by antonstock and hzoerner
  */
 
 public class RunCalculation {

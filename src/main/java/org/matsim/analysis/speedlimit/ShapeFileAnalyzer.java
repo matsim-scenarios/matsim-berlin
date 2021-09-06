@@ -12,6 +12,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * by hzoerner
+ */
+
 public class ShapeFileAnalyzer {
 
     private String epsgFrom = "31468";

@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * by antonstock
+ * by antonstock and hzoerner
  */
 
 public class CalculateTotalPollution implements WarmEmissionEventHandler, ColdEmissionEventHandler {

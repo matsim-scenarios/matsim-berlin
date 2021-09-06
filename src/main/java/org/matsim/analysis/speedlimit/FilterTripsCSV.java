@@ -4,6 +4,9 @@ import org.matsim.api.core.v01.Coord;
 
 import java.io.*;
 import java.util.*;
+/**
+ * by hzoerner
+ */
 
 public class FilterTripsCSV {
 
