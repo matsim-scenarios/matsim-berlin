@@ -46,7 +46,7 @@ import org.matsim.vehicles.VehicleUtils;
 import java.util.logging.Logger;
 
 /**
- * @author ikaddoura
+ * @author ikaddoura, modified by antonstock
  */
 
 public class RunOfflineAirPollutionAnalysis {
@@ -94,10 +94,6 @@ public class RunOfflineAirPollutionAnalysis {
 	void run() {
 
 		Config config = ConfigUtils.createConfig();
-//		config.vehicles().setVehiclesFile(runDirectory + runId + ".output_vehicles.xml.gz");
-//		config.network().setInputFile(runDirectory + runId + ".output_network.xml.gz");
-//		config.transit().setTransitScheduleFile(runDirectory + runId + ".output_transitSchedule.xml.gz");
-//		config.transit().setVehiclesFile(runDirectory + runId + ".output_transitVehicles.xml.gz");
 		config.vehicles().setVehiclesFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/output-berlin-v5.5-1pct/berlin-v5.5.3-1pct.output_vehicles.xml.gz");
 		config.network().setInputFile("C:\\Users\\anton\\OneDrive\\uni\\MATSim\\HW2\\cluster output\\ring\\berlin.output_network_with_hbefa.xml");
 		config.transit().setTransitScheduleFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/output-berlin-v5.5-1pct/berlin-v5.5.3-1pct.output_transitSchedule.xml.gz");
