@@ -14,7 +14,7 @@ import java.io.IOException;
 public class RunCalculation {
 
     //events file
-    private static final String eventsFile = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Hausaufgabe_2\\Output\\berlin-30kmh-gesBLN.emission.events.offline.xml.gz";
+    private static final String eventsFile = "C:\\Users\\anton\\OneDrive\\uni\\MATSim\\HW2\\cluster output\\gesamt-Berlin\\berlin-30kmh-gesBLN.emission.events.offline.xml.gz";
 
     public static void main(String[] args) throws IOException {
         var manager = EventsUtils.createEventsManager();

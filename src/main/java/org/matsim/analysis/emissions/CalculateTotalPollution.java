@@ -24,9 +24,9 @@ public class CalculateTotalPollution implements WarmEmissionEventHandler, ColdEm
     private int warmEventCounter =0;
     private int coldEventCounter = 0;
     private double totalValueOnePercentSample =0;
-    private String shapeFilePath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Bezirke_-_Berlin-shp\\Berlin_Bezirke.shp";
-    private String networkFilePath = "C:\\Users\\ACER\\Desktop\\Uni\\MATSim\\Berlin_Scenario_output\\berlin-v5.5-1p" +
-            "ct.output_network.xml.gz";
+    private String shapeFilePath = "C:\\Users\\anton\\OneDrive\\uni\\MATSim\\HW2\\analysis\\shapefiles\\ring\\Berlin_S-Bahn-Ring.shp";
+    //private String shapeFilePath = "C:\\Users\\anton\\OneDrive\\uni\\MATSim\\HW2\\analysis\\shapefiles\\gesamt-Berlin\\Berlin_Bezirke.shp";
+    private String networkFilePath = "C:\\Users\\anton\\OneDrive\\uni\\MATSim\\HW2\\cluster output\\ring\\berlin.output_network_with_hbefa.xml";
 
     private HashMap<Id<Link>,Double> pollutionOnLinks = new HashMap<>();
     private ShapeFileAnalyzer shapeFileAnalyzer =  new ShapeFileAnalyzer(shapeFilePath);
