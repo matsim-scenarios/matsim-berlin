@@ -70,9 +70,10 @@ import org.matsim.core.router.TripRouter;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
+import org.matsim.core.utils.timing.TimeInterpretation;
 import org.matsim.pt.config.TransitConfigGroup;
 import org.matsim.pt.router.TransitScheduleChangedEvent;
-import org.matsim.pt.routes.ExperimentalTransitRoute;
+import org.matsim.pt.routes.DefaultTransitPassengerRoute;
 import org.matsim.pt.transitSchedule.api.Departure;
 import org.matsim.pt.transitSchedule.api.TransitLine;
 import org.matsim.pt.transitSchedule.api.TransitRoute;
@@ -453,7 +454,7 @@ public final class RunPtDisturbancesBerlin {
 
 		// force new transit router:
 		final TripRouter tripRouter = tripRouterProvider.get();
-		EditTrips editTrips = new EditTrips( tripRouter, scenario, internalInterface );
+		EditTrips editTrips = new EditTrips( tripRouter, scenario, internalInterface, TimeInterpretation.create(scenario.getConfig()) );
 		
 		int currentTripsReplanned = 0;
 		int futureTripsReplanned = 0;
@@ -503,7 +504,7 @@ public final class RunPtDisturbancesBerlin {
 				} else if( pe instanceof Leg ){
 					Leg leg = (Leg) pe;
 					if( leg.getMode().equals( TransportMode.pt ) ){
-						ExperimentalTransitRoute transitRoute = (ExperimentalTransitRoute) leg.getRoute();
+						DefaultTransitPassengerRoute transitRoute = (DefaultTransitPassengerRoute) leg.getRoute();
 						if( transitRoute.getLineId().equals( disturbedLineId ) ){
 							TripStructureUtils.Trip affectedTrip = editTrips.findTripAtPlanElement( agent, pe );
 							if( currentTrip != null && currentTrip.getTripElements().contains( pe ) ){
