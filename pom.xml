@@ -9,16 +9,12 @@
 	<name>MATSim Open Berlin scenario project</name>
 	<description>MATSim Open Berlin scenario project</description>
 
-	<properties>		
+	<properties>
 		<!-- release -->
 		<!--<matsim.version>13.0</matsim.version>-->
 
 		<!-- PR-labelled release -->
-<!--		<matsim.version>14.0-PR1548</matsim.version>-->
-		<matsim.version>14.0-PR1589</matsim.version>
-<!--		<matsim.version>14.0-SNAPSHOT</matsim.version>-->
-
-
+		<matsim.version>14.0-PR1590</matsim.version>
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
 		<!--<matsim.version>14.0-SNAPSHOT</matsim.version>-->
@@ -45,12 +41,6 @@
 		</repository>
 
 		<repository>
-			<!-- Required for MATSim snaphots -->
-			<id>ojo-snapshots</id>
-			<url>http://oss.jfrog.org/libs-snapshot</url>
-		</repository>
-
-		<repository>
 			<id>de.topobyte</id>
 			<url>https://mvn.topobyte.de</url>
 		</repository>
@@ -58,11 +48,6 @@
 		<repository>
 			<id>com.slimjars.trove4j</id>
 			<url>https://mvn.slimjars.com</url>
-		</repository>
-
-		<repository>
-			<id>SBB</id>
-			<url>https://schweizerischebundesbahnen.bintray.com/simba.mvn</url>
 		</repository>
 
 	</repositories>
@@ -85,13 +70,6 @@
 
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
-			<artifactId>av</artifactId>
-			<version>${matsim.version}</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.matsim.contrib</groupId>
 			<artifactId>emissions</artifactId>
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
@@ -103,7 +81,6 @@
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
 		</dependency>
-
 
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
@@ -182,20 +159,20 @@
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>opt-drt</artifactId>
-			<version>0a4ad0fe73</version>
+			<version>d61d2c8</version>
 		</dependency>
 		
 		<dependency>
 	    	<groupId>com.github.matsim-vsp</groupId>
 	    	<artifactId>matsim-analysis</artifactId>
-	    	<version>v3.2</version>
+	    	<version>933a6dd</version>
 			<!-- <version>94a0b679d7</version> -->
         </dependency>
 
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>pt-extensions</artifactId>
-			<version>67dec05d3b</version>
+			<version>c6cd2aa65b</version>
 		</dependency>
 
 		<dependency>
