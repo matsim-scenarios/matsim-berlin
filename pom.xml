@@ -140,7 +140,7 @@
 		<dependency>
 			<groupId>com.github.matsim-org</groupId>
 			<artifactId>GTFS2MATSim</artifactId>
-			<version>11.2</version>
+			<version>13.0</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>gt-epsg-hsql</artifactId>
