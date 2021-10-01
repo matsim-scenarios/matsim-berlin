@@ -24,6 +24,7 @@ import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 import com.google.inject.Singleton;
 import org.apache.log4j.Logger;
 import org.matsim.analysis.RunPersonTripAnalysis;
+import org.matsim.analysis.linkpaxvolumes.LinkPaxVolumesAnalysisModule;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -108,7 +109,7 @@ public final class RunBerlinScenario {
 					+ "Should only be used for testing or car-focused studies with a fixed modal split.  ");
 		}
 		
-		
+		controler.addOverridingModule(new LinkPaxVolumesAnalysisModule());
 		
 		// use the (congested) car travel time for the teleported ride mode
 		controler.addOverridingModule( new AbstractModule() {
