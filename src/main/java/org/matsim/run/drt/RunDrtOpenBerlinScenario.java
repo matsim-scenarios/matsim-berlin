@@ -48,10 +48,6 @@ import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.run.BerlinExperimentalConfigGroup;
 import org.matsim.run.RunBerlinScenario;
-import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
-import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
-import org.matsim.extensions.pt.routing.ptRoutingModes.PtIntermodalRoutingModesConfigGroup;
-import org.matsim.extensions.pt.routing.ptRoutingModes.PtIntermodalRoutingModesModule;
 
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
 import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
@@ -115,11 +111,7 @@ public final class RunDrtOpenBerlinScenario {
 		});
 
 		// yyyy there is fareSModule (with S) in config. ?!?!  kai, jul'19
-		
-		controler.addOverridingModule(new IntermodalTripFareCompensatorsModule());
-		
-		controler.addOverridingModule(new PtIntermodalRoutingModesModule());
-		
+
 		return controler;
 	}
 	
@@ -159,8 +151,7 @@ public final class RunDrtOpenBerlinScenario {
 
 	public static Config prepareConfig( AdditionalInformation additionalInformation, String [] args, ConfigGroup... customModules) {
 		ConfigGroup[] customModulesToAdd = new ConfigGroup[] { new DvrpConfigGroup(), new MultiModeDrtConfigGroup(),
-				new SwissRailRaptorConfigGroup(), new IntermodalTripFareCompensatorsConfigGroup(),
-				new PtIntermodalRoutingModesConfigGroup() };
+				new SwissRailRaptorConfigGroup() };
 		ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
 
 		int counter = 0;

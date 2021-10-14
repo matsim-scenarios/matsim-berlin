@@ -34,6 +34,7 @@ public class AssignIncome {
 
 	public static void assignIncomeToPersonSubpopulationAccordingToGermanyAverage(Population population){
 		// https://de.wikipedia.org/wiki/Einkommensverteilung_in_Deutschland
+		// besser https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Einkommen-Konsum-Lebensbedingungen/Einkommen-Einnahmen-Ausgaben/Publikationen/Downloads-Einkommen/einkommensverteilung-2152606139004.pdf?__blob=publicationFile
 		// Anteil der Personen (%) an allen Personen 10 20 30 40 50 60 70 80 90 100
 		// Nettoäquivalenzeinkommen(€) 826 1.142 1.399 1.630 1.847 2.070 2.332 2.659 3.156 4.329
 

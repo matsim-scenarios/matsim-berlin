@@ -17,7 +17,7 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.analysis.emissions;
+package org.matsim.analysis;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -45,26 +45,16 @@ import org.matsim.vehicles.VehicleUtils;
 * @author ikaddoura
 */
 
-public class RunOfflineAirPollutionAnalysisByVehicleCategory {
+public class RunOfflineAirPollutionAnalysis {
 	
 	private final String runDirectory;
 	private final String runId;
 	private final String hbefaWarmFile;
 	private final String hbefaColdFile;
 	private final String analysisOutputDirectory;
-	
-	public RunOfflineAirPollutionAnalysisByVehicleCategory(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
-		this.runDirectory = runDirectory;
-		this.runId = runId;
-		this.hbefaWarmFile = hbefaFileWarm;
-		this.hbefaColdFile = hbefaFileCold;
-		
-		if (!analysisOutputDirectory.endsWith("/")) analysisOutputDirectory = analysisOutputDirectory + "/";
-		this.analysisOutputDirectory = analysisOutputDirectory;
-	}
-	
+
 	public static void main(String[] args) {
-		
+				
 		if (args.length == 1) {
 			String rootDirectory = args[0];
 			if (!rootDirectory.endsWith("/")) rootDirectory = rootDirectory + "/";
@@ -75,7 +65,7 @@ public class RunOfflineAirPollutionAnalysisByVehicleCategory {
 			final String hbefaFileCold = "shared-svn/projects/matsim-germany/hbefa/hbefa-files/v3.2/EFA_ColdStart_vehcat_2005average.txt";
 			final String hbefaFileWarm = "shared-svn/projects/matsim-germany/hbefa/hbefa-files/v3.2/EFA_HOT_vehcat_2005average.txt";
 			
-			RunOfflineAirPollutionAnalysisByVehicleCategory analysis = new RunOfflineAirPollutionAnalysisByVehicleCategory(
+			RunOfflineAirPollutionAnalysis analysis = new RunOfflineAirPollutionAnalysis(
 					rootDirectory + runDirectory,
 					runId,
 					rootDirectory + hbefaFileWarm,
@@ -87,9 +77,19 @@ public class RunOfflineAirPollutionAnalysisByVehicleCategory {
 			throw new RuntimeException("Please set the root directory. Aborting...");
 		}
 	}
+	
+	public RunOfflineAirPollutionAnalysis(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
+		this.runDirectory = runDirectory;
+		this.runId = runId;
+		this.hbefaWarmFile = hbefaFileWarm;
+		this.hbefaColdFile = hbefaFileCold;
+		
+		if (!analysisOutputDirectory.endsWith("/")) analysisOutputDirectory = analysisOutputDirectory + "/";
+		this.analysisOutputDirectory = analysisOutputDirectory;
+	}
 
 	void run() {
-		
+
 		Config config = ConfigUtils.createConfig();
 		config.vehicles().setVehiclesFile(runDirectory + runId + ".output_vehicles.xml.gz");
 		config.network().setInputFile(runDirectory + runId + ".output_network.xml.gz");
@@ -112,7 +112,6 @@ public class RunOfflineAirPollutionAnalysisByVehicleCategory {
 		final String eventsFile = runDirectory + runId + ".output_events.xml.gz";
 		
 		Scenario scenario = ScenarioUtils.loadScenario(config);
-		
 		// network
 		for (Link link : scenario.getNetwork().getLinks().values()) {
 
@@ -218,7 +217,7 @@ public class RunOfflineAirPollutionAnalysisByVehicleCategory {
         matsimEventsReader.readFile(eventsFile);
         eventsManager.finishProcessing();
 
-        emissionEventWriter.closeFile();
+        emissionEventWriter.closeFile();	
 	}
 
 }

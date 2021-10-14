@@ -4,20 +4,13 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.matsim-scenarios</groupId>
 	<artifactId>matsim-berlin</artifactId>
-	<version>5.6.x-SNAPSHOT</version>
+	<version>5.5.3</version>
 
 	<name>MATSim Open Berlin scenario project</name>
 	<description>MATSim Open Berlin scenario project</description>
 
-	<properties>		
-		<!-- release -->
-		<!--<matsim.version>13.0</matsim.version>-->
-
-		<!-- PR-labelled release -->
-		<matsim.version>14.0-PR1452</matsim.version>
-
-		<!-- snapshot == not recommended: rather use PR-labelled release!-->
-		<!--<matsim.version>14.0-SNAPSHOT</matsim.version>-->
+	<properties>
+		<matsim.version>14.0-PR1512</matsim.version> <!-- 18.05.2021-->
 	</properties>
 
 	<repositories>
@@ -81,13 +74,6 @@
 
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
-			<artifactId>av</artifactId>
-			<version>${matsim.version}</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.matsim.contrib</groupId>
 			<artifactId>emissions</artifactId>
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
@@ -99,7 +85,6 @@
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
 		</dependency>
-
 
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
@@ -139,12 +124,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.matsim</groupId>
-			<artifactId>matsim-examples</artifactId>
-			<version>${matsim.version}</version>
-		</dependency>
-
-		<dependency>
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>analysis</artifactId>
 			<version>${matsim.version}</version>
@@ -178,21 +157,14 @@
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>opt-drt</artifactId>
-			<version>0a4ad0fe73</version>
+			<version>d61d2c8294</version>
 		</dependency>
 		
 		<dependency>
 	    	<groupId>com.github.matsim-vsp</groupId>
 	    	<artifactId>matsim-analysis</artifactId>
-	    	<version>v3.2</version>
-			<!-- <version>94a0b679d7</version> -->
+		<version>933a6dd</version>
         </dependency>
-
-		<dependency>
-			<groupId>com.github.matsim-vsp</groupId>
-			<artifactId>pt-extensions</artifactId>
-			<version>67dec05d3b</version>
-		</dependency>
 
 		<dependency>
 		<!-- This is the matsim "freight" contrib: -->
@@ -276,46 +248,45 @@
 			</plugin>
 
 			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<!--Presumably, you can run this by mvn assembly:assembly (?)-->
-
-				<configuration>
-					<descriptorRefs>
-						<descriptorRef>jar-with-dependencies</descriptorRef>
-					</descriptorRefs>
-					<archive>
-						<manifest>
-							<mainClass>org.matsim.gui.RunBerlinScenarioGUI</mainClass>
-						</manifest>
-					</archive>
-				</configuration>
-				<executions>
-					<execution>
-						<id>make-assembly</id>
-						<phase>package</phase>
-						<!--Presumably, this plugin is thus run as part of the package phase.  So-->
-						<!--you can either only run assembly:assembly, or package, where the-->
-						<!--latter may run additional stuff or not.-->
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>  <!-- Create sources.jar -->
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>3.2.0</version>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.2.2</version>
 				<executions>
 					<execution>
-						<id>attach-sources</id>
+						<phase>package</phase>
 						<goals>
-							<goal>jar</goal>
+							<goal>shade</goal>
 						</goals>
+						<configuration>
+							<outputFile>${project.basedir}/${project.build.finalName}.jar</outputFile>
+							<transformers>
+								<!-- This bit sets the main class for the executable jar as you otherwise would with the assembly plugin -->
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<manifestEntries>
+										<Main-Class>org.matsim.gui.RunBerlinScenarioGUI</Main-Class>
+										<Specification-Vendor>org.matsim</Specification-Vendor>
+										<Implementation-Vendor>org.matsim</Implementation-Vendor>
+										<Implementation-Version>${project.version}</Implementation-Version>
+									</manifestEntries>
+								</transformer>
+								<!-- This bit merges the various GeoTools META-INF/services files         -->
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+							</transformers>
+							<filters>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/*.SF</exclude>
+										<exclude>META-INF/*.DSA</exclude>
+										<exclude>META-INF/*.RSA</exclude>
+									</excludes>
+								</filter>
+							</filters>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
+
 		</plugins>
 	</build>
 
