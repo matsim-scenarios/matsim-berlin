@@ -1,11 +1,22 @@
 package org.matsim.run;
 
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.prep.PreparedGeometry;
+import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
+import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Plan;
+import org.matsim.core.config.groups.StrategyConfigGroup;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
+import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.population.PopulationUtils;
+import org.matsim.core.replanning.strategies.ReRoute;
 import org.matsim.core.router.TripStructureUtils;
+import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.facilities.ActivityFacilitiesFactoryImpl;
+import org.matsim.vis.snapshotwriters.SnapshotWritersModule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +28,35 @@ public class MosaikRunner {
 
         var config = RunBerlinScenario.prepareConfig(args);
         config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
+        config.strategy().clearStrategySettings();
+
+        // allow only re-route and plan selection
+        var reRouteFreight = new StrategyConfigGroup.StrategySettings()
+                .setStrategyName("ReRoute")
+                .setWeight(0.5)
+                .setSubpopulation("freight");
+
+        var reRoutePersons = new StrategyConfigGroup.StrategySettings()
+                .setStrategyName("ReRoute")
+                .setWeight(0.5)
+                .setSubpopulation("person");
+
+        var changePlansPersons =  new StrategyConfigGroup.StrategySettings()
+                .setStrategyName("ChangeExpBeta")
+                .setWeight(0.5)
+                .setSubpopulation("person");
+
+        var changePlansFreight =  new StrategyConfigGroup.StrategySettings()
+                .setStrategyName("ChangeExpBeta")
+                .setWeight(0.5)
+                .setSubpopulation("freight");
+
+
+        config.strategy().addStrategySettings(reRouteFreight);
+        config.strategy().addStrategySettings(reRoutePersons);
+        config.strategy().addStrategySettings(changePlansPersons);
+        config.strategy().addStrategySettings(changePlansFreight);
+        config.strategy().setFractionOfIterationsToDisableInnovation(0.8);
 
         var scenario = RunBerlinScenario.prepareScenario(config);
 
@@ -43,6 +83,48 @@ public class MosaikRunner {
         new CreatePseudoNetwork(scenario.getTransitSchedule(), scenario.getNetwork(), "pt_", 0.1, 100000.0).createNetwork();
 
          */
+
+        var bbox = createBoundingBox();
+        var network = scenario.getNetwork();
+        // if links are within the bounding box replace simplified links with detailed geometries
+        // first add detailed geometries for the original geometry information
+        var linksToDelete = network.getLinks().values().parallelStream()
+                .filter(link -> isCoveredBy(link, bbox))
+                .peek(link -> {
+
+                    // get the original geometry information from the link attributes
+                    var originalGeometry = NetworkUtils.getOriginalGeometry(link);
+
+                    // convert original link's attributes into map once
+                    var attributes = link.getAttributes().getAsMap();
+
+                    // for each node in the original geometry add one link
+                    for (int i = 0; i < originalGeometry.size(); i++) {
+
+                        network.addNode(originalGeometry.get(i));
+
+                        var from = i == 0 ? link.getFromNode() : originalGeometry.get(i);
+                        var to = i == originalGeometry.size() - 1 ? link.getToNode() : originalGeometry.get(i + 1);
+                        var newLink = network.getFactory().createLink(Id.createLinkId(link.getId().toString() + "_" + i), from, to);
+
+                        // copy all values of the original link
+                        newLink.setAllowedModes(link.getAllowedModes());
+                        newLink.setCapacity(link.getCapacity());
+                        newLink.setFreespeed(link.getFreespeed());
+                        newLink.setNumberOfLanes(link.getNumberOfLanes());
+
+                        // copy all unstructured attributes
+                        attributes.forEach((key, value) -> newLink.getAttributes().putAttribute(key, value));
+
+                        network.addLink(newLink);
+                    }
+                })
+                .collect(Collectors.toSet());
+
+        // now delete the links simplified links
+        for (var link : linksToDelete) {
+            network.removeLink(link.getId());
+        }
 
         // remove linkids from activities
         scenario.getPopulation().getPersons().values().parallelStream()
@@ -98,5 +180,22 @@ public class MosaikRunner {
 
         var controler = RunBerlinScenario.prepareControler(scenario);
         controler.run();
+    }
+
+    private static PreparedGeometry createBoundingBox() {
+
+        var geometry = new GeometryFactory().createPolygon(
+                new Coordinate[]{
+                        new Coordinate(385030.5, 5818413.0), new Coordinate(385030.5, 5820459),
+                        new Coordinate(387076.5, 5820459), new Coordinate(385030.5, 5820459),
+                        new Coordinate(385030.5, 5818413.0)
+                }
+        );
+        return new PreparedGeometryFactory().create(geometry);
+    }
+
+    private static boolean isCoveredBy(Link link, PreparedGeometry geometry) {
+        return geometry.covers(MGC.coord2Point(link.getFromNode().getCoord()))
+                && geometry.covers(MGC.coord2Point(link.getToNode().getCoord()));
     }
 }

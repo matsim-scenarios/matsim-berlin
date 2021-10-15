@@ -17,7 +17,7 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.analysis;
+package org.matsim.analysis.emissions;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -45,7 +45,7 @@ import org.matsim.vehicles.VehicleUtils;
 * @author ikaddoura
 */
 
-public class RunOfflineAirPollutionAnalysis {
+public class RunOfflineAirPollutionAnalysisByVehicleCategory {
 	
 	private final String runDirectory;
 	private final String runId;
@@ -65,7 +65,7 @@ public class RunOfflineAirPollutionAnalysis {
 			final String hbefaFileCold = "shared-svn/projects/matsim-germany/hbefa/hbefa-files/v3.2/EFA_ColdStart_vehcat_2005average.txt";
 			final String hbefaFileWarm = "shared-svn/projects/matsim-germany/hbefa/hbefa-files/v3.2/EFA_HOT_vehcat_2005average.txt";
 			
-			RunOfflineAirPollutionAnalysis analysis = new RunOfflineAirPollutionAnalysis(
+			RunOfflineAirPollutionAnalysisByVehicleCategory analysis = new RunOfflineAirPollutionAnalysisByVehicleCategory(
 					rootDirectory + runDirectory,
 					runId,
 					rootDirectory + hbefaFileWarm,
@@ -78,7 +78,7 @@ public class RunOfflineAirPollutionAnalysis {
 		}
 	}
 	
-	public RunOfflineAirPollutionAnalysis(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
+	public RunOfflineAirPollutionAnalysisByVehicleCategory(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
 		this.runDirectory = runDirectory;
 		this.runId = runId;
 		this.hbefaWarmFile = hbefaFileWarm;
@@ -115,7 +115,7 @@ public class RunOfflineAirPollutionAnalysis {
 		// network
 		for (Link link : scenario.getNetwork().getLinks().values()) {
 
-			double freespeed = Double.NaN;
+			double freespeed;
 
 			if (link.getFreespeed() <= 13.888889) {
 				freespeed = link.getFreespeed() * 2;
