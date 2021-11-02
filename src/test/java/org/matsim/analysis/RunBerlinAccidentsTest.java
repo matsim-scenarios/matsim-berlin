@@ -15,8 +15,8 @@ import org.matsim.contrib.accidents.runExample.AccidentsNetworkModification;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.prepare.accidents.WriteBVWPAccidentRoadTypesIntoLinkAttributes;
-import org.matsim.run.RunBerlinScenario;
 import org.matsim.testcases.MatsimTestUtils;
+import org.matsim.run.RunBerlinScenario;
 
 /**
  * @author hacastrom

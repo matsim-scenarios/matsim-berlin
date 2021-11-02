@@ -19,8 +19,8 @@
 
 package org.matsim.gui;
 
-import org.matsim.run.RunBerlinScenario;
 import org.matsim.run.gui.Gui;
+import org.matsim.run.RunBerlinScenario;
 
 public class RunBerlinScenarioGUI {
 

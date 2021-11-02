@@ -7,8 +7,7 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.network.algorithms.NetworkCleaner;
-import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
+import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
 import org.matsim.core.network.io.MatsimNetworkReader;
 import org.matsim.core.network.io.NetworkWriter;
 import org.matsim.core.scenario.ScenarioUtils;
@@ -25,7 +24,7 @@ public class NetworkModifierScenarioB100 {
     public static void main(String[] args) {
         // Input and output files
         String networkInputFile = "/Users/moritzkreuschner/Desktop/Master Thesis/E_Shapefiles/Shapefiles/berlin-v5.5-network.xml.gz";
-        String networkOutputFile = "/Users/moritzkreuschner/Desktop/Master Thesis/B_Coding/Coding/git/matsim-berlin-kreuschner/superblock_input_data/Input_B100/Network/network-modifiedB100.xml.gz";
+        String networkOutputFile = "/Users/moritzkreuschner/Desktop/Master Thesis/B_Coding/Coding/git/matsim-berlin-kreuschner/superblock_input_data/Input_B100/Network/Network-modifiedB100.xml.gz";
 
 
 
@@ -37,18 +36,12 @@ public class NetworkModifierScenarioB100 {
         // Loop for different shapefiles
         for (int i = 1; i < 160; i++) {
 
-            // Superblocks that are not in the directory
-            //if(i==3){
-            //    continue;
-            //}
-
-
 
             // Store relevant area of city as geometry
 
 
             ShapeFileReader ShapeFileReader = new ShapeFileReader();
-            Collection<SimpleFeature> features = ShapeFileReader.readFileAndInitialize("/Users/moritzkreuschner/Desktop/Master Thesis/E_Shapefiles/Shapefiles/Superblocks_Shapefiles/25percent/S000" + i + ".shp");
+            Collection<SimpleFeature> features = ShapeFileReader.readFileAndInitialize("/Users/moritzkreuschner/Desktop/Master Thesis/E_Shapefiles/Shapefiles/Superblocks_Shapefiles/S000" + i + ".shp");
             //continue;
             Map<String, Geometry> zoneGeometries = new HashMap<>();
             for (SimpleFeature feature : features) {
@@ -87,11 +80,6 @@ public class NetworkModifierScenarioB100 {
                 }
                 link.setAllowedModes(allowedModesAfter);
 
-
-                if (areaGeometry.contains(linkCenterAsPoint))
-                    link.setFreespeed(1.3888889);
-
-
             }
 
             LOG.info("Superblock " + i + " is ready");
@@ -101,10 +89,11 @@ public class NetworkModifierScenarioB100 {
 
         // Get car subnetwork and clean it
         Scenario carScenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
-        TransportModeNetworkFilter transportModeNetworkFilterCar = new TransportModeNetworkFilter(scenario.getNetwork());
-        transportModeNetworkFilterCar.filter(carScenario.getNetwork(), new HashSet<>(Arrays.asList(TransportMode.car)));
-        (new NetworkCleaner()).run(carScenario.getNetwork());
-        LOG.info("Finished creating and cleaning car subnetwork");
+        new MultimodalNetworkCleaner(carScenario.getNetwork()).run(Set.of(TransportMode.car));
+        //TransportModeNetworkFilter transportModeNetworkFilterCar = new TransportModeNetworkFilter(scenario.getNetwork());
+        //transportModeNetworkFilterCar.filter(carScenario.getNetwork(), new HashSet<>(Arrays.asList(TransportMode.car)));
+        //(new NetworkCleaner()).run(carScenario.getNetwork());
+        //LOG.info("Finished creating and cleaning car subnetwork");
 
 
         // Write modified network to file

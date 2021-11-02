@@ -11,7 +11,8 @@
 
 	<properties>
 <!--				<matsim.version>13.0-SNAPSHOT</matsim.version>-->
-		<matsim.version>13.0-2020w51-SNAPSHOT</matsim.version>
+		<!--		<matsim.version>13.0-2020w51-SNAPSHOT</matsim.version>-->
+		<matsim.version>14.0-PR1512</matsim.version> <!-- 18.05.2021-->
 	</properties>
 
 	<repositories>
