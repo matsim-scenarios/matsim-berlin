@@ -34,7 +34,9 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Node;
 import org.matsim.contrib.gtfs.RunGTFS2MATSim;
 import org.matsim.contrib.gtfs.TransitSchedulePostProcessTools;
+import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.groups.NetworkConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
@@ -100,9 +102,9 @@ public class RunGTFS2MATSimOpenBerlin {
 
 		//output files
 		String outputDirectory = "RunGTFS2MATSimOpenBerlin";
-		String networkFile = outputDirectory + "/berlin-v5.5-network.xml.gz";
-		String scheduleFile = outputDirectory + "/berlin-v5.5-transit-schedule.xml.gz";
-		String transitVehiclesFile = outputDirectory + "/berlin-v5.5-transit-vehicles.xml.gz";
+		String networkFile = outputDirectory + "/berlin-v5.6-network.xml.gz";
+		String scheduleFile = outputDirectory + "/berlin-v5.6-transit-schedule.xml.gz";
+		String transitVehiclesFile = outputDirectory + "/berlin-v5.6-transit-vehicles.xml.gz";
 		
 		// ensure output directory exists
 	    File directory = new File(outputDirectory);
@@ -122,10 +124,11 @@ public class RunGTFS2MATSimOpenBerlin {
 		TransitSchedulePostProcessTools.copyEarlyDeparturesToFollowingNight(scenario.getTransitSchedule(), 6 * 3600, "copied");
 		
 		//if necessary, parse in an existing network file here:
-		new MatsimNetworkReader(scenario.getNetwork()).readFile("../public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/input/berlin-v5-network.xml.gz");
+		new MatsimNetworkReader(scenario.getNetwork()).readFile("../public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz");
+		Config config = ConfigUtils.loadConfig("../public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.config.xml");
 		
 		//remove existing pt network (nodes and links)
-		Network networkWoPt = getNetworkWOExistingPtLinksAndNodes(scenario.getNetwork(), "pt_");
+		Network networkWoPt = getNetworkWOExistingPtLinksAndNodes(scenario.getNetwork(), "pt_", config.network());
 		new NetworkWriter(networkWoPt).write(outputDirectory + "/network_filtered_woNewPt.xml.gz");
 		
 		//Create a network around the schedule and transit vehicles
@@ -171,8 +174,8 @@ public class RunGTFS2MATSimOpenBerlin {
 		// delays up to 60s are probably ok, because most input gtfs schedule data has an accuracy of only one minute
 	}
 
-	private static Network getNetworkWOExistingPtLinksAndNodes(Network network, String ptNetworkIdentifier) {
-		NetworkFilterManager nfmPT = new NetworkFilterManager(network);
+	private static Network getNetworkWOExistingPtLinksAndNodes(Network network, String ptNetworkIdentifier, NetworkConfigGroup networkConfigGroup) {
+		NetworkFilterManager nfmPT = new NetworkFilterManager(network, networkConfigGroup);
 		nfmPT.addLinkFilter(new NetworkLinkFilter() {
 			
 			@Override
