@@ -10,7 +10,9 @@ import org.matsim.contrib.freight.carrier.Carrier;
 import org.matsim.contrib.freight.carrier.CarrierCapabilities;
 import org.matsim.contrib.freight.carrier.CarrierVehicle;
 import org.matsim.contrib.freight.carrier.CarrierVehicleTypeLoader;
+import org.matsim.contrib.freight.carrier.CarrierVehicleTypes;
 import org.matsim.contrib.freight.carrier.Carriers;
+import org.matsim.vehicles.Vehicle;
 import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
 import org.matsim.contrib.freight.carrier.CarrierImpl;
 
@@ -81,16 +83,21 @@ public class AbfallChessboardUtils {
 	 * 
 	 * @param
 	 */
-	static void createCarriersForChessboard(Carriers carriers, FleetSize fleetSize) {
+	static void createCarriersForChessboard(Carriers carriers, FleetSize fleetSize, CarrierVehicleTypes carrierVehicleTypes) {
 		String vehicleName = "TruckChessboard";
 		double earliestStartingTime = 6 * 3600;
 		double latestFinishingTime = 14 * 3600;
 
-		AbfallUtils.createGarbageTruck(vehicleName, linkChessboardDepot, earliestStartingTime, latestFinishingTime);
+		CarrierVehicle newCarrierVehicle =  CarrierVehicle.Builder
+			.newInstance(Id.create(vehicleName, Vehicle.class), Id.createLinkId(linkChessboardDepot))
+			.setEarliestStart(earliestStartingTime).setLatestEnd(latestFinishingTime)
+			.setTypeId(carrierVehicleTypes.getVehicleTypes().values().iterator().next().getId()).build();
+
+//		AbfallUtils.createGarbageTruck(vehicleName, linkChessboardDepot, earliestStartingTime, latestFinishingTime);
 
 		// define Carriers
 
-		defineCarriersChessboard(carriers, AbfallUtils.vehicleAtDepot, fleetSize);
+		defineCarriersChessboard(carriers, newCarrierVehicle, fleetSize, carrierVehicleTypes);
 	}
 
 	/**
@@ -100,13 +107,13 @@ public class AbfallChessboardUtils {
 	 * @param
 	 * 
 	 */
-	private static void defineCarriersChessboard(Carriers carriers, CarrierVehicle vehicleDepot, FleetSize fleetSize) {
+	private static void defineCarriersChessboard(Carriers carriers, CarrierVehicle vehicleDepot, FleetSize fleetSize, CarrierVehicleTypes carrierVehicleTypes) {
 		CarrierCapabilities carrierCapabilities = CarrierCapabilities.Builder.newInstance()
-				.addType(AbfallUtils.carrierVehType).addVehicle(vehicleDepot).setFleetSize(fleetSize).build();
+				.addType(carrierVehicleTypes.getVehicleTypes().values().iterator().next()).addVehicle(vehicleDepot).setFleetSize(fleetSize).build();
 
 		carrierChessboard.setCarrierCapabilities(carrierCapabilities);
 
 		// Fahrzeugtypen den Anbietern zuordenen
-		new CarrierVehicleTypeLoader(carriers).loadVehicleTypes(AbfallUtils.vehicleTypes);
+		new CarrierVehicleTypeLoader(carriers).loadVehicleTypes(carrierVehicleTypes);
 	}
 }
