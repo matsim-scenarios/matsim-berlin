@@ -19,6 +19,7 @@
 	</module>
 	<module name="berlinExperimental" >
 		<param name="populationDownsampleFactor" value="1.0" />
+		<param name="tagDrtLinksBufferAroundServiceAreaShp" value="5000.0" />
 	</module>
 	<module name="network" >
 		<param name="inputNetworkFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz" />
@@ -193,7 +194,7 @@
 			<!-- Stop locations file (transit schedule format, but without lines) for DRT stops. Used only for the stopbased mode -->
 			<param name="transitStopFile" value="null"/>
 			<!-- Limit the operation of vehicles to links (of the 'dvrp_routing' network) with 'allowedModes' containing this 'mode'. For backward compatibility, the value is set to false by default - this means that the vehicles are allowed to operate on all links of the 'dvrp_routing' network. The 'dvrp_routing' is defined by DvrpConfigGroup.networkModes) -->
-			<param name="useModeFilteredSubnetwork" value="drt"/>
+			<param name="useModeFilteredSubnetwork" value="true"/>
 			<!-- An XML file specifying the vehicle fleet. The file format according to dvrp_vehicles_v1.dtd -->
 			<param name="vehiclesFile"
 				   value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlin-drt-v5.5-10pct/input/berlin-drt-v5.5.drt-1000vehicles-4seats.xml.gz"/>
