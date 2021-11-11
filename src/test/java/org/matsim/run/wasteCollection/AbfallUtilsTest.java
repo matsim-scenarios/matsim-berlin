@@ -26,16 +26,16 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.freight.carrier.Carrier;
-import org.matsim.contrib.freight.carrier.CarrierVehicle;
-import org.matsim.contrib.freight.carrier.CarrierVehicleType;
 import org.matsim.contrib.freight.carrier.Carriers;
-import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
+import org.matsim.contrib.freight.utils.FreightUtils;
+import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.gis.ShapeFileReader;
 import org.matsim.testcases.MatsimTestUtils;
-import org.matsim.vehicles.VehicleType;
-import org.matsim.vehicles.EngineInformation.FuelType;
 import org.opengis.feature.simple.SimpleFeature;
 
 /**
@@ -54,7 +54,18 @@ public class AbfallUtilsTest {
 
 	@Test
 	public final void testCreateCarrierMap() {
-		HashMap<String, Carrier> carrierMap = AbfallUtils.createCarrier();
+		String vehicleTypesFileLocation = "scenarios/berlin-v5.5-10pct/input/wasteCollection/vehicleTypes.xml";
+		String inputCarriersWithDieselVehicle = "scenarios/berlin-v5.5-10pct/input/wasteCollection/carriers_diesel_vehicle.xml";
+		String inputCarriersWithMediumBatteryVehicle = "scenarios/berlin-v5.5-10pct/input/wasteCollection/carriers_medium_EV.xml";
+		String inputCarriersWithSmallBatteryVehicle = "scenarios/berlin-v5.5-10pct/input/wasteCollection/carriers_small_EV.xml";
+		Config config = ConfigUtils.createConfig();
+		config = AbfallUtils.prepareConfig(config, 0, vehicleTypesFileLocation, inputCarriersWithDieselVehicle);
+		Scenario scenario = ScenarioUtils.loadScenario(config);
+		FreightUtils.loadCarriersAccordingToFreightConfig(scenario);
+
+		// creates carrier
+		Carriers carriers = FreightUtils.addOrGetCarriers(scenario);
+		HashMap<String, Carrier> carrierMap = AbfallUtils.createCarrier(carriers);
 		Assert.assertEquals(4, carrierMap.size());
 		Assert.assertTrue(carrierMap.containsKey("Nordring"));
 		Assert.assertTrue(carrierMap.containsKey("MalmoeerStr"));
@@ -63,51 +74,37 @@ public class AbfallUtilsTest {
 		for (Carrier singleCarrier : carrierMap.values()) {
 			Assert.assertNotNull(singleCarrier);
 		}
-	}
+		
+		config = AbfallUtils.prepareConfig(config, 0, vehicleTypesFileLocation, inputCarriersWithMediumBatteryVehicle);
+		scenario = ScenarioUtils.loadScenario(config);
+		FreightUtils.loadCarriersAccordingToFreightConfig(scenario);
 
-	@Test
-	public final void testCreateAndAddVehicles() {
-		AbfallUtils.createAndAddVehicles(true);
-		Assert.assertEquals(FuelType.electricity, AbfallUtils.carrierVehType.getEngineInformation().getFuelType());
-		Assert.assertEquals(0., AbfallUtils.carrierVehType.getVehicleCostInformation().getCostsPerSecond(), 0);
-		Assert.assertTrue(AbfallUtils.vehicleTypes.getVehicleTypes().containsKey(AbfallUtils.carrierVehType.getId()));
-		AbfallUtils.createAndAddVehicles(false);
-		Assert.assertEquals(FuelType.diesel, AbfallUtils.carrierVehType.getEngineInformation().getFuelType());
-		Assert.assertEquals(0., AbfallUtils.carrierVehType.getCostInformation().getCostsPerSecond(), 0);
-		Assert.assertTrue(AbfallUtils.vehicleTypes.getVehicleTypes().containsKey(AbfallUtils.carrierVehType.getId()));
-	}
-
-	@Test
-	public final void testCreateGarbageTruck() {
-		AbfallUtils.carrierVehType = CarrierVehicleType.Builder.newInstance(Id.create("truckType", VehicleType.class))
-				.build();
-		CarrierVehicle truck = AbfallUtils.createGarbageTruck("testTruck", "12345", 3600., 7200.);
-		Assert.assertEquals("testTruck", truck.getVehicleId().toString());
-		Assert.assertEquals("12345", truck.getLocation().toString());
-		Assert.assertEquals(3600., truck.getEarliestStartTime(), MatsimTestUtils.EPSILON);
-		Assert.assertEquals(7200., truck.getLatestEndTime(), MatsimTestUtils.EPSILON);
-
-	}
-
-	@Test
-	public final void testCreateCarriersBerlin() {
-		final String berlinDistrictsWithGarbageInformations = "scenarios/berlin-v5.5-10pct/input/wasteCollection/districtsWithGarbageInformations.shp";
-		Carriers testCarriers = new Carriers();
-		HashMap<String, Carrier> carrierMap = AbfallUtils.createCarrier();
-		Collection<SimpleFeature> districtsWithGarbage = ShapeFileReader
-				.getAllFeatures(berlinDistrictsWithGarbageInformations);
-		AbfallUtils.carrierVehType = CarrierVehicleType.Builder.newInstance(Id.create("truckType", VehicleType.class))
-				.build();
-		AbfallUtils.createCarriersBerlin(districtsWithGarbage, testCarriers, carrierMap, FleetSize.INFINITE);
-
+		// creates carrier
+		carriers = FreightUtils.addOrGetCarriers(scenario);
+		carrierMap = AbfallUtils.createCarrier(carriers);
+		Assert.assertEquals(4, carrierMap.size());
+		Assert.assertTrue(carrierMap.containsKey("Nordring"));
+		Assert.assertTrue(carrierMap.containsKey("MalmoeerStr"));
+		Assert.assertTrue(carrierMap.containsKey("Gradestrasse"));
+		Assert.assertTrue(carrierMap.containsKey("Forckenbeck"));
 		for (Carrier singleCarrier : carrierMap.values()) {
-			Assert.assertEquals(FleetSize.INFINITE, singleCarrier.getCarrierCapabilities().getFleetSize());
-			Assert.assertEquals(1, singleCarrier.getCarrierCapabilities().getVehicleTypes().size());
-			Assert.assertTrue(
-					singleCarrier.getCarrierCapabilities().getVehicleTypes().contains(AbfallUtils.carrierVehType));
-			Assert.assertEquals(1, singleCarrier.getCarrierCapabilities().getCarrierVehicles().size());
+			Assert.assertNotNull(singleCarrier);
 		}
+		config = AbfallUtils.prepareConfig(config, 0, vehicleTypesFileLocation, inputCarriersWithSmallBatteryVehicle);
+		scenario = ScenarioUtils.loadScenario(config);
+		FreightUtils.loadCarriersAccordingToFreightConfig(scenario);
 
+		// creates carrier
+		carriers = FreightUtils.addOrGetCarriers(scenario);
+		carrierMap = AbfallUtils.createCarrier(carriers);
+		Assert.assertEquals(4, carrierMap.size());
+		Assert.assertTrue(carrierMap.containsKey("Nordring"));
+		Assert.assertTrue(carrierMap.containsKey("MalmoeerStr"));
+		Assert.assertTrue(carrierMap.containsKey("Gradestrasse"));
+		Assert.assertTrue(carrierMap.containsKey("Forckenbeck"));
+		for (Carrier singleCarrier : carrierMap.values()) {
+			Assert.assertNotNull(singleCarrier);
+		}
 	}
 
 	@Test
@@ -132,7 +129,7 @@ public class AbfallUtilsTest {
 
 	@Test
 	public final void testShapeFile() {
-		final String berlinDistrictsWithGarbageInformations = "scenarios/berlin-v5.5-10pct/input/wasteCollection/districtsWithGarbageInformations.shp";
+		final String berlinDistrictsWithGarbageInformations = "scenarios/berlin-v5.5-10pct/input/wasteCollection/garbageInput/districtsWithGarbageInformations.shp";
 		Collection<SimpleFeature> districtsWithGarbage = ShapeFileReader
 				.getAllFeatures(berlinDistrictsWithGarbageInformations);
 		for (SimpleFeature districtInformation : districtsWithGarbage) {

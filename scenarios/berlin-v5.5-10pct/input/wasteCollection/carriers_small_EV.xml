@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<carriers>
+		<carrier id="BSR_Gradestrasse">
+			<capabilities fleetSize="INFINITE">
+				<vehicles>
+					<vehicle id="TruckGradestrasseEV1" depotLinkId="71781" typeId="EV_small_battery" earliestStart="06:00:00" latestEnd="14:00:00"/>
+				</vehicles>
+
+			</capabilities>
+
+		</carrier>
+
+		<carrier id="BSR_MalmoeerStr">
+			<capabilities fleetSize="INFINITE">
+				<vehicles>
+					<vehicle id="TruckMalmoeerEV1" depotLinkId="116212" typeId="EV_small_battery" earliestStart="06:00:00" latestEnd="14:00:00"/>
+				</vehicles>
+
+			</capabilities>
+
+		</carrier>
+
+		<carrier id="BSR_Forckenbeck">
+			<capabilities fleetSize="INFINITE">
+				<vehicles>
+					<vehicle id="TruckForckenbeckEV1" depotLinkId="27766" typeId="EV_small_battery" earliestStart="06:00:00" latestEnd="14:00:00"/>
+				</vehicles>
+
+			</capabilities>
+
+		</carrier>
+
+		<carrier id="BSR_Nordring">
+			<capabilities fleetSize="INFINITE">
+				<vehicles>
+					<vehicle id="TruckNordringEV1" depotLinkId="42882" typeId="EV_small_battery" earliestStart="06:00:00" latestEnd="14:00:00"/>
+				</vehicles>
+
+			</capabilities>
+
+		</carrier>
+
+	</carriers>
