@@ -157,6 +157,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>roadpricing</artifactId>
+			<version>${matsim.version}</version>
+		</dependency>
+
+		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>opt-drt</artifactId>
 			<version>d61d2c8</version>
