@@ -40,7 +40,8 @@ import java.util.List;
 
 public class CreateRoadPricingXml {
     public static void main (String[] args) {
-        String zoneShpFile = "../public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlin-bezirksregionen/berlin-bezirksregion_GK4_fixed.shp";
+//        String zoneShpFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlin-bezirksregionen/berlin-bezirksregion_GK4_fixed.shp";
+        String zoneShpFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-inner-city-area/inner-city-area.shp";
         String zoneShpCRS = "EPSG:31468";
         String outputFile = "berlin_distance_roadpricing.xml";
         if (args.length == 0) {
@@ -76,7 +77,7 @@ public class CreateRoadPricingXml {
         RoadPricingUtils.createAndAddGeneralCost(scheme,
                 Time.parseTime("00:00:00"),
                 Time.parseTime("30:00:00"),
-                0.0001);
+                0.00005);
 
         RoadPricingWriterXMLv1 writer = new RoadPricingWriterXMLv1(scheme);
         writer.writeFile(outputFile);
