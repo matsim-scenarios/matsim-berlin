@@ -31,6 +31,7 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.drt.routing.DrtRoute;
 import org.matsim.contrib.drt.routing.DrtRouteFactory;
 import org.matsim.contrib.roadpricing.RoadPricing;
+import org.matsim.contrib.roadpricing.RoadPricingConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
@@ -136,7 +137,10 @@ public final class RunBerlinScenario {
 			}
 		} );
 
-		RoadPricing.configure( controler );
+		RoadPricingConfigGroup roadPricingConfigGroup = ConfigUtils.addOrGetModule(scenario.getConfig(), RoadPricingConfigGroup.class);
+		if (roadPricingConfigGroup.getTollLinksFile() != null) {
+			RoadPricing.configure( controler );
+		}
 
 		return controler;
 	}
