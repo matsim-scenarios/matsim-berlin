@@ -45,23 +45,24 @@ import org.matsim.vehicles.VehicleUtils;
 * @author ikaddoura
 */
 
-public class RunOfflineAirPollutionAnalysis {
-	
+public class RunOfflineAirPollutionAnalysisC100 {
+
 	private final String runDirectory;
 	private final String runId;
 	private final String hbefaWarmFile;
 	private final String hbefaColdFile;
 	private final String analysisOutputDirectory;
 
+
 	public static void main(String[] args) {
-			
-			final String runDirectory = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/output-berlinv5.5/";
-			final String runId = "berlin-v5.5-10pct";
+
+			final String runDirectory = "/net/ils/kreuschner/output/output_ScenarioC100/";
+			final String runId = "ScenarioC100";
 
 			final String hbefaFileCold = "https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/0e73947443d68f95202b71a156b337f7f71604ae/5a297db51545335b2f7899002a1ea6c45d4511a3.enc";
 			final String hbefaFileWarm = "https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/0e73947443d68f95202b71a156b337f7f71604ae/944637571c833ddcf1d0dfcccb59838509f397e6.enc";
 
-			RunOfflineAirPollutionAnalysis analysis = new RunOfflineAirPollutionAnalysis(
+			RunOfflineAirPollutionAnalysisC100 analysis = new RunOfflineAirPollutionAnalysisC100(
 					runDirectory,
 					runId,
 					hbefaFileWarm,
@@ -70,8 +71,8 @@ public class RunOfflineAirPollutionAnalysis {
 			analysis.run();
 
 	}
-	
-	public RunOfflineAirPollutionAnalysis(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
+
+	public RunOfflineAirPollutionAnalysisC100(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
 		this.runDirectory = runDirectory;
 		this.runId = runId;
 		this.hbefaWarmFile = hbefaFileWarm;

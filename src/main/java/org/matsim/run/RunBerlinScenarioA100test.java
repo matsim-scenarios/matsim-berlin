@@ -62,9 +62,9 @@ import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorith
  * @author ikaddoura
  */
 
-public final class RunBerlinScenarioA100 {
+public final class RunBerlinScenarioA100test {
 
-    private static final Logger log = Logger.getLogger(RunBerlinScenarioA100.class );
+    private static final Logger log = Logger.getLogger(RunBerlinScenarioA100test.class );
 
     public static void main(String[] args) {
 
@@ -73,7 +73,7 @@ public final class RunBerlinScenarioA100 {
         }
 
         if ( args.length==0 ) {
-            args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-10pct.config_ScenarioA100.xml"}  ;
+            args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config_ScenarioA100.xml"}  ;
         }
 
         Config config = prepareConfig( args ) ;
@@ -258,3 +258,4 @@ public final class RunBerlinScenarioA100 {
     }
 
 }
+

@@ -34,20 +34,20 @@ import org.matsim.core.scenario.ScenarioUtils;
  * @author ikaddoura
  *
  */
-public class RunOfflineNoiseAnalysis {
-	private static final Logger log = Logger.getLogger(RunOfflineNoiseAnalysis.class);
-	
+public class RunOfflineNoiseAnalysisA75 {
+	private static final Logger log = Logger.getLogger(RunOfflineNoiseAnalysisA75.class);
+
 	private final String runDirectory;
 	private final String runId;
 	private final String analysisOutputDirectory;
-	
+
 //	private final String tunnelLinkIdFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/input/berlin-v5.1.tunnel-linkIDs.csv";
 	private final String tunnelLinkIdFile = null;
 
 //	private final String noiseBarriersFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-buildings/osm-buildings-dissolved.geojson";
 	private final String noiseBarriersFile = null;
 
-	public RunOfflineNoiseAnalysis(String runDirectory, String runId, String analysisOutputDirectory) {
+	public RunOfflineNoiseAnalysisA75(String runDirectory, String runId, String analysisOutputDirectory) {
 		this.runDirectory = runDirectory;
 		this.runId = runId;
 		
@@ -57,10 +57,10 @@ public class RunOfflineNoiseAnalysis {
 
 	public static void main(String[] args) {
 
-		final String runDirectory = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/output-berlinv5.5/";
-		final String runId = "berlin-v5.5-10pct";
+		final String runDirectory = "//net/ils/kreuschner/output/output_ScenarioA75/";
+		final String runId = "ScenarioA75";
 		
-		RunOfflineNoiseAnalysis analysis = new RunOfflineNoiseAnalysis(runDirectory, runId, "./scenario/");
+		RunOfflineNoiseAnalysisA75 analysis = new RunOfflineNoiseAnalysisA75(runDirectory, runId, "./scenario/");
 		analysis.run();
 	}
 
