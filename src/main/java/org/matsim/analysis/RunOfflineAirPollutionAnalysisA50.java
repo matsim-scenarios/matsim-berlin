@@ -104,6 +104,7 @@ public class RunOfflineAirPollutionAnalysisA50 {
 		
 		final String emissionEventOutputFile = analysisOutputDirectory + runId + ".emission.events.offline.xml.gz";
 		final String eventsFile = runDirectory + runId + ".output_events.xml.gz";
+
 		
 		Scenario scenario = ScenarioUtils.loadScenario(config);
 		// network

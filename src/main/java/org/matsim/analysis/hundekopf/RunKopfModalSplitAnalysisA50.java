@@ -21,7 +21,7 @@ public class RunKopfModalSplitAnalysisA50 {
         final String runId = "ScenarioA50";
         final String runDirectory = "/net/ils/kreuschner/output/output_ScenarioA50";
 
-        final String outputDirectory = "/net/ils/kreuschner/analysis/modal-split-analysis-hundekopf-A50/";
+        final String outputDirectory = "/net/ils/kreuschner/analysis/modal-split-analysis-superblocks-NOhome-A50/";
 
         Config config = ConfigUtils.createConfig();
         config.network().setInputFile(null);
@@ -41,8 +41,8 @@ public class RunKopfModalSplitAnalysisA50 {
 //        filter.setPersonAttribute("berlin");
 //        filter.setPersonAttributeName("home-activity-zone");
 
-		filter.setZoneFile("//net/ils/kreuschner/Superblocks_Shapefiles/berlin-hundekopf-based-on-planungsraum.shp");
-		filter.setRelevantActivityType("home");
+		filter.setZoneFile("/net/ils/kreuschner/Superblocks_Shapefiles/Superblocks_gesamt.shp");
+//		filter.setRelevantActivityType("home");
 
         filter.preProcess(scenario);
 

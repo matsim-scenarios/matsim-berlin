@@ -17,10 +17,10 @@ public class RunBerlinModalSplitAnalysisBase {
 
     public static void main(String[] args) throws IOException {
 
-        final String runId = "ScenarioBase";
+        final String runId = "berlin-v5.5.3-10pct";
         final String runDirectory = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/output-berlinv5.5";
 
-        final String outputDirectory = "//net/ils/kreuschner/analysis/modal-split-analysis-base/";
+        final String outputDirectory = "//net/ils/kreuschner/analysis/modal-split-analysis-berlin-base/";
 
         Config config = ConfigUtils.createConfig();
         config.network().setInputFile(null);
