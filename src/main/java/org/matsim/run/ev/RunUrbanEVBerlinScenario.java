@@ -35,7 +35,6 @@ import java.util.*;
 class RunUrbanEVBerlinScenario {
 
     @Inject
-    private ChargingInfrastructureSpecification chargingInfrastructureSpecification;
 
     private static final Logger log = Logger.getLogger(RunBerlinScenario.class);
 
@@ -46,7 +45,7 @@ class RunUrbanEVBerlinScenario {
         }
 
         if (args.length == 0) {
-            args = new String[]{"scenarios/berlin-v5.5-1pct/input/ev/berlin-v5.5-1pct.config-ev-test2.xml"};
+            args = new String[]{"scenarios/berlin-v5.5-1pct/input/ev/berlin-v5.5-10pct.config-ev-MPM-günstig.xml"};
         }
 
         Config config = RunBerlinScenario.prepareConfig(args);
@@ -76,7 +75,6 @@ class RunUrbanEVBerlinScenario {
         EvConfigGroup evConfigGroup = new EvConfigGroup();
         evConfigGroup.setTimeProfiles(true);
         config.addModule(evConfigGroup);
-        // Config config = ConfigUtils.loadConfig("C:/Users/admin/IdeaProjects/matsim-berlin/scenarios/berlin-v5.5-1pct/input/ev/berlin-v5.5-1pct.config-ev-test2.xml", new EvConfigGroup());
         UrbanEVConfigGroup urbanEVConfigGroup = new UrbanEVConfigGroup();
         config.addModule(urbanEVConfigGroup);
 
@@ -121,7 +119,6 @@ class RunUrbanEVBerlinScenario {
             if (person.getId().toString().contains("freight") || PopulationUtils.getPersonAttribute(person, "home-activity-zone").equals("brandenburg")) {
 
                 VehicleType evVehicleType = vehiclesFactory.createVehicleType(Id.create(person.getId().toString(), VehicleType.class));
-                //Id<Vehicle> vehicleId = VehicleUtils.createVehicleId(person, TransportMode.car);
                 Id<Vehicle> vehicleId = Id.createVehicleId(person.getId().toString());
                 Vehicle vehicle = vehiclesFactory.createVehicle(vehicleId, evVehicleType);
                 scenario.getVehicles().addVehicleType(evVehicleType);
@@ -135,7 +132,7 @@ class RunUrbanEVBerlinScenario {
                 VehicleType evVehicleType = vehiclesFactory.createVehicleType(Id.create(person.getId().toString(), VehicleType.class));
                 //Id<Vehicle> vehicleId = VehicleUtils.createVehicleId(person, TransportMode.car);
                 Id<Vehicle> vehicleId = Id.createVehicleId(person.getId().toString());
-               // VehicleUtils.createVehiclesContainer().addVehicleType(evVehicleType);
+
                 VehicleUtils.setHbefaTechnology(evVehicleType.getEngineInformation(), "electricity");
                 VehicleUtils.setEnergyCapacity(evVehicleType.getEngineInformation(), 60);
                 EVUtils.setInitialEnergy(evVehicleType.getEngineInformation(), 60);
@@ -145,15 +142,13 @@ class RunUrbanEVBerlinScenario {
                 scenario.getVehicles().addVehicleType(evVehicleType);
                 scenario.getVehicles().addVehicle(vehicle);
                 mode2VehicleId.put(TransportMode.car, vehicleId);
-            }
+           }
 
             for (String mode : modes) {
                 if (!mode.equals("car")) {
 
                     VehicleType type = vehiclesFactory.createVehicleType(Id.create(person.getId().toString() + "_" + mode, VehicleType.class));
                     scenario.getVehicles().addVehicleType(type);
-                   // VehicleUtils.createVehiclesContainer().addVehicleType(type);
-                    //scenario.getVehicles().getVehicleTypes().get(Id.create(mode, VehicleType.class));
                     Vehicle vehicle1 = vehiclesFactory.createVehicle(Id.createVehicleId(person.getId().toString() + "_" + mode), type);
                     scenario.getVehicles().addVehicle(vehicle1);
                     mode2VehicleId.put(mode, vehicle1.getId());
