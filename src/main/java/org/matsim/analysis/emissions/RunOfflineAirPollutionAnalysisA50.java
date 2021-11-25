@@ -117,9 +117,9 @@ public class RunOfflineAirPollutionAnalysisA50 {
         config.global().setNumberOfThreads(1);
 
         EmissionsConfigGroup eConfig = ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
-        eConfig.setDetailedVsAverageLookupBehavior(DetailedVsAverageLookupBehavior.tryDetailedThenTechnologyAverageElseAbort);
-        eConfig.setDetailedColdEmissionFactorsFile(hbefaColdFile);
-        eConfig.setDetailedWarmEmissionFactorsFile(hbefaWarmFile);
+        eConfig.setDetailedVsAverageLookupBehavior(DetailedVsAverageLookupBehavior.directlyTryAverageTable);
+        eConfig.setAverageColdEmissionFactorsFile(hbefaColdFile);
+        eConfig.setAverageWarmEmissionFactorsFile(hbefaWarmFile);
         eConfig.setHbefaRoadTypeSource(HbefaRoadTypeSource.fromLinkAttributes);
         eConfig.setNonScenarioVehicles(NonScenarioVehicles.ignore);
         eConfig.setWritingEmissionsEvents(true);
