@@ -14,7 +14,7 @@
 		<!--<matsim.version>13.0</matsim.version>-->
 
 		<!-- PR-labelled release -->
-		<matsim.version>14.0-PR1758</matsim.version>
+		<matsim.version>14.0-PR1766</matsim.version>
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
 		<!--<matsim.version>14.0-SNAPSHOT</matsim.version>-->
@@ -165,7 +165,7 @@
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>opt-drt</artifactId>
-			<version>2da07afe63</version>
+			<version>0b00b9b9b9</version>
 		</dependency>
 		
 		<dependency>
@@ -179,6 +179,24 @@
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>pt-extensions</artifactId>
 			<version>609986ef68</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.matsim</groupId>
+					<artifactId>matsim</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.matsim.contrib</groupId>
+					<artifactId>drt</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.matsim.contrib</groupId>
+					<artifactId>dvrp</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.matsim.contrib</groupId>
+					<artifactId>vsp</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
