@@ -71,14 +71,18 @@ public abstract class GenerateAirPollutionSpatialPlots {
         final String runDir = rootDirectory + "public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/";
         final String runId = "berlin-v5.4-1pct";
         final String events = runDir + runId + ".emission.events.offline.xml.gz";
+        final String configFile = runDir + runId + "output_config.xml";
         final String networkFile = runDir + runId + "output_network.xml.gz";
         final String outputFile = runDir + runId + ".emissions." + Pollutant.NOx + ".csv";
 
         // filter the network onto the bounding box. This way only the links within the bounding box will collect emissions
         var boundingBox = createBoundingBox();
-        var filteredNetwork = NetworkUtils.readNetwork(networkFile).getLinks().values().parallelStream()
+
+        Config config = ConfigUtils.loadConfig(configFile);
+
+        var filteredNetwork = NetworkUtils.readNetwork(networkFile, config).getLinks().values().parallelStream()
                 .filter(link -> boundingBox.covers(MGC.coord2Point(link.getFromNode().getCoord())) || boundingBox.covers(MGC.coord2Point(link.getToNode().getCoord())))
-                .collect(NetworkUtils.getCollector());
+                .collect(NetworkUtils.getCollector(config));
 
         // do the actual rastering. Reducing the radius will lead to less smoothed emissions
         // reduce to 0, to only draw emissions onto cells which are covered by a link.

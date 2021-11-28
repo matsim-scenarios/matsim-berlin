@@ -44,14 +44,14 @@ import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
-import org.matsim.pt.transitSchedule.api.TransitSchedule;
-import org.matsim.pt.transitSchedule.api.TransitStopFacility;
-import org.matsim.run.BerlinExperimentalConfigGroup;
-import org.matsim.run.RunBerlinScenario;
 import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
 import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
 import org.matsim.extensions.pt.routing.ptRoutingModes.PtIntermodalRoutingModesConfigGroup;
 import org.matsim.extensions.pt.routing.ptRoutingModes.PtIntermodalRoutingModesModule;
+import org.matsim.pt.transitSchedule.api.TransitSchedule;
+import org.matsim.pt.transitSchedule.api.TransitStopFacility;
+import org.matsim.run.BerlinExperimentalConfigGroup;
+import org.matsim.run.RunBerlinScenario;
 
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
 import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
@@ -115,11 +115,9 @@ public final class RunDrtOpenBerlinScenario {
 		});
 
 		// yyyy there is fareSModule (with S) in config. ?!?!  kai, jul'19
-		
 		controler.addOverridingModule(new IntermodalTripFareCompensatorsModule());
-		
 		controler.addOverridingModule(new PtIntermodalRoutingModesModule());
-		
+
 		return controler;
 	}
 	

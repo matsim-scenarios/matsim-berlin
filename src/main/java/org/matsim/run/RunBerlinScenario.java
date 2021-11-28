@@ -31,6 +31,8 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.drt.routing.DrtRoute;
 import org.matsim.contrib.drt.routing.DrtRouteFactory;
+import org.matsim.contrib.roadpricing.RoadPricing;
+import org.matsim.contrib.roadpricing.RoadPricingConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
@@ -49,12 +51,12 @@ import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.extensions.pt.PtExtensionsConfigGroup;
+import org.matsim.extensions.pt.replanning.singleTripStrategies.ChangeSingleTripModeAndRoute;
+import org.matsim.extensions.pt.replanning.singleTripStrategies.RandomSingleTripReRoute;
 import org.matsim.extensions.pt.routing.EnhancedRaptorIntermodalAccessEgress;
 import org.matsim.prepare.population.AssignIncome;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
-import org.matsim.extensions.pt.replanning.singleTripStrategies.ChangeSingleTripModeAndRoute;
-import org.matsim.extensions.pt.replanning.singleTripStrategies.RandomSingleTripReRoute;
 import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
 import java.io.IOException;
@@ -118,12 +120,12 @@ public final class RunBerlinScenario {
 				addTravelTimeBinding( TransportMode.ride ).to( networkTravelTime() );
 				addTravelDisutilityFactoryBinding( TransportMode.ride ).to( carTravelDisutilityFactoryKey() );
 				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifier.class);
-				
+
 				addPlanStrategyBinding("RandomSingleTripReRoute").toProvider(RandomSingleTripReRoute.class);
 				addPlanStrategyBinding("ChangeSingleTripModeAndRoute").toProvider(ChangeSingleTripModeAndRoute.class);
 
 				bind(RaptorIntermodalAccessEgress.class).to(EnhancedRaptorIntermodalAccessEgress.class);
-
+				
 				//use income-dependent marginal utility of money for scoring
 				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class).in(Singleton.class);
 
@@ -135,6 +137,11 @@ public final class RunBerlinScenario {
 				}
 			}
 		} );
+
+		RoadPricingConfigGroup roadPricingConfigGroup = ConfigUtils.addOrGetModule(scenario.getConfig(), RoadPricingConfigGroup.class);
+		if (roadPricingConfigGroup.getTollLinksFile() != null) {
+			RoadPricing.configure( controler );
+		}
 
 		return controler;
 	}
@@ -176,7 +183,7 @@ public final class RunBerlinScenario {
 		
 		String[] typedArgs = Arrays.copyOfRange( args, 1, args.length );
 		
-		ConfigGroup[] customModulesToAdd = null ;
+		ConfigGroup[] customModulesToAdd;
 		if (additionalInformation == RunDrtOpenBerlinScenario.AdditionalInformation.acceptUnknownParamsBerlinConfig) {
 			customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(true),
 					new PtExtensionsConfigGroup()};

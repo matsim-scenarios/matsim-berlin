@@ -20,6 +20,9 @@
 package org.matsim.run.drt;
 
 import org.apache.log4j.Logger;
+import org.matsim.analysis.linkpaxvolumes.LinkPaxVolumesAnalysisModule;
+import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
+import org.matsim.analysis.pt.stop2stop.PtStop2StopAnalysisModule;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
@@ -68,6 +71,9 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpAndModeCoverage {
 				ConfigUtils.addOrGetModule(scenario.getConfig(), MultiModeOptDrtConfigGroup.class));
 
 		controler.addOverridingModule(new DynamicShutdownModule());
+		controler.addOverridingModule(new LinkPaxVolumesAnalysisModule());
+		controler.addOverridingModule(new PtStop2StopAnalysisModule());
+		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
 		
 		controler.run() ;
 		

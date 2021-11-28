@@ -44,7 +44,7 @@ public class RunModeChoiceCoverageControlerListenerTest {
         TransportPlanningMainModeIdentifier transportId = new TransportPlanningMainModeIdentifier();
 
         ControlerConfigGroup controlerConfigGroup = new ControlerConfigGroup();
-        OutputDirectoryHierarchy controlerIO = new OutputDirectoryHierarchy("/ModeChoiceCoverageControlerListener",
+        OutputDirectoryHierarchy controlerIO = new OutputDirectoryHierarchy(utils.getOutputDirectory() + "/ModeChoiceCoverageControlerListener",
                 OverwriteFileSetting.overwriteExistingFiles, CompressionType.gzip);
 
         Person person = PopulationUtils.getFactory().createPerson(Id.create(1, Person.class));
@@ -101,7 +101,7 @@ public class RunModeChoiceCoverageControlerListenerTest {
         TransportPlanningMainModeIdentifier transportId = new TransportPlanningMainModeIdentifier();
 
         ControlerConfigGroup controlerConfigGroup = new ControlerConfigGroup();
-        OutputDirectoryHierarchy controlerIO = new OutputDirectoryHierarchy("/ModeChoiceCoverageControlerListener",
+        OutputDirectoryHierarchy controlerIO = new OutputDirectoryHierarchy(utils.getOutputDirectory() + "/ModeChoiceCoverageControlerListener",
                 OverwriteFileSetting.overwriteExistingFiles, CompressionType.gzip);
 
         Person person1 = PopulationUtils.getFactory().createPerson(Id.create(1, Person.class));
@@ -172,7 +172,7 @@ public class RunModeChoiceCoverageControlerListenerTest {
         TransportPlanningMainModeIdentifier transportId = new TransportPlanningMainModeIdentifier();
 
         ControlerConfigGroup controlerConfigGroup = new ControlerConfigGroup();
-        OutputDirectoryHierarchy controlerIO = new OutputDirectoryHierarchy("/ModeChoiceCoverageControlerListener",
+        OutputDirectoryHierarchy controlerIO = new OutputDirectoryHierarchy(utils.getOutputDirectory() + "/ModeChoiceCoverageControlerListener",
                 OverwriteFileSetting.overwriteExistingFiles, CompressionType.gzip);
 
         Person person = PopulationUtils.getFactory().createPerson(Id.create(1, Person.class));

@@ -31,6 +31,8 @@ import java.util.Map.Entry;
 /**
  * Calculates mode choice coverage at the end of each iteration, based on the main mode identifier of a trip chain.
  * Mode choice coverage percentage of trips have used a certain mode at least once (or 5x, 10x, …) in previous iterations.
+ * 
+ * FIXME: This class was copied to matsim-libs. To be removed. The rest of Dynamic Shutdown currently needs this class though.
  *
  * @author jakobrehmann
  */
