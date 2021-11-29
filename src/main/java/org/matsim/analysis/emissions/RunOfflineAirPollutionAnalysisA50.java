@@ -108,8 +108,8 @@ public class RunOfflineAirPollutionAnalysisA50 {
         Config config = ConfigUtils.createConfig();
         config.vehicles().setVehiclesFile( runDirectory + runId + ".output_allVehicles.xml.gz");
         config.network().setInputFile( runDirectory + runId + ".output_network.xml.gz");
-        config.transit().setTransitScheduleFile( runDirectory +runId + ".output_transitSchedule.xml.gz");
-        config.transit().setVehiclesFile( runDirectory + runId + ".output_transitVehicles.xml.gz");
+        config.transit().setTransitScheduleFile(null);
+        config.transit().setVehiclesFile( null);
         config.global().setCoordinateSystem("EPSG:31468");
         config.plans().setInputFile(null);
         config.parallelEventHandling().setNumberOfThreads(null);
