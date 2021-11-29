@@ -186,26 +186,8 @@ public class RunOfflineAirPollutionAnalysisA50 {
 
         // vehicles
 
-        Id<VehicleType> carVehicleTypeId = Id.create("car", VehicleType.class);
-        Id<VehicleType> freightVehicleTypeId = Id.create("freight", VehicleType.class);
-
-        VehicleType carVehicleType = scenario.getVehicles().getVehicleTypes().get(carVehicleTypeId);
-        VehicleType freightVehicleType = scenario.getVehicles().getVehicleTypes().get(freightVehicleTypeId);
-
-        EngineInformation carEngineInformation = carVehicleType.getEngineInformation();
-        VehicleUtils.setHbefaVehicleCategory( carEngineInformation, HbefaVehicleCategory.PASSENGER_CAR.toString());
-        VehicleUtils.setHbefaTechnology( carEngineInformation, "average" );
-        VehicleUtils.setHbefaSizeClass( carEngineInformation, "average" );
-        VehicleUtils.setHbefaEmissionsConcept( carEngineInformation, "average" );
-
-        EngineInformation freightEngineInformation = freightVehicleType.getEngineInformation();
-        VehicleUtils.setHbefaVehicleCategory( freightEngineInformation, HbefaVehicleCategory.HEAVY_GOODS_VEHICLE.toString());
-        VehicleUtils.setHbefaTechnology( freightEngineInformation, "average" );
-        VehicleUtils.setHbefaSizeClass( freightEngineInformation, "average" );
-        VehicleUtils.setHbefaEmissionsConcept( freightEngineInformation, "average" );
-
-        // public transit vehicles should be considered as non-hbefa vehicles
-        for (VehicleType type : scenario.getTransitVehicles().getVehicleTypes().values()) {
+        // 1.) Set all vehicletypes to "Non-HBEFA"
+        for (VehicleType type : scenario.getVehicles().getVehicleTypes().values()) {
             EngineInformation engineInformation = type.getEngineInformation();
             // TODO: Check! Is this a zero emission vehicle?!
             VehicleUtils.setHbefaVehicleCategory( engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
@@ -213,6 +195,24 @@ public class RunOfflineAirPollutionAnalysisA50 {
             VehicleUtils.setHbefaSizeClass( engineInformation, "average" );
             VehicleUtils.setHbefaEmissionsConcept( engineInformation, "average" );
         }
+
+        //Now set the "car" vehicle types
+        VehicleType carVehicleType = scenario.getVehicles().getVehicleTypes().get(Id.create("car", VehicleType.class));
+        EngineInformation carEngineInformation = carVehicleType.getEngineInformation();
+        VehicleUtils.setHbefaVehicleCategory( carEngineInformation, HbefaVehicleCategory.PASSENGER_CAR.toString());
+        VehicleUtils.setHbefaTechnology( carEngineInformation, "average" );
+        VehicleUtils.setHbefaSizeClass( carEngineInformation, "average" );
+        VehicleUtils.setHbefaEmissionsConcept( carEngineInformation, "average" );
+
+        //Now set the "freight" vehicle types
+        VehicleType freightVehicleType = scenario.getVehicles().getVehicleTypes().get(Id.create("freight", VehicleType.class));
+        EngineInformation freightEngineInformation = freightVehicleType.getEngineInformation();
+        VehicleUtils.setHbefaVehicleCategory( freightEngineInformation, HbefaVehicleCategory.HEAVY_GOODS_VEHICLE.toString());
+        VehicleUtils.setHbefaTechnology( freightEngineInformation, "average" );
+        VehicleUtils.setHbefaSizeClass( freightEngineInformation, "average" );
+        VehicleUtils.setHbefaEmissionsConcept( freightEngineInformation, "average" );
+
+        //As a result all non-car and non-freight vehicles are iognored in the emissions analysis. This are mostly the pt relates veh types.
 
         //------------------------------------------------------------------------------
 
