@@ -22,6 +22,7 @@ package org.matsim.analysis.substitutePT;
 
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
 import org.apache.log4j.Logger;
+import org.matsim.analysis.linkpaxvolumes.LinkPaxVolumesAnalysisModule;
 import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
 import org.matsim.analysis.pt.stop2stop.PtStop2StopAnalysisModule;
 import org.matsim.api.core.v01.Scenario;
@@ -166,6 +167,7 @@ class DrtSubstitutesAnalysisRunner {
 				install(new PersonMoneyEventsAnalysisModule());
 //				creates output on pt occupancy
 				install(new PtStop2StopAnalysisModule());
+				install(new LinkPaxVolumesAnalysisModule());
 
 			}
 		});
