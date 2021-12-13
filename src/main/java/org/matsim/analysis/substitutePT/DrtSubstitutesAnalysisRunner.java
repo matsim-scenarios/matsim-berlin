@@ -77,12 +77,20 @@ class DrtSubstitutesAnalysisRunner {
 
 	public static void main(String[] args) {
 
-//		DrtSubstitutesAnalysisRunner analysisRunner = new DrtSubstitutesAnalysisRunner(true);
-//		Config config = analysisRunner.prepareConfigBasedOnOutputConfig("D:/VW/AP3/i501/i501.output_config.xml", new DynamicShutdownConfigGroup(), new MultiModeOptDrtConfigGroup());
+		String outputConfigFile;
+		boolean drtUsedInUnderlyingRun;
 
+		if (args.length == 2) {
+			outputConfigFile = args[0];
+			drtUsedInUnderlyingRun = args[1].equals("true");
+		} else {
+			// Please note: you cannot write to public svn, so chnage the config file or the output directory
+			outputConfigFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/output-berlin-v5.5-1pct/berlin-v5.5.3-1pct.output_config.xml";
+			drtUsedInUnderlyingRun = false;
+		}
 		DrtSubstitutesAnalysisRunner analysisRunner = new DrtSubstitutesAnalysisRunner(false);
-		Config config = analysisRunner.prepareConfigBasedOnOutputConfig("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/output-berlin-v5.5-1pct/berlin-v5.5.3-1pct.output_config.xml");
-		config.controler().setOutputDirectory("you can not write to public svn!");
+		Config config = analysisRunner.prepareConfigBasedOnOutputConfig("/home/gregor/ilsMount/leich/drtSubstitutesPtVw/output/output-vw100/vw100.output_config.xml");
+
 		ConfigUtils.addOrGetModule(config, SwissRailRaptorConfigGroup.class).setUseIntermodalAccessEgress(false); //TODO currently not compatible with accessibility computation...
 
 		Scenario scenario = analysisRunner.prepareScenario(config);
