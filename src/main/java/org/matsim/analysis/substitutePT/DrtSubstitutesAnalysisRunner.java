@@ -84,12 +84,12 @@ class DrtSubstitutesAnalysisRunner {
 			outputConfigFile = args[0];
 			drtUsedInUnderlyingRun = args[1].equals("true");
 		} else {
-			// Please note: you cannot write to public svn, so chnage the config file or the output directory
+			// Please note: you cannot write to public svn, so change the config file or the output directory
 			outputConfigFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/output-berlin-v5.5-1pct/berlin-v5.5.3-1pct.output_config.xml";
 			drtUsedInUnderlyingRun = false;
 		}
-		DrtSubstitutesAnalysisRunner analysisRunner = new DrtSubstitutesAnalysisRunner(false);
-		Config config = analysisRunner.prepareConfigBasedOnOutputConfig("/home/gregor/ilsMount/leich/drtSubstitutesPtVw/output/output-vw100/vw100.output_config.xml");
+		DrtSubstitutesAnalysisRunner analysisRunner = new DrtSubstitutesAnalysisRunner(drtUsedInUnderlyingRun);
+		Config config = analysisRunner.prepareConfigBasedOnOutputConfig(outputConfigFile);
 
 		ConfigUtils.addOrGetModule(config, SwissRailRaptorConfigGroup.class).setUseIntermodalAccessEgress(false); //TODO currently not compatible with accessibility computation...
 
