@@ -1,4 +1,4 @@
-package org.matsim.prepare.superblocks.ScenarioB25;
+package org.matsim.prepare.superblocks.ScenarioA75;
 
 import org.apache.log4j.Logger;
 import org.locationtech.jts.geom.Geometry;
@@ -20,21 +20,21 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class NetworkModifierScenarioA25 {
+public class NetworkModifierScenarioA75 {
 
-    private static final Logger LOG = Logger.getLogger(org.matsim.prepare.superblocks.ScenarioB25.NetworkModifierScenarioA25.class);
+    private static final Logger LOG = Logger.getLogger(NetworkModifierScenarioA75.class);
 
     public static void main(String[] args) throws IOException {
         // Input and output files
         String networkInputFile = "/Users/moritzkreuschner/Desktop/Master Thesis/01_Shapefiles/Shapefiles/berlin-v5.5-network.xml.gz";
-        String networkOutputFile = "/Users/moritzkreuschner/Desktop/Master Thesis/02_Coding/git/matsim-berlin-kreuschner/superblock_input_data/Network-modifiedA25.xml.gz";
+        String networkOutputFile = "/Users/moritzkreuschner/Desktop/Master Thesis/02_Coding/git/matsim-berlin-kreuschner/superblock_input_data/Network-modifiedC75.xml.gz";
 
-        Path filePath = Paths.get("/Users/moritzkreuschner/Desktop/Master Thesis/01_Shapefiles/Shapefiles/Superblocks_Shapefiles/25percent/NOTin25percent.txt");
+        Path filePath = Paths.get("/Users/moritzkreuschner/Desktop/Master Thesis/01_Shapefiles/Shapefiles/Superblocks_Shapefiles/75percent/NOTin75percent.txt");
         Scanner scanner = new Scanner(filePath);
-        List<Integer> NOTin25list = new ArrayList<>();
+        List<Integer> NOTin75list = new ArrayList<>();
         while (scanner.hasNext()) {
             if (scanner.hasNextInt()) {
-                NOTin25list.add(scanner.nextInt());
+                NOTin75list.add(scanner.nextInt());
             } else {
                 scanner.next();
             }
@@ -45,6 +45,7 @@ public class NetworkModifierScenarioA25 {
         MatsimNetworkReader reader = new MatsimNetworkReader(scenario.getNetwork());
         reader.readFile(networkInputFile);
 
+        // Get only non-pt links
         Set<Link> set = new HashSet<>();
         for (Link link1 : scenario.getNetwork().getLinks().values()) {
             if (!link1.getAllowedModes().contains(TransportMode.pt)) {
@@ -54,9 +55,10 @@ public class NetworkModifierScenarioA25 {
         Set<? extends Link> nonptlinks = set;
 
         // Loop for different shapefiles
-        // Superblocks that are not in the directory
-        for (int i = 1; i < 160; i++) {
-            if (NOTin25list.contains(i)) {
+        for (int i = 1; i < 161; i++) {
+
+            // Superblocks that are not in the directory
+            if (NOTin75list.contains(i)) {
                 continue;
             } else {
 
@@ -75,30 +77,25 @@ public class NetworkModifierScenarioA25 {
                 for (Link link : nonptlinks) {
 
                     Point linkCenterAsPoint = MGC.xy2Point(link.getCoord().getX(), link.getCoord().getY());
+
                     if (areaGeometry.contains(linkCenterAsPoint)) {
-                        link.setFreespeed(0.00001);
-                        link.setCapacity(0);
+                        link.setFreespeed(1.3888889);
                     }
                 }
 
                 LOG.info("Superblock " + i + " is ready");
             }
         }
-
-        LOG.info("Finished modifying freespeed and capacity");
+        LOG.info("Finished modifying freespeed");
 
         // Get car subnetwork and clean it
         Scenario carScenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
         new MultimodalNetworkCleaner(carScenario.getNetwork()).run(Set.of(TransportMode.car));
-        /*TransportModeNetworkFilter transportModeNetworkFilterCar = new TransportModeNetworkFilter(scenario.getNetwork());
-        transportModeNetworkFilterCar.filter(carScenario.getNetwork(), new HashSet<>(Arrays.asList(TransportMode.car)));
-        (new NetworkCleaner()).run(carScenario.getNetwork());*/
 
-        LOG.info("Finished cleaning car subnetwork");
+        LOG.info("Finished creating and cleaning car subnetwork");
 
         // Write modified network to file
         NetworkWriter writer = new NetworkWriter(scenario.getNetwork());
         writer.write(networkOutputFile);
-
     }
 }

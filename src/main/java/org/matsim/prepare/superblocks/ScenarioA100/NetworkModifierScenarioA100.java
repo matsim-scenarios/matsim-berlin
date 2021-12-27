@@ -18,9 +18,9 @@ import org.opengis.feature.simple.SimpleFeature;
 import java.io.IOException;
 import java.util.*;
 
-public class NetworkModifierScenarioC100 {
+public class NetworkModifierScenarioA100 {
 
-    private static final Logger LOG = Logger.getLogger(org.matsim.prepare.superblocks.ScenarioA100.NetworkModifierScenarioC100.class);
+    private static final Logger LOG = Logger.getLogger(NetworkModifierScenarioA100.class);
 
     public static void main(String[] args) throws IOException {
         // Input and output files
@@ -42,7 +42,7 @@ public class NetworkModifierScenarioC100 {
         Set<? extends Link> nonptlinks = set;
 
         // Loop for different shapefiles
-        for (int i = 1; i < 160; i++) {
+        for (int i = 1; i < 161; i++) {
 
             // Store relevant area of city as geometry
             ShapeFileReader ShapeFileReader = new ShapeFileReader();

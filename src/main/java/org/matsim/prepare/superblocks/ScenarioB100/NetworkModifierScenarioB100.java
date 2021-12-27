@@ -20,8 +20,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class NetworkModifierScenarioA100 {
-    private static final Logger LOG = Logger.getLogger(org.matsim.prepare.superblocks.ScenarioB100.NetworkModifierScenarioA100.class);
+public class NetworkModifierScenarioB100 {
+    private static final Logger LOG = Logger.getLogger(NetworkModifierScenarioB100.class);
 
     public static void main(String[] args) throws IOException {
         // Input and output files
@@ -54,7 +54,7 @@ public class NetworkModifierScenarioA100 {
 
         // Loop for different shapefiles
         // Superblocks that are not in the directory
-        for (int i = 1; i < 160; i++) {
+        for (int i = 1; i < 161; i++) {
 
                 // Store relevant area of city as geometry
                 ShapeFileReader ShapeFileReader = new ShapeFileReader();
