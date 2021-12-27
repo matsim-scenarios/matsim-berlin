@@ -1,19 +1,25 @@
 package org.matsim.analysis.modeShare;
 
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Point;
+import org.matsim.analysis.modeShare.AffectedAgentHandler;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.*;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.events.EventsUtils;
 import org.matsim.core.events.MatsimEventsReader;
+import org.matsim.core.network.io.MatsimNetworkReader;
 import org.matsim.core.population.io.PopulationReader;
 import org.matsim.core.scenario.ScenarioUtils;
 
-import java.io.*;
-import java.util.ArrayList;
 
-public class ModalSplitAnalysisSuperblocksA25 {
+import java.io.*;
+import java.util.*;
+
+public class ModalSplitAnalysisSuperblocksB25 {
 
     public static void main(String[] args) throws IOException {
 
@@ -23,13 +29,40 @@ public class ModalSplitAnalysisSuperblocksA25 {
         //String OutputFile_Results = "/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/ScenarioBase_Results.txt";
 
         // PlanA25
-        String InputFile_planFile = "//net/ils/kreuschner/output/output_ScenarioC25/ScenarioC25.output_plans.xml";
-        String OutputFile_Results = "//net/ils/kreuschner/analysis/C25/ScenarioC25_Results.txt";
+        //String InputFile_planFile = "//net/ils/kreuschner/output/output_ScenarioA25/ScenarioA25.output_plans.xml";
+        //String OutputFile_Results = "//net/ils/kreuschner/analysis/A25/ScenarioA25_Results.txt";
 
+        // PlanA50
+        //String InputFile_planFile = "/Users/moritzkreuschner/Desktop/Master Thesis/04_Planfiles/ScenarioA50.output_plans.xml";
+        //String OutputFile_Results = "/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/ScenarioA50_Results.txt";
+
+        // PlanA75
+        //String InputFile_planFile = "/Users/moritzkreuschner/Desktop/Master Thesis/04_Planfiles/ScenarioA75.output_plans.xml";
+        //String OutputFile_Results = "/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/ScenarioA75_Results.txt";
+
+        // PlanA100
+        //String InputFile_planFile = "/Users/moritzkreuschner/Desktop/Master Thesis/04_Planfiles/ScenarioA100.output_plans.xml";
+        //String OutputFile_Results = "/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/ScenarioA100_Results.txt";
+
+        // PlanC25
+        String InputFile_planFile = "/Users/moritzkreuschner/Desktop/Master Thesis/06_Planfiles/ScenarioC25.output_plans.xml";
+        String OutputFile_Results = "/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/ScenarioC25_Results.txt";
+
+        // PlanC50
+        //String InputFile_planFile = "/Users/moritzkreuschner/Desktop/Master Thesis/04_Planfiles/ScenarioC50.output_plans.xml";
+        //String OutputFile_Results = "/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/ScenarioC50_Results.txt";
+
+        // PlanC75
+        //String InputFile_planFile = "/Users/moritzkreuschner/Desktop/Master Thesis/04_Planfiles/ScenarioC75.output_plans.xml";
+        //String OutputFile_Results = "/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/ScenarioC75_Results.txt";
+
+        // PlanC100
+        //String InputFile_planFile = "/Users/moritzkreuschner/Desktop/Master Thesis/04_Planfiles/ScenarioC100.output_plans.xml";
+        //String OutputFile_Results = "/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/ScenarioC100_Results.txt";
         //-------------For Input and Output Files-------------//
 
         //——————Input——————
-        String Superblocks = "//net/ils/kreuschner/analysis/C25/ModifiedLinksInSuperblocks25.txt";
+        String Superblocks = "/Users/moritzkreuschner/Desktop/Master Thesis/06_Planfiles/ModifiedLinksInSuperblocks25.txt";
         //——————Input——————
 
         //——————Input As List——————
@@ -47,7 +80,7 @@ public class ModalSplitAnalysisSuperblocksA25 {
         System.out.println(SuperblocksList);
         System.out.println(SuperblocksList.size());
 
-        String PersonInternalIDs = "//net/ils/kreuschner/analysis/C25/Person_Superblock_C25.txt";
+        String PersonInternalIDs = "//net/ils/kreuschner/analysis/A25/Person_Superblock_A25.txt";
         // ResindentsIDs
         BufferedReader bfrpersonInternalIDs = new BufferedReader(new FileReader(PersonInternalIDs));
         ArrayList<String> personInternalIDsList = new ArrayList<>();
@@ -64,9 +97,9 @@ public class ModalSplitAnalysisSuperblocksA25 {
 
 
         //************************for AffectedAgentHandler
-        String inputFile = "//net/ils/kreuschner/output/output_ScenarioC25/ScenarioC25.output_events.xml.gz";
-        String outputFile1 = "//net/ils/kreuschner/analysis/C25/resident_and_worker_Agents_C25.txt";
-        String outputFile2 = "//net/ils/kreuschner/analysis/C25/affected_Vehicles_C25.txt";
+        String inputFile = "//net/ils/kreuschner/output/output_ScenarioA25/ScenarioA25.output_events.xml.gz";
+        String outputFile1 = "//net/ils/kreuschner/analysis/A25/resident_and_worker_Agents_A25.txt";
+        String outputFile2 = "//net/ils/kreuschner/analysis/A25/affected_Vehicles_A25.txt";
 
 
         EventsManager eventsManager = EventsUtils.createEventsManager();

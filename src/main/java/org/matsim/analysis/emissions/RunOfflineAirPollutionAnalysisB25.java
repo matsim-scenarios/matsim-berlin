@@ -60,8 +60,8 @@ import static org.matsim.contrib.emissions.Pollutant.*;
 * @author ikaddoura
 */
 
-public class RunOfflineAirPollutionAnalysisA75 {
-    private static final Logger log = Logger.getLogger(RunOfflineAirPollutionAnalysisA75.class);
+public class RunOfflineAirPollutionAnalysisB25 {
+    private static final Logger log = Logger.getLogger(RunOfflineAirPollutionAnalysisB25.class);
 
     private final String runDirectory;
     private final String runId;
@@ -71,7 +71,7 @@ public class RunOfflineAirPollutionAnalysisA75 {
 
     static List<Pollutant> pollutants2Output = Arrays.asList(CO2_TOTAL, NOx, PM, PM_non_exhaust);
 
-    public RunOfflineAirPollutionAnalysisA75(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
+    public RunOfflineAirPollutionAnalysisB25(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
         if (!runDirectory.endsWith("/")) runDirectory = runDirectory + "/";
         this.runDirectory = runDirectory;
 
@@ -91,9 +91,9 @@ public class RunOfflineAirPollutionAnalysisA75 {
         final String hbefaFileCold = "https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/0e73947443d68f95202b71a156b337f7f71604ae/ColdStart_Vehcat_2020_Average_withHGVetc.csv.enc";
         final String hbefaFileWarm = "https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/0e73947443d68f95202b71a156b337f7f71604ae/7eff8f308633df1b8ac4d06d05180dd0c5fdf577.enc";
 
-        final String runId = "ScenarioC75" ;
-        String runDirectory = "/net/ils/kreuschner/output/output_ScenarioC75/";
-        RunOfflineAirPollutionAnalysisA75 analysis = new RunOfflineAirPollutionAnalysisA75(
+        final String runId = "ScenarioA25" ;
+        String runDirectory = "/net/ils/kreuschner/output/output_ScenarioA25/";
+        RunOfflineAirPollutionAnalysisB25 analysis = new RunOfflineAirPollutionAnalysisB25(
                 runDirectory,
                 runId,
                 hbefaFileWarm,

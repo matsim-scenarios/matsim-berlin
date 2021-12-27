@@ -14,16 +14,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RunKopfModalSplitAnalysisA100 {
+public class RunKopfModalSplitAnalysisB25 {
 
     public static void main(String[] args) throws IOException {
 
         for (int i = 1; i < 5; i++) {
 
-            final String runId = "ScenarioC100";
-            final String runDirectory = "/net/ils/kreuschner/output/output_ScenarioC100";
+            final String runId = "ScenarioA25";
+            final String runDirectory = "/net/ils/kreuschner/output/output_ScenarioA25";
 
-            final String outputDirectory = "/net/ils/kreuschner/analysis/modal-split-analysis-superblocksCat"+i+"-C100/";
+            final String outputDirectory = "/net/ils/kreuschner/analysis/modal-split-analysis-superblocksCat" + i + "-A25/";
 
             Config config = ConfigUtils.createConfig();
             config.network().setInputFile(null);
@@ -40,10 +40,10 @@ public class RunKopfModalSplitAnalysisA100 {
 
             filter.setSubpopulation("person");
 
-            //        filter.setPersonAttribute("berlin");
-            //        filter.setPersonAttributeName("home-activity-zone");
+//        filter.setPersonAttribute("berlin");
+//        filter.setPersonAttributeName("home-activity-zone");
 
-            filter.setZoneFile("/net/ils/kreuschner/Superblocks_Shapefiles/SuperblocksCat" +i+ ".shp");
+            filter.setZoneFile("/net/ils/kreuschner/Superblocks_Shapefiles/SuperblocksCat" + i + ".shp");
             filter.setRelevantActivityType("home");
 
             filter.preProcess(scenario);

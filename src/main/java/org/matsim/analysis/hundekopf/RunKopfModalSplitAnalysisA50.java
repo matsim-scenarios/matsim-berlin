@@ -18,53 +18,56 @@ public class RunKopfModalSplitAnalysisA50 {
 
     public static void main(String[] args) throws IOException {
 
-        final String runId = "ScenarioA50";
-        final String runDirectory = "/net/ils/kreuschner/output/output_ScenarioA50";
+        for (int i = 1; i < 5; i++) {
 
-        final String outputDirectory = "/net/ils/kreuschner/analysis/modal-split-analysis-superblocks-NOhome-A50/";
+            final String runId = "ScenarioC50";
+            final String runDirectory = "/net/ils/kreuschner/output/output_ScenarioC50";
 
-        Config config = ConfigUtils.createConfig();
-        config.network().setInputFile(null);
-        config.plans().setInputFile(runDirectory + "/" + runId + ".output_plans.xml.gz");
-        config.controler().setRunId(runId);
-        config.global().setCoordinateSystem("EPSG:31468");
-        config.vehicles().setVehiclesFile(null);
-        config.transit().setTransitScheduleFile(null);
-        config.transit().setVehiclesFile(null);
-        config.facilities().setInputFile(null);
-        Scenario scenario = ScenarioUtils.loadScenario(config);
+            final String outputDirectory = "/net/ils/kreuschner/analysis/modal-split-analysis-superblocksCat" + i + "-C50/";
 
-        AgentAnalysisFilter filter = new AgentAnalysisFilter("A");
+            Config config = ConfigUtils.createConfig();
+            config.network().setInputFile(null);
+            config.plans().setInputFile(runDirectory + "/" + runId + ".output_plans.xml.gz");
+            config.controler().setRunId(runId);
+            config.global().setCoordinateSystem("EPSG:31468");
+            config.vehicles().setVehiclesFile(null);
+            config.transit().setTransitScheduleFile(null);
+            config.transit().setVehiclesFile(null);
+            config.facilities().setInputFile(null);
+            Scenario scenario = ScenarioUtils.loadScenario(config);
 
-        filter.setSubpopulation("person");
+            AgentAnalysisFilter filter = new AgentAnalysisFilter("A");
+
+            filter.setSubpopulation("person");
 
 //        filter.setPersonAttribute("berlin");
 //        filter.setPersonAttributeName("home-activity-zone");
 
-		filter.setZoneFile("/net/ils/kreuschner/Superblocks_Shapefiles/Superblocks_gesamt.shp");
-//		filter.setRelevantActivityType("home");
+            filter.setZoneFile("/net/ils/kreuschner/Superblocks_Shapefiles/SuperblocksCat" + i + ".shp");
+            filter.setRelevantActivityType("home");
 
-        filter.preProcess(scenario);
+            filter.preProcess(scenario);
 
-        ModeAnalysis analysis = new ModeAnalysis(scenario, filter, null, new DefaultAnalysisMainModeIdentifier());
-        analysis.run();
+            ModeAnalysis analysis = new ModeAnalysis(scenario, filter, null, new DefaultAnalysisMainModeIdentifier());
+            analysis.run();
 
-        File directory = new File(outputDirectory);
-        directory.mkdirs();
+            File directory = new File(outputDirectory);
+            directory.mkdirs();
 
-        analysis.writeModeShares(outputDirectory);
-        analysis.writeTripRouteDistances(outputDirectory);
-        analysis.writeTripEuclideanDistances(outputDirectory);
+            analysis.writeModeShares(outputDirectory);
+            analysis.writeTripRouteDistances(outputDirectory);
+            analysis.writeTripEuclideanDistances(outputDirectory);
 
-        final List<Tuple<Double, Double>> distanceGroups = new ArrayList<>();
-        distanceGroups.add(new Tuple<>(0., 1000.));
-        distanceGroups.add(new Tuple<>(1000., 3000.));
-        distanceGroups.add(new Tuple<>(3000., 5000.));
-        distanceGroups.add(new Tuple<>(5000., 10000.));
-        distanceGroups.add(new Tuple<>(10000., 20000.));
-        distanceGroups.add(new Tuple<>(20000., 100000.));
-        distanceGroups.add(new Tuple<>(100000., 999999999999.));
-        analysis.writeTripRouteDistances(outputDirectory, distanceGroups);
-        analysis.writeTripEuclideanDistances(outputDirectory, distanceGroups);
+            final List<Tuple<Double, Double>> distanceGroups = new ArrayList<>();
+            distanceGroups.add(new Tuple<>(0., 1000.));
+            distanceGroups.add(new Tuple<>(1000., 3000.));
+            distanceGroups.add(new Tuple<>(3000., 5000.));
+            distanceGroups.add(new Tuple<>(5000., 10000.));
+            distanceGroups.add(new Tuple<>(10000., 20000.));
+            distanceGroups.add(new Tuple<>(20000., 100000.));
+            distanceGroups.add(new Tuple<>(100000., 999999999999.));
+            analysis.writeTripRouteDistances(outputDirectory, distanceGroups);
+            analysis.writeTripEuclideanDistances(outputDirectory, distanceGroups);
+        }
     }
 }

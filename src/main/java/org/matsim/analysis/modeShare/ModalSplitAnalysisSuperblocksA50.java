@@ -18,17 +18,19 @@ public class ModalSplitAnalysisSuperblocksA50 {
     public static void main(String[] args) throws IOException {
 
         //-------------For Input and Output Files-------------
+        // BaseCase
+        //String InputFile_planFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/output-berlinv5.5/ScenarioA25.output_plans.xml";
+        //String OutputFile_Results = "/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/ScenarioBase_Results.txt";
 
-
-        // PlanA50
-        String InputFile_planFile = "//net/ils/kreuschner/output/output_ScenarioA50/ScenarioA50.output_plans.xml";
-        String OutputFile_Results = "//net/ils/kreuschner/analysis/A50/ScenarioA50_Results.txt";
+        // PlanC50
+        String InputFile_planFile = "//net/ils/kreuschner/output/output_ScenarioC50/ScenarioC50.output_plans.xml";
+        String OutputFile_Results = "//net/ils/kreuschner/analysis/AC50/ScenarioC50_Results.txt";
 
 
         //-------------For Input and Output Files-------------//
 
         //——————Input——————
-        String Superblocks = "//net/ils/kreuschner/analysis/A50/ModifiedLinksInSuperblocks50.txt";
+        String Superblocks = "//net/ils/kreuschner/analysis/C50/ModifiedLinksInSuperblocks50.txt";
         //——————Input——————
 
         //——————Input As List——————
@@ -46,7 +48,7 @@ public class ModalSplitAnalysisSuperblocksA50 {
         System.out.println(SuperblocksList);
         System.out.println(SuperblocksList.size());
 
-        String PersonInternalIDs = "//net/ils/kreuschner/analysis/A50/Person_Superblock_A50.txt";
+        String PersonInternalIDs = "//net/ils/kreuschner/analysis/C50/Person_Superblock_C50.txt";
         // ResindentsIDs
         BufferedReader bfrpersonInternalIDs = new BufferedReader(new FileReader(PersonInternalIDs));
         ArrayList<String> personInternalIDsList = new ArrayList<>();
@@ -63,9 +65,9 @@ public class ModalSplitAnalysisSuperblocksA50 {
 
 
         //************************for AffectedAgentHandler
-        String inputFile = "//net/ils/kreuschner/output/output_ScenarioA50/ScenarioA50.output_events.xml.gz";
-        String outputFile1 = "//net/ils/kreuschner/analysis/A50/resident_and_worker_Agents_A50.txt";
-        String outputFile2 = "//net/ils/kreuschner/analysis/A50/affected_Vehicles_A50.txt";
+        String inputFile = "//net/ils/kreuschner/output/output_ScenarioC50/ScenarioC50.output_events.xml.gz";
+        String outputFile1 = "//net/ils/kreuschner/analysis/C50/resident_and_worker_Agents_C50.txt";
+        String outputFile2 = "//net/ils/kreuschner/analysis/C50/affected_Vehicles_C50.txt";
 
 
         EventsManager eventsManager = EventsUtils.createEventsManager();

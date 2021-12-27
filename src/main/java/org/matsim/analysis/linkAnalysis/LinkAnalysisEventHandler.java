@@ -34,6 +34,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
+/*
 public class LinkAnalysisEventHandler implements LinkEnterEventHandler, PersonDepartureEventHandler, PersonArrivalEventHandler, ActivityEndEventHandler {
     //Affected Vehicles.
     public static Set<Id> affectedVehicles = new HashSet<>();
@@ -52,40 +53,94 @@ public class LinkAnalysisEventHandler implements LinkEnterEventHandler, PersonDe
     public static Map<Id, Double> timeMap = new HashMap<>();
     public static Set<Id> residentsUsingPT = new HashSet<>();
 
-    //NoneResidentsAffectedAgents.
-    public static Set<Id> noneResidentsAffectedAgents = new HashSet<>();
-    public static double totalTimeSpentByNoneResidentsAffectedAgentsInTraffic = 0.0;
-    public static Map<Id, Double> timeMap_noneResidentsAffectedAgents = new HashMap<>();
-    public static Set<Id> noneResidentsAffectedAgentsUsingPT = new HashSet<>();
+    //Mode bicycle
+    public static Set<Id> modeBicycle = new HashSet<>();
+    public static double totalTimeSpentInModeBicycleBerlin = 0.0;
+    public static double totalDistanceTravelledInModeBicycleBerlin = 0.0;
+    public static double totalTimeSpentInModeBicycleHundekopf = 0.0;
+    public static double totalDistanceTravelledInModeBicycleHundekopf = 0.0;
+    public static double totalTimeSpentInModeBicycleSuperblock = 0.0;
+    public static double totalDistanceTravelledInModeBicycleSuperblock = 0.0;
 
-    //AffectedAgents.
-    public static Set<Id> affectedAgents = new HashSet<>();
-    public static double totalTimeSpentByAffectedAgentsInTraffic = 0.0;
-    public static Map<Id, Double> timeMap_affectedAgents = new HashMap<>();
-    public static Set<Id> affectedAgentsUsingPT = new HashSet<>();
+    //Mode car
+    public static Set<Id> modeCar = new HashSet<>();
+    public static double totalTimeSpentInModeCarBerlin = 0.0;
+    public static double totalDistanceTravelledInModeCarBerlin = 0.0;
+    public static double totalTimeSpentInModeCarHundekopf = 0.0;
+    public static double totalDistanceTravelledInModeCarHundekopf = 0.0;
+    public static double totalTimeSpentInModeCarSuperblock = 0.0;
+    public static double totalDistanceTravelledInModeCarSuperblock = 0.0;
 
-    //OtherAgents.
-    public static Set<Id> otherAgents = new HashSet<>();
-    public static double totalTimeSpentByOtherAgentsInTraffic = 0.0;
-    public static Map<Id, Double> timeMap_otherAgents = new HashMap<>();
-    public static Set<Id> otherAgentsUsingPT = new HashSet<>();
+    //Mode pt
+    public static Set<Id> modePt = new HashSet<>();
+    public static double totalTimeSpentInModePtBerlin = 0.0;
+    public static double totalDistanceTravelledInModePtBerlin = 0.0;
+    public static double totalTimeSpentInModePtHundekopf = 0.0;
+    public static double totalDistanceTravelledInModePtHundekopf = 0.0;
+    public static double totalTimeSpentInModePtSuperblock = 0.0;
+    public static double totalDistanceTravelledInModePtSuperblock = 0.0;
+
+    //Mode ride
+    public static Set<Id> modeRide = new HashSet<>();
+    public static double totalTimeSpentInModeRideBerlin = 0.0;
+    public static double totalDistanceTravelledInModeRideBerlin = 0.0;
+    public static double totalTimeSpentInModeRideHundekopf = 0.0;
+    public static double totalDistanceTravelledInModeRideHundekopf = 0.0;
+    public static double totalTimeSpentInModeRideSuperblock = 0.0;
+    public static double totalDistanceTravelledInModeRideSuperblock = 0.0;
+
+    //Mode freight
+    public static Set<Id> modeFreight = new HashSet<>();
+    public static double totalTimeSpentInModeFreightBerlin = 0.0;
+    public static double totalDistanceTravelledInModeFreightBerlin = 0.0;
+    public static double totalTimeSpentInModeFreightHundekopf = 0.0;
+    public static double totalDistanceTravelledInModeFreightHundekopf = 0.0;
+    public static double totalTimeSpentInModeFreightSuperblock = 0.0;
+    public static double totalDistanceTravelledInModeFreightSuperblock = 0.0;
+
+    //Mode walk
+    public static Set<Id> modeWalk = new HashSet<>();
+    public static double totalTimeSpentInModeWalkBerlin = 0.0;
+    public static double totalDistanceTravelledInModeWalkBerlin = 0.0;
+    public static double totalTimeSpentInModeWalkHundekopf = 0.0;
+    public static double totalDistanceTravelledInModeWalkHundekopf = 0.0;
+    public static double totalTimeSpentInModeWalkSuperblock = 0.0;
+    public static double totalDistanceTravelledInModeWalkSuperblock = 0.0;
+
+    //Berlin links
+    public static List<Id> berlinLinks = new ArrayList<Id>();
+    public static Map<Id, Double> vehicleHasEnteredBerlinZone = new HashMap<Id, Double>();
+    public static double totalTimeSpentInBerlinZone = 0.0;
+    public static double totalDistanceTravelledInBerlinZone = 0.0;
+    public static Map<Id, Double> distanceOfLinks1 = new HashMap<Id, Double>();
+    public static Set<Id> vehiclesGoingThroughBerlinZone = new HashSet();
+
+    //Hundekopf links
+    public static List<Id> hundekopfLinks = new ArrayList<Id>();
+    public static Map<Id, Double> vehicleHasEnteredHundekopfZone = new HashMap<Id, Double>();
+    public static double totalTimeSpentInHundekopfZone = 0.0;
+    public static double totalDistanceTravelledInHundekopfZone = 0.0;
+    public static Map<Id, Double> distanceOfLinks2 = new HashMap<Id, Double>();
+    public static Set<Id> vehiclesGoingThroughHundekopfZone = new HashSet();
+
+    //Superblock links
+    public static List<Id> superblockLinks = new ArrayList<Id>();
+    public static Map<Id, Double> vehicleHasEnteredSuperblockZone = new HashMap<Id, Double>();
+    public static double totalTimeSpentInSuperblockZone = 0.0;
+    public static double totalDistanceTravelledInSuperblockZone = 0.0;
+    public static Map<Id, Double> distanceOfLinks3 = new HashMap<Id, Double>();
+    public static Set<Id> vehiclesGoingThroughSuperblockZone = new HashSet();
 
 
-    //Modified links
-    public static List<Id> modifiedLinks = new ArrayList<Id>();
-    public static Map<Id, Double> vehicleHasEnteredModifiedZone = new HashMap<Id, Double>();
-    public static double totalTimeSpentInModifiedZone = 0.0;
-    public static double totalDistanceTravelledInModifiedZone = 0.0;
-    public static Map<Id, Double> distanceOfLinks = new HashMap<Id, Double>();
-    public static Set<Id> vehiclesGoingThroughModifiedZone = new HashSet();
-
-
-    /*//Additional (outside the modified zone).
+    */
+/*//*
+/Additional (outside superblock in Hundekopf).
     public static List<Id> HundekopfLinks = new ArrayList<Id>();
-    public static double totalTimeSpentInErnstReuter = 0.0;
-    public static double totalDistanceTravelledInErnstReuter = 0.0;
-    public static Set<Id> vehiclesGoingThroughErnstReuter = new HashSet();
-    public static Map<Id, Double> vehicleHasEnteredHundekopf = new HashMap<Id, Double>();*/
+    public static double totalTimeSpentOnPrimaryRd = 0.0;
+    public static double totalDistanceTravelledOnPrimaryRd = 0.0;
+    public static Set<Id> vehiclesGoingThroughPrimaryRd = new HashSet();
+    public static Map<Id, Double> vehicleHasEnteredPrimaryRd = new HashMap<Id, Double>();*//*
+
 
     //Other
     public static Set<Id> agentsUsingPt = new HashSet<>();
@@ -93,85 +148,68 @@ public class LinkAnalysisEventHandler implements LinkEnterEventHandler, PersonDe
     public LinkAnalysisEventHandler() throws IOException, ParserConfigurationException, SAXException {
         //Create every link list.
 
-        String networkInputFile = "/Users/moritzkreuschner/Desktop/Master Thesis/01_Shapefiles/Shapefiles/berlin-v5.5-network.xml";
-        // Get network
-        Scenario scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
-        MatsimNetworkReader reader = new MatsimNetworkReader(scenario.getNetwork());
-        reader.readFile(networkInputFile);
-
-        Path filePath = Paths.get("/Users/moritzkreuschner/Desktop/Master Thesis/01_Shapefiles/Shapefiles/Superblocks_Shapefiles/25percent/NOTin25percent.txt");
-        Scanner scanner = new Scanner(filePath);
-        List<Integer> NOTin25list = new ArrayList<>();
-        while (scanner.hasNext()) {
-            if (scanner.hasNextInt()) {
-                NOTin25list.add(scanner.nextInt());
-            } else {
-                scanner.next();
+            //links in Berlin
+            Scanner scanner1 = new Scanner(new File("/Users/moritzkreuschner/Desktop/linksInsideBerlin.txt"));
+            while (scanner1.hasNextLine()) {
+                String id = scanner1.nextLine();
+                berlinLinks.add(Id.createLinkId(id));
             }
-        }
+            scanner1.close();
 
-        for (int i = 1; i < 160; i++) {
-            if (NOTin25list.contains(i)) {
-                continue;
-            } else {
-
-                // Store relevant area of city as geometry
-                ShapeFileReader ShapeFileReader = new ShapeFileReader();
-                Collection<SimpleFeature> features = ShapeFileReader.readFileAndInitialize("/Users/moritzkreuschner/Desktop/Master Thesis/01_Shapefiles/Shapefiles/Superblocks_Shapefiles/S000" + i + ".shp");
-                //continue;
-                Map<String, Geometry> zoneGeometries = new HashMap<>();
-                for (SimpleFeature feature : features) {
-                    zoneGeometries.put((String) feature.getAttribute("Name"),
-                            (Geometry) feature.getDefaultGeometry());
-                }
-                Geometry areaGeometry = zoneGeometries.get("Superblock" + i);
-
-                for (Link link : scenario.getNetwork().getLinks().values()) {
-
-                    Point linkCenterAsPoint = MGC.xy2Point(link.getCoord().getX(), link.getCoord().getY());
-                    if (areaGeometry.contains(linkCenterAsPoint)) {
-                        modifiedLinks.add(link.getId());
-                    }
-                }
+            //links in Hundekopf
+            Scanner scanner2 = new Scanner(new File("/Users/moritzkreuschner/Desktop/linksInsideHundekopf.txt"));
+            while (scanner2.hasNextLine()) {
+                String id = scanner2.nextLine();
+                hundekopfLinks.add(Id.createLinkId(id));
             }
+            scanner2.close();
 
 
-            Scanner scanner5 = new Scanner(new File("/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/A25/affected_Vehicles_A25.txt"));
+            //links in Superblocks
+            Scanner scanner3 = new Scanner(new File("/Users/moritzkreuschner/Desktop/linksInsideSuperblock_total.txt"));
+            while (scanner3.hasNextLine()) {
+                String id = scanner3.nextLine();
+                superblockLinks.add(Id.createLinkId(id));
+            }
+            scanner3.close();
+
+
+            Scanner scanner5 = new Scanner(new File("/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/C25/affected_Vehicles_C25.txt"));
             while (scanner5.hasNextLine()) {
                 String id = scanner5.nextLine();
                 affectedVehicles.add(Id.createVehicleId(id));
             }
             scanner5.close();
 
-            Scanner scanner6 = new Scanner(new File("/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/A25/affected_Residents_A25.txt"));
+            Scanner scanner6 = new Scanner(new File("/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/C25/affected_Residents_C25.txt"));
             while (scanner6.hasNextLine()) {
                 String id = scanner6.nextLine();
                 affectedResidents.add(Id.createPersonId(id));
             }
             scanner6.close();
 
-            Scanner scanner7 = new Scanner(new File("/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/A25/Person_Superblock_A25.txt"));
+            Scanner scanner7 = new Scanner(new File("/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/C25/Residents_C25.txt"));
             while (scanner7.hasNextLine()) {
                 String id = scanner7.nextLine();
                 residents.add(Id.createPersonId(id));
             }
             scanner7.close();
 
-            Scanner scanner8 = new Scanner(new File("/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/A25/noneResidentsAffectedAgents_A25.txt"));
+            Scanner scanner8 = new Scanner(new File("/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/C25/noneResidentsAffectedAgents_C25.txt"));
             while (scanner8.hasNextLine()) {
                 String id = scanner8.nextLine();
                 noneResidentsAffectedAgents.add(Id.createPersonId(id));
             }
             scanner8.close();
 
-            Scanner scanner9 = new Scanner(new File("/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/A25/affected_Agents_A25.txt"));
+            Scanner scanner9 = new Scanner(new File("/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/C25/affected_Agents_C25.txt"));
             while (scanner9.hasNextLine()) {
                 String id = scanner9.nextLine();
                 affectedAgents.add(Id.createPersonId(id));
             }
             scanner9.close();
 
-            Scanner scanner10 = new Scanner(new File("/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/A25/otherAgents_A25.txt"));
+            Scanner scanner10 = new Scanner(new File("/Users/moritzkreuschner/Desktop/Master Thesis/05_Analysis/C25/otherAgents_C25.txt"));
             while (scanner10.hasNextLine()) {
                 String id = scanner10.nextLine();
                 otherAgents.add(Id.createPersonId(id));
@@ -188,39 +226,77 @@ public class LinkAnalysisEventHandler implements LinkEnterEventHandler, PersonDe
             dct.getDocumentElement().normalize();
             NodeList nodeList = dct.getElementsByTagName("link");
             for (int j = 0; j < nodeList.getLength(); j++) {
-                Node node = nodeList.item(i);
+                Node node = nodeList.item(j);
                 if (node.getNodeType() == Node.ELEMENT_NODE) {
                     Element e = (Element) node;
                     Double linkDist = Double.parseDouble(e.getAttribute("length"));
-                    distanceOfLinks.put(Id.createLinkId(e.getAttribute("id")), linkDist);
+                    distanceOfLinks3.put(Id.createLinkId(e.getAttribute("id")), linkDist);
                 }
             }
-        }
     }
+
 
     @Override
     public void handleEvent(LinkEnterEvent event){
         Id link = event.getLinkId();
         Id vehicle = event.getVehicleId();
 
-        if(affectedVehicles.contains(vehicle)){
-            totalDistanceTravelledByAffectedVehicles += distanceOfLinks.get(link);
+        if (berlinLinks.contains(link)){
+
         }
 
-        if (modifiedLinks.contains(link)){
+        if(affectedVehicles.contains(vehicle)){
+            totalDistanceTravelledByAffectedVehicles += distanceOfLinks3.get(link);
+        }
+
+        if (superblockLinks.contains(link)){
             //Add vehicle to the set of vehicles going through the modified zone.
-            vehiclesGoingThroughModifiedZone.add(event.getVehicleId());
+            vehiclesGoingThroughSuperblockZone.add(event.getVehicleId());
             //Add the link's distance to the total distance travelled counter.
-            totalDistanceTravelledInModifiedZone += distanceOfLinks.get(event.getLinkId());
+            totalDistanceTravelledInSuperblockZone += distanceOfLinks3.get(event.getLinkId());
             //Vehicle enters for the first time in our zone, so we record the time.
-            vehicleHasEnteredModifiedZone.putIfAbsent(vehicle, event.getTime());
+            vehicleHasEnteredSuperblockZone.putIfAbsent(vehicle, event.getTime());
         }else{
-            if (vehicleHasEnteredModifiedZone.containsKey(vehicle)){
+            if (vehicleHasEnteredSuperblockZone.containsKey(vehicle)){
                 //Vehicle is leaving the modified zone, we add the time spent in traffic to the counter.
                 Double currentTime = event.getTime();
-                totalTimeSpentInModifiedZone += (currentTime-vehicleHasEnteredModifiedZone.get(vehicle));
+                totalTimeSpentInSuperblockZone += (currentTime-vehicleHasEnteredSuperblockZone.get(vehicle));
                 //Vehicle's id removed from the map so that next time it enters zone the time is stored.
-                vehicleHasEnteredModifiedZone.remove(vehicle);
+                vehicleHasEnteredSuperblockZone.remove(vehicle);
+            }
+        }
+
+        if (berlinLinks.contains(link)){
+            //Add vehicle to the set of vehicles going through the modified zone.
+            vehiclesGoingThroughBerlinZone.add(event.getVehicleId());
+            //Add the link's distance to the total distance travelled counter.
+            totalDistanceTravelledInBerlinZone += distanceOfLinks1.get(event.getLinkId());
+            //Vehicle enters for the first time in our zone, so we record the time.
+            vehicleHasEnteredBerlinZone.putIfAbsent(vehicle, event.getTime());
+        }else{
+            if (vehicleHasEnteredBerlinZone.containsKey(vehicle)){
+                //Vehicle is leaving the modified zone, we add the time spent in traffic to the counter.
+                Double currentTime = event.getTime();
+                totalTimeSpentInBerlinZone += (currentTime-vehicleHasEnteredBerlinZone.get(vehicle));
+                //Vehicle's id removed from the map so that next time it enters zone the time is stored.
+                vehicleHasEnteredBerlinZone.remove(vehicle);
+            }
+        }
+
+        if (hundekopfLinks.contains(link)){
+            //Add vehicle to the set of vehicles going through the modified zone.
+            vehiclesGoingThroughHundekopfZone.add(event.getVehicleId());
+            //Add the link's distance to the total distance travelled counter.
+            totalDistanceTravelledInHundekopfZone += distanceOfLinks2.get(event.getLinkId());
+            //Vehicle enters for the first time in our zone, so we record the time.
+            vehicleHasEnteredHundekopfZone.putIfAbsent(vehicle, event.getTime());
+        }else{
+            if (vehicleHasEnteredHundekopfZone.containsKey(vehicle)){
+                //Vehicle is leaving the modified zone, we add the time spent in traffic to the counter.
+                Double currentTime = event.getTime();
+                totalTimeSpentInHundekopfZone += (currentTime-vehicleHasEnteredHundekopfZone.get(vehicle));
+                //Vehicle's id removed from the map so that next time it enters zone the time is stored.
+                vehicleHasEnteredHundekopfZone.remove(vehicle);
             }
         }
     }
@@ -228,6 +304,9 @@ public class LinkAnalysisEventHandler implements LinkEnterEventHandler, PersonDe
     @Override
     public void handleEvent(PersonDepartureEvent event){
         Id person = event.getPersonId();
+        Id link = event.getLinkId();
+
+
         if(residents.contains(person)){
             timeMap.putIfAbsent(person, event.getTime());
         } else if(noneResidentsAffectedAgents.contains(person)) {
@@ -247,6 +326,14 @@ public class LinkAnalysisEventHandler implements LinkEnterEventHandler, PersonDe
     @Override
     public void handleEvent(PersonArrivalEvent event){
         Id person = event.getPersonId();
+        Id link = event.getLinkId();
+        if(berlinLinks.contains(link)){
+            totalTimeSpentInModeWalkBerlin += (event.getTime()-timeMap.get(person));
+            timeMap.remove(person);
+
+        }
+
+
         if(timeMap.containsKey(person)){
             totalTimeSpentByResidentsInTraffic += (event.getTime()-timeMap.get(person));
             timeMap.remove(person);
@@ -294,50 +381,86 @@ public class LinkAnalysisEventHandler implements LinkEnterEventHandler, PersonDe
 
     public void printResults(){
         System.out.println("***************************************************************");
-        System.out.println("MODIFIED ZONE");
-        System.out.println("Total distance travelled in modified zones: " + totalDistanceTravelledInModifiedZone);
-        System.out.println("Total time travelled in modified zones: " + totalTimeSpentInModifiedZone);
-        System.out.println("Total number of vehicles going through modified zones: " + vehiclesGoingThroughModifiedZone.size());
-        System.out.println("---------------------------------------------------------------");
         System.out.println("AFFECTED VEHICLES:");
         System.out.println("Number of affected vehicles: " + affectedVehicles.size());
         System.out.println("Total distance travelled by the affected vehicles: " + totalDistanceTravelledByAffectedVehicles);
         System.out.println("Average distance travelled by the affected vehicles: " + totalDistanceTravelledByAffectedVehicles/affectedVehicles.size());
         System.out.println("---------------------------------------------------------------");
+        System.out.println("Superblock ZONE");
+        System.out.println("Total distance travelled in modified zones: " + totalDistanceTravelledInSuperblockZone);
+        System.out.println("Total time travelled in modified zones: " + totalTimeSpentInSuperblockZone);
+        System.out.println("Total number of vehicles going through modified zones: " + vehiclesGoingThroughSuperblockZone.size());
+        System.out.println("---------------------------------------------------------------");
+        System.out.println("Hundekopf ZONE");
+        System.out.println("Total distance travelled in modified zones: " + totalDistanceTravelledInHundekopfZone);
+        System.out.println("Total time travelled in modified zones: " + totalTimeSpentInHundekopfZone);
+        System.out.println("Total number of vehicles going through modified zones: " + vehiclesGoingThroughHundekopfZone.size());
+        System.out.println("---------------------------------------------------------------");
+        System.out.println("BERLIN ZONE");
+        System.out.println("Total distance travelled in modified zones: " + totalDistanceTravelledInBerlinZone);
+        System.out.println("Total time travelled in modified zones: " + totalTimeSpentInBerlinZone);
+        System.out.println("Total number of vehicles going through modified zones: " + vehiclesGoingThroughBerlinZone.size());
+        System.out.println("---------------------------------------------------------------");
         System.out.println("AffectedResidents:");
         System.out.println("Number of affected residents: " + affectedResidents.size());
         System.out.println("Total time spent in traffic by the affected residents: " + totalTimeSpentByAffectedResidentsInTraffic);
         System.out.println("Average time spent in traffic by the affected residens: " + totalTimeSpentByAffectedResidentsInTraffic / affectedResidents.size());
-        System.out.println("Number of affected residents using pt: " + affectedResidentsUsingPT.size());
         System.out.println("---------------------------------------------------------------");
         System.out.println("Residents:");
         System.out.println("Number of residents: " + residents.size());
         System.out.println("Total time spent in traffic by the residents: " + totalTimeSpentByResidentsInTraffic);
         System.out.println("Average time spent in traffic by the residens: " + totalTimeSpentByResidentsInTraffic / residents.size());
-        System.out.println("Number of residents using pt: " + residentsUsingPT.size());
         System.out.println("---------------------------------------------------------------");
-        System.out.println("NoneResidentsAffectedAgents:");
-        System.out.println("Number of none-resident affected agents: " + noneResidentsAffectedAgents.size());
-        System.out.println("Total time spent in traffic by the none-resident affected agents: " + totalTimeSpentByNoneResidentsAffectedAgentsInTraffic);
-        System.out.println("Average time spent in traffic by the none-resident affected agents: " + totalTimeSpentByNoneResidentsAffectedAgentsInTraffic / noneResidentsAffectedAgents.size());
-        System.out.println("Number of none-resident affected agents using pt: " + noneResidentsAffectedAgentsUsingPT.size());
+        System.out.println("Mode biclycle:");
+        System.out.println("Total time spent mode bicycle in Berlin: " + totalTimeSpentInModeBicycleBerlin);
+        System.out.println("Total time spent mode bicycle in Hundekopf: " + totalTimeSpentInModeBicycleHundekopf);
+        System.out.println("Total time spent mode bicycle in Superblock: " + totalTimeSpentInModeBicycleSuperblock);
+        System.out.println("Total distance mode bicycle in Berlin: " + totalDistanceTravelledInModeBicycleBerlin);
+        System.out.println("Total distance mode bicycle in Hundekopf: " + totalDistanceTravelledInModeBicycleHundekopf);
+        System.out.println("Total distance mode bicycle in Superblock: " + totalDistanceTravelledInModeBicycleSuperblock);
         System.out.println("---------------------------------------------------------------");
-        System.out.println("AffectedAgents:");
-        System.out.println("Number of affected agents: " + affectedAgents.size());
-        System.out.println("Total time spent in traffic by the affected agents: " + totalTimeSpentByAffectedAgentsInTraffic);
-        System.out.println("Average time spent in traffic by the affected agents: " + totalTimeSpentByAffectedAgentsInTraffic / affectedAgents.size());
-        System.out.println("Number of affected agents using pt: " + affectedAgentsUsingPT.size());
+        System.out.println("Mode car:");
+        System.out.println("Total time spent mode car in Berlin: " + totalTimeSpentInModeCarBerlin);
+        System.out.println("Total time spent mode car in Hundekopf: " + totalTimeSpentInModeCarHundekopf);
+        System.out.println("Total time spent mode car in Superblock: " + totalTimeSpentInModeCarSuperblock);
+        System.out.println("Total distance mode car in Berlin: " + totalDistanceTravelledInModeCarBerlin);
+        System.out.println("Total distance mode car in Hundekopf: " + totalDistanceTravelledInModeCarHundekopf);
+        System.out.println("Total distance mode car in Superblock: " + totalDistanceTravelledInModeCarSuperblock);
         System.out.println("---------------------------------------------------------------");
-        System.out.println("OtherAgents:");
-        System.out.println("Number of other agents: " + otherAgents.size());
-        System.out.println("Total time spent in traffic by the other agents: " + totalTimeSpentByOtherAgentsInTraffic);
-        System.out.println("Average time spent in traffic by the other agents: " + totalTimeSpentByOtherAgentsInTraffic / otherAgents.size());
-        System.out.println("Number of other agents using pt: " + otherAgentsUsingPT.size());
+        System.out.println("Mode ride:");
+        System.out.println("Total time spent mode ride in Berlin: " + totalTimeSpentInModeRideBerlin);
+        System.out.println("Total time spent mode ride in Hundekopf: " + totalTimeSpentInModeRideHundekopf);
+        System.out.println("Total time spent mode ride in Superblock: " + totalTimeSpentInModeRideSuperblock);
+        System.out.println("Total distance mode ride in Berlin: " + totalDistanceTravelledInModeRideBerlin);
+        System.out.println("Total distance mode ride in Hundekopf: " + totalDistanceTravelledInModeRideHundekopf);
+        System.out.println("Total distance mode ride in Superblock: " + totalDistanceTravelledInModeRideSuperblock);
+        System.out.println("---------------------------------------------------------------");
+        System.out.println("Mode pt:");
+        System.out.println("Total time spent mode pt in Berlin: " + totalTimeSpentInModePtBerlin);
+        System.out.println("Total time spent mode pt in Hundekopf: " + totalTimeSpentInModePtHundekopf);
+        System.out.println("Total time spent mode pt in Superblock: " + totalTimeSpentInModePtSuperblock);
+        System.out.println("Total distance mode pt in Berlin: " + totalDistanceTravelledInModePtBerlin);
+        System.out.println("Total distance mode pt in Hundekopf: " + totalDistanceTravelledInModePtHundekopf);
+        System.out.println("Total distance mode pt in Superblock: " + totalDistanceTravelledInModePtSuperblock);
+        System.out.println("---------------------------------------------------------------");
+        System.out.println("Mode freight:");
+        System.out.println("Total time spent mode freight in Berlin: " + totalTimeSpentInModeFreightBerlin);
+        System.out.println("Total time spent mode freight in Hundekopf: " + totalTimeSpentInModeFreightHundekopf);
+        System.out.println("Total time spent mode freight in Superblock: " + totalTimeSpentInModeFreightSuperblock);
+        System.out.println("Total distance mode freight in Berlin: " + totalDistanceTravelledInModeFreightBerlin);
+        System.out.println("Total distance mode freight in Hundekopf: " + totalDistanceTravelledInModeFreightHundekopf);
+        System.out.println("Total distance mode freight in Superblock: " + totalDistanceTravelledInModeFreightSuperblock);
+        System.out.println("---------------------------------------------------------------");
+        System.out.println("Mode walk:");
+        System.out.println("Total time spent mode walk in Berlin: " + totalTimeSpentInModeWalkBerlin);
+        System.out.println("Total time spent mode walk in Hundekopf: " + totalTimeSpentInModeWalkHundekopf);
+        System.out.println("Total time spent mode walk in Superblock: " + totalTimeSpentInModeWalkSuperblock);
+        System.out.println("Total distance mode walk in Berlin: " + totalDistanceTravelledInModeWalkBerlin);
+        System.out.println("Total distance mode walk in Hundekopf: " + totalDistanceTravelledInModeWalkHundekopf);
+        System.out.println("Total distance mode walk in Superblock: " + totalDistanceTravelledInModeWalkSuperblock);
         System.out.println("---------------------------------------------------------------");
 
-        System.out.println("OTHER:");
-        System.out.println("Number of agents using pt: " + agentsUsingPt.size());
-        System.out.println("***************************************************************");
     }
 
 }
+*/

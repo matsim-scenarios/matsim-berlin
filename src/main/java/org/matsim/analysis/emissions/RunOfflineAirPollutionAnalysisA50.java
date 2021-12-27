@@ -39,14 +39,19 @@ import org.matsim.core.events.EventsUtils;
 import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.events.algorithms.EventWriterXML;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.vehicles.*;
+import org.matsim.vehicles.EngineInformation;
+import org.matsim.vehicles.VehicleType;
+import org.matsim.vehicles.VehicleUtils;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.NumberFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.matsim.contrib.emissions.Pollutant.*;
@@ -66,7 +71,7 @@ public class RunOfflineAirPollutionAnalysisA50 {
 
     static List<Pollutant> pollutants2Output = Arrays.asList(CO2_TOTAL, NOx, PM, PM_non_exhaust);
 
-    RunOfflineAirPollutionAnalysisA50(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
+    public RunOfflineAirPollutionAnalysisA50(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
         if (!runDirectory.endsWith("/")) runDirectory = runDirectory + "/";
         this.runDirectory = runDirectory;
 
@@ -78,17 +83,16 @@ public class RunOfflineAirPollutionAnalysisA50 {
         this.analysisOutputDirectory = analysisOutputDirectory;
     }
 
+
     public static void main(String[] args) throws IOException {
 
         //TODO: Please set MATSIM_DECRYPTION_PASSWORD as envrionment variable to decrypt the files.
 
-        final String hbefaPath = "https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/";
-        //actually the hbefa files need to be set relative to the config or by absolute path...
-		final String hbefaFileCold = hbefaPath + "0e73947443d68f95202b71a156b337f7f71604ae/ColdStart_Vehcat_2020_Average_withHGVetc.csv.enc";
-        final String hbefaFileWarm = hbefaPath + "0e73947443d68f95202b71a156b337f7f71604ae/7eff8f308633df1b8ac4d06d05180dd0c5fdf577.enc";
+        final String hbefaFileCold = "https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/0e73947443d68f95202b71a156b337f7f71604ae/ColdStart_Vehcat_2020_Average_withHGVetc.csv.enc";
+        final String hbefaFileWarm = "https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/0e73947443d68f95202b71a156b337f7f71604ae/7eff8f308633df1b8ac4d06d05180dd0c5fdf577.enc";
 
-        final String runId = "ScenarioA50" ;
-        String runDirectory = "/net/ils/kreuschner/output/output_ScenarioA50/";
+        final String runId = "ScenarioC50" ;
+        String runDirectory = "/net/ils/kreuschner/output/output_ScenarioC50/";
         RunOfflineAirPollutionAnalysisA50 analysis = new RunOfflineAirPollutionAnalysisA50(
                 runDirectory,
                 runId,
@@ -108,8 +112,8 @@ public class RunOfflineAirPollutionAnalysisA50 {
         Config config = ConfigUtils.createConfig();
         config.vehicles().setVehiclesFile( runDirectory + runId + ".output_allVehicles.xml.gz");
         config.network().setInputFile( runDirectory + runId + ".output_network.xml.gz");
-        config.transit().setTransitScheduleFile(null);
-        config.transit().setVehiclesFile( null);
+        config.transit().setTransitScheduleFile( runDirectory +runId + ".output_transitSchedule.xml.gz");
+        config.transit().setVehiclesFile( runDirectory + runId + ".output_transitVehicles.xml.gz");
         config.global().setCoordinateSystem("EPSG:31468");
         config.plans().setInputFile(null);
         config.parallelEventHandling().setNumberOfThreads(null);
@@ -213,6 +217,7 @@ public class RunOfflineAirPollutionAnalysisA50 {
         VehicleUtils.setHbefaEmissionsConcept( freightEngineInformation, "average" );
 
         //As a result all non-car and non-freight vehicles are iognored in the emissions analysis. This are mostly the pt relates veh types.
+
 
         //------------------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-package org.matsim.analysis.hundekopf;
+package org.matsim.analysis.modalSplit.hundekopf;
 
 import org.matsim.analysis.AgentAnalysisFilter;
 import org.matsim.analysis.DefaultAnalysisMainModeIdentifier;
@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RunKopfModalSplitAnalysisA100 {
+public class RunKopfModalSplitAnalysisC100 {
 
     public static void main(String[] args) throws IOException {
 
