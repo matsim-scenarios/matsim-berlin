@@ -95,7 +95,8 @@ public class RunAnalyse {
 		log.info("Running analysis for " + scenarioWahl + " : " + inputDir);
 
 		Carriers carriers = new Carriers();
-		new CarrierPlanXmlReader(carriers)
+		CarrierVehicleTypes carrierVehicleTypes = new CarrierVehicleTypes();
+		new CarrierPlanXmlReader(carriers, carrierVehicleTypes)
 				.readFile(new File(inputDir + "output_CarrierPlans.xml").getCanonicalPath());
 
 		Network network = NetworkUtils.readNetwork(inputDir + "output_network.xml.gz");
@@ -145,7 +146,7 @@ public class RunAnalyse {
 				}
 
 				Id<Person> personId = Id.create(
-						carrier.getId().toString() + scheduledTour.getVehicle().getVehicleId().toString() + tourNumber,
+						carrier.getId().toString() + scheduledTour.getVehicle().getId().toString() + tourNumber,
 						Person.class);
 				personId2tourDistanceKm.put(personId, distanceTourKM);
 				personId2tourNumCollections.put(personId, numCollections);
