@@ -9,12 +9,12 @@
 	<name>MATSim Open Berlin scenario project</name>
 	<description>MATSim Open Berlin scenario project</description>
 
-	<properties>		
+	<properties>
 		<!-- release -->
 		<!--<matsim.version>13.0</matsim.version>-->
 
 		<!-- PR-labelled release -->
-		<matsim.version>14.0-PR1788</matsim.version>
+		<matsim.version>14.0-PR1868</matsim.version>
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
 		<!--<matsim.version>14.0-SNAPSHOT</matsim.version>-->
