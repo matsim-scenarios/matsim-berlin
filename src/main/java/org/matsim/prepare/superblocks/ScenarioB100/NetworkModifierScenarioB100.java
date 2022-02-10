@@ -27,8 +27,11 @@ public class NetworkModifierScenarioB100 {
         // Input and output files
         String networkInputFile = "/Users/moritzkreuschner/Desktop/Master Thesis/01_Shapefiles/Shapefiles/berlin-v5.5-network.xml.gz";
         String networkOutputFile = "/Users/moritzkreuschner/Desktop/Master Thesis/02_Coding/git/matsim-berlin-kreuschner/superblock_input_data/Network-modifiedA100.xml.gz";
+        String shapeFileDirectory = "/Users/moritzkreuschner/Desktop/Master Thesis/01_Shapefiles/Shapefiles/Superblocks_Shapefiles/";
 
         Path filePath = Paths.get("/Users/moritzkreuschner/Desktop/Master Thesis/01_Shapefiles/Shapefiles/Superblocks_Shapefiles/100percent/NOTin100percent.txt");
+        int nrOfSuperBlocks = 160;
+
         Scanner scanner = new Scanner(filePath);
         List<Integer> NOTin50list = new ArrayList<>();
         while (scanner.hasNext()) {
@@ -54,11 +57,11 @@ public class NetworkModifierScenarioB100 {
 
         // Loop for different shapefiles
         // Superblocks that are not in the directory
-        for (int i = 1; i < 161; i++) {
+        for (int i = 0; i < nrOfSuperBlocks; i++) {
 
                 // Store relevant area of city as geometry
                 ShapeFileReader ShapeFileReader = new ShapeFileReader();
-                Collection<SimpleFeature> features = ShapeFileReader.readFileAndInitialize("/Users/moritzkreuschner/Desktop/Master Thesis/01_Shapefiles/Shapefiles/Superblocks_Shapefiles/S000" + i + ".shp");
+                Collection<SimpleFeature> features = ShapeFileReader.readFileAndInitialize(shapeFileDirectory + "S000" + (i + 1) + ".shp");
                 //continue;
                 Map<String, Geometry> zoneGeometries = new HashMap<>();
                 for (SimpleFeature feature : features) {
@@ -73,8 +76,13 @@ public class NetworkModifierScenarioB100 {
 
                     Point linkCenterAsPoint = MGC.xy2Point(link.getCoord().getX(), link.getCoord().getY());
                     if (areaGeometry.contains(linkCenterAsPoint)) {
-                        link.setFreespeed(0.00001);
-                        link.setCapacity(0);
+
+//                        link.setFreespeed(0.00001);
+//                        link.setCapacity(0);
+
+                        Set<String> modes = link.getAllowedModes();
+                        modes.remove(TransportMode.car);
+                        link.setAllowedModes(modes);
                     }
                 }
 
