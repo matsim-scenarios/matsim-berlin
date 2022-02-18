@@ -26,9 +26,16 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
+import org.matsim.api.core.v01.population.PopulationFactory;
 import org.matsim.core.config.Config;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.router.MainModeIdentifier;
+import org.matsim.core.router.PlanRouter;
+import org.matsim.core.router.TripRouter;
 import org.matsim.core.router.TripStructureUtils;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.matsim.run.RunBerlinScenario.*;
 
@@ -50,15 +57,18 @@ public class RunBerlinSuperblocksWithoutCarsScenario {
 		Scenario scenario = prepareScenario( config ) ;
 
 		//delete all car routes
+		PopulationFactory factory = scenario.getPopulation().getFactory();
 		for (Person person : scenario.getPopulation().getPersons().values()) {
 			for (Plan plan : person.getPlans()) {
-				for (Leg leg : TripStructureUtils.getLegs(plan)) {
-					if (leg.getMode().equals(TransportMode.car)) leg.setRoute(null);
-				}
+				TripStructureUtils.getTrips(plan).stream()
+						.filter(trip -> TripStructureUtils.identifyMainMode(trip.getTripElements()).equals(TransportMode.car))
+						.forEach(carTrip ->
+								TripRouter.insertTrip(plan, carTrip.getOriginActivity(), List.of(factory.createLeg(TransportMode.car)), carTrip.getDestinationActivity()));
 			}
 		}
 
 		Controler controler = prepareControler( scenario ) ;
+
 		controler.run();
 	}
 
