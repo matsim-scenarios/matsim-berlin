@@ -14,7 +14,7 @@
 		<!--<matsim.version>13.0</matsim.version>-->
 
 		<!-- PR-labelled release -->
-		<matsim.version>14.0-PR1868</matsim.version>
+		<matsim.version>14.0-PR1884</matsim.version>
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
 		<!--<matsim.version>14.0-SNAPSHOT</matsim.version>-->
@@ -100,7 +100,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.13.1</version>
+			<version>4.13.2</version>
 			<scope>test</scope>
 		</dependency>
 
