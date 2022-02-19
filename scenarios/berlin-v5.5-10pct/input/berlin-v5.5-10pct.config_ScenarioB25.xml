@@ -18,7 +18,7 @@
 		<param name="numberOfThreads" value="8" />
 	</module>
 	<module name="network" >
-		<param name="inputNetworkFile" value="/Users/moritzkreuschner/Desktop/Master Thesis/B_Coding/Coding/git/matsim-berlin-kreuschner/superblock_input_data/Input_B25/Network/network-modifiedB25.xml.gz" />
+		<param name="inputNetworkFile" value="/Users/moritzkreuschner/Desktop/MasterThesis/coding/modified-networks/B/Network-modifiedB25.xml.gz" />
 	</module>
 	<module name="plans" >
 		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.plans.xml.gz" />

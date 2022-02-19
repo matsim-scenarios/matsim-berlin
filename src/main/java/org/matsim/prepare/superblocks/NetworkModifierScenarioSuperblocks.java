@@ -1,4 +1,4 @@
-package org.matsim.prepare.superblocks.ScenarioB25;
+package org.matsim.prepare.superblocks;
 
 import org.apache.log4j.Logger;
 import org.locationtech.jts.geom.Geometry;
@@ -20,21 +20,25 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class NetworkModifierScenarioB25 {
 
-    private static final Logger LOG = Logger.getLogger(NetworkModifierScenarioB25.class);
+public class NetworkModifierScenarioSuperblocks {
+
+    private static final Logger LOG = Logger.getLogger(NetworkModifierScenarioSuperblocks.class);
 
     public static void main(String[] args) throws IOException {
         // Input and output files
-        String networkInputFile = "/Users/moritzkreuschner/Desktop/Master Thesis/01_Shapefiles/Shapefiles/berlin-v5.5-network.xml.gz";
-        String networkOutputFile = "/Users/moritzkreuschner/Desktop/Master Thesis/02_Coding/git/matsim-berlin-kreuschner/superblock_input_data/Network-modifiedA25.xml.gz";
+        String networkInputFile = "/Users/moritzkreuschner/Desktop/MasterThesis/coding/berlin-v5.5-network.xml.gz";
+        String networkOutputFile = "/Users/moritzkreuschner/Desktop/MasterThesis/coding/modified-networks/A/Network-modifiedA25.xml.gz";
+        String shapeFileDirectory = "/Users/moritzkreuschner/Desktop/MasterThesis/coding/shapefiles/superblocks/";
 
-        Path filePath = Paths.get("/Users/moritzkreuschner/Desktop/Master Thesis/01_Shapefiles/Shapefiles/Superblocks_Shapefiles/25percent/NOTin25percent.txt");
+        Path filePath = Paths.get("/Users/moritzkreuschner/Desktop/MasterThesis/coding/number_superblocks/NOTin25percent.txt");
+        int nrOfSuperBlocks = 160;
+
         Scanner scanner = new Scanner(filePath);
-        List<Integer> NOTin25list = new ArrayList<>();
+        List<Integer> NOTinlist = new ArrayList<>();
         while (scanner.hasNext()) {
             if (scanner.hasNextInt()) {
-                NOTin25list.add(scanner.nextInt());
+                NOTinlist.add(scanner.nextInt());
             } else {
                 scanner.next();
             }
@@ -54,51 +58,51 @@ public class NetworkModifierScenarioB25 {
         Set<? extends Link> nonptlinks = set;
 
         // Loop for different shapefiles
-        // Superblocks that are not in the directory
-        for (int i = 1; i < 161; i++) {
-            if (NOTin25list.contains(i)) {
+        for (int i = 0; i < nrOfSuperBlocks; i++) {
+
+            // Superblocks that are not in list
+            if (NOTinlist.contains(i)) {
                 continue;
             } else {
 
                 // Store relevant area of city as geometry
                 ShapeFileReader ShapeFileReader = new ShapeFileReader();
-                Collection<SimpleFeature> features = ShapeFileReader.readFileAndInitialize("/Users/moritzkreuschner/Desktop/Master Thesis/01_Shapefiles/Shapefiles/Superblocks_Shapefiles/S000" + i + ".shp");
+                Collection<SimpleFeature> features = ShapeFileReader.readFileAndInitialize(shapeFileDirectory + "S000" + (i + 1) + ".shp");
                 //continue;
                 Map<String, Geometry> zoneGeometries = new HashMap<>();
                 for (SimpleFeature feature : features) {
                     zoneGeometries.put((String) feature.getAttribute("Name"),
                             (Geometry) feature.getDefaultGeometry());
                 }
-                Geometry areaGeometry = zoneGeometries.get("Superblock" + i);
+                Geometry areaGeometry = zoneGeometries.get("Superblock" + (i + 1));
 
                 // Modify the car network
                 for (Link link : nonptlinks) {
 
                     Point linkCenterAsPoint = MGC.xy2Point(link.getCoord().getX(), link.getCoord().getY());
+
                     if (areaGeometry.contains(linkCenterAsPoint)) {
-                        link.setFreespeed(0.00001);
-                        link.setCapacity(0);
+                        // Approach A
+                        //link.setFreespeed(1.3888889);
+                        // Approach B
+                        Set<String> modes = new HashSet<String>(link.getAllowedModes());
+                        modes.remove(TransportMode.car);
+                        link.setAllowedModes(modes);
                     }
                 }
 
-                LOG.info("Superblock " + i + " is ready");
+                LOG.info("Superblock " + (i + 1) + " is ready");
             }
         }
-
-        LOG.info("Finished modifying freespeed and capacity");
+        LOG.info("Finished modifying freespeed");
 
         // Get car subnetwork and clean it
         Scenario carScenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
         new MultimodalNetworkCleaner(carScenario.getNetwork()).run(Set.of(TransportMode.car));
-        /*TransportModeNetworkFilter transportModeNetworkFilterCar = new TransportModeNetworkFilter(scenario.getNetwork());
-        transportModeNetworkFilterCar.filter(carScenario.getNetwork(), new HashSet<>(Arrays.asList(TransportMode.car)));
-        (new NetworkCleaner()).run(carScenario.getNetwork());*/
-
-        LOG.info("Finished cleaning car subnetwork");
+        LOG.info("Finished creating and cleaning car subnetwork");
 
         // Write modified network to file
         NetworkWriter writer = new NetworkWriter(scenario.getNetwork());
         writer.write(networkOutputFile);
-
     }
 }

@@ -27,6 +27,8 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Plan;
+import org.matsim.api.core.v01.population.PopulationFactory;
 import org.matsim.contrib.drt.routing.DrtRoute;
 import org.matsim.contrib.drt.routing.DrtRouteFactory;
 import org.matsim.core.config.Config;
@@ -43,6 +45,8 @@ import org.matsim.core.gbl.Gbl;
 import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.population.routes.RouteFactories;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
+import org.matsim.core.router.TripRouter;
+import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
@@ -55,6 +59,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
+import java.util.List;
 
 import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType.FastAStarLandmarks;
 
@@ -62,9 +67,10 @@ import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorith
  * @author ikaddoura
  */
 
-public final class RunBerlinScenarioA100test {
+public final class RunBerlinSuperblocksScenario {
 
-    private static final Logger log = Logger.getLogger(RunBerlinScenarioA100test.class );
+    private static final Logger log = Logger.getLogger(RunBerlinSuperblocksScenario.class );
+
 
     public static void main(String[] args) {
 
@@ -73,11 +79,23 @@ public final class RunBerlinScenarioA100test {
         }
 
         if ( args.length==0 ) {
-            args = new String[] {"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config_ScenarioA100.xml"}  ;
+            throw new IllegalArgumentException("you need to specify your own config that contains the modified network!")  ;
         }
 
         Config config = prepareConfig( args ) ;
         Scenario scenario = prepareScenario( config ) ;
+
+        //delete all car routes
+        PopulationFactory factory = scenario.getPopulation().getFactory();
+        for (Person person : scenario.getPopulation().getPersons().values()) {
+            for (Plan plan : person.getPlans()) {
+                TripStructureUtils.getTrips(plan).stream()
+                        .filter(trip -> TripStructureUtils.identifyMainMode(trip.getTripElements()).equals(TransportMode.car))
+                        .forEach(carTrip ->
+                                TripRouter.insertTrip(plan, carTrip.getOriginActivity(), List.of(factory.createLeg(TransportMode.car)), carTrip.getDestinationActivity()));
+            }
+        }
+
         Controler controler = prepareControler( scenario ) ;
         controler.run();
     }
@@ -256,6 +274,4 @@ public final class RunBerlinScenarioA100test {
         map.values().removeIf( person -> rnd.nextDouble() > sample ) ;
         log.warn( "Population downsampled to " + map.size() + " agents." ) ;
     }
-
 }
-
