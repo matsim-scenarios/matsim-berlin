@@ -49,13 +49,12 @@ public class NetworkModifierScenarioSuperblocks {
         MatsimNetworkReader reader = new MatsimNetworkReader(scenario.getNetwork());
         reader.readFile(networkInputFile);
 
-        Set<Link> set = new HashSet<>();
+        Set<Link> nonPTLinks = new HashSet<>();
         for (Link link1 : scenario.getNetwork().getLinks().values()) {
             if (!link1.getAllowedModes().contains(TransportMode.pt)) {
-                set.add(link1);
+                nonPTLinks.add(link1);
             }
         }
-        Set<? extends Link> nonptlinks = set;
 
         // Loop for different shapefiles
         for (int i = 0; i < nrOfSuperBlocks; i++) {
@@ -77,8 +76,9 @@ public class NetworkModifierScenarioSuperblocks {
                 Geometry areaGeometry = zoneGeometries.get("Superblock" + (i + 1));
 
                 // Modify the car network
-                for (Link link : nonptlinks) {
-
+                Iterator<Link> linkIterator = nonPTLinks.iterator();
+                while (linkIterator.hasNext() ){
+                    Link link = linkIterator.next();
                     Point linkCenterAsPoint = MGC.xy2Point(link.getCoord().getX(), link.getCoord().getY());
 
                     if (areaGeometry.contains(linkCenterAsPoint)) {
@@ -88,6 +88,7 @@ public class NetworkModifierScenarioSuperblocks {
                         Set<String> modes = new HashSet<String>(link.getAllowedModes());
                         modes.remove(TransportMode.car);
                         link.setAllowedModes(modes);
+                        linkIterator.remove(); // we have handled this link and do not need to handle it again (as we do the same thing with all the links)
                     }
                 }
 
@@ -97,8 +98,7 @@ public class NetworkModifierScenarioSuperblocks {
         LOG.info("Finished modifying freespeed");
 
         // Get car subnetwork and clean it
-        Scenario carScenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
-        new MultimodalNetworkCleaner(carScenario.getNetwork()).run(Set.of(TransportMode.car));
+        new MultimodalNetworkCleaner(scenario.getNetwork()).run(Set.of(TransportMode.car));
         LOG.info("Finished creating and cleaning car subnetwork");
 
         // Write modified network to file
