@@ -17,7 +17,7 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.analysis;
+package org.matsim.analysis.emissions;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
@@ -34,20 +34,20 @@ import org.matsim.core.scenario.ScenarioUtils;
  * @author ikaddoura
  *
  */
-public class RunOfflineNoiseAnalysis {
-	private static final Logger log = Logger.getLogger(RunOfflineNoiseAnalysis.class);
-	
+public class RunOfflineNoiseAnalysisA100 {
+	private static final Logger log = Logger.getLogger(RunOfflineNoiseAnalysisA100.class);
+
 	private final String runDirectory;
 	private final String runId;
 	private final String analysisOutputDirectory;
-	
+
 //	private final String tunnelLinkIdFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/input/berlin-v5.1.tunnel-linkIDs.csv";
 	private final String tunnelLinkIdFile = null;
 
 //	private final String noiseBarriersFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-buildings/osm-buildings-dissolved.geojson";
 	private final String noiseBarriersFile = null;
 
-	public RunOfflineNoiseAnalysis(String runDirectory, String runId, String analysisOutputDirectory) {
+	public RunOfflineNoiseAnalysisA100(String runDirectory, String runId, String analysisOutputDirectory) {
 		this.runDirectory = runDirectory;
 		this.runId = runId;
 		
@@ -56,11 +56,11 @@ public class RunOfflineNoiseAnalysis {
 	}
 
 	public static void main(String[] args) {
+
+		final String runDirectory = "//net/ils/kreuschner/output/output_ScenarioC100/";
+		final String runId = "ScenarioC100";
 		
-		final String runDirectory = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/";
-		final String runId = "berlin-v5.4-1pct";
-		
-		RunOfflineNoiseAnalysis analysis = new RunOfflineNoiseAnalysis(runDirectory, runId, "./scenario/");
+		RunOfflineNoiseAnalysisA100 analysis = new RunOfflineNoiseAnalysisA100(runDirectory, runId, "./scenario/C100/");
 		analysis.run();
 	}
 
@@ -69,7 +69,7 @@ public class RunOfflineNoiseAnalysis {
 		double timeBinSize = 3600.;
 		
 		Config config = ConfigUtils.createConfig(new NoiseConfigGroup());
-		config.global().setCoordinateSystem("GK4");
+		config.global().setCoordinateSystem("EPSG:31468");
 		config.network().setInputFile(runDirectory + runId + ".output_network.xml.gz");
 		config.plans().setInputFile(runDirectory + runId + ".output_plans.xml.gz");
 		config.controler().setOutputDirectory(runDirectory);

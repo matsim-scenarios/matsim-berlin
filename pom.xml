@@ -18,7 +18,7 @@
 		<!-- Repository for MATSim releases (MATSim is not on Maven central) -->
 		<repository>
 			<id>matsim</id>
-			<url>https://repo.matsim.org/repository/matsim</url>
+			<url>https://dl.bintray.com/matsim/matsim</url>
 		</repository>
 
 		<repository>
@@ -157,13 +157,14 @@
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>opt-drt</artifactId>
-			<version>d61d2c8294</version>
+			<version>e955606ea4</version>
 		</dependency>
 		
 		<dependency>
 	    	<groupId>com.github.matsim-vsp</groupId>
 	    	<artifactId>matsim-analysis</artifactId>
-		<version>933a6dd</version>
+	    	<version>v3.2</version>
+			<!-- <version>94a0b679d7</version> -->
         </dependency>
 
 		<dependency>
@@ -272,16 +273,6 @@
 								<!-- This bit merges the various GeoTools META-INF/services files         -->
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
 							</transformers>
-							<filters>
-								<filter>
-									<artifact>*:*</artifact>
-									<excludes>
-										<exclude>META-INF/*.SF</exclude>
-										<exclude>META-INF/*.DSA</exclude>
-										<exclude>META-INF/*.RSA</exclude>
-									</excludes>
-								</filter>
-							</filters>
 						</configuration>
 					</execution>
 				</executions>

@@ -1,0 +1,69 @@
+package org.matsim.analysis.modalSplit;
+
+import org.matsim.analysis.AgentAnalysisFilter;
+import org.matsim.analysis.DefaultAnalysisMainModeIdentifier;
+import org.matsim.api.core.v01.Scenario;
+import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.utils.collections.Tuple;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class RunBerlinModalSplitAnalysisBase {
+
+    public static void main(String[] args) throws IOException {
+
+        final String runId = "berlin-v5.5.3-10pct";
+        final String runDirectory = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/output-berlinv5.5";
+
+        final String outputDirectory = "//net/ils/kreuschner/analysis/modal-split-analysis-berlin-base/";
+
+        Config config = ConfigUtils.createConfig();
+        config.network().setInputFile(null);
+        config.plans().setInputFile(runDirectory + "/" + runId + ".output_plans.xml.gz");
+        config.controler().setRunId(runId);
+        config.global().setCoordinateSystem("EPSG:31468");
+        config.vehicles().setVehiclesFile(null);
+        config.transit().setTransitScheduleFile(null);
+        config.transit().setVehiclesFile(null);
+        config.facilities().setInputFile(null);
+        Scenario scenario = ScenarioUtils.loadScenario(config);
+
+        AgentAnalysisFilter filter = new AgentAnalysisFilter("A");
+
+        filter.setSubpopulation("person");
+
+        filter.setPersonAttribute("berlin");
+        filter.setPersonAttributeName("home-activity-zone");
+
+//		filter.setZoneFile("/Users/moritzkreuschner/Desktop/Master Thesis/01_Shapefiles/Shapefiles/berlin.shp");
+//		filter.setRelevantActivityType("home");
+
+        filter.preProcess(scenario);
+
+        ModeAnalysis analysis = new ModeAnalysis(scenario, filter, null, new DefaultAnalysisMainModeIdentifier());
+        analysis.run();
+
+        File directory = new File(outputDirectory);
+        directory.mkdirs();
+
+        analysis.writeModeShares(outputDirectory);
+        analysis.writeTripRouteDistances(outputDirectory);
+        analysis.writeTripEuclideanDistances(outputDirectory);
+
+        final List<Tuple<Double, Double>> distanceGroups = new ArrayList<>();
+        distanceGroups.add(new Tuple<>(0., 1000.));
+        distanceGroups.add(new Tuple<>(1000., 3000.));
+        distanceGroups.add(new Tuple<>(3000., 5000.));
+        distanceGroups.add(new Tuple<>(5000., 10000.));
+        distanceGroups.add(new Tuple<>(10000., 20000.));
+        distanceGroups.add(new Tuple<>(20000., 100000.));
+        distanceGroups.add(new Tuple<>(100000., 999999999999.));
+        analysis.writeTripRouteDistances(outputDirectory, distanceGroups);
+        analysis.writeTripEuclideanDistances(outputDirectory, distanceGroups);
+    }
+}
