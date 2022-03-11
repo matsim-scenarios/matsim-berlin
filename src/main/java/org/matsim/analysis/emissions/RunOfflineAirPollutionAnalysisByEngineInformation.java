@@ -27,14 +27,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.Identifiable;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.emissions.EmissionModule;
 import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.Pollutant;
+import org.matsim.contrib.emissions.VspHbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup.DetailedVsAverageLookupBehavior;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup.HbefaRoadTypeSource;
@@ -121,7 +124,6 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		eConfig.setDetailedVsAverageLookupBehavior(DetailedVsAverageLookupBehavior.tryDetailedThenTechnologyAverageElseAbort);
 		eConfig.setDetailedColdEmissionFactorsFile(hbefaColdFile);
 		eConfig.setDetailedWarmEmissionFactorsFile(hbefaWarmFile);
-		eConfig.setHbefaRoadTypeSource(HbefaRoadTypeSource.fromLinkAttributes);
 		eConfig.setNonScenarioVehicles(NonScenarioVehicles.ignore);
 		eConfig.setWritingEmissionsEvents(true);
 		
@@ -138,54 +140,7 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 		Scenario scenario = ScenarioUtils.loadScenario(config);
 		
 		// network
-		for (Link link : scenario.getNetwork().getLinks().values()) {
-
-			double freespeed = Double.NaN;
-
-			if (link.getFreespeed() <= 13.888889) {
-				freespeed = link.getFreespeed() * 2;
-				// for non motorway roads, the free speed level was reduced
-			} else {
-				freespeed = link.getFreespeed();
-				// for motorways, the original speed levels seems ok.
-			}
-			
-			if(freespeed <= 8.333333333){ //30kmh
-				link.getAttributes().putAttribute("hbefa_road_type", "URB/Access/30");
-			} else if(freespeed <= 11.111111111){ //40kmh
-				link.getAttributes().putAttribute("hbefa_road_type", "URB/Access/40");
-			} else if(freespeed <= 13.888888889){ //50kmh
-				double lanes = link.getNumberOfLanes();
-				if(lanes <= 1.0){
-					link.getAttributes().putAttribute("hbefa_road_type", "URB/Local/50");
-				} else if(lanes <= 2.0){
-					link.getAttributes().putAttribute("hbefa_road_type", "URB/Distr/50");
-				} else if(lanes > 2.0){
-					link.getAttributes().putAttribute("hbefa_road_type", "URB/Trunk-City/50");
-				} else{
-					throw new RuntimeException("NoOfLanes not properly defined");
-				}
-			} else if(freespeed <= 16.666666667){ //60kmh
-				double lanes = link.getNumberOfLanes();
-				if(lanes <= 1.0){
-					link.getAttributes().putAttribute("hbefa_road_type", "URB/Local/60");
-				} else if(lanes <= 2.0){
-					link.getAttributes().putAttribute("hbefa_road_type", "URB/Trunk-City/60");
-				} else if(lanes > 2.0){
-					link.getAttributes().putAttribute("hbefa_road_type", "URB/MW-City/60");
-				} else{
-					throw new RuntimeException("NoOfLanes not properly defined");
-				}
-			} else if(freespeed <= 19.444444444){ //70kmh
-				link.getAttributes().putAttribute("hbefa_road_type", "URB/MW-City/70");
-			} else if(freespeed <= 22.222222222){ //80kmh
-				link.getAttributes().putAttribute("hbefa_road_type", "URB/MW-Nat./80");
-			} else if(freespeed > 22.222222222){ //faster
-				link.getAttributes().putAttribute("hbefa_road_type", "RUR/MW/>130");
-			} else{
-				throw new RuntimeException("Link not considered...");
-			}			
-		}
+		new VspHbefaRoadTypeMapping().addHbefaMappings(scenario.getNetwork());
 				
 		// car vehicles
 		
@@ -266,30 +221,19 @@ public class RunOfflineAirPollutionAnalysisByEngineInformation {
 			EngineInformation engineInformation = type.getEngineInformation();
 			VehicleUtils.setHbefaVehicleCategory( engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());		
 		}
-		
-		List<Id<Vehicle>> vehiclesToChangeToElectric = new ArrayList<>();
+
 		List<Id<Vehicle>> carVehiclesToChangeToSpecificType = new ArrayList<>();
 
 		final Random rnd = MatsimRandom.getLocalInstance();
 
 		int totalVehiclesCounter = 0;
 		// randomly change some vehicle types
-		for (Vehicle vehicle : scenario.getVehicles().getVehicles().values()) {
-			totalVehiclesCounter++;
-			if (vehicle.getId().toString().contains("freight")) {
-				// some freight vehicles have the type "car", skip them...
-				
-			} else if (vehicle.getType().getId().toString().equals(defaultCarVehicleType.getId().toString())) {
-				
-				carVehiclesToChangeToSpecificType.add(vehicle.getId());
-				
-				if (rnd.nextDouble() < shareOfPrivateVehiclesChangedToElectric) {
-					vehiclesToChangeToElectric.add(vehicle.getId());
-				}
-			} else {
-				// ignore all other vehicles
-			}
-		}
+		List<Id<Vehicle>> vehiclesToChangeToElectric = scenario.getVehicles().getVehicles().values().stream()
+				.filter(vehicle -> vehicle.getType().getId().equals(defaultCarVehicleType.getId()))
+				.filter(vehicle -> !vehicle.getId().toString().contains("freight"))// some freight vehicles have the type "car", skip them...
+				.filter(vehicle -> rnd.nextDouble() < shareOfPrivateVehiclesChangedToElectric)
+				.map(Identifiable::getId)
+				.collect(Collectors.toList());
 		
 		final double petrolShare = 0.512744724750519;
 		final double dieselShare = 0.462841421365738;
