@@ -58,7 +58,6 @@ public class MosaikRunner {
                 .setWeight(0.5)
                 .setSubpopulation("freight");
 
-
         config.strategy().addStrategySettings(reRouteFreight);
         config.strategy().addStrategySettings(reRoutePersons);
         config.strategy().addStrategySettings(changePlansPersons);
@@ -79,6 +78,7 @@ public class MosaikRunner {
                     var transformed = transformation.transform(activity.getCoord());
                     activity.setCoord(transformed);
                 });
+        scenario.getPopulation().getAttributes().putAttribute("coordinateReferenceSystem", "EPSG:25833");
 
         // replace trips in plans with single empty legs which only have a main mode
         for (var person : scenario.getPopulation().getPersons().values()) {
@@ -124,6 +124,7 @@ public class MosaikRunner {
             facility.setCoord(transformed);
             scenario.getActivityFacilities().addActivityFacility(facility);
         }
+        scenario.getActivityFacilities().getAttributes().putAttribute("coordinateReferenceSystem", "EPSG:25833");
 
         var controler = RunBerlinScenario.prepareControler(scenario);
         controler.run();
