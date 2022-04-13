@@ -14,7 +14,7 @@
 		<!--<matsim.version>13.0</matsim.version>-->
 
 		<!-- PR-labelled release -->
-		<matsim.version>14.0-PR1859</matsim.version>
+		<matsim.version>14.0</matsim.version>
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
 		<!--<matsim.version>14.0-SNAPSHOT</matsim.version>-->
@@ -165,20 +165,20 @@
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>opt-drt</artifactId>
-			<version>0b00b9b9b9</version>
+			<version>ffcd8211</version>
 		</dependency>
 		
 		<dependency>
 	    	<groupId>com.github.matsim-vsp</groupId>
 	    	<artifactId>matsim-analysis</artifactId>
-	    	<version>933a6dd</version>
+	    	<version>399c920</version>
 			<!-- <version>94a0b679d7</version> -->
         </dependency>
 
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>pt-extensions</artifactId>
-			<version>609986ef68</version>
+			<version>68a67f67e6</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.matsim</groupId>
