@@ -160,6 +160,10 @@ public final class RunBerlinScenario {
 
 		BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 
+		RouteFactories routeFactories = scenario.getPopulation().getFactory().getRouteFactories();
+		routeFactories.setRouteFactory(DrtRoute.class, new DrtRouteFactory());
+		
+		ScenarioUtils.loadScenario(scenario);
 		for (Link link: scenario.getNetwork().getLinks().values()) {
 			Set<String> allowedModes = link.getAllowedModes();
 			if (allowedModes.contains(TransportMode.car)) {
@@ -168,11 +172,6 @@ public final class RunBerlinScenario {
 				link.setAllowedModes(extendedAllowedModes);
 			}
 		}
-
-		RouteFactories routeFactories = scenario.getPopulation().getFactory().getRouteFactories();
-		routeFactories.setRouteFactory(DrtRoute.class, new DrtRouteFactory());
-		
-		ScenarioUtils.loadScenario(scenario);
 
 		if (berlinCfg.getPopulationDownsampleFactor() != 1.0) {
 			downsample(scenario.getPopulation().getPersons(), berlinCfg.getPopulationDownsampleFactor());
