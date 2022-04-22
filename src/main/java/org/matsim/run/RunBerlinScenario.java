@@ -27,6 +27,7 @@ import org.matsim.analysis.RunPersonTripAnalysis;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.drt.routing.DrtRoute;
 import org.matsim.contrib.drt.routing.DrtRouteFactory;
@@ -59,9 +60,7 @@ import org.matsim.run.drt.RunDrtOpenBerlinScenario;
 import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType.FastAStarLandmarks;
 
@@ -159,12 +158,22 @@ public final class RunBerlinScenario {
 		 */
 		final Scenario scenario = ScenarioUtils.createScenario( config );
 
+		BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
+
 		RouteFactories routeFactories = scenario.getPopulation().getFactory().getRouteFactories();
 		routeFactories.setRouteFactory(DrtRoute.class, new DrtRouteFactory());
 		
 		ScenarioUtils.loadScenario(scenario);
+		// add NetworkModesToAddToAllCarLinks
+		for (Link link: scenario.getNetwork().getLinks().values()) {
+			Set<String> allowedModes = link.getAllowedModes();
+			if (allowedModes.contains(TransportMode.car)) {
+				Set<String> extendedAllowedModes = new HashSet<>(allowedModes);
+				extendedAllowedModes.addAll(berlinCfg.getNetworkModesToAddToAllCarLinks());
+				link.setAllowedModes(extendedAllowedModes);
+			}
+		}
 
-		BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 		if (berlinCfg.getPopulationDownsampleFactor() != 1.0) {
 			downsample(scenario.getPopulation().getPersons(), berlinCfg.getPopulationDownsampleFactor());
 		}
