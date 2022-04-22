@@ -162,8 +162,11 @@ public final class RunBerlinScenario {
 
 		for (Link link: scenario.getNetwork().getLinks().values()) {
 			Set<String> allowedModes = link.getAllowedModes();
-			Set<String> extendedAllowedModes = new HashSet<>(allowedModes);
-			extendedAllowedModes.addAll(berlinCfg.getNetworkModesToAddToAllCarLinks());
+			if (allowedModes.contains(TransportMode.car)) {
+				Set<String> extendedAllowedModes = new HashSet<>(allowedModes);
+				extendedAllowedModes.addAll(berlinCfg.getNetworkModesToAddToAllCarLinks());
+				link.setAllowedModes(extendedAllowedModes);
+			}
 		}
 
 		RouteFactories routeFactories = scenario.getPopulation().getFactory().getRouteFactories();
