@@ -164,6 +164,7 @@ public final class RunBerlinScenario {
 		routeFactories.setRouteFactory(DrtRoute.class, new DrtRouteFactory());
 		
 		ScenarioUtils.loadScenario(scenario);
+		// add NetworkModesToAddToAllCarLinks
 		for (Link link: scenario.getNetwork().getLinks().values()) {
 			Set<String> allowedModes = link.getAllowedModes();
 			if (allowedModes.contains(TransportMode.car)) {
