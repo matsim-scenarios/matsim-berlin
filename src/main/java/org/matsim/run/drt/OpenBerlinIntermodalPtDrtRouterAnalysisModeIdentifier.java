@@ -57,6 +57,7 @@ public final class OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier impleme
 		modeHierarchy.add( "bicycle" ); // TransportMode.bike is not registered as main mode, only "bicycle" ;
 		modeHierarchy.add( TransportMode.ride ) ;
 		modeHierarchy.add( TransportMode.car ) ;
+		modeHierarchy.add( "car2" ) ;
 		for (String drtMode: drtModes) {
 			modeHierarchy.add( drtMode ) ;
 		}
