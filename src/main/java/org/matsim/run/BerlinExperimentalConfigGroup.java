@@ -39,7 +39,7 @@ public class BerlinExperimentalConfigGroup extends ReflectiveConfigGroup {
     private static final String PLAN_TYPE_OVERWRITING = "planTypeOverwriting";
     private static final String NETWORK_MODES_TO_ADD_TO_ALL_CAR_LINKS = "networkModesToAddToAllCarLinks";
 
-    private static final String ANALYSIS_LEVEL = "analyisLevel";
+    private static final String ANALYSIS_LEVEL = "analysisLevel";
 
     enum PlanTypeOverwriting {NO_OVERWRITE, TAG_INITIAL_SELECTED_PLAN_AND_MODIFIED_PLANS_DIFFERENTLY};
     enum AnalysisLevel {MINIMAL, FULL}
