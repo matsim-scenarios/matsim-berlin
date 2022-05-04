@@ -39,7 +39,10 @@ public class BerlinExperimentalConfigGroup extends ReflectiveConfigGroup {
     private static final String PLAN_TYPE_OVERWRITING = "planTypeOverwriting";
     private static final String NETWORK_MODES_TO_ADD_TO_ALL_CAR_LINKS = "networkModesToAddToAllCarLinks";
 
+    private static final String ANALYSIS_LEVEL = "analyisLevel";
+
     enum PlanTypeOverwriting {NO_OVERWRITE, TAG_INITIAL_SELECTED_PLAN_AND_MODIFIED_PLANS_DIFFERENTLY};
+    enum AnalysisLevel {MINIMAL, FULL}
 	
 	public BerlinExperimentalConfigGroup() {
 		super(GROUP_NAME);
@@ -53,6 +56,7 @@ public class BerlinExperimentalConfigGroup extends ReflectiveConfigGroup {
     private double tagDrtLinksBufferAroundServiceAreaShp = 2000.0;
     private PlanTypeOverwriting planTypeOverwriting = PlanTypeOverwriting.NO_OVERWRITE;
     private Collection<String> networkModesToAddToAllCarLinks = Collections.emptyList();
+    private AnalysisLevel analysisLevel = AnalysisLevel.MINIMAL;
 	
     @StringGetter(POPULATION_DOWNSAMPLE_FACTOR)
     public double getPopulationDownsampleFactor() {
@@ -100,6 +104,16 @@ public class BerlinExperimentalConfigGroup extends ReflectiveConfigGroup {
     @StringSetter(NETWORK_MODES_TO_ADD_TO_ALL_CAR_LINKS)
     public void setNetworkModesToAddToAllCarLinksAsString(String networkModesToAddToAllCarLinksString) {
         this.networkModesToAddToAllCarLinks = ImmutableSet.copyOf(StringUtils.explode(networkModesToAddToAllCarLinksString, ','));
+    }
+
+    @StringGetter(ANALYSIS_LEVEL)
+    public AnalysisLevel getAnalysisLevel () {
+        return analysisLevel;
+    }
+
+    @StringSetter(ANALYSIS_LEVEL)
+    public void setAnalysisLevel (AnalysisLevel analysisLevel) {
+        this.analysisLevel = analysisLevel;
     }
 
 }

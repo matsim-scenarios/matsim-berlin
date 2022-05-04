@@ -24,6 +24,9 @@ import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 import com.google.inject.Singleton;
 import org.apache.log4j.Logger;
 import org.matsim.analysis.RunPersonTripAnalysis;
+import org.matsim.analysis.linkpaxvolumes.LinkPaxVolumesAnalysisModule;
+import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
+import org.matsim.analysis.pt.stop2stop.PtStop2StopAnalysisModule;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -133,6 +136,14 @@ public final class RunBerlinScenario {
 					PlanTypeOverwriter overwriter = new PlanTypeOverwriter(berlinCfg, scenario.getPopulation());
 					addControlerListenerBinding().toInstance(overwriter);
 				}
+
+				// analysis output
+				if (berlinCfg.getAnalysisLevel().equals(BerlinExperimentalConfigGroup.AnalysisLevel.FULL)) {
+					install(new LinkPaxVolumesAnalysisModule());
+					install(new PtStop2StopAnalysisModule());
+					install(new PersonMoneyEventsAnalysisModule());
+				}
+
 			}
 		} );
 

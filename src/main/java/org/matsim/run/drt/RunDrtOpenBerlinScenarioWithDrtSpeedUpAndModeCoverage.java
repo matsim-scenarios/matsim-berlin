@@ -71,9 +71,6 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpAndModeCoverage {
 				ConfigUtils.addOrGetModule(scenario.getConfig(), MultiModeOptDrtConfigGroup.class));
 
 		controler.addOverridingModule(new DynamicShutdownModule());
-		controler.addOverridingModule(new LinkPaxVolumesAnalysisModule());
-		controler.addOverridingModule(new PtStop2StopAnalysisModule());
-		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
 		
 		controler.run() ;
 		
