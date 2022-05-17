@@ -30,14 +30,15 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
 import org.matsim.optDRT.MultiModeOptDrtConfigGroup;
 import org.matsim.optDRT.OptDrt;
-import org.matsim.run.RunBerlinScenario;
+import org.matsim.run.dynamicShutdown.DynamicShutdownConfigGroup;
+import org.matsim.run.dynamicShutdown.DynamicShutdownModule;
 
 /**
 * @author ikaddoura
 */
 
-public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
-	private static final Logger log = Logger.getLogger(RunDrtOpenBerlinScenarioWithDrtSpeedUp.class);
+public class RunDrtOpenBerlinScenarioWithOptDrtAndModeCoverage {
+	private static final Logger log = Logger.getLogger(RunDrtOpenBerlinScenarioWithOptDrtAndModeCoverage.class);
 
 	public static void main(String[] args) {
 		for (String arg : args) {
@@ -48,8 +49,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 			args = new String[] { "scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-v5.5-1pct.config.xml" };
 		}
 
-		Config config = RunDrtOpenBerlinScenario.prepareConfig(args, new MultiModeOptDrtConfigGroup());
-
+		Config config = RunDrtOpenBerlinScenario.prepareConfig(args, new MultiModeOptDrtConfigGroup(), new DynamicShutdownConfigGroup());
 		for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 			if (drtCfg.getDrtSpeedUpParams().isEmpty()) {
 				drtCfg.addParameterSet(new DrtSpeedUpParams());
@@ -65,6 +65,8 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 
 		OptDrt.addAsOverridingModule(controler,
 				ConfigUtils.addOrGetModule(scenario.getConfig(), MultiModeOptDrtConfigGroup.class));
+
+		controler.addOverridingModule(new DynamicShutdownModule());
 		
 		controler.run() ;
 		

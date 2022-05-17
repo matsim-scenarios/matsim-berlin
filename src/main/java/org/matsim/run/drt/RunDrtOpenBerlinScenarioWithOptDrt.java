@@ -20,9 +20,6 @@
 package org.matsim.run.drt;
 
 import org.apache.log4j.Logger;
-import org.matsim.analysis.linkpaxvolumes.LinkPaxVolumesAnalysisModule;
-import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
-import org.matsim.analysis.pt.stop2stop.PtStop2StopAnalysisModule;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
@@ -33,16 +30,13 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
 import org.matsim.optDRT.MultiModeOptDrtConfigGroup;
 import org.matsim.optDRT.OptDrt;
-import org.matsim.run.RunBerlinScenario;
-import org.matsim.run.dynamicShutdown.DynamicShutdownConfigGroup;
-import org.matsim.run.dynamicShutdown.DynamicShutdownModule;
 
 /**
 * @author ikaddoura
 */
 
-public class RunDrtOpenBerlinScenarioWithDrtSpeedUpAndModeCoverage {
-	private static final Logger log = Logger.getLogger(RunDrtOpenBerlinScenarioWithDrtSpeedUpAndModeCoverage.class);
+public class RunDrtOpenBerlinScenarioWithOptDrt {
+	private static final Logger log = Logger.getLogger(RunDrtOpenBerlinScenarioWithOptDrt.class);
 
 	public static void main(String[] args) {
 		for (String arg : args) {
@@ -53,7 +47,8 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpAndModeCoverage {
 			args = new String[] { "scenarios/berlin-v5.5-1pct/input/drt/berlin-drt-v5.5-1pct.config.xml" };
 		}
 
-		Config config = RunDrtOpenBerlinScenario.prepareConfig(args, new MultiModeOptDrtConfigGroup(), new DynamicShutdownConfigGroup());
+		Config config = RunDrtOpenBerlinScenario.prepareConfig(args, new MultiModeOptDrtConfigGroup());
+
 		for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 			if (drtCfg.getDrtSpeedUpParams().isEmpty()) {
 				drtCfg.addParameterSet(new DrtSpeedUpParams());
@@ -69,8 +64,6 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpAndModeCoverage {
 
 		OptDrt.addAsOverridingModule(controler,
 				ConfigUtils.addOrGetModule(scenario.getConfig(), MultiModeOptDrtConfigGroup.class));
-
-		controler.addOverridingModule(new DynamicShutdownModule());
 		
 		controler.run() ;
 		
