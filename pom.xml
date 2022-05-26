@@ -139,7 +139,7 @@
 
 		<dependency>
 			<groupId>com.github.matsim-org</groupId>
-			<artifactId>GTFS2MATSim</artifactId>
+			<artifactId>gtfs2matsim</artifactId>
 			<version>13.0</version>
 			<exclusions>
 				<exclusion>
