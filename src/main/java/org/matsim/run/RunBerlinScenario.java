@@ -47,6 +47,7 @@ import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
+import org.matsim.prepare.network.NetworkChanger;
 import org.matsim.prepare.population.AssignIncome;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
@@ -78,7 +79,11 @@ public final class RunBerlinScenario {
 		}
 
 		Config config = prepareConfig( args ) ;
-		Scenario scenario = prepareScenario( config ) ;
+		Scenario scenario = prepareScenario( config );
+
+		// add links to network for homework
+		NetworkChanger.addA100Extension(scenario.getNetwork());
+
 		Controler controler = prepareControler( scenario ) ;
 		controler.run();
 	}
