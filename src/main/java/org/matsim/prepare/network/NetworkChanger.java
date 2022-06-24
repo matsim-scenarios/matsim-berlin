@@ -57,9 +57,9 @@ public class NetworkChanger {
 
 			Node startNode = network.getNodes().get(Id.get("206191207", Node.class));  // Motorway Grenzallee
 
-			addLinkToNetwork(network, "grenzallee-sonnenallee",
+			addLinkToNetwork(network, "bab100-grenzallee-sonnenallee",
 						startNode, sonnenalleeN1, allowedModes, capacity, freespeed, lanes, 746.230);
-			addLinkToNetwork(network, "sonnenallee-n",
+			addLinkToNetwork(network, "bab100-sonnenallee-n",
 					sonnenalleeN1, sonnenalleeN2, allowedModes, capacity, freespeed, lanes, 52.458);
 
 		// TODO Autobahn Richtung sueden
@@ -86,9 +86,9 @@ public class NetworkChanger {
 	//			network.addNode(trParkS1);
 	//			network.addNode(trParkS2);
 
-			addLinkToNetwork(network, "sonnenallee-trpark",
+			addLinkToNetwork(network, "bab100-sonnenallee-trpark",
 					sonnenalleeN2, trParkN1, allowedModes, capacity, freespeed, lanes, 2525.724);
-			addLinkToNetwork(network, "trpark-n",
+			addLinkToNetwork(network, "bab100-trpark-n",
 					trParkN1, trParkN2, allowedModes, capacity, freespeed, lanes, 21.320);
 
 			// TODO Autobahn Richtung sueden
@@ -103,13 +103,27 @@ public class NetworkChanger {
 //			startNode2 = null;  // 29787103 nach Sueden
 //			targetNode1 = null;  // 4317221792    --> Ostkreuz hat nur einen Punkt auf der Markgrafenstr, einen auf Hauptstr
 //			targetNode2 = null;  // Hauptstr: 4370346530 nach Osten, 4245068305   nach Westen
+			Node ostkreuzN1 = network.getFactory().createNode(Id.createNodeId("ostkreuz-nord1"), new Coord(4599744, 5819705));
+			Node ostkreuzN2 = network.getFactory().createNode(Id.createNodeId("ostkreuz-nord2"), new Coord(4599807, 5819805));
+			// TODO sued
+			//			Node ostkreuzS1 = network.getFactory().createNode(Id.createNodeId("ostkreuz-sued1"), new Coord(, ));
+			//			Node ostkreuzS2 = network.getFactory().createNode(Id.createNodeId("ostkreuz-sued2"), new Coord(, ));
 
+			network.addNode(ostkreuzN1);
+			network.addNode(ostkreuzN2);
+			//			network.addNode(ostkreuzS1);
+			//			network.addNode(ostkreuzS2);
 
+			addLinkToNetwork(network, "bab100-trpark-ostkreuz",
+					trParkN2, ostkreuzN1, allowedModes, capacity, freespeed, lanes, 1088.652);
+			addLinkToNetwork(network, "bab100-ostkreuz-n",
+					ostkreuzN1, ostkreuzN2, allowedModes, capacity, freespeed, lanes, 118.073);
+
+			// TODO Autobahn Richtung sueden
 
 
 //
 //			// Ostkreuz to Franfurter Allee
-//			length = null;  // TODO
 //			startNode1 = null; //
 //			startNode2 = null;  //
 //			targetNode1 = null;  //  Guertelstr: 1791505417
@@ -139,8 +153,6 @@ public class NetworkChanger {
 	                                     double freespeed,
 	                                     double lanes,
 	                                     double length){
-
-
 
 		Link newLink = network.getFactory().createLink(Id.createLinkId(linkId), startNode, targetNode);
 
