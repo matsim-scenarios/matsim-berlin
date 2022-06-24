@@ -122,18 +122,35 @@ public class NetworkChanger {
 			// TODO Autobahn Richtung sueden
 
 
-//
-//			// Ostkreuz to Franfurter Allee
+
+//			// Ostkreuz to Frankfurter Allee
 //			startNode1 = null; //
 //			startNode2 = null;  //
 //			targetNode1 = null;  //  Guertelstr: 1791505417
 //			targetNode2 = null;  //  Kreuzung Moellendorffstr/Frankfurter Allee (von unten links gegen den Uhrzeigersinn):
 //			// 12614683, 598234402, 288267826, 29784919
-//			addLinkToNetwork(network, startNode, targetNode, allowedModes, capacity, freespeed, length, lanes);
-//			addLinkToNetwork(network, targetNode, startNode, allowedModes, capacity, freespeed, length, lanes);
+			Node frankfurterN1 = network.getFactory().createNode(Id.createNodeId("frankfurter-nord1"), new Coord(4600297, 5820952));
+			Node frankfurterN2 = network.getFactory().createNode(Id.createNodeId("frankfurter-nord2"), new Coord(4600304, 5821024));
+			// TODO sued
+			//			Node ostkreuzS1 = network.getFactory().createNode(Id.createNodeId("frankfurter-sued1"), new Coord(, ));
+			//			Node ostkreuzS2 = network.getFactory().createNode(Id.createNodeId("frankfurter-sued2"), new Coord(, ));
+
+			network.addNode(frankfurterN1);
+			network.addNode(frankfurterN2);
+			//			network.addNode(frankfurterS1);
+			//			network.addNode(frankfurterS2);
+
+			addLinkToNetwork(network, "bab100-ostkreuz-frankfurter",
+					ostkreuzN2, frankfurterN1, allowedModes, capacity, freespeed, lanes, 1246.026);
+			addLinkToNetwork(network, "bab100-frankfurter-n",
+					frankfurterN1, frankfurterN2, allowedModes, capacity, freespeed, lanes, 72.416);
+
+			// TODO Autobahn Richtung sueden
+
+
 //
 //
-//			// Franfurter Allee to Storkower Strasse (28373619, 28373623)
+//			// Frankfurter Allee to Storkower Strasse (28373619, 28373623)
 //			length = null;  // TODO
 //			startNode1 = null; //
 //			startNode2 = null;  //
