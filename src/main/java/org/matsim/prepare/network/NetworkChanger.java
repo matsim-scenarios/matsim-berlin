@@ -132,8 +132,8 @@ public class NetworkChanger {
 			Node frankfurterN1 = network.getFactory().createNode(Id.createNodeId("frankfurter-nord1"), new Coord(4600297, 5820952));
 			Node frankfurterN2 = network.getFactory().createNode(Id.createNodeId("frankfurter-nord2"), new Coord(4600304, 5821024));
 			// TODO sued
-			//			Node ostkreuzS1 = network.getFactory().createNode(Id.createNodeId("frankfurter-sued1"), new Coord(, ));
-			//			Node ostkreuzS2 = network.getFactory().createNode(Id.createNodeId("frankfurter-sued2"), new Coord(, ));
+			//			Node frankfurterS1 = network.getFactory().createNode(Id.createNodeId("frankfurter-sued1"), new Coord(, ));
+			//			Node frankfurterS2 = network.getFactory().createNode(Id.createNodeId("frankfurter-sued2"), new Coord(, ));
 
 			network.addNode(frankfurterN1);
 			network.addNode(frankfurterN2);
@@ -148,18 +148,33 @@ public class NetworkChanger {
 			// TODO Autobahn Richtung sueden
 
 
-//
-//
+
 //			// Frankfurter Allee to Storkower Strasse (28373619, 28373623)
-//			length = null;  // TODO
-//			startNode1 = null; //
-//			startNode2 = null;  //
-//			targetNode1 = null;  //
-//			targetNode2 = null;  //
-//			addLinkToNetwork(network, startNode, targetNode, allowedModes, capacity, freespeed, length, lanes);
-//			addLinkToNetwork(network, targetNode, startNode, allowedModes, capacity, freespeed, length, lanes);
+			Node storkowerN = network.getFactory().createNode(Id.createNodeId("storkower-nord"), new Coord(4600508, 5822103));
+			Node storkowerS = network.getFactory().createNode(Id.createNodeId("storkower-sued"), new Coord(4600494, 5822103));
+
+			network.addNode(storkowerN);
+			network.addNode(storkowerS);
+
+			Node targetNode = network.getNodes().get(Id.get("28373623", Node.class));  // Storkower Str
+
+			addLinkToNetwork(network, "bab100-frankfurter-storkower",
+					frankfurterN2, storkowerN, allowedModes, capacity, freespeed, lanes, 1096.887);
+			addLinkToNetwork(network, "bab100-as-storkower-n",
+					storkowerN, targetNode, allowedModes, capacity, freespeed, lanes, 45.345);
+
+
+			// TODO Autobahn Richtung sueden
+			startNode = network.getNodes().get(Id.get("28373619", Node.class));  // Storkower Str
+//			addLinkToNetwork(network, "bab100-as-storkower-s",
+//					startNode, storkowerS, allowedModes, capacity, freespeed, lanes, );
+//			addLinkToNetwork(network, "bab100-storkower-frankfurter",
+//					storkowerS, frankfurterS1, allowedModes, capacity, freespeed, lanes, );
+
+
+
 //		}
-		NetworkUtils.writeNetwork(network, "scenarios/berlin-bab100-network-out.xml");
+//		NetworkUtils.writeNetwork(network, "scenarios/berlin-bab100-network-out.xml");
 	}
 
 	private static void addLinkToNetwork(Network network,
