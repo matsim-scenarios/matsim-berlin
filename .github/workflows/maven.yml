@@ -15,6 +15,7 @@ jobs:
     environment: Build
     env:
       MATSIM_DECRYPTION_PASSWORD: ${{ secrets.MATSIM_DECRYPTION_PASSWORD }}
+      MAVEN_OPTS: -Xmx10G
 
     steps:
     - uses: actions/checkout@v2
