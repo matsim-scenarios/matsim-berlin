@@ -21,7 +21,6 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Person;
-import org.matsim.contrib.freight.Freight;
 import org.matsim.contrib.freight.FreightConfigGroup;
 import org.matsim.contrib.freight.carrier.Carrier;
 import org.matsim.contrib.freight.carrier.CarrierPlan;
@@ -649,12 +648,11 @@ class AbfallUtils {
 	static Controler prepareControler(Scenario scenario) {
 		Controler controler = new Controler(scenario);
 
-		Freight.configure(controler);
+		controler.addOverridingModule( new CarrierModule() );
 
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
-				install(new CarrierModule());
 //                bind(CarrierPlanStrategyManagerFactory.class).toInstance( null );
 //                bind(CarrierScoringFunctionFactory.class).toInstance(null );
 			}
@@ -708,8 +706,6 @@ class AbfallUtils {
 
 	/**
 	 * Gives an output of a .txt file with some important information
-	 * 
-	 * @param allGarbage
 	 * 
 	 * @param
 	 */
