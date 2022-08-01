@@ -648,12 +648,11 @@ class AbfallUtils {
 	static Controler prepareControler(Scenario scenario) {
 		Controler controler = new Controler(scenario);
 
-//		Freight.configure(controler);
+		controler.addOverridingModule( new CarrierModule() );
 
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
-				install(new CarrierModule());
 //                bind(CarrierPlanStrategyManagerFactory.class).toInstance( null );
 //                bind(CarrierScoringFunctionFactory.class).toInstance(null );
 			}
@@ -707,8 +706,6 @@ class AbfallUtils {
 
 	/**
 	 * Gives an output of a .txt file with some important information
-	 * 
-	 * @param allGarbage
 	 * 
 	 * @param
 	 */
