@@ -36,9 +36,6 @@ import com.google.inject.Inject;
 
 /**
  * Based on {@link TransportPlanningMainModeIdentifier}
- *
- * ModeStatsControlerListener takes modes from scoreConfig.getAllModes() and ignores everything else.
- * So keep this in mind before using this class.
  * 
  * @author nagel / gleich
  *
