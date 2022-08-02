@@ -58,7 +58,7 @@ import org.matsim.extensions.pt.replanning.singleTripStrategies.ChangeSingleTrip
 import org.matsim.extensions.pt.replanning.singleTripStrategies.RandomSingleTripReRoute;
 import org.matsim.extensions.pt.routing.EnhancedRaptorIntermodalAccessEgress;
 import org.matsim.prepare.population.AssignIncome;
-import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
+import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
 import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
@@ -120,7 +120,7 @@ public final class RunBerlinScenario {
 			public void install() {
 				addTravelTimeBinding( TransportMode.ride ).to( networkTravelTime() );
 				addTravelDisutilityFactoryBinding( TransportMode.ride ).to( carTravelDisutilityFactoryKey() );
-				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifier.class);
+				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier.class);
 
 				addPlanStrategyBinding("RandomSingleTripReRoute").toProvider(RandomSingleTripReRoute.class);
 				addPlanStrategyBinding("ChangeSingleTripModeAndRoute").toProvider(ChangeSingleTripModeAndRoute.class);
