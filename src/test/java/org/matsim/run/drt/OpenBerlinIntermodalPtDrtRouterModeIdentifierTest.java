@@ -85,36 +85,6 @@ public class OpenBerlinIntermodalPtDrtRouterModeIdentifierTest {
 	}
 	
 	@Test
-	public final void testDrtPtFallbackModesRecognition() {
-		log.info("Running testDrtPtFallbackModesRecognition...");
-		
-		OpenBerlinIntermodalPtDrtRouterModeIdentifier mainModeIdentifier = new OpenBerlinIntermodalPtDrtRouterModeIdentifier();
-		
-		Scenario scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
-		PopulationFactory factory = scenario.getPopulation().getFactory();
-		
-		{
-			List<PlanElement> planElements = new ArrayList<>();
-			planElements.add(factory.createLeg(TransportMode.transit_walk));
-			Assert.assertEquals("Wrong mode!", TransportMode.pt, mainModeIdentifier.identifyMainMode(planElements));
-		}
-		
-		{
-			List<PlanElement> planElements = new ArrayList<>();
-			planElements.add(factory.createLeg(TripRouter.getFallbackMode(TransportMode.drt)));
-			Assert.assertEquals("Wrong mode!", TransportMode.drt, mainModeIdentifier.identifyMainMode(planElements));
-		}
-		
-		{
-			List<PlanElement> planElements = new ArrayList<>();
-			planElements.add(factory.createLeg(TripRouter.getFallbackMode("drt2")));
-			Assert.assertEquals("Wrong mode!", "drt2", mainModeIdentifier.identifyMainMode(planElements));
-		}
-		
-		log.info("Running testDrtPtFallbackModesRecognition... Done.");
-	}
-	
-	@Test
 	public final void testIntermodalPtDrtTrip() {
 		log.info("Running testIntermodalPtDrtTrip...");
 		
