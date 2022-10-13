@@ -22,7 +22,8 @@ package org.matsim.run.drt;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
@@ -45,7 +46,7 @@ import org.matsim.vis.otfvis.OTFVisConfigGroup;
 */
 
 public class KNVisOutputDrtOpenBerlinScenario {
-	private static final Logger log = Logger.getLogger( KNVisOutputDrtOpenBerlinScenario.class);
+	private static final Logger log = LogManager.getLogger( KNVisOutputDrtOpenBerlinScenario.class);
 
 	public static void main(String[] args) {
 

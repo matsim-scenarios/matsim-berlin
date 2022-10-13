@@ -1,6 +1,7 @@
 package org.matsim.run.dynamicShutdown;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.analysis.ModeStatsControlerListener;
 import org.matsim.analysis.ScoreStats;
 import org.matsim.analysis.ScoreStatsControlerListener.ScoreItem;
@@ -45,7 +46,7 @@ import static org.matsim.run.dynamicShutdown.DynamicShutdownConfigGroup.slopeWin
 
 public class DynamicShutdownControlerListenerImpl implements IterationStartsListener, StartupListener, ShutdownListener, DynamicShutdownControlerListener {
 
-    private static final Logger log = Logger.getLogger(StrategyManager.class);
+    private static final Logger log = LogManager.getLogger(StrategyManager.class);
 
     private final ControlerConfigGroup controlerConfigGroup;
     private final ScoreStats scoreStats;

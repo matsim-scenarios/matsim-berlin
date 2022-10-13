@@ -23,7 +23,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.google.inject.Singleton;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
@@ -41,7 +42,6 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
-import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
@@ -68,7 +68,7 @@ import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParamete
 
 public final class RunDrtOpenBerlinScenario {
 
-	private static final Logger log = Logger.getLogger(RunDrtOpenBerlinScenario.class);
+	private static final Logger log = LogManager.getLogger(RunDrtOpenBerlinScenario.class);
 	
 	private static final String DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_ATTRIBUTE = "drtStopFilter";
 	private static final String DRT_ACCESS_EGRESS_TO_PT_STOP_FILTER_VALUE = "station_S/U/RE/RB_drtServiceArea";
@@ -123,7 +123,7 @@ public final class RunDrtOpenBerlinScenario {
 
 		for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 			
-			String drtServiceAreaShapeFile = drtCfg.getDrtServiceAreaShapeFile();
+			String drtServiceAreaShapeFile = drtCfg.drtServiceAreaShapeFile;
 			if (drtServiceAreaShapeFile != null && !drtServiceAreaShapeFile.equals("") && !drtServiceAreaShapeFile.equals("null")) {
 				
 				// Michal says restricting drt to a drt network roughly the size of the service area helps to speed up.

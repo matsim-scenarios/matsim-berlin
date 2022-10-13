@@ -5,7 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.contrib.accidents.AccidentsConfigGroup;
 import org.matsim.contrib.accidents.runExample.AccidentsNetworkModification;
@@ -17,7 +18,7 @@ import org.matsim.run.RunBerlinScenario;
 
 public class WriteBVWPAccidentRoadTypesIntoLinkAttributes {
 	
-	private static final Logger log = Logger.getLogger(WriteBVWPAccidentRoadTypesIntoLinkAttributes.class);
+	private static final Logger log = LogManager.getLogger(WriteBVWPAccidentRoadTypesIntoLinkAttributes.class);
 	
 	public static void main(String[] args) throws IOException { 
 		

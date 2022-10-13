@@ -28,7 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.events.ActivityStartEvent;
 import org.matsim.api.core.v01.events.Event;
@@ -44,7 +45,7 @@ import org.matsim.core.events.MatsimEventsReader;
 
 public class RunEventAnalysis {
 	
-	private static final Logger log = Logger.getLogger(RunEventAnalysis.class );
+	private static final Logger log = LogManager.getLogger(RunEventAnalysis.class );
 
 	public static void main(String[] args) throws IOException {
 		

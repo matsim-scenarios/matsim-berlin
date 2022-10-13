@@ -6,8 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
@@ -31,7 +32,7 @@ import org.opengis.feature.simple.SimpleFeature;
  */
 public class Run_Abfall {
 
-	static final Logger log = Logger.getLogger(Run_Abfall.class);
+	static final Logger log = LogManager.getLogger(Run_Abfall.class);
 
 	private static final String original_Chessboard = "https://raw.githubusercontent.com/matsim-org/matsim/master/examples/scenarios/freight-chessboard-9x9/grid9x9.xml";
 	private static final String berlin = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.2-1pct/output-berlin-v5.2-1pct/berlin-v5.2-1pct.output_network.xml.gz";
@@ -109,7 +110,7 @@ public class Run_Abfall {
 			chosenCarrier = carrierChoice.carriersFromInputFile;
 		}
 
-		log.setLevel(Level.INFO);
+//		log.setLevel(Level.INFO); // method no longer exists
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();

@@ -20,7 +20,8 @@
 
 package org.matsim.prepare.population;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.population.PopulationUtils;
@@ -30,7 +31,7 @@ import java.util.Random;
 
 public class AssignIncome {
 
-	private static final Logger log = Logger.getLogger(AssignIncome.class);
+	private static final Logger log = LogManager.getLogger(AssignIncome.class);
 
 	public static void assignIncomeToPersonSubpopulationAccordingToGermanyAverage(Population population){
 		// https://de.wikipedia.org/wiki/Einkommensverteilung_in_Deutschland

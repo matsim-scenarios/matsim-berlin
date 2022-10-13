@@ -19,7 +19,8 @@
 
 package org.matsim.run.drt;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
@@ -36,7 +37,7 @@ import org.matsim.optDRT.OptDrt;
 */
 
 public class RunDrtOpenBerlinScenarioWithOptDrt {
-	private static final Logger log = Logger.getLogger(RunDrtOpenBerlinScenarioWithOptDrt.class);
+	private static final Logger log = LogManager.getLogger(RunDrtOpenBerlinScenarioWithOptDrt.class);
 
 	public static void main(String[] args) {
 		for (String arg : args) {

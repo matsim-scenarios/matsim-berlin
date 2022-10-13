@@ -18,7 +18,8 @@
  * *********************************************************************** */
 package org.matsim.run;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -47,7 +48,7 @@ import java.util.*;
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RunBerlinScenarioTest {
-	private static final Logger log = Logger.getLogger( RunBerlinScenarioTest.class ) ;
+	private static final Logger log = LogManager.getLogger( RunBerlinScenarioTest.class ) ;
 	
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 	
@@ -239,7 +240,7 @@ public class RunBerlinScenarioTest {
 			}
 		}
 
-		Logger.getLogger(modeCnt.toString()) ;			
+		log.info(modeCnt.toString()) ;
 		return modeCnt;	
 	}
 }

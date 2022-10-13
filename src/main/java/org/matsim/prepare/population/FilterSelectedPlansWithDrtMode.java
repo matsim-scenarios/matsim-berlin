@@ -19,7 +19,8 @@
 
 package org.matsim.prepare.population;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Leg;
@@ -36,7 +37,7 @@ import org.matsim.core.scenario.ScenarioUtils;
 
 public class FilterSelectedPlansWithDrtMode {
 	
-	private static final Logger log = Logger.getLogger(FilterSelectedPlansWithDrtMode.class);
+	private static final Logger log = LogManager.getLogger(FilterSelectedPlansWithDrtMode.class);
 	
 	private final static String inputPlans = "...";
 	private final static String outputPlans = "...";

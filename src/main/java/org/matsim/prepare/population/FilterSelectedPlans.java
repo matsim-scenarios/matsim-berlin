@@ -19,12 +19,12 @@
 
 package org.matsim.prepare.population;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.*;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.algorithms.TripsToLegsAlgorithm;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scenario.ScenarioUtils;
@@ -37,7 +37,7 @@ import java.util.Set;
 
 public class FilterSelectedPlans {
 	
-	private static final Logger log = Logger.getLogger(FilterSelectedPlans.class);
+	private static final Logger log = LogManager.getLogger(FilterSelectedPlans.class);
 	
 	private final static String inputPlans = "D:/svn/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/base_b18_pt03_c1_mgn0.6.output_plans.xml.gz";//"...";
 	private final static String outputPlans = "D:/svn/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.plans.xml.gz";//"...";

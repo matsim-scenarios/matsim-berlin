@@ -62,7 +62,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 			config.plans().setInputFile("../../../../test/input/drt/drt-test-agents.xml");
 
 			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
-				drtCfg.setNumberOfThreads(1);
+				drtCfg.numberOfThreads = 1;
 			}
 
 			BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config,
@@ -102,7 +102,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUpTest {
 			config.controler().setOutputDirectory(utils.getOutputDirectory());
 
 			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
-				drtCfg.setNumberOfThreads(1);
+				drtCfg.numberOfThreads = 1;
 			}
 
 			BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config,

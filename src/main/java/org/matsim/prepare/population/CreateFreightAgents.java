@@ -25,7 +25,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.locationtech.jts.geom.Geometry;
@@ -54,7 +55,7 @@ import org.opengis.feature.simple.SimpleFeature;
  */
 public class CreateFreightAgents {
 
-	private static final Logger log = Logger.getLogger(CreateFreightAgents.class);
+	private static final Logger log = LogManager.getLogger(CreateFreightAgents.class);
 
 	private int personCounter = 0;
 	private final Map<String, SimpleFeature> features = new HashMap<>();

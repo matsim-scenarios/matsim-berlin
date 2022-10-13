@@ -21,7 +21,8 @@ package org.matsim.run.drt;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,7 +31,6 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.api.core.v01.population.PopulationFactory;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.router.TripRouter;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.pt.PtConstants;
 import org.matsim.testcases.MatsimTestUtils;
@@ -40,7 +40,7 @@ import org.matsim.testcases.MatsimTestUtils;
  *
  */
 public class OpenBerlinIntermodalPtDrtRouterModeIdentifierTest {
-	private static final Logger log = Logger.getLogger( OpenBerlinIntermodalPtDrtRouterModeIdentifierTest.class ) ;
+	private static final Logger log = LogManager.getLogger( OpenBerlinIntermodalPtDrtRouterModeIdentifierTest.class ) ;
 	
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 	

@@ -26,7 +26,8 @@ import java.io.File;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
@@ -83,7 +84,7 @@ import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 
 public class RunGTFS2MATSimOpenBerlin {
 
-	private static final Logger log = Logger.getLogger(RunGTFS2MATSimOpenBerlin.class);
+	private static final Logger log = LogManager.getLogger(RunGTFS2MATSimOpenBerlin.class);
 	
 	public static void main(String[] args) {
 	

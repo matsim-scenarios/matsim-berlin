@@ -21,7 +21,8 @@ package org.matsim.prepare.population;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -51,7 +52,7 @@ import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
  */
 public class RemovePtRoutes {
 	
-	private final static Logger log = Logger.getLogger(RemovePtRoutes.class);
+	private final static Logger log = LogManager.getLogger(RemovePtRoutes.class);
 
 	public static void main(String[] args) {
 		Config config = ConfigUtils.createConfig();

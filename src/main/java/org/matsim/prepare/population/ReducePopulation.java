@@ -22,7 +22,8 @@ package org.matsim.prepare.population;
 import java.util.Iterator;
 import java.util.Random;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.PopulationWriter;
 import org.matsim.core.config.Config;
@@ -36,7 +37,7 @@ import org.matsim.core.scenario.ScenarioUtils;
  */
 public class ReducePopulation {
 	
-	private final static Logger log = Logger.getLogger(ReducePopulation.class);
+	private final static Logger log = LogManager.getLogger(ReducePopulation.class);
 
 	public static void main(String[] args) {
 		Config config = ConfigUtils.createConfig();

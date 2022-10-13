@@ -22,7 +22,8 @@ package org.matsim.run.drt;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.matsim.api.core.v01.Id;
@@ -59,7 +60,7 @@ import org.matsim.testcases.MatsimTestUtils;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RunDrtOpenBerlinScenarioTest {
 		
-	private static final Logger log = Logger.getLogger(RunDrtOpenBerlinScenarioTest.class);
+	private static final Logger log = LogManager.getLogger(RunDrtOpenBerlinScenarioTest.class);
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 
 	// During debug some exceptions only occured at the replanning stage of the 3rd
@@ -82,7 +83,7 @@ public class RunDrtOpenBerlinScenarioTest {
 			config.qsim().setNumberOfThreads(1);
 			
 			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
-				drtCfg.setNumberOfThreads(1);
+				drtCfg.numberOfThreads = 1;
 			}
 			
 			// Decrease population to 0.01% sample 
@@ -142,9 +143,9 @@ public class RunDrtOpenBerlinScenarioTest {
 			ptExtensionsConfigGroup.addIntermodalAccessEgressModeUtilityRandomization(utilityRandomization);
 			
 			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
-				drtCfg.setNumberOfThreads(1);
-				drtCfg.setDrtServiceAreaShapeFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlkoenig-area/berlkoenig-area.shp");
-				drtCfg.setVehiclesFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlkoenig-drt-v5.5/input/berlkoenig-drt-v5.5.drt-by-rndLocations-1000vehicles-4seats.xml.gz");
+				drtCfg.numberOfThreads = 1;
+				drtCfg.drtServiceAreaShapeFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlkoenig-area/berlkoenig-area.shp";
+				drtCfg.vehiclesFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlkoenig-drt-v5.5/input/berlkoenig-drt-v5.5.drt-by-rndLocations-1000vehicles-4seats.xml.gz";
 			}
 			
 			Scenario scenario = RunDrtOpenBerlinScenario.prepareScenario( config ) ;
@@ -250,9 +251,9 @@ public class RunDrtOpenBerlinScenarioTest {
 			ptExtensionsConfigGroup.addIntermodalAccessEgressModeUtilityRandomization(utilityRandomization);
 			
 			for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
-				drtCfg.setNumberOfThreads(1);
-				drtCfg.setDrtServiceAreaShapeFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlkoenig-area/berlkoenig-area.shp");
-				drtCfg.setVehiclesFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlkoenig-drt-v5.5/input/berlkoenig-drt-v5.5.drt-by-rndLocations-1000vehicles-4seats.xml.gz");
+				drtCfg.numberOfThreads = 1;
+				drtCfg.drtServiceAreaShapeFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlkoenig-area/berlkoenig-area.shp";
+				drtCfg.vehiclesFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/berlkoenig-drt-v5.5/input/berlkoenig-drt-v5.5.drt-by-rndLocations-1000vehicles-4seats.xml.gz";
 			}
 			
 			IntermodalTripFareCompensatorsConfigGroup compensatorsCfg = ConfigUtils.addOrGetModule(config, IntermodalTripFareCompensatorsConfigGroup.class);
