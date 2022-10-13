@@ -165,20 +165,19 @@
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>opt-drt</artifactId>
-			<version>ffcd8211</version>
+			<version>0d94df59ec</version>
 		</dependency>
 		
 		<dependency>
 	    	<groupId>com.github.matsim-vsp</groupId>
 	    	<artifactId>matsim-analysis</artifactId>
-	    	<version>399c920</version>
-			<!-- <version>94a0b679d7</version> -->
+	    	<version>23bfbfc865</version>
         </dependency>
 
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>pt-extensions</artifactId>
-			<version>68a67f67e6</version>
+			<version>1f9ee649a9</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.matsim</groupId>
