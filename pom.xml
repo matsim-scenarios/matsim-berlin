@@ -177,7 +177,7 @@
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>pt-extensions</artifactId>
-			<version>1f9ee649a9</version>
+			<version>c6253b0a53</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.matsim</groupId>
