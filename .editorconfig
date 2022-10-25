@@ -1,0 +1,19 @@
+
+root = true
+
+[*]
+end_of_line = lf
+
+
+[*.java]
+charset = utf-8
+indent_style = tab
+ij_smart_tabs = true
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[pom.xml]
+indent_style = tab
+
+[Makefile]
+indent_style = tab
