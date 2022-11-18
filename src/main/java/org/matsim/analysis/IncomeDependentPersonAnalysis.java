@@ -23,6 +23,7 @@ package org.matsim.analysis;
 import one.util.streamex.StreamEx;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Population;
+import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.router.TripStructureUtils;
 
@@ -31,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.stream.Collectors.toList;
-import static playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters.PERSONAL_INCOME_ATTRIBUTE_NAME;
 
 public class IncomeDependentPersonAnalysis {
 
@@ -45,7 +45,7 @@ public class IncomeDependentPersonAnalysis {
 	private static void printNrOfPersonsClassifiedByDRTLegsAndIncome(Population population) {
 		Map<Double, List<Integer>> nrOfDrtLegsByIncome = StreamEx.of(population.getPersons().values())
 				.filter(p -> PopulationUtils.getSubpopulation(p).equals("person"))
-				.mapToEntry(p -> PopulationUtils.getPersonAttribute(p, PERSONAL_INCOME_ATTRIBUTE_NAME) == null ?  -999.999 : (double) PopulationUtils.getPersonAttribute(p, PERSONAL_INCOME_ATTRIBUTE_NAME),
+				.mapToEntry(p -> PersonUtils.getIncome(p) == null ?  -999.999 : (double) PersonUtils.getIncome(p),
 						p -> getNumberOfDrtLegs(p))
 				.filterValues(v -> v > 0)
 				.grouping(toList());
