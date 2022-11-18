@@ -56,6 +56,7 @@ import org.matsim.core.replanning.choosers.ForceInnovationStrategyChooser;
 import org.matsim.core.replanning.choosers.StrategyChooser;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.scoring.functions.PersonScoringParametersFromPersonAttributes;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.extensions.pt.PtExtensionsConfigGroup;
@@ -65,7 +66,6 @@ import org.matsim.extensions.pt.routing.EnhancedRaptorIntermodalAccessEgress;
 import org.matsim.prepare.population.AssignIncome;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
-import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
 import java.io.IOException;
 import java.util.*;
@@ -133,7 +133,7 @@ public final class RunBerlinScenario {
 				bind(RaptorIntermodalAccessEgress.class).to(EnhancedRaptorIntermodalAccessEgress.class);
 				
 				//use income-dependent marginal utility of money for scoring
-				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class).in(Singleton.class);
+				bind(ScoringParametersForPerson.class).to(PersonScoringParametersFromPersonAttributes.class).in(Singleton.class);
 
 				// set Plantypes to keep the initial selected plan up to the last iteration
 				BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(controler.getConfig(), BerlinExperimentalConfigGroup.class);
