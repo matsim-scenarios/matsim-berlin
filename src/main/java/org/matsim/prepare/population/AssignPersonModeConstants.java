@@ -55,7 +55,7 @@ public class AssignPersonModeConstants {
         population.getPersons().values().forEach((person) -> {
             Map<String, String> modeConstants = PersonUtils.getModeConstants(person);
             if (modeConstants == null) {
-                modeConstants = new HashMap();
+                modeConstants = new HashMap<>();
             }
 
             modeConstants.put(mode, Double.toString((random.nextDouble() - 0.5) * 2 * sigma + mean));
