@@ -42,19 +42,26 @@ public class RunBerlinScenarioWithParkingCosts {
 
 	private static double residentialParkingCosts;
 
+	//https://www.berlin.de/ba-mitte/politik-und-verwaltung/aemter/ordnungsamt/parkraumbewirtschaftung/
+	private static double nonResidentialParkingCostPerHour;
+	private static final double MAX_DAILY_COST_FACTOR = 12;
+
 	public static void main(String[] args) {
 
 		if ( args.length==0 ) {
 //			args = new String[] {"scenarios/berlin-v5.5-10pct/input/berlin-v5.5-10pct.config.xml"}  ;
 			args = new String[] {"" + (20.40d / (2*365)),
+					"1.0",
 					"scenarios/berlin-v5.5-1pct/input/berlin-v5.5-1pct.config.xml",
 					"--config:controler.lastIteration", "0"
 			} ;
 		}
 		residentialParkingCosts = Double.parseDouble(args[0]);
-		String[] configArgs = new String[args.length-1];
-		for(int i = 1; i<=args.length-1; i++){
-			configArgs[i-1] = args[i];
+		nonResidentialParkingCostPerHour = Double.parseDouble(args[1]);
+
+		String[] configArgs = new String[args.length-2];
+		for(int i = 2; i<=args.length-1; i++){
+			configArgs[i-2] = args[i];
 		}
 		Config config = RunBerlinScenario.prepareConfig(configArgs, new ParkingCostConfigGroup());
 
@@ -83,9 +90,14 @@ public class RunBerlinScenarioWithParkingCosts {
 
 		for (Link link : scenario.getNetwork().getLinks().values()){
 			Set<String> allowedModes = link.getAllowedModes();
-			//attach residential parking attribute to all Berlin links
 			if(allowedModes.contains(parkingCfg.getMode()) && ShpGeometryUtils.isCoordInPreparedGeometries(link.getCoord(), berlinShape)){
+				//attach residential parking attribute to all Berlin links
 				link.getAttributes().putAttribute(parkingCfg.getResidentialParkingFeeAttributeName(), residentialParkingCosts);
+				//duration-based parking costs. first hour is the same as all others
+				link.getAttributes().putAttribute(parkingCfg.getFirstHourParkingCostLinkAttributeName(), nonResidentialParkingCostPerHour);
+				link.getAttributes().putAttribute(parkingCfg.getExtraHourParkingCostLinkAttributeName(), nonResidentialParkingCostPerHour);
+				//max costs per link per day
+				link.getAttributes().putAttribute(parkingCfg.getMaxDailyParkingCostLinkAttributeName(), MAX_DAILY_COST_FACTOR * nonResidentialParkingCostPerHour);
 			}
 		}
 
