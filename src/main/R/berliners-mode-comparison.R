@@ -77,21 +77,59 @@ berliners <- read.table(file="//sshfs.r/schlenther@cluster.math.tu-berlin.de/net
 base <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res0.0") %>% 
   filter(person %in% berliners$person)
   
+
 ###### CURRENT DAILY RESIDENTIAL PARKING FEE = 0.028 €
 p0.028 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res0.028") %>% 
   filter(person %in% berliners$person)
 
-###### 10 * DAILY RESIDENTIAL PARKING FEE = 0.28 €
+
+
+###### 10 * DAILY RESIDENTIAL PARKING FEE = 0.28 € ###################################################
 p0.28 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res0.28") %>% 
   filter(person %in% berliners$person)
+
+p0.28_l1.0 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res0.28-link1.0") %>% 
+  filter(person %in% berliners$person)
+
+p0.28_l2.0 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res0.28-link2.0") %>% 
+  filter(person %in% berliners$person)
+
+p0.28_l4.0 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res0.28-link4.0") %>% 
+  filter(person %in% berliners$person)
+
+p0.28_l10.0 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res0.28-link10.0") %>% 
+  filter(person %in% berliners$person)
+
+p0.28_l20.0 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res0.28-link20.0") %>% 
+  filter(person %in% berliners$person)
+
+
 
 ###### 100 * DAILY RESIDENTIAL PARKING FEE = 2.8 €
 p2.8 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res2.8") %>% 
   filter(person %in% berliners$person)
 
+p2.8_l1.0 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res2.8-link1.0") %>% 
+  filter(person %in% berliners$person)
+
+p2.8_l2.0 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res2.8-link2.0") %>% 
+  filter(person %in% berliners$person)
+
+p2.8_l4.0 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res2.8-link4.0") %>% 
+  filter(person %in% berliners$person)
+
+p2.8_l10.0 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res2.8-link10.0") %>% 
+  filter(person %in% berliners$person)
+
+p2.8_l20.0 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res2.8-link20.0") %>% 
+  filter(person %in% berliners$person)
+
+
 ###### 1000 * DAILY RESIDENTIAL PARKING FEE = 28 €
 p28.0 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res28.0") %>% 
   filter(person %in% berliners$person)
+
+
 
 
 ##########################################################PLOT###########################################################
@@ -147,4 +185,24 @@ grid.arrange(p12,p22,p32,p42, ncol=2, nrow = 2, top = "Einführung von Anwohnerp
 grid.arrange(p13,p23,p33,p43, ncol=2, nrow = 2, top = "Einführung von Anwohnerparkkosten im Berlin-Modell")
 
 
+
+###########################################
+### COMPARE MODAL SPLIT ACROSS NON-RESIDENTIAL PARKING FEES
+
+###### 10 * DAILY RESIDENTIAL PARKING FEE = 0.28 €
+plot0.28_l0 <- p22
+
+plot0.28_l1 <- plotModalSplitPieChart(p0.28_l1.0)
+plot0.28_l2 <- plotModalSplitPieChart(p0.28_l2.0)
+plot0.28_l4 <- plotModalSplitPieChart(p0.28_l4.0)
+plot0.28_l10 <- plotModalSplitPieChart(p0.28_l10.0)
+plot0.28_l20 <- plotModalSplitPieChart(p0.28_l20.0)
+
+grid.arrange(plot0.28_l0,
+             plot0.28_l1,
+             plot0.28_l2,
+             plot0.28_l4,
+             plot0.28_l10,
+             plot0.28_l20,
+             ncol=3, nrow = 2, top = "Residential parking cost 0.28 €/Tag")
 
