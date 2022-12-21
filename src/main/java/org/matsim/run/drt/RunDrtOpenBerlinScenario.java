@@ -103,9 +103,6 @@ public final class RunDrtOpenBerlinScenario {
 			@Override
 			public void install() {
 				bind(MainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifier.class);
-
-				//use income-dependent marginal utility of money for scoring
-				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class).in(Singleton.class);
 			}
 		});
 
