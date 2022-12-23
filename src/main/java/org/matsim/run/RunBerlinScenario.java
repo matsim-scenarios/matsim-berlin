@@ -146,8 +146,8 @@ public final class RunBerlinScenario {
 				if (berlinCfg.getAnalysisLevel().equals(BerlinExperimentalConfigGroup.AnalysisLevel.FULL)) {
 					install(new LinkPaxVolumesAnalysisModule());
 					install(new PtStop2StopAnalysisModule());
-					install(new PersonMoneyEventsAnalysisModule());
 				}
+				install(new PersonMoneyEventsAnalysisModule());
 
 				// use forced innovation every 10 iterations
 				bind(new TypeLiteral<StrategyChooser<Plan, Person>>() {}).toInstance(new ForceInnovationStrategyChooser<>(10, ForceInnovationStrategyChooser.Permute.yes));
