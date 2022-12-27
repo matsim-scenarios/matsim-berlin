@@ -50,8 +50,8 @@ public class CreateRoadPricingXml {
     private static String BERLIN_CRS = "EPSG:31468";
 
     public static void main (String[] args) {
-        String zoneShpFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-shp/berlin.shp";
-//        String zoneShpFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-inner-city-area/inner-city-area.shp";
+//        String zoneShpFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-shp/berlin.shp";
+        String zoneShpFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-inner-city-area/inner-city-area.shp";
         String zoneShpCRS = "EPSG:31468";
 
         //determine tolled links
@@ -62,36 +62,63 @@ public class CreateRoadPricingXml {
         List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(IOUtils.resolveFileOrResource(zoneShpFile));
         CoordinateTransformation transformer = TransformationFactory.getCoordinateTransformation(BERLIN_CRS, zoneShpCRS);
         Set<Id<Link>> tolledLinks = new HashSet<>();
+        Set<Id<Link>> linksToRemove = new HashSet<>();
+
+
         for (Link link : network.getLinks().values()) {
             if(!link.getAllowedModes().contains("pt")){ //we wanna skip pt links
                 Coord fromNodeTransformed = transformer.transform(link.getFromNode().getCoord());
                 Coord toNodeTransformed = transformer.transform(link.getToNode().getCoord());
-                if (ShpGeometryUtils.isCoordInPreparedGeometries(fromNodeTransformed, geometries) &&
+
+//                //if link if fully contained in shape file
+//                if (ShpGeometryUtils.isCoordInPreparedGeometries(fromNodeTransformed, geometries) &&
+//                        ShpGeometryUtils.isCoordInPreparedGeometries(toNodeTransformed, geometries)) {
+//                    tolledLinks.add(link.getId());
+//                }
+                //if link is a border link (fromNode XOR toNode is contained) -> use for cordon pricing!
+                if (ShpGeometryUtils.isCoordInPreparedGeometries(fromNodeTransformed, geometries) ^
                         ShpGeometryUtils.isCoordInPreparedGeometries(toNodeTransformed, geometries)) {
                     tolledLinks.add(link.getId());
                 }
+                else {
+                    linksToRemove.add(link.getId());
+                }
+            } else {
+                linksToRemove.add(link.getId());
             }
         }
 
-        for (double ii = 0; ii <= 50; ii += 5){
+        linksToRemove.forEach(l -> network.removeLink(l));
+        NetworkUtils.writeNetwork(network, "hundekopf_cordon_roadpricing_bothWays_network.xml.gz");
+
+
+        for (double ii = 0; ii <= 25; ii += 2.5){
             double toll = ii; //area toll is in euro
 //            double toll = ii / 1_000; //network distance unit is m
 
-            String outputFile = "berlin_area_roadpricing_" + ii + "_euro.xml";
+//            String outputFile = "berlin_area_roadpricing_" + ii + "_euro.xml";
 //            String outputFile = "hundekopf_area_roadpricing_" + ii + "_euro.xml";
+            String outputFile = "hundekopf_cordon_roadpricing_bothWays_" + ii + "_euro.xml";
+
 
             //create empty scenario object
             Scenario scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
             RoadPricingSchemeImpl scheme = RoadPricingUtils.addOrGetMutableRoadPricingScheme(scenario);
 
             /* Configure roadpricing scheme. */
-            RoadPricingUtils.setType(scheme, RoadPricingScheme.TOLL_TYPE_AREA);
+//            RoadPricingUtils.setType(scheme, RoadPricingScheme.TOLL_TYPE_AREA);
 //            RoadPricingUtils.setType(scheme, RoadPricingScheme.TOLL_TYPE_DISTANCE);
+            RoadPricingUtils.setType(scheme, RoadPricingScheme.TOLL_TYPE_LINK); //used for cordon pricing
 
-            RoadPricingUtils.setName(scheme, "Berlin_area_toll");
+
+//            RoadPricingUtils.setName(scheme, "Berlin_area_toll");
 //            RoadPricingUtils.setName(scheme, "Hundekopf_area_toll");
-            RoadPricingUtils.setDescription(scheme, "area toll within Berlin border");
+            RoadPricingUtils.setName(scheme, "Hundekopf_cordon_toll");
+
+
+//            RoadPricingUtils.setDescription(scheme, "area toll within Berlin border");
 //            RoadPricingUtils.setDescription(scheme, "area toll within inner city");
+            RoadPricingUtils.setDescription(scheme, "cordon toll at Berlin inner city border");
 
             tolledLinks.forEach(linkId -> RoadPricingUtils.addLink(scheme, linkId));
 
