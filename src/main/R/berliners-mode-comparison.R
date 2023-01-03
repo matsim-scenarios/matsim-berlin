@@ -67,7 +67,7 @@ compareModalDistanceDistribution <- function(tripsTable1,tripsTable2){
 ##########################################################READ INPUT###########################################################
 
 
-tollType <- "distance" #use 'area', 'distance' or 'cordon'
+tollType <- "cordon" #use 'area', 'distance' or 'cordon'
 area <- "berlin" #use 'berlin' or 'hundekopf'
 
 
@@ -92,28 +92,28 @@ berliners <- read.table(file=paste(root, "output-berlin-area/b-a-0/b-a-0.output_
 #}
 
 
-toll <- "0.0"
+toll <- "0"
   run0 <- readTripsTable(str_c(root, "output-", area, "-", tollType, "/", str_sub(area,1,1), "-", str_sub(tollType, 1, 1), "-", toll)) %>% 
     filter(person %in% berliners$person)
   plot0 <- plotModalSplitPieChart(run0) + 
     ggtitle(str_c(area, "-", tollType, "-", toll))
   
 
-toll <- "0.25"
+toll <- "2.5"
 run1 <- readTripsTable(str_c(root, "output-", area, "-", tollType, "/", str_sub(area,1,1), "-", str_sub(tollType, 1, 1), "-", toll)) %>% 
   filter(person %in% berliners$person)
 plot1 <- plotModalSplitPieChart(run1) + 
   ggtitle(str_c(area, "-", tollType, "-", toll))
 
 
-toll <- "1.0"
+toll <- "5.0"
 run2 <- readTripsTable(str_c(root, "output-", area, "-", tollType, "/", str_sub(area,1,1), "-", str_sub(tollType, 1, 1), "-", toll)) %>% 
   filter(person %in% berliners$person)
 plot2 <- plotModalSplitPieChart(run2) + 
   ggtitle(str_c(area, "-", tollType, "-", toll))
 
 
-toll <- "5.0"
+toll <- "7.5"
 run3 <- readTripsTable(str_c(root, "output-", area, "-", tollType, "/", str_sub(area,1,1), "-", str_sub(tollType, 1, 1), "-", toll)) %>% 
   filter(person %in% berliners$person) 
 plot3 <- plotModalSplitPieChart(run3) + 
