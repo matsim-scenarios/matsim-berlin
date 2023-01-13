@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<vehicleDefinitions xmlns="http://www.matsim.org/files/dtd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.matsim.org/files/dtd http://www.matsim.org/files/dtd/vehicleDefinitions_v2.0.xsd">
+
+	<vehicleType id="diesel_vehicle">
+
+		<capacity seats="1" standingRoomInPersons="0" other="11500.0">
+
+		</capacity>
+		<maximumVelocity meterPerSecond="22.22222222222222"/>
+		<engineInformation>
+			<attributes>
+				<attribute name="fuelConsumptionPerTonnePickupWaste" class="java.lang.Double">0.5</attribute>
+				<attribute name="fuelConsumptionPerKm" class="java.lang.Double">60.0</attribute>
+				<attribute name="fuelType" class="java.lang.String">diesel</attribute>
+			</attributes>
+		</engineInformation>
+		<costInformation fixedCostsPerDay="982.98" costsPerMeter="8.46E-4" costsPerSecond="0.0">
+
+		</costInformation>
+	</vehicleType>
+
+	<vehicleType id="EV_small_battery">
+
+		<capacity seats="1" standingRoomInPersons="0" other="11500.0">
+
+		</capacity>
+		<length meter="7.5"/>
+		<width meter="1.0"/>
+		<maximumVelocity meterPerSecond="22.22222222222222"/>
+		<engineInformation>
+			<attributes>
+				<attribute name="engeryCapacity" class="java.lang.Double">80.0</attribute>
+				<attribute name="engeryConsumptionPerTonnePickupWaste" class="java.lang.Double">1.4</attribute>
+				<attribute name="engeryConsumptionPerKm" class="java.lang.Double">1.0</attribute>
+				<attribute name="fuelType" class="java.lang.String">electricity</attribute>
+			</attributes>
+		</engineInformation>
+		<costInformation fixedCostsPerDay="1198.06" costsPerMeter="1.53E-4" costsPerSecond="0.0">
+
+		</costInformation>
+		<passengerCarEquivalents pce="1.0"/>
+		<networkMode networkMode="car"/>
+		<flowEfficiencyFactor factor="1.0"/>
+	</vehicleType>
+	
+	<vehicleType id="EV_medium_battery">
+
+		<capacity seats="1" standingRoomInPersons="0" other="10500.0">
+
+		</capacity>
+		<length meter="7.5"/>
+		<width meter="1.0"/>
+		<maximumVelocity meterPerSecond="22.22222222222222"/>
+		<engineInformation>
+			<attributes>
+				<attribute name="engeryCapacity" class="java.lang.Double">310.0</attribute>
+				<attribute name="engeryConsumptionPerTonnePickupWaste" class="java.lang.Double">1.4</attribute>
+				<attribute name="engeryConsumptionPerKm" class="java.lang.Double">1.0</attribute>
+				<attribute name="fuelType" class="java.lang.String">electricity</attribute>
+			</attributes>
+		</engineInformation>
+		<costInformation fixedCostsPerDay="1262.17" costsPerMeter="1.53E-4" costsPerSecond="0.0">
+
+		</costInformation>
+		<passengerCarEquivalents pce="1.0"/>
+		<networkMode networkMode="car"/>
+		<flowEfficiencyFactor factor="1.0"/>
+	</vehicleType>
+		
+
+</vehicleDefinitions>

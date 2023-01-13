@@ -3,7 +3,7 @@
 # The MATSim Open Berlin Scenario
 ![Berlin MATSim network and agents)](scenarios/berlin-v5.5-10pct/visualization-berlin.png "Berlin MATSim network and agents")
 
-### About this project
+## About this project
 
 This repository provides an open MATSim transport model for Berlin, provided by the [Transport Systems Planning and Transport Telematics group](https://www.vsp.tu-berlin.de) of [Technische Universität Berlin](http://www.tu-berlin.de). Please reference/cite the scenario based on <a rel="license" href="https://doi.org/10.1016/j.procs.2019.04.120">this paper</a>.
 
@@ -11,15 +11,15 @@ This repository provides an open MATSim transport model for Berlin, provided by 
 
 Currently, there are two versions of the MATSim Open Berlin model:
 
-##### 10pct scenario (`scenarios/berlin-v5.x-10pct`)
+### 10pct scenario (`scenarios/berlin-v5.x-10pct`)
 
 This scenario contains a 10pct sample of the Greater Berlin population; road capacities are accordingly reduced. The scenario is calibrated taking into consideration the traffic counts, modal split and mode-specific trip distance distributions.
     
-##### 1pct scenario (`scenarios/berlin-v5.x-1pct`)
+### 1pct scenario (`scenarios/berlin-v5.x-1pct`)
 
 This scenario contains a 1pct sample of the Greater Berlin population; road capacities are accordingly reduced. This scenario was not (!) calibrated and should only be used for testing purposes or pre-studies.
 
-### Licenses
+## Licenses
 
 The **MATSim program code** in this repository is distributed under the terms of the [GNU General Public License as published by the Free Software Foundation (version 2)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html). The MATSim program code are files that reside in the `src` directory hierarchy and typically end with `*.java`.
 
@@ -30,21 +30,21 @@ The **MATSim input files, output files, analysis data and visualizations** are l
 
 **Other data files**, in particular in `original-input-data`, have their own individual licenses that need to be individually clarified with the copyright holders.
 
-### Note
+## Note
 
-Handling of large files within git is not without problems (git lfs files are not included in the zip download; we have to pay; ...).  In consequence, large files, both on the input and on the output side, reside at https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin .  
+Handling of large files within git is not without problems (git lfs files are not included in the zip download; we have to pay; ...).  In consequence, large files, both on the input and on the output side, reside at https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin . Please check out the latest release / the latest numbered branch since those are stable. The master branch is an potentially unstable development head. 
 
 ----
-### Simple things (without installing/running MATSim)
+## Simple things (without installing/running MATSim)
 
-##### Movies
+### Movies
 
 1. Go to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/
 1. Decide for a scenario that you find interesting (e.g. `berlin-v5.x-10pct`) and go into that directory.
 1. Inside there, look for an `output-*` directory that you find interesting and go into that directory.
 1. Inside there, look for `movie-*` files.  You can't watch them directly, but there are various ways to download them. You can watch them then. Try that.
 
-##### Run VIA on output files
+### Run VIA on output files
 
 1. Get VIA from https://www.simunto.com/via/.  (There is a free license for a small number of agents; that will probably work but only display a small number of vehicles/agents.)
 1. Go to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/ .
@@ -55,15 +55,15 @@ Handling of large files within git is not without problems (git lfs files are no
 1. Run VIA and enjoy.
 
 ----
-### Downloading the repository - Alternative 1: Download ZIP
+## Downloading the repository - Alternative 1: Download ZIP
 
 1. Click on `Clone or download` and then on `Download ZIP`.
 1. Unzip the repository.
 1. Go to "Run the MATSim Berlin scenario" below.
 
-### Downloading the repository - Alternative 2: Clone the repository
+## Downloading the repository - Alternative 2: Clone the repository
 
-##### Initial stuff (needs to be done once)
+### Initial stuff (needs to be done once)
 
 1. Install git for the command line.
 1. Type `git clone https://github.com/matsim-scenarios/matsim-berlin.git` in the command line.
@@ -72,7 +72,7 @@ Handling of large files within git is not without problems (git lfs files are no
 
 This will result in a new `matsim-berlin` directory.  Memorize where you have put it.  You can move it, as a whole, to some other place.
 
-##### Update your local clone of the repository.
+### Update your local clone of the repository.
 
 1. Go into the `matsim-berlin` directory.
 1. Type `git pull`
@@ -82,9 +82,11 @@ This will result in a new `matsim-berlin` directory.  Memorize where you have pu
 This will update your repository to the newest version.
 
 ----
-### Run the MATSim Berlin scenario
-
-##### ... using a runnable jar file
+## Run the MATSim Berlin scenario ...
+<details>
+<summary>    
+    <h3>... using a runnable jar file</h3>
+</summary>    
 (Requires either cloning or downloading the repository.)
 
 1. Depending on the version of matsim-berlin you have selected, you might have to create the jar file yourself. 
@@ -106,7 +108,11 @@ java -jar [FILENAME].jar
 1. "Open" the output directory.  You can drag files into VIA as was already done above.
 1. "Edit..." (in the GUI) the config file.  Re-run MATSim.
 
-##### ... using an IDE, e.g. Eclipse, IntelliJ - Alternative 1: use cloned/downloaded matsim-berlin repository
+</details>
+<details>
+    <summary>
+<h3>... using an IDE, e.g. Eclipse, IntelliJ - Alternative 1: use cloned/downloaded matsim-berlin repository</h3>
+    </summary>
 (Requires either cloning or downloading the repository.)
 
 1. Set up the project in your IDE.
@@ -114,8 +120,9 @@ java -jar [FILENAME].jar
 1. Run the JAVA class `src/main/java/org/matsim/run/RunBerlinScenario.java` or `src/main/java/org/matsim/gui/RunBerlinScenarioGUI.java`.
 1. "Open" the output directory.  You can drag files into VIA as was already done above.
 1. Edit the config file or adjust the run class. Re-run MATSim.
-
-##### ... using an IDE, e.g. Eclipse, IntelliJ - Alternative 2: use matsim-berlin as a maven dependency
+</details>
+<details>    
+<summary><h3>... using an IDE, e.g. Eclipse, IntelliJ - Alternative 2: use matsim-berlin as a maven dependency</h3></summary>
 
 1. Clone the matsim-example-project: https://github.com/matsim-org/matsim-example-project
 2. Add a maven dependency to the open berlin project by writing the following to the pom file:
@@ -131,7 +138,7 @@ java -jar [FILENAME].jar
 <dependency>
   <groupId>com.github.matsim-scenarios</groupId>
   <artifactId>matsim-berlin</artifactId>
-  <version>5.5</version>
+  <version>5.5.3</version>
 </dependency>
 ```
 
@@ -150,9 +157,10 @@ Controler controler = RunBerlinScenario.prepareControler( scenario ) ;
 controler.run
 
 ```
+</details>
 
 ---
-### More information
+## More information
 
 For more information about the scenario generation, see VSP working paper # 19-01 under https://www.vsp.tu-berlin.de/publications/vspwp .
 
