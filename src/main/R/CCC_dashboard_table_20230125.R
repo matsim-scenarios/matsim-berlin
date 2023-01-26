@@ -80,6 +80,16 @@ measures$"parking" <- ifelse(measures$"Autoverbot"=="all",measures$"parking" - 0
 
 ######################################################################################################### Maut
 
+###PAVE
+## in PAVE hatten wir als Zusatzmaßnahme zu DRT die variablen PKW-Kosten von 0,20 €/km auf 0,40 €/km und auf 0,60 €/km erhöht (also so etwas wie globale Distanzmaut)
+## DRT wurde hier sowohl als Taxi im Hundekopf und zusätzlich als Pooling Berlin-weit angeboten,
+## s. auch https://vsp.berlin/pave/3-combined/T200P100-000-p3-10 und S.215ff im PAVE Bericht (VSP-WP 21-30)
+#
+# CO2:      0,20€/km -> ~ -50%, 0,40€/km -> -75%
+# traffic:  0,20€/km -> ~ -35% FzgKm, 0,40€/km -> -55% FzgKm
+# Kosten:   3,5 bis 4 Millionen Euro Einnahmen (+) am Tag
+# parking:  0,20€/km -> ~ -50% car modal split, 0,40€/km -> -75% car modal split (VSP WP 20-03 does not explicitly confirm but points in the same direction (only cares about nr of drt rides and shift from cars))
+
 measures$"CO2" <- ifelse(measures$"Maut"=="nein",measures$"CO2" + 0.02,measures$"CO2")
 measures$"CO2" <- ifelse(measures$"Maut"=="extra",measures$"CO2" - 0.02,measures$"CO2")
 measures$"CO2" <- ifelse(measures$"Maut"=="Berlin-wide",measures$"CO2" - 0.02,measures$"CO2")
