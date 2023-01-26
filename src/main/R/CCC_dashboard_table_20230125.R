@@ -33,13 +33,13 @@ measures <- cbind(frame,CO2,Kosten,traffic,parking)
 ######################################################################################################### Dekarbonsierung ÖPNV
 
 measures$"CO2" <- ifelse(measures$"ÖPNV"=="carbonised",measures$"CO2" + 0.00,measures$"CO2")
-measures$"CO2" <- ifelse(dmeasures$"ÖPNV"=="decarbonised",measures$"CO2" - 0.12,measures$"CO2")
+measures$"CO2" <- ifelse(measures$"ÖPNV"=="decarbonised",measures$"CO2" - 0.12,measures$"CO2")
 measures$"Kosten" <- ifelse(measures$"ÖPNV"=="carbonised",measures$"Kosten" + 0.00,measures$"Kosten")
-measures$"Kosten" <- ifelse(dmeasures$"ÖPNV"=="decarbonised",measures$"Kosten" - 0.25,measures$"Kosten")
+measures$"Kosten" <- ifelse(measures$"ÖPNV"=="decarbonised",measures$"Kosten" - 0.25,measures$"Kosten")
 measures$"traffic" <- ifelse(measures$"ÖPNV"=="carbonised",measures$"traffic" + 0.00,measures$"traffic")
-measures$"traffic" <- ifelse(dmeasures$"ÖPNV"=="decarbonised",measures$"traffic" - 0.25,measures$"traffic")
+measures$"traffic" <- ifelse(measures$"ÖPNV"=="decarbonised",measures$"traffic" - 0.25,measures$"traffic")
 measures$"parking" <- ifelse(measures$"ÖPNV"=="carbonised",measures$"parking" + 0.00,measures$"parking")
-measures$"parking" <- ifelse(dmeasures$"ÖPNV"=="decarbonised",measures$"parking" - 0.25,measures$"parking")
+measures$"parking" <- ifelse(measures$"ÖPNV"=="decarbonised",measures$"parking" - 0.25,measures$"parking")
 
 ######################################################################################################### Ausbau Radinfrastruktur
 
@@ -55,13 +55,13 @@ measures$"parking" <- ifelse(measures$"Fahrrad"=="stark",measures$"parking" - 0.
 ######################################################################################################### Superblocks/Kiezblocks
 
 measures$"CO2" <- ifelse(measures$"kiezblocks"=="nein",measures$"CO2" + 0.01,measures$"CO2")
-measures$"CO2" <- ifelse(dmeasures$"kiezblocks"=="stark",measures$"CO2" - 0.01,measures$"CO2")
+measures$"CO2" <- ifelse(measures$"kiezblocks"=="stark",measures$"CO2" - 0.01,measures$"CO2")
 measures$"Kosten" <- ifelse(measures$"kiezblocks"=="nein",measures$"Kosten" + 0.25,measures$"Kosten")
-measures$"Kosten" <- ifelse(dmeasures$"kiezblocks"=="stark",measures$"Kosten" - 0.25,measures$"Kosten")
+measures$"Kosten" <- ifelse(measures$"kiezblocks"=="stark",measures$"Kosten" - 0.25,measures$"Kosten")
 measures$"traffic" <- ifelse(measures$"kiezblocks"=="nein",measures$"traffic" + 0.25,measures$"traffic")
-measures$"traffic" <- ifelse(dmeasures$"kiezblocks"=="stark",measures$"traffic" - 0.25,measures$"traffic")
+measures$"traffic" <- ifelse(measures$"kiezblocks"=="stark",measures$"traffic" - 0.25,measures$"traffic")
 measures$"parking" <- ifelse(measures$"kiezblocks"=="nein",measures$"parking" + 0.25,measures$"parking")
-measures$"parking" <- ifelse(dmeasures$"kiezblocks"=="stark",measures$"parking" - 0.25,measures$"parking")
+measures$"parking" <- ifelse(measures$"kiezblocks"=="stark",measures$"parking" - 0.25,measures$"parking")
 
 ######################################################################################################### Autoverbote
 
