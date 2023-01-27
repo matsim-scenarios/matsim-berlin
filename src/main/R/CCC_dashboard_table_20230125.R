@@ -64,7 +64,10 @@ massnahme <- "kiezblocks"
 auspraegung <- "ja"
 
 measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" + 0.01,measures$"CO2")
-measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 0.25,measures$"Kosten")
+
+#kaum Kosten:
+#measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 0.25,measures$"Kosten")
+
 measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" + 0.25,measures$"traffic")
 measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" + 0.25,measures$"parking")
 
