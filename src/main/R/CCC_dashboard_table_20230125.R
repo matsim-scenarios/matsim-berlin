@@ -266,7 +266,12 @@ measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten"
 #measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking",measures$"parking")
 
 ############################################
-##########################################################################################################
+############################################
+# safety net:
+measures$"CO2" <- ifelse( measures$"CO2" < 0.01, 0.01, measures$"CO2")
+
+############################################
+############################################
 ### number format "x.yz"
 #options(digits = 1) 
 
