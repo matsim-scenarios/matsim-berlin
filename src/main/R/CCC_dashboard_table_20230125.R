@@ -14,15 +14,16 @@ print("#########################################################################
 #########################################################################################################
 ## expanding grid with measures
 
-frame <- expand.grid(OePNV = c("carbonised","dekarbonisiert"),
-                  kiezblocks = c("nein","stark"),
-                  Fahrrad = c("nein","stark"), 
-                  Autoverbot = c("nein","fossil","all"),
-                  MautHundekopf = c("keine","nurFossil","alle","autofrei"),
-                  MautAussenbezirke = c("keine","nurFossil","alle","autofrei"),
-                  DRT = c("nein","nurAussenbezirke","ganzeStadt"),
-                  ParkraumbewirtschaftungHundekopf = c("keine","Besucher_teuer_Anwohner_preiswert","Besucher_teuer_Anwohner_teuer"),
-                  ParkraumbewirtschaftungAussenbezirke = c("keine","Besucher_teuer_Anwohner_preiswert","Besucher_teuer_Anwohner_teuer")
+mautFossil="mautFossil"
+
+frame <- expand.grid(OePNV = c("base","dekarbonisiert"),
+                  kiezblocks = c("base","stark"),
+                  Fahrrad = c("base","stark"), 
+                  fahrenderVerkehr = c("base",mautFossil,"MautFuerAlle","zeroEmissionsZone","autofrei"),
+                  #fahrenderVerkehrAussenbezirke = c("base",mautFossil,"MautFuerAlle","zeroEmissionsZone","autofrei"),
+                  DRT = c("base","nurAussenbezirke","ganzeStadt"),
+                  ParkraumHundekopf = c("base","Besucher_teuer_Anwohner_preiswert","Besucher_teuer_Anwohner_teuer"),
+                  ParkraumAussenbezirke = c("base","Besucher_teuer_Anwohner_preiswert","Besucher_teuer_Anwohner_teuer")
                   )
 
 ## adding output values: CO2, Kosten, Menge fließender Verkehr, Menge stehender Verkehr
@@ -54,22 +55,25 @@ massnahme <- "Fahrrad"
 auspraegung <- "stark"
 
 measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" - 0.05,measures$"CO2")
-measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 0.05,measures$"Kosten")
+measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 0.01,measures$"Kosten")
 measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" - 0.05,measures$"traffic")
-measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" - 0.05,measures$"parking")
+
+measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" - 0.025,measures$"parking")
+# Annahme: Jede zweite Person schafft ihr Auto ab.
 
 ########################################################################################################## Superblocks/Kiezblocks
 
 massnahme <- "kiezblocks"
-auspraegung <- "ja"
+auspraegung <- "stark"
 
-measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" + 0.01,measures$"CO2")
+measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" - 0.05,measures$"CO2")
 
-#kaum Kosten:
 #measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 0.25,measures$"Kosten")
+# Annahme: kaum Kosten
 
-measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" + 0.25,measures$"traffic")
-measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" + 0.25,measures$"parking")
+measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" + 0.05,measures$"traffic")
+measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" + 0.025,measures$"parking")
+# Annahme: Jede zweite Person schafft ihr Auto ab.
 
 ########################################################################################################## DRT
 
@@ -88,7 +92,7 @@ measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten"
 measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" - 0.05,measures$"traffic")
 measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" - 0.05,measures$"parking")
 
-########################################################################################################## MautHundekopf
+########################################################################################################## fahrenderVerkehrHundekopf
 
 ####PAVE
 ### in PAVE hatten wir als Zusatzmaßnahme zu DRT die variablen PKW-Kosten von 0,20 €/km auf 0,40 €/km und auf 0,60 €/km erhöht (also so etwas wie globale Distanzmaut)
@@ -101,55 +105,118 @@ measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parkin
 ## parking:  0,20€/km -> ~ -50% car modal split, 0,40€/km -> -75% car modal split (VSP WP 20-03 does not explicitly confirm but points in the same direction (only cares about nr of drt rides and shift from cars))
 
 
-massnahme <- "MautHundekopf"
-auspraegung <- "nurFossil"
+############################################
+############################################
 
-measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" + 0.02,measures$"CO2")
-measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 0.05,measures$"Kosten")
-measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" + 0.05,measures$"traffic")
-measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" + 0.05,measures$"parking")
+massnahme <- "fahrenderVerkehr"
 
-auspraegung <- "alle"
+# --------------------------------------------
 
-measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" - 0.02,measures$"CO2")
+auspraegung <- "MautFuerAlle"
+# 20ct/km
+
+traffRed=0.5
+
+measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2"*traffRed,measures$"CO2")
+
 measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 0.05,measures$"Kosten")
-measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" - 0.05,measures$"traffic")
+# Was sind die bisherigen Kosten?  Das geht nicht in Prozent, oder??
+
+measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic"*traffRed,measures$"traffic")
+# DRT müsste irgendwie separat dazu kommen.
+
+measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking"*traffRed,measures$"parking")
+# (Auto-Abschaffung analog CO2-Reduktion)
+
+# --------------------------------------------
+
+auspraegung <- mautFossil
+
+measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2"*0.5,measures$"CO2")
+# ähnliche Wirkung auf wie "Maut für alle".  Wirkt intuitiv richtig, aber warum?
+
+measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 0.05,measures$"Kosten")
+
+measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic"*0.75,measures$"traffic")
+
+measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking"*0.25,measures$"parking")
+
+# --------------------------------------------
+
+auspraegung <- "zeroEmissionsZone"
+
+measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" - 0.99,measures$"CO2")
+# (pt emissions remain if not reduced otherwise.  Problem with sequence!!)
+
+measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 0.01 ,measures$"Kosten")
+# Schilder, Durchsetzung, etc.
+
+measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic",measures$"traffic")
+
 measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" - 0.05,measures$"parking")
+
+# --------------------------------------------
 
 auspraegung <- "autofrei"
 
-measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" - 0.02,measures$"CO2")
+measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2"-0.99,measures$"CO2")
 measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 0.05,measures$"Kosten")
-measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" - 0.05,measures$"traffic")
-measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" - 0.05,measures$"parking")
+measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic"-0.99,measures$"traffic")
+measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking"-0.99,measures$"parking")
 
-########################################################################################################## ParkraumbewirtschaftungHundekopf
+############################################
+#############################################
+#massnahme <- "fahrenderVerkehrHundekopf"
+#auspraegung <- mautFossil
 
-massnahme <- "MautAussenbezirke"
-auspraegung <- "nurFossil"
+#measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2"/2,measures$"CO2")
+## 
 
-measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" + 0.02,measures$"CO2")
-measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 0.05,measures$"Kosten")
-measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" + 0.05,measures$"traffic")
-measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" + 0.05,measures$"parking")
+#measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 0.05,measures$"Kosten")
+#measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" + 0.05,measures$"traffic")
+#measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" + 0.05,measures$"parking")
 
-auspraegung <- "alle"
+#auspraegung <- "MautFuerAlle"
 
-measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" - 0.02,measures$"CO2")
-measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 0.05,measures$"Kosten")
-measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" - 0.05,measures$"traffic")
-measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" - 0.05,measures$"parking")
+#measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" - 0.02,measures$"CO2")
+#measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 0.05,measures$"Kosten")
+#measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" - 0.05,measures$"traffic")
+#measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" - 0.05,measures$"parking")
 
-auspraegung <- "autofrei"
+#auspraegung <- "autofrei"
 
-measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" - 0.02,measures$"CO2")
-measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 0.05,measures$"Kosten")
-measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" - 0.05,measures$"traffic")
-measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" - 0.05,measures$"parking")
+#measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" - 0.02,measures$"CO2")
+#measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 0.05,measures$"Kosten")
+#measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" - 0.05,measures$"traffic")
+#measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" - 0.05,measures$"parking")
 
-########################################################################################################## ParkraumbewirtschaftungHundekopf
+#############################################
+#############################################
+#massnahme <- "fahrenderVerkehrAussenbezirke"
+#auspraegung <- mautFossil
 
-massnahme <- "ParkraumbewirtschaftungHundekopf"
+#measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" + 0.02,measures$"CO2")
+#measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 0.05,measures$"Kosten")
+#measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" + 0.05,measures$"traffic")
+#measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" + 0.05,measures$"parking")
+
+#auspraegung <- "MautFuerAlle"
+
+#measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" - 0.02,measures$"CO2")
+#measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 0.05,measures$"Kosten")
+#measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" - 0.05,measures$"traffic")
+#measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" - 0.05,measures$"parking")
+
+#auspraegung <- "autofrei"
+
+#measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" - 0.02,measures$"CO2")
+#measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 0.05,measures$"Kosten")
+#measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" - 0.05,measures$"traffic")
+#measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" - 0.05,measures$"parking")
+
+#############################################
+############################################
+massnahme <- "ParkraumHundekopf"
 auspraegung <- "Besucher_teuer_Anwohner_preiswert"
 
 measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" - 0.02,measures$"CO2")
@@ -164,9 +231,9 @@ measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten"
 measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" - 0.05,measures$"traffic")
 measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" - 0.05,measures$"parking")
 
-########################################################################################################## ParkraumbewirtschaftungAussenbezirke
+########################################################################################################## ParkraumAussenbezirke
 
-massnahme <- "ParkraumbewirtschaftungAussenbezirke"
+massnahme <- "ParkraumAussenbezirke"
 auspraegung <- "Besucher_teuer_Anwohner_preiswert"
 
 measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" - 0.02,measures$"CO2")
@@ -187,4 +254,3 @@ measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parkin
 
 ### writing CSV file ## PATH FOR OUTPUT
 write.csv(measures, "CCC_dashboard.csv", row.names=FALSE)
-system("head -11 CCC_dashboard.csv")
