@@ -19,6 +19,7 @@ import org.matsim.application.options.ShpOptions;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.PopulationUtils;
+import org.matsim.core.scenario.ProjectionUtils;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.opengis.feature.simple.SimpleFeature;
 import picocli.CommandLine;
@@ -110,6 +111,8 @@ public class CreatePopulation implements MATSimAppCommand {
 			}
 		}
 
+		// TODO: has same crs as input shape
+		ProjectionUtils.putCRS(population, "EPSG:25833");
 		PopulationUtils.writePopulation(population, output.toString());
 
 		return 0;
@@ -133,7 +136,7 @@ public class CreatePopulation implements MATSimAppCommand {
 			unemployed = FMT.parse(record.get("Anteil Arbeitslose nach SGB II und SGB III an Einwohnerinnen und Einwohner (EW) im Alter von 15 bis unter 65 Jahren")).doubleValue() / 100;
 		} catch (ParseException e) {
 			unemployed = 0;
-			log.warn("LOR {} has no unemployment", record.get(1));
+			log.warn("LOR {} {} has no unemployment", raumID, record.get(1));
 		}
 
 		var sex = new EnumeratedAttributeDistribution<>(Map.of("f", quota, "m", 1 - quota));
