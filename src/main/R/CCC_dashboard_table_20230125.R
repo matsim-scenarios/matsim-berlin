@@ -309,8 +309,8 @@ measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten"
 
 ############################################
 ############################################
-# adding "1" to costs since this is decucted by the dashboard:
-measures$"Kosten" <- measures$"Kosten"+1
+# adding "1" to costs since this is decucted by the dashboard.  And then we divide by 100 to compensate for the % sign. (no, other way round)
+measures$"Kosten" <- (measures$"Kosten"/100)+1
 
 ############################################
 ############################################
