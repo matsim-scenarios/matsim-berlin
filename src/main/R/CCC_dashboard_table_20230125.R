@@ -70,12 +70,12 @@ auspraegung <- "stark"
 
 measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2"*0.9,measures$"CO2")
 
-#measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 0.25,measures$"Kosten")
-# Annahme: kaum Kosten
-
 measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic"*0.9,measures$"traffic")
 measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking"*0.95,measures$"parking")
 # Annahme: Jede zweite Person schafft ihr Auto ab.
+
+measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 3.3,measures$"Kosten")
+# Annahme: kaum Kosten
 
 ########################################################################################################## DRT
 
@@ -122,15 +122,15 @@ measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2"*12/20
 # Parkplätze betrifft, dann gehen der Verkehr dafür von 10% auf 2%,
 # und der andere bleibt gleich.  Also von 20% auf 12%
 
-
-measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten",measures$"Kosten")
-# yyyyyy wenigstens approximative Einnahmen
-
 measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic"*12/20,measures$"traffic")
 # wie CO2
 
 measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking"*16/20,measures$"parking")
 # Gehe wie immer davon aus, dass 1/2 davon ihr Auto verkaufen.  Also von 10% auf 6%
+
+measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 1,measures$"Kosten")
+# 1 mio car trips in base case, corresponding to 20% mode share.  Half
+# of that, i.e. 10%pts, will not pay.  8%pts goes away.  2%pts remains.  I.e. 10% of original, 100k.  So these pay approx for 2.5hrs per day.  10Eu x 100k = 1m/day.
 
 # ---
 
@@ -141,14 +141,14 @@ auspraegung <- "Besucher_teuer_Anwohner_teuer"
 measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2"*0.2,measures$"CO2")
 # car share von 20% auf 2%
 
-measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 0.05,measures$"Kosten")
-# yyyyyy wenigstens approximative Einnahmen
-
 measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic"*0.2,measures$"traffic")
 # car share von 20% auf 2%
 
 measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking"*0.2,measures$"parking")
 # Hier Annahme gleiche Reduktion wie "fahrend".
+
+measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 1.28 ,measures$"Kosten")
+# The remaining 10pct pay 10Eu per day as above, plus 2.8 Eu per day for "Anwohner".
 
 ############################################
 # ############################################
@@ -188,8 +188,8 @@ measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffi
 measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking"*traffRed,measures$"parking")
 # (Auto-Abschaffung analog CO2-Reduktion)
 
-measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 4,measures$"Kosten")
-# Was sind die bisherigen Kosten?  Das geht nicht in Prozent, oder??
+measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 4*365,measures$"Kosten")
+# 4 Mio Einnahmen pro Tag.  Habe ich jetzt 1:1 eingetragen.  Umrechungen ggf. am Ende.
 
 # --------------------------------------------
 
@@ -204,7 +204,8 @@ measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffi
 measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking"*0.75,measures$"parking")
 # Eine Hälfte zahlt Maut, die andere wechselt auf nicht-fossiles Auto.
 
-measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 2,measures$"Kosten")
+measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 2*365,measures$"Kosten")
+# Annahme: 1/2 * MautFürAlle
 
 # --------------------------------------------
 
@@ -301,6 +302,13 @@ measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten"
 # no consequences on moving/non-moving traffic:
 #measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic",measures$"traffic")
 #measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking",measures$"parking")
+
+
+
+############################################
+############################################
+# adding "1" to costs since this is decucted by the dashboard:
+measures$"Kosten" <- measures$"Kosten"+1
 
 ############################################
 ############################################
