@@ -299,7 +299,7 @@ auspraegung <- "dekarbonisiert"
 
 measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2"*0.99,measures$"CO2")
 
-measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 0.01,measures$"Kosten")
+measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 65,measures$"Kosten")
 
 # no consequences on moving/non-moving traffic:
 #measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic",measures$"traffic")
@@ -315,7 +315,7 @@ measures$"Kosten" <- (measures$"Kosten"/100)+1
 ############################################
 ############################################
 # safety net:
-measures$"CO2" <- ifelse( measures$"CO2" < 0.01, 0.01, measures$"CO2")
+measures$"CO2" <- ifelse( measures$"CO2" < 0.01, 0.0, measures$"CO2")
 
 ############################################
 ############################################
