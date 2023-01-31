@@ -33,7 +33,7 @@ input/Planungsraum_EPSG_25833.shp:
 
 
 $p/berlin-only-$V-25pct.plans.xml.gz: input/PLR_2013_2020.csv input/Planungsraum_EPSG_25833.shp input/landuse.shp
-	java -jar $(JAR) prepare create-population\
+	java -jar $(JAR) prepare berlin-population\
 		--input $<\
 		--shp $(word 2,$^) --shp-crs EPSG:25833\
 		--landuse $(word 3,$^) --landuse-filter residential\

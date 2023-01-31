@@ -33,14 +33,14 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 @CommandLine.Command(
-		name = "create-population",
-		description = "Create a synthetic population."
+		name = "berlin-population",
+		description = "Create synthetic population for berlin."
 )
-public class CreatePopulation implements MATSimAppCommand {
+public class CreateBerlinPopulation implements MATSimAppCommand {
 
 	private final static NumberFormat FMT = NumberFormat.getInstance(Locale.GERMAN);
 
-	private static final Logger log = LogManager.getLogger(CreatePopulation.class);
+	private static final Logger log = LogManager.getLogger(CreateBerlinPopulation.class);
 
 	@CommandLine.Option(names = "--input", description = "Path to input csv data", required = true)
 	private Path input;
@@ -69,7 +69,7 @@ public class CreatePopulation implements MATSimAppCommand {
 	long id;
 
 	public static void main(String[] args) {
-		new CreatePopulation().execute(args);
+		new CreateBerlinPopulation().execute(args);
 	}
 
 	@Override
