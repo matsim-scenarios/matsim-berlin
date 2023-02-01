@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.matsim-scenarios</groupId>
@@ -104,6 +104,18 @@
 			<scope>compile</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>com.github.kit-ifv</groupId>
+			<artifactId>actitopp</artifactId>
+			<version>1.9.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>3.15</version>
+		</dependency>
+
 		<!-- Include the JUnit testing library.  Not transitive. -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -175,12 +187,12 @@
 			<artifactId>opt-drt</artifactId>
 			<version>0d94df59ec</version>
 		</dependency>
-		
+
 		<dependency>
-	    	<groupId>com.github.matsim-vsp</groupId>
-	    	<artifactId>matsim-analysis</artifactId>
-	    	<version>23bfbfc865</version>
-        </dependency>
+			<groupId>com.github.matsim-vsp</groupId>
+			<artifactId>matsim-analysis</artifactId>
+			<version>23bfbfc865</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
@@ -207,23 +219,23 @@
 		</dependency>
 
 		<dependency>
-		<!-- This is the matsim "freight" contrib: -->
+			<!-- This is the matsim "freight" contrib: -->
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>freight</artifactId>
 			<version>${matsim.version}</version>
 
-		<exclusions>
-		<exclusion>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-		</exclusion>
-		<exclusion>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-		</exclusion>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-api</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-log4j12</artifactId>
+				</exclusion>
 
-    </exclusions> 
-    
+			</exclusions>
+
 		</dependency>
 
 		<!-- for weighted random draw: https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
@@ -299,7 +311,8 @@
 							<outputFile>${project.basedir}/${project.build.finalName}.jar</outputFile>
 							<transformers>
 								<!-- This bit sets the main class for the executable jar as you otherwise would with the assembly plugin -->
-								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<manifestEntries>
 										<Main-Class>org.matsim.run.RunOpenBerlinScenario</Main-Class>
 										<Specification-Vendor>org.matsim</Specification-Vendor>
@@ -308,7 +321,8 @@
 									</manifestEntries>
 								</transformer>
 								<!-- This bit merges the various GeoTools META-INF/services files         -->
-								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
 							</transformers>
 							<filters>
 								<filter>

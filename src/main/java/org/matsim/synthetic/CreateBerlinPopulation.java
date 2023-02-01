@@ -20,7 +20,10 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.scenario.ProjectionUtils;
+import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.core.utils.geometry.geotools.MGC;
+import org.matsim.core.utils.geometry.transformations.GeotoolsTransformation;
+import org.matsim.run.RunOpenBerlinScenario;
 import org.opengis.feature.simple.SimpleFeature;
 import picocli.CommandLine;
 
@@ -60,13 +63,15 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 	@CommandLine.Option(names = "--sample", description = "Sample size to generate", defaultValue = "0.25")
 	private double sample;
 
-
 	private Map<String, MultiPolygon> lors;
 
-	private Random rnd;
+	private SplittableRandom rnd;
 
 	private Population population;
-	long id;
+
+	private final CoordinateTransformation ct = new GeotoolsTransformation("EPSG:25833", "EPSG:25832");
+
+	private long id;
 
 	public static void main(String[] args) {
 		new CreateBerlinPopulation().execute(args);
@@ -82,7 +87,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 
 		List<SimpleFeature> fts = shp.readFeatures();
 
-		rnd = new Random(0);
+		rnd = new SplittableRandom(0);
 		lors = new HashMap<>();
 		population = PopulationUtils.createPopulation(ConfigUtils.createConfig());
 		id = 0;
@@ -91,6 +96,8 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 		for (SimpleFeature ft : fts) {
 			lors.put((String) ft.getAttribute("SCHLUESSEL"), (MultiPolygon) ft.getDefaultGeometry());
 		}
+
+		log.info("Found {} LORs", lors.size());
 
 		CSVFormat.Builder format = CSVFormat.DEFAULT.builder().setDelimiter(';').setHeader().setSkipHeaderRecord(true);
 
@@ -111,8 +118,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 			}
 		}
 
-		// TODO: has same crs as input shape
-		ProjectionUtils.putCRS(population, "EPSG:25833");
+		ProjectionUtils.putCRS(population, RunOpenBerlinScenario.CRS);
 		PopulationUtils.writePopulation(population, output.toString());
 
 		return 0;
@@ -122,6 +128,8 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 
 		String raumID = record.get("RaumID");
 		int n = Integer.parseInt(record.get("Einwohnerinnen und Einwohner (EW) insgesamt"));
+
+		log.info("Processing {} with {} inhabitants", raumID, n);
 
 		double young = FMT.parse(record.get("Anteil der unter 18-Jährigen an Einwohnerinnen und Einwohner (EW) gesamt")).doubleValue() / 100;
 		double old = FMT.parse(record.get("Anteil der 65-Jährigen und älter an Einwohnerinnen und Einwohner (EW) gesamt")).doubleValue() / 100;
@@ -157,7 +165,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 
 		for (int i = 0; i < n * sample; i++) {
 
-			Person person = f.createPerson(Id.createPersonId(id++));
+			Person person = f.createPerson(Id.createPersonId("berlin" + id++));
 			PersonUtils.setSex(person, sex.sample());
 
 			AgeGroup group = ageGroup.sample();
@@ -173,10 +181,13 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 				PersonUtils.setEmployed(person, false);
 			}
 
-			Coord coord = sampleHomeCoordinate(geom);
+			Coord coord = ct.transform(sampleHomeCoordinate(geom, "EPSG:25833", landuse, rnd));
 
-			person.getAttributes().putAttribute("home_x", coord.getX());
-			person.getAttributes().putAttribute("home_y", coord.getY());
+			person.getAttributes().putAttribute(Attributes.HOME_X, coord.getX());
+			person.getAttributes().putAttribute(Attributes.HOME_Y, coord.getY());
+
+			person.getAttributes().putAttribute(Attributes.GEM, 11000000);
+			person.getAttributes().putAttribute(Attributes.LOR, Integer.parseInt(raumID));
 
 			Plan plan = f.createPlan();
 			plan.addActivity(f.createActivityFromCoord("home", coord));
@@ -187,23 +198,26 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 		}
 	}
 
-	private Coord sampleHomeCoordinate(MultiPolygon geometry) {
+	/**
+	 * Samples a home coordinates from geometry and landuse.
+	 */
+	public static Coord sampleHomeCoordinate(MultiPolygon geometry, String crs, LanduseOptions landuse, SplittableRandom rnd) {
 
 		Envelope bbox = geometry.getEnvelopeInternal();
 
 		int i = 0;
 		Coord coord;
 		do {
-			coord = landuse.select("EPSG:25833", () -> new Coord(
+			coord = landuse.select(crs, () -> new Coord(
 					bbox.getMinX() + (bbox.getMaxX() - bbox.getMinX()) * rnd.nextDouble(),
 					bbox.getMinY() + (bbox.getMaxY() - bbox.getMinY()) * rnd.nextDouble()
 			));
 
 			i++;
 
-		} while (!geometry.contains(MGC.coord2Point(coord)) && i < 500);
+		} while (!geometry.contains(MGC.coord2Point(coord)) && i < 1500);
 
-		if (i == 500)
+		if (i == 1500)
 			log.warn("Invalid coordinate generated");
 
 		return coord;
