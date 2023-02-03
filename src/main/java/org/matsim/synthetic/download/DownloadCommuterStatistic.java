@@ -107,7 +107,8 @@ public class DownloadCommuterStatistic implements MATSimAppCommand {
 
 			for (OD od : results) {
 
-				printer.print(od.origin);
+				// commuter codes (pendler) are prefixed with a P which we don't need
+				printer.print(od.origin.replace("P", ""));
 				printer.print(od.destination);
 				printer.print(od.n);
 				printer.println();
