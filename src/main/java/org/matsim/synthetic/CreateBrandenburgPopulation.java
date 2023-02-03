@@ -1,5 +1,7 @@
 package org.matsim.synthetic;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
@@ -31,6 +33,8 @@ import java.util.SplittableRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static org.matsim.synthetic.download.CalculateEmployedPopulation.*;
+
 @CommandLine.Command(
 		name = "brandenburg-population",
 		description = "Create synthetic population for brandenburg."
@@ -43,6 +47,9 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 
 	@CommandLine.Option(names = "--population", description = "Path to population csv (Regional statistic)", required = true)
 	private Path stats;
+
+	@CommandLine.Option(names = "--employees", description = "Path to employees json (See CalculateEmployedPopulation).", required = true)
+	private Path employedPath;
 
 	@CommandLine.Option(names = "--output", description = "Path to output population", required = true)
 	private Path output;
@@ -61,6 +68,9 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 
 	private SplittableRandom rnd;
 	private Population population;
+
+	private Map<Integer, Employment> employed;
+
 	private long id;
 
 	public static void main(String[] args) {
@@ -75,11 +85,9 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 			return 2;
 		}
 
-		// https://github.com/arup-group/osmox
-		// https://github.com/DLR-VF/TAPAS
-
-		// Extraction of working places / e.g. Edeka
-		//
+		employed = new JsonMapper().readerFor(new TypeReference<Map<Integer, Employment>>() {
+				})
+				.readValue(employedPath.toFile());
 
 		// TODO: random LOR, random building -> work facility
 		// 5 plans with different work location per agent
@@ -120,8 +128,6 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 			}
 		}
 
-		// TODO: set employment
-
 		for (Map.Entry<String, SimpleFeature> zone : zones.entrySet()) {
 			if (!found.contains(zone.getKey()))
 				log.warn("Zone not found in population statistic: {} ({})", zone.getValue().getAttribute("GEN"), zone.getKey());
@@ -149,7 +155,16 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 		int low = Integer.parseInt(group[0]);
 		int high = group[1].equals("inf") ? MAX_AGE : Integer.parseInt(group[1]);
 
-		UniformAttributeDistribution<Integer> age = new UniformAttributeDistribution<>(IntStream.range(low, high).boxed().toList());
+		UniformAttributeDistribution<Integer> ageDist = new UniformAttributeDistribution<>(IntStream.range(low, high).boxed().toList());
+
+		// Landkreis
+		int lk = Integer.parseInt(code.substring(0, code.length() - 3));
+		if (!employed.containsKey(lk)) {
+			log.error("No employment for {}", code);
+			return;
+		}
+
+		Entry employed = gender.equals("m") ? this.employed.get(lk).men : this.employed.get(lk).women;
 
 		PopulationFactory f = population.getFactory();
 
@@ -157,11 +172,13 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 
 			Person person = f.createPerson(Id.createPersonId("bb" + id++));
 
-			PersonUtils.setSex(person, gender);
-			PersonUtils.setAge(person, age.sample());
+			int age = ageDist.sample();
 
-			// Initialize unemployed, will be set later
-			PersonUtils.setEmployed(person, false);
+			PersonUtils.setSex(person, gender);
+			PersonUtils.setAge(person, age);
+
+			// All persons will be employed until employed population is empty.
+			PersonUtils.setEmployed(person, employed.subtract(1 / sample, age));
 
 			Coord coord = CreateBerlinPopulation.sampleHomeCoordinate(geom, RunOpenBerlinScenario.CRS, landuse, rnd);
 
@@ -174,9 +191,11 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 			plan.addActivity(f.createActivityFromCoord("home", coord));
 
 			person.addPlan(plan);
+			person.setSelectedPlan(plan);
 
 			population.addPerson(person);
 
 		}
 	}
+
 }

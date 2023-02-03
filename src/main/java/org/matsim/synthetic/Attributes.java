@@ -17,4 +17,11 @@ public final class Attributes {
 
 	public static final String RegioStaR7 = "RegioStaR7";
 
+
+	/**
+	 * Work commute destination.
+	 */
+	public static final String COMMUTE = "commute";
+
+
 }

@@ -87,6 +87,7 @@ public class DownloadCommuterStatistic implements MATSimAppCommand {
 				try {
 					result = downloadGemeinde(client, gemeinde);
 				} catch (IOException e) {
+					log.error("Error retrieving stats", e);
 					Thread.sleep(15_000);
 					continue;
 				}

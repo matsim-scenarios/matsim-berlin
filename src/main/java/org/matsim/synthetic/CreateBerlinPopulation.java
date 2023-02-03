@@ -193,6 +193,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 			plan.addActivity(f.createActivityFromCoord("home", coord));
 
 			person.addPlan(plan);
+			person.setSelectedPlan(plan);
 
 			population.addPerson(person);
 		}

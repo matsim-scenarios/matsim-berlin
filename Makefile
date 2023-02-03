@@ -22,13 +22,8 @@ ${SHP_FILES}:
 input/brandenburg.osm.pbf:
 	curl https://download.geofabrik.de/europe/germany/brandenburg-230101.osm.pbf -o $@
 
-input/brandenburg_facilities.osm.pbf: input/brandenburg.osm.pbf
-	$(osmosis) --rb file=$<\
-	 --tf accept-ways landuse=* building=* shop=* office=* sport=* amenity=* leisure=* tourism=* industrial=*\
-     --tf reject-relations\
-	 --used-node --wb $@
 
-input/brandenburg_epsg_25832.geojson: input/brandenburg_facilities.osm.pbf
+input/brandenburg_epsg_25832.geojson: input/brandenburg.osm.pbf
 	osmox run input/facilities.json $< brandenburg -crs epsg:25832
 
 $(germany)/RegioStaR-Referenzdateien.xlsx:
@@ -38,6 +33,12 @@ input/landuse.shp: ${SHP_FILES}
 	mkdir -p input/landuse
 	java -Xmx20G -jar $(JAR) prepare create-landuse-shp $^\
 	 --target-crs ${CRS}\
+	 --output $@
+
+input/facilities.shp: input/brandenburg.osm.pbf
+	java -jar $(JAR) prepare facilities\
+	 --activity-mapping input/activity_mapping.json\
+	 --input $<\
 	 --output $@
 
 input/PLR_2013_2020.csv:
@@ -62,15 +63,32 @@ $p/brandeburg-only-$V-25pct.plans.xml.gz: input/landuse.shp
 	java -jar $(JAR) prepare brandenburg-population\
 	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp\
 	 --population $(germany)/regionalstatistik/population.csv\
+	 --employees $(germany)/regionalstatistik/employed.json\
  	 --landuse $< --landuse-filter residential\
  	 --output $@
 
-$p/berlin-$V-25pct.plans.xml.gz: $p/berlin-only-$V-25pct.plans.xml.gz $p/brandeburg-only-$V-25pct.plans.xml.gz
+$p/berlin-static-$V-25pct.plans.xml.gz: $p/berlin-only-$V-25pct.plans.xml.gz $p/brandeburg-only-$V-25pct.plans.xml.gz
 	java -jar $(JAR) prepare merge-populations $^\
 	 --output $@
 
 	java -jar $(JAR) prepare lookup-regiostar --input $@ --output $@ --xls $(germany)/RegioStaR-Referenzdateien.xlsx
 
+	java -jar $(JAR) prepare assign-commuters --input $@ --output $@
+
+	# For debugging and visualization
+	java -jar $(JAR) prepare downsample-population $@\
+     	 --sample-size 0.25\
+     	 --samples 0.1\
+
+
+$p/berlin-$V-25pct.plans.xml.gz: $p/berlin-static-$V-25pct.plans.xml.gz input/facilities.shp
+	java -jar $(JAR) prepare actitopp\
+	 --input $< --output $@\
+	 --shp $(word 2,$^)
+
+	java -jar $(JAR) prepare downsample-population $@\
+     	 --sample-size 0.25\
+     	 --samples 0.1 0.01\
 
 prepare: $p/berlin-$V-25pct.plans.xml.gz
 	echo "Done"
