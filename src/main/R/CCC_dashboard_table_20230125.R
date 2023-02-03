@@ -14,7 +14,8 @@ print("#########################################################################
 #########################################################################################################
 ## expanding grid with measures
 
-mautFossil="mautFossil"
+mautFossil <- "mautFossil"
+kiezbloeckeGanzeStadt <- "ganze Stadt"
 
 frame <- expand.grid(OePNV = c("base","dekarbonisiert"),
                   kiezblocks = c("base","stark"),
@@ -70,15 +71,18 @@ measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten"
 massnahme <- "kiezblocks"
 auspraegung <- "stark"
 
-# Gleiche Annahme wie bei Fahrrad
+# Im Ruhrgebiet hatten wir für Kiezblöcke mit _Sperrung_ für Autos Absenkung modal split von 36% auf 27%, also 23% weg.  Wenn wir nicht für die Autos
+# sperren, sondern nur Schritttempo plus keine Durchfahrt, dann erwarten wir ca. 1/2 der Wirkung, also 11.5%, gerundet 10%.  Das ist wohl auch
+# halbwegs konsistent mit Leipzig (dort wurde gesperrt, aber kleinere Blöcke als Ruhr).
 
-measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2"*0.9,measures$"CO2")
+measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2" * 0.9,measures$"CO2")
 
-measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic"*0.9,measures$"traffic")
-measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking"*0.95,measures$"parking")
+measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic" * 0.9,measures$"traffic")
+
+measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking" * 0.95,measures$"parking")
 # Annahme: Jede zweite Person schafft ihr Auto ab.
 
-measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 5,measures$"Kosten")
+measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 10,measures$"Kosten")
 # https://docs.google.com/spreadsheets/d/1pHne8cdCsSHKrH0WI6YFU2Ocv7RBMFR58T50n1KswFY/edit#gid=691888471
 
 ########################################################################################################## DRT
