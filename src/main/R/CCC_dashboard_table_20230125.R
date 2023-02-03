@@ -60,8 +60,10 @@ measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffi
 measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking"*0.95,measures$"parking")
 # Annahme: Jede zweite Person schafft ihr Auto ab.
 
-measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 133.,measures$"Kosten")
-# Kosten ca. 1000Eu/qm.  1000km Radwegnetz.  4 Meter Breite.  4 * 1000 * 1000 * 1000 = 4e9.  Abgeschrieben 30J = 133 Mio/J.
+measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 70,measures$"Kosten")
+# Kosten ca. 1000Eu/qm.  1000km Radwegnetz.  4 Meter Breite.  4 * 1000 * 1000 * 1000 = 4e9.  Abgeschrieben 30J = 133 Mio/J.'
+# Kosten 70 Mio /J auf 10 Jahre: 100km RSV + 850km Vorrangnetz + 1500km Ausbau
+
 
 ########################################################################################################## Superblocks/Kiezblocks
 
@@ -76,8 +78,8 @@ measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffi
 measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking"*0.95,measures$"parking")
 # Annahme: Jede zweite Person schafft ihr Auto ab.
 
-measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 3.3,measures$"Kosten")
-# Annahme: kaum Kosten
+measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 5,measures$"Kosten")
+# https://docs.google.com/spreadsheets/d/1pHne8cdCsSHKrH0WI6YFU2Ocv7RBMFR58T50n1KswFY/edit#gid=691888471
 
 ########################################################################################################## DRT
 
@@ -299,7 +301,11 @@ auspraegung <- "dekarbonisiert"
 
 measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2"*0.99,measures$"CO2")
 
-measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 65,measures$"Kosten")
+# BVG hat ca. 1500 Busse.  Halten ca. 15 Jahre, also 100 neu pro Jahr.  E-Busse kosten ca. 680k, angeblich 3x so teuer wie fossile Busse.  Wir rechnen
+# nur die Mehrkosten wg. El, also 2/3 * 680 = 450kEu.  Mal 100 = 45Mio/Jahr.  An anderer Stelle berichtet BVG 65Mio für 90 Ebusse plus Infra.  Davon
+# müsste man aber die ohnehin entstehenden Kosten für fossile Busse wieder abziehen.
+# https://docs.google.com/spreadsheets/d/1pHne8cdCsSHKrH0WI6YFU2Ocv7RBMFR58T50n1KswFY/edit#gid=691888471
+measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 50,measures$"Kosten")
 
 # no consequences on moving/non-moving traffic:
 #measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic",measures$"traffic")
