@@ -4,7 +4,7 @@ library(tidyverse)
 library(lubridate)
 library(viridis)
 library(dplyr)
-library(utils) 
+library(utils)
 #########################################################################################################
 #########################################################################################################
 # options(error=function() { traceback(2); if(!interactive()) quit("no", status = 1, runLast = FALSE) })
@@ -17,7 +17,7 @@ print("#########################################################################
 mautFossil <- "mautFossil"
 kiezbloeckeGanzeStadt <- "ganze Stadt"
 
-frame <- expand.grid(OePNV = c("base","dekarbonisiert"),
+frame <- utils::expand.grid(OePNV = c("base","dekarbonisiert"),
                   kiezblocks = c("base","stark"),
                   Fahrrad = c("base","stark"), 
                   fahrenderVerkehr = c("base",mautFossil,"MautFuerAlle","zeroEmissionsZone","autofrei"),
@@ -30,11 +30,11 @@ frame <- expand.grid(OePNV = c("base","dekarbonisiert"),
 
 ## adding output values: CO2, Kosten, Menge fließender Verkehr, Menge stehender Verkehr
 ## value in relation (1.00 = 100%)
-CO2 = c(1.00)
-traffic = c(1.00)
-parking = c(1.00)
+CO2 <- c(1.00)
+traffic <- c(1.00)
+parking <- c(1.00)
 
-Kosten = c(0.00)
+Kosten <- c(0.00)
 # (need to decide on some unit, i.e. mio Eu/d.  This may also not be
 # easy since, say, toll revenue is different if other measures
 # (bicycle, improve pt, Kiezblöcke) are around or not.)  Vllt müssen
@@ -336,3 +336,4 @@ measures$"CO2" <- ifelse( measures$"CO2" < 0.01, 0.0, measures$"CO2")
 write.csv(measures, "CCC_dashboard.csv", row.names=FALSE)
 
 print("done")
+
