@@ -1,9 +1,9 @@
 ## loading packages
-library(tidyr)
-library(tidyverse)
-library(lubridate)
-library(viridis)
-library(dplyr)
+# library(tidyr)
+# library(tidyverse)
+# library(lubridate)
+# library(viridis)
+# library(dplyr)
 library(utils)
 #########################################################################################################
 #########################################################################################################
@@ -17,7 +17,7 @@ print("#########################################################################
 mautFossil <- "mautFossil"
 kiezbloeckeGanzeStadt <- "ganze Stadt"
 
-frame <- utils::expand.grid(OePNV = c("base","dekarbonisiert"),
+frame <- expand.grid(OePNV = c("base","dekarbonisiert"),
                   kiezblocks = c("base","stark"),
                   Fahrrad = c("base","stark"), 
                   fahrenderVerkehr = c("base",mautFossil,"MautFuerAlle","zeroEmissionsZone","autofrei"),
