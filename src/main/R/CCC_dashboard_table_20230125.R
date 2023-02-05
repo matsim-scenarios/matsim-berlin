@@ -35,12 +35,7 @@ traffic <- c(1.00)
 parking <- c(1.00)
 
 Kosten <- c(0.00)
-# (need to decide on some unit, i.e. mio Eu/d.  This may also not be
-# easy since, say, toll revenue is different if other measures
-# (bicycle, improve pt, Kiezblöcke) are around or not.)  Vllt müssen
-# wir die Kosten am Ende eintragen?  Wir sollten m.E. auf jeden Fall
-# MATSim-units nehmen, also Kosten pro Tag.  Und ggf. am Ende
-# umrechnen oder beides ausweisen.
+# Das sind jetzt mio Eu / Jahr.  Am Ende fügen wir noch Eu / (Kopf * Monat).
 
 measures <- cbind(frame,CO2,Kosten,traffic,parking)
 #########################################################################################################
@@ -319,8 +314,13 @@ measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten"
 
 ############################################
 ############################################
+measures$"KostenProKopfUndMonat" <- measures$"Kosten"/12/3.800000
+# (wir dividieren nur durch 3.8 statt 3.8 Mio, weil wir die "Mio" aus der Einheit rausnehmen)
+
 # adding "1" to costs since this is decucted by the dashboard.  And then we divide by 100 to compensate for the % sign. (no, other way round)
 measures$"Kosten" <- (measures$"Kosten"/100)+1
+measures$"KostenProKopfUndMonat" <- (measures$"KostenProKopfUndMonat"/100)+1
+
 
 ############################################
 ############################################
