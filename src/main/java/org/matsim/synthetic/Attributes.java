@@ -9,6 +9,8 @@ public final class Attributes {
 	 * Gemeinde code.
 	 */
 	public static final String GEM = "gem";
+	public static final String ARS = "ars";
+
 
 	/**
 	 * LOR for Berlin
@@ -19,9 +21,10 @@ public final class Attributes {
 
 
 	/**
-	 * Work commute destination.
+	 * Work / edu commute destination.
 	 */
 	public static final String COMMUTE = "commute";
+	public static final String COMMUTE_KM = "commute_km";
 
 
 }

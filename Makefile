@@ -5,7 +5,7 @@ V := v6.0
 CRS := EPSG:25832
 
 p := input/$V
-germany := ../shared-svn/projects/matsim-germany/
+germany := ../shared-svn/projects/matsim-germany
 berlin := ../public-svn/matsim/scenarios/countries/de/berlin/berlin-$V
 
 REGIONS := brandenburg
@@ -73,7 +73,10 @@ $p/berlin-static-$V-25pct.plans.xml.gz: $p/berlin-only-$V-25pct.plans.xml.gz $p/
 
 	java -jar $(JAR) prepare lookup-regiostar --input $@ --output $@ --xls $(germany)/RegioStaR-Referenzdateien.xlsx
 
-	java -jar $(JAR) prepare assign-commuters --input $@ --output $@
+	java -jar $(JAR) prepare assign-commuters\
+	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp\
+	 --commuter $(germany)/regionalstatistik/commuter.csv\
+	 --input $@ --output $@
 
 	# For debugging and visualization
 	java -jar $(JAR) prepare downsample-population $@\

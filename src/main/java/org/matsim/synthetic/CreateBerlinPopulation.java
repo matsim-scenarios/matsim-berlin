@@ -187,6 +187,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 			person.getAttributes().putAttribute(Attributes.HOME_Y, coord.getY());
 
 			person.getAttributes().putAttribute(Attributes.GEM, 11000000);
+			person.getAttributes().putAttribute(Attributes.ARS, 110000000000L);
 			person.getAttributes().putAttribute(Attributes.LOR, Integer.parseInt(raumID));
 
 			Plan plan = f.createPlan();

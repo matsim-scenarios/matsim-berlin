@@ -36,12 +36,12 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 	@CommandLine.Mixin
 	private ShpOptions shp;
 
+	private ModelFileBase fileBase;
 	private PopulationFactory factory;
 	private int index;
 
-	private static final ModelFileBase fileBase = new ModelFileBase();
-	private static final RNGHelper rng = new RNGHelper(1);
-	private static final SplittableRandom rnd = new SplittableRandom(1);
+	private final RNGHelper rng = new RNGHelper(1);
+	private final SplittableRandom rnd = new SplittableRandom(1);
 
 	public static void main(String[] args) throws InvalidPatternException {
 		new RunActitopp().execute(args);
@@ -54,6 +54,8 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 			log.error("Activity shape file is required");
 			return 2;
 		}
+
+		fileBase = new ModelFileBase();
 
 		Population population = PopulationUtils.readPopulation(input.toString());
 		factory = population.getFactory();
@@ -119,27 +121,39 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 	 */
 	private void convertDay(int weekDay, List<HActivity> activities, Plan plan, Coord homeCoord) {
 
-		// schedule is relative to start of week
-		int offset = weekDay * 1440;
+		Activity a = null;
 
 		for (HActivity act : activities) {
 
 			if (act.getDay().getWeekday() != weekDay)
 				continue;
 
-			int start = act.getStartTime() - offset;
-
 			if (plan.getPlanElements().isEmpty() && !act.isHomeActivity()) {
 				Activity home = factory.createActivityFromCoord("home", homeCoord);
 				plan.addActivity(home);
 			}
 
-			Activity a = factory.createActivityFromLinkId(act.getActivityType().name(), Id.createLinkId("unassiged"));
-			a.setStartTime(start * 60);
+			if (act.isHomeActivity()) {
+				a = factory.createActivityFromCoord("home", homeCoord);
+			} else
+				a = factory.createActivityFromLinkId(act.getActivityType().name(), Id.createLinkId("unassiged"));
+
+			// TODO: activity name is not normalized
+
+			a.setStartTime(act.getStartTime() * 60);
 			a.setMaximumDuration(act.getDuration() * 60);
 
-			plan.addLeg(factory.createLeg("walk"));
+			// No leg needed for first activity
+			if (!plan.getPlanElements().isEmpty())
+				plan.addLeg(factory.createLeg("walk"));
+
 			plan.addActivity(a);
+		}
+
+		// Last home activity has no end time and duration
+		if (a != null && a.getType().equals("home")) {
+			a.setEndTimeUndefined();
+			a.setMaximumDurationUndefined();
 		}
 	}
 
@@ -193,6 +207,8 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 
 		// TODO from data
 		int numberofcarsinhousehold = rnd.nextInt(0, 3);
+
+		// TODO: commuting distances
 
 		return new ActitoppPerson(index++, children0_10, children_u18, age, employment,
 				gender, areaType, numberofcarsinhousehold);

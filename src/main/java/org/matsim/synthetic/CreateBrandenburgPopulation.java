@@ -2,6 +2,7 @@ package org.matsim.synthetic;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
@@ -63,8 +64,7 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 	@CommandLine.Mixin
 	private LanduseOptions landuse = new LanduseOptions();
 
-	@CommandLine.Mixin
-	private CsvOptions csv = new CsvOptions();
+	private final CsvOptions csv = new CsvOptions(CSVFormat.Predefined.Default);
 
 	private SplittableRandom rnd;
 	private Population population;
@@ -121,7 +121,7 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 
 				if (zones.containsKey(code)) {
 
-					addPersons(record, code, (MultiPolygon) zones.get(code).getDefaultGeometry());
+					addPersons(record, code, (String) zones.get(code).getAttribute("ARS"), (MultiPolygon) zones.get(code).getDefaultGeometry());
 
 					found.add(code);
 				}
@@ -144,7 +144,7 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 	/**
 	 * Add number of persons to the population according to entry.
 	 */
-	private void addPersons(CSVRecord r, String code, MultiPolygon geom) {
+	private void addPersons(CSVRecord r, String code, String ars, MultiPolygon geom) {
 
 		int n = Integer.parseInt(r.get("n"));
 
@@ -186,6 +186,7 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 			person.getAttributes().putAttribute(Attributes.HOME_Y, coord.getY());
 
 			person.getAttributes().putAttribute(Attributes.GEM, Integer.parseInt(code));
+			person.getAttributes().putAttribute(Attributes.ARS, Long.parseLong(ars));
 
 			Plan plan = f.createPlan();
 			plan.addActivity(f.createActivityFromCoord("home", coord));
