@@ -317,10 +317,24 @@ measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten"
 measures$"KostenProKopfUndMonat" <- measures$"Kosten"/12/3.800000
 # (wir dividieren nur durch 3.8 statt 3.8 Mio, weil wir die "Mio" aus der Einheit rausnehmen)
 
+
+# adjust to 10pct steps.  Does not yet work exactly as intended.
+
+kpi <- "CO2"
+measures$kpi <- round( measures$kpi * 10) / 10
+
+kpi <- "parking"
+measures$kpi <- round( measures$kpi * 10) / 10
+
+kpi <- "traffic"
+measures$kpi <- round( measures$kpi * 10) / 10
+
+# measures$"parking" <- ifelse( measures$"parking" > 0.05, round(measures$"parking"*10)/10, measures$"parking")
+# measures$"traffic" <- ifelse( measures$"traffic" > 0.05, round(measures$"traffic"*10)/10, measures$"traffic")
+
 # adding "1" to costs since this is decucted by the dashboard.  And then we divide by 100 to compensate for the % sign. (no, other way round)
 measures$"Kosten" <- (measures$"Kosten"/100)+1
 measures$"KostenProKopfUndMonat" <- (measures$"KostenProKopfUndMonat"/100)+1
-
 
 ############################################
 ############################################
