@@ -20,7 +20,7 @@ kiezbloeckeGanzeStadt <- "ganze Stadt"
 frame <- expand.grid(OePNV = c("base","dekarbonisiert"),
                   kiezblocks = c("base","stark"),
                   Fahrrad = c("base","stark"), 
-                  fahrenderVerkehr = c("base",mautFossil,"MautFuerAlle","zeroEmissionsZone","autofrei"),
+                  fahrenderVerkehr = c("base",mautFossil,"MautFuerAlle","zeroEmissionsZone","zeroEmissionsZonePlusMaut","autofrei"),
                   DRT = c("base","nurAussenbezirke","ganzeStadt"),
                   Parkraum = c("base","Besucher_teuer_Anwohner_preiswert","Besucher_teuer_Anwohner_teuer")
                   )
@@ -181,7 +181,7 @@ massnahme <- "fahrenderVerkehr"
 auspraegung <- "MautFuerAlle"
 # 20ct/km
 
-traffRed=0.5
+traffRed<-0.5
 
 measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2"*traffRed,measures$"CO2")
 
@@ -222,6 +222,19 @@ measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten"
 measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic",measures$"traffic")
 
 measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking",measures$"parking")
+
+# --------------------------------------------
+
+auspraegung <- "zeroEmissionsZonePlusMaut"
+
+measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2"*0.01,measures$"CO2")
+
+measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" + 0.01 ,measures$"Kosten")
+# Schilder, Durchsetzung, etc.
+
+measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic"*traffRed,measures$"traffic")
+
+measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking"*traffRed,measures$"parking")
 
 # --------------------------------------------
 
