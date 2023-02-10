@@ -19,8 +19,9 @@ kiezbloeckeGanzeStadt <- "ganze Stadt"
 
 frame <- expand.grid(OePNV = c("base","dekarbonisiert"),
                   kiezblocks = c("base","stark"),
-                  Fahrrad = c("base","stark"), 
-                  fahrenderVerkehr = c("base",mautFossil,"MautFuerAlle","zeroEmissionsZone","zeroEmissionsZonePlusMaut","autofrei"),
+                  Fahrrad = c("base","stark"),
+                     # fahrenderVerkehr = c("base",mautFossil,"MautFuerAlle","zeroEmissionsZone","zeroEmissionsZonePlusMaut","autofrei"),
+                     fahrenderVerkehr = c("base","zeroEmissionsZone","zeroEmissionsZonePlusMaut","autofrei"),
                   DRT = c("base","nurAussenbezirke","ganzeStadt"),
                   Parkraum = c("base","Besucher_teuer_Anwohner_preiswert","Besucher_teuer_Anwohner_teuer")
                   )
@@ -177,39 +178,41 @@ measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten"
 massnahme <- "fahrenderVerkehr"
 
 # --------------------------------------------
-
-auspraegung <- "MautFuerAlle"
-# 20ct/km
-
-traffRed<-0.5
-
-measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2"*traffRed,measures$"CO2")
-
-measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic"*traffRed,measures$"traffic")
-# DRT müsste irgendwie separat dazu kommen.
-
-measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking"*traffRed,measures$"parking")
-# (Auto-Abschaffung analog CO2-Reduktion)
-
-measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 4*365,measures$"Kosten")
-# 4 Mio Einnahmen pro Tag.  Habe ich jetzt 1:1 eingetragen.  Umrechungen ggf. am Ende.
-
-# --------------------------------------------
-
-auspraegung <- mautFossil
-
-measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2"*0.5,measures$"CO2")
-# ähnliche Wirkung auf wie "Maut für alle".  Wirkt intuitiv richtig, aber warum?
-
-measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic"*0.75,measures$"traffic")
-# Eine Hälfte zahlt Maut, die andere wechselt auf nicht-fossiles Auto.
-
-measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking"*0.75,measures$"parking")
-# Eine Hälfte zahlt Maut, die andere wechselt auf nicht-fossiles Auto.
-
-measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 2*365,measures$"Kosten")
-# Annahme: 1/2 * MautFürAlle
-
+# # --------------------------------------------
+#
+# auspraegung <- "MautFuerAlle"
+# # 20ct/km
+#
+traffRed<-0.6
+#
+# measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2"*traffRed,measures$"CO2")
+#
+# measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic"*traffRed,measures$"traffic")
+# # DRT müsste irgendwie separat dazu kommen.
+#
+# measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking"*traffRed,measures$"parking")
+# # (Auto-Abschaffung analog CO2-Reduktion)
+#
+# measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 4*365,measures$"Kosten")
+# # 4 Mio Einnahmen pro Tag.  Habe ich jetzt 1:1 eingetragen.  Umrechungen ggf. am Ende.
+#
+# # --------------------------------------------
+#
+# auspraegung <- mautFossil
+#
+# measures$"CO2" <- ifelse(measures[[massnahme]]==auspraegung,measures$"CO2"*0.5,measures$"CO2")
+# # ähnliche Wirkung auf wie "Maut für alle".  Wirkt intuitiv richtig, aber warum?
+#
+# measures$"traffic" <- ifelse(measures[[massnahme]]==auspraegung,measures$"traffic"*0.75,measures$"traffic")
+# # Eine Hälfte zahlt Maut, die andere wechselt auf nicht-fossiles Auto.
+#
+# measures$"parking" <- ifelse(measures[[massnahme]]==auspraegung,measures$"parking"*0.75,measures$"parking")
+# # Eine Hälfte zahlt Maut, die andere wechselt auf nicht-fossiles Auto.
+#
+# measures$"Kosten" <- ifelse(measures[[massnahme]]==auspraegung,measures$"Kosten" - 2*365,measures$"Kosten")
+# # Annahme: 1/2 * MautFürAlle
+#
+# # --------------------------------------------
 # --------------------------------------------
 
 auspraegung <- "zeroEmissionsZone"
