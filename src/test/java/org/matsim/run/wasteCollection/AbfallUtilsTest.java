@@ -30,7 +30,7 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.freight.carrier.Carrier;
 import org.matsim.contrib.freight.carrier.Carriers;
-import org.matsim.contrib.freight.utils.FreightUtils;
+import org.matsim.contrib.freight.controler.FreightUtils;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.scenario.ScenarioUtils;
@@ -74,7 +74,7 @@ public class AbfallUtilsTest {
 		for (Carrier singleCarrier : carrierMap.values()) {
 			Assert.assertNotNull(singleCarrier);
 		}
-		
+
 		config = AbfallUtils.prepareConfig(config, 0, vehicleTypesFileLocation, inputCarriersWithMediumBatteryVehicle);
 		scenario = ScenarioUtils.loadScenario(config);
 		FreightUtils.loadCarriersAccordingToFreightConfig(scenario);

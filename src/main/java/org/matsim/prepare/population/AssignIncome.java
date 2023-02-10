@@ -24,6 +24,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.gbl.MatsimRandom;
+import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.PopulationUtils;
 import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
@@ -49,7 +50,7 @@ public class AssignIncome {
 					return subpopulation != null && subpopulation.equals("person"); //only assign income to person subpopulation (not to freight etc.)
 				})
 				//don't overwrite income attribute (input plans may have income attributes already)
-				.filter(person -> person.getAttributes().getAttribute(IncomeDependentUtilityOfMoneyPersonScoringParameters.PERSONAL_INCOME_ATTRIBUTE_NAME) == null)
+				.filter(person -> PersonUtils.getIncome(person) == null)
 				.forEach(person -> {
 						double income = 0.;
 						double rndDouble = rnd.nextDouble();
@@ -67,7 +68,7 @@ public class AssignIncome {
 						else {
 							throw new RuntimeException("Aborting..." + rndDouble);
 						}
-						person.getAttributes().putAttribute(IncomeDependentUtilityOfMoneyPersonScoringParameters.PERSONAL_INCOME_ATTRIBUTE_NAME, income);
+						PersonUtils.setIncome(person, income);
 				});
 
 		log.info("finished");

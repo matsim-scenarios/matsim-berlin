@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<translations>
+
+    <translation>
+        <name>Remove railways</name>
+        <description>
+            Remove all railway information.
+        </description>
+        <match mode="or">
+            <tag k="railway" match_id="1" v=".*"/>
+            <tag k="electrified" match_id="2" v=".*"/>
+            <tag k="voltage" match_id="3" v=".*"/>
+            <tag k="gauge" match_id="4" v=".*"/>
+        </match>
+        <output>
+            <copy-unmatched/>
+        </output>
+    </translation>
+
+</translations>

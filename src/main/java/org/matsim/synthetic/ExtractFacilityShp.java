@@ -29,7 +29,6 @@ import org.locationtech.jts.geom.*;
 import org.locationtech.jts.index.strtree.STRtree;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.options.CrsOptions;
-import org.matsim.application.options.ShpOptions;
 import org.matsim.run.RunOpenBerlinScenario;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -43,12 +42,12 @@ import java.nio.file.Path;
 import java.util.*;
 
 @CommandLine.Command(
-		name = "facilities",
+		name = "facility-shp",
 		description = "Generate facility shape file from OSM data."
 )
-public class ExtractFacilities implements MATSimAppCommand {
+public class ExtractFacilityShp implements MATSimAppCommand {
 
-	private static final Logger log = LogManager.getLogger(ExtractFacilities.class);
+	private static final Logger log = LogManager.getLogger(ExtractFacilityShp.class);
 	private static final double POI_BUFFER = 6;
 
 	/**
@@ -92,7 +91,7 @@ public class ExtractFacilities implements MATSimAppCommand {
 	private int ignored;
 
 	public static void main(String[] args) {
-		new ExtractFacilities().execute(args);
+		new ExtractFacilityShp().execute(args);
 	}
 
 	@Override

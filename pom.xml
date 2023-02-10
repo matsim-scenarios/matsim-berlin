@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.matsim-scenarios</groupId>
 	<artifactId>matsim-berlin</artifactId>
-	<version>5.6.x-SNAPSHOT</version>
+	<version>6.x-SNAPSHOT</version>
 
 	<name>MATSim Open Berlin scenario project</name>
 	<description>MATSim Open Berlin scenario project</description>
@@ -14,7 +14,7 @@
 		<!--<matsim.version>13.0</matsim.version>-->
 
 		<!-- PR-labelled release -->
-		<matsim.version>15.0-PR2223</matsim.version>
+		<matsim.version>15.0-PR2406</matsim.version>
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
 		<!--<matsim.version>14.0-SNAPSHOT</matsim.version>-->
@@ -105,6 +105,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>locationchoice</artifactId>
+			<version>${matsim.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>com.github.kit-ifv</groupId>
 			<artifactId>actitopp</artifactId>
 			<version>1.9.1</version>
@@ -172,11 +179,11 @@
 		<dependency>
 			<groupId>com.github.matsim-org</groupId>
 			<artifactId>gtfs2matsim</artifactId>
-			<version>13.0</version>
+			<version>master-33809c4f0f-1</version>
 			<exclusions>
 				<exclusion>
-					<artifactId>gt-epsg-hsql</artifactId>
-					<groupId>org.geotools</groupId>
+					<groupId>org.matsim</groupId>
+					<artifactId>matsim</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>

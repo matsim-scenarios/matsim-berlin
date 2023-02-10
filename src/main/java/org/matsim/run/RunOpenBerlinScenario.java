@@ -12,7 +12,7 @@ import picocli.CommandLine;
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = RunOpenBerlinScenario.VERSION, mixinStandardHelpOptions = true)
 @MATSimApplication.Prepare({
 		CreateLandUseShp.class, CreateBerlinPopulation.class, CreateBrandenburgPopulation.class, MergePopulations.class,
-		LookupRegioStaR.class, ExtractFacilities.class, DownSamplePopulation.class, DownloadCommuterStatistic.class,
+		LookupRegioStaR.class, ExtractFacilityShp.class, DownSamplePopulation.class, DownloadCommuterStatistic.class,
 		AssignCommuters.class, RunActitopp.class
 })
 public class RunOpenBerlinScenario extends MATSimApplication {
