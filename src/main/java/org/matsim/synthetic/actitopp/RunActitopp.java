@@ -36,12 +36,10 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 	@CommandLine.Mixin
 	private ShpOptions shp;
 
-	private ModelFileBase fileBase;
 	private PopulationFactory factory;
 	private int index;
 
-	private final RNGHelper rng = new RNGHelper(1);
-	private final SplittableRandom rnd = new SplittableRandom(1);
+	private ThreadLocal<Context> tl;
 
 	public static void main(String[] args) throws InvalidPatternException {
 		new RunActitopp().execute(args);
@@ -55,14 +53,14 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 			return 2;
 		}
 
-		fileBase = new ModelFileBase();
-
 		Population population = PopulationUtils.readPopulation(input.toString());
 		factory = population.getFactory();
 
 		log.info("Generating activity chains...");
 
-		ParallelPersonAlgorithmUtils.run(population, 1, this);
+		tl = ThreadLocal.withInitial(Context::new);
+
+		ParallelPersonAlgorithmUtils.run(population, 8, this);
 
 		PopulationUtils.writePopulation(population, output.toString());
 
@@ -76,7 +74,13 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 		if (PersonUtils.getAge(person) < 10)
 			return;
 
-		ActitoppPerson ap = convertPerson(person);
+		Context ctx = tl.get();
+
+		ActitoppPerson ap = convertPerson(person, ctx.rnd);
+
+		if (PersonUtils.isEmployed(person)) {
+			ap.setCommutingdistance_work((double) person.getAttributes().getAttribute(Attributes.COMMUTE_KM));
+		}
 
 		boolean scheduleOK = false;
 		int tries = 0;
@@ -86,12 +90,11 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 				Coord homeCoord = new Coord((Double) person.getAttributes().getAttribute(Attributes.HOME_X),
 						(Double) person.getAttributes().getAttribute(Attributes.HOME_Y));
 
-				ap.generateSchedule(fileBase, rng);
+				ap.generateSchedule(ctx.fileBase, ctx.rng);
 
 				// choose random tuesday, wednesday, thursday
 				HWeekPattern week = ap.getWeekPattern();
-				HDay day = week.getDay(rnd.nextInt(2, 5));
-
+				HDay day = week.getDay(ctx.rnd.nextInt(2, 5));
 
 				if (!day.isHomeDay()) {
 
@@ -136,9 +139,7 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 			if (act.isHomeActivity()) {
 				a = factory.createActivityFromCoord("home", homeCoord);
 			} else
-				a = factory.createActivityFromLinkId(act.getActivityType().name(), Id.createLinkId("unassiged"));
-
-			// TODO: activity name is not normalized
+				a = factory.createActivityFromLinkId(getActivityType(act.getActivityType()), Id.createLinkId("unassigned"));
 
 			a.setStartTime(act.getStartTime() * 60);
 			a.setMaximumDuration(act.getDuration() * 60);
@@ -157,10 +158,17 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 		}
 	}
 
+	private String getActivityType(ActivityType activityType) {
+		if (activityType == ActivityType.TRANSPORT || activityType == ActivityType.UNKNOWN) {
+			return "other";
+		}
+		return activityType.name().toLowerCase();
+	}
+
 	/**
 	 * Convert actitopp person into matsim.
 	 */
-	private ActitoppPerson convertPerson(Person p) {
+	private ActitoppPerson convertPerson(Person p, SplittableRandom rnd) {
 		// TODO: from data
 		int children0_10 = rnd.nextInt(0, 2);
 		int children_u18 = rnd.nextInt(0, 2);
@@ -208,10 +216,22 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 		// TODO from data
 		int numberofcarsinhousehold = rnd.nextInt(0, 3);
 
-		// TODO: commuting distances
+		// TODO: edu commuting distances
 
 		return new ActitoppPerson(index++, children0_10, children_u18, age, employment,
 				gender, areaType, numberofcarsinhousehold);
+	}
+
+	/**
+	 * Context for one thread.
+	 */
+	private static final class Context {
+
+		private final ModelFileBase fileBase = new ModelFileBase();
+		;
+		private final RNGHelper rng = new RNGHelper(1);
+		private final SplittableRandom rnd = new SplittableRandom(1);
+
 	}
 
 }

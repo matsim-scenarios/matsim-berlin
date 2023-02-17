@@ -30,7 +30,7 @@ import picocli.CommandLine;
 		CreateLandUseShp.class, CreateBerlinPopulation.class, CreateBrandenburgPopulation.class, MergePopulations.class,
 		LookupRegioStaR.class, ExtractFacilityShp.class, DownSamplePopulation.class, DownloadCommuterStatistic.class,
 		AssignCommuters.class, RunActitopp.class, CreateNetworkFromSumo.class, CreateTransitScheduleFromGtfs.class,
-		CleanNetwork.class, CreateMATSimFacilities.class
+		CleanNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
 

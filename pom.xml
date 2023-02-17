@@ -6,8 +6,8 @@
 	<artifactId>matsim-berlin</artifactId>
 	<version>6.x-SNAPSHOT</version>
 
-	<name>MATSim Open Berlin scenario project</name>
-	<description>MATSim Open Berlin scenario project</description>
+	<name>MATSim Open Berlin scenario</name>
+	<description>MATSim Open Berlin scenario</description>
 
 	<properties>
 		<!-- release -->

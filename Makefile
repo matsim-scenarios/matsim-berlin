@@ -144,10 +144,16 @@ $p/berlin-static-$V-25pct.plans.xml.gz: $p/berlin-only-$V-25pct.plans.xml.gz $p/
      	 --samples 0.1\
 
 
-$p/berlin-$V-25pct.plans.xml.gz: $p/berlin-static-$V-25pct.plans.xml.gz input/facilities.shp
+$p/berlin-activities-$V-25pct.plans.xml.gz: $p/berlin-static-$V-25pct.plans.xml.gz input/facilities.shp
 	$(sc) prepare actitopp\
 	 --input $< --output $@\
 	 --shp $(word 2,$^)
+
+$p/berlin-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans.xml.gz $p/berlin-$V-facilities.xml.gz
+	$(sc) prepare init-location-choice\
+	 --input $< --output $@\
+	 --facilities $(word 2,$^)\
+	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp
 
 	$(sc) prepare downsample-population $@\
      	 --sample-size 0.25\

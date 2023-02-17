@@ -4,6 +4,9 @@ import it.unimi.dsi.fastutil.longs.*;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.math3.distribution.GammaDistribution;
+import org.apache.commons.math3.distribution.RealDistribution;
+import org.apache.commons.math3.random.Well19937c;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.locationtech.jts.geom.MultiPolygon;
@@ -47,6 +50,11 @@ public class AssignCommuters implements MATSimAppCommand, PersonAlgorithm {
 	private Random rnd = new Random(0);
 	private Map<Long, SimpleFeature> zones;
 	private Long2ObjectMap<Long2DoubleMap> commuter;
+
+	/**
+	 * Draw distances from this distribution. Fit with dists < 50km.
+	 */
+	private final RealDistribution distribution = new GammaDistribution(new Well19937c(1), 1.06639881, 1 / 0.07092311);
 
 	public static void main(String[] args) {
 		new AssignCommuters().execute(args);
@@ -112,10 +120,16 @@ public class AssignCommuters implements MATSimAppCommand, PersonAlgorithm {
 			// Default is commute within same zone
 			person.getAttributes().putAttribute(Attributes.COMMUTE, ars);
 
+			double extent = origin.getEnvelopeInternal().maxExtent();
+			double dist = distribution.sample();
+
+			// Create commute distance within the region
+			for (int i = 0; i < 10 && dist > extent; i++) {
+				dist = distribution.sample();
+			}
+
 			// Default commute within zone and random diameter
-			// TODO: should come from data
-			person.getAttributes().putAttribute(Attributes.COMMUTE_KM,
-					(origin.getEnvelopeInternal().getDiameter() * rnd.nextDouble() * 0.8) / 1000);
+			person.getAttributes().putAttribute(Attributes.COMMUTE_KM, dist);
 
 			Long2DoubleMap comms = commuter.get(ars);
 
@@ -125,6 +139,10 @@ public class AssignCommuters implements MATSimAppCommand, PersonAlgorithm {
 			}
 
 			long to = selectTarget(ars, comms);
+
+			// Same zone commuters are the default
+			if (ars == to)
+				return;
 
 			if (!zones.containsKey(to)) {
 

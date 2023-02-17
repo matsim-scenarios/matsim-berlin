@@ -118,6 +118,10 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 
 		log.info("Configured activity types: {}", types.keySet());
 
+		if (types.keySet().stream().anyMatch(t -> t.length() > 10)) {
+			log.error("Activity names max length is 10, due to shp format limitation.");
+			return 2;
+		}
 
 
 		// Collect all geometries first
