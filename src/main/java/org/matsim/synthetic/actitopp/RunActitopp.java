@@ -33,9 +33,6 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 	@CommandLine.Option(names = "--output", description = "Path to output population", required = true)
 	private Path output;
 
-	@CommandLine.Mixin
-	private ShpOptions shp;
-
 	private PopulationFactory factory;
 	private int index;
 
@@ -47,11 +44,6 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 
 	@Override
 	public Integer call() throws Exception {
-
-		if (shp.getShapeFile() == null) {
-			log.error("Activity shape file is required");
-			return 2;
-		}
 
 		Population population = PopulationUtils.readPopulation(input.toString());
 		factory = population.getFactory();
@@ -125,14 +117,24 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 	private void convertDay(int weekDay, List<HActivity> activities, Plan plan, Coord homeCoord) {
 
 		Activity a = null;
+		HActivity prev = null;
 
 		for (HActivity act : activities) {
 
-			if (act.getDay().getWeekday() != weekDay)
+			if (act.getDay().getWeekday() != weekDay) {
+				prev = act;
 				continue;
+			}
 
 			if (plan.getPlanElements().isEmpty() && !act.isHomeActivity()) {
 				Activity home = factory.createActivityFromCoord("home", homeCoord);
+
+				// This should not occur
+				if (prev == null)
+					throw new IllegalStateException("Previous activity is null, can not set home end time");
+
+				// If activity started on previous day, the end time needs to be adjusted to new day
+				home.setEndTime((prev.getEndTime() * 60) % 86400);
 				plan.addActivity(home);
 			}
 
@@ -149,6 +151,7 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 				plan.addLeg(factory.createLeg("walk"));
 
 			plan.addActivity(a);
+			prev = act;
 		}
 
 		// Last home activity has no end time and duration

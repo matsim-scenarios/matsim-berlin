@@ -13,6 +13,7 @@ import org.matsim.contrib.locationchoice.frozenepsilons.FrozenTastesConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.FacilitiesConfigGroup;
+import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.StrategyConfigGroup;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
@@ -22,6 +23,8 @@ import org.matsim.synthetic.actitopp.RunActitopp;
 import org.matsim.synthetic.download.DownloadCommuterStatistic;
 import picocli.CommandLine;
 
+import java.util.List;
+
 /**
  * This scenario class is used for run a MATSim scenario in various stages of the calibration process.
  */
@@ -30,7 +33,7 @@ import picocli.CommandLine;
 		CreateLandUseShp.class, CreateBerlinPopulation.class, CreateBrandenburgPopulation.class, MergePopulations.class,
 		LookupRegioStaR.class, ExtractFacilityShp.class, DownSamplePopulation.class, DownloadCommuterStatistic.class,
 		AssignCommuters.class, RunActitopp.class, CreateNetworkFromSumo.class, CreateTransitScheduleFromGtfs.class,
-		CleanNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class
+		CleanNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
 
@@ -52,6 +55,12 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	protected Config prepareConfig(Config config) {
 
 		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
+
+		// TODO: typical durations not from data yet
+		for (String act : List.of("home", "work", "education", "leisure", "shopping", "other")) {
+			config.planCalcScore()
+					.addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams(act).setTypicalDuration(6 * 3600));
+		}
 
 		if (sample.isSet()) {
 			config.qsim().setFlowCapFactor(sample.getSize() / 100d);
