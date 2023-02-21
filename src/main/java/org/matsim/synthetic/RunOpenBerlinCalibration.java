@@ -1,5 +1,8 @@
 package org.matsim.synthetic;
 
+import com.google.inject.Inject;
+import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Person;
 import org.matsim.application.MATSimApplication;
 import org.matsim.application.options.SampleOptions;
 import org.matsim.application.prepare.CreateLandUseShp;
@@ -8,6 +11,9 @@ import org.matsim.application.prepare.network.CreateNetworkFromSumo;
 import org.matsim.application.prepare.population.DownSamplePopulation;
 import org.matsim.application.prepare.population.MergePopulations;
 import org.matsim.application.prepare.pt.CreateTransitScheduleFromGtfs;
+import org.matsim.contrib.cadyts.car.CadytsCarModule;
+import org.matsim.contrib.cadyts.car.CadytsContext;
+import org.matsim.contrib.cadyts.general.CadytsScoring;
 import org.matsim.contrib.locationchoice.frozenepsilons.FrozenTastes;
 import org.matsim.contrib.locationchoice.frozenepsilons.FrozenTastesConfigGroup;
 import org.matsim.core.config.Config;
@@ -18,6 +24,10 @@ import org.matsim.core.config.groups.StrategyConfigGroup;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
+import org.matsim.core.scoring.ScoringFunction;
+import org.matsim.core.scoring.ScoringFunctionFactory;
+import org.matsim.core.scoring.SumScoringFunction;
+import org.matsim.core.scoring.functions.*;
 import org.matsim.run.RunOpenBerlinScenario;
 import org.matsim.synthetic.actitopp.RunActitopp;
 import org.matsim.synthetic.download.DownloadCommuterStatistic;
@@ -39,6 +49,9 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 	@CommandLine.Option(names = "--mode", description = "Calibration mode that should be run.")
 	private CalibrationMode mode;
+
+	@CommandLine.Option(names = "--weight", description = "Strategy weight for calibration config.", defaultValue = "1")
+	private double weight;
 
 	@CommandLine.Mixin
 	private final SampleOptions sample = new SampleOptions(100, 25, 10, 1);
@@ -92,7 +105,13 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			dccg.setRandomSeed(2);
 			dccg.setDestinationSamplePercent(10.);
 
-		}
+		} else if (mode == CalibrationMode.cadyts) {
+
+			// TODO: cadyts needs counts data
+			config.counts().setInputFile("TODO");
+
+		} else
+			throw new IllegalStateException("Mode not implemented:" + mode);
 
 
 		return config;
@@ -103,6 +122,34 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		if (mode == CalibrationMode.locationChoice) {
 			FrozenTastes.configure(controler);
+		} else if (mode == CalibrationMode.cadyts) {
+
+			controler.addOverridingModule(new CadytsCarModule());
+			controler.setScoringFunctionFactory(new ScoringFunctionFactory() {
+				@Inject
+				private CadytsContext cadytsContext;
+				@Inject
+				ScoringParametersForPerson parameters;
+
+				@Override
+				public ScoringFunction createNewScoringFunction(Person person) {
+					SumScoringFunction sumScoringFunction = new SumScoringFunction();
+
+					Config config = controler.getConfig();
+
+					final ScoringParameters params = parameters.getScoringParameters(person);
+					sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(params, controler.getScenario().getNetwork()));
+					sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(params));
+					sumScoringFunction.addScoringFunction(new CharyparNagelAgentStuckScoring(params));
+
+					final CadytsScoring<Link> scoringFunction = new CadytsScoring<>(person.getSelectedPlan(), config, cadytsContext);
+					scoringFunction.setWeightOfCadytsCorrection(weight * config.planCalcScore().getBrainExpBeta());
+					sumScoringFunction.addScoringFunction(scoringFunction);
+
+					return sumScoringFunction;
+				}
+			});
+
 		}
 
 	}
