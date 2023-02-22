@@ -1,28 +1,16 @@
 package org.matsim.prepare.parking;
 
 import org.locationtech.jts.geom.Geometry;
-import org.matsim.api.core.v01.Coord;
-import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.network.Link;
-import org.matsim.api.core.v01.network.Network;
-import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.network.NetworkUtils;
-import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.gis.ShapeFileReader;
-import org.matsim.core.utils.gis.ShapeFileWriter;
 import org.matsim.core.utils.io.IOUtils;
-import org.matsim.facilities.ActivityFacilitiesFactory;
 import org.opengis.feature.simple.SimpleFeature;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
-public class ParkingPerZone {
+public class ParkingSupplyPerZone {
 
     public static void main(String[] args) throws IOException {
 
@@ -48,9 +36,9 @@ public class ParkingPerZone {
                 }
 
             }
-            lorToParkingCapacity.put(berlinZone.getID(), capacity);
+            lorToParkingCapacity.put((String) berlinZone.getAttribute("PLR_NAME"), capacity);
         }
-        writeParkingCapacityPerLink("test.tsv", lorToParkingCapacity);
+        writeParkingCapacityPerLink("parkingSupply.tsv", lorToParkingCapacity);
 
     }
 
