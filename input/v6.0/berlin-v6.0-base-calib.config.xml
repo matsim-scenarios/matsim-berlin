@@ -34,6 +34,10 @@
 		<param name="useTransit" value="true"/>
 		<param name="vehiclesFile" value="./berlin-v6.0-transitVehicles.xml.gz"/>
 	</module>
+	<module name="facilities">
+		<param name="facilitiesSource" value="fromFile"/>
+		<param name="inputFacilitiesFile" value="./berlin-v6.0-facilities.xml.gz"/>
+	</module>
 	<module name="planscalcroute">
 		<param name="networkModes" value="car,freight,ride"/>
 		<param name="accessEgressType" value="accessEgressModeToLink"/>

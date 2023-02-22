@@ -176,6 +176,7 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 
 			PersonUtils.setSex(person, gender);
 			PersonUtils.setAge(person, age);
+			PopulationUtils.putSubpopulation(person, "person");
 
 			// All persons will be employed until employed population is empty.
 			PersonUtils.setEmployed(person, employed.subtract(1 / sample, age));

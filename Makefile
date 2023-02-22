@@ -107,6 +107,13 @@ $p/berlin-$V-network-with-pt.xml.gz: $p/berlin-$V-network.xml.gz
 	 --shp $p/area/area.shp\
 	 --shp $p/area/area.shp
 
+$p/berlin-$V-car-counts.xml.gz: $p/berlin-$V-network.xml.gz
+	$(sc) prepare create-counts\
+	 --network $<\
+	 --shp $(berlin)/Verkehrsmengen_DTVw_2019.zip\
+	 --output $p/berlin-$V-
+	# TODO: output argument not ideal
+
 $p/berlin-$V-facilities.xml.gz: $p/berlin-$V-network.xml.gz input/facilities.shp
 	$(sc) prepare facilities --network $< --shp $(word 2,$^)\
 	 --output $@

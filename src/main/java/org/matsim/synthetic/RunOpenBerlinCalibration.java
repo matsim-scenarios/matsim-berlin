@@ -28,6 +28,7 @@ import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.SumScoringFunction;
 import org.matsim.core.scoring.functions.*;
+import org.matsim.prepare.berlinCounts.CreateCountsFromOpenData;
 import org.matsim.run.RunOpenBerlinScenario;
 import org.matsim.synthetic.actitopp.RunActitopp;
 import org.matsim.synthetic.download.DownloadCommuterStatistic;
@@ -43,7 +44,8 @@ import java.util.List;
 		CreateLandUseShp.class, CreateBerlinPopulation.class, CreateBrandenburgPopulation.class, MergePopulations.class,
 		LookupRegioStaR.class, ExtractFacilityShp.class, DownSamplePopulation.class, DownloadCommuterStatistic.class,
 		AssignCommuters.class, RunActitopp.class, CreateNetworkFromSumo.class, CreateTransitScheduleFromGtfs.class,
-		CleanNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class
+		CleanNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class,
+		CreateCountsFromOpenData.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
 
@@ -88,9 +90,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		if (mode == CalibrationMode.locationChoice) {
 
-			config.facilities().setFacilitiesSource(FacilitiesConfigGroup.FacilitiesSource.fromFile);
-			config.facilities().setInputFile("./berlin-v6.0-facilities.xml.gz");
-
 			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings().setStrategyName(FrozenTastes.LOCATION_CHOICE_PLAN_STRATEGY).setWeight(0.1));
 			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings().setStrategyName(DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta).setWeight(1.0));
 			config.strategy().setFractionOfIterationsToDisableInnovation(0.8);
@@ -107,8 +106,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		} else if (mode == CalibrationMode.cadyts) {
 
-			// TODO: cadyts needs counts data
-			config.counts().setInputFile("TODO");
+			config.counts().setInputFile("./berlin-v6.0-car-counts.xml.gz");
 
 		} else
 			throw new IllegalStateException("Mode not implemented:" + mode);

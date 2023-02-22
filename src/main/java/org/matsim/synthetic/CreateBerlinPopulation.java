@@ -167,6 +167,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 
 			Person person = f.createPerson(Id.createPersonId("berlin" + id++));
 			PersonUtils.setSex(person, sex.sample());
+			PopulationUtils.putSubpopulation(person, "person");
 
 			AgeGroup group = ageGroup.sample();
 

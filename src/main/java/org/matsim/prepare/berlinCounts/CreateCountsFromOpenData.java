@@ -12,7 +12,6 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.options.CountsOption;
-import org.matsim.application.options.CrsOptions;
 import org.matsim.application.options.ShpOptions;
 import org.matsim.core.config.groups.NetworkConfigGroup;
 import org.matsim.core.network.NetworkUtils;
@@ -20,9 +19,9 @@ import org.matsim.core.network.filter.NetworkFilterManager;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.counts.Counts;
 import org.matsim.counts.CountsWriter;
+import org.matsim.run.RunOpenBerlinScenario;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import picocli.CommandLine;
 
@@ -34,28 +33,25 @@ import java.util.regex.Pattern;
 @CommandLine.Command(name = "create-counts", description = "creates MATSim counts from FIS Broker count data")
 public class CreateCountsFromOpenData implements MATSimAppCommand {
 
+	private static final Logger log = LogManager.getLogger(CreateCountsFromOpenData.class);
+
 	@CommandLine.Option(names = "--network", description = "Network file path", required = true)
-	String networkFilePath;
+	private String networkFilePath;
 
 	@CommandLine.Option(names = "--road-type", description = "road type patterns to filter the network")
-	List<String> roadTypes = List.of("motorway", "trunk", "primary");
+	private List<String> roadTypes = List.of("motorway", "trunk", "primary");
 
 	@CommandLine.Option(names = "--output", description = "output folder", required = true)
-	String output;
+	private String output;
 
 	@CommandLine.Mixin
-	CountsOption countsOption = new CountsOption();
+	private CountsOption countsOption = new CountsOption();
 
 	@CommandLine.Mixin
-	ShpOptions shp = new ShpOptions();
+	private ShpOptions shp = new ShpOptions();
 
-	@CommandLine.Mixin
-	CrsOptions crs = new CrsOptions();
-
-	Counts<Link> car = new Counts<>();
-	Counts<Link> freight = new Counts<>();
-
-	Logger logger = LogManager.getLogger(CreateCountsFromOpenData.class);
+	private final Counts<Link> car = new Counts<>();
+	private final Counts<Link> freight = new Counts<>();
 
 	public static void main(String[] args) {
 		new CreateCountsFromOpenData().execute(args);
@@ -64,14 +60,16 @@ public class CreateCountsFromOpenData implements MATSimAppCommand {
 	@Override
 	public Integer call() throws Exception {
 
-		if(!shp.isDefined())
-			throw new RuntimeException("Please enter the FIS-Broker shape file path!");
+		if (!shp.isDefined()) {
+			log.error("FIS-Broker shape file path [--shp] is required!");
+			return 2;
+		}
 
-		logger.info("Read shape file.");
+		log.info("Read shape file.");
 		List<SimpleFeature> features = shp.readFeatures();
 		List<Predicate<Link>> roadTypeFilter = createRoadTypeFilter(roadTypes);
 
-		logger.info("Read network and apply filters");
+		log.info("Read network and apply filters");
 		Network filteredNetwork;
 		{
 			Network network = NetworkUtils.readNetwork(networkFilePath);
@@ -82,28 +80,28 @@ public class CreateCountsFromOpenData implements MATSimAppCommand {
 			filteredNetwork = filter.applyFilters();
 		}
 
-		logger.info("Build Index.");
+		log.info("Build Index.");
 		NetworkIndex index = new NetworkIndex(filteredNetwork, 10);
-		MathTransform transformation = getCoordinateTransformation(crs);
+		MathTransform transformation = getCoordinateTransformation(shp.getShapeCrs(), RunOpenBerlinScenario.CRS);
 
-		logger.info("Processing simple features.");
+		log.info("Processing simple features.");
 		int counter = 0;
-		for(SimpleFeature feature: features){
+		for (SimpleFeature feature : features) {
 
 			counter++;
 			String id = (String) feature.getAttribute("link_id");
-			if(countsOption.getIgnored().contains(id))
+			if (countsOption.getIgnored().contains(id))
 				continue;
 
-			if(!(feature.getDefaultGeometry() instanceof MultiLineString ls)) {
+			if (!(feature.getDefaultGeometry() instanceof MultiLineString ls)) {
 				throw new RuntimeException("Geometry #" + counter + " is no LineString. Please check your shape file!.");
 			}
 
 			MultiLineString transformed = (MultiLineString) JTS.transform(ls, transformation);
 
 			Link matched = index.query(transformed);
-			if(matched == null) {
-				logger.warn("Could not match feature {}. Maybe try with a bigger search range?", id);
+			if (matched == null) {
+				log.warn("Could not match feature {}. Maybe try with a bigger search range?", id);
 			} else {
 				index.remove(matched);
 
@@ -116,30 +114,23 @@ public class CreateCountsFromOpenData implements MATSimAppCommand {
 			}
 		}
 
-		logger.info("Write results to {}", output);
+		log.info("Write results to {}", output);
 		new CountsWriter(car).write(output + "car-counts.xml.gz");
 		new CountsWriter(freight).write(output + "freight-counts.xml.gz");
 
 		return 0;
 	}
 
-	MathTransform getCoordinateTransformation(CrsOptions crs){
-		CoordinateReferenceSystem inputCRS;
-		CoordinateReferenceSystem targetCRS;
-
-		MathTransform transformation;
-
+	private static MathTransform getCoordinateTransformation(String inputCRS, String targetCRS) {
 		try {
-			inputCRS = CRS.decode(crs.getInputCRS(), true);
-			targetCRS = CRS.decode(crs.getTargetCRS(), true);
-
-			transformation = CRS.findMathTransform(inputCRS, targetCRS);
+			return CRS.findMathTransform(
+					CRS.decode(inputCRS, true),
+					CRS.decode(targetCRS, true)
+			);
 		} catch (FactoryException e) {
 			e.printStackTrace();
 			throw new RuntimeException("Please check the coordinate systems!");
 		}
-
-		return transformation;
 	}
 
 	private List<Predicate<Link>> createRoadTypeFilter(List<String> types) {
@@ -150,7 +141,7 @@ public class CreateCountsFromOpenData implements MATSimAppCommand {
 
 			Predicate<Link> p = link -> {
 				var attr = link.getAttributes().getAttribute("type");
-				if(attr == null)
+				if (attr == null)
 					return true;
 
 				Pattern pattern = Pattern.compile(type, Pattern.CASE_INSENSITIVE);
@@ -162,14 +153,14 @@ public class CreateCountsFromOpenData implements MATSimAppCommand {
 		return filter;
 	}
 
-	private static class NetworkIndex{
+	private static class NetworkIndex {
 
 		private final STRtree index = new STRtree();
 		private final GeometryFactory factory = new GeometryFactory();
 
-		double range;
+		private final double range;
 
-		public NetworkIndex(Network network, double range){
+		private NetworkIndex(Network network, double range) {
 
 			this.range = range;
 
@@ -181,7 +172,8 @@ public class CreateCountsFromOpenData implements MATSimAppCommand {
 			index.build();
 		}
 
-		public Link query(MultiLineString ls) {
+		@SuppressWarnings("unchecked")
+		private Link query(MultiLineString ls) {
 
 			Envelope searchArea = ls.buffer(this.range).getEnvelopeInternal();
 
@@ -221,7 +213,7 @@ public class CreateCountsFromOpenData implements MATSimAppCommand {
 			return factory.createLineString(coordinates);
 		}
 
-		public void remove(Link link) {
+		private void remove(Link link) {
 			Envelope env = getLinkEnvelope(link);
 			index.remove(env, link);
 		}
