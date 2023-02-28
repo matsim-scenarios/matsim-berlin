@@ -18,7 +18,6 @@ import org.matsim.contrib.locationchoice.frozenepsilons.FrozenTastes;
 import org.matsim.contrib.locationchoice.frozenepsilons.FrozenTastesConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.config.groups.FacilitiesConfigGroup;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.StrategyConfigGroup;
 import org.matsim.core.controler.Controler;
@@ -30,7 +29,6 @@ import org.matsim.core.scoring.SumScoringFunction;
 import org.matsim.core.scoring.functions.*;
 import org.matsim.prepare.berlinCounts.CreateCountsFromOpenData;
 import org.matsim.run.RunOpenBerlinScenario;
-import org.matsim.synthetic.actitopp.RunActitopp;
 import org.matsim.synthetic.download.DownloadCommuterStatistic;
 import picocli.CommandLine;
 

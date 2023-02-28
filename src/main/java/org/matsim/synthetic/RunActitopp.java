@@ -1,4 +1,4 @@
-package org.matsim.synthetic.actitopp;
+package org.matsim.synthetic;
 
 import edu.kit.ifv.mobitopp.actitopp.*;
 import org.apache.logging.log4j.LogManager;
@@ -7,12 +7,10 @@ import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.population.*;
 import org.matsim.application.MATSimAppCommand;
-import org.matsim.application.options.ShpOptions;
 import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.algorithms.ParallelPersonAlgorithmUtils;
 import org.matsim.core.population.algorithms.PersonAlgorithm;
-import org.matsim.synthetic.Attributes;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
@@ -32,6 +30,9 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 
 	@CommandLine.Option(names = "--output", description = "Path to output population", required = true)
 	private Path output;
+
+	@CommandLine.Option(names = "--n", description = "Number of plans to generate per agent", defaultValue = "5")
+	private int n;
 
 	private PopulationFactory factory;
 	private int index;
@@ -68,6 +69,22 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 
 		Context ctx = tl.get();
 
+		// Assume that there is only the stay home plan, which is the selected one
+		for (int i = 0; i < n; i++) {
+			boolean newPlan = generatePlan(person, ctx);
+
+			// Create a copy of the stay home plan if no new one was generated
+			if (!newPlan)
+				person.createCopyOfSelectedPlanAndMakeSelected();
+
+		}
+
+		// Remove initial plan
+		person.removePlan(person.getSelectedPlan());
+		person.setSelectedPlan(person.getPlans().get(0));
+	}
+
+	private boolean generatePlan(Person person, Context ctx) {
 		ActitoppPerson ap = convertPerson(person, ctx.rnd);
 
 		if (PersonUtils.isEmployed(person)) {
@@ -93,11 +110,9 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 					Plan plan = factory.createPlan();
 
 					convertDay(day.getWeekday(), week.getAllActivities(), plan, homeCoord);
-
-					person.removePlan(person.getSelectedPlan());
 					person.addPlan(plan);
-					person.setSelectedPlan(plan);
-				}
+				} else
+					return false;
 
 				scheduleOK = true;
 			} catch (InvalidPatternException e) {
@@ -105,10 +120,12 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 				tries++;
 				if (tries > 100) {
 					log.warn("No chain generated for person {} after 100 attempts", person.getId());
-					break;
+					return false;
 				}
 			}
 		}
+
+		return true;
 	}
 
 	/**
@@ -121,10 +138,20 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 
 		for (HActivity act : activities) {
 
-			if (act.getDay().getWeekday() != weekDay) {
+			int actDay = act.getDay().getWeekday();
+
+			if (actDay < weekDay) {
 				prev = act;
 				continue;
 			}
+
+			// Collect activities until agent is at home
+			if (actDay > weekDay && prev != null && prev.isHomeActivity()) {
+				break;
+			}
+
+			if (actDay > weekDay && !act.isHomeActivity())
+				continue;
 
 			if (plan.getPlanElements().isEmpty() && !act.isHomeActivity()) {
 				Activity home = factory.createActivityFromCoord("home", homeCoord);
@@ -146,6 +173,10 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 			a.setStartTime(act.getStartTime() * 60);
 			a.setMaximumDuration(act.getDuration() * 60);
 
+			// Cut late activities 3h after midnight
+			if (actDay > weekDay)
+				a.setStartTime(Math.min(a.getStartTime().seconds() + 86400d, 4 * 3600 + 86400d));
+
 			// No leg needed for first activity
 			if (!plan.getPlanElements().isEmpty())
 				plan.addLeg(factory.createLeg("walk"));
@@ -159,6 +190,8 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 			a.setEndTimeUndefined();
 			a.setMaximumDurationUndefined();
 		}
+
+
 	}
 
 	private String getActivityType(ActivityType activityType) {
@@ -231,7 +264,7 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 	private static final class Context {
 
 		private final ModelFileBase fileBase = new ModelFileBase();
-		;
+
 		private final RNGHelper rng = new RNGHelper(1);
 		private final SplittableRandom rnd = new SplittableRandom(1);
 

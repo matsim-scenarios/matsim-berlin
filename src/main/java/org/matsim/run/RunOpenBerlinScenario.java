@@ -6,7 +6,7 @@ import org.matsim.application.prepare.population.DownSamplePopulation;
 import org.matsim.application.prepare.population.MergePopulations;
 import org.matsim.prepare.berlinCounts.CreateCountsFromOpenData;
 import org.matsim.synthetic.*;
-import org.matsim.synthetic.actitopp.RunActitopp;
+import org.matsim.synthetic.RunActitopp;
 import org.matsim.synthetic.download.DownloadCommuterStatistic;
 import picocli.CommandLine;
 
