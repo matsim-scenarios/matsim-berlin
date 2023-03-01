@@ -90,14 +90,26 @@ input/sumo.net.xml: input/network.osm
 	 --osm-files $< -o=$@
 
 
-$p/berlin-$V-network.xml.gz: input/sumo.net.xml
-	$(sc) prepare network-from-sumo $<\
+$p/berlin-$V-network.xml.gz: #input/sumo.net.xml
+
+	# Use 5.x network
+
+	# TODO: This has EPSG: 31468 and needs to be converted
+	cp $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz $@
+
+#	$(sc) prepare network-from-sumo $<\
 	 --output $@
 
-	$(sc) prepare clean-network $@ --output $@ --modes car
+#	$(sc) prepare clean-network $@ --output $@ --modes car
 
 $p/berlin-$V-network-with-pt.xml.gz: $p/berlin-$V-network.xml.gz
-	$(sc) prepare transit-from-gtfs --network $< --output=$p\
+
+	# Copy 5.x network stuff
+	cp $< $@
+	cp $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz $p/berlin-v6.0-transitSchedule.xml.gz
+	cp $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-transit-vehicles.xml.gz $p/berlin-v6.0-transitVehicles.xml.gz
+
+#	$(sc) prepare transit-from-gtfs --network $< --output=$p\
 	 --name berlin-$V --date "2023-01-11" --target-crs $(CRS) \
 	 ../shared-svn/projects/DiTriMo/data/gtfs/20230113_regio.zip\
 	 ../shared-svn/projects/DiTriMo/data/gtfs/20230113_train_short.zip\
@@ -113,6 +125,13 @@ $p/berlin-$V-car-counts.xml.gz: $p/berlin-$V-network.xml.gz
 	 --shp $(berlin)/Verkehrsmengen_DTVw_2019.zip\
 	 --output $p/berlin-$V-
 	# TODO: output argument not ideal
+
+
+$p/berlin-$V-counts-car-vmz.xml.gz:
+	$(sc) prepare counts-from-vmz\
+	 --csv ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/CountsId_to_linkId.csv\
+	 --excel ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx\
+ 	 --output $@
 
 $p/berlin-$V-facilities.xml.gz: $p/berlin-$V-network.xml.gz input/facilities.shp
 	$(sc) prepare facilities --network $< --shp $(word 2,$^)\

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+// TODO: these are somehow processed volumes and not raw counts
 @CommandLine.Command(name = "create-counts", description = "creates MATSim counts from FIS Broker count data")
 public class CreateCountsFromOpenData implements MATSimAppCommand {
 

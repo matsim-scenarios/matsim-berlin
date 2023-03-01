@@ -7,11 +7,15 @@ import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.TopologyException;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.options.ShpOptions;
 import org.matsim.core.network.NetworkUtils;
+import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
+import org.matsim.core.network.filter.NetworkFilterManager;
+import org.matsim.core.network.filter.NetworkLinkFilter;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.facilities.*;
 import org.opengis.feature.simple.SimpleFeature;
@@ -52,12 +56,16 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 			return 2;
 		}
 
-		Network network = NetworkUtils.readNetwork(this.network.toString());
+		Network completeNetwork = NetworkUtils.readNetwork(this.network.toString());
+		TransportModeNetworkFilter filter = new TransportModeNetworkFilter(completeNetwork);
+		Network carOnlyNetwork = NetworkUtils.createNetwork();
+		filter.filter(carOnlyNetwork, Set.of(TransportMode.car));
+
 		List<SimpleFeature> fts = shp.readFeatures();
 
 		Map<Id<Link>, Holder> data = new ConcurrentHashMap<>();
 
-		fts.parallelStream().forEach(ft -> processFeature(ft, network, data));
+		fts.parallelStream().forEach(ft -> processFeature(ft, carOnlyNetwork, data));
 
 		ActivityFacilities facilities = FacilitiesUtils.createActivityFacilities();
 

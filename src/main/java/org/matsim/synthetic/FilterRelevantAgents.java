@@ -6,6 +6,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Node;
 import org.matsim.api.core.v01.population.Activity;
@@ -15,6 +16,7 @@ import org.matsim.api.core.v01.population.Population;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.options.ShpOptions;
 import org.matsim.core.network.NetworkUtils;
+import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.algorithms.ParallelPersonAlgorithmUtils;
 import org.matsim.core.population.algorithms.PersonAlgorithm;
@@ -81,7 +83,11 @@ public class FilterRelevantAgents implements MATSimAppCommand, PersonAlgorithm {
 			return 2;
 		}
 
-		network = NetworkUtils.readNetwork(networkPath.toString());
+		Network completeNetwork = NetworkUtils.readNetwork(networkPath.toString());
+		TransportModeNetworkFilter filter = new TransportModeNetworkFilter(completeNetwork);
+		network = NetworkUtils.createNetwork();
+		filter.filter(network, Set.of(TransportMode.car));
+
 		geometry = shp.getGeometry();
 		ct = shp.createTransformation(RunOpenBerlinScenario.CRS);
 

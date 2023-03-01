@@ -1,5 +1,8 @@
 package org.matsim.synthetic;
 
+import org.apache.commons.math3.distribution.GammaDistribution;
+import org.apache.commons.math3.distribution.RealDistribution;
+import org.apache.commons.math3.random.Well19937c;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.locationtech.jts.geom.Geometry;
@@ -23,6 +26,7 @@ import org.matsim.run.RunOpenBerlinScenario;
 import org.opengis.feature.simple.SimpleFeature;
 import picocli.CommandLine;
 
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -114,6 +118,9 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 			Coord lastCoord = homeCoord;
 
+			// Edu is fixed and not sampled twice
+			ActivityFacility edu = null;
+
 			for (Activity act : acts) {
 
 				String type = act.getType();
@@ -127,8 +134,6 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 					// bug in actitopp?
 
 					if (type.equals("work") && PersonUtils.isEmployed(person)) {
-
-
 						// Select work facility
 						if (person.getAttributes().getAttribute(Attributes.ARS) == person.getAttributes().getAttribute(Attributes.COMMUTE)) {
 							location = sampleDistAndZone(homeCoord,
@@ -152,10 +157,20 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 							act.setCoord(homeCoord);
 							continue;
 						}
+					} else if (type.equals("education")) {
+						if (edu != null) {
+							location = edu;
+						} else {
+							location = sampleDistAndZone(homeCoord,
+									trees.get(type), null, ctxs.get().eduDist.sample(), ctxs.get().rnd
+							);
+
+							edu = location;
+						}
 					}
 
 					if (location == null) {
-
+						// sample something randomly with increasing radius
 						for (int i = 0; i < 15 && location == null; i++) {
 							List<ActivityFacility> query = trees.get(type).query(MGC.coord2Point(lastCoord).buffer(3000 + 1000 * i).getEnvelopeInternal());
 							if (!query.isEmpty()) {
@@ -172,9 +187,9 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 	}
 
 	/**
-	 * Sample facility within distance from coordinate, that is located in the desired target zone.
+	 * Sample facility within distance from coordinate, that is located in the desired target zone (if not null).
 	 */
-	private ActivityFacility sampleDistAndZone(Coord coord, STRtree index, Geometry zone, double dist, SplittableRandom rnd) {
+	private ActivityFacility sampleDistAndZone(Coord coord, STRtree index, @Nullable Geometry zone, double dist, SplittableRandom rnd) {
 
 		ActivityFacility location = null;
 		for (int i = 0; i < 500 && location == null; i++) {
@@ -190,7 +205,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 			List<ActivityFacility> query = index.query(MGC.coord2Point(c).buffer(3000).getEnvelopeInternal());
 			while (!query.isEmpty()) {
 				ActivityFacility af = query.remove(rnd.nextInt(query.size()));
-				if (zone.contains(MGC.coord2Point(af.getCoord()))) {
+				if (zone == null || zone.contains(MGC.coord2Point(af.getCoord()))) {
 					location = af;
 					break;
 				}
@@ -222,6 +237,11 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 	private static final class Context {
 		private final SplittableRandom rnd = new SplittableRandom(1);
+
+		/**
+		 * Edu commuting dists, fit for < 30 km.
+		 */
+		private final RealDistribution eduDist = new GammaDistribution(new Well19937c(1), 0.9599925, 1 / 0.2180801);
 
 	}
 

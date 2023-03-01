@@ -1,6 +1,7 @@
 package org.matsim.synthetic;
 
 import com.google.inject.Inject;
+import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.application.MATSimApplication;
@@ -28,6 +29,7 @@ import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.SumScoringFunction;
 import org.matsim.core.scoring.functions.*;
 import org.matsim.prepare.berlinCounts.CreateCountsFromOpenData;
+import org.matsim.prepare.berlinCounts.CreateCountsFromVMZ;
 import org.matsim.run.RunOpenBerlinScenario;
 import org.matsim.synthetic.download.DownloadCommuterStatistic;
 import picocli.CommandLine;
@@ -43,7 +45,7 @@ import java.util.List;
 		LookupRegioStaR.class, ExtractFacilityShp.class, DownSamplePopulation.class, DownloadCommuterStatistic.class,
 		AssignCommuters.class, RunActitopp.class, CreateNetworkFromSumo.class, CreateTransitScheduleFromGtfs.class,
 		CleanNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class,
-		CreateCountsFromOpenData.class
+		CreateCountsFromOpenData.class, CreateCountsFromVMZ.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
 
@@ -88,7 +90,14 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		if (mode == CalibrationMode.locationChoice) {
 
-			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings().setStrategyName(FrozenTastes.LOCATION_CHOICE_PLAN_STRATEGY).setWeight(0.1));
+			// TODO: need better initial mode
+
+			// TODO: increase network capacity factor
+			// TODO: set all plans to walk/car
+			config.qsim().setFlowCapFactor(1.0);
+			config.qsim().setStorageCapFactor(1.0);
+
+			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings().setStrategyName(FrozenTastes.LOCATION_CHOICE_PLAN_STRATEGY).setWeight(1.0));
 			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings().setStrategyName(DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta).setWeight(1.0));
 			config.strategy().setFractionOfIterationsToDisableInnovation(0.8);
 			config.planCalcScore().setFractionOfIterationsToStartScoreMSA(0.8);
@@ -111,6 +120,15 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 
 		return config;
+	}
+
+	@Override
+	protected void prepareScenario(Scenario scenario) {
+
+		if (mode == CalibrationMode.locationChoice) {
+			// TODO: set all to car
+		}
+
 	}
 
 	@Override
