@@ -5,6 +5,7 @@ import org.matsim.application.prepare.CreateLandUseShp;
 import org.matsim.application.prepare.population.DownSamplePopulation;
 import org.matsim.application.prepare.population.MergePopulations;
 import org.matsim.prepare.berlinCounts.CreateCountsFromOpenData;
+import org.matsim.prepare.berlinCounts.CreateCountsFromVIZData;
 import org.matsim.synthetic.*;
 import org.matsim.synthetic.actitopp.RunActitopp;
 import org.matsim.synthetic.download.DownloadCommuterStatistic;
@@ -14,7 +15,7 @@ import picocli.CommandLine;
 @MATSimApplication.Prepare({
 		CreateLandUseShp.class, CreateBerlinPopulation.class, CreateBrandenburgPopulation.class, MergePopulations.class,
 		LookupRegioStaR.class, ExtractFacilityShp.class, DownSamplePopulation.class, DownloadCommuterStatistic.class,
-		AssignCommuters.class, RunActitopp.class, CreateCountsFromOpenData.class
+		AssignCommuters.class, RunActitopp.class, CreateCountsFromOpenData.class, CreateCountsFromVIZData.class
 })
 public class RunOpenBerlinScenario extends MATSimApplication {
 
