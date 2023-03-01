@@ -82,6 +82,26 @@ base <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/s
 p0.028 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res0.028") %>% 
   filter(person %in% berliners$person)
 
+p0.028_l0.0 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res0.028-link0.0") %>% 
+  filter(person %in% berliners$person)
+
+p0.028_l1.0 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res0.028-link1.0") %>% 
+  filter(person %in% berliners$person)
+
+p0.028_l2.0 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res0.028-link2.0") %>% 
+  filter(person %in% berliners$person)
+
+p0.028_l4.0 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res0.028-link4.0") %>% 
+  filter(person %in% berliners$person)
+
+p0.028_l10.0 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res0.028-link10.0") %>% 
+  filter(person %in% berliners$person)
+
+p0.028_l20.0 <- readTripsTable("//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/schlenther/berlin/parkingCosts/output/res0.028-link20.0") %>% 
+  filter(person %in% berliners$person)
+
+
+
 
 
 ###### 10 * DAILY RESIDENTIAL PARKING FEE = 0.28 € ###################################################
@@ -188,6 +208,32 @@ grid.arrange(p13,p23,p33,p43, ncol=2, nrow = 2, top = "Einführung von Anwohnerp
 
 ###########################################
 ### COMPARE MODAL SPLIT ACROSS NON-RESIDENTIAL PARKING FEES
+
+###### CURRENT DAILY RESIDENTIAL PARKING FEE = 0.028 €
+plot0.028 <- plotModalSplitPieChart(p0.028)
+  +  ggtitle('0 €/Std')
+plot0.028_l0 <- plotModalSplitPieChart(p0.028_l1.0)
+  +  ggtitle('0 €/Std')
+plot0.028_l1 <- plotModalSplitPieChart(p0.028_l1.0)
+  +  ggtitle('1 €/Std')
+plot0.028_l2 <- plotModalSplitPieChart(p0.028_l2.0)
+  +  ggtitle('2 €/Std')
+plot0.028_l4 <- plotModalSplitPieChart(p0.028_l4.0)
+  +  ggtitle('4 €/Std')
+plot0.028_l10 <- plotModalSplitPieChart(p0.028_l10.0)
+  +  ggtitle('10 €/Std')
+plot0.028_l20 <- plotModalSplitPieChart(p0.028_l20.0)
+  +  ggtitle('20 €/Std')
+
+grid.arrange(plot0.028,
+             plot0.028_l0,
+             plot0.028_l1,
+             plot0.028_l2,
+             plot0.028_l4,
+             plot0.028_l10,
+             #plot0.028_l20,
+             ncol=3, nrow = 2, top = "Residential parking cost 0.28 €/Tag")
+
 
 ###### 10 * DAILY RESIDENTIAL PARKING FEE = 0.28 €
 plot0.28_l0 <- p22
