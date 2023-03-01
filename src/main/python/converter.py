@@ -1,11 +1,38 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import numpy as np
 
 from data import *
 
 
 class SrV2018:
     """ Maps SrV data to standard format"""
+
+    # Fallback regiostar codes hard-coded
+    CODES = {
+        'Potsdam': 2,
+        'Cottbus': 4,
+        'Frankfurt (Oder)': 2,
+        'Kleinmachnow/Stahnsdorf/Teltow': 3,
+        'Werder (Havel)/Schwielowsee': 3,
+        'Michendorf/Nuthetal': 3,
+        'Bernau': 3,
+        'Blankenfelde-Mahlow/Rangsdorf': 3,
+        'Dallgow/Falkensee/Wustermark': 3,
+        'Eichwalde/Zeuthen': 3,
+        'Fürstenwalde': 3,
+        'Spremberg': 3,
+        'Strausberg': 3,
+        'Rüdersdorf': 3,
+        'Oranienburg': 3,
+        'Hennigsdorf/Velten': 3,
+        'Brandenburg (Havel)': 5,
+        'Schönefeld': 3,
+        'Königs Wusterhausen': 3,
+        'Eberswalde': 3,
+        'Lübben/Lübbenau': 6,
+        'Ludwigsfelde': 3
+    }
 
     @staticmethod
     def parking_position(x):
@@ -20,7 +47,10 @@ class SrV2018:
         return ParkingPosition.NA
 
     @staticmethod
-    def economic_status(eink, persons):
+    def economic_status(status, eink, persons):
+
+        if status >= 1:
+            return list(EconomicStatus)[int(status) - 1]
 
         # Calculated according to Srv 2018
         # https://tu-dresden.de/bu/verkehr/ivs/srv/ressourcen/dateien/SrV2018_Tabellenbericht_Oberzentren_500TEW-_flach.pdf?lang=de
@@ -212,3 +242,45 @@ class SrV2018:
             return SourceDestinationGroup.UNKNOWN
 
         return list(SourceDestinationGroup)[int(x) - 1]
+
+    @staticmethod
+    def region_type(d, regio, random_state):
+
+        if "PLZ" in dir(d):
+            plz = int(d.PLZ)
+
+            r = regio[regio.plz == plz]
+            if len(r) == 0:
+                raise ValueError("Unknown PLZ: %d" % plz)
+
+            if len(r) > 1:
+                r = r.sample(n=1, random_state=random_state)
+
+            r = r.iloc[0].RegioStaR7
+            if np.isnan(r):
+                raise ValueError("No RegioStar value available for: %d" % plz)
+
+            return int(r) - 70
+
+        else:
+            name = d.ST_CODE_NAME
+            return SrV2018.CODES[name]
+
+
+def prepare_regiostar_lookup(plz, regiostar) -> pd.DataFrame:
+    plz = pd.read_csv(plz)
+
+    regiostar = pd.read_excel(regiostar, sheet_name="ReferenzGebietsstand2020")
+    df = plz.merge(regiostar, how="left", left_on="ags", right_on="gem_20")
+
+    df = df[["plz", "ags", "RegioStaR2", "RegioStaR4", "RegioStaR5", "RegioStaR7", "RegioStaR17"]]
+
+    return df
+
+
+if __name__ == "__main__":
+    d = "/Users/rakow/Development/matsim-scenarios/shared-svn/projects/matsim-germany/"
+
+    df = prepare_regiostar_lookup(d + "zuordnung_plz_ort.csv", d + "RegioStaR-Referenzdateien.xlsx")
+
+    df.to_csv(d + "zuordnung_plz_regiostar.csv", index=False)
