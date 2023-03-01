@@ -17,7 +17,7 @@ public class DataFromBerlinerSenateToCounts {
 
     public static void main(String[] args) {
 
-        // Data is here https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/CountsId_to_linkId.csv
+        // Data is here https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx
         String excel = "Enter your local path here";
         // Data is here https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/CountsId_to_linkId.csv
         String csv = "Enter your local path here";
@@ -97,7 +97,7 @@ public class DataFromBerlinerSenateToCounts {
                     continue;
                 }
                 int MQ_ID = Integer.parseInt(information[0]);
-                int linkid = 0;
+                int linkid = -999;
                 if (!information[1].isBlank()) {
                     linkid = Integer.parseInt(information[1]);
                 }
@@ -173,7 +173,7 @@ class ExcelDataFormat {
                     berlinCounts.setDetail("");
                 }
                 berlinCounts.setOrientation(replaceUmlaute(sheet.getRow(j).getCell(3).getStringCellValue()));
-                berlinCounts.setLinkid((int) sheet.getRow(j).getCell(6).getNumericCellValue());
+//                berlinCounts.setLinkid((int) sheet.getRow(j).getCell(6).getNumericCellValue());
             }
         }
         return berlinCountsMap;
