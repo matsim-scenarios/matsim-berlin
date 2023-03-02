@@ -91,11 +91,12 @@ input/sumo.net.xml: input/network.osm
 
 
 $p/berlin-$V-network.xml.gz: #input/sumo.net.xml
-
 	# Use 5.x network
-
-	# TODO: This has EPSG: 31468 and needs to be converted
-	cp $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz $@
+	$(sc) prepare reproject-network\
+	 --input $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz\
+	 --output $@\
+	 --input-crs EPSG:31468\
+	 --target-crs $(CRS)
 
 #	$(sc) prepare network-from-sumo $<\
 	 --output $@

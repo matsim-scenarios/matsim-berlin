@@ -3,7 +3,9 @@ package org.matsim.synthetic;
 import com.google.inject.Inject;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Plan;
 import org.matsim.application.MATSimApplication;
 import org.matsim.application.options.SampleOptions;
 import org.matsim.application.prepare.CreateLandUseShp;
@@ -24,6 +26,7 @@ import org.matsim.core.config.groups.StrategyConfigGroup;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
+import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.SumScoringFunction;
@@ -45,7 +48,7 @@ import java.util.List;
 		LookupRegioStaR.class, ExtractFacilityShp.class, DownSamplePopulation.class, DownloadCommuterStatistic.class,
 		AssignCommuters.class, RunActitopp.class, CreateNetworkFromSumo.class, CreateTransitScheduleFromGtfs.class,
 		CleanNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class,
-		CreateCountsFromOpenData.class, CreateCountsFromVMZ.class
+		CreateCountsFromOpenData.class, CreateCountsFromVMZ.class, ReprojectNetwork.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
 
@@ -126,9 +129,17 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	protected void prepareScenario(Scenario scenario) {
 
 		if (mode == CalibrationMode.locationChoice) {
-			// TODO: set all to car
-		}
 
+			// Location choice is based on car
+			for (Person p : scenario.getPopulation().getPersons().values()) {
+				for (Plan plan : p.getPlans()) {
+					for (Leg leg : TripStructureUtils.getLegs(plan)) {
+						leg.setMode("car");
+						leg.setRoutingMode("car");
+					}
+				}
+			}
+		}
 	}
 
 	@Override
