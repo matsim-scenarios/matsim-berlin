@@ -12,8 +12,7 @@ import java.util.List;
 /**
  * Class to match points or linestrings to MATSim network links
  * can be used to create counts
- * */
-
+ */
 public class NetworkIndex<T> {
 
 	private STRtree index = new STRtree();
@@ -49,7 +48,7 @@ public class NetworkIndex<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<Link> query(T toMatch){
+	public List<Link> query(T toMatch) {
 
 		Geometry geometry = getter.createGeometry(toMatch);
 
@@ -66,7 +65,7 @@ public class NetworkIndex<T> {
 		this.getter = getter;
 	}
 
-	public Geometry getGeometry(T object){
+	public Geometry getGeometry(T object) {
 		return this.getter.createGeometry(object);
 	}
 
@@ -92,6 +91,7 @@ public class NetworkIndex<T> {
 		index.remove(env, link);
 	}
 
+	@FunctionalInterface
 	public interface GeometryGetter<T> {
 
 		Geometry createGeometry(T o);

@@ -171,23 +171,31 @@ $p/berlin-static-$V-25pct.plans.xml.gz: $p/berlin-only-$V-25pct.plans.xml.gz $p/
      	 --samples 0.1\
 
 
-$p/berlin-activities-$V-25pct.plans.xml.gz: $p/berlin-static-$V-25pct.plans.xml.gz
-	$(sc) prepare actitopp\
-	 --input $< --output $@
+$p/berlin-activities-$V-25pct.plans-1.xml.gz: $p/berlin-static-$V-25pct.plans.xml.gz
+	# Create five separate sets of activities
+	$(sc) prepare actitopp --n 1 --seed 2 --input $< --output $(subst plans-1,plans-2,$@)
+	$(sc) prepare actitopp --n 1 --seed 3 --input $< --output $(subst plans-1,plans-3,$@)
+	$(sc) prepare actitopp --n 1 --seed 4 --input $< --output $(subst plans-1,plans-4,$@)
+	$(sc) prepare actitopp --n 1 --seed 4 --input $< --output $(subst plans-1,plans-5,$@)
 
-$p/berlin-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans.xml.gz $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
+	$(sc) prepare actitopp --n 1 --seed 1 --input $< --output $@
+
+$p/berlin-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans-1.xml.gz $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
 	$(sc) prepare init-location-choice\
-	 --input $< --output $@\
+	 --input "$(subst plans-1,plans-*,$<)"\
+	 --output $@\
 	 --facilities $(word 2,$^)\
 	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp
 
-	$(sc) prepare filter-relevant-agents\
+	# TODO: location choice and then merge
+
+	#$(sc) prepare filter-relevant-agents\
 	 --input $@ --output $@\
 	 --shp input/v6.0/area/area.shp\
 	 --facilities $(word 2,$^)\
 	 --network $(word 3,$^)
 
-	$(sc) prepare downsample-population $@\
+	#$(sc) prepare downsample-population $@\
      	 --sample-size 0.25\
      	 --samples 0.1 0.01\
 

@@ -15,6 +15,7 @@ import picocli.CommandLine;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Random;
 import java.util.SplittableRandom;
 
 @CommandLine.Command(
@@ -31,8 +32,11 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 	@CommandLine.Option(names = "--output", description = "Path to output population", required = true)
 	private Path output;
 
-	@CommandLine.Option(names = "--n", description = "Number of plans to generate per agent", defaultValue = "5")
+	@CommandLine.Option(names = "--n", description = "Number of plans to generate per agent", defaultValue = "1")
 	private int n;
+
+	@CommandLine.Option(names = "--seed", description = "Seed used to generate plans", defaultValue = "1")
+	private long seed;
 
 	private PopulationFactory factory;
 	private int index;
@@ -51,7 +55,7 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 
 		log.info("Generating activity chains...");
 
-		tl = ThreadLocal.withInitial(Context::new);
+		tl = ThreadLocal.withInitial(() -> new Context(seed));
 
 		ParallelPersonAlgorithmUtils.run(population, 8, this);
 
@@ -265,9 +269,16 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 
 		private final ModelFileBase fileBase = new ModelFileBase();
 
-		private final RNGHelper rng = new RNGHelper(1);
-		private final SplittableRandom rnd = new SplittableRandom(1);
+		private final RNGHelper rng;
+		private final SplittableRandom rnd;
 
+		public Context(long seed) {
+
+			// Generate a new uncorrelated seed
+			long l = new Random(seed).nextLong();
+			rng = new RNGHelper(l);
+			rnd = new SplittableRandom(l);
+		}
 	}
 
 }

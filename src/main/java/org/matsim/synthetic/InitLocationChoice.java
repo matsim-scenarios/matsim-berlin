@@ -27,7 +27,7 @@ import org.opengis.feature.simple.SimpleFeature;
 import picocli.CommandLine;
 
 import javax.annotation.Nullable;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,7 +40,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 	private static final Logger log = LogManager.getLogger(InitLocationChoice.class);
 
-	@CommandLine.Option(names = "--input", description = "Path to input population", required = true)
+	@CommandLine.Option(names = "--input", description = "Path to input population, can be a pattern if * is used.", required = true)
 	private Path input;
 
 	@CommandLine.Option(names = "--output", description = "Path to output population", required = true)
@@ -75,8 +75,6 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		zones = shp.readFeatures().stream()
 				.collect(Collectors.toMap(ft -> Long.parseLong((String) ft.getAttribute("ARS")), ft -> ft));
 
-		Population population = PopulationUtils.readPopulation(input.toString());
-
 		ActivityFacilities facilities = FacilitiesUtils.createActivityFacilities();
 		new MatsimFacilitiesReader(RunOpenBerlinScenario.CRS, RunOpenBerlinScenario.CRS, facilities)
 				.readFile(facilityPath.toString());
@@ -100,9 +98,26 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		// Build all trees
 		trees.values().forEach(STRtree::build);
 
-		ParallelPersonAlgorithmUtils.run(population, 8, this);
+		PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:**/" + input.getFileName().toString());
 
-		PopulationUtils.writePopulation(population, output.toString());
+		List<Path> input = Files.list(this.input.getParent())
+				.filter(matcher::matches)
+				.toList();
+
+		log.info("Using input files: {}", input);
+
+		int i = 1;
+		for (Path p : input) {
+
+			Population population = PopulationUtils.readPopulation(p.toString());
+			ParallelPersonAlgorithmUtils.run(population, 8, this);
+
+			String filename = output.toString().replace("plans.xml.gz", "plans-" + i + ".xml.gz");
+			PopulationUtils.writePopulation(population, filename);
+
+			log.info("Written population to {}", filename);
+			i++;
+		}
 
 
 		return 0;
