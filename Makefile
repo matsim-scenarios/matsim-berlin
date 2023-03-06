@@ -173,12 +173,12 @@ $p/berlin-static-$V-25pct.plans.xml.gz: $p/berlin-only-$V-25pct.plans.xml.gz $p/
 
 $p/berlin-activities-$V-25pct.plans-1.xml.gz: $p/berlin-static-$V-25pct.plans.xml.gz
 	# Create five separate sets of activities
-	$(sc) prepare actitopp --n 1 --seed 2 --input $< --output $(subst plans-1,plans-2,$@)
-	$(sc) prepare actitopp --n 1 --seed 3 --input $< --output $(subst plans-1,plans-3,$@)
-	$(sc) prepare actitopp --n 1 --seed 4 --input $< --output $(subst plans-1,plans-4,$@)
-	$(sc) prepare actitopp --n 1 --seed 4 --input $< --output $(subst plans-1,plans-5,$@)
+	$(sc) prepare activity-sampling --seed 2 --input $< --output $(subst plans-1,plans-2,$@) --persons src/main/python/table-persons.csv --activities src/main/python/table-activities.csv
+	$(sc) prepare activity-sampling --seed 3 --input $< --output $(subst plans-1,plans-3,$@) --persons src/main/python/table-persons.csv --activities src/main/python/table-activities.csv
+	$(sc) prepare activity-sampling --seed 4 --input $< --output $(subst plans-1,plans-4,$@) --persons src/main/python/table-persons.csv --activities src/main/python/table-activities.csv
+	$(sc) prepare activity-sampling --seed 5 --input $< --output $(subst plans-1,plans-5,$@) --persons src/main/python/table-persons.csv --activities src/main/python/table-activities.csv
 
-	$(sc) prepare actitopp --n 1 --seed 1 --input $< --output $@
+	$(sc) prepare activity-sampling --seed 1 --input $< --output $@ --persons src/main/python/table-persons.csv --activities src/main/python/table-activities.csv
 
 $p/berlin-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans-1.xml.gz $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
 	$(sc) prepare init-location-choice\

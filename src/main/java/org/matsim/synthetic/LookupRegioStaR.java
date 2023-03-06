@@ -72,7 +72,8 @@ public class LookupRegioStaR implements MATSimAppCommand, PersonAlgorithm {
 		if (!lookup.containsKey(gem))
 			log.warn("Unknown Gemeinde {}", gem);
 
-		person.getAttributes().putAttribute(Attributes.RegioStaR7, lookup.get(gem));
+		// Currently hardcoded to R7
+		person.getAttributes().putAttribute(Attributes.RegioStaR7, lookup.get(gem) - 70);
 	}
 
 	private Int2IntMap readXls() throws IOException, InvalidFormatException {

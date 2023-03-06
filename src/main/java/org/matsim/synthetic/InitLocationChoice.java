@@ -132,66 +132,66 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 			List<Activity> acts = TripStructureUtils.getActivities(plan, TripStructureUtils.StageActivityHandling.ExcludeStageActivities);
 
 			Coord lastCoord = homeCoord;
+			ActivityFacility work = null;
+			if (PersonUtils.isEmployed(person)) {
+				// Select work facility
+				if (person.getAttributes().getAttribute(Attributes.ARS) == person.getAttributes().getAttribute(Attributes.COMMUTE)) {
+					work = sampleDistAndZone(homeCoord,
+							trees.get("work"),
+							(Geometry) zones.get((long) person.getAttributes().getAttribute(Attributes.COMMUTE)).getDefaultGeometry(),
+							(double) person.getAttributes().getAttribute(Attributes.COMMUTE_KM),
+							ctxs.get().rnd
+					);
 
-			// Edu is fixed and not sampled twice
-			ActivityFacility edu = null;
+					// Filter brandenburg zones
+				} else
+					work = sampleZone(
+							trees.get("work"),
+							(Geometry) zones.get((long) person.getAttributes().getAttribute(Attributes.COMMUTE)).getDefaultGeometry(),
+							ctxs.get().rnd
+					);
+			}
 
 			for (Activity act : acts) {
 
 				String type = act.getType();
 
 				if (Attributes.isLinkUnassigned(act.getLinkId())) {
-
 					act.setLinkId(null);
 					ActivityFacility location = null;
 
-					// TODO: unemployed persons have WORK activities
-					// bug in actitopp?
-
-					if (type.equals("work") && PersonUtils.isEmployed(person)) {
-						// Select work facility
-						if (person.getAttributes().getAttribute(Attributes.ARS) == person.getAttributes().getAttribute(Attributes.COMMUTE)) {
-							location = sampleDistAndZone(homeCoord,
-									trees.get(type),
-									(Geometry) zones.get((long) person.getAttributes().getAttribute(Attributes.COMMUTE)).getDefaultGeometry(),
-									(double) person.getAttributes().getAttribute(Attributes.COMMUTE_KM),
-									ctxs.get().rnd
-							);
-
-							// Filter brandenburg zones
-						} else
-							location = sampleZone(
-									trees.get(type),
-									(Geometry) zones.get((long) person.getAttributes().getAttribute(Attributes.COMMUTE)).getDefaultGeometry(),
-									ctxs.get().rnd
-							);
-
+					if (type.equals("work")) {
 						// Location can be outside network area / outside available facilities
 						// these people will work from home
-						if (location == null) {
+						if (work == null) {
 							act.setCoord(homeCoord);
 							continue;
-						}
-					} else if (type.equals("education")) {
-						if (edu != null) {
-							location = edu;
-						} else {
-							location = sampleDistAndZone(homeCoord,
-									trees.get(type), null, ctxs.get().eduDist.sample(), ctxs.get().rnd
-							);
-
-							edu = location;
-						}
+						} else
+							location = work;
 					}
 
-					if (location == null) {
+					if (location == null && trees.containsKey(type)) {
 						// sample something randomly with increasing radius
-						for (int i = 0; i < 15 && location == null; i++) {
-							List<ActivityFacility> query = trees.get(type).query(MGC.coord2Point(lastCoord).buffer(3000 + 1000 * i).getEnvelopeInternal());
+
+						// TODO: sample distance can below the desired dist
+						double dist = (double) act.getAttributes().getAttribute("orig_dist");
+						for (int i = 0; i < 10 && location == null; i++) {
+							List<ActivityFacility> query = trees.get(type).query(MGC.coord2Point(lastCoord).buffer(dist * (1000 * i) * Math.pow(1.1, i)).getEnvelopeInternal());
 							if (!query.isEmpty()) {
 								location = query.get(ctxs.get().rnd.nextInt(query.size()));
 							}
 						}
+					}
+
+					if (location == null) {
+						// sample only coordinate if nothing else is possible
+						// Activities without facility entry, or where no facility could be found
+
+						double dist = (double) act.getAttributes().getAttribute("orig_dist");
+						Coord c = rndCoord(ctxs.get().rnd, dist, lastCoord);
+						act.setCoord(c);
+						lastCoord = c;
+						continue;
 					}
 
 					lastCoord = location.getCoord();
@@ -210,12 +210,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		for (int i = 0; i < 500 && location == null; i++) {
 
 			// TODO: full degree angle can be very inefficient for sampling far away zones
-			var angle = rnd.nextDouble() * Math.PI * 2;
-
-			var x = Math.cos(angle) * dist;
-			var y = Math.sin(angle) * dist;
-
-			Coord c = new Coord(coord.getX() + x, coord.getY() + y);
+			Coord c = rndCoord(rnd, dist, coord);
 
 			List<ActivityFacility> query = index.query(MGC.coord2Point(c).buffer(3000).getEnvelopeInternal());
 			while (!query.isEmpty()) {
@@ -228,6 +223,15 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		}
 
 		return location;
+	}
+
+	private Coord rndCoord(SplittableRandom rnd, double dist, Coord origin) {
+		var angle = rnd.nextDouble() * Math.PI * 2;
+
+		var x = Math.cos(angle) * dist;
+		var y = Math.sin(angle) * dist;
+
+		return new Coord(origin.getX() + x, origin.getY() + y);
 	}
 
 	/**
@@ -252,12 +256,6 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 	private static final class Context {
 		private final SplittableRandom rnd = new SplittableRandom(1);
-
-		/**
-		 * Edu commuting dists, fit for < 30 km.
-		 */
-		private final RealDistribution eduDist = new GammaDistribution(new Well19937c(1), 0.9599925, 1 / 0.2180801);
-
 	}
 
 }

@@ -76,17 +76,25 @@ class Availability(AutoNameLowerStrEnum):
 class Purpose(AutoNameLowerStrEnum):
     WORK = auto()
     WORK_BUSINESS = auto()
-    EDU_PRIMARY = auto()  # Edu could be split further
+    EDU_KIGA = auto()
+    """ Kinderkrippe/-garten  """
+    EDU_PRIMARY = auto()
+    """ Grundschule """
+    EDU_SECONDARY = auto()
+    """ Weiterführende Schule """
     EDU_HIGHER = auto()
+    """ Berufs-, Fach-, Hochschule """
     EDU_OTHER = auto()
-    SHOP_FOOD = auto()
+    """ Andere Bildungseinrichtung """
+
+    SHOP_DAILY = auto()
     SHOP_OTHER = auto()
     PERSONAL_BUSINESS = auto()
     TRANSPORT = auto()
     LEISURE = auto()
     DINING = auto()
     OUTSIDE_RECREATION = auto()
-    VISIT = auto()  # Check if needed
+    VISIT = auto()
     HOME = auto()
     OTHER = auto()
 
@@ -242,7 +250,8 @@ class Activity:
     n: int
     type: Purpose
     duration: int
-    leg_dist: int
+    leg_dist: float
+    leg_duration: float
     leg_mode: TripMode
 
 
@@ -415,7 +424,27 @@ def srv_to_standard(data: tuple, regio=None):
 
 
 if __name__ == "__main__":
-    d = os.path.expanduser("~/Development/matsim-scenarios/shared-svn/projects/matsim-berlin/data/SrV/")
+    import argparse
 
-    read_all_srv([d + "Berlin+Umland", d + "Brandenburg"],
-                 regio=os.path.expanduser("~/Development/matsim-scenarios/shared-svn/projects/matsim-germany/zuordnung_plz_regiostar.csv"))
+    from preparation import prepare_persons, create_activities
+
+    parser = argparse.ArgumentParser(description="Converter for survey data")
+
+    parser.add_argument("-d", "--directory", default=os.path.expanduser(
+        "~/Development/matsim-scenarios/shared-svn/projects/matsim-berlin/data/SrV/"))
+    parser.add_argument("--regiostar", default=os.path.expanduser(
+        "~/Development/matsim-scenarios/shared-svn/projects/matsim-germany/zuordnung_plz_regiostar.csv"))
+
+    parser.add_argument("--output", default="table", help="Output prefix")
+
+    args = parser.parse_args()
+
+    hh, persons, trips = read_all_srv([args.directory + "Berlin+Umland", args.directory + "Brandenburg"],
+                                      regio=args.regiostar)
+
+    df = prepare_persons(hh, persons, trips, augment=5)
+
+    df.to_csv(args.output + "-persons.csv", index_label="idx")
+
+    activities = create_activities(df, trips, include_person_context=False, cut_groups=False)
+    activities.to_csv(args.output + "-activities.csv", index=False)

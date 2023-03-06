@@ -35,6 +35,8 @@ public class MergePlans implements MATSimAppCommand {
 
 		Population population = PopulationUtils.readPopulation(inputs.get(0).toString());
 
+		// TODO: only merge selected plans
+
 		for (int i = 1; i < inputs.size(); i++) {
 
 			String filename = inputs.get(i).toString();

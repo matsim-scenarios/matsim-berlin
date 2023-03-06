@@ -24,6 +24,7 @@ public final class Attributes {
 	 */
 	public static final String LOR = "lor";
 
+
 	public static final String RegioStaR7 = "RegioStaR7";
 
 
@@ -32,6 +33,13 @@ public final class Attributes {
 	 */
 	public static final String COMMUTE = "commute";
 	public static final String COMMUTE_KM = "commute_km";
+
+	public static final String BIKE_AVAIL = "bikeAvail";
+	public static final String PT_ABO_AVAIL = "ptAboAvail";
+	public static final String EMPLOYMENT = "employment";
+	public static final String RESTRICTED_MOBILITY = "restricted_mobility";
+	public static final String ECONOMIC_STATUS = "economic_status";
+	public static final String HOUSEHOLD_SIZE = "household_size";
 
 
 	public static boolean isLinkUnassigned(Id<Link> link) {

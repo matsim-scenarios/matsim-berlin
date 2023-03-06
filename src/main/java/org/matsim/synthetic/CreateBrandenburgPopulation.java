@@ -89,16 +89,6 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 				})
 				.readValue(employedPath.toFile());
 
-		// TODO: random LOR, random building -> work facility
-		// 5 plans with different work location per agent
-
-		// TODO: Route all plans
-		// remove agents not crossing berlin + Autobahnring
-		// Kreis um Center von Berlin + Radius konfigurierbar
-
-		// Cadyts / Sample size reduzieren
-		// Nur mit home-work-home
-
 		// Filter for Brandenburg
 		Map<String, SimpleFeature> zones = shp.readFeatures().stream()
 				.filter(ft -> ft.getAttribute("SN_L").equals("12"))

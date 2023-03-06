@@ -211,14 +211,18 @@ class SrV2018:
             return Purpose.WORK
         elif x == 2:
             return Purpose.WORK_BUSINESS
-        elif x == 3 or x == 4:
+        elif x == 3:
+            return Purpose.EDU_KIGA
+        elif x == 4:
             return Purpose.EDU_PRIMARY
-        elif x == 5 or x == 6:
+        elif x == 5:
+            return Purpose.EDU_SECONDARY
+        elif x == 6:
             return Purpose.EDU_HIGHER
         elif x == 7:
             return Purpose.EDU_OTHER
         elif x == 8:
-            return Purpose.SHOP_FOOD
+            return Purpose.SHOP_DAILY
         elif x == 9:
             return Purpose.SHOP_OTHER
         elif x == 19 or x == 10:

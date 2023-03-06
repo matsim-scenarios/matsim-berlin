@@ -56,7 +56,7 @@ import java.util.Set;
 		LookupRegioStaR.class, ExtractFacilityShp.class, DownSamplePopulation.class, DownloadCommuterStatistic.class,
 		AssignCommuters.class, RunActitopp.class, CreateNetworkFromSumo.class, CreateTransitScheduleFromGtfs.class,
 		CleanNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class,
-		CreateCountsFromOpenData.class, CreateCountsFromVMZ.class, ReprojectNetwork.class
+		CreateCountsFromOpenData.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
 
@@ -99,7 +99,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		config.plans().setInputFile(populationPath.toString());
 
 		// TODO: typical durations not from data yet
-		for (String act : List.of("home", "work", "education", "leisure", "shopping", "other")) {
+		for (String act : List.of("home", "work", "edu_kiga", "edu_primary", "edu_secondary", "edu_higher", "edu_other", "transport", "visit",
+				"leisure", "dining", "shop_daily", "shop_other", "work_business", "personal_business", "outside_recreation", "other")) {
 			config.planCalcScore()
 					.addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams(act).setTypicalDuration(6 * 3600));
 		}
@@ -131,9 +132,9 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 			FrozenTastesConfigGroup dccg = ConfigUtils.addOrGetModule(config, FrozenTastesConfigGroup.class);
 
-			dccg.setEpsilonScaleFactors("1.0,1.0,1.0");
+			dccg.setEpsilonScaleFactors("1.0,1.0,1.0,1.0,1.0");
 			dccg.setAlgorithm(FrozenTastesConfigGroup.Algotype.bestResponse);
-			dccg.setFlexibleTypes("leisure,shopping,other");
+			dccg.setFlexibleTypes("shop_daily,shop_other,leisure,dining,personal_business");
 			dccg.setTravelTimeApproximationLevel(FrozenTastesConfigGroup.ApproximationLevel.localRouting);
 			dccg.setRandomSeed(2);
 			dccg.setDestinationSamplePercent(10.);

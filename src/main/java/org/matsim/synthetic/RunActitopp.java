@@ -195,7 +195,6 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 			a.setMaximumDurationUndefined();
 		}
 
-
 	}
 
 	private String getActivityType(ActivityType activityType) {
@@ -245,11 +244,11 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 		// Raumtyp Coding: 1 - rural 2 - provincial 3 - cityoutskirt 4 - metropolitan 5 - conurbation
 		int regioStar = (int) p.getAttributes().getAttribute(Attributes.RegioStaR7);
 		int areaType = switch (regioStar) {
-			case 71 -> 4;
-			case 72, 75 -> 5;
-			case 73 -> 3;
-			case 74, 76 -> 2;
-			case 77 -> 1;
+			case 1 -> 4;
+			case 2, 5 -> 5;
+			case 3 -> 3;
+			case 4, 6 -> 2;
+			case 7 -> 1;
 			default -> throw new IllegalStateException("Unknown regioStar type: " + regioStar);
 		};
 

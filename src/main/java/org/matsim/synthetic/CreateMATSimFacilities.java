@@ -168,16 +168,34 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 	private Set<String> activities(SimpleFeature ft) {
 		Set<String> act = new HashSet<>();
 
-		if (Boolean.TRUE == ft.getAttribute("work"))
+		if (Boolean.TRUE == ft.getAttribute("work")) {
 			act.add("work");
-		if (Boolean.TRUE == ft.getAttribute("shop") || Boolean.TRUE == ft.getAttribute("shop_daily"))
-			act.add("shopping");
-		if (Boolean.TRUE == ft.getAttribute("leisure") || Boolean.TRUE == ft.getAttribute("dining"))
+			act.add("work_business");
+		}
+		if (Boolean.TRUE == ft.getAttribute("shop")) {
+			act.add("shop_other");
+			act.add("shop_daily");
+		}
+		if (Boolean.TRUE == ft.getAttribute("shop_daily"))
+			act.add("shop_daily");
+		if (Boolean.TRUE == ft.getAttribute("leisure"))
 			act.add("leisure");
-		if (Boolean.TRUE == ft.getAttribute("edu_higher") || Boolean.TRUE == ft.getAttribute("edu_prim") || Boolean.TRUE == ft.getAttribute("edu_other"))
-			act.add("education");
-		if (Boolean.TRUE == ft.getAttribute("p_business") || Boolean.TRUE == ft.getAttribute("medical") || Boolean.TRUE == ft.getAttribute("religious"))
-			act.add("other");
+		if (Boolean.TRUE == ft.getAttribute("dining"))
+			act.add("dining");
+		if (Boolean.TRUE == ft.getAttribute("edu_higher"))
+			act.add("edu_higher");
+		if (Boolean.TRUE == ft.getAttribute("edu_prim")) {
+			act.add("edu_primary");
+			act.add("edu_secondary");
+		}
+		if (Boolean.TRUE == ft.getAttribute("edu_kiga"))
+			act.add("edu_kiga");
+		if (Boolean.TRUE == ft.getAttribute("edu_other"))
+			act.add("edu_other");
+		if (Boolean.TRUE == ft.getAttribute("p_business") || Boolean.TRUE == ft.getAttribute("medical") || Boolean.TRUE == ft.getAttribute("religious")) {
+			act.add("personal_business");
+			act.add("work_business");
+		}
 
 		return act;
 	}
