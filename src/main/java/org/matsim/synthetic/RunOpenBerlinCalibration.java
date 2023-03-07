@@ -16,6 +16,7 @@ import org.matsim.application.prepare.network.CleanNetwork;
 import org.matsim.application.prepare.network.CreateNetworkFromSumo;
 import org.matsim.application.prepare.population.DownSamplePopulation;
 import org.matsim.application.prepare.population.MergePopulations;
+import org.matsim.application.prepare.population.SplitActivityTypesDuration;
 import org.matsim.application.prepare.pt.CreateTransitScheduleFromGtfs;
 import org.matsim.contrib.cadyts.car.CadytsCarModule;
 import org.matsim.contrib.cadyts.car.CadytsContext;
@@ -46,6 +47,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * This scenario class is used for run a MATSim scenario in various stages of the calibration process.
@@ -56,11 +58,18 @@ import java.util.Set;
 		LookupRegioStaR.class, ExtractFacilityShp.class, DownSamplePopulation.class, DownloadCommuterStatistic.class,
 		AssignCommuters.class, RunActitopp.class, CreateNetworkFromSumo.class, CreateTransitScheduleFromGtfs.class,
 		CleanNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class,
-		CreateCountsFromOpenData.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class
+		CreateCountsFromOpenData.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class,
+		MergePlans.class, SplitActivityTypesDuration.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
 
 	private static final Logger log = LogManager.getLogger(RunOpenBerlinCalibration.class);
+
+	/**
+	 * Flexible modes, which need to be known for location choice and during generation.
+	 * A day can not end on a flexible mode.
+	 */
+	static final Set<String> FLEXIBLE_MODES = Set.of("shop_daily", "shop_other", "leisure", "dining", "personal_business");
 
 	@CommandLine.Option(names = "--mode", description = "Calibration mode that should be run.")
 	private CalibrationMode mode;
@@ -70,9 +79,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 	@CommandLine.Option(names = "--population", description = "Path to population")
 	private Path populationPath;
-
-	@CommandLine.Option(names = "--no-qsim", description = "Disable QSim and use teleportation only", defaultValue = "false")
-	private boolean noQSIM;
 
 	@CommandLine.Mixin
 	private final SampleOptions sample = new SampleOptions(100, 25, 10, 1);
@@ -106,6 +112,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		}
 
 		config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("car interaction").setTypicalDuration(60));
+		config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("ride interaction").setTypicalDuration(60));
 
 		if (sample.isSet()) {
 			config.qsim().setFlowCapFactor(sample.getSize() / 100d);
@@ -120,10 +127,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		if (mode == CalibrationMode.locationChoice) {
 
-			// TODO: increase network capacity factor
-			// TODO: set all plans to walk/car
-			config.qsim().setFlowCapFactor(config.qsim().getFlowCapFactor() * 10.0);
-			config.qsim().setStorageCapFactor(config.qsim().getStorageCapFactor() * 10.0);
+			config.qsim().setFlowCapFactor(config.qsim().getFlowCapFactor() * 4);
+			config.qsim().setStorageCapFactor(config.qsim().getStorageCapFactor() * 4);
 
 			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings().setStrategyName(FrozenTastes.LOCATION_CHOICE_PLAN_STRATEGY).setWeight(weight));
 			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings().setStrategyName(DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta).setWeight(1.0));
@@ -134,10 +139,10 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 			dccg.setEpsilonScaleFactors("1.0,1.0,1.0,1.0,1.0");
 			dccg.setAlgorithm(FrozenTastesConfigGroup.Algotype.bestResponse);
-			dccg.setFlexibleTypes("shop_daily,shop_other,leisure,dining,personal_business");
+			dccg.setFlexibleTypes(String.join(",", FLEXIBLE_MODES));
 			dccg.setTravelTimeApproximationLevel(FrozenTastesConfigGroup.ApproximationLevel.localRouting);
 			dccg.setRandomSeed(2);
-			dccg.setDestinationSamplePercent(10.);
+			dccg.setDestinationSamplePercent(25);
 
 		} else if (mode == CalibrationMode.cadyts) {
 
@@ -146,36 +151,12 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		} else
 			throw new IllegalStateException("Mode not implemented:" + mode);
 
-
-		if (noQSIM) {
-			log.info("Disabling QSim...");
-
-			// Transit will not work without qsim
-			config.transit().setUseTransit(false);
-
-			Collection<String> mainModes = config.qsim().getMainModes();
-			config.qsim().setMainModes(Set.of());
-
-		}
-
 		return config;
 	}
 
 	@Override
 	protected void prepareScenario(Scenario scenario) {
 
-		if (mode == CalibrationMode.locationChoice) {
-
-			// Location choice is based on car
-			for (Person p : scenario.getPopulation().getPersons().values()) {
-				for (Plan plan : p.getPlans()) {
-					for (Leg leg : TripStructureUtils.getLegs(plan)) {
-						leg.setMode("car");
-						leg.setRoutingMode("car");
-					}
-				}
-			}
-		}
 	}
 
 	@Override
@@ -212,22 +193,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			});
 
 		}
-
-		if (noQSIM) {
-
-			controler.addOverridingModule(new AbstractModule() {
-				@Override
-				public void install() {
-					addTravelTimeBinding(TransportMode.ride).to(FreeSpeedTravelTime.class);
-					addTravelTimeBinding(TransportMode.car).to(FreeSpeedTravelTime.class);
-					addTravelTimeBinding("freight").to(FreeSpeedTravelTime.class);
-				}
-
-			});
-
-		}
-
-
 	}
 
 	public enum CalibrationMode {

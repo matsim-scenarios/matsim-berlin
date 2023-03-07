@@ -14,7 +14,7 @@ import java.util.List;
 
 @CommandLine.Command(
 		name = "merge-plans",
-		description = "Merge plans of the same person into one population."
+		description = "Merge selected plans of the same person into one population."
 )
 public class MergePlans implements MATSimAppCommand {
 
@@ -24,7 +24,7 @@ public class MergePlans implements MATSimAppCommand {
 	private List<Path> inputs;
 
 	@CommandLine.Option(names = "--output", description = "Path to output population", required = true)
-	private List<Path> output;
+	private Path output;
 
 	public static void main(String[] args) {
 		new MergePlans().execute(args);
@@ -35,7 +35,14 @@ public class MergePlans implements MATSimAppCommand {
 
 		Population population = PopulationUtils.readPopulation(inputs.get(0).toString());
 
-		// TODO: only merge selected plans
+		for (Person person : population.getPersons().values()) {
+			Plan selected = person.getSelectedPlan();
+
+			for (Plan plan : person.getPlans()) {
+				if (plan != selected)
+					person.removePlan(plan);
+			}
+		}
 
 		for (int i = 1; i < inputs.size(); i++) {
 
@@ -52,9 +59,7 @@ public class MergePlans implements MATSimAppCommand {
 					continue;
 				}
 
-				for (Plan plan : p.getPlans()) {
-					destPerson.addPlan(plan);
-				}
+				destPerson.addPlan(p.getSelectedPlan());
 			}
 		}
 

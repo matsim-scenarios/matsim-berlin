@@ -257,11 +257,18 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 				a.setMaximumDuration(duration * 60);
 			}
 
-			a.getAttributes().putAttribute("orig_dist", Double.parseDouble(act.get("leg_dist")));
-			a.getAttributes().putAttribute("orig_duration", Double.parseDouble(act.get("leg_duration")));
+			if (i > 0) {
+				a.getAttributes().putAttribute("orig_dist", Double.parseDouble(act.get("leg_dist")));
+				a.getAttributes().putAttribute("orig_duration", Double.parseDouble(act.get("leg_duration")));
+			}
 
 			if (!plan.getPlanElements().isEmpty()) {
 				lastMode = act.get("leg_mode");
+
+				// other mode is initialized as walk
+				if (lastMode.equals("other"))
+					lastMode = "walk";
+
 				plan.addLeg(factory.createLeg(lastMode));
 			}
 
@@ -271,8 +278,7 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 		// Last activity has no end time and duration
 		if (a != null) {
 
-			Set<String> flexible = Set.of("shop_daily", "shop_other", "leisure", "dining", "personal_business");
-			if (!flexible.contains(a.getType())) {
+			if (!RunOpenBerlinCalibration.FLEXIBLE_MODES.contains(a.getType())) {
 				a.setEndTimeUndefined();
 				a.setMaximumDurationUndefined();
 			} else {
