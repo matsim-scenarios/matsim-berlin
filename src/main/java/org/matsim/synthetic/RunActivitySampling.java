@@ -213,7 +213,7 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 
 		person.getAttributes().putAttribute(Attributes.EMPLOYMENT, record.get("employment"));
 		person.getAttributes().putAttribute(Attributes.RESTRICTED_MOBILITY, record.get("restricted_mobility").equals("True"));
-		person.getAttributes().putAttribute(Attributes.ECONOMIC_STATUS, record.get("economic_status").equals("True"));
+		person.getAttributes().putAttribute(Attributes.ECONOMIC_STATUS, record.get("economic_status"));
 		person.getAttributes().putAttribute(Attributes.HOUSEHOLD_SIZE, Integer.parseInt(record.get("n_persons")));
 
 		List<CSVRecord> activities = this.activities.get(idx);
@@ -234,6 +234,8 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 		Activity a = null;
 		String lastMode = null;
 
+		double startTime = 0;
+
 		for (int i = 0; i < activities.size(); i++) {
 
 			CSVRecord act = activities.get(i);
@@ -251,15 +253,31 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 			} else
 				a = factory.createActivityFromLinkId(actType, Id.createLinkId("unassigned"));
 
+			double legDuration = Double.parseDouble(act.get("leg_duration"));
+
 			if (plan.getPlanElements().isEmpty()) {
 				a.setEndTime(duration * 60);
+				startTime += duration * 60;
 			} else if (duration < 1440) {
-				a.setMaximumDuration(duration * 60);
+
+				startTime += legDuration * 60;
+
+				// Flexible modes are represented with duration
+				// otherwise start and end time
+				if (RunOpenBerlinCalibration.FLEXIBLE_MODES.contains(actType))
+					a.setMaximumDuration(duration * 60);
+				else {
+					a.setStartTime(startTime);
+					a.setEndTime(startTime + duration * 60);
+				}
+
+				startTime += duration * 60;
+
 			}
 
 			if (i > 0) {
 				a.getAttributes().putAttribute("orig_dist", Double.parseDouble(act.get("leg_dist")));
-				a.getAttributes().putAttribute("orig_duration", Double.parseDouble(act.get("leg_duration")));
+				a.getAttributes().putAttribute("orig_duration", legDuration);
 			}
 
 			if (!plan.getPlanElements().isEmpty()) {
