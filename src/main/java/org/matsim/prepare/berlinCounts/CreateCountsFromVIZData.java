@@ -1,5 +1,7 @@
 package org.matsim.prepare.berlinCounts;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Row;
@@ -7,10 +9,14 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.locationtech.jts.geom.Geometry;
 import org.matsim.api.core.v01.Coord;
+import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.Identifiable;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.application.MATSimAppCommand;
+import org.matsim.application.options.CountsOption;
 import org.matsim.application.options.CrsOptions;
+import org.matsim.application.options.CsvOptions;
 import org.matsim.core.config.groups.NetworkConfigGroup;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.filter.NetworkFilterManager;
@@ -20,10 +26,7 @@ import org.matsim.counts.CountsWriter;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -43,7 +46,13 @@ public class CreateCountsFromVIZData implements MATSimAppCommand {
 	private Path output;
 
 	@CommandLine.Mixin
+	CountsOption counts = new CountsOption();
+
+	@CommandLine.Mixin
 	CrsOptions crs = new CrsOptions();
+
+	@CommandLine.Mixin
+	CsvOptions csv = new CsvOptions();
 
 	private final Logger logger = LogManager.getLogger(CreateCountsFromVIZData.class);
 
@@ -82,22 +91,37 @@ public class CreateCountsFromVIZData implements MATSimAppCommand {
 		});
 
 		for(Station station: stations.values())
-			match(station, index);
+			match(station, index, counts, network);
 
 		Counts<Link> car = new Counts<>();
 		Counts<Link> freight = new Counts<>();
 
+		List<String> noMatching = new ArrayList<>();
+
 		logger.info("Map stations to counts");
-		mapStationsToCounts(stations, car, freight);
+		mapStationsToCounts(stations, car, freight, noMatching);
 
 		logger.info("Write output count files into {}", output.toString());
 		new CountsWriter(car).write(output.toString() + "\\car-counts.xml");
 		new CountsWriter(freight).write(output.toString() + "\\freight-counts.xml");
 
+		if(!noMatching.isEmpty()){
+			CSVPrinter printer = csv.createPrinter(Path.of(output.toString(), "\\unmatched_stations.csv"));
+			printer.print("id");
+			printer.println();
+
+			for(String id: noMatching){
+				printer.print(id);
+				printer.println();
+			}
+
+			printer.close();
+		}
+
 		return 0;
 	}
 
-	private void mapStationsToCounts(HashMap<String, Station> stations, Counts<Link> car, Counts<Link> freight){
+	private void mapStationsToCounts(HashMap<String, Station> stations, Counts<Link> car, Counts<Link> freight, List<String> noMatching){
 
 		car.setYear(2018);
 		freight.setYear(2018);
@@ -108,11 +132,10 @@ public class CreateCountsFromVIZData implements MATSimAppCommand {
 		car.setName("Car");
 		freight.setName("Freight");
 
-		int counter = 0;
 		for (Station station : stations.values()) {
 
 			if(!station.isMatched()){
-				counter++;
+				noMatching.add(station.getId());
 				continue;
 			}
 
@@ -120,13 +143,26 @@ public class CreateCountsFromVIZData implements MATSimAppCommand {
 			freight.createAndAddCount(station.getMatched().getId(), station.id).createVolume(1, station.getFreight());
 		}
 
-		logger.info("Done. Stations without a matched link: {}", counter);
+		logger.info("Done. Stations without a matched link: {}", noMatching.size());
 	}
 
-	private void match(Station station, NetworkIndex<Station> index) {
+	private void match(Station station, NetworkIndex<Station> index, CountsOption counts, Network network) {
+
+		if(station.getDirection().equals("unbekannt") || counts.isIgnored(station.getId())){
+			station.setIsNotMatched();
+			return;
+		}
+
+		Map<String, Id<Link>> manualMatched = counts.getManualMatched();
+		if(manualMatched.containsKey(station.getId())){
+			Id<Link> linkId = manualMatched.get(station.getId());
+			Link link = network.getLinks().get(linkId);
+			station.setMatched(link);
+			index.remove(link);
+			return;
+		}
 
 		List<Link> result = index.query(station);
-
 		if(result == null) {
 			station.setIsNotMatched();
 			return;
@@ -147,20 +183,19 @@ public class CreateCountsFromVIZData implements MATSimAppCommand {
 			return;
 		}
 
-		Link closest = filtered.stream().findFirst().get();
-		for(Link l: filtered){
-			String linkDirection = getLinkDirection(l);
+		Map<Link, Double> distances = filtered.stream()
+				.filter(link -> pattern.matcher(getLinkDirection(link)).find())
+				.collect(Collectors.toMap(r -> r, r -> index.link2LineString(r).distance(geometry)));
 
-			if(linkDirection.contains(direction)){
-				double distance = index.link2LineString(l).distance(geometry);
-				double curClosest = index.link2LineString(closest).distance(geometry);
+		Double min = Collections.min(distances.values());
 
-				if (distance < curClosest) closest = l;
+		for (Map.Entry<Link, Double> entry : distances.entrySet()) {
+			if(entry.getValue().doubleValue() == min.doubleValue()) {
+				station.setMatched(entry.getKey());
+				index.remove(entry.getKey());
+				return;
 			}
 		}
-
-		station.setMatched(closest);
-		index.remove(closest);
 	}
 
 	private String getLinkDirection(Link l) {
@@ -296,18 +331,5 @@ public class CreateCountsFromVIZData implements MATSimAppCommand {
 		public String getDirection() {
 			return direction;
 		}
-	}
-
-	private enum Direction{
-
-		Nord,
-		Nordost,
-		Nordwest,
-		Ost,
-		Süd,
-		Südost,
-		Südwest,
-		West,
-		unbekannt,
 	}
 }
