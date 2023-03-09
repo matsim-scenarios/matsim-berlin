@@ -20,6 +20,7 @@ import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.algorithms.ParallelPersonAlgorithmUtils;
 import org.matsim.core.population.algorithms.PersonAlgorithm;
 import org.matsim.core.router.TripStructureUtils;
+import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.facilities.*;
 import org.matsim.run.RunOpenBerlinScenario;
@@ -172,11 +173,20 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 					if (location == null && trees.containsKey(type)) {
 						// sample something randomly with increasing radius
-
-						// TODO: sample distance can below the desired dist
 						double dist = (double) act.getAttributes().getAttribute("orig_dist");
+
+						// Lower threshold
+						double lower = dist * 0.85;
+						// Needed for lambda
+						final Coord refCoord = lastCoord;
+
 						for (int i = 0; i < 10 && location == null; i++) {
 							List<ActivityFacility> query = trees.get(type).query(MGC.coord2Point(lastCoord).buffer(dist * (1000 * i) * Math.pow(1.1, i)).getEnvelopeInternal());
+
+							// Distance should be larger than the lower bound
+							query = query.stream().filter(f -> CoordUtils.calcEuclideanDistance(refCoord, f.getCoord()) >= lower)
+									.toList();
+
 							if (!query.isEmpty()) {
 								location = query.get(ctxs.get().rnd.nextInt(query.size()));
 							}

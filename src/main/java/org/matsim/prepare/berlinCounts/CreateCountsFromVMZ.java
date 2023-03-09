@@ -133,6 +133,11 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 				if (using.equals("x")) {
 					count.setUsing(true);
 				}
+
+				if (linkid == -999) {
+					berlinCountsMap.remove(MQ_ID);
+					log.warn("No link id: {}", count);
+				}
 			}
 		} catch (IOException e) {
 			log.error(e);
@@ -356,6 +361,17 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 			this.PERC_Q_KFZ_TYPE[i] = PERC_Q_KFZ_TYPE;
 			this.PERC_Q_PKW_TYPE[i] = PERC_Q_PKW_TYPE;
 			this.PERC_Q_LKW_TYPE[i] = PERC_Q_LKW_TYPE;
+		}
+
+		@Override
+		public String toString() {
+			return "BerlinCounts{" +
+					"MQ_ID=" + MQ_ID +
+					", linkid=" + linkid +
+					", position='" + position + '\'' +
+					", orientation='" + orientation + '\'' +
+					", detail='" + detail + '\'' +
+					'}';
 		}
 	}
 

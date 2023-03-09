@@ -121,17 +121,29 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			config.plans().setInputFile(sample.adjustName(config.plans().getInputFile()));
 		}
 
+		// Flow capacities are increased for the calibration
+		config.qsim().setFlowCapFactor(config.qsim().getFlowCapFactor() * 4);
+		config.qsim().setStorageCapFactor(config.qsim().getStorageCapFactor() * 4);
+
+		// Required for all calibration strategies
+		config.strategy().addStrategySettings(
+				new StrategyConfigGroup.StrategySettings()
+						.setStrategyName(DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta)
+						.setWeight(1.0)
+						.setSubpopulation("person")
+		);
 
 		if (mode == null)
 			throw new IllegalArgumentException("Calibration mode [--mode} not set!");
 
 		if (mode == CalibrationMode.locationChoice) {
 
-			config.qsim().setFlowCapFactor(config.qsim().getFlowCapFactor() * 4);
-			config.qsim().setStorageCapFactor(config.qsim().getStorageCapFactor() * 4);
+			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
+					.setStrategyName(FrozenTastes.LOCATION_CHOICE_PLAN_STRATEGY)
+					.setWeight(weight)
+					.setSubpopulation("person")
+			);
 
-			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings().setStrategyName(FrozenTastes.LOCATION_CHOICE_PLAN_STRATEGY).setWeight(weight));
-			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings().setStrategyName(DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta).setWeight(1.0));
 			config.strategy().setFractionOfIterationsToDisableInnovation(0.8);
 			config.planCalcScore().setFractionOfIterationsToStartScoreMSA(0.8);
 
@@ -146,7 +158,10 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		} else if (mode == CalibrationMode.cadyts) {
 
-			config.counts().setInputFile("./berlin-v6.0-car-counts.xml.gz");
+			config.counts().setInputFile("./berlin-v6.0-counts-car-vmz.xml.gz");
+
+			// Counts are scaled with sample size and reduced for missing commercial traffic
+			config.counts().setCountsScaleFactor(0.75 * sample.getSize() / 100d);
 
 		} else
 			throw new IllegalStateException("Mode not implemented:" + mode);
@@ -180,9 +195,11 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 					Config config = controler.getConfig();
 
 					final ScoringParameters params = parameters.getScoringParameters(person);
-					sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(params, controler.getScenario().getNetwork()));
-					sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(params));
-					sumScoringFunction.addScoringFunction(new CharyparNagelAgentStuckScoring(params));
+
+					// Only cadyts is scored
+//					sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(params, controler.getScenario().getNetwork()));
+//					sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(params));
+//					sumScoringFunction.addScoringFunction(new CharyparNagelAgentStuckScoring(params));
 
 					final CadytsScoring<Link> scoringFunction = new CadytsScoring<>(person.getSelectedPlan(), config, cadytsContext);
 					scoringFunction.setWeightOfCadytsCorrection(weight * config.planCalcScore().getBrainExpBeta());
