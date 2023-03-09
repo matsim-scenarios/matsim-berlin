@@ -19,6 +19,7 @@
     "synagogue": ["religious"],
     "temple": ["religious"],
     "hospital": ["medical", "work"],
+    "veterinary": ["p_business", "work"],
     "kindergarden": ["edu_kiga", "work"],
     "school": ["edu_prim", "work"],
     "university": ["edu_higher", "work"],
@@ -107,12 +108,18 @@
   "medicalcare": {
     "*": ["medical", "work"]
   },
+  "healthcare": {
+    "*": ["medial", "work"]
+  },
   "office": {
-    "*": ["work"]
+    "*": ["work"],
+    "tax_advisor": ["p_business", "work"],
+    "insurance": ["p_business", "work"]
   },
   "government": {
     "*": ["work"],
-    "tax": ["p_business","work"]
+    "tax": ["p_business","work"],
+    "register_office": ["p_business","work"]
   },
   "shop": {
     "*": ["shop", "work"],
