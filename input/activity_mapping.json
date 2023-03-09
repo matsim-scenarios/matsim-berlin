@@ -110,7 +110,16 @@
   "office": {
     "*": ["work"]
   },
+  "government": {
+    "*": ["work"],
+    "tax": ["p_business","work"]
+  },
   "shop": {
-    "*": ["shop", "work"]
+    "*": ["shop", "work"],
+    "supermarket": ["shop_daily", "work"],
+    "convenience": ["shop_daily", "work"],
+    "chemist": ["shop_daily", "work"],
+    "bakery": ["shop_daily", "work"],
+    "deli": ["shop_daily", "work"]
   }
 }

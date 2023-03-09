@@ -4,11 +4,8 @@ import com.google.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
-import org.matsim.api.core.v01.population.Plan;
 import org.matsim.application.MATSimApplication;
 import org.matsim.application.options.SampleOptions;
 import org.matsim.application.prepare.CreateLandUseShp;
@@ -27,16 +24,14 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.StrategyConfigGroup;
-import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
-import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.SumScoringFunction;
-import org.matsim.core.scoring.functions.*;
-import org.matsim.core.trafficmonitoring.FreeSpeedTravelTime;
+import org.matsim.core.scoring.functions.ScoringParameters;
+import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.prepare.berlinCounts.CreateCountsFromOpenData;
 import org.matsim.prepare.berlinCounts.CreateCountsFromVMZ;
 import org.matsim.run.RunOpenBerlinScenario;
@@ -44,10 +39,8 @@ import org.matsim.synthetic.download.DownloadCommuterStatistic;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * This scenario class is used for run a MATSim scenario in various stages of the calibration process.
@@ -69,7 +62,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	 * Flexible modes, which need to be known for location choice and during generation.
 	 * A day can not end on a flexible mode.
 	 */
-	static final Set<String> FLEXIBLE_MODES = Set.of("shop_daily", "shop_other", "leisure", "dining", "personal_business");
+	static final Set<String> FLEXIBLE_MODES = Set.of("shop_daily", "shop_other", "leisure", "dining");
 
 	@CommandLine.Option(names = "--mode", description = "Calibration mode that should be run.")
 	private CalibrationMode mode;
