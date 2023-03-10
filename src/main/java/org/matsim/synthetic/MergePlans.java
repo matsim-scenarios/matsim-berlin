@@ -11,6 +11,7 @@ import picocli.CommandLine;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 
 @CommandLine.Command(
 		name = "merge-plans",
@@ -38,10 +39,12 @@ public class MergePlans implements MATSimAppCommand {
 		for (Person person : population.getPersons().values()) {
 			Plan selected = person.getSelectedPlan();
 
-			for (Plan plan : person.getPlans()) {
-				if (plan != selected)
-					person.removePlan(plan);
-			}
+			List<? extends Plan> toRemove = person.getPlans().stream()
+					.filter(plan -> !Objects.equals(plan, selected))
+					.toList();
+
+			// Need intermediate list to avoid concurrent modification
+			toRemove.forEach(person::removePlan);
 		}
 
 		for (int i = 1; i < inputs.size(); i++) {

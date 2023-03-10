@@ -24,6 +24,7 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.StrategyConfigGroup;
+import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
@@ -41,6 +42,7 @@ import picocli.CommandLine;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * This scenario class is used for run a MATSim scenario in various stages of the calibration process.
@@ -142,7 +144,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 			FrozenTastesConfigGroup dccg = ConfigUtils.addOrGetModule(config, FrozenTastesConfigGroup.class);
 
-			dccg.setEpsilonScaleFactors("1.0,1.0,1.0,1.0,1.0");
+			dccg.setEpsilonScaleFactors(FLEXIBLE_MODES.stream().map(s -> "1.0").collect(Collectors.joining(",")));
 			dccg.setAlgorithm(FrozenTastesConfigGroup.Algotype.bestResponse);
 			dccg.setFlexibleTypes(String.join(",", FLEXIBLE_MODES));
 			dccg.setTravelTimeApproximationLevel(FrozenTastesConfigGroup.ApproximationLevel.localRouting);
@@ -155,6 +157,11 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 			// Counts are scaled with sample size and reduced for missing commercial traffic
 			config.counts().setCountsScaleFactor(0.75 * sample.getSize() / 100d);
+
+			// No innovation switch-off needed
+			config.planCalcScore().setFractionOfIterationsToStartScoreMSA(1.0);
+			config.strategy().setFractionOfIterationsToDisableInnovation(1.0);
+			config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.ignore);
 
 		} else
 			throw new IllegalStateException("Mode not implemented:" + mode);
