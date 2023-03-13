@@ -264,7 +264,7 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 
 				// Flexible modes are represented with duration
 				// otherwise start and end time
-				if (RunOpenBerlinCalibration.FLEXIBLE_MODES.contains(actType))
+				if (RunOpenBerlinCalibration.FLEXIBLE_ACTS.contains(actType))
 					a.setMaximumDuration(duration * 60);
 				else {
 					a.setStartTime(startTime);
@@ -296,7 +296,7 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 		// Last activity has no end time and duration
 		if (a != null) {
 
-			if (!RunOpenBerlinCalibration.FLEXIBLE_MODES.contains(a.getType())) {
+			if (!RunOpenBerlinCalibration.FLEXIBLE_ACTS.contains(a.getType())) {
 				a.setEndTimeUndefined();
 				a.setMaximumDurationUndefined();
 			} else {

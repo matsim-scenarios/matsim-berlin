@@ -6,11 +6,13 @@ import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.MATSimApplication;
 import org.matsim.application.options.SampleOptions;
 import org.matsim.application.prepare.CreateLandUseShp;
 import org.matsim.application.prepare.network.CleanNetwork;
 import org.matsim.application.prepare.network.CreateNetworkFromSumo;
+import org.matsim.application.prepare.population.CleanPopulation;
 import org.matsim.application.prepare.population.DownSamplePopulation;
 import org.matsim.application.prepare.population.MergePopulations;
 import org.matsim.application.prepare.population.SplitActivityTypesDuration;
@@ -22,7 +24,6 @@ import org.matsim.contrib.locationchoice.frozenepsilons.FrozenTastes;
 import org.matsim.contrib.locationchoice.frozenepsilons.FrozenTastesConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.StrategyConfigGroup;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.Controler;
@@ -35,6 +36,7 @@ import org.matsim.core.scoring.functions.ScoringParameters;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.prepare.berlinCounts.CreateCountsFromOpenData;
 import org.matsim.prepare.berlinCounts.CreateCountsFromVMZ;
+import org.matsim.run.Activities;
 import org.matsim.run.RunOpenBerlinScenario;
 import org.matsim.synthetic.download.DownloadCommuterStatistic;
 import picocli.CommandLine;
@@ -54,17 +56,17 @@ import java.util.stream.Collectors;
 		AssignCommuters.class, RunActitopp.class, CreateNetworkFromSumo.class, CreateTransitScheduleFromGtfs.class,
 		CleanNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class,
 		CreateCountsFromOpenData.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class,
-		MergePlans.class, SplitActivityTypesDuration.class
+		MergePlans.class, SplitActivityTypesDuration.class, CleanPopulation.class, CleanAttributes.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
 
 	private static final Logger log = LogManager.getLogger(RunOpenBerlinCalibration.class);
 
 	/**
-	 * Flexible modes, which need to be known for location choice and during generation.
-	 * A day can not end on a flexible mode.
+	 * Flexible activities, which need to be known for location choice and during generation.
+	 * A day can not end on a flexible activity.
 	 */
-	static final Set<String> FLEXIBLE_MODES = Set.of("shop_daily", "shop_other", "leisure", "dining");
+	static final Set<String> FLEXIBLE_ACTS = Set.of("shop_daily", "shop_other", "leisure", "dining");
 
 	@CommandLine.Option(names = "--mode", description = "Calibration mode that should be run.")
 	private CalibrationMode mode;
@@ -77,6 +79,9 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 	@CommandLine.Mixin
 	private final SampleOptions sample = new SampleOptions(100, 25, 10, 1);
+
+	@CommandLine.Option(names = "--scale-factor", description = "Scale factor for counts.", defaultValue = "1")
+	private double scaleFactor;
 
 	public static void main(String[] args) {
 		MATSimApplication.run(RunOpenBerlinCalibration.class, args);
@@ -98,16 +103,9 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		log.info("Running {} calibration {}", mode, populationPath);
 
 		config.plans().setInputFile(populationPath.toString());
+		config.controler().setRunId(mode.toString());
 
-		// TODO: typical durations not from data yet
-		for (String act : List.of("home", "work", "edu_kiga", "edu_primary", "edu_secondary", "edu_higher", "edu_other", "transport", "visit",
-				"leisure", "dining", "shop_daily", "shop_other", "work_business", "personal_business", "outside_recreation", "other")) {
-			config.planCalcScore()
-					.addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams(act).setTypicalDuration(6 * 3600));
-		}
-
-		config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("car interaction").setTypicalDuration(60));
-		config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("ride interaction").setTypicalDuration(60));
+		Activities.addScoringParams(config);
 
 		if (sample.isSet()) {
 			config.qsim().setFlowCapFactor(sample.getSize() / 100d);
@@ -144,9 +142,9 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 			FrozenTastesConfigGroup dccg = ConfigUtils.addOrGetModule(config, FrozenTastesConfigGroup.class);
 
-			dccg.setEpsilonScaleFactors(FLEXIBLE_MODES.stream().map(s -> "1.0").collect(Collectors.joining(",")));
+			dccg.setEpsilonScaleFactors(FLEXIBLE_ACTS.stream().map(s -> "1.0").collect(Collectors.joining(",")));
 			dccg.setAlgorithm(FrozenTastesConfigGroup.Algotype.bestResponse);
-			dccg.setFlexibleTypes(String.join(",", FLEXIBLE_MODES));
+			dccg.setFlexibleTypes(String.join(",", FLEXIBLE_ACTS));
 			dccg.setTravelTimeApproximationLevel(FrozenTastesConfigGroup.ApproximationLevel.localRouting);
 			dccg.setRandomSeed(2);
 			dccg.setDestinationSamplePercent(25);
@@ -155,13 +153,33 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 			config.counts().setInputFile("./berlin-v6.0-counts-car-vmz.xml.gz");
 
+			config.controler().setRunId("cadyts");
+			config.controler().setOutputDirectory("./output/cadyts-" + scaleFactor);
+
 			// Counts are scaled with sample size and reduced for missing commercial traffic
-			config.counts().setCountsScaleFactor(0.75 * sample.getSize() / 100d);
+			config.counts().setCountsScaleFactor(scaleFactor * sample.getSize() / 100d);
 
 			// No innovation switch-off needed
 			config.planCalcScore().setFractionOfIterationsToStartScoreMSA(1.0);
 			config.strategy().setFractionOfIterationsToDisableInnovation(1.0);
 			config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.ignore);
+
+		} else if (mode == CalibrationMode.routeChoice) {
+
+			config.qsim().setFlowCapFactor(sample.getSize() / 100d);
+			config.qsim().setStorageCapFactor(sample.getSize() / 100d);
+
+			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
+					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
+					.setWeight(weight)
+					.setSubpopulation("person")
+			);
+
+			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
+					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.TimeAllocationMutator)
+					.setWeight(weight)
+					.setSubpopulation("person")
+			);
 
 		} else
 			throw new IllegalStateException("Mode not implemented:" + mode);
@@ -212,9 +230,29 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		}
 	}
 
+	@Override
+	protected List<MATSimAppCommand> preparePostProcessing(Path outputFolder, String runId) {
+
+		if (mode == CalibrationMode.cadyts || mode == CalibrationMode.routeChoice) {
+			return List.of(
+					new CleanPopulation().withArgs(
+							"--plans", outputFolder.resolve(runId + ".output_plans.xml.gz").toString(),
+							"--output", outputFolder.resolve(runId + ".output_selected_plans.xml.gz").toString(),
+							"--remove-unselected-plans"
+					)
+			);
+		}
+
+		return List.of();
+	}
+
+	/**
+	 * Different calibration stages.
+	 */
 	public enum CalibrationMode {
 		locationChoice,
-		cadyts
+		cadyts,
+		routeChoice
 	}
 
 }

@@ -8,13 +8,14 @@ p := input/$V
 germany := ../shared-svn/projects/matsim-germany
 berlin := ../public-svn/matsim/scenarios/countries/de/berlin/berlin-$V
 
+MEMORY ?= 20G
 REGIONS := brandenburg
 SHP_FILES=$(patsubst %, input/shp/%-latest-free.shp.zip, $(REGIONS))
 
 osmosis := osmosis/bin/osmosis
 
 # Scenario creation tool
-sc := java -Xmx20G -cp $(JAR) org.matsim.synthetic.RunOpenBerlinCalibration
+sc := java -Xmx$(MEMORY) -cp $(JAR) org.matsim.synthetic.RunOpenBerlinCalibration
 
 .PHONY: prepare
 
@@ -180,24 +181,35 @@ $p/berlin-activities-$V-25pct.plans-1.xml.gz: $p/berlin-static-$V-25pct.plans.xm
 
 	$(sc) prepare activity-sampling --seed 1 --input $< --output $@ --persons src/main/python/table-persons.csv --activities src/main/python/table-activities.csv
 
-$p/berlin-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans-1.xml.gz $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
+$p/berlin-initial-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans-1.xml.gz $p/berlin-$V-facilities.xml.gz
 	$(sc) prepare init-location-choice\
 	 --input "$(subst plans-1,plans-*,$<)"\
 	 --output $@\
 	 --facilities $(word 2,$^)\
 	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp
 
-	# TODO: location choice and then merge
 
-	#$(sc) prepare filter-relevant-agents\
-	 --input $@ --output $@\
+# These depend on the output of calibration runs
+$p/berlin-uncalibrated-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
+	$(sc) prepare filter-relevant-agents\
+	 --input output/cadyts_scale_1/*.output_selected_plans.xml.gz --output $@\
 	 --shp input/v6.0/area/area.shp\
-	 --facilities $(word 2,$^)\
-	 --network $(word 3,$^)
+	 --facilities $<\
+	 --network $(word 2,$^)
 
-	#$(sc) prepare downsample-population $@\
+	$(sc) prepare split-activity-types-duration\
+	 --input $@ --output $@
+
+$p/berlin-$V-25pct.plans.xml.gz:
+	cp output/route-choice/routeChoice.output_selected_plans.xml.gz $@
+
+	$(sc) prepare downsample-population $@\
      	 --sample-size 0.25\
      	 --samples 0.1 0.01\
+
+
+prepare-calibration: $p/berlin-initial-$V-25pct.plans.xml.gz
+	echo "Done"
 
 prepare: $p/berlin-$V-25pct.plans.xml.gz $p/berlin-$V-network-with-pt.xml.gz
 	echo "Done"

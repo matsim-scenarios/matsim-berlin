@@ -9,8 +9,8 @@
 		<param name="overwriteFiles" value="failIfDirectoryExists"/>
 		<param name="runId" value="berlin-v6.0-calib"/>
 		<param name="outputDirectory" value="./output/berlin-v6.0-calib"/>
-		<param name="writeEventsInterval" value="50"/>
-		<param name="writePlansInterval" value="50"/>
+		<param name="writeEventsInterval" value="100"/>
+		<param name="writePlansInterval" value="100"/>
 		<param name="routingAlgorithmType" value="SpeedyALT"/>
 	</module>
 	<module name="global">
@@ -53,12 +53,12 @@
 		</parameterset>
 	</module>
 	<module name="qsim">
-		<param name="endTime" value="36:00:00"/>
-		<param name="flowCapacityFactor" value="0.1"/>
 		<param name="mainMode" value="car,freight"/>
+		<param name="flowCapacityFactor" value="0.25"/>
+		<param name="storageCapacityFactor" value="0.25"/>
 		<param name="numberOfThreads" value="16"/>
 		<param name="startTime" value="00:00:00"/>
-		<param name="storageCapacityFactor" value="0.1"/>
+		<param name="endTime" value="36:00:00"/>
 		<param name="stuckTime" value="30.0"/>
 		<param name="trafficDynamics" value="kinematicWaves"/>
 		<param name="vehiclesSource" value="modeVehicleTypesFromVehiclesData"/>
