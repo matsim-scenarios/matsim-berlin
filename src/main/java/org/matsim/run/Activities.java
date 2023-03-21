@@ -59,15 +59,16 @@ public enum Activities {
 	/**
 	 * Add required activity params for the scenario.
 	 */
-	public static void addScoringParams(Config config) {
+	public static void addScoringParams(Config config, boolean splitTypes) {
 
 		for (Activities value : Activities.values()) {
 			// Default length if none is given
 			config.planCalcScore().addActivityParams(value.apply(new PlanCalcScoreConfigGroup.ActivityParams(value.name())).setTypicalDuration(6 * 3600));
 
-			for (long ii = 600; ii <= 97200; ii += 600) {
-				config.planCalcScore().addActivityParams(value.apply(new PlanCalcScoreConfigGroup.ActivityParams(value.name() + "_" + ii).setTypicalDuration(ii)));
-			}
+			if (splitTypes)
+				for (long ii = 600; ii <= 97200; ii += 600) {
+					config.planCalcScore().addActivityParams(value.apply(new PlanCalcScoreConfigGroup.ActivityParams(value.name() + "_" + ii).setTypicalDuration(ii)));
+				}
 		}
 
 		config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("car interaction").setTypicalDuration(60));

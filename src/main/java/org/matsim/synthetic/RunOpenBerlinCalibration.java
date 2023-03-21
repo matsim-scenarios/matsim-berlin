@@ -112,7 +112,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		config.plans().setInputFile(populationPath.toString());
 		config.controler().setRunId(mode.toString());
 
-		Activities.addScoringParams(config);
+		// Location choice does not work with the split types
+		Activities.addScoringParams(config, mode != CalibrationMode.locationChoice);
 
 		if (sample.isSet()) {
 			config.qsim().setFlowCapFactor(sample.getSize() / 100d);
@@ -154,7 +155,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			dccg.setFlexibleTypes(String.join(",", FLEXIBLE_ACTS));
 			dccg.setTravelTimeApproximationLevel(FrozenTastesConfigGroup.ApproximationLevel.localRouting);
 			dccg.setRandomSeed(2);
-			dccg.setDestinationSamplePercent(20);
+			dccg.setDestinationSamplePercent(25);
 
 		} else if (mode == CalibrationMode.cadyts) {
 
