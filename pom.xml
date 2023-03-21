@@ -14,10 +14,10 @@
 		<!--<matsim.version>13.0</matsim.version>-->
 
 		<!-- PR-labelled release -->
-		<matsim.version>15.0-PR2438</matsim.version>
+		<matsim.version>15.0-PR2457</matsim.version>
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
-		<!--<matsim.version>14.0-SNAPSHOT</matsim.version>-->
+<!--		<matsim.version>15.0-SNAPSHOT</matsim.version>-->
 		<maven.compiler.release>17</maven.compiler.release>
 	</properties>
 

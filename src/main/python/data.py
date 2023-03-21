@@ -212,7 +212,7 @@ class Person:
     """ Universal definition of person attributes."""
     p_id: str
     p_weight: float
-    hh: str
+    hh_id: str
     age: int
     gender: Gender
     employment: Employment
@@ -223,6 +223,8 @@ class Person:
     pt_abo_avail: Availability
     mobile_on_day: bool
     present_on_day: bool
+    reporting_day: int
+    n_trips: int
 
 
 @dataclass
@@ -231,6 +233,7 @@ class Trip:
     t_id: str
     t_weight: float
     p_id: str
+    hh_id: str
     n: int
     day_of_week: int
     departure: int
@@ -365,7 +368,9 @@ def srv_to_standard(data: tuple, regio=None):
                     p.V_ERAD_VERFUEG) == Availability.YES else SrV2018.veh_avail(p.V_RAD_VERFUEG),
                 SrV2018.veh_avail(p.V_FK_VERFUEG),
                 p.V_WOHNUNG == 1,
-                p.V_WOHNORT == 1
+                p.V_WOHNORT == 1,
+                int(p.STICHTAG_WTAG),
+                int(p.E_ANZ_WEGE)
             )
         )
 
@@ -391,7 +396,7 @@ def srv_to_standard(data: tuple, regio=None):
                 pint(h.V_ANZ_MOT125 + h.V_ANZ_MOPMOT + h.V_ANZ_SONST),
                 SrV2018.parking_position(h.V_STELLPL1),
                 SrV2018.economic_status(h.E_OEK_STATUS if "E_OEK_STATUS" in hh.keys() else -1, h.V_EINK,
-                                        ps[ps.hh == hh_id]),
+                                        ps[ps.hh_id == hh_id]),
                 SrV2018.household_type(h.E_HHTYP),
                 SrV2018.region_type(h, regio, random_state),
                 h.ST_CODE_NAME,
@@ -408,6 +413,7 @@ def srv_to_standard(data: tuple, regio=None):
                 str(int(t.HHNR)) + "_" + str(int(t.PNR)) + "_" + str(int(t.WNR)),
                 t.GEWICHT_W,
                 str(int(t.HHNR)) + "_" + str(int(t.PNR)),
+                str(int(t.HHNR)),
                 int(t.WNR),
                 int(t.STICHTAG_WTAG),
                 int(t.E_BEGINN),
@@ -441,6 +447,12 @@ if __name__ == "__main__":
 
     hh, persons, trips = read_all_srv([args.directory + "Berlin+Umland", args.directory + "Brandenburg"],
                                       regio=args.regiostar)
+
+    hh.to_csv(args.output + "-households.csv")
+    trips.to_csv(args.output + "-trips.csv")
+    persons.to_csv(args.output + "-unscaled-persons.csv")
+
+    print("Written survey csvs")
 
     df = prepare_persons(hh, persons, trips, augment=5)
 

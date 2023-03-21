@@ -26,9 +26,12 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.StrategyConfigGroup;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
+import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
+import org.matsim.core.router.AnalysisMainModeIdentifier;
+import org.matsim.core.router.RoutingModeMainModeIdentifier;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.SumScoringFunction;
@@ -228,6 +231,13 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			});
 
 		}
+
+		controler.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				bind(AnalysisMainModeIdentifier.class).to(RoutingModeMainModeIdentifier.class);
+			}
+		});
 	}
 
 	@Override

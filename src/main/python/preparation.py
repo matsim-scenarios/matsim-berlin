@@ -13,7 +13,7 @@ from data import *
 
 def prepare_persons(hh, pp, tt, augment=5, max_hh_size=5):
     """ Cleans common data errors and fill missing values """
-    df = pp.join(hh, on="hh", lsuffix="hh_")
+    df = pp.join(hh, on="hh_id", lsuffix="hh_")
 
     # Augment data using p_weight
     if augment > 1:
@@ -37,7 +37,7 @@ def prepare_persons(hh, pp, tt, augment=5, max_hh_size=5):
     # Large households are underrepresented and capped
     df.n_persons = np.minimum(df.n_persons, max_hh_size)
 
-    df = df.drop(columns=['hh', 'p_weight', 'present_on_day', 'location', 'h_weight', 'n_cars', 'n_bikes',
+    df = df.drop(columns=['hh_id', 'p_weight', 'present_on_day', 'location', 'h_weight', 'n_cars', 'n_bikes',
                           'n_other_vehicles', 'car_parking'])
 
     # Move the region type variable to the front because it is used as conditional
@@ -117,6 +117,9 @@ def create_activities(all_persons: pd.DataFrame, tt: pd.DataFrame, core_weekday=
     tt = tt.reset_index().set_index("p_id")
 
     import multiprocess as mp
+
+    # TODO: handling if persons are present or not
+    # TODO: removing of persons with invalid plans
 
     def convert(persons):
         res = []
@@ -201,7 +204,7 @@ def create_activities(all_persons: pd.DataFrame, tt: pd.DataFrame, core_weekday=
     else:
         df = activities
 
-    df = df.drop(columns=["mobile_on_day", "p_weight", "hh", "present_on_day"], errors="ignore")
+    df = df.drop(columns=["mobile_on_day", "p_weight", "hh_id", "present_on_day"], errors="ignore")
 
     # TODO: permute length and dist
 
