@@ -1,11 +1,13 @@
 package org.matsim.synthetic;
 
 import com.google.inject.Inject;
+import com.google.inject.TypeLiteral;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Plan;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.MATSimApplication;
 import org.matsim.application.options.SampleOptions;
@@ -29,6 +31,8 @@ import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
+import org.matsim.core.replanning.choosers.ForceInnovationStrategyChooser;
+import org.matsim.core.replanning.choosers.StrategyChooser;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.RoutingModeMainModeIdentifier;
@@ -150,7 +154,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			dccg.setFlexibleTypes(String.join(",", FLEXIBLE_ACTS));
 			dccg.setTravelTimeApproximationLevel(FrozenTastesConfigGroup.ApproximationLevel.localRouting);
 			dccg.setRandomSeed(2);
-			dccg.setDestinationSamplePercent(25);
+			dccg.setDestinationSamplePercent(20);
 
 		} else if (mode == CalibrationMode.cadyts) {
 
@@ -200,6 +204,14 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		if (mode == CalibrationMode.locationChoice) {
 			FrozenTastes.configure(controler);
+
+			controler.addOverridingModule(new AbstractModule() {
+				@Override
+				public void install() {
+					binder().bind(new TypeLiteral<StrategyChooser<Plan, Person>>() {}).toInstance(new ForceInnovationStrategyChooser<>(5, ForceInnovationStrategyChooser.Permute.no));
+				}
+			});
+
 		} else if (mode == CalibrationMode.cadyts) {
 
 			controler.addOverridingModule(new CadytsCarModule());
