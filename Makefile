@@ -95,7 +95,9 @@ $p/berlin-$V-network.xml.gz: #input/sumo.net.xml
 	# Use 5.x network
 	$(sc) prepare reproject-network\
 	 --input $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz\
+	 --transit-schedule $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz\
 	 --output $@\
+ 	 --output-transit $p/berlin-v6.0-transitSchedule.xml.gz\
 	 --input-crs EPSG:31468\
 	 --target-crs $(CRS)
 
@@ -108,7 +110,6 @@ $p/berlin-$V-network-with-pt.xml.gz: $p/berlin-$V-network.xml.gz
 
 	# Copy 5.x network stuff
 	cp $< $@
-	cp $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz $p/berlin-v6.0-transitSchedule.xml.gz
 	cp $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-transit-vehicles.xml.gz $p/berlin-v6.0-transitVehicles.xml.gz
 
 #	$(sc) prepare transit-from-gtfs --network $< --output=$p\
@@ -121,6 +122,7 @@ $p/berlin-$V-network-with-pt.xml.gz: $p/berlin-$V-network.xml.gz
 	 --shp $p/area/area.shp\
 	 --shp $p/area/area.shp
 
+# TODO: naming scheme must be updated
 $p/berlin-$V-car-counts.xml.gz: $p/berlin-$V-network.xml.gz
 	$(sc) prepare create-counts\
 	 --network $<\
