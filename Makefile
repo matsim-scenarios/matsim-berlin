@@ -183,11 +183,12 @@ $p/berlin-activities-$V-25pct.plans-1.xml.gz: $p/berlin-static-$V-25pct.plans.xm
 
 	$(sc) prepare activity-sampling --seed 1 --input $< --output $@ --persons src/main/python/table-persons.csv --activities src/main/python/table-activities.csv
 
-$p/berlin-initial-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans-1.xml.gz $p/berlin-$V-facilities.xml.gz
+$p/berlin-initial-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans-1.xml.gz $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
 	$(sc) prepare init-location-choice\
 	 --input "$(subst plans-1,plans-*,$<)"\
 	 --output $@\
 	 --facilities $(word 2,$^)\
+	 --network $(word 3,$^)\
 	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp
 
 

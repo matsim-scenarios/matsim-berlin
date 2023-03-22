@@ -1,5 +1,9 @@
 
 library(tidyverse)
+library(patchwork)
+library(scales)
+library(viridis)
+library(ggsci)
 
 # trip distance groups
 levels = c("0 - 1000", "1000 - 2000", "2000 - 5000", "5000 - 10000", "10000 - 20000", "20000+")
@@ -61,7 +65,7 @@ aggr_ref <- ref %>%
 # Read simulation data
 ##################
 
-f <- "~/Volumes/math-cluster/matsim-berlin/calibration/output/route-choice"
+f <- "~/Volumes/math-cluster/matsim-berlin/calibration/output/cadyts_scale_075"
 sim_scale <- 100/25
 
 persons <- read_delim(list.files(f, pattern = "*.output_persons.csv.gz", full.names = T, include.dirs = F), delim = ";", trim_ws = T, 

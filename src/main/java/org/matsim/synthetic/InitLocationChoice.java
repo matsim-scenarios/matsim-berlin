@@ -1,20 +1,22 @@
 package org.matsim.synthetic;
 
-import org.apache.commons.math3.distribution.GammaDistribution;
-import org.apache.commons.math3.distribution.RealDistribution;
-import org.apache.commons.math3.random.Well19937c;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.index.strtree.STRtree;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.options.ShpOptions;
+import org.matsim.core.network.NetworkUtils;
+import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
 import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.algorithms.ParallelPersonAlgorithmUtils;
@@ -22,15 +24,23 @@ import org.matsim.core.population.algorithms.PersonAlgorithm;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.core.utils.geometry.geotools.MGC;
-import org.matsim.facilities.*;
+import org.matsim.facilities.ActivityFacilities;
+import org.matsim.facilities.ActivityFacility;
+import org.matsim.facilities.FacilitiesUtils;
+import org.matsim.facilities.MatsimFacilitiesReader;
 import org.matsim.run.RunOpenBerlinScenario;
 import org.opengis.feature.simple.SimpleFeature;
 import picocli.CommandLine;
 
 import javax.annotation.Nullable;
-import java.nio.file.*;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.matsim.synthetic.CreateMATSimFacilities.IGNORED_LINK_TYPES;
 
 @CommandLine.Command(
 		name = "init-location-choice",
@@ -50,12 +60,17 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 	@CommandLine.Option(names = "--facilities", description = "Path to facilities file", required = true)
 	private Path facilityPath;
 
+	@CommandLine.Option(names = "--network", description = "Path to network file", required = true)
+	private Path networkPath;
+
 	@CommandLine.Mixin
 	private ShpOptions shp;
 
 	private Map<String, STRtree> trees;
 
 	private Map<Long, SimpleFeature> zones;
+
+	private Network network;
 
 	private ThreadLocal<Context> ctxs;
 
@@ -72,6 +87,11 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		}
 
 		ctxs = ThreadLocal.withInitial(Context::new);
+
+		Network completeNetwork = NetworkUtils.readNetwork(networkPath.toString());
+		TransportModeNetworkFilter filter = new TransportModeNetworkFilter(completeNetwork);
+		network = NetworkUtils.createNetwork();
+		filter.filter(network, Set.of(TransportMode.car));
 
 		zones = shp.readFeatures().stream()
 				.collect(Collectors.toMap(ft -> Long.parseLong((String) ft.getAttribute("ARS")), ft -> ft));
@@ -198,7 +218,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 						// Activities without facility entry, or where no facility could be found
 
 						double dist = (double) act.getAttributes().getAttribute("orig_dist");
-						Coord c = rndCoord(ctxs.get().rnd, dist, lastCoord);
+						Coord c = sampleLink(ctxs.get().rnd, dist, lastCoord);
 						act.setCoord(c);
 						lastCoord = c;
 						continue;
@@ -242,6 +262,22 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		var y = Math.sin(angle) * dist;
 
 		return new Coord(origin.getX() + x, origin.getY() + y);
+	}
+
+	/**
+	 * Sample a coordinate for which the associated link is not one of the ignored types.
+	 */
+	private Coord sampleLink(SplittableRandom rnd, double dist, Coord origin) {
+
+		Coord coord = null;
+		for (int i = 0; i < 500; i++) {
+			coord = rndCoord(rnd, dist, origin);
+			Link link = NetworkUtils.getNearestLink(network, coord);
+			if (!IGNORED_LINK_TYPES.contains(NetworkUtils.getType(link)))
+				break;
+		}
+
+		return coord;
 	}
 
 	/**

@@ -14,8 +14,6 @@ import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.options.ShpOptions;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
-import org.matsim.core.network.filter.NetworkFilterManager;
-import org.matsim.core.network.filter.NetworkLinkFilter;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.facilities.*;
 import org.opengis.feature.simple.SimpleFeature;
@@ -34,6 +32,12 @@ import java.util.stream.Collectors;
 public class CreateMATSimFacilities implements MATSimAppCommand {
 
 	private static final Logger log = LogManager.getLogger(CreateMATSimFacilities.class);
+
+	/**
+	 * Filter link types that don't have a facility associated.
+	 */
+	static final Set<String> IGNORED_LINK_TYPES = Set.of("motorway", "trunk",
+			"motorway_link", "trunk_link", "secondary_link", "primary_link");
 
 	@CommandLine.Option(names = "--network", required = true, description = "Path to car network")
 	private Path network;
@@ -103,30 +107,42 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 	}
 
 	/**
-	 * Sample points and choose link with the most nearest points. Aggregate everything so there is at most one facility per link.
+	 * Sample points and choose link with the nearest points. Aggregate everything so there is at most one facility per link.
 	 */
 	private void processFeature(SimpleFeature ft, Network network, Map<Id<Link>, Holder> data) {
 
+		// Actual id is the last part
 		String[] id = ft.getID().split("\\.");
 
+		// Pairs of coords and corresponding links
 		List<Coord> coords = samplePoints((MultiPolygon) ft.getDefaultGeometry(), 23);
 		List<Id<Link>> links = coords.stream().map(coord -> NetworkUtils.getNearestLinkExactly(network, coord).getId()).toList();
 
 		Map<Id<Link>, Long> map = links.stream()
+				.filter(l -> !IGNORED_LINK_TYPES.contains(NetworkUtils.getType(network.getLinks().get(l))))
 				.collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+		// Everything could be filtered and map empty
+		if (map.isEmpty())
+			return;
 
 		List<Map.Entry<Id<Link>, Long>> counts = map.entrySet().stream().sorted(Map.Entry.comparingByValue())
 				.toList();
 
+		// The "main" link of the facility
 		Id<Link> link = counts.get(counts.size() - 1).getKey();
 
 		Holder holder = data.computeIfAbsent(link, k -> new Holder(ConcurrentHashMap.newKeySet(), ConcurrentHashMap.newKeySet(), Collections.synchronizedList(new ArrayList<>())));
 
 		holder.ids.add(id[id.length - 1]);
 		holder.activities.addAll(activities(ft));
+
+		// Search for the original drawn coordinate of the associated link
 		for (int i = 0; i < links.size(); i++) {
-			if (links.get(i).equals(link))
+			if (links.get(i).equals(link)) {
 				holder.coords.add(coords.get(i));
+				break;
+			}
 		}
 	}
 
@@ -174,10 +190,11 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		}
 		if (Boolean.TRUE == ft.getAttribute("shop")) {
 			act.add("shop_other");
+		}
+		if (Boolean.TRUE == ft.getAttribute("shop_daily")) {
+			act.add("shop_other");
 			act.add("shop_daily");
 		}
-		if (Boolean.TRUE == ft.getAttribute("shop_daily"))
-			act.add("shop_daily");
 		if (Boolean.TRUE == ft.getAttribute("leisure"))
 			act.add("leisure");
 		if (Boolean.TRUE == ft.getAttribute("dining"))

@@ -255,18 +255,13 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 	@Override
 	protected List<MATSimAppCommand> preparePostProcessing(Path outputFolder, String runId) {
-
-		if (mode == CalibrationMode.cadyts || mode == CalibrationMode.routeChoice) {
-			return List.of(
-					new CleanPopulation().withArgs(
-							"--plans", outputFolder.resolve(runId + ".output_plans.xml.gz").toString(),
-							"--output", outputFolder.resolve(runId + ".output_selected_plans.xml.gz").toString(),
-							"--remove-unselected-plans"
-					)
-			);
-		}
-
-		return List.of();
+		return List.of(
+				new CleanPopulation().withArgs(
+						"--plans", outputFolder.resolve(runId + ".output_plans.xml.gz").toString(),
+						"--output", outputFolder.resolve(runId + ".output_selected_plans.xml.gz").toString(),
+						"--remove-unselected-plans"
+				)
+		);
 	}
 
 	/**
