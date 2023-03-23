@@ -1,17 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import functools
 import numpy as np
 import pandas as pd
-
 from sklearn.utils import shuffle
-
-import functools
 
 from data import *
 
 
-def prepare_persons(hh, pp, tt, augment=5, max_hh_size=5):
+def prepare_persons(hh, pp, tt, augment=5, max_hh_size=5, core_weekday=False, remove_with_invalid_trips=False):
     """ Cleans common data errors and fill missing values """
     df = pp.join(hh, on="hh_id", lsuffix="hh_")
 
@@ -37,8 +35,15 @@ def prepare_persons(hh, pp, tt, augment=5, max_hh_size=5):
     # Large households are underrepresented and capped
     df.n_persons = np.minimum(df.n_persons, max_hh_size)
 
-    df = df.drop(columns=['hh_id', 'p_weight', 'present_on_day', 'location', 'h_weight', 'n_cars', 'n_bikes',
-                          'n_other_vehicles', 'car_parking'])
+    if core_weekday:
+        df = df[df.reporting_day <= 4]
+
+    if remove_with_invalid_trips:
+        invalid = set(tt[~tt.valid].p_id)
+        df = df[~df.p_id.isin(invalid)]
+
+    df = df.drop(columns=['hh_id', 'p_weight', 'present_on_day', 'reporting_day', 'location', 'h_weight',
+                          'n_cars', 'n_bikes', 'n_other_vehicles', 'car_parking'])
 
     # Move the region type variable to the front because it is used as conditional
     df.insert(3, 'region_type', df.pop('region_type'))
@@ -49,9 +54,6 @@ def prepare_persons(hh, pp, tt, augment=5, max_hh_size=5):
 
     # Maximum age is 99, also to be able to encode age with two tokens
     df.loc[df.age >= 99, "age"] = 99
-
-    # TODO: derive commute distance / category
-    # TODO: is mobile could be on weekend, we normally want a weekday model
 
     return df
 
@@ -117,9 +119,6 @@ def create_activities(all_persons: pd.DataFrame, tt: pd.DataFrame, core_weekday=
     tt = tt.reset_index().set_index("p_id")
 
     import multiprocess as mp
-
-    # TODO: handling if persons are present or not
-    # TODO: removing of persons with invalid plans
 
     def convert(persons):
         res = []

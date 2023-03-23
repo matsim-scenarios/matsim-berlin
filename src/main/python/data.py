@@ -454,9 +454,10 @@ if __name__ == "__main__":
 
     print("Written survey csvs")
 
-    df = prepare_persons(hh, persons, trips, augment=5)
+    df = prepare_persons(hh, persons, trips, augment=5, core_weekday=True, remove_with_invalid_trips=True)
 
     df.to_csv(args.output + "-persons.csv", index_label="idx")
+    print("Created %d synthetics persons" % len(df))
 
     activities = create_activities(df, trips, include_person_context=False, cut_groups=False)
     activities.to_csv(args.output + "-activities.csv", index=False)

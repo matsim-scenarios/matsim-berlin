@@ -122,9 +122,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			config.plans().setInputFile(sample.adjustName(config.plans().getInputFile()));
 		}
 
-		// Flow capacities are increased for the calibration
-		config.qsim().setFlowCapFactor(config.qsim().getFlowCapFactor() * 4);
-		config.qsim().setStorageCapFactor(config.qsim().getStorageCapFactor() * 4);
 
 		// Required for all calibration strategies
 		config.strategy().addStrategySettings(
@@ -138,6 +135,10 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			throw new IllegalArgumentException("Calibration mode [--mode} not set!");
 
 		if (mode == CalibrationMode.locationChoice) {
+
+			// Flow capacities are increased for the calibration
+			config.qsim().setFlowCapFactor(config.qsim().getFlowCapFactor() * 4);
+			config.qsim().setStorageCapFactor(config.qsim().getStorageCapFactor() * 4);
 
 			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
 					.setStrategyName(FrozenTastes.LOCATION_CHOICE_PLAN_STRATEGY)
@@ -159,6 +160,12 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		} else if (mode == CalibrationMode.cadyts) {
 
+			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
+					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
+					.setWeight(weight)
+					.setSubpopulation("person")
+			);
+
 			config.counts().setInputFile("./berlin-v6.0-counts-car-vmz.xml.gz");
 
 			config.controler().setRunId("cadyts");
@@ -173,9 +180,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.ignore);
 
 		} else if (mode == CalibrationMode.routeChoice) {
-
-			config.qsim().setFlowCapFactor(sample.getSize() / 100d);
-			config.qsim().setStorageCapFactor(sample.getSize() / 100d);
 
 			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
 					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
