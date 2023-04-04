@@ -573,7 +573,7 @@
 		<param name="isUsingOpportunityCostOfTimeForLocationChoice" value="true" />
 		<param name="logitScaleParamForPlansRemoval" value="1.0" />
 		<!-- Options: | ignore | info | warn | abort | .  When violating VSP defaults, this results in nothing, logfile infos, logfile warnings, or aborts.  Members of VSP should use `abort' or talk to kai. -->
-		<param name="vspDefaultsCheckingLevel" value="abort" />
+		<param name="vspDefaultsCheckingLevel" value="warn" />
 		<!-- if true then writes output_events in output directory.  default is `false'. Will only work when lastIteration is multiple of events writing interval -->
 		<param name="writingOutputEvents" value="true" />
 	</module>

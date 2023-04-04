@@ -219,7 +219,7 @@ $p/berlin-businessTraffic-$V-25pct.plans.xml.gz:
 
 $p/berlin-freightTraffic-$V-25pct.plans.xml.gz:
 	$(sc) prepare generate-small-scale-commercial-traffic\
-	  $(berlin)/input/commercialTraffic\
+	  input/commercialTraffic\
 	 --sample 0.25\
 	 --jspritIterations 1\
 	 --creationOption createNewCarrierFile\
