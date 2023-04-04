@@ -201,20 +201,40 @@ $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
 
 $p/berlin-businessTraffic-$V-25pct.plans.xml.gz:
 	$(sc) prepare generate-small-scale-commercial-traffic\
+	  input/commercialTraffic\
+	 --sample 0.25\
+	 --jspritIterations 1\
+	 --creationOption createNewCarrierFile\
+	 --landuseConfiguration useOSMBuildingsAndLanduse\
+	 --trafficType businessTraffic\
+	 --zoneShapeFileName $(berlin)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp\
+	 --buildingsShapeFileName $(berlin)/input/shp/buildings_BerlinBrandenburg_4326.shp\
+	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
+	 --shapeCRS "EPSG:4326"\
+	 --resistanceFactor "0.005"\
+	 --nameOutputPopulation $(notdir $@)\
+	 --PathOutput output/businessTraffic
+
+	mv output/businessTraffic/$(notdir $@) $@
+
+$p/berlin-freightTraffic-$V-25pct.plans.xml.gz:
+	$(sc) prepare generate-small-scale-commercial-traffic\
 	  $(berlin)/input/commercialTraffic\
 	 --sample 0.25\
 	 --jspritIterations 1\
 	 --creationOption createNewCarrierFile\
 	 --landuseConfiguration useOSMBuildingsAndLanduse\
 	 --trafficType businessTraffic\
-	 --zoneShapeFileName ../shp/berlinBrandenburg_Zones_VKZ_4326.shp\
-	 --buildingsShapeFileName ../shp/buildings_BerlinBrandenburg_4326.shp\
-	 --landuseShapeFileName ../shp/berlinBrandenburg_landuse_4326.shp\
+	 --zoneShapeFileName $(berlin)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp\
+	 --buildingsShapeFileName $(berlin)/input/shp/buildings_BerlinBrandenburg_4326.shp\
+	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
 	 --shapeCRS "EPSG:4326"\
-	 --resistanceFactor "0.005"
+	 --resistanceFactor "0.005"\
+	 --nameOutputPopulation $(notdir $@)\
+	 --PathOutput output/freightTraffic
 
- 	# TODO: output folder
- 	# output name
+	mv output/freightTraffic/$(notdir $@) $@
+
 
 
 # Depends on location choice runs and freight model
@@ -235,6 +255,8 @@ $p/berlin-uncalibrated-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/
 	 --input $@ --output $@
 
  	# TODO: merge other freight types
+ 	# $p/berlin-freightTraffic-$V-25pct.plans.xml.gz
+ 	# $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
 
 $p/berlin-$V-25pct.plans.xml.gz:
 	cp output/route-choice/routeChoice.output_selected_plans.xml.gz $@
