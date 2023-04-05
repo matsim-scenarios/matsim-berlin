@@ -4,7 +4,7 @@
 	<module name="global" >
 		<param name="coordinateSystem" value="EPSG:25832" />
 		<param name="defaultDelimiter" value=";" />
-		<param name="insistingOnDeprecatedConfigVersion" value="true" />
+		<param name="insistingOnDeprecatedConfigVersion" value="false" />
 		<!-- "global" number of threads.  This number is used, e.g., for replanning, but NOT in QSim.  This can typically be set to as many cores as you have available, or possibly even slightly more. -->
 		<param name="numberOfThreads" value="2" />
 		<param name="randomSeed" value="4177" />
