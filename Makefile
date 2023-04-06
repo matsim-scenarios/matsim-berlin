@@ -236,12 +236,12 @@ $p/berlin-freightTraffic-$V-25pct.plans.xml.gz:
 	mv output/freightTraffic/$(notdir $@) $@
 
 
-
 # Depends on location choice runs and freight model
-$p/berlin-cadyts-input-$V-25pct.plans.xml.gz:
-	$(sc) prepare merge-plans output/lc-*/*output_selected_plans.xml.gz \
-		$p/berlin-businessTraffic-$V-25pct.plans.xml.gz\
+$p/berlin-cadyts-input-$V-25pct.plans.xml.gz: $p/berlin-businessTraffic-$V-25pct.plans.xml.gz
+	$(sc) prepare merge-plans output/lc-*/*output_selected_plans.xml.gz\
 		--output $@
+
+	$(sc) prepare merge-populations $@ $< --output $@
 
 # These depend on the output of calibration runs
 $p/berlin-uncalibrated-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz

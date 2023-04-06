@@ -7,7 +7,8 @@ import argparse
 import pandas as pd
 import numpy as np
 
-from data import read_all_srv
+from data import TripMode, read_all_srv
+from preparation import _fill
 
 #%%
 
@@ -38,11 +39,14 @@ persons = persons[~persons.index.isin(invalid)]
 
 trips = all_trips.drop(columns=["hh_id"]).join(persons, on="p_id", how="inner")
 
+_fill(trips, "main_mode", TripMode.OTHER)
+
 
 #%%
 
 labels = ["0 - 1000", "1000 - 2000", "2000 - 5000", "5000 - 10000", "10000 - 20000", "20000+"]
 bins = [0, 1000, 2000, 5000, 10000, 20000, np.inf]
+
 
 trips["dist_group"] = pd.cut(trips.gis_length * 1000, bins, labels=labels, right=False)
 
@@ -54,7 +58,7 @@ def weighted(x):
     return pd.Series(data=data)
 
 
-aggr = trips.groupby(["age_group", "dist_group", "main_mode"]).apply(weighted)
+aggr = trips.groupby(["dist_group", "main_mode"]).apply(weighted)
 
 aggr["share"] = aggr.n / aggr.n.sum()
 aggr["share"].fillna(0, inplace=True)
