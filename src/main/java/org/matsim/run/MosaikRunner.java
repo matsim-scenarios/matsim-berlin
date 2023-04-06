@@ -28,8 +28,6 @@ import java.util.stream.Collectors;
 
 public class MosaikRunner {
 
-    private static final CoordinateTransformation transformation = TransformationFactory.getCoordinateTransformation(TransformationFactory.DHDN_GK4, "EPSG:25833");
-
     public static void main(String[] args) {
 
         var config = RunBerlinScenario.prepareConfig(args);
@@ -67,7 +65,6 @@ public class MosaikRunner {
         var scenario = RunBerlinScenario.prepareScenario(config);
 
         // remove linkids from activities
-        // transform activity coordinates to utm-33
         scenario.getPopulation().getPersons().values().parallelStream()
                 .flatMap(person -> person.getPlans().stream())
                 .flatMap(plan -> plan.getPlanElements().stream())
@@ -75,10 +72,7 @@ public class MosaikRunner {
                 .map(element -> (Activity) element)
                 .forEach(activity -> {
                     activity.setLinkId(null);
-                    var transformed = transformation.transform(activity.getCoord());
-                    activity.setCoord(transformed);
                 });
-        scenario.getPopulation().getAttributes().putAttribute("coordinateReferenceSystem", "EPSG:25833");
 
         // replace trips in plans with single empty legs which only have a main mode
         for (var person : scenario.getPopulation().getPersons().values()) {
@@ -120,11 +114,8 @@ public class MosaikRunner {
 
         // add new facilities to scenario
         for (var facility : facilities) {
-            var transformed = transformation.transform(facility.getCoord());
-            facility.setCoord(transformed);
             scenario.getActivityFacilities().addActivityFacility(facility);
         }
-        scenario.getActivityFacilities().getAttributes().putAttribute("coordinateReferenceSystem", "EPSG:25833");
 
         var controler = RunBerlinScenario.prepareControler(scenario);
         controler.run();
