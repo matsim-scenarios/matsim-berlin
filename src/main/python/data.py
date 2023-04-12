@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
-
-from enum import Enum, auto
-from dataclasses import dataclass
-
 import numpy as np
+import os
 import pandas as pd
+from dataclasses import dataclass
+from enum import Enum, auto
 
 
 class StrEnum(str, Enum):

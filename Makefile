@@ -191,6 +191,57 @@ $p/berlin-initial-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans-1.x
 	 --network $(word 3,$^)\
 	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp
 
+$p/berlin-longHaulFreight-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
+	$(sc) prepare extract-freight-trips ../public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/german_freight.25pct.plans.xml.gz\
+	 --network ../public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/germany-europe-network.xml.gz\
+	 --input-crs $(CRS)\
+	 --target-crs $(CRS)\
+	 --shp $p/area/area.shp --shp-crs $(CRS)\
+	 --output $@
+
+$p/berlin-businessTraffic-$V-25pct.plans.xml.gz:
+	$(sc) prepare generate-small-scale-commercial-traffic\
+	  input/commercialTraffic\
+	 --sample 0.25\
+	 --jspritIterations 1\
+	 --creationOption createNewCarrierFile\
+	 --landuseConfiguration useOSMBuildingsAndLanduse\
+	 --trafficType businessTraffic\
+	 --zoneShapeFileName $(berlin)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp\
+	 --buildingsShapeFileName $(berlin)/input/shp/buildings_BerlinBrandenburg_4326.shp\
+	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
+	 --shapeCRS "EPSG:4326"\
+	 --resistanceFactor "0.005"\
+	 --nameOutputPopulation $(notdir $@)\
+	 --PathOutput output/businessTraffic
+
+	mv output/businessTraffic/$(notdir $@) $@
+
+$p/berlin-freightTraffic-$V-25pct.plans.xml.gz:
+	$(sc) prepare generate-small-scale-commercial-traffic\
+	  input/commercialTraffic\
+	 --sample 0.25\
+	 --jspritIterations 1\
+	 --creationOption createNewCarrierFile\
+	 --landuseConfiguration useOSMBuildingsAndLanduse\
+	 --trafficType businessTraffic\
+	 --zoneShapeFileName $(berlin)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp\
+	 --buildingsShapeFileName $(berlin)/input/shp/buildings_BerlinBrandenburg_4326.shp\
+	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
+	 --shapeCRS "EPSG:4326"\
+	 --resistanceFactor "0.005"\
+	 --nameOutputPopulation $(notdir $@)\
+	 --PathOutput output/freightTraffic
+
+	mv output/freightTraffic/$(notdir $@) $@
+
+
+# Depends on location choice runs and freight model
+$p/berlin-cadyts-input-$V-25pct.plans.xml.gz: $p/berlin-businessTraffic-$V-25pct.plans.xml.gz
+	$(sc) prepare merge-plans output/lc-*/*output_selected_plans.xml.gz\
+		--output $@
+
+	$(sc) prepare merge-populations $@ $< --output $@
 
 # These depend on the output of calibration runs
 $p/berlin-uncalibrated-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
@@ -203,13 +254,16 @@ $p/berlin-uncalibrated-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/
 	$(sc) prepare split-activity-types-duration\
 	 --input $@ --output $@
 
+ 	# TODO: merge other freight types
+ 	# $p/berlin-freightTraffic-$V-25pct.plans.xml.gz
+ 	# $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
+
 $p/berlin-$V-25pct.plans.xml.gz:
 	cp output/route-choice/routeChoice.output_selected_plans.xml.gz $@
 
 	$(sc) prepare downsample-population $@\
      	 --sample-size 0.25\
      	 --samples 0.1 0.01\
-
 
 prepare-calibration: $p/berlin-initial-$V-25pct.plans.xml.gz
 	echo "Done"

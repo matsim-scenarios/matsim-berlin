@@ -10,6 +10,7 @@ class SrV2018:
 
     # Fallback regiostar codes hard-coded
     CODES = {
+        'Berlin': 1,
         'Potsdam': 2,
         'Cottbus': 4,
         'Frankfurt (Oder)': 2,
@@ -250,7 +251,7 @@ class SrV2018:
     @staticmethod
     def region_type(d, regio, random_state):
 
-        if "PLZ" in dir(d):
+        if "PLZ" in dir(d) and regio is not None:
             plz = int(d.PLZ)
 
             r = regio[regio.plz == plz]

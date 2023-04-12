@@ -1,5 +1,6 @@
 package org.matsim.synthetic;
 
+import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 import com.google.inject.Inject;
 import com.google.inject.TypeLiteral;
 import org.apache.logging.log4j.LogManager;
@@ -26,6 +27,7 @@ import org.matsim.contrib.locationchoice.frozenepsilons.FrozenTastes;
 import org.matsim.contrib.locationchoice.frozenepsilons.FrozenTastesConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.StrategyConfigGroup;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
@@ -45,6 +47,7 @@ import org.matsim.prepare.berlinCounts.CreateCountsFromOpenData;
 import org.matsim.prepare.berlinCounts.CreateCountsFromVMZ;
 import org.matsim.run.Activities;
 import org.matsim.run.RunOpenBerlinScenario;
+import org.matsim.smallScaleCommercialTrafficGeneration.CreateSmallScaleCommercialTrafficDemand;
 import org.matsim.synthetic.download.DownloadCommuterStatistic;
 import picocli.CommandLine;
 
@@ -63,7 +66,8 @@ import java.util.stream.Collectors;
 		AssignCommuters.class, RunActitopp.class, CreateNetworkFromSumo.class, CreateTransitScheduleFromGtfs.class,
 		CleanNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class,
 		CreateCountsFromOpenData.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class,
-		MergePlans.class, SplitActivityTypesDuration.class, CleanPopulation.class, CleanAttributes.class
+		MergePlans.class, SplitActivityTypesDuration.class, CleanPopulation.class, CleanAttributes.class,
+		CreateSmallScaleCommercialTrafficDemand.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
 
@@ -124,12 +128,14 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 
 		// Required for all calibration strategies
-		config.strategy().addStrategySettings(
-				new StrategyConfigGroup.StrategySettings()
-						.setStrategyName(DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta)
-						.setWeight(1.0)
-						.setSubpopulation("person")
-		);
+		for (String subpopulation : List.of("person", "businessTraffic", "businessTraffic_service")) {
+			config.strategy().addStrategySettings(
+					new StrategyConfigGroup.StrategySettings()
+							.setStrategyName(DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta)
+							.setWeight(1.0)
+							.setSubpopulation(subpopulation)
+			);
+		}
 
 		if (mode == null)
 			throw new IllegalArgumentException("Calibration mode [--mode} not set!");
@@ -146,6 +152,9 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 					.setSubpopulation("person")
 			);
 
+			config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("pt interaction").setTypicalDuration(30));
+			config.vspExperimental().setAbleToOverwritePtInteractionParams(true);
+
 			config.strategy().setFractionOfIterationsToDisableInnovation(0.8);
 			config.planCalcScore().setFractionOfIterationsToStartScoreMSA(0.8);
 
@@ -160,18 +169,29 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		} else if (mode == CalibrationMode.cadyts) {
 
+			for (String subpopulation : List.of("person", "businessTraffic", "businessTraffic_service")) {
+				config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
+						.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
+						.setWeight(weight)
+						.setSubpopulation(subpopulation)
+				);
+			}
+
 			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
-					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
+					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.TimeAllocationMutator)
 					.setWeight(weight)
 					.setSubpopulation("person")
 			);
+
+			config.timeAllocationMutator().setMutationRange(15 * 60);
+			config.timeAllocationMutator().setAffectingDuration(false);
 
 			config.counts().setInputFile("./berlin-v6.0-counts-car-vmz.xml.gz");
 
 			config.controler().setRunId("cadyts");
 			config.controler().setOutputDirectory("./output/cadyts-" + scaleFactor);
 
-			// Counts are scaled with sample size and reduced for missing commercial traffic
+			// Counts can be scaled with sample size
 			config.counts().setCountsScaleFactor(scaleFactor * sample.getSize() / 100d);
 
 			// No innovation switch-off needed
@@ -202,6 +222,13 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	@Override
 	protected void prepareScenario(Scenario scenario) {
 
+		if (mode == CalibrationMode.cadyts)
+			// each initial plan needs a separate type, so it won't be removed
+			for (Person person : scenario.getPopulation().getPersons().values()) {
+				for (int i = 0; i < person.getPlans().size(); i++) {
+					person.getPlans().get(i).setType(String.valueOf(i));
+				}
+			}
 	}
 
 	@Override
@@ -252,6 +279,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
+
+				install(new SwissRailRaptorModule());
 				bind(AnalysisMainModeIdentifier.class).to(RoutingModeMainModeIdentifier.class);
 			}
 		});
