@@ -72,6 +72,8 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 	private Network network;
 
+	private ActivityFacilities facilities = FacilitiesUtils.createActivityFacilities();
+
 	private ThreadLocal<Context> ctxs;
 
 	public static void main(String[] args) {
@@ -96,7 +98,6 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		zones = shp.readFeatures().stream()
 				.collect(Collectors.toMap(ft -> Long.parseLong((String) ft.getAttribute("ARS")), ft -> ft));
 
-		ActivityFacilities facilities = FacilitiesUtils.createActivityFacilities();
 		new MatsimFacilitiesReader(RunOpenBerlinScenario.CRS, RunOpenBerlinScenario.CRS, facilities)
 				.readFile(facilityPath.toString());
 
@@ -186,6 +187,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 						// these people will work from home
 						if (work == null) {
 							act.setCoord(homeCoord);
+							lastCoord = homeCoord;
 							continue;
 						} else
 							location = work;
@@ -196,12 +198,12 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 						double dist = (double) act.getAttributes().getAttribute("orig_dist");
 
 						// Lower threshold
-						double lower = dist * 0.85;
+						double lower = dist * 1000 * 0.85;
 						// Needed for lambda
 						final Coord refCoord = lastCoord;
 
-						for (int i = 0; i < 10 && location == null; i++) {
-							List<ActivityFacility> query = trees.get(type).query(MGC.coord2Point(lastCoord).buffer(dist * (1000 * i) * Math.pow(1.1, i)).getEnvelopeInternal());
+						for (int i = 0; i < 15 && location == null; i++) {
+							List<ActivityFacility> query = trees.get(type).query(MGC.coord2Point(lastCoord).buffer((dist * 1000) + (500 * i) * Math.pow(1.1, i)).getEnvelopeInternal());
 
 							// Distance should be larger than the lower bound
 							query = query.stream().filter(f -> CoordUtils.calcEuclideanDistance(refCoord, f.getCoord()) >= lower)
@@ -224,9 +226,14 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 						continue;
 					}
 
-					lastCoord = location.getCoord();
 					act.setFacilityId(location.getId());
 				}
+
+				if (act.getCoord() != null)
+					lastCoord = act.getCoord();
+				else if (act.getFacilityId() != null)
+					lastCoord = facilities.getFacilities().get(act.getFacilityId()).getCoord();
+
 			}
 		}
 	}
@@ -239,10 +246,9 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		ActivityFacility location = null;
 		for (int i = 0; i < 500 && location == null; i++) {
 
-			// TODO: full degree angle can be very inefficient for sampling far away zones
 			Coord c = rndCoord(rnd, dist, coord);
 
-			List<ActivityFacility> query = index.query(MGC.coord2Point(c).buffer(3000).getEnvelopeInternal());
+			List<ActivityFacility> query = index.query(MGC.coord2Point(c).buffer(1000).getEnvelopeInternal());
 			while (!query.isEmpty()) {
 				ActivityFacility af = query.remove(rnd.nextInt(query.size()));
 				if (zone == null || zone.contains(MGC.coord2Point(af.getCoord()))) {
@@ -255,11 +261,14 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		return location;
 	}
 
+	/**
+	 * Dist is in km.
+	 */
 	private Coord rndCoord(SplittableRandom rnd, double dist, Coord origin) {
 		var angle = rnd.nextDouble() * Math.PI * 2;
 
-		var x = Math.cos(angle) * dist;
-		var y = Math.sin(angle) * dist;
+		var x = Math.cos(angle) * dist * 1000;
+		var y = Math.sin(angle) * dist * 1000;
 
 		return new Coord(origin.getX() + x, origin.getY() + y);
 	}
