@@ -22,11 +22,11 @@ public class MosaikRunnerWithRoadPricing {
         config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
 
         var scenario = RunBerlinScenario.prepareScenario(config);
-        loadScheme(scenario);
+       // loadScheme(scenario);
 
         var controler = RunBerlinScenario.prepareControler(scenario);
-        var module = new RoadPricingModule(RoadPricingUtils.getRoadPricingScheme(scenario));
-        controler.addOverridingModule(module);
+        //var module = new RoadPricingModule(RoadPricingUtils.addOrGetRoadPricingScheme(scenario));
+        controler.addOverridingModule(new RoadPricingModule());
 
         controler.run();
     }
