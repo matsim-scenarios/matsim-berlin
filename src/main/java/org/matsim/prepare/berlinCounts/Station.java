@@ -1,16 +1,16 @@
 package org.matsim.prepare.berlinCounts;
 
 import org.matsim.api.core.v01.Coord;
+import org.matsim.api.core.v01.network.Link;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Record class to hold VIZ count station data, e.g. coords and aggregated volumes.
  */
-public record Station(String id, String name, String direction, Coord coord, Map<Integer, Double> miv, Map<Integer, Double> freight) {
+public record Station(String id, String name, String direction, Coord coord, AtomicReference<Link> linkAtomicReference) {
 
 	public Station(String id, String name, String direction, Coord coord) {
-		this(id, name, direction, coord, new HashMap<>(), new HashMap<>());
+		this(id, name, direction, coord, new AtomicReference<>());
 	}
 }
