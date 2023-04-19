@@ -14,7 +14,7 @@
 		<!--<matsim.version>13.0</matsim.version>-->
 
 		<!-- PR-labelled release -->
-		<matsim.version>15.0-PR2487</matsim.version>
+		<matsim.version>16.0-SNAPSHOT</matsim.version>
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
 <!--		<matsim.version>15.0-SNAPSHOT</matsim.version>-->
@@ -54,6 +54,18 @@
 	</repositories>
 
 	<dependencies>
+
+		<dependency>
+			<groupId>tech.tablesaw</groupId>
+			<artifactId>tablesaw-core</artifactId>
+			<version>0.43.1</version>
+			<exclusions>
+				<exclusion>
+					<groupId>it.unimi.dsi</groupId>
+					<artifactId>fastutil</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
 		<!-- This is the matsim "core": -->
 		<dependency>
