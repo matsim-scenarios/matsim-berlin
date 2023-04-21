@@ -247,6 +247,7 @@ class Trip:
 class Activity:
     """ Activity information (including leg) """
     a_id: str
+    a_weight: float
     p_id: str
     n: int
     type: Purpose

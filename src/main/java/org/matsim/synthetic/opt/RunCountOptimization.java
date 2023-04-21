@@ -98,7 +98,7 @@ public class RunCountOptimization implements MATSimAppCommand {
 
 		log.info("Collected {} relevant plans", persons.size());
 
-		problem.iterate(1000);
+		problem.iterate(1000, 0.2);
 
 		PlanAssignmentProblem solution = solve(problem);
 
