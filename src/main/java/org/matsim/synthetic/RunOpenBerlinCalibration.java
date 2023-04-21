@@ -49,9 +49,12 @@ import org.matsim.run.Activities;
 import org.matsim.run.RunOpenBerlinScenario;
 import org.matsim.smallScaleCommercialTrafficGeneration.CreateSmallScaleCommercialTrafficDemand;
 import org.matsim.synthetic.download.DownloadCommuterStatistic;
+import org.matsim.synthetic.opt.RunCountOptimization;
+import org.matsim.synthetic.opt.SelectPlansFromIndex;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -67,7 +70,7 @@ import java.util.stream.Collectors;
 		CleanNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class,
 		CreateCountsFromOpenData.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class,
 		MergePlans.class, SplitActivityTypesDuration.class, CleanPopulation.class, CleanAttributes.class,
-		CreateSmallScaleCommercialTrafficDemand.class
+		CreateSmallScaleCommercialTrafficDemand.class, RunCountOptimization.class, SelectPlansFromIndex.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
 
@@ -94,6 +97,9 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	@CommandLine.Option(names = "--scale-factor", description = "Scale factor for counts.", defaultValue = "1")
 	private double scaleFactor;
 
+	@CommandLine.Option(names = "--plan-index", description = "Only use one plan with specified index")
+	private Integer planIndex;
+
 	public static void main(String[] args) {
 		MATSimApplication.run(RunOpenBerlinCalibration.class, args);
 	}
@@ -115,6 +121,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		config.plans().setInputFile(populationPath.toString());
 		config.controler().setRunId(mode.toString());
+		config.planCalcScore().setWriteExperiencedPlans(true);
 
 		// Location choice does not work with the split types
 		Activities.addScoringParams(config, mode != CalibrationMode.locationChoice);
@@ -169,6 +176,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		} else if (mode == CalibrationMode.cadyts) {
 
+			/*
 			for (String subpopulation : List.of("person", "businessTraffic", "businessTraffic_service")) {
 				config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
 						.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
@@ -182,6 +190,10 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 					.setWeight(weight)
 					.setSubpopulation("person")
 			);
+			 */
+			// Set high flow capacity
+			config.qsim().setFlowCapFactor(config.qsim().getFlowCapFactor() * 4);
+			config.qsim().setStorageCapFactor(config.qsim().getStorageCapFactor() * 4);
 
 			config.timeAllocationMutator().setMutationRange(15 * 60);
 			config.timeAllocationMutator().setAffectingDuration(false);
@@ -213,6 +225,14 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 					.setSubpopulation("person")
 			);
 
+		} else if (mode == CalibrationMode.eval) {
+
+			iterations = 0;
+			config.controler().setLastIteration(0);
+
+			config.qsim().setFlowCapFactor(config.qsim().getFlowCapFactor() * scaleFactor);
+			config.qsim().setStorageCapFactor(config.qsim().getStorageCapFactor() * scaleFactor);
+
 		} else
 			throw new IllegalStateException("Mode not implemented:" + mode);
 
@@ -222,6 +242,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	@Override
 	protected void prepareScenario(Scenario scenario) {
 
+		/*
 		if (mode == CalibrationMode.cadyts)
 			// each initial plan needs a separate type, so it won't be removed
 			for (Person person : scenario.getPopulation().getPersons().values()) {
@@ -229,6 +250,22 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 					person.getPlans().get(i).setType(String.valueOf(i));
 				}
 			}
+		 */
+
+		if (planIndex != null) {
+			for (Person person : scenario.getPopulation().getPersons().values()) {
+				List<? extends Plan> plans = person.getPlans();
+				Set<Plan> toRemove = new HashSet<>();
+
+				for (int i = 0; i < plans.size(); i++) {
+					if (i == planIndex) {
+						person.setSelectedPlan(plans.get(i));
+					} else
+						toRemove.add(plans.get(i));
+				}
+				toRemove.forEach(person::removePlan);
+			}
+		}
 	}
 
 	@Override
@@ -266,6 +303,9 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 //					sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(params));
 //					sumScoringFunction.addScoringFunction(new CharyparNagelAgentStuckScoring(params));
 
+					// TODO: change the scoring type in the cadyts module
+					// to FLOW VEHH
+
 					final CadytsScoring<Link> scoringFunction = new CadytsScoring<>(person.getSelectedPlan(), config, cadytsContext);
 					scoringFunction.setWeightOfCadytsCorrection(weight * config.planCalcScore().getBrainExpBeta());
 					sumScoringFunction.addScoringFunction(scoringFunction);
@@ -301,6 +341,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	 * Different calibration stages.
 	 */
 	public enum CalibrationMode {
+		eval,
 		locationChoice,
 		cadyts,
 		routeChoice

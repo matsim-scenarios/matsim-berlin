@@ -236,6 +236,29 @@ $p/berlin-freightTraffic-$V-25pct.plans.xml.gz:
 	mv output/freightTraffic/$(notdir $@) $@
 
 
+# This file requires eval runs
+$p/berlin-initial-$V-25pct.experienced_plans.xml.gz:
+	$(sc) prepare merge-plans output/exp-*/*.output_experienced_plans.xml.gz\
+		--output $@
+
+	# Only for debugging
+	$(sc) prepare downsample-population $@\
+     	 --sample-size 0.25\
+     	 --samples 0.05 0.01\
+
+
+$p/berlin-uncalibrated-$V-25pct.plans.xml.gz: $p/berlin-initial-$V-25pct.experienced_plans.xml.gz
+	$(sc) prepare run-count-opt\
+	 --input $<\
+	 --network $p/berlin-v6.0-network-with-pt.xml.gz\
+     --counts $p/berlin-v6.0-counts-car-vmz.xml.gz\
+	 --output $p/berlin-$V-25pct.plans-idx.csv
+
+	$(sc) prepare select-plans-idx\
+ 	 --input $p/berlin-cadyts-input-$V-25pct.plans.xml.gz\
+ 	 --csv $p/berlin-$V-25pct.plans-idx.csv\
+ 	 --output $@
+
 # Depends on location choice runs and freight model
 $p/berlin-cadyts-input-$V-25pct.plans.xml.gz: $p/berlin-businessTraffic-$V-25pct.plans.xml.gz
 	$(sc) prepare merge-plans output/lc-*/*output_selected_plans.xml.gz\
@@ -244,7 +267,7 @@ $p/berlin-cadyts-input-$V-25pct.plans.xml.gz: $p/berlin-businessTraffic-$V-25pct
 	$(sc) prepare merge-populations $@ $< --output $@
 
 # These depend on the output of calibration runs
-$p/berlin-uncalibrated-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
+$p/berlin-cadyts-output-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
 	$(sc) prepare filter-relevant-agents\
 	 --input output/cadyts_scale_1/*.output_selected_plans.xml.gz --output $@\
 	 --shp input/v6.0/area/area.shp\

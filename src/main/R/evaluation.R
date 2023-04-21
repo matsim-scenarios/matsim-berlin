@@ -65,7 +65,7 @@ aggr_ref <- ref %>%
 # Read simulation data
 ##################
 
-f <- "~/Volumes/math-cluster/matsim-berlin/calibration/output/cadyts_scale_075"
+f <- "~/Volumes/math-cluster/matsim-berlin/calibration/output/cadyts"
 sim_scale <- 100/25
 
 persons <- read_delim(list.files(f, pattern = "*.output_persons.csv.gz", full.names = T, include.dirs = F), delim = ";", trim_ws = T, 
@@ -125,3 +125,18 @@ p2_aggr <- ggplot(data=aggr, mapping =  aes(x=1, y=share, fill=mode)) +
 combined <- p1_aggr / p2_aggr
 combined + plot_layout(guides = "auto")
 
+
+############
+# Distance groups
+############
+
+d_ref <- ref %>% group_by(dist_group) %>%
+    summarise(share=sum(share)) %>%
+    mutate(source = "SrV")
+
+d_sim <- sim %>% group_by(dist_group) %>%
+    summarise(share=sum(trips) / sum(sim$trips)) %>%
+    mutate(source = "sim")
+
+ggplot(data=bind_rows(list(d_ref, d_sim)), aes(x=dist_group, y=share, fill=source)) +
+  geom_bar(stat = "identity", position=position_dodge())

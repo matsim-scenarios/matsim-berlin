@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<solver xmlns="https://www.optaplanner.org/xsd/solver" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="https://www.optaplanner.org/xsd/solver https://www.optaplanner.org/xsd/solver/solver.xsd">
+
+	<environmentMode>REPRODUCIBLE</environmentMode>
+	<moveThreadCount>1</moveThreadCount>
+
+	<solutionClass>org.matsim.synthetic.opt.PlanAssignmentProblem</solutionClass>
+	<entityClass>org.matsim.synthetic.opt.PlanPerson</entityClass>
+
+
+	<!-- Define the score function -->
+	<scoreDirectorFactory>
+		<incrementalScoreCalculatorClass>org.matsim.synthetic.opt.ScoreCalculator</incrementalScoreCalculatorClass>
+	</scoreDirectorFactory>
+
+	<!-- Configure the optimization algorithms (optional) -->
+	<termination>
+		<daysSpentLimit>1</daysSpentLimit>
+	</termination>
+	<localSearch>
+
+		<termination>
+			<unimprovedStepCountLimit>50000</unimprovedStepCountLimit>
+		</termination>
+
+		<unionMoveSelector>
+			<cacheType>JUST_IN_TIME</cacheType>
+			<selectionOrder>RANDOM</selectionOrder>
+
+			<changeMoveSelector/>
+			<swapMoveSelector/>
+
+			<moveIteratorFactory>
+				<fixedProbabilityWeight>0.15</fixedProbabilityWeight>
+				<moveIteratorFactoryClass>org.matsim.synthetic.opt.LargeShuffleMoveSelector</moveIteratorFactoryClass>
+			</moveIteratorFactory>
+
+		</unionMoveSelector>
+
+	</localSearch>
+
+
+</solver>

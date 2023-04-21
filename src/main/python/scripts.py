@@ -115,13 +115,16 @@ aggr = aggr.drop(columns=["n"])
 print(aggr)
 
 
-aggr.to_csv("pupulation_stats_ref.csv")
+aggr.to_csv("population_stats_ref.csv")
 
 
 
 #%%
 
-
+# TODO: activity stats ref
+# activity type by hour
+# start + end + ongoing
+# activity durations, by type as histogram
 
 
 

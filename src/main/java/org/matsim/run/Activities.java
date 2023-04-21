@@ -74,6 +74,8 @@ public enum Activities {
 		config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("car interaction").setTypicalDuration(60));
 		config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("ride interaction").setTypicalDuration(60));
 		config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("service").setTypicalDuration(3600));
+		config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("start").setTypicalDuration(3600));
+		config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("end").setTypicalDuration(3600));
 
 	}
 
