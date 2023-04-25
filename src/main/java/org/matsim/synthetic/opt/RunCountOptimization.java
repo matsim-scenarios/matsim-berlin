@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 @CommandLine.Command(name = "run-count-opt", description = "Select plans to match counts data")
 public class RunCountOptimization implements MATSimAppCommand {
@@ -48,6 +49,9 @@ public class RunCountOptimization implements MATSimAppCommand {
 
 	@CommandLine.Option(names = "--counts", description = "Path to counts", required = true)
 	private Path countsPath;
+
+	@CommandLine.Option(names = "--metric")
+	private PlanAssignmentProblem.ErrorMetric metric = PlanAssignmentProblem.ErrorMetric.abs_error;
 
 	@CommandLine.Option(names = "--sample-size", defaultValue = "0.25")
 	private double sampleSize;
@@ -94,11 +98,11 @@ public class RunCountOptimization implements MATSimAppCommand {
 
 		List<PlanPerson> persons = processPopulation(input, network, linkCounts);
 
-		problem = new PlanAssignmentProblem(maxK, persons, counts);
+		problem = new PlanAssignmentProblem(maxK, metric, persons, counts);
 
 		log.info("Collected {} relevant plans", persons.size());
 
-		problem.iterate(1000, 0.2);
+		problem.iterate(5000, 0.5);
 
 		PlanAssignmentProblem solution = solve(problem);
 
@@ -124,7 +128,7 @@ public class RunCountOptimization implements MATSimAppCommand {
 
 		Set<Id<Link>> links = linkCounts.getCounts().keySet();
 
-		int scale = (int) (100 / sampleSize);
+		int scale = (int) (1 / sampleSize);
 
 		for (Person person : population.getPersons().values()) {
 
@@ -204,8 +208,15 @@ public class RunCountOptimization implements MATSimAppCommand {
 
 		Solver<PlanAssignmentProblem> solver = factory.buildSolver();
 
+		AtomicLong ts = new AtomicLong(System.currentTimeMillis());
+
 		solver.addEventListener(event -> {
-			log.info("New best solution: {}", event.getNewBestScore());
+
+			// Only log every x seconds
+			if (ts.get() + 5_000 < System.currentTimeMillis()) {
+				log.info("New best solution: {}", event.getNewBestScore());
+				ts.set(System.currentTimeMillis());
+			}
 		});
 
 		return solver.solve(problem);

@@ -3,7 +3,7 @@
 		xsi:schemaLocation="https://www.optaplanner.org/xsd/solver https://www.optaplanner.org/xsd/solver/solver.xsd">
 
 	<environmentMode>REPRODUCIBLE</environmentMode>
-	<moveThreadCount>1</moveThreadCount>
+	<moveThreadCount>4</moveThreadCount>
 
 	<solutionClass>org.matsim.synthetic.opt.PlanAssignmentProblem</solutionClass>
 	<entityClass>org.matsim.synthetic.opt.PlanPerson</entityClass>
@@ -16,6 +16,7 @@
 
 	<!-- Configure the optimization algorithms (optional) -->
 	<termination>
+<!--		<secondsSpentLimit>60</secondsSpentLimit>-->
 		<daysSpentLimit>1</daysSpentLimit>
 	</termination>
 	<localSearch>

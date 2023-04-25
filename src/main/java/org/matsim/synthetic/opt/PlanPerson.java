@@ -42,7 +42,7 @@ public class PlanPerson {
 	/**
 	 * Scores of each plan.
 	 */
-	private final float[] scores;
+	private final double[] scores;
 
 	/**
 	 * Maximum number of affected counts.
@@ -59,7 +59,7 @@ public class PlanPerson {
 		for (Int2IntMap plan : plans) {
 			max = Math.max(max, plan.values().intStream().sum());
 		}
-		this.scores = new float[plans.length];
+		this.scores = new double[plans.length];
 		Arrays.fill(scores, Float.NaN);
 
 		this.maxImpact = max;
@@ -68,7 +68,7 @@ public class PlanPerson {
 	/**
 	 * Constructor for cloning.
 	 */
-	private PlanPerson(Integer k, Id<Person> id, int offset, Int2IntMap[] plans, float[] scores, int maxImpact) {
+	private PlanPerson(Integer k, Id<Person> id, int offset, Int2IntMap[] plans, double[] scores, int maxImpact) {
 		this.k = k;
 		this.id = id;
 		this.offset = offset;
@@ -100,24 +100,18 @@ public class PlanPerson {
 		return k;
 	}
 
-	public void setScore(int[] diff) {
+	public void setScore(ScoreCalculator calc) {
 
 
 		for (int i = 0; i < plans.length; i++) {
 
-			int score = 0;
+			double score = 0;
 
 			Int2IntMap p = plans[i];
 
 			for (Int2IntMap.Entry e : p.int2IntEntrySet()) {
 
-				// Positive score where more counts are needed,
-				// negative score when there are too many counts
-				if (diff[e.getIntKey()] > 0) {
-					score += plans[i].get(e.getIntKey());
-				} else if (diff[e.getIntKey()] < 0) {
-					score -= plans[i].get(e.getIntKey());
-				}
+				score += calc.scoreEntry(e);
 			}
 
 			scores[i] = score;
@@ -129,20 +123,20 @@ public class PlanPerson {
 	 *
 	 * @see org.matsim.core.replanning.strategies.ChangeExpBeta
 	 */
-	public int changePlanExpBeta(Random rnd) {
+	public int changePlanExpBeta(double beta, Random rnd) {
 
 		int other = rnd.nextInt(scores.length);
 
-		float currentPlan = scores[k];
-		float otherPlan = scores[other];
+		double currentPlan = scores[k];
+		double otherPlan = scores[other];
 
-		if (Float.isNaN(otherPlan))
+		if (Double.isNaN(otherPlan))
 			return other;
 
-		if (Float.isNaN(currentPlan))
+		if (Double.isNaN(currentPlan))
 			return k;
 
-		double weight = Math.exp(0.5 * 1 * (otherPlan - currentPlan));
+		double weight = Math.exp(0.5 * beta * (otherPlan - currentPlan));
 
 		// switch plan
 		if (rnd.nextDouble() < 0.01 * weight) {
