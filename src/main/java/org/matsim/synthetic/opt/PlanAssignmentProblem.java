@@ -102,15 +102,6 @@ public class PlanAssignmentProblem implements Iterable<PlanPerson> {
 		}
 	}
 
-	/**
-	 * Error metric to calculate.
-	 */
-	enum ErrorMetric {
-		abs_error,
-		log_error,
-		symetric_percentage_error
-	}
-
 	public static final class Cloner implements SolutionCloner<PlanAssignmentProblem> {
 		@Override
 		public PlanAssignmentProblem cloneSolution(PlanAssignmentProblem original) {

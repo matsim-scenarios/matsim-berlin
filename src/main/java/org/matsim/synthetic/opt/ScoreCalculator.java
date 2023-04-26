@@ -2,6 +2,7 @@ package org.matsim.synthetic.opt;
 
 
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import org.apache.commons.math3.util.FastMath;
 import org.optaplanner.core.api.score.buildin.simplebigdecimal.SimpleBigDecimalScore;
 import org.optaplanner.core.api.score.calculator.IncrementalScoreCalculator;
 
@@ -9,13 +10,11 @@ import java.math.BigDecimal;
 
 public class ScoreCalculator implements IncrementalScoreCalculator<PlanAssignmentProblem, SimpleBigDecimalScore> {
 
+	private static final double C = 15.0;
 	/**
 	 * Error metric.
 	 */
 	private BigDecimal error = BigDecimal.ZERO;
-
-	private static final double C = 100.0;
-
 	/**
 	 * Real counts
 	 */
@@ -25,15 +24,18 @@ public class ScoreCalculator implements IncrementalScoreCalculator<PlanAssignmen
 	 */
 	private int[] observed;
 
-	private PlanAssignmentProblem.ErrorMetric metric;
+	private ErrorMetric metric;
 
-	static BigDecimal diffChange(PlanAssignmentProblem.ErrorMetric err, int count, int old, int update) {
+	static BigDecimal diffChange(ErrorMetric err, int count, int old, int update) {
+
+		// Floating point arithmetic still leads to score corruption in full assert mode
+		// logarithm can not even be efficiently calculated using big decimal, the corruption needs to be accepted as this point
+
 		return switch (err) {
 			case abs_error -> BigDecimal.valueOf(Math.abs(count - update) - Math.abs(count - old));
-			case log_error ->
-					BigDecimal.valueOf(Math.log((update + C) / (count + C))).abs().subtract(BigDecimal.valueOf(Math.log((old + C) / (count + C))).abs());
-			case symetric_percentage_error -> BigDecimal.valueOf((double) (update - count) / (double) (update + count) / 2.).abs()
-					.subtract(BigDecimal.valueOf((double) (old - count) / (double) (old + count) / 2.).abs());
+			case log_error -> BigDecimal.valueOf(FastMath.abs(FastMath.log((update + C) / (count + C))) - FastMath.abs(FastMath.log((old + C) / (count + C))));
+			case symmetric_percentage_error -> BigDecimal.valueOf(FastMath.abs((double) (update - count) / (update + count + 2 * C) / 2.) -
+					FastMath.abs((double) (old - count) / (old + count + 2 * C) / 2.));
 		};
 	}
 
@@ -59,15 +61,15 @@ public class ScoreCalculator implements IncrementalScoreCalculator<PlanAssignmen
 
 		// Log score needs to shift counts by 1.0 to avoid log 0
 
-		if (metric == PlanAssignmentProblem.ErrorMetric.abs_error)
+		if (metric == ErrorMetric.abs_error)
 			for (int j = 0; j < counts.length; j++)
 				error += Math.abs(counts[j] - observed[j]);
-		else if (metric == PlanAssignmentProblem.ErrorMetric.log_error)
+		else if (metric == ErrorMetric.log_error)
 			for (int j = 0; j < counts.length; j++)
-				error += Math.abs(Math.log((observed[j] + C) / (counts[j] + C)));
-		else if (metric == PlanAssignmentProblem.ErrorMetric.symetric_percentage_error) {
+				error += FastMath.abs(Math.log((observed[j] + C) / (counts[j] + C)));
+		else if (metric == ErrorMetric.symmetric_percentage_error) {
 			for (int j = 0; j < counts.length; j++)
-				error += Math.abs((double) (observed[j] - counts[j]) / (double) (observed[j] + counts[j]) / 2);
+				error += FastMath.abs((double) (observed[j] - counts[j]) / (observed[j] + counts[j] + 2 * C) / 2);
 		}
 
 		this.error = BigDecimal.valueOf(error);
@@ -133,7 +135,6 @@ public class ScoreCalculator implements IncrementalScoreCalculator<PlanAssignmen
 		int idx = e.getIntKey();
 
 		// Calculate impact compared to a plan without the observations of this plan
-
 		// old can not get negative
 
 		BigDecimal score = diffChange(metric, counts[idx], Math.max(0, observed[idx] - e.getIntValue()), observed[idx]);

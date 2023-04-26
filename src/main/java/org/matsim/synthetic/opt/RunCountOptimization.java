@@ -51,7 +51,7 @@ public class RunCountOptimization implements MATSimAppCommand {
 	private Path countsPath;
 
 	@CommandLine.Option(names = "--metric")
-	private PlanAssignmentProblem.ErrorMetric metric = PlanAssignmentProblem.ErrorMetric.abs_error;
+	private ErrorMetric metric = ErrorMetric.abs_error;
 
 	@CommandLine.Option(names = "--sample-size", defaultValue = "0.25")
 	private double sampleSize;

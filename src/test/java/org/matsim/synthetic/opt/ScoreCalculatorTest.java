@@ -13,7 +13,7 @@ public class ScoreCalculatorTest {
 	@Test
 	public void absChange() {
 
-		PlanAssignmentProblem.ErrorMetric e = PlanAssignmentProblem.ErrorMetric.abs_error;
+		ErrorMetric e = ErrorMetric.abs_error;
 		// some count value
 		int c = 5;
 
@@ -37,7 +37,7 @@ public class ScoreCalculatorTest {
 	@Test
 	public void logChange() {
 
-		PlanAssignmentProblem.ErrorMetric e = PlanAssignmentProblem.ErrorMetric.log_error;
+		ErrorMetric e = ErrorMetric.log_error;
 
 		assertThat(ScoreCalculator.diffChange(e, 5, 3, 5))
 				.isEqualTo(BigDecimal.valueOf(-0.5108256237659907));

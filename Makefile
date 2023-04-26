@@ -15,7 +15,7 @@ SHP_FILES=$(patsubst %, input/shp/%-latest-free.shp.zip, $(REGIONS))
 osmosis := osmosis/bin/osmosis
 
 # Scenario creation tool
-sc := java -Xmx$(MEMORY) -cp $(JAR) org.matsim.synthetic.RunOpenBerlinCalibration
+sc := java -Xmx$(MEMORY) -XX:+UseParallelGC -cp $(JAR) org.matsim.synthetic.RunOpenBerlinCalibration
 
 .PHONY: prepare
 
@@ -246,18 +246,23 @@ $p/berlin-initial-$V-25pct.experienced_plans.xml.gz:
      	 --sample-size 0.25\
      	 --samples 0.05 0.01\
 
-
-$p/berlin-uncalibrated-$V-25pct.plans.xml.gz: $p/berlin-initial-$V-25pct.experienced_plans.xml.gz
+ERROR_METRIC := abs_error log_error symmetric_percentage_error
+eval-opt: $p/berlin-initial-$V-25pct.experienced_plans.xml.gz
 	$(sc) prepare run-count-opt\
 	 --input $<\
 	 --network $p/berlin-v6.0-network-with-pt.xml.gz\
      --counts $p/berlin-v6.0-counts-car-vmz.xml.gz\
-	 --output $p/berlin-$V-25pct.plans-idx.csv
+	 --output $p/berlin-$V-25pct.plans-idx.csv\
+	 --metric $(ERROR_METRIC)
 
 	$(sc) prepare select-plans-idx\
  	 --input $p/berlin-cadyts-input-$V-25pct.plans.xml.gz\
  	 --csv $p/berlin-$V-25pct.plans-idx.csv\
- 	 --output $@
+ 	 --output $p/berlin-$V-25pct.plans_$(ERROR_METRIC).xml.gz
+
+	$(sc) run --mode "eval" --output "output/eval-$(ERROR_METRIC)" --25pct --population "berlin-$V-25pct.plans_$(ERROR_METRIC).xml.gz"\
+	 --config $p/berlin-$V-base-calib.config.xml
+
 
 # Depends on location choice runs and freight model
 $p/berlin-cadyts-input-$V-25pct.plans.xml.gz: $p/berlin-businessTraffic-$V-25pct.plans.xml.gz
