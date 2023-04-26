@@ -252,12 +252,12 @@ eval-opt: $p/berlin-initial-$V-25pct.experienced_plans.xml.gz
 	 --input $<\
 	 --network $p/berlin-v6.0-network-with-pt.xml.gz\
      --counts $p/berlin-v6.0-counts-car-vmz.xml.gz\
-	 --output $p/berlin-$V-25pct.plans-idx.csv\
+	 --output $p/berlin-$V-25pct.plans_selection_$(ERROR_METRIC).csv\
 	 --metric $(ERROR_METRIC)
 
 	$(sc) prepare select-plans-idx\
  	 --input $p/berlin-cadyts-input-$V-25pct.plans.xml.gz\
- 	 --csv $p/berlin-$V-25pct.plans-idx.csv\
+ 	 --csv $p/berlin-$V-25pct.plans_selection_$(ERROR_METRIC).csv\
  	 --output $p/berlin-$V-25pct.plans_$(ERROR_METRIC).xml.gz
 
 	$(sc) run --mode "eval" --output "output/eval-$(ERROR_METRIC)" --25pct --population "berlin-$V-25pct.plans_$(ERROR_METRIC).xml.gz"\
