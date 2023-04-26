@@ -246,7 +246,7 @@ $p/berlin-initial-$V-25pct.experienced_plans.xml.gz:
      	 --sample-size 0.25\
      	 --samples 0.05 0.01\
 
-ERROR_METRIC := abs_error log_error symmetric_percentage_error
+ERROR_METRIC ?= abs_error
 eval-opt: $p/berlin-initial-$V-25pct.experienced_plans.xml.gz
 	$(sc) prepare run-count-opt\
 	 --input $<\
