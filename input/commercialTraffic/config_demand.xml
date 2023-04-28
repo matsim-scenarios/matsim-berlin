@@ -10,7 +10,7 @@
 		<param name="randomSeed" value="4177" />
 	</module>
 	<module name="vehicles" >
-		<param name="vehiclesFile" value="vehicleTypes.xml" />
+		<param name="vehiclesFile" value="commercial_VehicleTypes_CV.xml" />
 	</module>
 	<module name="freight" >
 		<!-- Freight Carriers File, according to MATSim freight contrib -->
