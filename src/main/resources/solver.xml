@@ -17,7 +17,7 @@
 	<!-- Configure the optimization algorithms (optional) -->
 	<termination>
 <!--		<secondsSpentLimit>60</secondsSpentLimit>-->
-		<daysSpentLimit>1</daysSpentLimit>
+		<daysSpentLimit>2</daysSpentLimit>
 	</termination>
 	<localSearch>
 

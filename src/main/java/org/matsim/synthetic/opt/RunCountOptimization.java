@@ -102,7 +102,14 @@ public class RunCountOptimization implements MATSimAppCommand {
 
 		log.info("Collected {} relevant plans", persons.size());
 
-		problem.iterate(5000, 0.5);
+		// Error scales are very different so different betas are needed
+		double beta = switch (metric) {
+			case abs_error -> 1;
+			case log_error -> 100;
+			case symmetric_percentage_error -> 300;
+		};
+
+		problem.iterate(5000, 0.5, beta);
 
 		PlanAssignmentProblem solution = solve(problem);
 

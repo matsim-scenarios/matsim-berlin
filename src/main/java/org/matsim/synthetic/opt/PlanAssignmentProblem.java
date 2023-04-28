@@ -73,7 +73,7 @@ public class PlanAssignmentProblem implements Iterable<PlanPerson> {
 		return persons.iterator();
 	}
 
-	public void iterate(int n, double prob) {
+	public void iterate(int n, double prob, double beta) {
 
 		ScoreCalculator calc = new ScoreCalculator();
 		calc.resetWorkingSolution(this);
@@ -90,7 +90,7 @@ public class PlanAssignmentProblem implements Iterable<PlanPerson> {
 
 			// Best p and beta are not known, so it will be annealed
 			double p = prob - step * i;
-			double b = 1 - i / (double) n;
+			double b = beta - (beta/n) * i;
 
 			for (PlanPerson person : persons) {
 
