@@ -109,7 +109,7 @@ public class RunCountOptimization implements MATSimAppCommand {
 			case symmetric_percentage_error -> 300;
 		};
 
-		problem.iterate(5000, 0.5, beta);
+		problem.iterate(5000, 0.5, beta, 0.01);
 
 		PlanAssignmentProblem solution = solve(problem);
 
@@ -220,7 +220,7 @@ public class RunCountOptimization implements MATSimAppCommand {
 		solver.addEventListener(event -> {
 
 			// Only log every x seconds
-			if (ts.get() + 5_000 < System.currentTimeMillis()) {
+			if (ts.get() + 30_000 < System.currentTimeMillis()) {
 				log.info("New best solution: {}", event.getNewBestScore());
 				ts.set(System.currentTimeMillis());
 			}

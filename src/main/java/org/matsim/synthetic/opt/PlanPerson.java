@@ -110,7 +110,6 @@ public class PlanPerson {
 			Int2IntMap p = plans[i];
 
 			for (Int2IntMap.Entry e : p.int2IntEntrySet()) {
-
 				score += calc.scoreEntry(e);
 			}
 
@@ -123,7 +122,7 @@ public class PlanPerson {
 	 *
 	 * @see org.matsim.core.replanning.strategies.ChangeExpBeta
 	 */
-	public int changePlanExpBeta(double beta, Random rnd) {
+	public int changePlanExpBeta(double beta, double w, Random rnd) {
 
 		int other = rnd.nextInt(scores.length);
 
@@ -139,7 +138,7 @@ public class PlanPerson {
 		double weight = Math.exp(0.5 * beta * (otherPlan - currentPlan));
 
 		// switch plan
-		if (rnd.nextDouble() < 0.01 * weight) {
+		if (rnd.nextDouble() < w * weight) {
 			return other;
 		}
 

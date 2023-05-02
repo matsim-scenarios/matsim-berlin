@@ -14,7 +14,7 @@
 		<incrementalScoreCalculatorClass>org.matsim.synthetic.opt.ScoreCalculator</incrementalScoreCalculatorClass>
 	</scoreDirectorFactory>
 
-	<!-- Configure the optimization algorithms (optional) -->
+	<!-- Configure the optimization algorithms -->
 	<termination>
 <!--		<secondsSpentLimit>60</secondsSpentLimit>-->
 		<daysSpentLimit>2</daysSpentLimit>

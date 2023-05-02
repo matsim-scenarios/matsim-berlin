@@ -14,7 +14,8 @@ public class ScoreCalculator implements IncrementalScoreCalculator<PlanAssignmen
 	/**
 	 * Error metric.
 	 */
-	private BigDecimal error = BigDecimal.ZERO;
+	private double error = 0;
+
 	/**
 	 * Real counts
 	 */
@@ -26,16 +27,16 @@ public class ScoreCalculator implements IncrementalScoreCalculator<PlanAssignmen
 
 	private ErrorMetric metric;
 
-	static BigDecimal diffChange(ErrorMetric err, int count, int old, int update) {
+	static double diffChange(ErrorMetric err, int count, int old, int update) {
 
 		// Floating point arithmetic still leads to score corruption in full assert mode
 		// logarithm can not even be efficiently calculated using big decimal, the corruption needs to be accepted as this point
 
 		return switch (err) {
-			case abs_error -> BigDecimal.valueOf(Math.abs(count - update) - Math.abs(count - old));
-			case log_error -> BigDecimal.valueOf(FastMath.abs(FastMath.log((update + C) / (count + C))) - FastMath.abs(FastMath.log((old + C) / (count + C))));
-			case symmetric_percentage_error -> BigDecimal.valueOf(FastMath.abs((double) (update - count) / (update + count + 2 * C) / 2.) -
-					FastMath.abs((double) (old - count) / (old + count + 2 * C) / 2.));
+			case abs_error -> Math.abs(count - update) - Math.abs(count - old);
+			case log_error -> FastMath.abs(FastMath.log((update + C) / (count + C))) - FastMath.abs(FastMath.log((old + C) / (count + C)));
+			case symmetric_percentage_error -> FastMath.abs((double) (update - count) / (update + count + 2 * C) / 2.) -
+					FastMath.abs((double) (old - count) / (old + count + 2 * C) / 2.);
 		};
 	}
 
@@ -57,7 +58,7 @@ public class ScoreCalculator implements IncrementalScoreCalculator<PlanAssignmen
 	}
 
 	private void calcScoreInternal() {
-		double error = 0;
+		error = 0;
 
 		// Log score needs to shift counts by 1.0 to avoid log 0
 
@@ -71,8 +72,6 @@ public class ScoreCalculator implements IncrementalScoreCalculator<PlanAssignmen
 			for (int j = 0; j < counts.length; j++)
 				error += FastMath.abs((double) (observed[j] - counts[j]) / (observed[j] + counts[j] + 2 * C) / 2);
 		}
-
-		this.error = BigDecimal.valueOf(error);
 	}
 
 	@Override
@@ -95,7 +94,7 @@ public class ScoreCalculator implements IncrementalScoreCalculator<PlanAssignmen
 			int old = observed[e.getIntKey()];
 			int update = observed[e.getIntKey()] -= e.getIntValue();
 
-			error = error.add(diffChange(metric, counts[e.getIntKey()], old, update));
+			error += diffChange(metric, counts[e.getIntKey()], old, update);
 		}
 
 	}
@@ -112,7 +111,7 @@ public class ScoreCalculator implements IncrementalScoreCalculator<PlanAssignmen
 			int old = observed[e.getIntKey()];
 			int update = observed[e.getIntKey()] += e.getIntValue();
 
-			error = error.add(diffChange(metric, counts[e.getIntKey()], old, update));
+			error += diffChange(metric, counts[e.getIntKey()], old, update);
 		}
 	}
 
@@ -127,7 +126,7 @@ public class ScoreCalculator implements IncrementalScoreCalculator<PlanAssignmen
 
 	@Override
 	public SimpleBigDecimalScore calculateScore() {
-		return SimpleBigDecimalScore.of(error.negate());
+		return SimpleBigDecimalScore.of(BigDecimal.valueOf(-error));
 	}
 
 	double scoreEntry(Int2IntMap.Entry e) {
@@ -137,8 +136,6 @@ public class ScoreCalculator implements IncrementalScoreCalculator<PlanAssignmen
 		// Calculate impact compared to a plan without the observations of this plan
 		// old can not get negative
 
-		BigDecimal score = diffChange(metric, counts[idx], Math.max(0, observed[idx] - e.getIntValue()), observed[idx]);
-
-		return -score.doubleValue();
+		return -diffChange(metric, counts[idx], Math.max(0, observed[idx] - e.getIntValue()), observed[idx]);
 	}
 }

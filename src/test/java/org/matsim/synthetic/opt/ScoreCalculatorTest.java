@@ -18,19 +18,19 @@ public class ScoreCalculatorTest {
 		int c = 5;
 
 		assertThat(ScoreCalculator.diffChange(e, c, 3, 5))
-				.isEqualTo(BigDecimal.valueOf(-2));
+				.isEqualTo(-2);
 
 		assertThat(ScoreCalculator.diffChange(e, c, 6, 5))
-				.isEqualTo(BigDecimal.valueOf(-1));
+				.isEqualTo(-1);
 
 		assertThat(ScoreCalculator.diffChange(e, c, 4, 6))
-				.isEqualTo(BigDecimal.valueOf(0));
+				.isEqualTo(0);
 
 		assertThat(ScoreCalculator.diffChange(e, c, 5, 3))
-				.isEqualTo(BigDecimal.valueOf(2));
+				.isEqualTo(2);
 
 		assertThat(ScoreCalculator.diffChange(e, c, 10, 15))
-				.isEqualTo(BigDecimal.valueOf(5));
+				.isEqualTo(5);
 
 	}
 
@@ -40,13 +40,14 @@ public class ScoreCalculatorTest {
 		ErrorMetric e = ErrorMetric.log_error;
 
 		assertThat(ScoreCalculator.diffChange(e, 5, 3, 5))
-				.isEqualTo(BigDecimal.valueOf(-0.5108256237659907));
+				.isEqualTo(-0.10536051565782628);
 
 		assertThat(ScoreCalculator.diffChange(e, 5, 5, 3))
-				.isEqualTo(BigDecimal.valueOf(0.5108256237659907));
+				.isEqualTo(0.10536051565782628);
 
+		// Does not hold anymore, because of the constant
 		assertThat(ScoreCalculator.diffChange(e, 10, 5, 20))
-				.isCloseTo(BigDecimal.valueOf(0), Offset.offset(BigDecimal.ZERO));
+				.isEqualTo(0);
 
 	}
 

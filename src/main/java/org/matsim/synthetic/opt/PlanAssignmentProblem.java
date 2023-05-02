@@ -73,7 +73,7 @@ public class PlanAssignmentProblem implements Iterable<PlanPerson> {
 		return persons.iterator();
 	}
 
-	public void iterate(int n, double prob, double beta) {
+	public void iterate(int n, double prob, double beta, double w) {
 
 		ScoreCalculator calc = new ScoreCalculator();
 		calc.resetWorkingSolution(this);
@@ -96,7 +96,7 @@ public class PlanAssignmentProblem implements Iterable<PlanPerson> {
 
 				if (rnd.nextDouble() < p) {
 					person.setScore(calc);
-					person.setK(person.changePlanExpBeta(b, rnd));
+					person.setK(person.changePlanExpBeta(b, w, rnd));
 				}
 			}
 		}
