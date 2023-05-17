@@ -68,6 +68,17 @@ aggr = aggr.drop(columns=["n"])
 
 aggr.to_csv("mode_share_ref.csv")
 
+
+# Also normalize der distance group
+for dist_group in aggr.index.get_level_values(0).categories:
+    sub = aggr.loc[dist_group, :]
+    sub.share /= sub.share.sum()
+
+
+aggr.to_csv("mode_share_per_dist_ref.csv")
+
+
+
 #%%
 
 def summarize(x):
@@ -98,14 +109,47 @@ aggr = summarize(trips)
 
 aggr.to_csv("trip_purposes_by_hour_ref.csv")
 
-
 #%%
+
 def mode_usage(mode):
     
     def f(x):
         return (x == mode).any()
     
     return f
+
+def summarize(x):
+    
+    total = x.p_weight.sum()
+    total_mobile = x[x.mobile_on_day].p_weight.sum()
+    
+    mobile = total_mobile / total
+    
+    
+    args = {k.value: ("main_mode", mode_usage(k)) for k in set(trips.main_mode)}
+    
+    p_trips = trips[trips.p_id.isin(x.index)]
+    
+    mode_user = p_trips.groupby(["p_id"]).agg(**args)    
+    joined = x.join(mode_user, how="inner")
+        
+    data = {}
+    for c in mode_user.columns:
+        share = joined[joined[c]].p_weight.sum() / total_mobile        
+        data[c] = share    
+     
+    
+    return pd.DataFrame(data={"main_mode": data.keys(), "user": data.values()}).set_index("main_mode")
+
+
+aggr = summarize(persons)
+#aggr = aggr.to_frame(0).T
+
+
+aggr.to_csv("mode_users_ref.csv")
+
+
+#%%
     
 
 def summarize(x):
@@ -151,7 +195,4 @@ print(aggr)
 
 
 aggr.to_csv("population_stats_ref.csv")
-
-
-#%%
 
