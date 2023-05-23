@@ -15,9 +15,10 @@ public class BerlinDashboardProvider implements DashboardProvider {
 
 	@Override
 	public List<Dashboard> getDashboards(Config config, SimWrapper simWrapper) {
-		return List.of(
-			new TripDashboard("mode_share_ref.csv", "mode_share_per_dist_ref.csv", "mode_users_ref.csv")
-		);
+		TripDashboard trips = new TripDashboard("mode_share_ref.csv", "mode_share_per_dist_ref.csv", "mode_users_ref.csv");
+		trips.setAnalysisArgs("--match-id", "^berlin.+");
+
+		return List.of(trips);
 	}
 
 }
