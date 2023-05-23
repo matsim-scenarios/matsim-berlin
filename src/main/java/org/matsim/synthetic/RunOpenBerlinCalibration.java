@@ -47,6 +47,7 @@ import org.matsim.prepare.berlinCounts.CreateCountsFromOpenData;
 import org.matsim.prepare.berlinCounts.CreateCountsFromVMZ;
 import org.matsim.run.Activities;
 import org.matsim.run.RunOpenBerlinScenario;
+import org.matsim.simwrapper.SimWrapperModule;
 import org.matsim.smallScaleCommercialTrafficGeneration.CreateSmallScaleCommercialTrafficDemand;
 import org.matsim.synthetic.download.DownloadCommuterStatistic;
 import org.matsim.synthetic.opt.RunCountOptimization;
@@ -130,9 +131,12 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			config.qsim().setFlowCapFactor(sample.getSize() / 100d);
 			config.qsim().setStorageCapFactor(sample.getSize() / 100d);
 
+			// Counts can be scaled with sample size
+			config.counts().setCountsScaleFactor(scaleFactor * sample.getSize() / 100d);
 			config.plans().setInputFile(sample.adjustName(config.plans().getInputFile()));
 		}
 
+		config.counts().setInputFile("./berlin-v6.0-counts-car-vmz.xml.gz");
 
 		// Required for all calibration strategies
 		for (String subpopulation : List.of("person", "businessTraffic", "businessTraffic_service")) {
@@ -202,9 +206,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 			config.controler().setRunId("cadyts");
 			config.controler().setOutputDirectory("./output/cadyts-" + scaleFactor);
-
-			// Counts can be scaled with sample size
-			config.counts().setCountsScaleFactor(scaleFactor * sample.getSize() / 100d);
 
 			// No innovation switch-off needed
 			config.planCalcScore().setFractionOfIterationsToStartScoreMSA(1.0);
@@ -315,6 +316,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			});
 
 		}
+
+		controler.addOverridingModule(new SimWrapperModule());
 
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
