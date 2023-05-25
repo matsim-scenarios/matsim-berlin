@@ -34,6 +34,7 @@ import java.util.SplittableRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static org.matsim.synthetic.CreateBerlinPopulation.generateId;
 import static org.matsim.synthetic.download.CalculateEmployedPopulation.*;
 
 @CommandLine.Command(
@@ -70,8 +71,6 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 	private Population population;
 
 	private Map<Integer, Employment> employed;
-
-	private long id;
 
 	public static void main(String[] args) {
 		new CreateBrandenburgPopulation().execute(args);
@@ -123,7 +122,9 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 				log.warn("Zone not found in population statistic: {} ({})", zone.getValue().getAttribute("GEN"), zone.getKey());
 		}
 
-		log.info("Generated {} persons", id);
+		log.info("Generated {} persons", population.getPersons().size());
+
+		PopulationUtils.sortPersons(population);
 
 		ProjectionUtils.putCRS(population, RunOpenBerlinScenario.CRS);
 		PopulationUtils.writePopulation(population, output.toString());
@@ -160,7 +161,7 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 
 		for (int i = 0; i < n * sample; i++) {
 
-			Person person = f.createPerson(Id.createPersonId("bb" + id++));
+			Person person = f.createPerson(generateId(population, "bb", rnd));
 
 			int age = ageDist.sample();
 

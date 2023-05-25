@@ -236,6 +236,10 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 
 		double startTime = 0;
 
+		// Track the distance to the first home activity
+		double homeDist = 0;
+		boolean arrivedHome = false;
+
 		for (int i = 0; i < activities.size(); i++) {
 
 			CSVRecord act = activities.get(i);
@@ -275,8 +279,10 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 
 			}
 
+			double legDist = Double.parseDouble(act.get("leg_dist"));
+
 			if (i > 0) {
-				a.getAttributes().putAttribute("orig_dist", Double.parseDouble(act.get("leg_dist")));
+				a.getAttributes().putAttribute("orig_dist", legDist);
 				a.getAttributes().putAttribute("orig_duration", legDuration);
 			}
 
@@ -290,8 +296,20 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 				plan.addLeg(factory.createLeg(lastMode));
 			}
 
+			if (!arrivedHome) {
+				homeDist += legDist;
+			}
+
+			if (a.getType().equals("home")) {
+				arrivedHome = true;
+			}
+
 			plan.addActivity(a);
 		}
+
+		// First activity contains the home distance
+		Activity act = (Activity) plan.getPlanElements().get(0);
+		act.getAttributes().putAttribute("orig_dist", homeDist);
 
 		// Last activity has no end time and duration
 		if (a != null) {

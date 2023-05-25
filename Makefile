@@ -163,16 +163,6 @@ $p/berlin-static-$V-25pct.plans.xml.gz: $p/berlin-only-$V-25pct.plans.xml.gz $p/
 
 	$(sc) prepare lookup-regiostar --input $@ --output $@ --xls $(germany)/RegioStaR-Referenzdateien.xlsx
 
-	$(sc) prepare assign-commuters\
-	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp\
-	 --commuter $(germany)/regionalstatistik/commuter.csv\
-	 --input $@ --output $@
-
-	# For debugging and visualization
-	$(sc) prepare downsample-population $@\
-     	 --sample-size 0.25\
-     	 --samples 0.1\
-
 
 $p/berlin-activities-$V-25pct.plans-1.xml.gz: $p/berlin-static-$V-25pct.plans.xml.gz
 	# Create five separate sets of activities
@@ -189,7 +179,14 @@ $p/berlin-initial-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans-1.x
 	 --output $@\
 	 --facilities $(word 2,$^)\
 	 --network $(word 3,$^)\
-	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp
+	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp\
+	 --commuter $(germany)/regionalstatistik/commuter.csv\
+
+	# For debugging and visualization
+	$(sc) prepare downsample-population $p/berlin-initial-$V-25pct.plans-1.xml.gz\
+		 --sample-size 0.25\
+		 --samples 0.1\
+
 
 $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
 	$(sc) prepare extract-freight-trips ../public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/german_freight.25pct.plans.xml.gz\
