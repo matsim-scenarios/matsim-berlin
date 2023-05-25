@@ -5,7 +5,10 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.Identifiable;
 import org.matsim.api.core.v01.events.PersonEntersVehicleEvent;
 import org.matsim.api.core.v01.events.PersonLeavesVehicleEvent;
 import org.matsim.api.core.v01.events.PersonMoneyEvent;
@@ -14,6 +17,7 @@ import org.matsim.api.core.v01.events.handler.PersonEntersVehicleEventHandler;
 import org.matsim.api.core.v01.events.handler.PersonLeavesVehicleEventHandler;
 import org.matsim.api.core.v01.events.handler.TransitDriverStartsEventHandler;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.analysis.time.TimeBinMap;
 import org.matsim.contrib.emissions.EmissionModule;
@@ -28,6 +32,8 @@ import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.ReflectiveConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
+import org.matsim.core.utils.geometry.geotools.MGC;
+import org.matsim.core.utils.gis.ShapeFileReader;
 import org.matsim.vehicles.EngineInformation;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
@@ -38,6 +44,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class MosaikRunnerWithRoadPricing {
 
@@ -142,7 +149,7 @@ public class MosaikRunnerWithRoadPricing {
             VehicleUtils.setHbefaEmissionsConcept(engineInformation, "average");
         }
 
-        var tollHandler = new EmissionTollHandler(createCostFactors(), createTimeFactors(), rpConfigGroup.factor);
+        var tollHandler = new EmissionTollHandler(getTollLinks(rpConfigGroup, scenario.getNetwork()), createCostFactors(), createTimeFactors(), rpConfigGroup.factor);
 
         var controler = RunBerlinScenario.prepareControler(scenario);
         controler.addOverridingModule(new AbstractModule() {
@@ -200,6 +207,23 @@ public class MosaikRunnerWithRoadPricing {
         return result;
     }
 
+    private static Set<Id<Link>> getTollLinks(RoadPricingConfigGroup config, Network network) {
+
+        if (config.tollArea == null) return network.getLinks().keySet();
+
+        var fact = new PreparedGeometryFactory();
+        var geometry = ShapeFileReader.getAllFeatures(config.tollArea).stream()
+                .map(f -> (Geometry) f.getDefaultGeometry())
+                .map(fact::create)
+                .findAny()
+                .orElseThrow();
+
+        return network.getLinks().values().parallelStream()
+                .filter(l -> geometry.covers(MGC.coord2Point(l.getFromNode().getCoord())) && geometry.covers(MGC.coord2Point(l.getToNode().getCoord())))
+                .map(Identifiable::getId)
+                .collect(Collectors.toSet());
+    }
+
     public static void readTable(String table, Consumer<CSVRecord> recordConsumer) {
 
         log.info("Loading table: " + table);
@@ -219,35 +243,36 @@ public class MosaikRunnerWithRoadPricing {
         private final Map<Pollutant, Double> costFactors;
         private final TimeBinMap<Map<Pollutant, Double>> timeFactors;
         private final double scaleFactor;
+
+        private final Set<Id<Link>> tollLinks;
         private final Map<Id<Vehicle>, Id<Person>> vehicle2Person = new HashMap<>();
         private final Set<Id<Person>> td = new HashSet<>();
 
         @Inject
         private EventsManager events;
 
-        private EmissionTollHandler(Map<Pollutant, Double> costFactors, TimeBinMap<Map<Pollutant, Double>> timeFactors, double scaleFactor) {
+        private EmissionTollHandler(Set<Id<Link>> tollLinks, Map<Pollutant, Double> costFactors, TimeBinMap<Map<Pollutant, Double>> timeFactors, double scaleFactor) {
             this.costFactors = costFactors;
             this.timeFactors = timeFactors;
             this.scaleFactor = scaleFactor;
+            this.tollLinks = tollLinks;
         }
 
         @Override
         public void handleEvent(ColdEmissionEvent event) {
-            handle(event.getTime(), event.getVehicleId(), event.getColdEmissions());
+            handle(event.getTime(), event.getVehicleId(), event.getLinkId(), event.getColdEmissions());
         }
 
         @Override
         public void handleEvent(WarmEmissionEvent event) {
-            handle(event.getTime(), event.getVehicleId(), event.getWarmEmissions());
+            handle(event.getTime(), event.getVehicleId(), event.getLinkId(), event.getWarmEmissions());
         }
 
-        private void handle(double time, Id<Vehicle> vehId, Map<Pollutant, Double> emissions) {
+        private void handle(double time, Id<Vehicle> vehId, Id<Link> linkId, Map<Pollutant, Double> emissions) {
+
+            if (!vehicle2Person.containsKey(vehId) || !tollLinks.contains(linkId)) return;
 
             var personId = vehicle2Person.get(vehId);
-
-            // in case of pt vehicle for example
-            if (personId == null) return;
-
             var amount = emissions.entrySet().stream()
                     .filter(entry -> costFactors.containsKey(entry.getKey()))
                     .mapToDouble(entry -> calculateAmount(time, entry.getKey(), entry.getValue()))
@@ -286,6 +311,8 @@ public class MosaikRunnerWithRoadPricing {
 
         private double factor = 1.0;
 
+        private String tollArea;
+
         @StringSetter("factor")
         public void setFactor(String factor) {
             this.factor = Double.parseDouble(factor);
@@ -294,6 +321,16 @@ public class MosaikRunnerWithRoadPricing {
         @StringGetter("factor")
         public String getFactor() {
             return Double.toString(factor);
+        }
+
+        @StringSetter("tollArea")
+        public void setTollArea(String value) {
+            this.tollArea = value;
+        }
+
+        @StringGetter("tollArea")
+        public String getTollArea() {
+            return tollArea;
         }
 
         public void setFactor(double factor) {
