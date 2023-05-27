@@ -7,6 +7,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Point;
 import org.matsim.application.options.CsvOptions;
 import org.matsim.facilities.ActivityFacility;
 import org.opengis.feature.simple.SimpleFeature;
@@ -68,14 +69,17 @@ public class CommuterAssignment {
 	 * @param f   sampler producing target locations
 	 * @param ars origin zone
 	 */
-	public ActivityFacility selectTarget(SplittableRandom rnd, long ars, Sampler f) {
+	public ActivityFacility selectTarget(SplittableRandom rnd, long ars, double dist, Point refPoint, Sampler f) {
 
 		// Commute in same zone
 		Long2DoubleMap comms = commuter.get(ars);
 		if (!commuter.containsKey(ars) || comms.isEmpty())
 			return null;
 
-		LongList entries = new LongArrayList(comms.keySet());
+		LongList entries;
+		synchronized (comms) {
+			entries = new LongArrayList(comms.keySet());
+		}
 
 		while (!entries.isEmpty()) {
 			long key = entries.removeLong(rnd.nextInt(entries.size()));
@@ -87,6 +91,10 @@ public class CommuterAssignment {
 				continue;
 
 			Geometry zone = (Geometry) ft.getDefaultGeometry();
+
+			// Zones too far away don't need to be considered
+			if (zone.distance(refPoint) > dist * 1.2)
+				continue;
 
 			ActivityFacility res = f.sample(zone);
 

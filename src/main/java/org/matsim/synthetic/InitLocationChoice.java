@@ -237,7 +237,10 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 						act.setCoord(c);
 						lastCoord = c;
 
-						warning.incrementAndGet();
+						// An activity with type could not be put into correct facility.
+						if (trees.containsKey(type)){
+							warning.incrementAndGet();
+						}
 
 						continue;
 					}
@@ -268,7 +271,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 		// Only larger distances can be commuters to other zones
 		if (dist > 3000) {
-			workPlace = commuter.selectTarget(ctx.rnd, ars, zone -> sampleZone(index, dist, refCoord, zone, ctx.rnd));
+			workPlace = commuter.selectTarget(ctx.rnd, ars, dist, MGC.coord2Point(refCoord), zone -> sampleZone(index, dist, refCoord, zone, ctx.rnd));
 		}
 
 		if (workPlace == null) {

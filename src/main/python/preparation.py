@@ -42,7 +42,13 @@ def prepare_persons(hh, pp, tt, augment=5, max_hh_size=5, core_weekday=False, re
         invalid = set(tt[~tt.valid].p_id)
         df = df[~df.p_id.isin(invalid)]
 
-    df = df.drop(columns=['hh_id', 'p_weight', 'present_on_day', 'reporting_day', 'location', 'h_weight',
+        mobile = set(tt[tt.valid].p_id)
+
+        # Filter persons that are supposed to be mobile but have no trips
+        df = df[ (df.p_id.isin(mobile) | (~df.mobile_on_day) )]
+
+
+    df = df.drop(columns=['hh_id', 'present_on_day', 'reporting_day', 'location', 'h_weight',
                           'n_cars', 'n_bikes', 'n_other_vehicles', 'car_parking'])
 
     # Move the region type variable to the front because it is used as conditional
@@ -147,17 +153,17 @@ def create_activities(all_persons: pd.DataFrame, tt: pd.DataFrame, core_weekday=
             if core_weekday:
                 # Monday - Thursday
                 if (trips.day_of_week > 4).any():
-                    return
+                    continue
 
             # id generator
             def a_id(t_i):
                 return "%s_%d" % (p.Index, t_i)
 
             if len(trips) == 0:
-                acts.append(Activity(a_id(0), p.p_weight, p.Index, 0, Purpose.HOME, 1440, 0, 0, TripMode.OTHER))
+                acts.append(Activity(a_id(0), p.Index, 0, Purpose.HOME, 1440, 0, 0, TripMode.OTHER))
             else:
                 acts.append(
-                    Activity(a_id(0), p.p_weight, p.Index, 0, trips.iloc[0].sd_group.source(), trips.iloc[0].departure, 0, 0,
+                    Activity(a_id(0), p.Index, 0, trips.iloc[0].sd_group.source(), trips.iloc[0].departure, 0, 0,
                              TripMode.OTHER))
 
             for i in range(len(trips) - 1):
@@ -169,7 +175,7 @@ def create_activities(all_persons: pd.DataFrame, tt: pd.DataFrame, core_weekday=
                 if duration < 0 or t0.gis_length < 0:
                     valid = False
 
-                acts.append(Activity(a_id(i + 1), p.p_weight, p.Index, i + 1, t0.purpose,
+                acts.append(Activity(a_id(i + 1), p.Index, i + 1, t0.purpose,
                                      duration, t0.gis_length, t0.duration, t0.main_mode))
 
             if len(trips) > 1:
@@ -182,7 +188,7 @@ def create_activities(all_persons: pd.DataFrame, tt: pd.DataFrame, core_weekday=
 
                 # Duration is set to rest of day
                 acts.append(
-                    Activity(a_id(i + 1), p.p_weight, p.Index, i + 1, tl.purpose, 1440, tl.gis_length, tl.duration, tl.main_mode))
+                    Activity(a_id(i + 1), p.Index, i + 1, tl.purpose, 1440, tl.gis_length, tl.duration, tl.main_mode))
 
             if valid:
                 res.extend(acts)

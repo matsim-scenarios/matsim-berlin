@@ -18,6 +18,7 @@ import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.algorithms.ParallelPersonAlgorithmUtils;
 import org.matsim.core.population.algorithms.PersonAlgorithm;
+import org.matsim.core.router.TripStructureUtils;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
@@ -26,37 +27,29 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @CommandLine.Command(
-		name = "activity-sampling",
-		description = "Create activities by sampling from survey data"
+	name = "activity-sampling",
+	description = "Create activities by sampling from survey data"
 )
 public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 
 	private static final Logger log = LogManager.getLogger(RunActivitySampling.class);
-
-	@CommandLine.Option(names = "--input", description = "Path to input population", required = true)
-	private Path input;
-
-	@CommandLine.Option(names = "--output", description = "Output path for population", required = true)
-	private Path output;
-
-	@CommandLine.Option(names = "--persons", description = "Path to person table", required = true)
-	private Path personsPath;
-
-	@CommandLine.Option(names = "--activities", description = "Path to activity table", required = true)
-	private Path activityPath;
-
-	@CommandLine.Option(names = "--seed", description = "Seed used to sample plans", defaultValue = "1")
-	private long seed;
 	private final CsvOptions csv = new CsvOptions(CSVFormat.Predefined.Default);
-
 	private final Map<Key, IntList> groups = new HashMap<>();
-
 	private final Int2ObjectMap<CSVRecord> persons = new Int2ObjectOpenHashMap<>();
 	/**
 	 * Maps person index to list of activities.
 	 */
 	private final Int2ObjectMap<List<CSVRecord>> activities = new Int2ObjectOpenHashMap<>();
-
+	@CommandLine.Option(names = "--input", description = "Path to input population", required = true)
+	private Path input;
+	@CommandLine.Option(names = "--output", description = "Output path for population", required = true)
+	private Path output;
+	@CommandLine.Option(names = "--persons", description = "Path to person table", required = true)
+	private Path personsPath;
+	@CommandLine.Option(names = "--activities", description = "Path to activity table", required = true)
+	private Path activityPath;
+	@CommandLine.Option(names = "--seed", description = "Seed used to sample plans", defaultValue = "1")
+	private long seed;
 	private ThreadLocal<Context> ctxs;
 
 	private PopulationFactory factory;
@@ -84,6 +77,18 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 		ParallelPersonAlgorithmUtils.run(population, 8, this);
 
 		PopulationUtils.writePopulation(population, output.toString());
+
+		double atHome = 0;
+		for (Person person : population.getPersons().values()) {
+			List<Leg> legs = TripStructureUtils.getLegs(person.getSelectedPlan());
+			if (legs.isEmpty())
+				atHome++;
+		}
+
+		int size = population.getPersons().size();
+		double mobile = (size - atHome) / size;
+
+		log.info("Processed {} persons, mobile persons: {}%", size, 100 * mobile);
 
 		return 0;
 	}
@@ -216,15 +221,33 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 		person.getAttributes().putAttribute(Attributes.ECONOMIC_STATUS, record.get("economic_status"));
 		person.getAttributes().putAttribute(Attributes.HOUSEHOLD_SIZE, Integer.parseInt(record.get("n_persons")));
 
-		List<CSVRecord> activities = this.activities.get(idx);
 
-		if (activities != null && !activities.isEmpty()) {
-			person.removePlan(person.getSelectedPlan());
+		String mobile = record.get("mobile_on_day");
 
-			Plan plan = createPlan(Attributes.getHomeCoord(person), activities);
+		// ensure mobile agents have a valid plan
+		switch (mobile.toLowerCase()) {
 
-			person.addPlan(plan);
-			person.setSelectedPlan(plan);
+			case "true" -> {
+				List<CSVRecord> activities = this.activities.get(idx);
+
+				if (activities == null)
+					throw new AssertionError("No activities for mobile person " + idx);
+
+				if (activities.size() == 0)
+					throw new AssertionError("Activities for mobile agent can not be empty.");
+
+				person.removePlan(person.getSelectedPlan());
+				Plan plan = createPlan(Attributes.getHomeCoord(person), activities);
+
+				person.addPlan(plan);
+				person.setSelectedPlan(plan);
+			}
+
+			case "false" -> {
+				// Keep the stay home plan
+			}
+
+			default -> throw new AssertionError("Invalid mobile_on_day attribute " + mobile);
 		}
 	}
 

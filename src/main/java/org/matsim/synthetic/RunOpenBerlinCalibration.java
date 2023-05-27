@@ -123,6 +123,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		Activities.addScoringParams(config, mode != CalibrationMode.locationChoice);
 
 		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
+
+		sw.exclude.add("StuckAgentDashboard");
 		sw.defaultParams().mapCenter = "13.39,52.51";
 		sw.defaultParams().mapZoomLevel = 9.1;
 
@@ -156,17 +158,22 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		if (mode == CalibrationMode.locationChoice) {
 
-			// Flow capacities are increased for the calibration
-			config.qsim().setFlowCapFactor(config.qsim().getFlowCapFactor() * 4);
-			config.qsim().setStorageCapFactor(config.qsim().getStorageCapFactor() * 4);
-
 			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
 				.setStrategyName(FrozenTastes.LOCATION_CHOICE_PLAN_STRATEGY)
 				.setWeight(weight)
 				.setSubpopulation("person")
 			);
 
+			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
+				.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
+				.setWeight(weight / 5)
+				.setSubpopulation("person")
+			);
+
+			// Overwrite these to fix scoring warnings
+			config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("work").setTypicalDuration(8 * 3600));
 			config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("pt interaction").setTypicalDuration(30));
+
 			config.vspExperimental().setAbleToOverwritePtInteractionParams(true);
 
 			config.strategy().setFractionOfIterationsToDisableInnovation(0.8);
