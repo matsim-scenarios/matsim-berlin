@@ -32,6 +32,7 @@ import org.matsim.core.config.Config;
 import org.matsim.core.router.MainModeIdentifierImpl;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
+import org.matsim.legacy.run.RunBerlinScenario;
 import org.matsim.testcases.MatsimTestUtils;
 
 import java.util.List;
@@ -39,7 +40,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * part 1 of tests for {@link org.matsim.run.RunBerlinScenario}
+ * part 1 of tests for {@link RunBerlinScenario}
  *
  * @author ikaddoura
  *
@@ -47,9 +48,9 @@ import java.util.TreeMap;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RunBerlinScenarioSmallTests {
 	private static final Logger log = LogManager.getLogger( RunBerlinScenarioSmallTests.class ) ;
-	
+
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
-	
+
 	@Test
 	public final void aTestTest() {
 		// a dummy test to satisfy the matrix build by travis.
@@ -57,7 +58,7 @@ public class RunBerlinScenarioSmallTests {
 		log.info("") ;
 		Assert.assertTrue( true );
 	}
-	
+
 	@Test
 	public final void bTestConfig1() {
 		try {
@@ -65,18 +66,18 @@ public class RunBerlinScenarioSmallTests {
 			final String[] args = {configFilename,
 					"--config:controler.runId", "test-run-ID",
 					"--config:controler.outputDirectory", utils.getOutputDirectory()};
-			
+
 			Config config =  RunBerlinScenario.prepareConfig( args );
 			Assert.assertEquals("Wrong parameter from command line", "test-run-ID", config.controler().getRunId());
 
 			log.info( "Done with bTestConfig1"  );
 			log.info("") ;
-			
+
 		} catch ( Exception ee ) {
 			throw new RuntimeException(ee) ;
 		}
 	}
-	
+
 	@Test
 	public final void cTestConfig2() {
 		try {
@@ -85,36 +86,36 @@ public class RunBerlinScenarioSmallTests {
 					"--config:controler.runId", "test-run-ID",
 					"--config:controler.outputDirectory", utils.getOutputDirectory(),
 					"--config:planCalcScore.scoringParameters[subpopulation=null].modeParams[mode=car].constant", "-0.12345"};
-			
+
 			Config config =  RunBerlinScenario.prepareConfig( args );
 			Assert.assertEquals("Wrong parameter from command line", -0.12345, config.planCalcScore().getModes().get("car").getConstant(), MatsimTestUtils.EPSILON);
 
 			log.info( "Done with cTestConfig2"  );
 			log.info("") ;
-			
+
 		} catch ( Exception ee ) {
 			ee.printStackTrace();
 			throw new RuntimeException(ee) ;
 		}
 	}
-	
+
 	@Test
 	public final void c2TestEquil() {
 		// this should work (but does not since RunBerlinScenario enforces vsp-abort). kai, sep'19
-		
+
 		try {
 			String configFilename = "scenarios/equil/config.xml" ;
 			final String[] args = {configFilename,
 					"--config:controler.outputDirectory", utils.getOutputDirectory(),
 			};
 			RunBerlinScenario.main( args );
-			
+
 		} catch ( Exception ee ) {
 			ee.printStackTrace();
 			throw new RuntimeException(ee) ;
 		}
 	}
-	
+
 	@Test
 	public final void c2TestEquilB() {
 		// this is overriding the vsp-abort but is still not working.  kai, sep'19
@@ -126,7 +127,7 @@ public class RunBerlinScenarioSmallTests {
 					"--config:vspExperimental.vspDefaultsCheckingLevel", "warn"
 			};
 			RunBerlinScenario.main( args );
-			
+
 		} catch ( Exception ee ) {
 			ee.printStackTrace();
 			throw new RuntimeException(ee) ;
@@ -134,18 +135,18 @@ public class RunBerlinScenarioSmallTests {
 	}
 
 	static Map<String, Double> analyzeModeStats( Population population ) {
-		
+
 		Map<String,Double> modeCnt = new TreeMap<>() ;
 
 		MainModeIdentifierImpl mainModeIdentifier = new MainModeIdentifierImpl();
-		
+
 		for (Person person : population.getPersons().values()) {
 			Plan plan = person.getSelectedPlan() ;
 
 			List<Trip> trips = TripStructureUtils.getTrips(plan) ;
 			for ( Trip trip : trips ) {
 				String mode = mainModeIdentifier.identifyMainMode( trip.getTripElements() ) ;
-				
+
 				Double cnt = modeCnt.get( mode );
 				if ( cnt==null ) {
 					cnt = 0. ;
@@ -155,6 +156,6 @@ public class RunBerlinScenarioSmallTests {
 		}
 
 		log.info(modeCnt.toString()) ;
-		return modeCnt;	
+		return modeCnt;
 	}
 }
