@@ -224,17 +224,14 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		} else if (mode == CalibrationMode.routeChoice) {
 
-			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
-				.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
-				.setWeight(weight)
-				.setSubpopulation("person")
-			);
-
-			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
-				.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.TimeAllocationMutator)
-				.setWeight(weight)
-				.setSubpopulation("person")
-			);
+			// Re route for all populations
+			for (String subpopulation : List.of("person", "businessTraffic", "businessTraffic_service")) {
+				config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
+					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
+					.setWeight(weight)
+					.setSubpopulation(subpopulation)
+				);
+			}
 
 		} else if (mode == CalibrationMode.eval) {
 

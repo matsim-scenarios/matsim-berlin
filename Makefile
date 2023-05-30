@@ -232,6 +232,12 @@ $p/berlin-freightTraffic-$V-25pct.plans.xml.gz:
 
 	mv output/freightTraffic/$(notdir $@) $@
 
+# Depends on location choice runs and freight model
+$p/berlin-cadyts-input-$V-25pct.plans.xml.gz: $p/berlin-businessTraffic-$V-25pct.plans.xml.gz
+	$(sc) prepare merge-plans output/lc-*/*output_selected_plans.xml.gz\
+		--output $@
+
+	$(sc) prepare merge-populations $@ $< --output $@
 
 # This file requires eval runs
 $p/berlin-initial-$V-25pct.experienced_plans.xml.gz:
@@ -261,17 +267,10 @@ eval-opt: $p/berlin-initial-$V-25pct.experienced_plans.xml.gz
 	 --config $p/berlin-$V-base-calib.config.xml
 
 
-# Depends on location choice runs and freight model
-$p/berlin-cadyts-input-$V-25pct.plans.xml.gz: $p/berlin-businessTraffic-$V-25pct.plans.xml.gz
-	$(sc) prepare merge-plans output/lc-*/*output_selected_plans.xml.gz\
-		--output $@
-
-	$(sc) prepare merge-populations $@ $< --output $@
-
-# These depend on the output of calibration runs
-$p/berlin-cadyts-output-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
+# These depend on the output of optimization runs
+$p/berlin-$V-25pct.plans.xml.gz:  $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz $p/berlin-freightTraffic-$V-25pct.plans.xml.gz $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
 	$(sc) prepare filter-relevant-agents\
-	 --input output/cadyts_scale_1/*.output_selected_plans.xml.gz --output $@\
+	 --input $p/berlin-$V-25pct.plans_log_error.xml.gz --output $@\
 	 --shp input/v6.0/area/area.shp\
 	 --facilities $<\
 	 --network $(word 2,$^)
@@ -279,16 +278,12 @@ $p/berlin-cadyts-output-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p
 	$(sc) prepare split-activity-types-duration\
 	 --input $@ --output $@
 
- 	# TODO: merge other freight types
- 	# $p/berlin-freightTraffic-$V-25pct.plans.xml.gz
- 	# $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
+	$(sc) prepare merge-populations $@ \
+		--output $@
 
-$p/berlin-$V-25pct.plans.xml.gz:
-	cp output/route-choice/routeChoice.output_selected_plans.xml.gz $@
-
-	$(sc) prepare downsample-population $@\
-     	 --sample-size 0.25\
-     	 --samples 0.1 0.01\
+	$(sc) prepare downsample-population $@  $(word 3,$^)  $(word 4,$^)\
+		 --sample-size 0.25\
+		 --samples 0.1 0.01\
 
 prepare-calibration: $p/berlin-initial-$V-25pct.plans.xml.gz
 	echo "Done"
