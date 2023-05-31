@@ -69,13 +69,87 @@ aggr = aggr.drop(columns=["n"])
 aggr.to_csv("mode_share_ref.csv")
 
 
+# Also normalize der distance group
+for dist_group in aggr.index.get_level_values(0).categories:
+    sub = aggr.loc[dist_group, :]
+    sub.share /= sub.share.sum()
+
+
+aggr.to_csv("mode_share_per_dist_ref.csv")
+
+
+
 #%%
+
+def summarize(x):
+    
+    data = {"d": 1}
+    
+    x["departure_h"] = x.departure // 60
+    x["arrival_h"] = (x.departure + x.duration) // 60
+
+    d = x.groupby(["purpose", "departure_h"]).agg(n=("t_weight", "sum"))    
+    d["departure"] = d.n / d.n.sum()
+    d = d.drop(columns=["n"])
+    d.index.rename(names=["purpose", "h"], inplace=True)
+
+    a = x.groupby(["purpose", "arrival_h"]).agg(n=("t_weight", "sum"))    
+    a["arrival"] = a.n / a.n.sum()
+    a = a.drop(columns=["n"]).rename(index={"arrival_h": "h"})
+    a.index.rename(names=["purpose", "h"], inplace=True)
+
+    
+    m = pd.merge(a, d, left_index=True, right_index=True, how="outer")
+    m.fillna(0, inplace=True)
+    
+    return m
+
+
+aggr = summarize(trips)
+
+aggr.to_csv("trip_purposes_by_hour_ref.csv")
+
+#%%
+
 def mode_usage(mode):
     
     def f(x):
         return (x == mode).any()
     
     return f
+
+def summarize(x):
+    
+    total = x.p_weight.sum()
+    total_mobile = x[x.mobile_on_day].p_weight.sum()
+    
+    mobile = total_mobile / total
+    
+    
+    args = {k.value: ("main_mode", mode_usage(k)) for k in set(trips.main_mode)}
+    
+    p_trips = trips[trips.p_id.isin(x.index)]
+    
+    mode_user = p_trips.groupby(["p_id"]).agg(**args)    
+    joined = x.join(mode_user, how="inner")
+        
+    data = {}
+    for c in mode_user.columns:
+        share = joined[joined[c]].p_weight.sum() / total_mobile        
+        data[c] = share    
+     
+    
+    return pd.DataFrame(data={"main_mode": data.keys(), "user": data.values()}).set_index("main_mode")
+
+
+aggr = summarize(persons)
+#aggr = aggr.to_frame(0).T
+
+
+aggr.to_csv("mode_users_ref.csv")
+
+
+#%%
     
 
 def summarize(x):
@@ -99,7 +173,13 @@ def summarize(x):
         share = joined[joined[c]].p_weight.sum() / total_mobile        
         data[c] = share    
      
-    data.update({"mobile": mobile, "n": x.p_weight.sum(), "avg_trips": np.average(x.n_trips, weights=x.p_weight)})
+    # avg_trips_per_mobile
+    x_mobile = x[x.mobile_on_day] 
+    data.update({"mobile": mobile, 
+                 "n": x.p_weight.sum(), 
+                 "avg_trips": np.average(x.n_trips, weights=x.p_weight),
+                 "avg_trips_mobile": np.average(x_mobile.n_trips, weights=x_mobile.p_weight)
+                 })
     
     return pd.Series(data=data)
 
@@ -108,20 +188,11 @@ def summarize(x):
 aggr = persons.groupby(["age_group"]).apply(summarize)
 
 aggr["population_share"] = aggr.n / aggr.n.sum()
-
-aggr = aggr.drop(columns=["n"])
+aggr["n"] = aggr.population_share * 3645000
 
 
 print(aggr)
 
 
-aggr.to_csv("pupulation_stats_ref.csv")
-
-
-
-#%%
-
-
-
-
+aggr.to_csv("population_stats_ref.csv")
 

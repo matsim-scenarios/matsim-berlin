@@ -15,7 +15,7 @@ SHP_FILES=$(patsubst %, input/shp/%-latest-free.shp.zip, $(REGIONS))
 osmosis := osmosis/bin/osmosis
 
 # Scenario creation tool
-sc := java -Xmx$(MEMORY) -cp $(JAR) org.matsim.synthetic.RunOpenBerlinCalibration
+sc := java -Xmx$(MEMORY) -XX:+UseParallelGC -cp $(JAR) org.matsim.synthetic.RunOpenBerlinCalibration
 
 .PHONY: prepare
 
@@ -163,16 +163,6 @@ $p/berlin-static-$V-25pct.plans.xml.gz: $p/berlin-only-$V-25pct.plans.xml.gz $p/
 
 	$(sc) prepare lookup-regiostar --input $@ --output $@ --xls $(germany)/RegioStaR-Referenzdateien.xlsx
 
-	$(sc) prepare assign-commuters\
-	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp\
-	 --commuter $(germany)/regionalstatistik/commuter.csv\
-	 --input $@ --output $@
-
-	# For debugging and visualization
-	$(sc) prepare downsample-population $@\
-     	 --sample-size 0.25\
-     	 --samples 0.1\
-
 
 $p/berlin-activities-$V-25pct.plans-1.xml.gz: $p/berlin-static-$V-25pct.plans.xml.gz
 	# Create five separate sets of activities
@@ -189,7 +179,14 @@ $p/berlin-initial-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans-1.x
 	 --output $@\
 	 --facilities $(word 2,$^)\
 	 --network $(word 3,$^)\
-	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp
+	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp\
+	 --commuter $(germany)/regionalstatistik/commuter.csv\
+
+	# For debugging and visualization
+	$(sc) prepare downsample-population $p/berlin-initial-$V-25pct.plans-1.xml.gz\
+		 --sample-size 0.25\
+		 --samples 0.1\
+
 
 $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
 	$(sc) prepare extract-freight-trips ../public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/german_freight.25pct.plans.xml.gz\
@@ -235,7 +232,6 @@ $p/berlin-freightTraffic-$V-25pct.plans.xml.gz:
 
 	mv output/freightTraffic/$(notdir $@) $@
 
-
 # Depends on location choice runs and freight model
 $p/berlin-cadyts-input-$V-25pct.plans.xml.gz: $p/berlin-businessTraffic-$V-25pct.plans.xml.gz
 	$(sc) prepare merge-plans output/lc-*/*output_selected_plans.xml.gz\
@@ -243,10 +239,38 @@ $p/berlin-cadyts-input-$V-25pct.plans.xml.gz: $p/berlin-businessTraffic-$V-25pct
 
 	$(sc) prepare merge-populations $@ $< --output $@
 
-# These depend on the output of calibration runs
-$p/berlin-uncalibrated-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
+# This file requires eval runs
+$p/berlin-initial-$V-25pct.experienced_plans.xml.gz:
+	$(sc) prepare merge-plans output/exp-*/*.output_experienced_plans.xml.gz\
+		--output $@
+
+	# Only for debugging
+	$(sc) prepare downsample-population $@\
+     	 --sample-size 0.25\
+     	 --samples 0.05 0.01\
+
+ERROR_METRIC ?= abs_error
+eval-opt: $p/berlin-initial-$V-25pct.experienced_plans.xml.gz
+	$(sc) prepare run-count-opt\
+	 --input $<\
+	 --network $p/berlin-v6.0-network-with-pt.xml.gz\
+     --counts $p/berlin-v6.0-counts-car-vmz.xml.gz\
+	 --output $p/berlin-$V-25pct.plans_selection_$(ERROR_METRIC).csv\
+	 --metric $(ERROR_METRIC)
+
+	$(sc) prepare select-plans-idx\
+ 	 --input $p/berlin-cadyts-input-$V-25pct.plans.xml.gz\
+ 	 --csv $p/berlin-$V-25pct.plans_selection_$(ERROR_METRIC).csv\
+ 	 --output $p/berlin-$V-25pct.plans_$(ERROR_METRIC).xml.gz
+
+	$(sc) run --mode "eval" --output "output/eval-$(ERROR_METRIC)" --25pct --population "berlin-$V-25pct.plans_$(ERROR_METRIC).xml.gz"\
+	 --config $p/berlin-$V-base-calib.config.xml
+
+
+# These depend on the output of optimization runs
+$p/berlin-$V-25pct.plans.xml.gz:  $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz $p/berlin-freightTraffic-$V-25pct.plans.xml.gz $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
 	$(sc) prepare filter-relevant-agents\
-	 --input output/cadyts_scale_1/*.output_selected_plans.xml.gz --output $@\
+	 --input $p/berlin-$V-25pct.plans_log_error.xml.gz --output $@\
 	 --shp input/v6.0/area/area.shp\
 	 --facilities $<\
 	 --network $(word 2,$^)
@@ -254,16 +278,12 @@ $p/berlin-uncalibrated-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/
 	$(sc) prepare split-activity-types-duration\
 	 --input $@ --output $@
 
- 	# TODO: merge other freight types
- 	# $p/berlin-freightTraffic-$V-25pct.plans.xml.gz
- 	# $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
-
-$p/berlin-$V-25pct.plans.xml.gz:
-	cp output/route-choice/routeChoice.output_selected_plans.xml.gz $@
+	$(sc) prepare merge-populations $@ $(word 3,$^)  $(word 4,$^)\
+		--output $@
 
 	$(sc) prepare downsample-population $@\
-     	 --sample-size 0.25\
-     	 --samples 0.1 0.01\
+		 --sample-size 0.25\
+		 --samples 0.1 0.01\
 
 prepare-calibration: $p/berlin-initial-$V-25pct.plans.xml.gz
 	echo "Done"

@@ -14,10 +14,10 @@
 		<!--<matsim.version>13.0</matsim.version>-->
 
 		<!-- PR-labelled release -->
-		<matsim.version>16.0-SNAPSHOT</matsim.version>
+<!--		<matsim.version>15.0-PR2487</matsim.version>-->
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
-<!--		<matsim.version>15.0-SNAPSHOT</matsim.version>-->
+		<matsim.version>16.0-SNAPSHOT</matsim.version>
 		<maven.compiler.release>17</maven.compiler.release>
 	</properties>
 
@@ -54,18 +54,6 @@
 	</repositories>
 
 	<dependencies>
-
-		<dependency>
-			<groupId>tech.tablesaw</groupId>
-			<artifactId>tablesaw-core</artifactId>
-			<version>0.43.1</version>
-			<exclusions>
-				<exclusion>
-					<groupId>it.unimi.dsi</groupId>
-					<artifactId>fastutil</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
 
 		<!-- This is the matsim "core": -->
 		<dependency>
@@ -107,6 +95,12 @@
 			<artifactId>application</artifactId>
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>xerces</groupId>
+					<artifactId>xercesImpl</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
@@ -114,6 +108,12 @@
 			<artifactId>vsp</artifactId>
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>xerces</groupId>
+					<artifactId>xercesImpl</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
@@ -124,9 +124,22 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>simwrapper</artifactId>
+			<version>${matsim.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>com.github.kit-ifv</groupId>
 			<artifactId>actitopp</artifactId>
 			<version>1.9.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.optaplanner</groupId>
+			<artifactId>optaplanner-core</artifactId>
+			<version>8.35.0.Final</version>
 		</dependency>
 
 		<dependency>
@@ -161,6 +174,13 @@
 			<artifactId>matsim</artifactId>
 			<type>test-jar</type>
 			<version>${matsim.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<version>3.24.2</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -263,6 +283,10 @@
 				<exclusion>
 					<groupId>org.slf4j</groupId>
 					<artifactId>slf4j-log4j12</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>xerces</groupId>
+					<artifactId>xercesImpl</artifactId>
 				</exclusion>
 
 			</exclusions>
@@ -370,6 +394,30 @@
 					</execution>
 				</executions>
 			</plugin>
+
+			<plugin>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>1.0.1</version>
+				<executions>
+					<execution>
+						<id>forbid-xerces</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<bannedDependencies>
+									<excludes>
+										<exclude>xerces:xercesImpl</exclude>
+									</excludes>
+								</bannedDependencies>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+
 		</plugins>
 	</build>
 

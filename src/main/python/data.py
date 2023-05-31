@@ -324,10 +324,12 @@ def read_all_srv(dirs, regio=None):
 
     pp = pd.concat(pp, axis=0)
     pp = pp[~pp.index.duplicated(keep='first')]
+    pp.sort_index(inplace=True)
     print("Persons: ", len(pp))
 
     tt = pd.concat(tt, axis=0)
     tt = tt[~tt.index.duplicated(keep='first')]
+    tt.sort_values(["p_id", "n"], inplace=True)
     print("Trips: ", len(tt))
 
     return hh, pp, tt
@@ -420,7 +422,7 @@ def srv_to_standard(data: tuple, regio=None):
                 SrV2018.trip_mode(t.E_HVM),
                 SrV2018.trip_purpose(t.V_ZWECK),
                 SrV2018.sd_group(int(t.E_QZG_17)),
-                t.E_WEG_GUELTIG != 0
+                t.E_WEG_GUELTIG != 0 and t.GIS_LAENGE_GUELTIG != 0
             )
         )
 

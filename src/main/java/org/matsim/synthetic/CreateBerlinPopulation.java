@@ -23,7 +23,7 @@ import org.matsim.core.scenario.ProjectionUtils;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.core.utils.geometry.transformations.GeotoolsTransformation;
-import org.matsim.run.RunOpenBerlinScenario;
+import org.matsim.legacy.run.RunOpenBerlinScenario;
 import org.opengis.feature.simple.SimpleFeature;
 import picocli.CommandLine;
 
@@ -71,8 +71,6 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 
 	private final CoordinateTransformation ct = new GeotoolsTransformation("EPSG:25833", "EPSG:25832");
 
-	private long id;
-
 	public static void main(String[] args) {
 		new CreateBerlinPopulation().execute(args);
 	}
@@ -90,7 +88,6 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 		rnd = new SplittableRandom(0);
 		lors = new HashMap<>();
 		population = PopulationUtils.createPopulation(ConfigUtils.createConfig());
-		id = 0;
 
 		// Collect all LORs
 		for (SimpleFeature ft : fts) {
@@ -117,6 +114,10 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 				}
 			}
 		}
+
+		log.info("Generated {} persons", population.getPersons().size());
+
+		PopulationUtils.sortPersons(population);
 
 		ProjectionUtils.putCRS(population, RunOpenBerlinScenario.CRS);
 		PopulationUtils.writePopulation(population, output.toString());
@@ -165,7 +166,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 
 		for (int i = 0; i < n * sample; i++) {
 
-			Person person = f.createPerson(Id.createPersonId("berlin" + id++));
+			Person person = f.createPerson(generateId(population, "berlin", rnd));
 			PersonUtils.setSex(person, sex.sample());
 			PopulationUtils.putSubpopulation(person, "person");
 
@@ -200,6 +201,23 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 			population.addPerson(person);
 		}
 	}
+
+	/**
+	 * Generate a new unique id within population.
+	 */
+	public static Id<Person> generateId(Population population, String prefix, SplittableRandom rnd) {
+
+		Id<Person> id;
+		byte[] bytes = new byte[4];
+		do {
+			rnd.nextBytes(bytes);
+			id = Id.createPersonId(prefix + "_" + HexFormat.of().formatHex(bytes));
+
+		} while (population.getPersons().containsKey(id));
+
+		return id;
+	}
+
 
 	/**
 	 * Samples a home coordinates from geometry and landuse.

@@ -42,7 +42,13 @@ def prepare_persons(hh, pp, tt, augment=5, max_hh_size=5, core_weekday=False, re
         invalid = set(tt[~tt.valid].p_id)
         df = df[~df.p_id.isin(invalid)]
 
-    df = df.drop(columns=['hh_id', 'p_weight', 'present_on_day', 'reporting_day', 'location', 'h_weight',
+        mobile = set(tt[tt.valid].p_id)
+
+        # Filter persons that are supposed to be mobile but have no trips
+        df = df[ (df.p_id.isin(mobile) | (~df.mobile_on_day) )]
+
+
+    df = df.drop(columns=['hh_id', 'present_on_day', 'reporting_day', 'location', 'h_weight',
                           'n_cars', 'n_bikes', 'n_other_vehicles', 'car_parking'])
 
     # Move the region type variable to the front because it is used as conditional
@@ -147,7 +153,7 @@ def create_activities(all_persons: pd.DataFrame, tt: pd.DataFrame, core_weekday=
             if core_weekday:
                 # Monday - Thursday
                 if (trips.day_of_week > 4).any():
-                    return
+                    continue
 
             # id generator
             def a_id(t_i):

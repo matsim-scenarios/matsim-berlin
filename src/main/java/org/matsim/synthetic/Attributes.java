@@ -27,13 +27,6 @@ public final class Attributes {
 
 	public static final String RegioStaR7 = "RegioStaR7";
 
-
-	/**
-	 * Work / edu commute destination.
-	 */
-	public static final String COMMUTE = "commute";
-	public static final String COMMUTE_KM = "commute_km";
-
 	public static final String BIKE_AVAIL = "bikeAvail";
 	public static final String PT_ABO_AVAIL = "ptAboAvail";
 	public static final String EMPLOYMENT = "employment";

@@ -35,6 +35,8 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.gbl.Gbl;
+import org.matsim.legacy.run.BerlinExperimentalConfigGroup;
+import org.matsim.legacy.run.RunBerlinScenario;
 import org.matsim.testcases.MatsimTestUtils;
 
 public class RunBerlinScenarioIT{
@@ -130,17 +132,17 @@ public class RunBerlinScenarioIT{
 			config.controler().setWriteEventsInterval( config.controler().getLastIteration() );
 			config.controler().setWritePlansUntilIteration( 0 );
 			config.controler().setWritePlansInterval( 0 );
-			
+
 			final double sample = 0.1;
 			config.qsim().setFlowCapFactor( config.qsim().getFlowCapFactor()*sample );
 			config.qsim().setStorageCapFactor( config.qsim().getStorageCapFactor()*sample );
 			BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 			berlinCfg.setPopulationDownsampleFactor(sample);
-			
+
 			Scenario scenario = RunBerlinScenario.prepareScenario( config ) ;
 
 			Controler controler = RunBerlinScenario.prepareControler( scenario ) ;
-			
+
 			controler.run() ;
 
 			Gbl.assertNotNull( controler.getScoreStats() );

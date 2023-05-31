@@ -92,7 +92,8 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 		ActitoppPerson ap = convertPerson(person, ctx.rnd);
 
 		if (PersonUtils.isEmployed(person)) {
-			ap.setCommutingdistance_work((double) person.getAttributes().getAttribute(Attributes.COMMUTE_KM));
+			// attr was removed
+//			ap.setCommutingdistance_work((double) person.getAttributes().getAttribute(Attributes.COMMUTE_KM));
 		}
 
 		boolean scheduleOK = false;

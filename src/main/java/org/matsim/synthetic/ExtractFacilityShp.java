@@ -29,7 +29,7 @@ import org.locationtech.jts.geom.*;
 import org.locationtech.jts.index.strtree.STRtree;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.options.CrsOptions;
-import org.matsim.run.RunOpenBerlinScenario;
+import org.matsim.legacy.run.RunOpenBerlinScenario;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.referencing.crs.CRSAuthorityFactory;
