@@ -278,10 +278,10 @@ $p/berlin-$V-25pct.plans.xml.gz:  $p/berlin-$V-facilities.xml.gz $p/berlin-$V-ne
 	$(sc) prepare split-activity-types-duration\
 	 --input $@ --output $@
 
-	$(sc) prepare merge-populations $@ \
+	$(sc) prepare merge-populations $@ $(word 3,$^)  $(word 4,$^)\
 		--output $@
 
-	$(sc) prepare downsample-population $@  $(word 3,$^)  $(word 4,$^)\
+	$(sc) prepare downsample-population $@\
 		 --sample-size 0.25\
 		 --samples 0.1 0.01\
 
