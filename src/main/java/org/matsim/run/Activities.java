@@ -1,4 +1,4 @@
-package org.matsim.legacy.run;
+package org.matsim.run;
 
 import org.matsim.core.config.Config;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;

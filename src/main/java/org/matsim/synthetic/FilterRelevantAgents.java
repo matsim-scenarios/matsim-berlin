@@ -31,7 +31,7 @@ import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.facilities.ActivityFacilities;
 import org.matsim.facilities.FacilitiesUtils;
 import org.matsim.facilities.MatsimFacilitiesReader;
-import org.matsim.legacy.run.RunOpenBerlinScenario;
+import org.matsim.run.RunOpenBerlinScenario;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
