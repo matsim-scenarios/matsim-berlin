@@ -278,7 +278,10 @@ $p/berlin-$V-25pct.plans.xml.gz:  $p/berlin-$V-facilities.xml.gz $p/berlin-$V-ne
 	$(sc) prepare split-activity-types-duration\
 	 --input $@ --output $@
 
-	$(sc) prepare merge-populations $@ $(word 3,$^)  $(word 4,$^)\
+	$(sc) prepare fix-subtour-modes --input $@ --output $@
+
+	# TODO Business traffic has colliding ids
+	$(sc) prepare merge-populations $@ $(word 4,$^)\
 		--output $@
 
 	$(sc) prepare downsample-population $@\
