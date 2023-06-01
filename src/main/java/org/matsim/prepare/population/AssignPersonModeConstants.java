@@ -38,11 +38,16 @@ public class AssignPersonModeConstants {
 
     public static void main(String[] args) {
         String inputPopulationFile = "~/git/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.plans.xml.gz";
-        String mode = TransportMode.drt;
+//        String mode = TransportMode.drt;
+//        String mode = TransportMode.car;
+        String mode = "bicycle";
+
         double mean = 0.0;
-        double sigma = 6.0;
+        double sigma = 100.0;
 //		String outputPopulationFile = "berlin-v5.5-10pct_drtAscLogNormal_mean_" +
-        String outputPopulationFile = "berlin-v5.5-10pct_drtAscUniform_mean_" +
+//        String outputPopulationFile = "berlin-v5.5-10pct_drtAscUniform_mean_" +
+//                mean + "_sigma_" + sigma + ".plans.xml.gz";
+        String outputPopulationFile = "berlin-v5.5-10pct_" + mode + "_asc2ExtremeValues_mean_" +
                 mean + "_sigma_" + sigma + ".plans.xml.gz";
 
         Population population = PopulationUtils.readPopulation(inputPopulationFile);
@@ -58,7 +63,9 @@ public class AssignPersonModeConstants {
                 modeConstants = new HashMap<>();
             }
 
-            modeConstants.put(mode, Double.toString((random.nextDouble() - 0.5) * 2 * sigma + mean));
+//            modeConstants.put(mode, Double.toString((random.nextDouble() - 0.5) * 2 * sigma + mean));
+            modeConstants.put(mode, Double.toString((random.nextDouble() < 0.5 ? sigma : -sigma) + mean));
+
             PersonUtils.setModeConstants(person, modeConstants);
         });
 
