@@ -9,40 +9,32 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Identifiable;
-import org.matsim.api.core.v01.events.PersonEntersVehicleEvent;
-import org.matsim.api.core.v01.events.PersonLeavesVehicleEvent;
-import org.matsim.api.core.v01.events.PersonMoneyEvent;
-import org.matsim.api.core.v01.events.TransitDriverStartsEvent;
-import org.matsim.api.core.v01.events.handler.PersonEntersVehicleEventHandler;
-import org.matsim.api.core.v01.events.handler.PersonLeavesVehicleEventHandler;
-import org.matsim.api.core.v01.events.handler.TransitDriverStartsEventHandler;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
-import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.analysis.time.TimeBinMap;
-import org.matsim.contrib.emissions.EmissionModule;
 import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.Pollutant;
-import org.matsim.contrib.emissions.events.ColdEmissionEvent;
-import org.matsim.contrib.emissions.events.ColdEmissionEventHandler;
-import org.matsim.contrib.emissions.events.WarmEmissionEvent;
-import org.matsim.contrib.emissions.events.WarmEmissionEventHandler;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
-import org.matsim.core.api.experimental.events.EventsManager;
+import org.matsim.contrib.roadpricing.RoadPricingModule;
+import org.matsim.contrib.roadpricing.RoadPricingScheme;
+import org.matsim.contrib.roadpricing.RoadPricingSchemeImpl;
+import org.matsim.contrib.roadpricing.RoadPricingUtils;
 import org.matsim.core.config.ReflectiveConfigGroup;
-import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.core.utils.gis.ShapeFileReader;
 import org.matsim.vehicles.EngineInformation;
-import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 
-import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -50,10 +42,10 @@ public class MosaikRunnerWithRoadPricing {
 
     private static final Logger log = LogManager.getLogger(MosaikRunnerWithRoadPricing.class);
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         var emissionConfig = new EmissionsConfigGroup();
-        var rpConfigGroup = new RoadPricingConfigGroup();
+        var rpConfigGroup = new Mosaik2ConfigGroup();
         var config = RunBerlinScenario.prepareConfig(args, emissionConfig, rpConfigGroup);
 
         log.info("Running with scale factor " + rpConfigGroup.factor);
@@ -149,18 +141,55 @@ public class MosaikRunnerWithRoadPricing {
             VehicleUtils.setHbefaEmissionsConcept(engineInformation, "average");
         }
 
-        var tollHandler = new EmissionTollHandler(getTollLinks(rpConfigGroup, scenario.getNetwork()), createCostFactors(), createTimeFactors(), rpConfigGroup.factor);
+        RoadPricingSchemeImpl scheme = RoadPricingUtils.addOrGetMutableRoadPricingScheme(scenario);
+        RoadPricingUtils.setType(scheme, RoadPricingScheme.TOLL_TYPE_LINK);
+        RoadPricingUtils.setName(scheme, "Toll_from_PALM");
+        RoadPricingUtils.setDescription(scheme, "Tolls are calculated from concentrations retrieved from a PALM simulation run.");
+        var timeFactors = createTimeFactors();
+        var costFactors = createCostFactors();
+        var tollLinks = getTollLinks(rpConfigGroup, scenario.getNetwork());
+        var emissionPerMeter = createEmissionPerMeter();
+
+        var path = Paths.get(config.controler().getOutputDirectory()).resolve("tolls.csv");
+        log.info("writing tolls to: " + path);
+        try (var writer = Files.newBufferedWriter(path); var p = CSVFormat.DEFAULT.withFirstRecordAsHeader().withHeader("time", "toll [€/m]").print(writer)) {
+            for (var bin : timeFactors.getTimeBins()) {
+
+                var time = bin.getStartTime();
+                var tollPerMeter = bin.getValue().entrySet().stream()
+                        .mapToDouble(entry -> costFactors.get(entry.getKey()) * emissionPerMeter.get(entry.getKey()) * entry.getValue())
+                        .sum();
+                p.printRecord(time, tollPerMeter);
+
+                for (var id : tollLinks) {
+                    var link = scenario.getNetwork().getLinks().get(id);
+                    var toll = link.getLength() * tollPerMeter;
+                    RoadPricingUtils.addLinkSpecificCost(scheme, id, time, time + timeFactors.getBinSize(), toll);
+                }
+            }
+        }
 
         var controler = RunBerlinScenario.prepareControler(scenario);
-        controler.addOverridingModule(new AbstractModule() {
-            @Override
-            public void install() {
-                bind(EmissionModule.class).asEagerSingleton();
-                addEventHandlerBinding().toInstance(tollHandler);
-            }
-        });
+        controler.addOverridingModule(new RoadPricingModule());
 
         controler.run();
+    }
+
+    /**
+     * Creates average emission [g/m]. Values are taken from HBEFA https://www.hbefa.net/e/index.html with Parameters
+     * Passenger Car, Regulated, 2020, Emissioncat::Details,Fuel::Aggregated
+     * <p>
+     * Values are divided by 1000 to konvert [g/Vehkm] into [g/Vehm]
+     *
+     * @return
+     */
+    private static Map<Pollutant, Double> createEmissionPerMeter() {
+        log.info("Creating emission per meter");
+        return Map.of(
+                Pollutant.PM, 0.002 / 1000,
+                Pollutant.PM_non_exhaust, 0.002 / 1000,
+                Pollutant.NOx, 0.338 / 1000
+        );
     }
 
     /**
@@ -207,7 +236,7 @@ public class MosaikRunnerWithRoadPricing {
         return result;
     }
 
-    private static Set<Id<Link>> getTollLinks(RoadPricingConfigGroup config, Network network) {
+    private static Set<Id<Link>> getTollLinks(Mosaik2ConfigGroup config, Network network) {
 
         if (config.tollArea == null) return network.getLinks().keySet();
 
@@ -238,76 +267,9 @@ public class MosaikRunnerWithRoadPricing {
         }
     }
 
-    private static class EmissionTollHandler implements WarmEmissionEventHandler, ColdEmissionEventHandler, PersonEntersVehicleEventHandler, PersonLeavesVehicleEventHandler, TransitDriverStartsEventHandler {
+    private static class Mosaik2ConfigGroup extends ReflectiveConfigGroup {
 
-        private final Map<Pollutant, Double> costFactors;
-        private final TimeBinMap<Map<Pollutant, Double>> timeFactors;
-        private final double scaleFactor;
-
-        private final Set<Id<Link>> tollLinks;
-        private final Map<Id<Vehicle>, Id<Person>> vehicle2Person = new HashMap<>();
-        private final Set<Id<Person>> td = new HashSet<>();
-
-        @Inject
-        private EventsManager events;
-
-        private EmissionTollHandler(Set<Id<Link>> tollLinks, Map<Pollutant, Double> costFactors, TimeBinMap<Map<Pollutant, Double>> timeFactors, double scaleFactor) {
-            this.costFactors = costFactors;
-            this.timeFactors = timeFactors;
-            this.scaleFactor = scaleFactor;
-            this.tollLinks = tollLinks;
-        }
-
-        @Override
-        public void handleEvent(ColdEmissionEvent event) {
-            handle(event.getTime(), event.getVehicleId(), event.getLinkId(), event.getColdEmissions());
-        }
-
-        @Override
-        public void handleEvent(WarmEmissionEvent event) {
-            handle(event.getTime(), event.getVehicleId(), event.getLinkId(), event.getWarmEmissions());
-        }
-
-        private void handle(double time, Id<Vehicle> vehId, Id<Link> linkId, Map<Pollutant, Double> emissions) {
-
-            if (!vehicle2Person.containsKey(vehId) || !tollLinks.contains(linkId)) return;
-
-            var personId = vehicle2Person.get(vehId);
-            var amount = emissions.entrySet().stream()
-                    .filter(entry -> costFactors.containsKey(entry.getKey()))
-                    .mapToDouble(entry -> calculateAmount(time, entry.getKey(), entry.getValue()))
-                    .sum();
-
-            events.processEvent(new PersonMoneyEvent(time, personId, -amount, "hot spot mitigation", "government"));
-        }
-
-        private double calculateAmount(double time, Pollutant pollutant, double emission) {
-            var costFactor = costFactors.get(pollutant);
-            var timeFactor = timeFactors.getTimeBin(time).hasValue() ?
-                    timeFactors.getTimeBin(time).getValue().get(pollutant) : 1.0;
-            return emission * costFactor * timeFactor * scaleFactor;
-        }
-
-        @Override
-        public void handleEvent(PersonEntersVehicleEvent event) {
-            if (!td.contains(event.getPersonId()))
-                vehicle2Person.put(event.getVehicleId(), event.getPersonId());
-        }
-
-        @Override
-        public void handleEvent(PersonLeavesVehicleEvent event) {
-            vehicle2Person.remove(event.getVehicleId());
-        }
-
-        @Override
-        public void handleEvent(TransitDriverStartsEvent event) {
-            td.add(event.getDriverId());
-        }
-    }
-
-    private static class RoadPricingConfigGroup extends ReflectiveConfigGroup {
-
-        public static String GROUP_NAME = "rp";
+        public static String GROUP_NAME = "m2";
 
         private double factor = 1.0;
 
@@ -337,7 +299,7 @@ public class MosaikRunnerWithRoadPricing {
             this.factor = factor;
         }
 
-        public RoadPricingConfigGroup() {
+        public Mosaik2ConfigGroup() {
             super(GROUP_NAME);
         }
     }
