@@ -150,14 +150,20 @@ public class MosaikRunnerWithRoadPricing {
         var tollLinks = getTollLinks(rpConfigGroup, scenario.getNetwork());
         var emissionPerMeter = createEmissionPerMeter();
 
-        var path = Paths.get(config.controler().getOutputDirectory()).resolve("tolls.csv");
+        var path = Paths.get("./tolls.csv");
         log.info("writing tolls to: " + path);
         try (var writer = Files.newBufferedWriter(path); var p = CSVFormat.DEFAULT.withFirstRecordAsHeader().withHeader("time", "toll [€/m]").print(writer)) {
             for (var bin : timeFactors.getTimeBins()) {
 
                 var time = bin.getStartTime();
                 var tollPerMeter = bin.getValue().entrySet().stream()
-                        .mapToDouble(entry -> costFactors.get(entry.getKey()) * emissionPerMeter.get(entry.getKey()) * entry.getValue())
+                        .mapToDouble(entry -> {
+                            var costFactor = costFactors.get(entry.getKey());
+                            var epm = emissionPerMeter.get(entry.getKey());
+                            var timeFactor = entry.getValue();
+                            var tollResult = costFactor * epm * timeFactor;
+                            return tollResult;
+                        })
                         .sum();
                 p.printRecord(time, tollPerMeter);
 
@@ -187,7 +193,6 @@ public class MosaikRunnerWithRoadPricing {
         log.info("Creating emission per meter");
         return Map.of(
                 Pollutant.PM, 0.002 / 1000,
-                Pollutant.PM_non_exhaust, 0.002 / 1000,
                 Pollutant.NOx, 0.338 / 1000
         );
     }
@@ -201,7 +206,6 @@ public class MosaikRunnerWithRoadPricing {
         log.info("Creating cost factors.");
         return Map.of(
                 Pollutant.PM, 39.6 / 1000,
-                Pollutant.PM_non_exhaust, 39.6 / 1000,
                 Pollutant.NOx, 36.8 / 1000
         );
     }
@@ -230,7 +234,6 @@ public class MosaikRunnerWithRoadPricing {
                 bin.setValue(new HashMap<>());
             }
             bin.getValue().put(Pollutant.PM, factor);
-            bin.getValue().put(Pollutant.PM_non_exhaust, factor);
         });
 
         return result;
