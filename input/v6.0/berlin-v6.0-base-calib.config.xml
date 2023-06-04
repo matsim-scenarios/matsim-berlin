@@ -56,7 +56,7 @@
 		<param name="mainMode" value="car,freight"/>
 		<param name="flowCapacityFactor" value="0.25"/>
 		<param name="storageCapacityFactor" value="0.25"/>
-		<param name="numberOfThreads" value="16"/>
+		<param name="numberOfThreads" value="12"/>
 		<param name="startTime" value="00:00:00"/>
 		<param name="endTime" value="36:00:00"/>
 		<param name="stuckTime" value="30.0"/>
