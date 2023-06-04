@@ -7,6 +7,9 @@ import org.matsim.api.core.v01.population.Person;
 
 import java.util.Objects;
 
+/**
+ * Defines available attributes.
+ */
 public final class Attributes {
 
 	public static final String HOME_X = "home_x";
@@ -20,7 +23,7 @@ public final class Attributes {
 
 
 	/**
-	 * LOR for Berlin
+	 * LOR for Berlin.
 	 */
 	public static final String LOR = "lor";
 
@@ -34,6 +37,8 @@ public final class Attributes {
 	public static final String ECONOMIC_STATUS = "economic_status";
 	public static final String HOUSEHOLD_SIZE = "household_size";
 
+	private Attributes() {
+	}
 
 	public static boolean isLinkUnassigned(Id<Link> link) {
 		return link != null && Objects.equals(link.toString(), "unassigned");

@@ -367,7 +367,7 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 
 		private final MultiPolygon geometry;
 
-		public Feature(OsmEntity entity, int n, MultiPolygon geometry) {
+		Feature(OsmEntity entity, int n, MultiPolygon geometry) {
 			this.entity = entity;
 			this.bits = new BitSet(n);
 			this.bits.clear();

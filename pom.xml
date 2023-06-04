@@ -389,6 +389,7 @@
 					<failsOnError>true</failsOnError>
 					<failOnViolation>true</failOnViolation>
 					<linkXRef>false</linkXRef>
+					<excludes>**/legacy/**</excludes>
 				</configuration>
 				<executions>
 					<execution>
