@@ -71,7 +71,7 @@ import java.util.stream.Collectors;
 	CreateCountsFromOpenData.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class,
 	MergePlans.class, SplitActivityTypesDuration.class, CleanPopulation.class, CleanAttributes.class,
 	CreateSmallScaleCommercialTrafficDemand.class, RunCountOptimization.class, SelectPlansFromIndex.class,
-	ExtractRelevantFreightTrips.class, FixSubtourModes.class
+	ExtractRelevantFreightTrips.class, CheckCarAvailability.class, FixSubtourModes.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
 

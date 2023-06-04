@@ -21,7 +21,10 @@ public enum Activities {
 	leisure(9, 27),
 	dining(8, 27),
 	shop_daily(8, 20),
-	shop_other(8, 20);
+	shop_other(8, 20),
+
+	// Freight types
+	service;
 
 	/**
 	 * Start time of an activity in hours, can be -1 if not defined.
@@ -73,7 +76,6 @@ public enum Activities {
 
 		config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("car interaction").setTypicalDuration(60));
 		config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("ride interaction").setTypicalDuration(60));
-		config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("service").setTypicalDuration(3600));
 		config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("start").setTypicalDuration(3600));
 		config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("end").setTypicalDuration(3600));
 

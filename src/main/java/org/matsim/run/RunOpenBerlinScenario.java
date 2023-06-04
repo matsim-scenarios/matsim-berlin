@@ -71,10 +71,28 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 					.setWeight(1.0)
 					.setSubpopulation(subpopulation)
 			);
-
-			// TODO: other strategies
-
 		}
+
+		config.strategy().addStrategySettings(
+			new StrategyConfigGroup.StrategySettings()
+				.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
+				.setWeight(0.15)
+				.setSubpopulation("person")
+		);
+
+		config.strategy().addStrategySettings(
+			new StrategyConfigGroup.StrategySettings()
+				.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.TimeAllocationMutator)
+				.setWeight(0.15)
+				.setSubpopulation("person")
+		);
+
+		config.strategy().addStrategySettings(
+			new StrategyConfigGroup.StrategySettings()
+				.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.SubtourModeChoice)
+				.setWeight(0.15)
+				.setSubpopulation("person")
+		);
 
 		return config;
 	}

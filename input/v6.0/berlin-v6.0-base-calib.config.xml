@@ -71,7 +71,7 @@
 		<param name="considerCarAvailability" value="true"/>
 		<param name="behavior" value="betweenAllAndFewerConstraints"/>
 		<param name="probaForRandomSingleTripMode" value="0.5"/>
-		<param name="coordDistance" value="100"/>
+		<param name="coordDistance" value="0"/>
 	</module>
 	<module name="transitRouter">
 		<param name="extensionRadius" value="500.0"/>

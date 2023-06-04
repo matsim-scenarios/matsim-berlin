@@ -276,7 +276,10 @@ $p/berlin-$V-25pct.plans.xml.gz:  $p/berlin-$V-facilities.xml.gz $p/berlin-$V-ne
 	 --network $(word 2,$^)
 
 	$(sc) prepare split-activity-types-duration\
+ 	 --exclude start,end\
 	 --input $@ --output $@
+
+	$(sc) prepare check-car-avail --input $@ --output $@ --mode walk
 
 	$(sc) prepare fix-subtour-modes --input $@ --output $@
 
@@ -286,7 +289,7 @@ $p/berlin-$V-25pct.plans.xml.gz:  $p/berlin-$V-facilities.xml.gz $p/berlin-$V-ne
 
 	$(sc) prepare downsample-population $@\
 		 --sample-size 0.25\
-		 --samples 0.1 0.01\
+		 --samples 0.1 0.01 0.001\
 
 prepare-calibration: $p/berlin-initial-$V-25pct.plans.xml.gz
 	echo "Done"
