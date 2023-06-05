@@ -25,10 +25,7 @@ import org.optaplanner.core.api.solver.SolverFactory;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 @CommandLine.Command(name = "run-count-opt", description = "Select plans to match counts data")
@@ -83,7 +80,7 @@ public class RunCountOptimization implements MATSimAppCommand {
 
 		int k = 0;
 		for (Count<Link> value : linkCounts.getCounts().values()) {
-			HashMap<Integer, Volume> volumes = value.getVolumes();
+			Map<Integer, Volume> volumes = value.getVolumes();
 			for (int i = 0; i < H; i++) {
 				if (volumes.containsKey(i)) {
 					int idx = k * H + i;

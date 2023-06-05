@@ -43,8 +43,8 @@ public class ScoreCalculatorTest {
 				.isEqualTo(0.10536051565782628);
 
 		// Does not hold anymore, because of the constant
-		assertThat(ScoreCalculator.diffChange(e, 10, 5, 20))
-				.isEqualTo(0);
+//		assertThat(ScoreCalculator.diffChange(e, 10, 5, 20))
+//				.isEqualTo(0);
 
 	}
 

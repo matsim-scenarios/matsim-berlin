@@ -99,9 +99,9 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 
 		try (CSVParser parser = csv.createParser(stats)) {
 
-			for (CSVRecord record : parser) {
+			for (CSVRecord row : parser) {
 
-				String code = record.get("code");
+				String code = row.get("code");
 
 				// Some cities are LK level
 				if (!zones.containsKey(code) && code.length() == 5)
@@ -109,7 +109,7 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 
 				if (zones.containsKey(code)) {
 
-					addPersons(record, code, (String) zones.get(code).getAttribute("ARS"), (MultiPolygon) zones.get(code).getDefaultGeometry());
+					addPersons(row, code, (String) zones.get(code).getAttribute("ARS"), (MultiPolygon) zones.get(code).getDefaultGeometry());
 
 					found.add(code);
 				}

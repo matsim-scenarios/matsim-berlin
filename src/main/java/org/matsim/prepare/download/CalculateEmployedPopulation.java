@@ -85,13 +85,13 @@ public class CalculateEmployedPopulation implements MATSimAppCommand {
 
 		try (CSVParser parser = csv.createParser(path)) {
 
-			for (CSVRecord record : parser) {
+			for (CSVRecord row : parser) {
 
-				String code = record.get("code");
+				String code = row.get("code");
 				if (code.equals("DG"))
 					continue;
 
-				result.put(Integer.parseInt(code), Integer.parseInt(record.get("employed")));
+				result.put(Integer.parseInt(code), Integer.parseInt(row.get("employed")));
 			}
 		}
 
@@ -103,9 +103,9 @@ public class CalculateEmployedPopulation implements MATSimAppCommand {
 		Map<Integer, Employment> result = new HashMap<>();
 
 		try (CSVParser parser = csv.createParser(path)) {
-			for (CSVRecord record : parser) {
+			for (CSVRecord r : parser) {
 
-				String code = record.get("code");
+				String code = r.get("code");
 				if (code.equals("DG"))
 					continue;
 
@@ -114,9 +114,9 @@ public class CalculateEmployedPopulation implements MATSimAppCommand {
 
 				for (String gender : List.of("m", "f")) {
 
-					String age = record.get("age");
+					String age = r.get("age");
 					Entry entry = gender.equals("m") ? row.men : row.women;
-					int n = Integer.parseInt(record.get(gender));
+					int n = Integer.parseInt(r.get(gender));
 
 					switch (age) {
 						case "0 - 20" -> entry.age18_20 += n;
@@ -135,14 +135,26 @@ public class CalculateEmployedPopulation implements MATSimAppCommand {
 		return result;
 	}
 
+	/**
+	 * Helper class to collect employment statistic.
+	 */
 	public static final class Employment {
 
+		/**
+		 * Statistic for men.
+		 */
 		@JsonProperty
 		public final Entry men = new Entry();
 
+		/**
+		 * Statistics for women.
+		 */
 		@JsonProperty
 		public final Entry women = new Entry();
 
+		/**
+		 * Sum of men and women.
+		 */
 		public double sum() {
 			return men.sum() + women.sum();
 		}
@@ -159,6 +171,7 @@ public class CalculateEmployedPopulation implements MATSimAppCommand {
 	/**
 	 * Age grouping specific for available data.
 	 */
+	@SuppressWarnings(value = {"MemberName", "MissingJavadocMethod"})
 	public static final class Entry {
 		@JsonProperty
 		double age18_20;

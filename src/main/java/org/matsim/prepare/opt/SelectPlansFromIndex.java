@@ -43,8 +43,8 @@ public class SelectPlansFromIndex implements MATSimAppCommand {
 		Population population = PopulationUtils.readPopulation(input.toString());
 		Object2IntMap<Id<Person>> idx = new Object2IntOpenHashMap<>();
 		try (CSVParser parser = csvOpt.createParser(csv)) {
-			for (CSVRecord record : parser) {
-				idx.put(Id.createPersonId(record.get("id")), Integer.parseInt(record.get("idx")));
+			for (CSVRecord row : parser) {
+				idx.put(Id.createPersonId(row.get("id")), Integer.parseInt(row.get("idx")));
 			}
 		}
 

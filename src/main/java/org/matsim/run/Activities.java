@@ -3,6 +3,9 @@ package org.matsim.run;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 
+/**
+ * Defines available activity types.
+ */
 public enum Activities {
 	home,
 	other,

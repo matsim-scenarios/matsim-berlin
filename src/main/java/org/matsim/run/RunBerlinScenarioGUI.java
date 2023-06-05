@@ -19,10 +19,15 @@
 
 package org.matsim.run;
 
-import org.matsim.legacy.run.RunBerlinScenario;
 import org.matsim.run.gui.Gui;
 
-public class RunBerlinScenarioGUI {
+/**
+ * Runs the MATSim GUI for the OpenBerlin scenario.
+ */
+public final class RunBerlinScenarioGUI {
+
+	private RunBerlinScenarioGUI() {
+	}
 
 	public static void main(String[] args) {
 		Gui.show("MATSim GUI for matsim-berlin", RunOpenBerlinScenario.class);

@@ -44,16 +44,17 @@ public class CommuterAssignment {
 
 		// read commuters
 		try (CSVParser parser = csv.createParser(commuterPath)) {
-			for (CSVRecord record : parser) {
-				long from, to;
+			for (CSVRecord row : parser) {
+				long from;
+				long to;
 				try {
-					from = Long.parseLong(record.get("from"));
-					to = Long.parseLong(record.get("to"));
+					from = Long.parseLong(row.get("from"));
+					to = Long.parseLong(row.get("to"));
 				} catch (NumberFormatException e) {
 					continue;
 				}
 
-				String n = record.get("n");
+				String n = row.get("n");
 				commuter.computeIfAbsent(from, k -> Long2DoubleMaps.synchronize(new Long2DoubleOpenHashMap()))
 					.mergeDouble(to, Integer.parseInt(n), Double::sum);
 			}

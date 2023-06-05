@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 /**
  * Distribution with fixed probabilities for each entry.
  *
- * @param <T>
+ * @param <T> type of the produced value.
  */
 public class EnumeratedAttributeDistribution<T> implements AttributeDistribution<T> {
 

@@ -91,7 +91,12 @@
 
 		<module name="IllegalType">
 			<property name="illegalClassNames" value="com.google.inject.Singleton"/>
-			<message key="illegal.type" value="Use javax.inject.Singleton"/>
+			<message key="illegal.type" value="Use jakarta singleton annotation"/>
+		</module>
+
+		<module name="IllegalType">
+			<property name="illegalClassNames" value="javax.inject.Singleton,javax.inject.Inject,javax.inject.Provider"/>
+			<message key="illegal.type" value="Use annotations from jakarta package"/>
 		</module>
 
 		<module name="MultipleVariableDeclarations"/>
@@ -216,7 +221,7 @@
 			<!-- Underscores are allowed -->
 			<property name="format" value="^[a-z][a-zA-Z0-9_]*$"/>
 		</module>
-		<module name="RecordComponentName" />
+		<module name="RecordComponentName"/>
 		<module name="RecordTypeParameterName"/>
 		<module name="StaticVariableName"/>
 		<module name="TypeName"/>

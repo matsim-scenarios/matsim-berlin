@@ -272,7 +272,7 @@ public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 		private final RNGHelper rng;
 		private final SplittableRandom rnd;
 
-		public Context(long seed) {
+		Context(long seed) {
 
 			// Generate a new uncorrelated seed
 			long l = new Random(seed).nextLong();

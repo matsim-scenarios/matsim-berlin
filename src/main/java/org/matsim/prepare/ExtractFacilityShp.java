@@ -440,6 +440,9 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 
 	}
 
+	/**
+	 * Helper class to define data structure for mapping.
+	 */
 	public static final class MappingConfig {
 
 		private final Map<String, Set<String>> values = new HashMap<>();

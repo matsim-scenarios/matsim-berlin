@@ -10,6 +10,7 @@ import java.util.Objects;
 /**
  * Defines available attributes.
  */
+@SuppressWarnings("ConstantName")
 public final class Attributes {
 
 	public static final String HOME_X = "home_x";
@@ -26,7 +27,6 @@ public final class Attributes {
 	 * LOR for Berlin.
 	 */
 	public static final String LOR = "lor";
-
 
 	public static final String RegioStaR7 = "RegioStaR7";
 

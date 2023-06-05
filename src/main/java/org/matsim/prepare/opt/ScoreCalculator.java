@@ -8,7 +8,10 @@ import org.optaplanner.core.api.score.calculator.IncrementalScoreCalculator;
 
 import java.math.BigDecimal;
 
-public class ScoreCalculator implements IncrementalScoreCalculator<PlanAssignmentProblem, SimpleBigDecimalScore> {
+/**
+ * Score calculator.
+ */
+public final class ScoreCalculator implements IncrementalScoreCalculator<PlanAssignmentProblem, SimpleBigDecimalScore> {
 
 	private static final double C = 15.0;
 	/**
@@ -17,7 +20,7 @@ public class ScoreCalculator implements IncrementalScoreCalculator<PlanAssignmen
 	private double error = 0;
 
 	/**
-	 * Real counts
+	 * Real counts.
 	 */
 	private int[] counts;
 	/**

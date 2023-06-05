@@ -12,8 +12,11 @@ import org.optaplanner.core.api.score.buildin.simplebigdecimal.SimpleBigDecimalS
 import java.math.BigDecimal;
 import java.util.*;
 
+/**
+ * Planning problem containing all entities and information.
+ */
 @PlanningSolution(solutionCloner = PlanAssignmentProblem.Cloner.class)
-public class PlanAssignmentProblem implements Iterable<PlanPerson> {
+public final class PlanAssignmentProblem implements Iterable<PlanPerson> {
 
 	final int[] counts;
 	final ErrorMetric metric;
@@ -73,13 +76,16 @@ public class PlanAssignmentProblem implements Iterable<PlanPerson> {
 		return persons.iterator();
 	}
 
+	/**
+	 * Iterative pre optimization using change plan exp beta logic.
+	 */
 	public void iterate(int n, double prob, double beta, double w) {
 
 		ScoreCalculator calc = new ScoreCalculator();
 		calc.resetWorkingSolution(this);
 		score = calc.calculateScore();
 
-		Random rnd = new Random(0);
+		SplittableRandom rnd = new SplittableRandom(0);
 
 		double step = prob / n;
 
@@ -102,6 +108,9 @@ public class PlanAssignmentProblem implements Iterable<PlanPerson> {
 		}
 	}
 
+	/**
+	 * Create a clone of a solution.
+	 */
 	public static final class Cloner implements SolutionCloner<PlanAssignmentProblem> {
 		@Override
 		public PlanAssignmentProblem cloneSolution(PlanAssignmentProblem original) {

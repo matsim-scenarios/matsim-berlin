@@ -100,17 +100,17 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 
 		int i = 0;
 
-		for (CSVRecord record : csv) {
+		for (CSVRecord r : csv) {
 
-			int idx = Integer.parseInt(record.get("idx"));
-			int regionType = Integer.parseInt(record.get("region_type"));
-			String gender = record.get("gender");
-			String employment = record.get("employment");
-			int age = Integer.parseInt(record.get("age"));
+			int idx = Integer.parseInt(r.get("idx"));
+			int regionType = Integer.parseInt(r.get("region_type"));
+			String gender = r.get("gender");
+			String employment = r.get("employment");
+			int age = Integer.parseInt(r.get("age"));
 
 			Stream<Key> keys = createKey(gender, age, regionType, employment);
 			keys.forEach(key -> groups.computeIfAbsent(key, (k) -> new IntArrayList()).add(idx));
-			persons.put(idx, record);
+			persons.put(idx, r);
 			i++;
 		}
 
@@ -123,9 +123,9 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 		List<CSVRecord> current = null;
 
 		int i = 0;
-		for (CSVRecord record : csv) {
+		for (CSVRecord r : csv) {
 
-			int pId = Integer.parseInt(record.get("p_id"));
+			int pId = Integer.parseInt(r.get("p_id"));
 
 			if (pId != currentId) {
 				if (current != null)
@@ -135,7 +135,7 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 				current = new ArrayList<>();
 			}
 
-			current.add(record);
+			current.add(r);
 			i++;
 		}
 
@@ -208,21 +208,21 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 		}
 
 		int idx = subgroup.getInt(rnd.nextInt(subgroup.size()));
-		CSVRecord record = persons.get(idx);
+		CSVRecord row = persons.get(idx);
 
-		PersonUtils.setCarAvail(person, record.get("car_avail").equals("True") ? "always" : "never");
-		PersonUtils.setLicence(person, record.get("driving_license").toLowerCase());
+		PersonUtils.setCarAvail(person, row.get("car_avail").equals("True") ? "always" : "never");
+		PersonUtils.setLicence(person, row.get("driving_license").toLowerCase());
 
-		person.getAttributes().putAttribute(Attributes.BIKE_AVAIL, record.get("bike_avail").equals("True") ? "always" : "never");
-		person.getAttributes().putAttribute(Attributes.PT_ABO_AVAIL, record.get("pt_abo_avail").equals("True") ? "always" : "never");
+		person.getAttributes().putAttribute(Attributes.BIKE_AVAIL, row.get("bike_avail").equals("True") ? "always" : "never");
+		person.getAttributes().putAttribute(Attributes.PT_ABO_AVAIL, row.get("pt_abo_avail").equals("True") ? "always" : "never");
 
-		person.getAttributes().putAttribute(Attributes.EMPLOYMENT, record.get("employment"));
-		person.getAttributes().putAttribute(Attributes.RESTRICTED_MOBILITY, record.get("restricted_mobility").equals("True"));
-		person.getAttributes().putAttribute(Attributes.ECONOMIC_STATUS, record.get("economic_status"));
-		person.getAttributes().putAttribute(Attributes.HOUSEHOLD_SIZE, Integer.parseInt(record.get("n_persons")));
+		person.getAttributes().putAttribute(Attributes.EMPLOYMENT, row.get("employment"));
+		person.getAttributes().putAttribute(Attributes.RESTRICTED_MOBILITY, row.get("restricted_mobility").equals("True"));
+		person.getAttributes().putAttribute(Attributes.ECONOMIC_STATUS, row.get("economic_status"));
+		person.getAttributes().putAttribute(Attributes.HOUSEHOLD_SIZE, Integer.parseInt(row.get("n_persons")));
 
 
-		String mobile = record.get("mobile_on_day");
+		String mobile = row.get("mobile_on_day");
 
 		// ensure mobile agents have a valid plan
 		switch (mobile.toLowerCase()) {

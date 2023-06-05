@@ -5,6 +5,9 @@ import org.optaplanner.core.impl.heuristic.move.AbstractMove;
 
 import java.util.List;
 
+/**
+ * Switch multiple plan assignments at once.
+ */
 public class LargeChangeMove extends AbstractMove<PlanAssignmentProblem> {
 
 	private final List<PlanPerson> persons;

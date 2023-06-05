@@ -127,7 +127,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		trees = new HashMap<>();
 		for (String act : activities) {
 
-			TreeMap<Id<ActivityFacility>, ActivityFacility> afs = facilities.getFacilitiesForActivityType(act);
+			NavigableMap<Id<ActivityFacility>, ActivityFacility> afs = facilities.getFacilitiesForActivityType(act);
 			for (ActivityFacility af : afs.values()) {
 				STRtree index = trees.computeIfAbsent(act, k -> new STRtree());
 				index.insert(MGC.coord2Point(af.getCoord()).getEnvelopeInternal(), af);

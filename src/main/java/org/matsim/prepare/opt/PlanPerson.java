@@ -10,10 +10,13 @@ import org.optaplanner.core.api.domain.variable.PlanningVariable;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Random;
+import java.util.SplittableRandom;
 
+/**
+ * Entity representing a person.
+ */
 @PlanningEntity(difficultyComparatorClass = PlanPerson.DifficultyComparator.class)
-public class PlanPerson {
+public final class PlanPerson {
 
 	/**
 	 * A plan that does not affect any count stations.
@@ -81,9 +84,16 @@ public class PlanPerson {
 		return id;
 	}
 
+	/**
+	 * Offset compared to the original plans loaded from input.
+	 */
 	public int getOffset() {
 		return offset;
 	}
+
+	/**
+	 * Counts of selected maps.
+	 */
 	public Int2IntMap selected() {
 		return plans[k];
 	}
@@ -122,7 +132,7 @@ public class PlanPerson {
 	 *
 	 * @see org.matsim.core.replanning.strategies.ChangeExpBeta
 	 */
-	public int changePlanExpBeta(double beta, double w, Random rnd) {
+	public int changePlanExpBeta(double beta, double w, SplittableRandom rnd) {
 
 		int other = rnd.nextInt(scores.length);
 

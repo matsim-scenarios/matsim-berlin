@@ -41,7 +41,7 @@ import java.util.stream.IntStream;
 )
 public class CreateBerlinPopulation implements MATSimAppCommand {
 
-	private final static NumberFormat FMT = NumberFormat.getInstance(Locale.GERMAN);
+	private static final NumberFormat FMT = NumberFormat.getInstance(Locale.GERMAN);
 
 	private static final Logger log = LogManager.getLogger(CreateBerlinPopulation.class);
 
@@ -76,6 +76,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 	}
 
 	@Override
+	@SuppressWarnings("IllegalCatch")
 	public Integer call() throws Exception {
 
 		if (shp.getShapeFile() == null) {
@@ -100,17 +101,17 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 
 		try (CSVParser reader = new CSVParser(Files.newBufferedReader(input, Charset.forName("windows-1252")), format.build())) {
 
-			for (CSVRecord record : reader) {
+			for (CSVRecord row : reader) {
 
-				int year = Integer.parseInt(record.get("Jahr"));
+				int year = Integer.parseInt(row.get("Jahr"));
 				if (this.year != year)
 					continue;
 
 				try {
-					processLOR(record);
-				} catch (Exception e) {
+					processLOR(row);
+				} catch (RuntimeException e) {
 					log.error("Error processing lor", e);
-					log.error(record.toString());
+					log.error(row.toString());
 				}
 			}
 		}
@@ -125,27 +126,27 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 		return 0;
 	}
 
-	private void processLOR(CSVRecord record) throws ParseException {
+	private void processLOR(CSVRecord row) throws ParseException {
 
-		String raumID = record.get("RaumID");
-		int n = Integer.parseInt(record.get("Einwohnerinnen und Einwohner (EW) insgesamt"));
+		String raumID = row.get("RaumID");
+		int n = Integer.parseInt(row.get("Einwohnerinnen und Einwohner (EW) insgesamt"));
 
 		log.info("Processing {} with {} inhabitants", raumID, n);
 
-		double young = FMT.parse(record.get("Anteil der unter 18-Jährigen an Einwohnerinnen und Einwohner (EW) gesamt")).doubleValue() / 100;
-		double old = FMT.parse(record.get("Anteil der 65-Jährigen und älter an Einwohnerinnen und Einwohner (EW) gesamt")).doubleValue() / 100;
+		double young = FMT.parse(row.get("Anteil der unter 18-Jährigen an Einwohnerinnen und Einwohner (EW) gesamt")).doubleValue() / 100;
+		double old = FMT.parse(row.get("Anteil der 65-Jährigen und älter an Einwohnerinnen und Einwohner (EW) gesamt")).doubleValue() / 100;
 
 		// x women for 100 men
-		double women = FMT.parse(record.get("Geschlechterverteilung")).doubleValue();
+		double women = FMT.parse(row.get("Geschlechterverteilung")).doubleValue();
 		double quota = women / (100 + women);
 
 		// sometimes this entry is not set
 		double unemployed;
 		try {
-			unemployed = FMT.parse(record.get("Anteil Arbeitslose nach SGB II und SGB III an Einwohnerinnen und Einwohner (EW) im Alter von 15 bis unter 65 Jahren")).doubleValue() / 100;
+			unemployed = FMT.parse(row.get("Anteil Arbeitslose nach SGB II und SGB III an Einwohnerinnen und Einwohner (EW) im Alter von 15 bis unter 65 Jahren")).doubleValue() / 100;
 		} catch (ParseException e) {
 			unemployed = 0;
-			log.warn("LOR {} {} has no unemployment", raumID, record.get(1));
+			log.warn("LOR {} {} has no unemployment", raumID, row.get(1));
 		}
 
 		var sex = new EnumeratedAttributeDistribution<>(Map.of("f", quota, "m", 1 - quota));

@@ -36,7 +36,7 @@ public class LargeShuffleMoveSelector implements MoveIteratorFactory<PlanAssignm
 		private final Random random;
 		private int done = 0;
 
-		public It(int maxK, List<PlanPerson> list, Random random) {
+		It(int maxK, List<PlanPerson> list, Random random) {
 			this.maxK = maxK;
 			this.list = list;
 			this.random = random;
