@@ -1,6 +1,5 @@
 package org.matsim.run;
 
-import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.application.MATSimApplication;
@@ -15,7 +14,7 @@ import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.RoutingModeMainModeIdentifier;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
-import org.matsim.synthetic.RunOpenBerlinCalibration;
+import org.matsim.prepare.RunOpenBerlinCalibration;
 import picocli.CommandLine;
 
 import java.util.List;
