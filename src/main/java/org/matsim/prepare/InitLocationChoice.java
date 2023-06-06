@@ -238,7 +238,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 						lastCoord = c;
 
 						// An activity with type could not be put into correct facility.
-						if (trees.containsKey(type)){
+						if (trees.containsKey(type)) {
 							warning.incrementAndGet();
 						}
 
@@ -339,7 +339,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		var x = Math.cos(angle) * dist;
 		var y = Math.sin(angle) * dist;
 
-		return new Coord(origin.getX() + x, origin.getY() + y);
+		return new Coord(RunOpenBerlinCalibration.roundNumber(origin.getX() + x), RunOpenBerlinCalibration.roundNumber(origin.getY() + y));
 	}
 
 	private static final class Context {

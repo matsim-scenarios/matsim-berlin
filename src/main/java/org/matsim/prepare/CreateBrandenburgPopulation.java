@@ -83,8 +83,7 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 			return 2;
 		}
 
-		employed = new JsonMapper().readerFor(new TypeReference<Map<Integer, Employment>>() {
-				})
+		employed = new JsonMapper().readerFor(new TypeReference<Map<Integer, Employment>>() {})
 				.readValue(employedPath.toFile());
 
 		// Filter for Brandenburg

@@ -242,7 +242,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 		if (i == 1500)
 			log.warn("Invalid coordinate generated");
 
-		return coord;
+		return RunOpenBerlinCalibration.roundCoord(coord);
 	}
 
 	private enum AgeGroup {

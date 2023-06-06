@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.TypeLiteral;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
@@ -43,16 +44,18 @@ import org.matsim.core.scoring.functions.ScoringParameters;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.legacy.prepare.berlinCounts.CreateCountsFromOpenData;
 import org.matsim.legacy.prepare.berlinCounts.CreateCountsFromVMZ;
+import org.matsim.prepare.download.DownloadCommuterStatistic;
+import org.matsim.prepare.opt.RunCountOptimization;
+import org.matsim.prepare.opt.SelectPlansFromIndex;
 import org.matsim.run.Activities;
 import org.matsim.run.RunOpenBerlinScenario;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
 import org.matsim.smallScaleCommercialTrafficGeneration.CreateSmallScaleCommercialTrafficDemand;
-import org.matsim.prepare.download.DownloadCommuterStatistic;
-import org.matsim.prepare.opt.RunCountOptimization;
-import org.matsim.prepare.opt.SelectPlansFromIndex;
 import picocli.CommandLine;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
@@ -89,7 +92,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	private double weight;
 	@CommandLine.Option(names = "--population", description = "Path to population")
 	private Path populationPath;
-	@CommandLine.Option(names = "--scale-factor", description = "Scale factor for counts.", defaultValue = "1")
+	@CommandLine.Option(names = "--scale-factor", description = "Scale factor for capacity.", defaultValue = "1")
 	private double scaleFactor;
 
 	@CommandLine.Option(names = "--plan-index", description = "Only use one plan with specified index")
@@ -97,6 +100,17 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 	public RunOpenBerlinCalibration() {
 		super("input/v6.0/berlin-v6.0-base-calib.config.xml");
+	}
+
+	static double roundNumber(double x) {
+		return BigDecimal.valueOf(x).setScale(2, RoundingMode.HALF_UP).doubleValue();
+	}
+
+	/**
+	 * Round coordinates to sufficient precision.
+	 */
+	static Coord roundCoord(Coord coord) {
+		return new Coord(roundNumber(coord.getX()), roundNumber(coord.getY()));
 	}
 
 	public static void main(String[] args) {
@@ -134,7 +148,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			config.qsim().setStorageCapFactor(sampleSize);
 
 			// Counts can be scaled with sample size
-			config.counts().setCountsScaleFactor(scaleFactor * sampleSize);
+			config.counts().setCountsScaleFactor(sampleSize);
 			config.plans().setInputFile(sample.adjustName(config.plans().getInputFile()));
 
 			sw.defaultParams().sampleSize = String.valueOf(sampleSize);

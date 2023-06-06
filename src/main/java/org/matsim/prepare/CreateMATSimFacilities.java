@@ -90,7 +90,7 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 				continue;
 			}
 
-			ActivityFacility facility = f.createActivityFacility(id, new Coord(x.getAsDouble(), y.getAsDouble()));
+			ActivityFacility facility = f.createActivityFacility(id, RunOpenBerlinCalibration.roundCoord(new Coord(x.getAsDouble(), y.getAsDouble())));
 			for (String act : h.activities) {
 				facility.addActivityOption(f.createActivityOption(act));
 			}
