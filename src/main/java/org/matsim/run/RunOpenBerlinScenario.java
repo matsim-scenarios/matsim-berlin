@@ -29,7 +29,7 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 	public static final String CRS = "EPSG:25832";
 
 	@CommandLine.Mixin
-	private final SampleOptions sample = new SampleOptions(100, 25, 10, 1);
+	private final SampleOptions sample = new SampleOptions(25, 10, 1);
 	public RunOpenBerlinScenario() {
 		super(String.format("input/v%s/berlin-v%s-base-calib.config.xml", VERSION, VERSION));
 	}

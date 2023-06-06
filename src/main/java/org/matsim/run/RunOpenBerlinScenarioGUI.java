@@ -24,9 +24,9 @@ import org.matsim.run.gui.Gui;
 /**
  * Runs the MATSim GUI for the OpenBerlin scenario.
  */
-public final class RunBerlinScenarioGUI {
+public final class RunOpenBerlinScenarioGUI {
 
-	private RunBerlinScenarioGUI() {
+	private RunOpenBerlinScenarioGUI() {
 	}
 
 	public static void main(String[] args) {
