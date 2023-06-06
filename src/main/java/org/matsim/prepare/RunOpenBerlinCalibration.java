@@ -137,7 +137,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
 
-		sw.exclude.add("StuckAgentDashboard");
 		sw.defaultParams().mapCenter = "13.39,52.51";
 		sw.defaultParams().mapZoomLevel = 9.1;
 

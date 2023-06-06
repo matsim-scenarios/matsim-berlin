@@ -237,7 +237,7 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 					throw new AssertionError("Activities for mobile agent can not be empty.");
 
 				person.removePlan(person.getSelectedPlan());
-				Plan plan = createPlan(Attributes.getHomeCoord(person), activities);
+				Plan plan = createPlan(Attributes.getHomeCoord(person), activities, rnd);
 
 				person.addPlan(plan);
 				person.setSelectedPlan(plan);
@@ -251,7 +251,23 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 		}
 	}
 
-	private Plan createPlan(Coord homeCoord, List<CSVRecord> activities) {
+	/**
+	 * Randomize the duration slightly, depending on total duration.
+	 */
+	private int randomizeDuration(int minutes, SplittableRandom rnd) {
+		if (minutes <= 10)
+			return minutes * 60;
+
+		if (minutes <= 60)
+			return minutes * 60 + rnd.nextInt(300) - 150;
+
+		if (minutes <= 240)
+			return minutes * 60 + rnd.nextInt(600) - 300;
+
+		return minutes * 60 + rnd.nextInt(1200) - 600;
+	}
+
+	private Plan createPlan(Coord homeCoord, List<CSVRecord> activities, SplittableRandom rnd) {
 		Plan plan = factory.createPlan();
 
 		Activity a = null;
@@ -283,23 +299,28 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 			double legDuration = Double.parseDouble(act.get("leg_duration"));
 
 			if (plan.getPlanElements().isEmpty()) {
-				a.setEndTime(duration * 60);
-				startTime += duration * 60;
+				// Add little
+				int seconds = randomizeDuration(duration, rnd);
+
+				a.setEndTime(seconds);
+				startTime += seconds;
+
 			} else if (duration < 1440) {
 
 				startTime += legDuration * 60;
 
 				// Flexible modes are represented with duration
 				// otherwise start and end time
+				int seconds = randomizeDuration(duration, rnd);
+
 				if (RunOpenBerlinCalibration.FLEXIBLE_ACTS.contains(actType))
-					a.setMaximumDuration(duration * 60);
+					a.setMaximumDuration(seconds);
 				else {
 					a.setStartTime(startTime);
-					a.setEndTime(startTime + duration * 60);
+					a.setEndTime(startTime + seconds);
 				}
 
-				startTime += duration * 60;
-
+				startTime += seconds;
 			}
 
 			double legDist = Double.parseDouble(act.get("leg_dist"));
