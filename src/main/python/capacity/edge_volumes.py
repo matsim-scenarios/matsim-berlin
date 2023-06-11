@@ -6,7 +6,7 @@ import sys
 import shutil
 from os.path import join, basename
 
-from utils import init_env, init_workload, create_args, write_scenario, filter_network
+from utils import init_env, init_workload, create_args, write_scenario, filter_network, vehicle_parameter
 
 init_env()
 
@@ -29,32 +29,29 @@ def capacity_estimate(v):
 
     return 3600 * Qc
 
-
-def writeRouteFile(f_name, departLane, arrivalLane, edges, veh, qCV, qAV, qACV):
+def writeRouteFile(f_name, departLane, arrivalLane, edges, veh, scenario):
     text = """<?xml version="1.0" encoding="UTF-8"?>
 <routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
 
-    <vTypeDistribution id="vDist">
-        <vType id="vehCV" probability="{qCV}" color="1,0,0" vClass="passenger"/>
-        <vType id="vehACV" probability="{qACV}" color="0,0,1" vClass="passenger" minGap="0.5" accel="2.6" decel="3.5" sigma="0" tau="0.6" speedFactor="1" speedDev="0"/>
-        <vType id="vehAV" probability="{qAV}" color="0,1,0" vClass="passenger" decel="3.0" sigma="0.1" tau="1.5" speedFactor="1" speedDev="0"/>
-    </vTypeDistribution>
+"""
+    text += """<vTypeDistribution id="vDist">
+                    %s
+                </vTypeDistribution>
+            """ % vehicle_parameter(scenario)
 
+    text += """
     <flow id="veh" begin="0" end= "600" vehsPerHour="{veh}" type="vDist" departLane="{departLane}" arrivalLane="{arrivalLane}" departSpeed="max">
         <route edges="{edges}"/>
     </flow>
 
-</routes>
-"""
+</routes>"""
+
     # departSpeed="speedLimit" ?
     context = {
         "departLane": departLane,
         "arrivalLane": arrivalLane,
         "edges": edges,
-        "veh": veh,
-        "qCV": qCV,
-        "qAV": qAV,
-        "qACV": qACV
+        "veh": veh
     }
 
     with open(f_name, "w") as f:
@@ -119,14 +116,6 @@ def run(args, edges):
     # saveToFile(edges_ids,"junctions.json")
     i = 0
 
-    total = args.cv + args.av + args.acv
-
-    qCV = (args.cv / total)
-    qAV = (args.av / total)
-    qACV = (args.acv / total)
-
-    print("Running vehicle shares cv: %.2f, av: %.2f, acv: %.2f" % (qCV, qAV, qACV))
-
     if args.to_index <= 0:
         args.to_index = len(edges)
 
@@ -147,7 +136,7 @@ def run(args, edges):
         p_detector = join(args.runner, "detector.add.xml")
 
         filter_network(netconvert, args.network, edge, p_network)
-        writeRouteFile(p_routes, "best", "current", edge._id, cap, qCV, qAV, qACV)
+        writeRouteFile(p_routes, "best", "current", edge._id, cap, args.scenario)
         p_scenario = join(args.runner, "scenario.sumocfg")
 
         write_scenario(p_scenario, basename(p_network), basename(p_routes), basename(p_detector), args.step_length)
@@ -210,7 +199,8 @@ if __name__ == "__main__":
 
     allEdges = net.getEdges()  # all type of edges
 
-    selection = set(pd.read_csv(args.input[0]).edgeId)
+    with open(args.input[0]) as f:
+        selection = set(f.read().splitlines())
 
     # select if edges in net file
     edges = [edge for edge in allEdges if edge._id in selection]
