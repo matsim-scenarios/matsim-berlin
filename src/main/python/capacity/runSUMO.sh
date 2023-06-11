@@ -2,6 +2,7 @@
 #$ -l h_rt=600000
 #$ -j y
 #$ -m a
+#$ -o ./logfile/logfile_$JOB_NAME.log
 #$ -cwd
 #$ -pe mp 4
 #$ -l mem_free=4G
@@ -25,7 +26,7 @@ scenario="base"
 
 f="output-junctions/scenario-$scenario"
 
-command="python -u junction_volumes.py intersections.txt --scenario $scenario --network sumo.net.xml --output $f --runner runner${JOB_ID}${SGE_TASK_ID} --runner-index $idx --runner-total $total"
+command="python -u junction_volumes.py intersections.txt --scenario $scenario --network sumo.net.xml --output $f --runner runner/${JOB_ID}${SGE_TASK_ID} --runner-index $idx --runner-total $total"
 
 #command="python -u edge_volumes.py sample.csv --scenario $scenario--network sumo.net.xml --output $f --runner runner${JOB_ID}${SGE_TASK_ID} --runner-index $idx --runner-total $total"
 
