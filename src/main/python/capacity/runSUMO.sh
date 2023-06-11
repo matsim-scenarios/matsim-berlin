@@ -17,6 +17,7 @@ ENV="/net/ils/matsim-berlin/capacity/env"
 export LD_LIBRARY_PATH="$ENV/lib64:$ENV/lib:$LD_LIBRARY_PATH"
 export SUMO_HOME="$ENV/bin"
 
+# use with -t 1-10
 idx=$((SGE_TASK_ID - 1))
 total=$SGE_TASK_LAST
 

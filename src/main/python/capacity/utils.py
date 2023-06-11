@@ -40,30 +40,30 @@ def vehicle_parameter(scenario):
 
     if scenario == "base":
         return """
-            <vType id="vehCV" probability="0.99" color="1,0,0" vClass="passenger" impatience="0.2"/>
+            <vType id="vehCV" probability="0.99" color="1,0,0" vClass="passenger" impatience="0.1"/>
             <vType id="vehAV" probability="0.01" color="0,1,0" vClass="passenger" decel="3.0" sigma="0.1" tau="1.5" speedFactor="1" speedDev="0" />
         """
 
     elif scenario == "sst":
         return """
-            <vType id="vehCV" probability="0.9" color="1,0,0" vClass="passenger" impatience="0.2"/>
+            <vType id="vehCV" probability="0.9" color="1,0,0" vClass="passenger" impatience="0.1"/>
             <vType id="vehAV" probability="0.1" color="0,1,0" vClass="passenger" decel="3.0" sigma="0.1" tau="1.3" speedFactor="1" speedDev="0" />
         """
 
     elif scenario == "st":  # 5-10 years
         return """
-            <vType id="vehCV" probability="0.7" color="1,0,0" vClass="passenger" impatience="0.2"/>
+            <vType id="vehCV" probability="0.7" color="1,0,0" vClass="passenger" impatience="0.1"/>
             <vType id="vehAV" probability="0.3" color="0,1,0" vClass="passenger" decel="3.0" sigma="0.1" tau="1.2" speedFactor="1" speedDev="0" />
         """
     elif scenario == "mt":  # 15-20 years
         return """
-            <vType id="vehCV" probability="0.3" color="1,0,0" vClass="passenger" impatience="0.2"/>
+            <vType id="vehCV" probability="0.3" color="1,0,0" vClass="passenger" impatience="0.1"/>
             <vType id="vehAV" probability="0.55" color="0,1,0" vClass="passenger" decel="4.5" sigma="0.05" tau="0.9" speedFactor="1" speedDev="0" />
             <vType id="vehACV" probability="0.15" color="0,0,1" vClass="passenger" minGap="1" accel="2.6" decel="4.5" sigma="0.05" tau="0.8" speedFactor="1" speedDev="0" impatience="0"/>
         """
     elif scenario == "lt":  # 25+ years
         return """
-            <vType id="vehCV" probability="0.05" color="1,0,0" vClass="passenger" impatience="0.2"/>
+            <vType id="vehCV" probability="0.05" color="1,0,0" vClass="passenger" impatience="0.1"/>
             <vType id="vehAV" probability="0.15" color="0,1,0" vClass="passenger" decel="4.5" sigma="0.05" tau="0.9" speedFactor="1" speedDev="0" />
             <vType id="vehACV" probability="0.8" color="0,0,1" vClass="passenger" minGap="0.5" accel="2.6" decel="4.5" sigma="0" tau="0.6" speedFactor="1" speedDev="0" impatience="0.8"/>
     """
