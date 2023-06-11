@@ -114,6 +114,8 @@ $p/berlin-v6.1-network.xml.gz: input/sumo.net.xml
 
 	$(sc) prepare clean-network $@ --output $@ --modes car
 
+	$(sc) prepare sample-network --network $@
+
 $p/berlin-v6.1-network-with-pt.xml.gz: $p/berlin-v6.1-network.xml.gz
 	$(sc) prepare transit-from-gtfs --network $< --output=$p\
 	 --name berlin-v6.1 --date "2023-06-07" --target-crs $(CRS) \
