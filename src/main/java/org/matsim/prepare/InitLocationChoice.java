@@ -333,7 +333,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		return dist >= lower && dist <= upper;
 	}
 
-	private Coord rndCoord(SplittableRandom rnd, double dist, Coord origin) {
+	static Coord rndCoord(SplittableRandom rnd, double dist, Coord origin) {
 		var angle = rnd.nextDouble() * Math.PI * 2;
 
 		var x = Math.cos(angle) * dist;

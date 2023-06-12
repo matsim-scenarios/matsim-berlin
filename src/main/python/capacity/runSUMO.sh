@@ -16,7 +16,7 @@ source env/bin/activate
 ENV="/net/ils/matsim-berlin/capacity/env"
 
 export LD_LIBRARY_PATH="$ENV/lib64:$ENV/lib:$LD_LIBRARY_PATH"
-export SUMO_HOME="$ENV/bin"
+export SUMO_HOME="$ENV/share/sumo/"
 
 # use with -t 1-10
 idx=$((SGE_TASK_ID - 1))
@@ -24,11 +24,11 @@ total=$SGE_TASK_LAST
 
 scenario="base"
 
-f="output-junctions/scenario-$scenario"
+f="output-edges/scenario-$scenario"
 
-command="python -u junction_volumes.py intersections.txt --scenario $scenario --network sumo.net.xml --output $f --runner runner/${JOB_ID}${SGE_TASK_ID} --runner-index $idx --runner-total $total"
+#command="python -u junction_volumes.py intersections.txt --scenario $scenario --network sumo.net.xml --output $f --runner runner/${JOB_ID}${SGE_TASK_ID} --runner-index $idx --runner-total $total"
 
-#command="python -u edge_volumes.py sample.csv --scenario $scenario--network sumo.net.xml --output $f --runner runner${JOB_ID}${SGE_TASK_ID} --runner-index $idx --runner-total $total"
+command="python -u edge_volumes.py links.txt --scenario $scenario --network sumo.net.xml --output $f --runner runner/${JOB_ID}${SGE_TASK_ID} --runner-index $idx --runner-total $total"
 
 echo ""
 echo "command is $command"
@@ -36,5 +36,3 @@ echo ""
 
 $command
 python results.py --output $f --result $f.csv
-
-
