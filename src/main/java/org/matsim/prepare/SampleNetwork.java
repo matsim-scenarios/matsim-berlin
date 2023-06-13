@@ -68,6 +68,24 @@ public class SampleNetwork implements MATSimAppCommand {
 		return BigDecimal.valueOf(c.x).setScale(2, RoundingMode.HALF_UP) + " " + BigDecimal.valueOf(c.y).setScale(2, RoundingMode.HALF_UP);
 	}
 
+	/**
+	 * Random coord in the same direction as a link.
+	 */
+	static Coord rndCoord(SplittableRandom rnd, double dist, Link link) {
+
+		Coord v = link.getFromNode().getCoord();
+		Coord u = link.getToNode().getCoord();
+
+		var angle = Math.atan2(u.getY() - v.getY(), u.getX() - v.getX());
+
+		var sample = angle + rnd.nextDouble(-0.2, 0.2) * Math.PI * 2;
+
+		var x = Math.cos(sample) * dist;
+		var y = Math.sin(sample) * dist;
+
+		return new Coord(RunOpenBerlinCalibration.roundNumber(v.getX() + x), RunOpenBerlinCalibration.roundNumber(v.getY() + y));
+	}
+
 	@Override
 	public Integer call() throws Exception {
 
@@ -144,9 +162,9 @@ public class SampleNetwork implements MATSimAppCommand {
 
 				Link link = links.get(rnd.nextInt(0, links.size()));
 
-				Coord dest = InitLocationChoice.rndCoord(rnd, 5000, link.getCoord());
+				Coord dest = rndCoord(rnd, 5000, link);
 
-				Link to = NetworkUtils.getNearestLink(network, dest);
+				Link to = NetworkUtils.getNearestRightEntryLink(network, dest);
 
 				LeastCostPathCalculator.Path path = router.calcLeastCostPath(link.getFromNode(), to.getToNode(), 0, null, null);
 
@@ -164,11 +182,11 @@ public class SampleNetwork implements MATSimAppCommand {
 				Polygon simplified = (Polygon) TopologyPreservingSimplifier.simplify(polygon, 30);
 
 				csv.print(link.getId());
-				csv.print(to.getId());
+				csv.print(path.links.get(path.links.size() - 1).getId());
 				csv.print(minCapacity);
 				csv.print(path.travelTime);
 				csv.print(
-					" POLYGON((" +
+					"POLYGON((" +
 						Arrays.stream(simplified.getCoordinates()).map(SampleNetwork::toString).collect(Collectors.joining(","))
 						+ "))"
 				);
