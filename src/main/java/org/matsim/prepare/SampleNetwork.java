@@ -60,13 +60,6 @@ public class SampleNetwork implements MATSimAppCommand {
 	}
 
 	/**
-	 * Coordinate as string.
-	 */
-	private static String toString(Coordinate c) {
-		return BigDecimal.valueOf(c.x).setScale(2, RoundingMode.HALF_UP) + " " + BigDecimal.valueOf(c.y).setScale(2, RoundingMode.HALF_UP);
-	}
-
-	/**
 	 * Random coord in the same direction as a link.
 	 */
 	static Coord rndCoord(SplittableRandom rnd, double dist, Link link) {
