@@ -220,7 +220,7 @@ $p/berlin-freightTraffic-$V-25pct.plans.xml.gz:
 	 --jspritIterations 1\
 	 --creationOption createNewCarrierFile\
 	 --landuseConfiguration useOSMBuildingsAndLanduse\
-	 --trafficType businessTraffic\
+	 --trafficType freightTraffic\
 	 --zoneShapeFileName $(berlin)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp\
 	 --buildingsShapeFileName $(berlin)/input/shp/buildings_BerlinBrandenburg_4326.shp\
 	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
@@ -267,7 +267,7 @@ eval-opt: $p/berlin-initial-$V-25pct.experienced_plans.xml.gz
 
 
 # These depend on the output of optimization runs
-$p/berlin-$V-25pct.plans.xml.gz:  $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz $p/berlin-freightTraffic-$V-25pct.plans.xml.gz $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
+$p/berlin-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz $p/berlin-freightTraffic-$V-25pct.plans.xml.gz $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
 	$(sc) prepare filter-relevant-agents\
 	 --input $p/berlin-$V-25pct.plans_log_error.xml.gz --output $@\
 	 --shp input/v6.0/area/area.shp\
@@ -282,8 +282,7 @@ $p/berlin-$V-25pct.plans.xml.gz:  $p/berlin-$V-facilities.xml.gz $p/berlin-$V-ne
 
 	$(sc) prepare fix-subtour-modes --input $@ --output $@
 
-	# TODO Business traffic has colliding ids
-	$(sc) prepare merge-populations $@ $(word 4,$^)\
+	$(sc) prepare merge-populations $@ $(word 3,$^) $(word 4,$^)\
 		--output $@
 
 	$(sc) prepare downsample-population $@\

@@ -227,7 +227,7 @@ public class SampleNetwork implements MATSimAppCommand {
 
 		private final SplittableRandom rnd;
 
-		public RandomizedTravelTime(SplittableRandom rnd) {
+		RandomizedTravelTime(SplittableRandom rnd) {
 			this.rnd = rnd;
 		}
 
