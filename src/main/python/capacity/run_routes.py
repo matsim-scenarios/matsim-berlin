@@ -72,6 +72,7 @@ def read_result(out):
 
     return pd.DataFrame(data)
 
+
 def run(args, routes, location_offset):
     i = 0
 
@@ -101,9 +102,14 @@ def run(args, routes, location_offset):
 
         write_scenario(p_scenario, basename(p_network), basename(p_routes), basename(p_detector), args.step_length, end)
 
-        go(p_scenario, p_network, end, route.fromEdge + "_" + route.toEdge, args)
+        try:
+            go(p_scenario, p_network, end, route.fromEdge + "_" + route.toEdge, args)
+        except Exception as e:
+            print("Exception in route:", e)
+
         print("####################################################################")
         print("[" + str(i) + " / " + str(args.to_index - args.from_index) + "]")
+
 
 def go(scenario, network, end, f, args):
     # Clean existing output
