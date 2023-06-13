@@ -6,10 +6,8 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.LineString;
-import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.*;
+import org.locationtech.jts.io.WKTWriter;
 import org.locationtech.jts.simplify.TopologyPreservingSimplifier;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.network.Link;
@@ -153,6 +151,8 @@ public class SampleNetwork implements MATSimAppCommand {
 		List<? extends Link> links = new ArrayList<>(network.getLinks().values());
 
 		GeometryFactory f = new GeometryFactory();
+		WKTWriter w = new WKTWriter();
+		w.setPrecisionModel(new PrecisionModel(1));
 
 		try (CSVPrinter csv = new CSVPrinter(Files.newBufferedWriter(output.getPath("routes.txt")), CSVFormat.DEFAULT)) {
 
@@ -185,11 +185,7 @@ public class SampleNetwork implements MATSimAppCommand {
 				csv.print(path.links.get(path.links.size() - 1).getId());
 				csv.print(minCapacity);
 				csv.print(path.travelTime);
-				csv.print(
-					"POLYGON((" +
-						Arrays.stream(simplified.getCoordinates()).map(SampleNetwork::toString).collect(Collectors.joining(","))
-						+ "))"
-				);
+				csv.print(w.write(simplified));
 
 				csv.println();
 

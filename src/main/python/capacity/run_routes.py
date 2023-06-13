@@ -4,6 +4,7 @@
 import os
 import sys
 from os.path import join, basename
+from traceback import print_exc
 
 from utils import init_env, init_workload, create_args, write_scenario, filter_network_polygon, vehicle_parameter
 
@@ -66,7 +67,7 @@ def read_result(out):
             "edgeId": elem.attrib["id"]
         }
         for a in ("traveltime", "density", "waitingTime", "timeLoss", "speed", "speedRelative"):
-            d[a] = float(elem.attrib[a])
+            d[a] = float(elem.attrib.get(a, float("nan")))
 
         data.append(d)
 
@@ -105,7 +106,7 @@ def run(args, routes, location_offset):
         try:
             go(p_scenario, p_network, end, route.fromEdge + "_" + route.toEdge, args)
         except Exception as e:
-            print("Exception in route:", e)
+            print_exc()
 
         print("####################################################################")
         print("[" + str(i) + " / " + str(args.to_index - args.from_index) + "]")
@@ -133,7 +134,7 @@ def go(scenario, network, end, f, args):
     traci.close()
 
     res = read_result(out)
-    res.to_csv(join(args.output, f"{f}.csv"), index=False)
+    res.to_csv(join(args.output, f + ".csv"), index=False)
 
     sys.stdout.flush()
 
