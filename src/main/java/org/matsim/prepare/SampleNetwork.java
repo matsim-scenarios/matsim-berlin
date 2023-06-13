@@ -28,7 +28,6 @@ import org.matsim.core.router.FastDijkstraFactory;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
 import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.router.util.TravelTime;
-import org.matsim.core.trafficmonitoring.FreeSpeedTravelTime;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.vehicles.Vehicle;
 import picocli.CommandLine;
@@ -45,7 +44,7 @@ import java.util.stream.Collectors;
 	name = "sample-network",
 	description = "Sample nodes and junctions ids from network"
 )
-@CommandSpec(requireNetwork = true, produces = {"intersections.txt", "links.txt", "routes.txt"})
+@CommandSpec(requireNetwork = true, produces = {"intersections.txt", "edges.txt", "routes.txt"})
 public class SampleNetwork implements MATSimAppCommand {
 	private static final Logger log = LogManager.getLogger(SampleNetwork.class);
 
@@ -66,7 +65,7 @@ public class SampleNetwork implements MATSimAppCommand {
 	 * Coordinate as string.
 	 */
 	private static String toString(Coordinate c) {
-		return BigDecimal.valueOf(c.x).setScale(2, RoundingMode.HALF_UP) + "," + BigDecimal.valueOf(c.y).setScale(2, RoundingMode.HALF_UP);
+		return BigDecimal.valueOf(c.x).setScale(2, RoundingMode.HALF_UP) + " " + BigDecimal.valueOf(c.y).setScale(2, RoundingMode.HALF_UP);
 	}
 
 	@Override
@@ -99,7 +98,7 @@ public class SampleNetwork implements MATSimAppCommand {
 			n -> (Double) n.getAttributes().getAttribute("allowed_speed"), Collectors.toList()
 		));
 
-		try (BufferedWriter links = Files.newBufferedWriter(output.getPath("links.txt"))) {
+		try (BufferedWriter links = Files.newBufferedWriter(output.getPath("edges.txt"))) {
 
 			for (Map.Entry<Double, ? extends List<? extends Link>> e : bySpeed.entrySet()) {
 
@@ -160,17 +159,18 @@ public class SampleNetwork implements MATSimAppCommand {
 
 				LineString lineString = f.createLineString(path.nodes.stream().map(n -> MGC.coord2Point(n.getCoord()).getCoordinate()).toArray(Coordinate[]::new));
 
-				Polygon polygon = (Polygon) lineString.buffer(60);
-				// min capacity along the route
+				Polygon polygon = (Polygon) lineString.buffer(100);
 
-				Polygon simplified = (Polygon) TopologyPreservingSimplifier.simplify(polygon, 25);
+				Polygon simplified = (Polygon) TopologyPreservingSimplifier.simplify(polygon, 30);
 
 				csv.print(link.getId());
 				csv.print(to.getId());
 				csv.print(minCapacity);
 				csv.print(path.travelTime);
 				csv.print(
-					Arrays.stream(simplified.getCoordinates()).map(SampleNetwork::toString).collect(Collectors.joining(","))
+					" POLYGON((" +
+						Arrays.stream(simplified.getCoordinates()).map(SampleNetwork::toString).collect(Collectors.joining(","))
+						+ "))"
 				);
 
 				csv.println();
@@ -188,7 +188,7 @@ public class SampleNetwork implements MATSimAppCommand {
 	private Network createCityNetwork(Network network) {
 
 		NetworkFilterManager filter = new NetworkFilterManager(network, new NetworkConfigGroup());
-		filter.addLinkFilter(l -> !NetworkUtils.getHighwayType(l).startsWith("primary"));
+		filter.addLinkFilter(l -> !NetworkUtils.getHighwayType(l).startsWith("motorway"));
 
 		Network net = filter.applyFilters();
 
@@ -209,8 +209,6 @@ public class SampleNetwork implements MATSimAppCommand {
 
 	private static final class RandomizedTravelTime implements TravelTime {
 
-		private final FreeSpeedTravelTime tt = new FreeSpeedTravelTime();
-
 		private final Object2DoubleMap<Link> factors = new Object2DoubleOpenHashMap<>();
 
 		private final SplittableRandom rnd;
@@ -225,7 +223,15 @@ public class SampleNetwork implements MATSimAppCommand {
 
 		@Override
 		public double getLinkTravelTime(Link link, double time, Person person, Vehicle vehicle) {
-			return tt.getLinkTravelTime(link, time, person, vehicle) * factors.computeIfAbsent(link, l -> rnd.nextDouble(0.8, 1.2));
+			String type = NetworkUtils.getHighwayType(link);
+
+			double f = factors.computeIfAbsent(link, l -> rnd.nextDouble(0.5, 1.5));
+			// Main roads are avoided
+			if (type.startsWith("primary") || type.startsWith("secondary"))
+				f = 1.5;
+
+			double speed = link.getLength() / Math.max(link.getFreespeed(time), 8.3);
+			return speed * f;
 		}
 	}
 

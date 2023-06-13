@@ -5,6 +5,8 @@ import os
 import sys
 from subprocess import call
 
+from shapely import wkt
+from shapely.ops import transform
 
 def create_args(description):
     import sumolib
@@ -131,6 +133,21 @@ def filter_network(netconvert, netfile, edge, output, args=None):
     if args:
         cmd += args
 
+    cmd += ['-o', output]
+
+    call(cmd)
+
+
+def filter_network_polygon(netconvert, netfile, location_offset, geometry, output):
+    """ Filter network with a list of polygon coordinates"""
+
+    polygon = wkt.loads(geometry)
+
+    polygon = transform(lambda x, y: (x + location_offset[0], y + location_offset[1]), polygon)
+
+    coords = ",".join("%.2f,%.2f" % f for f in polygon.exterior.coords)
+
+    cmd = [netconvert, '-s', netfile, "--keep-edges.in-boundary", coords, "--no-internal-links", "false"]
     cmd += ['-o', output]
 
     call(cmd)

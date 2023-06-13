@@ -22,13 +22,12 @@ export SUMO_HOME="$ENV/share/sumo/"
 idx=$((SGE_TASK_ID - 1))
 total=$SGE_TASK_LAST
 
+mode="routes"
 scenario="base"
 
-f="output-edges/scenario-$scenario"
+f="output-${mode}/scenario-$scenario"
 
-#command="python -u junction_volumes.py intersections.txt --scenario $scenario --network sumo.net.xml --output $f --runner runner/${JOB_ID}${SGE_TASK_ID} --runner-index $idx --runner-total $total"
-
-command="python -u edge_volumes.py links.txt --scenario $scenario --network sumo.net.xml --output $f --runner runner/${JOB_ID}${SGE_TASK_ID} --runner-index $idx --runner-total $total"
+command="python -u run_${mode}.py ${mode}.txt --scenario $scenario --network sumo.net.xml --output $f --runner runner/${JOB_ID}${SGE_TASK_ID} --runner-index $idx --runner-total $total"
 
 echo ""
 echo "command is $command"

@@ -57,7 +57,6 @@ def writeRouteFile(f_name, departLane, arrivalLane, edges, veh, scenario):
     with open(f_name, "w") as f:
         f.write(text.format(**context))
 
-
 def writeDetectorFile(f_name, output, lane, laneNr, scale):
     text = """<?xml version="1.0" encoding="UTF-8"?>
 
