@@ -32,8 +32,6 @@ import picocli.CommandLine;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -52,7 +50,7 @@ public class SampleNetwork implements MATSimAppCommand {
 	@CommandLine.Mixin
 	private OutputOptions output = OutputOptions.ofCommand(SampleNetwork.class);
 
-	@CommandLine.Option(names = "--sample-size", description = "Number of samples to collect for each category.", defaultValue = "2000")
+	@CommandLine.Option(names = "--sample-size", description = "Number of samples to collect for each category.", defaultValue = "2200")
 	private int sample;
 
 	public static void main(String[] args) {
@@ -103,9 +101,11 @@ public class SampleNetwork implements MATSimAppCommand {
 			}
 		}
 
-		Map<Double, ? extends List<? extends Link>> bySpeed = network.getLinks().values().stream().collect(Collectors.groupingBy(
-			n -> (Double) n.getAttributes().getAttribute("allowed_speed"), Collectors.toList()
-		));
+		Map<Double, ? extends List<? extends Link>> bySpeed = network.getLinks().values().stream()
+			.filter(l -> !"traffic_light".equals(l.getToNode().getAttributes().getAttribute("type")))
+			.collect(Collectors.groupingBy(
+				n -> (Double) n.getAttributes().getAttribute("allowed_speed"), Collectors.toList()
+			));
 
 		try (BufferedWriter links = Files.newBufferedWriter(output.getPath("edges.txt"))) {
 
@@ -151,13 +151,13 @@ public class SampleNetwork implements MATSimAppCommand {
 
 			csv.printRecord("fromEdge", "toEdge", "min_capacity", "travel_time", "geometry");
 
-			for (int i = 0; i < sample; i++) {
+			for (int i = 0; i < 3000; i++) {
 
 				Link link = links.get(rnd.nextInt(0, links.size()));
 
-				Coord dest = rndCoord(rnd, 5000, link);
+				Coord dest = rndCoord(rnd, 6000, link);
 
-				Link to = NetworkUtils.getNearestRightEntryLink(network, dest);
+				Link to = NetworkUtils.getNearestLink(network, dest);
 
 				LeastCostPathCalculator.Path path = router.calcLeastCostPath(link.getFromNode(), to.getToNode(), 0, null, null);
 
