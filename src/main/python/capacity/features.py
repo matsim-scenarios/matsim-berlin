@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+import os.path
 from argparse import ArgumentParser
 
 import lxml.etree as ET
@@ -121,49 +121,77 @@ def read_network(sumo_network):
     return pd.DataFrame(data), pd.DataFrame(data_conns)
 
 
-def read_edges(sumo_network):
+def read_edges(folder):
+    """ Combine resulting files for edges """
+
     data = []
-
-    edges = {}
-    junctions = {}
-
-    for _, elem in ET.iterparse(sumo_network, events=("end",),
-                                tag=('edge', 'junction'),
-                                remove_blank_text=True):
-
-        if elem.tag == "edge":
-            edges[elem.attrib["id"]] = elem
-            continue
-        elif elem.tag == "junction":
-            junctions[elem.attrib["id"]] = elem
+    for f in os.listdir(folder):
+        if not f.endswith(".csv"):
             continue
 
-    for k, v in edges.items():
-        lane = v.find("lane")
+        df = pd.read_csv(os.path.join(folder, f))
+        edge_id = df.iloc[0].edgeId
 
-        f = junctions[v.attrib["from"]]
-        t = junctions[v.attrib["to"]]
+        aggr = df.groupby("laneId").agg(capacity=("flow", "max"))
 
         data.append({
-            "edgeId": k,
-            "name": v.attrib.get("name", ""),
-            "from": v.attrib["from"],
-            "to": v.attrib["to"],
-            "type": v.attrib["type"],
-            "speed": lane.attrib["speed"],
-            "length": float(lane.attrib["length"]),
-            "numLanes": len(v.findall("lane")),
-            "fromType": f.attrib["type"],
-            "toType": t.attrib["type"]
+            "edgeId": edge_id,
+            "capacity": float(aggr.capacity.mean())
         })
 
     return pd.DataFrame(data)
 
 
+def read_intersections(folder):
+    """ Read intersection results """
+
+    data = []
+    for f in os.listdir(folder):
+        if not f.endswith(".csv"):
+            continue
+
+        try:
+            df = pd.read_csv(os.path.join(folder, f))
+        except pd.errors.EmptyDataError:
+            print("Empty csv", f)
+            continue
+
+        # there could be exclusive lanes and the capacity to two edges completely additive
+        # however if the capacity is shared one direction could use way more than physical possible
+        aggr = df.groupby("fromEdgeId").agg(capacity=("flow", "max")).reset_index()
+        aggr.rename(columns={"fromEdgeId": "edgeId"})
+
+        data.append(aggr)
+
+    return pd.concat(data)
+
+
+def read_routes(folder):
+    """ Read routes from folder """
+    data = []
+    for f in os.listdir(folder):
+        if not f.endswith(".csv"):
+            continue
+
+        try:
+            df = pd.read_csv(os.path.join(folder, f))
+        except pd.errors.EmptyDataError:
+            print("Empty csv", f)
+            continue
+
+        data.append(df)
+
+    df = pd.concat(data)
+    aggr = df.groupby("edgeId").mean()
+
+    return aggr.reset_index()
+
+
 if __name__ == "__main__":
     parser = ArgumentParser(description="Util to convert data to csv")
 
-    parser.add_argument("mode", nargs='?', help="Convert result file that create with one of the run scripts")
+    parser.add_argument("mode", nargs='?', help="Convert result file that create with one of the run scripts",
+                        choices=["edges", "intersections", "routes"])
     parser.add_argument("--network", help="Path to sumo network")
     parser.add_argument("--input", help="Path to input file for conversion")
 
@@ -176,4 +204,22 @@ if __name__ == "__main__":
         edges.to_csv(args.network.replace(".xml", "-edges.csv.gz"), index=False)
         conns.to_csv(args.network.replace(".xml", "-conns.csv.gz"), index=False)
 
-    # TODO: collect aggregated results, replace the result txt
+    df = None
+
+    if args.input:
+
+        if args.mode == "edges":
+            df = read_edges(args.input)
+
+        elif args.mode == "intersections":
+            df = read_intersections(args.input)
+
+        elif args.mode == "routes":
+            df = read_routes(args.input)
+
+        if df is not None:
+            base = os.path.basename(args.input.rstrip("/"))
+            df.to_csv(f"result_{args.mode}_{base}.csv", index=False)
+
+    else:
+        print("Skipping results, because --input is not given")

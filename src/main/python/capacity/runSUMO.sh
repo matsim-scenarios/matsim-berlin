@@ -34,4 +34,4 @@ echo "command is $command"
 echo ""
 
 $command
-python results.py --output $f --result $f.csv
+python features.py $mode --output $f
