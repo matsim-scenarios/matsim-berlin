@@ -1,4 +1,4 @@
-package org.matsim.legacy.prepare.berlinCounts;
+package org.matsim.prepare.counts;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,11 +30,48 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-// TODO: these are somehow processed volumes and not raw counts
-@CommandLine.Command(name = "create-counts", description = "creates MATSim counts from FIS Broker count data")
-public class CreateCountsFromOpenData implements MATSimAppCommand {
+/**
+ * Data can be obtained at Data portal from Berlin:
+ * <a href="https://fbinter.stadt-berlin.de/fb/?loginkey=alphaDataStart&alphaDataId=s_vmengen2019@senstadt">GeoPortal Berlin</a>
+ */
+@CommandLine.Command(name = "counts-from-geoportal", description = "Creates MATSim counts from Berlin FIS Broker count data")
+public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 
-	private static final Logger log = LogManager.getLogger(CreateCountsFromOpenData.class);
+
+	/**
+	 * TODO
+	 *
+	 * Counts class has not the right structure
+	 *
+	 * one station need to be matched to multiple links (because of both directions)
+	 *
+	 * mapping.csv:
+	 *
+	 * stationId;linkId
+	 *
+	 * (station id can occur multiple times)
+	 *
+	 *
+	 * counts.csv:
+	 *
+	 * stationId;geometry;volume
+	 *
+	 *
+	 *
+	 * Analysis Class:
+	 *
+	 * mapping + counts als Input
+	 *
+	 * comparison.csv:
+	 *
+	 * stationId;observed_volume;simulated_volume
+	 *
+	 *
+	 *
+	 */
+
+
+	private static final Logger log = LogManager.getLogger(CreateCountsFromGeoPortalBerlin.class);
 
 	@CommandLine.Option(names = "--network", description = "Network file path", required = true)
 	private String networkFilePath;
@@ -55,7 +92,7 @@ public class CreateCountsFromOpenData implements MATSimAppCommand {
 	private final Counts<Link> freight = new Counts<>();
 
 	public static void main(String[] args) {
-		new CreateCountsFromOpenData().execute(args);
+		new CreateCountsFromGeoPortalBerlin().execute(args);
 	}
 
 	@Override

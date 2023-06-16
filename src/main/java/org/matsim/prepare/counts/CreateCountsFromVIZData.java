@@ -1,4 +1,4 @@
-package org.matsim.legacy.prepare.berlinCounts;
+package org.matsim.prepare.counts;
 
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.logging.log4j.LogManager;
@@ -28,8 +28,16 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-@CommandLine.Command(name = "counts-from-viz", description = "creates MATSim counts from VIZ data.")
+/**
+ * Data can be obtained at <a href="https://api.viz.berlin.de/daten/verkehrsdetektion">VIZ</a>
+ */
+@CommandLine.Command(name = "counts-from-viz", description = "Creates MATSim counts from VIZ data.")
 public class CreateCountsFromVIZData implements MATSimAppCommand {
+
+	/**
+	 * TODO: adapt to the newest network index
+	 * try with detailed geometries
+	 */
 
 	@CommandLine.Option(names = "--input", description = "input excel file", required = true)
 	private Path input;
