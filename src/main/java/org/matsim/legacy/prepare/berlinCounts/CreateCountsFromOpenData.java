@@ -19,7 +19,7 @@ import org.matsim.core.network.filter.NetworkFilterManager;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.counts.Counts;
 import org.matsim.counts.CountsWriter;
-import org.matsim.legacy.run.RunOpenBerlinScenario;
+import org.matsim.run.RunOpenBerlinScenario;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.MathTransform;

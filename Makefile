@@ -15,7 +15,7 @@ SHP_FILES=$(patsubst %, input/shp/%-latest-free.shp.zip, $(REGIONS))
 osmosis := osmosis/bin/osmosis
 
 # Scenario creation tool
-sc := java -Xmx$(MEMORY) -XX:+UseParallelGC -cp $(JAR) org.matsim.synthetic.RunOpenBerlinCalibration
+sc := java -Xmx$(MEMORY) -XX:+UseParallelGC -cp $(JAR) org.matsim.prepare.RunOpenBerlinCalibration
 
 .PHONY: prepare
 
@@ -60,7 +60,7 @@ $(berlin)/input/shp/Planungsraum_EPSG_25833.shp:
 input/network.osm: input/brandenburg.osm.pbf
 
 	$(osmosis) --rb file=$<\
-	 --tf accept-ways highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction,residential\
+	 --tf accept-ways highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction,residential,living_street\
 	 --bounding-polygon file="$p/area/area.poly"\
 	 --used-node --wb input/network-detailed.osm.pbf
 
@@ -91,7 +91,7 @@ input/sumo.net.xml: input/network.osm
 	 --osm-files $< -o=$@
 
 
-$p/berlin-$V-network.xml.gz: #input/sumo.net.xml
+$p/berlin-$V-network.xml.gz:
 	# Use 5.x network
 	$(sc) prepare reproject-network\
 	 --input $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz\
@@ -101,26 +101,26 @@ $p/berlin-$V-network.xml.gz: #input/sumo.net.xml
 	 --input-crs EPSG:31468\
 	 --target-crs $(CRS)
 
-#	$(sc) prepare network-from-sumo $<\
-	 --output $@
-
-#	$(sc) prepare clean-network $@ --output $@ --modes car
 
 $p/berlin-$V-network-with-pt.xml.gz: $p/berlin-$V-network.xml.gz
-
 	# Copy 5.x network stuff
 	cp $< $@
 	cp $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-transit-vehicles.xml.gz $p/berlin-v6.0-transitVehicles.xml.gz
 
-#	$(sc) prepare transit-from-gtfs --network $< --output=$p\
-	 --name berlin-$V --date "2023-01-11" --target-crs $(CRS) \
-	 ../shared-svn/projects/DiTriMo/data/gtfs/20230113_regio.zip\
-	 ../shared-svn/projects/DiTriMo/data/gtfs/20230113_train_short.zip\
-	 ../shared-svn/projects/DiTriMo/data/gtfs/20230113_train_long.zip\
-	 --prefix regio_,short_,long_\
-	 --shp $p/area/area.shp\
-	 --shp $p/area/area.shp\
-	 --shp $p/area/area.shp
+
+# TODO: Will be the updated network
+$p/berlin-v6.1-network.xml.gz: input/sumo.net.xml
+	$(sc) prepare network-from-sumo $< --output $@
+
+	$(sc) prepare clean-network $@ --output $@ --modes car
+
+	$(sc) prepare sample-network --network $@
+
+$p/berlin-v6.1-network-with-pt.xml.gz: $p/berlin-v6.1-network.xml.gz
+	$(sc) prepare transit-from-gtfs --network $< --output=$p\
+	 --name berlin-v6.1 --date "2023-06-07" --target-crs $(CRS) \
+	 $(germany)/gtfs/complete-pt-2023-06-06.zip\
+	 --shp $p/pt-area/pt-area.shp
 
 # TODO: naming scheme must be updated
 $p/berlin-$V-car-counts.xml.gz: $p/berlin-$V-network.xml.gz
@@ -129,7 +129,6 @@ $p/berlin-$V-car-counts.xml.gz: $p/berlin-$V-network.xml.gz
 	 --shp $(berlin)/Verkehrsmengen_DTVw_2019.zip\
 	 --output $p/berlin-$V-
 	# TODO: output argument not ideal
-
 
 $p/berlin-$V-counts-car-vmz.xml.gz:
 	$(sc) prepare counts-from-vmz\
@@ -221,7 +220,7 @@ $p/berlin-freightTraffic-$V-25pct.plans.xml.gz:
 	 --jspritIterations 1\
 	 --creationOption createNewCarrierFile\
 	 --landuseConfiguration useOSMBuildingsAndLanduse\
-	 --trafficType businessTraffic\
+	 --trafficType freightTraffic\
 	 --zoneShapeFileName $(berlin)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp\
 	 --buildingsShapeFileName $(berlin)/input/shp/buildings_BerlinBrandenburg_4326.shp\
 	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
@@ -268,7 +267,7 @@ eval-opt: $p/berlin-initial-$V-25pct.experienced_plans.xml.gz
 
 
 # These depend on the output of optimization runs
-$p/berlin-$V-25pct.plans.xml.gz:  $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz $p/berlin-freightTraffic-$V-25pct.plans.xml.gz $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
+$p/berlin-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz $p/berlin-freightTraffic-$V-25pct.plans.xml.gz $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
 	$(sc) prepare filter-relevant-agents\
 	 --input $p/berlin-$V-25pct.plans_log_error.xml.gz --output $@\
 	 --shp input/v6.0/area/area.shp\
@@ -276,14 +275,19 @@ $p/berlin-$V-25pct.plans.xml.gz:  $p/berlin-$V-facilities.xml.gz $p/berlin-$V-ne
 	 --network $(word 2,$^)
 
 	$(sc) prepare split-activity-types-duration\
+ 	 --exclude start,end\
 	 --input $@ --output $@
 
-	$(sc) prepare merge-populations $@ $(word 3,$^)  $(word 4,$^)\
+	$(sc) prepare check-car-avail --input $@ --output $@ --mode walk
+
+	$(sc) prepare fix-subtour-modes --input $@ --output $@
+
+	$(sc) prepare merge-populations $@ $(word 3,$^) $(word 4,$^)\
 		--output $@
 
 	$(sc) prepare downsample-population $@\
 		 --sample-size 0.25\
-		 --samples 0.1 0.01\
+		 --samples 0.1 0.01 0.001\
 
 prepare-calibration: $p/berlin-initial-$V-25pct.plans.xml.gz
 	echo "Done"

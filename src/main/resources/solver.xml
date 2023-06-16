@@ -5,13 +5,13 @@
 	<environmentMode>REPRODUCIBLE</environmentMode>
 	<moveThreadCount>4</moveThreadCount>
 
-	<solutionClass>org.matsim.synthetic.opt.PlanAssignmentProblem</solutionClass>
-	<entityClass>org.matsim.synthetic.opt.PlanPerson</entityClass>
+	<solutionClass>org.matsim.prepare.opt.PlanAssignmentProblem</solutionClass>
+	<entityClass>org.matsim.prepare.opt.PlanPerson</entityClass>
 
 
 	<!-- Define the score function -->
 	<scoreDirectorFactory>
-		<incrementalScoreCalculatorClass>org.matsim.synthetic.opt.ScoreCalculator</incrementalScoreCalculatorClass>
+		<incrementalScoreCalculatorClass>org.matsim.prepare.opt.ScoreCalculator</incrementalScoreCalculatorClass>
 	</scoreDirectorFactory>
 
 	<!-- Configure the optimization algorithms -->
@@ -34,7 +34,7 @@
 
 			<moveIteratorFactory>
 				<fixedProbabilityWeight>0.15</fixedProbabilityWeight>
-				<moveIteratorFactoryClass>org.matsim.synthetic.opt.LargeShuffleMoveSelector</moveIteratorFactoryClass>
+				<moveIteratorFactoryClass>org.matsim.prepare.opt.LargeShuffleMoveSelector</moveIteratorFactoryClass>
 			</moveIteratorFactory>
 
 		</unionMoveSelector>
