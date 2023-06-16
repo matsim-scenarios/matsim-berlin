@@ -1,4 +1,4 @@
-package org.matsim.legacy.prepare.berlinCounts;
+package org.matsim.prepare.counts;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

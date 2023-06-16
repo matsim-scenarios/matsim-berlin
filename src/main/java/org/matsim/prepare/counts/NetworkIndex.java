@@ -1,4 +1,4 @@
-package org.matsim.legacy.prepare.berlinCounts;
+package org.matsim.prepare.counts;
 
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.index.strtree.STRtree;
@@ -14,6 +14,14 @@ import java.util.List;
  * can be used to create counts
  */
 public class NetworkIndex<T> {
+
+	/*
+		TODO: use network index from matsim-libs
+
+		features matching with detailed geometries
+		IDEA: read link geometries and use detailed linestring, instead of simple ones
+
+	 */
 
 	private STRtree index = new STRtree();
 	private final double range;
