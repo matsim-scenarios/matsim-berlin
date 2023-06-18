@@ -1,4 +1,4 @@
-package org.matsim.prepare;
+package org.matsim.prepare.network;
 
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
@@ -27,6 +27,7 @@ import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
 import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.utils.geometry.geotools.MGC;
+import org.matsim.prepare.RunOpenBerlinCalibration;
 import org.matsim.vehicles.Vehicle;
 import picocli.CommandLine;
 
@@ -50,7 +51,7 @@ public class SampleNetwork implements MATSimAppCommand {
 	@CommandLine.Mixin
 	private OutputOptions output = OutputOptions.ofCommand(SampleNetwork.class);
 
-	@CommandLine.Option(names = "--sample-size", description = "Number of samples to collect for each category.", defaultValue = "2200")
+	@CommandLine.Option(names = "--sample-size", description = "Number of samples to collect for each category.", defaultValue = "5000")
 	private int sample;
 
 	public static void main(String[] args) {
@@ -75,6 +76,38 @@ public class SampleNetwork implements MATSimAppCommand {
 		return new Coord(RunOpenBerlinCalibration.roundNumber(v.getX() + x), RunOpenBerlinCalibration.roundNumber(v.getY() + y));
 	}
 
+	/**
+	 * Skip certain nodes to improve class imbalance regarding the allowed speed.
+	 */
+	private static double skip(Node node, String key) {
+
+		// all traffic lights are considered
+		if (key.equals("traffic_light"))
+			return 1;
+
+		Optional<? extends Link> first = node.getInLinks().values().stream().findFirst();
+		if (first.isEmpty())
+			return 0;
+
+		Link link = first.get();
+
+		// very long or short links are skipped
+		if (link.getLength() > 500 || link.getLength() < 10)
+			return 0;
+
+		double skip = 1;
+		if (NetworkUtils.getAllowedSpeed(link) == 13.89)
+			skip = 0.6;
+		else if (NetworkUtils.getAllowedSpeed(link) == 8.33)
+			skip = 0.3;
+
+		// Increase samples with more than 1 lane
+		if (link.getNumberOfLanes() == 1)
+			skip *= 0.7;
+
+		return skip;
+	}
+
 	@Override
 	public Integer call() throws Exception {
 
@@ -94,8 +127,16 @@ public class SampleNetwork implements MATSimAppCommand {
 
 				log.info("Sampling {} out of {} intersections for type {}", sample, list.size(), e.getKey());
 
-				for (int i = 0; i < sample; i++) {
+				for (int i = 0; i < sample && !list.isEmpty(); i++) {
+
 					Node n = list.remove(rnd.nextInt(0, list.size()));
+
+					// leave out certain links
+					if (rnd.nextDouble() > skip(n, e.getKey())) {
+						i--;
+						continue;
+					}
+
 					intersections.write(n.getId().toString() + "\n");
 				}
 			}
@@ -103,6 +144,7 @@ public class SampleNetwork implements MATSimAppCommand {
 
 		Map<Double, ? extends List<? extends Link>> bySpeed = network.getLinks().values().stream()
 			.filter(l -> !"traffic_light".equals(l.getToNode().getAttributes().getAttribute("type")))
+			.filter(l -> l.getLength() < 500 && l.getLength() > 50)
 			.collect(Collectors.groupingBy(
 				n -> (Double) n.getAttributes().getAttribute("allowed_speed"), Collectors.toList()
 			));
@@ -112,6 +154,9 @@ public class SampleNetwork implements MATSimAppCommand {
 			for (Map.Entry<Double, ? extends List<? extends Link>> e : bySpeed.entrySet()) {
 
 				List<? extends Link> list = e.getValue();
+
+				if (list.size() < 50)
+					continue;
 
 				log.info("Sampling {} out of {} links for speed {}", sample / 10, list.size(), e.getKey());
 
