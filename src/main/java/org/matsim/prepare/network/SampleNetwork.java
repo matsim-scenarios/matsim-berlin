@@ -92,7 +92,7 @@ public class SampleNetwork implements MATSimAppCommand {
 		Link link = first.get();
 
 		// very long or short links are skipped
-		if (link.getLength() > 500 || link.getLength() < 10)
+		if (link.getLength() > 500 || link.getLength() < 15)
 			return 0;
 
 		double skip = 1;
