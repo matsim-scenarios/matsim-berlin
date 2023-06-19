@@ -196,3 +196,11 @@ print(aggr)
 
 aggr.to_csv("population_stats_ref.csv")
 
+#%%
+
+act = pd.read_csv("table-activities.csv")
+
+
+aggr = act.groupby("p_id").max()
+
+#%%

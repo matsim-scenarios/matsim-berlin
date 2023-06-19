@@ -1,11 +1,79 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 import os.path
 from argparse import ArgumentParser
+from collections import defaultdict
 
 import lxml.etree as ET
 import pandas as pd
 from shapely.geometry import LineString
+
+
+def build_datasets(network, inter, edges, routes):
+    """ Build all datasets needed for training models"""
+    ft = pd.read_csv(network)
+
+    df_i = pd.read_csv(inter)
+    df_i = pd.merge(df_i, ft, left_on="fromEdgeId", right_on="edgeId")
+
+    df_e = pd.read_csv(edges)
+    df_e = pd.merge(df_e, ft, left_on="edgeId", right_on="edgeId")
+
+    df_r = pd.read_csv(routes).drop(columns=["speed"])
+    df_r = pd.merge(df_r, ft, left_on="edgeId", right_on="edgeId")
+
+    result = {}
+
+    aggr = df_r.groupby(["junctionType"])
+    for g in aggr.groups:
+        result["speedRelative_" + str(g)] = prepare_dataframe(aggr.get_group(g), target="speedRelative")
+
+    aggr = df_i.groupby(["junctionType"])
+    for g in aggr.groups:
+        result["capacity_" + str(g)] = prepare_dataframe(aggr.get_group(g), target="capacity")
+
+    aggr = df_e.groupby(["speed"])
+    for g in aggr.groups:
+        result["capacity_e_" + str(g)] = prepare_dataframe(aggr.get_group(g), target="capacity")
+
+    df_i["norm_cap"] = df_i.capacity / df_i.numLanes
+    aggr = df_i[df_i.junctionType != "traffic_light"].groupby(["speed"])
+    for g in aggr.groups:
+        result["capacity_i" + str(g)] = prepare_dataframe(aggr.get_group(g), target="norm_cap")
+
+    # TODO: group by speed, similar to junction, compare resulting capacities
+
+    return result
+
+
+def prepare_dataframe(df, target):
+    """ Simple preprocessing """
+
+    df = df.rename(columns={target: "target"})
+
+    # drop 2.5% smallest and largest
+    drop = len(df) // 40
+    df = df.drop(df.nsmallest(drop, ["target"]).index)
+    df = df.drop(df.nlargest(drop, ["target"]).index)
+
+    s = df['target']
+    q1 = s.quantile(0.25)
+    q3 = s.quantile(0.75)
+    iqr = q3 - q1
+    iqr_lower = q1 - 1.5 * iqr
+    iqr_upper = q3 + 1.5 * iqr
+    outliers = s[(s < iqr_lower) | (s > iqr_upper)]
+
+    df = df.drop(outliers.index)
+
+    # remove features
+    df = df[["target", "length", "speed",
+             "dir_l", "dir_r", "dir_s",
+             "priority_lower", "priority_equal", "priority_higher",
+             "numFoes", "numLanes", "junctionSize"]]
+
+    return df
 
 
 def parse_ls(el):
@@ -24,6 +92,8 @@ def read_network(sumo_network):
     edges = {}
     junctions = {}
 
+    to_edges = defaultdict(lambda: [])
+
     # Aggregated connections, for outgoing edge
     connections = {}
 
@@ -39,6 +109,7 @@ def read_network(sumo_network):
 
         if elem.tag == "edge":
             edges[elem.attrib["id"]] = elem
+            to_edges[elem.attrib["to"]].append(elem)
             continue
 
         elif elem.tag == "junction":
@@ -66,15 +137,19 @@ def read_network(sumo_network):
 
         from_edge_id = fromEdge.attrib["id"]
 
+        # Remove turn directions, which are not so relevant
+        if conn["dir"] == "t":
+            conn["dir"] = ""
+
         if from_edge_id not in connections:
             connections[from_edge_id] = {
-                "dirs": {conn["dir"]},
+                "dirs": {conn["dir"].lower()},
                 "response": request.attrib["response"],
                 "foes": request.attrib["foes"],
                 "conns": 1
             }
         else:
-            connections[from_edge_id]["dirs"].add(conn["dir"])
+            connections[from_edge_id]["dirs"].add(conn["dir"].lower())
             connections[from_edge_id]["response"] = combine_bitset(connections[from_edge_id]["response"],
                                                                    request.attrib["response"])
             connections[from_edge_id]["foes"] = combine_bitset(connections[from_edge_id]["foes"],
@@ -101,24 +176,45 @@ def read_network(sumo_network):
         # speed and length should be the same on all lanes
         lane = edge.find("lane", {"index": "0"})
 
+        prio = int(edge.attrib["priority"])
+
+        # determine priority relative to other edges
+        prios = sorted(list(set(int(t.attrib["priority"]) for t in to_edges[edge.attrib["to"]])))
+
+        ref = (len(prios) - 1) / 2
+        cmp = prios.index(prio)
+        if cmp > ref:
+            prio = "higher"
+        elif cmp < ref:
+            prio = "lower"
+        else:
+            prio = "equal"
+
+        dirs = "".join(sorted(conn.get("dirs", "")))
+
+        # TODO: some speed values can be aggregated
+
         d = {
             "edgeId": edge.attrib["id"],
-            "edgeType": edge.attrib["type"],
-            "priority": int(edge.attrib["priority"]),
+            "edgeType": edge.attrib["type"].replace("highway.", ""),
+            "priority": prio,
             "speed": float(lane.attrib["speed"]),
-            "fromLength": float(lane.attrib["length"]),
+            "length": float(lane.attrib["length"]),
             "numLanes": len(edge.findall("lane")),
-            "numConns": conn.get("conns", 0),
-            "numResponse": conn.get("response", "").count("1"),
-            "numFoes": conn.get("foes", "").count("1"),
-            "dirs": "".join(sorted(conn.get("dirs", ""))),
+            "numConns": min(conn.get("conns", 0), 6),
+            "numResponse": min(conn.get("response", "").count("1"), 3),
+            "numFoes": min(conn.get("foes", "").count("1"), 3),
+            "dir_l": "l" in dirs,
+            "dir_r": "r" in dirs,
+            "dir_s": "s" in dirs,
             "junctionType": junction.attrib["type"],
             "junctionSize": len(junction.findall("request"))
         }
 
         data.append(d)
 
-    return pd.DataFrame(data), pd.DataFrame(data_conns)
+    df = pd.DataFrame(data)
+    return pd.get_dummies(df, columns=["priority"]), pd.DataFrame(data_conns)
 
 
 def read_edges(folder):

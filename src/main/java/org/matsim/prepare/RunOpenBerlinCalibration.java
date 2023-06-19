@@ -45,6 +45,7 @@ import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.prepare.counts.CreateCountsFromGeoPortalBerlin;
 import org.matsim.prepare.counts.CreateCountsFromVMZ;
 import org.matsim.prepare.download.DownloadCommuterStatistic;
+import org.matsim.prepare.network.SampleNetwork;
 import org.matsim.prepare.opt.RunCountOptimization;
 import org.matsim.prepare.opt.SelectPlansFromIndex;
 import org.matsim.run.Activities;
@@ -102,14 +103,14 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		super("input/v6.0/berlin-v6.0-base-calib.config.xml");
 	}
 
-	static double roundNumber(double x) {
+	public static double roundNumber(double x) {
 		return BigDecimal.valueOf(x).setScale(2, RoundingMode.HALF_UP).doubleValue();
 	}
 
 	/**
 	 * Round coordinates to sufficient precision.
 	 */
-	static Coord roundCoord(Coord coord) {
+	public static Coord roundCoord(Coord coord) {
 		return new Coord(roundNumber(coord.getX()), roundNumber(coord.getY()));
 	}
 
