@@ -13,4 +13,9 @@ public record Station(String id, String name, String direction, Coord coord, Ato
 	public Station(String id, String name, String direction, Coord coord) {
 		this(id, name, direction, coord, new AtomicReference<>());
 	}
+
+	public String getStationId(){
+
+		return id + "_" + name;
+	}
 }

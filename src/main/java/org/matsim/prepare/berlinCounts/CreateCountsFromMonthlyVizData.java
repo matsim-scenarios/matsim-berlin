@@ -1,5 +1,6 @@
 package org.matsim.prepare.berlinCounts;
 
+import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
@@ -7,6 +8,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
@@ -29,6 +33,7 @@ import tech.tablesaw.api.StringColumn;
 import tech.tablesaw.api.Table;
 
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -52,6 +57,9 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	@CommandLine.Option(names = "--network", description = "MATSim network file path", required = true)
 	Path networkPath;
 
+	@CommandLine.Option(names = "--network-geometries", description = "network geometry file path", required = true)
+	private Path geometries;
+
 	@CommandLine.Option(names = "--output", description = "output directory", defaultValue = "input/")
 	Path output;
 
@@ -62,13 +70,13 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	int year;
 
 	@CommandLine.Mixin
-	private CsvOptions csvOptions = new CsvOptions();
+	private CsvOptions csv = new CsvOptions();
 
 	@CommandLine.Mixin
-	private CrsOptions crsOptions = new CrsOptions();
+	private CrsOptions crs = new CrsOptions();
 
 	@CommandLine.Mixin
-	CountsOption countsOption = new CountsOption();
+	CountsOption counts = new CountsOption();
 
 	private final Map<String, Station> stations = new HashMap<>();
 	private final Logger logger = LogManager.getLogger(CreateCountsFromMonthlyVizData.class);
@@ -82,6 +90,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 
 		String outputString = !output.toString().endsWith("/") || !output.toString().endsWith("\\") ? output + "/" : output.toString();
 
+		//Create Counts Objects
 		Counts<Link> car = new Counts<>();
 		car.setName(scenario + " car counts");
 		car.setDescription("Car counts based on data from the 'Verkehrsinformationszentrale Berlin'.");
@@ -91,6 +100,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		freight.setDescription("Freight counts based on data from the 'Verkehrsinformationszentrale Berlin'.");
 		freight.setYear(year);
 
+		//Get filepaths
 		List<Path> countPaths = new ArrayList<>();
 		Path stationPath = null;
 		for (Path path : Files.walk(input).collect(Collectors.toList())) {
@@ -101,8 +111,16 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			if (path.toString().endsWith(".gz"))
 				countPaths.add(path);
 		}
-		extractStations(stationPath, stations, countsOption);
-		matchWithNetwork(networkPath, stations, countsOption);
+
+		if (countPaths.size() < 12)
+			logger.warn("Expected 12 files, but only {} files containing count data were provided.", countPaths.size());
+		if(stationPath == null) {
+			logger.warn("No station data were provided. Return Code 1");
+			return 1;
+		}
+
+		extractStations(stationPath, stations, counts);
+		matchWithNetwork(networkPath, geometries, stations, counts);
 
 		List<CSVRecord> records = readCountData(countPaths);
 		aggregateAndAssignCountData(records, stations, car, freight, outputString);
@@ -113,11 +131,66 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		return 0;
 	}
 
-	private void matchWithNetwork(Path networkPath, Map<String, Station> stations, CountsOption countsOption) {
+	private LineString parseCoordinates(String coordinateSequence, GeometryFactory factory) {
+
+		String[] split = coordinateSequence.split("\\)");
+
+		Coordinate[] coordinates = new Coordinate[split.length];
+
+		for (int i = 0; i < split.length; i++) {
+			String coord = split[i];
+			int toRemove = coord.indexOf("(");
+
+			String cleaned = coord.substring(toRemove + 1);
+
+			String[] split1 = cleaned.split(",");
+
+			Coordinate coordinate = new Coordinate();
+			coordinate.setX(Double.parseDouble(split1[0]));
+			coordinate.setY(Double.parseDouble(split1[1]));
+
+			coordinates[i] = coordinate;
+		}
+
+		return factory.createLineString(coordinates);
+	}
+
+	private Map<Link, LineString> readNetworkGeometries(Path geometries, Map<Id<Link>, ? extends Link> links) {
+
+		logger.info("Parsing link geometries.");
+
+		Map<Link, LineString> network = new HashMap<>();
+
+		GeometryFactory factory = new GeometryFactory();
+
+		try {
+			CSVParser records = csv.getFormat().builder().setDelimiter(',').build().parse(new FileReader(geometries.toString()));
+
+			for (CSVRecord r : records) {
+
+				String idAsString = r.get("LinkId");
+				String raw = r.get("Geometry");
+
+				LineString link = parseCoordinates(raw, factory);
+
+				Id<Link> linkId = Id.createLinkId(idAsString);
+				if(links.containsKey(linkId))
+					network.put(links.get(linkId), link);
+			}
+		} catch (IOException e) {
+			logger.warn(e.getMessage());
+		}
+
+		return network;
+	}
+
+	private void matchWithNetwork(Path networkPath, Path geometries, Map<String, Station> stations, CountsOption countsOption) {
 
 		Network network = NetworkUtils.readNetwork(networkPath.toString());
-		CoordinateTransformation transformation = crsOptions.getTransformation();
-		NetworkIndex<Station> index = new NetworkIndex(network, 50, toMatch -> {
+		CoordinateTransformation transformation = crs.getTransformation();
+
+		Map<Link, LineString> networkGeometries = readNetworkGeometries(geometries, network.getLinks());
+		NetworkIndex<Station> index = new NetworkIndex<>(networkGeometries, 50, toMatch -> {
 			Coord coord = ((Station) toMatch).coord();
 			Coord transform = transformation.transform(coord);
 			return MGC.coord2Point(transform);
@@ -145,6 +218,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		});
 		index.addLinkFilter(((link, station) -> !link.getId().toString().startsWith("pt_")));
 
+		logger.info("Start matching stations to network.");
 		for (var it = stations.entrySet().iterator(); it.hasNext();) {
 			Map.Entry<String, Station> next = it.next();
 
@@ -211,7 +285,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 				if (!Files.exists(decompressed))
 					Files.copy(gis, decompressed);
 
-				List<CSVRecord> month = csvOptions.createParser(decompressed).getRecords();
+				List<CSVRecord> month = csv.createParser(decompressed).getRecords();
 
 				records.addAll(month);
 			} catch (IOException e) {
@@ -228,13 +302,13 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		//Create table from records first
 		Table table;
 		{
-			StringColumn id = StringColumn.create(ColumnNames.id.name());
-			DateColumn date = DateColumn.create(ColumnNames.date.name());
-			StringColumn hour = StringColumn.create(ColumnNames.hour.name());
-			DoubleColumn car = DoubleColumn.create(ColumnNames.car_volume.name());
-			DoubleColumn freight = DoubleColumn.create(ColumnNames.freight_volume.name());
-			DoubleColumn carSpeed = DoubleColumn.create(ColumnNames.car_avg_speed.name());
-			DoubleColumn freightSpeed = DoubleColumn.create(ColumnNames.freight_avg_speed.name());
+			StringColumn id = StringColumn.create(ColumnNames.id);
+			DateColumn date = DateColumn.create(ColumnNames.date);
+			StringColumn hour = StringColumn.create(ColumnNames.hour);
+			DoubleColumn car = DoubleColumn.create(ColumnNames.car_volume);
+			DoubleColumn freight = DoubleColumn.create(ColumnNames.freight_volume);
+			DoubleColumn carSpeed = DoubleColumn.create(ColumnNames.car_avg_speed);
+			DoubleColumn freightSpeed = DoubleColumn.create(ColumnNames.freight_avg_speed);
 
 			for (CSVRecord row : records) {
 				id.append(row.get(0));
@@ -256,16 +330,17 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		};
 
 		//filter and aggregation
-		Table summarized = table.where(t -> t.dateColumn(ColumnNames.date.name()).eval(dayFilter))
-				.summarize(ColumnNames.car_volume.name(), ColumnNames.freight_volume.name(), ColumnNames.car_avg_speed.name(), ColumnNames.freight_avg_speed.name(), mean)
-				.by(ColumnNames.id.name(), ColumnNames.hour.name());
+		logger.info("Start Aggregation");
+		Table summarized = table.where(t -> t.dateColumn(ColumnNames.date).eval(dayFilter))
+				.summarize(ColumnNames.car_volume, ColumnNames.freight_volume, ColumnNames.car_avg_speed, ColumnNames.freight_avg_speed, mean)
+				.by(ColumnNames.id, ColumnNames.hour);
 
 		//Column names were edited by summarize function
 		for (String name : table.columnNames())
 			summarized.columnNames().stream().filter(s -> s.contains(name)).findFirst().ifPresent(s -> summarized.column(s).setName(name));
 
 		//Assign aggregted hourly traffic volumes to count objects AND write avg speed per link and hour to csv file
-		try (CSVPrinter printer = csvOptions.createPrinter(Path.of(outputString + scenario + ".avg_speed.csv"))) {
+		try (CSVPrinter printer = csv.createPrinter(Path.of(outputString + scenario + ".avg_speed.csv"))) {
 			printer.print(ColumnNames.id);
 			printer.print(ColumnNames.hour);
 			printer.print(ColumnNames.car_avg_speed);
@@ -277,7 +352,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 				String key = entry.getKey();
 				Station station = entry.getValue();
 
-				Table idFiltered = summarized.copy().where(t -> t.stringColumn(ColumnNames.id.name()).isEqualTo(key));
+				Table idFiltered = summarized.copy().where(t -> t.stringColumn(ColumnNames.id).isEqualTo(key));
 
 				if (idFiltered.rowCount() != 24) {
 					logger.warn("Station {} does not contain hour values for the whole day!", key);
@@ -285,20 +360,20 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 					continue;
 				}
 
-				Count<Link> carCount = carCounts.createAndAddCount(station.linkAtomicReference().get().getId(), key);
-				Count<Link> freightCount = freightCounts.createAndAddCount(station.linkAtomicReference().get().getId(), key);
+				Count<Link> carCount = carCounts.createAndAddCount(station.linkAtomicReference().get().getId(), station.getStationId());
+				Count<Link> freightCount = freightCounts.createAndAddCount(station.linkAtomicReference().get().getId(), station.getStationId());
 
 				for (tech.tablesaw.api.Row row : idFiltered) {
-					double car = row.getDouble(ColumnNames.car_volume.name());
+					double car = row.getDouble(ColumnNames.car_volume);
 					//in VIZ data hours starts at 0, in MATSim count data starts at 1
-					int hour = Integer.parseInt(row.getString(ColumnNames.hour.name())) + 1;
-					double freight = row.getDouble(ColumnNames.freight_volume.name());
+					int hour = Integer.parseInt(row.getString(ColumnNames.hour)) + 1;
+					double freight = row.getDouble(ColumnNames.freight_volume);
 					carCount.createVolume(hour, Math.round(car));
 					freightCount.createVolume(hour, Math.round(freight));
 
 					//print to file
-					double carSpeed = row.getDouble(ColumnNames.car_avg_speed.name());
-					double freightSpeed = row.getDouble(ColumnNames.freight_avg_speed.name());
+					double carSpeed = row.getDouble(ColumnNames.car_avg_speed);
+					double freightSpeed = row.getDouble(ColumnNames.freight_avg_speed);
 
 					printer.print(station.linkAtomicReference().get().getId().toString());
 					printer.print(hour);
@@ -313,13 +388,14 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		}
 	}
 
-	private enum ColumnNames {
-		id,
-		date,
-		hour,
-		car_volume,
-		car_avg_speed,
-		freight_volume,
-		freight_avg_speed
+	private static class ColumnNames{
+		static String id = "id";
+		static String date = "date";
+		static String hour = "hour";
+		static String car_volume = "car_volume";
+		static String car_avg_speed = "car_avg_speed";
+		static String freight_volume = "freight_volume";
+		static String freight_avg_speed = "freight_avg_speed";
 	}
+
 }
