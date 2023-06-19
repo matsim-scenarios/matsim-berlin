@@ -59,9 +59,9 @@ def prepare_dataframe(df, target):
 
     # remove unneeded features
     df = df[["target", "length", "speed",
-             "dir_l", "dir_r", "dir_s",
+             "dir_l", "dir_r", "dir_s", "dir_multiple_s",
              "priority_lower", "priority_equal", "priority_higher",
-             "numFoes", "numLanes", "junctionSize"]]
+             "numFoes", "numLanes", "numToLanes", "junctionSize"]]
 
     return df
 
@@ -133,17 +133,26 @@ def read_network(sumo_network):
 
         if from_edge_id not in connections:
             connections[from_edge_id] = {
-                "dirs": {conn["dir"].lower()},
+                "dirs": set(conn["dir"].lower()),
                 "response": request.attrib["response"],
                 "foes": request.attrib["foes"],
-                "conns": 1
+                "to": {conn["to"]},
+                "conns": 1,
+                "multiple": False
             }
         else:
-            connections[from_edge_id]["dirs"].add(conn["dir"].lower())
+            dirs = set(conn["dir"].lower())
+
+            # Multiple direction connect straight
+            if "s" in connections[from_edge_id]["dirs"].intersection(dirs):
+                connections[from_edge_id]["multiple"] = True
+
+            connections[from_edge_id]["dirs"].update(dirs)
             connections[from_edge_id]["response"] = combine_bitset(connections[from_edge_id]["response"],
                                                                    request.attrib["response"])
             connections[from_edge_id]["foes"] = combine_bitset(connections[from_edge_id]["foes"],
                                                                request.attrib["foes"])
+            connections[from_edge_id]["to"].add(conn["to"])
             connections[from_edge_id]["conns"] += 1
 
         data_conns.append({
@@ -180,11 +189,14 @@ def read_network(sumo_network):
         else:
             prio = "equal"
 
-        dirs = "".join(sorted(conn.get("dirs", "")))
+        dirs = conn.get("dirs", "")
 
         # Remove uncommon speed values close together
         speed = float(lane.attrib["speed"])
         speed = max(8.33, speed)
+
+        num_lanes = len(edge.findall("lane"))
+        num_to_lanes = max(len(edges[x].findall("lane")) for x in conn.get("to", [])) if "to" in conn else num_lanes
 
         d = {
             "edgeId": edge.attrib["id"],
@@ -192,10 +204,12 @@ def read_network(sumo_network):
             "priority": prio,
             "speed": speed,
             "length": float(lane.attrib["length"]),
-            "numLanes": len(edge.findall("lane")),
+            "numLanes": num_lanes,
+            "numToLanes": num_to_lanes,
             "numConns": min(conn.get("conns", 0), 6),
             "numResponse": min(conn.get("response", "").count("1"), 3),
             "numFoes": min(conn.get("foes", "").count("1"), 3),
+            "dir_multiple_s": conn.get("multiple", False),
             "dir_l": "l" in dirs,
             "dir_r": "r" in dirs,
             "dir_s": "s" in dirs,
