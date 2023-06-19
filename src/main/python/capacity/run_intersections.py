@@ -22,6 +22,8 @@ netconvert = checkBinary('netconvert')
 
 
 def writeRouteFile(f_name, routes, extra_routes, scenario):
+    """ Write route file for intersection """
+
     text = """<?xml version="1.0" encoding="UTF-8"?>
 
 <routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
@@ -42,7 +44,7 @@ def writeRouteFile(f_name, routes, extra_routes, scenario):
 
     for i, edges in enumerate(extra_routes):
         text += """
-            <flow id="vehx%d" begin="0" end="1800" vehsPerHour="500" type="vDist" departLane="best" arrivalLane="current" departSpeed="max">
+            <flow id="vehx%d" begin="0" end="1800" vehsPerHour="200" type="vDist" departLane="best" arrivalLane="current" departSpeed="max">
                <route edges="%s"/>
             </flow>
         """ % (i, edges)

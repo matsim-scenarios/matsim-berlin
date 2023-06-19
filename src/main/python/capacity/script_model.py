@@ -25,7 +25,6 @@ d = "../../../../"
 
 dfs = build_datasets(d + "input/sumo.net-edges.csv.gz",
                      d + "input/result_intersections_scenario-base.csv",
-                     d + "input/result_edges_scenario-base.csv",
                      d + "input/result_routes_scenario-base.csv")
 
 

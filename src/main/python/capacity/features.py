@@ -10,15 +10,12 @@ import pandas as pd
 from shapely.geometry import LineString
 
 
-def build_datasets(network, inter, edges, routes):
+def build_datasets(network, inter, routes):
     """ Build all datasets needed for training models"""
     ft = pd.read_csv(network)
 
     df_i = pd.read_csv(inter)
     df_i = pd.merge(df_i, ft, left_on="fromEdgeId", right_on="edgeId")
-
-    df_e = pd.read_csv(edges)
-    df_e = pd.merge(df_e, ft, left_on="edgeId", right_on="edgeId")
 
     df_r = pd.read_csv(routes).drop(columns=["speed"])
     df_r = pd.merge(df_r, ft, left_on="edgeId", right_on="edgeId")
@@ -30,19 +27,9 @@ def build_datasets(network, inter, edges, routes):
         result["speedRelative_" + str(g)] = prepare_dataframe(aggr.get_group(g), target="speedRelative")
 
     aggr = df_i.groupby(["junctionType"])
-    for g in aggr.groups:
-        result["capacity_" + str(g)] = prepare_dataframe(aggr.get_group(g), target="capacity")
-
-    aggr = df_e.groupby(["speed"])
-    for g in aggr.groups:
-        result["capacity_e_" + str(g)] = prepare_dataframe(aggr.get_group(g), target="capacity")
-
     df_i["norm_cap"] = df_i.capacity / df_i.numLanes
-    aggr = df_i[df_i.junctionType != "traffic_light"].groupby(["speed"])
     for g in aggr.groups:
-        result["capacity_i" + str(g)] = prepare_dataframe(aggr.get_group(g), target="norm_cap")
-
-    # TODO: group by speed, similar to junction, compare resulting capacities
+        result["capacity_" + str(g)] = prepare_dataframe(aggr.get_group(g), target="norm_cap")
 
     return result
 
@@ -51,6 +38,9 @@ def prepare_dataframe(df, target):
     """ Simple preprocessing """
 
     df = df.rename(columns={target: "target"})
+
+    # Drop length outliers
+    df = df[df.length < 500]
 
     # drop 2.5% smallest and largest
     drop = len(df) // 40
@@ -67,7 +57,7 @@ def prepare_dataframe(df, target):
 
     df = df.drop(outliers.index)
 
-    # remove features
+    # remove unneeded features
     df = df[["target", "length", "speed",
              "dir_l", "dir_r", "dir_s",
              "priority_lower", "priority_equal", "priority_higher",
@@ -192,13 +182,15 @@ def read_network(sumo_network):
 
         dirs = "".join(sorted(conn.get("dirs", "")))
 
-        # TODO: some speed values can be aggregated
+        # Remove uncommon speed values close together
+        speed = float(lane.attrib["speed"])
+        speed = max(8.33, speed)
 
         d = {
             "edgeId": edge.attrib["id"],
             "edgeType": edge.attrib["type"].replace("highway.", ""),
             "priority": prio,
-            "speed": float(lane.attrib["speed"]),
+            "speed": speed,
             "length": float(lane.attrib["length"]),
             "numLanes": len(edge.findall("lane")),
             "numConns": min(conn.get("conns", 0), 6),
