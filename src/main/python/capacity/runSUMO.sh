@@ -4,8 +4,8 @@
 #$ -m a
 #$ -o ./logfile/logfile_$JOB_NAME.log
 #$ -cwd
-#$ -pe mp 4
-#$ -l mem_free=4G
+#$ -pe mp 3
+#$ -l mem_free=3G
 #$ -N sumo-berlin
 
 date
