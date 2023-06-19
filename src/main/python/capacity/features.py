@@ -131,21 +131,27 @@ def read_network(sumo_network):
         if conn["dir"] == "t":
             conn["dir"] = ""
 
+        dirs = set(conn["dir"].lower())
+        to = conn["fromLane"] + "_" + conn["to"] + "_" + conn["toLane"]
+
         if from_edge_id not in connections:
             connections[from_edge_id] = {
-                "dirs": set(conn["dir"].lower()),
+                "dirs": dirs,
                 "response": request.attrib["response"],
                 "foes": request.attrib["foes"],
                 "to": {conn["to"]},
                 "conns": 1,
-                "multiple": False
+                "dir_s": {to} if "s" in dirs else set(),
+                "dir_exclusive": True
             }
         else:
-            dirs = set(conn["dir"].lower())
 
             # Multiple direction connect straight
-            if "s" in connections[from_edge_id]["dirs"].intersection(dirs):
-                connections[from_edge_id]["multiple"] = True
+            if "s" in dirs:
+                connections[from_edge_id]["dir_s"].add(to)
+
+            if connections[from_edge_id]["dirs"].intersection(dirs):
+                connections[from_edge_id]["dir_exclusive"] = False
 
             connections[from_edge_id]["dirs"].update(dirs)
             connections[from_edge_id]["response"] = combine_bitset(connections[from_edge_id]["response"],
@@ -209,10 +215,11 @@ def read_network(sumo_network):
             "numConns": min(conn.get("conns", 0), 6),
             "numResponse": min(conn.get("response", "").count("1"), 3),
             "numFoes": min(conn.get("foes", "").count("1"), 3),
-            "dir_multiple_s": conn.get("multiple", False),
+            "dir_multiple_s": len(conn.get("dir_s", [])) > 1,
             "dir_l": "l" in dirs,
             "dir_r": "r" in dirs,
             "dir_s": "s" in dirs,
+            "dir_exclusive": conn.get("dir_exclusive", True),
             "junctionType": junction.attrib["type"],
             "junctionSize": len(junction.findall("request"))
         }
