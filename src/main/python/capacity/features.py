@@ -59,9 +59,9 @@ def prepare_dataframe(df, target):
 
     # remove unneeded features
     df = df[["target", "length", "speed",
-             "dir_l", "dir_r", "dir_s", "dir_multiple_s",
+             "dir_l", "dir_r", "dir_s", "dir_multiple_s", "dir_exclusive",
              "priority_lower", "priority_equal", "priority_higher",
-             "numFoes", "numLanes", "numToLanes", "junctionSize"]]
+             "numFoes", "numLanes", "changeNumLanes", "junctionSize"]]
 
     return df
 
@@ -211,7 +211,7 @@ def read_network(sumo_network):
             "speed": speed,
             "length": float(lane.attrib["length"]),
             "numLanes": num_lanes,
-            "numToLanes": num_to_lanes,
+            "changeNumLanes": min(num_to_lanes - num_lanes, 3),
             "numConns": min(conn.get("conns", 0), 6),
             "numResponse": min(conn.get("response", "").count("1"), 3),
             "numFoes": min(conn.get("foes", "").count("1"), 3),
@@ -221,7 +221,7 @@ def read_network(sumo_network):
             "dir_s": "s" in dirs,
             "dir_exclusive": conn.get("dir_exclusive", True),
             "junctionType": junction.attrib["type"],
-            "junctionSize": len(junction.findall("request"))
+            "junctionSize": min(len(junction.findall("request")), 36)
         }
 
         data.append(d)

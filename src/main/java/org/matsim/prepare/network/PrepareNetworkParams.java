@@ -39,6 +39,8 @@ public class PrepareNetworkParams implements MATSimAppCommand {
 	@CommandLine.Mixin
 	private final OutputOptions output = OutputOptions.ofCommand(PrepareNetworkParams.class);
 
+	private int warn = 0;
+
 	public static void main(String[] args) {
 		new PrepareNetworkParams().execute(args);
 	}
@@ -81,6 +83,8 @@ public class PrepareNetworkParams implements MATSimAppCommand {
 			applyChanges(link, types.get(link.getId()), features.get(link.getId()));
 		}
 
+		log.warn("Observed {} warnings out of {} links", warn, network.getLinks().size());
+
 		NetworkUtils.writeNetwork(network, output.getPath("network.xml.gz").toString());
 
 		return 0;
@@ -102,9 +106,14 @@ public class PrepareNetworkParams implements MATSimAppCommand {
 
 		double perLane = capacity.predict(features);
 
-		if (perLane < 300) {
-			log.warn("Increasing capacity per lane on {} from {} to 300", link.getId(), perLane);
-			perLane = 300;
+		double cap = capacityEstimate(features.getDouble("speed"));
+
+		boolean modified = false;
+
+		if (perLane < cap * 0.4) {
+			log.warn("Increasing capacity per lane on {} ({}, {}) from {} to {}", link.getId(), type, junctionType, perLane, cap * 0.4);
+			perLane = cap * 0.4;
+			modified = true;
 		}
 
 		link.setCapacity(link.getNumberOfLanes() * perLane);
@@ -125,18 +134,39 @@ public class PrepareNetworkParams implements MATSimAppCommand {
 			if (speedFactor > 1) {
 				log.warn("Reducing speed factor on {} from {} to 1", link.getId(), speedFactor);
 				speedFactor = 1;
+				modified = true;
 			}
 
 			// Threshold for very low speed factors
 			if (speedFactor < 0.25) {
-				// TODO: look into sumo data, what lower end is plausible?
-
 				log.warn("Increasing speed factor on {} from {} to 0.25", link, speedFactor);
 				speedFactor = 0.25;
+				modified = true;
 			}
 		}
+
+		if (modified)
+			warn++;
 
 		link.setFreespeed((double) link.getAttributes().getAttribute("allowed_speed") * speedFactor);
 		link.getAttributes().putAttribute("speed_factor", speedFactor);
 	}
+
+
+	/**
+	 * Theoretical capacity.
+	 */
+	private static double capacityEstimate(double v) {
+
+		// headway
+		double tT = 1.2;
+
+		// car length
+		double lL = 7.0;
+
+		double Qc = v / (v * tT + lL);
+
+		return 3600 * Qc;
+	}
+
 }
