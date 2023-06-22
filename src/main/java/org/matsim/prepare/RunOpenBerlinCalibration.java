@@ -103,6 +103,9 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		super("input/v6.0/berlin-v6.0-base-calib.config.xml");
 	}
 
+	/**
+	 * Round to two digits.
+	 */
 	public static double roundNumber(double x) {
 		return BigDecimal.valueOf(x).setScale(2, RoundingMode.HALF_UP).doubleValue();
 	}
