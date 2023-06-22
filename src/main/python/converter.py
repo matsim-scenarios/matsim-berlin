@@ -32,7 +32,8 @@ class SrV2018:
         'Königs Wusterhausen': 3,
         'Eberswalde': 3,
         'Lübben/Lübbenau': 6,
-        'Ludwigsfelde': 3
+        'Ludwigsfelde': 3,
+        'Leipzig': 1
     }
 
     @staticmethod
