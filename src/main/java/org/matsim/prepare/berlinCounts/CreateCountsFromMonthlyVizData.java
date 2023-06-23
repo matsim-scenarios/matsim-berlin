@@ -69,11 +69,14 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	@CommandLine.Option(names = "--year", description = "year of count data", defaultValue = "2022")
 	int year;
 
-	@CommandLine.Mixin
-	private CsvOptions csv = new CsvOptions();
+	@CommandLine.Option(names = "--use-road-names", description = "use road names to filter map matching results")
+	boolean roadNames;
 
 	@CommandLine.Mixin
-	private CrsOptions crs = new CrsOptions();
+	private final CsvOptions csv = new CsvOptions();
+
+	@CommandLine.Mixin
+	private final CrsOptions crs = new CrsOptions();
 
 	@CommandLine.Mixin
 	CountsOption counts = new CountsOption();
@@ -114,7 +117,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 
 		if (countPaths.size() < 12)
 			logger.warn("Expected 12 files, but only {} files containing count data were provided.", countPaths.size());
-		if(stationPath == null) {
+		if (stationPath == null) {
 			logger.warn("No station data were provided. Return Code 1");
 			return 1;
 		}
@@ -174,7 +177,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 				LineString link = parseCoordinates(raw, factory);
 
 				Id<Link> linkId = Id.createLinkId(idAsString);
-				if(links.containsKey(linkId))
+				if (links.containsKey(linkId))
 					network.put(links.get(linkId), link);
 			}
 		} catch (IOException e) {
@@ -218,7 +221,27 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		});
 		index.addLinkFilter(((link, station) -> !link.getId().toString().startsWith("pt_")));
 
+		if (roadNames) {
+			index.addLinkFilter((link, station) -> {
+				String name = station.name().toLowerCase();
+
+				if (name.endsWith("straße") || name.endsWith("str"))
+					name.replace("straße", "").replace("str", "");
+
+				if (name.equals("straße des 17. juni"))
+					return true;
+
+				Object linkRoadName = link.getAttributes().getAttribute("name");
+
+				if (linkRoadName == null)
+					return true;
+
+				return Pattern.compile(name, Pattern.CASE_INSENSITIVE).matcher((String) linkRoadName).find();
+			});
+		}
+
 		logger.info("Start matching stations to network.");
+		int counter = 0;
 		for (var it = stations.entrySet().iterator(); it.hasNext();) {
 			Map.Entry<String, Station> next = it.next();
 
@@ -226,7 +249,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			Id<Link> manuallyMatched = countsOption.isManuallyMatched(next.getKey());
 			if (manuallyMatched != null) {
 				if (!network.getLinks().containsKey(manuallyMatched))
-					throw new RuntimeException("Link {} is not in the network!");
+					throw new RuntimeException("Link " + manuallyMatched.toString() + " is not in the network!");
 				Link link = network.getLinks().get(manuallyMatched);
 				next.getValue().linkAtomicReference().set(link);
 				index.remove(link);
@@ -236,6 +259,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			Link query = index.query(next.getValue());
 
 			if (query == null) {
+				counter++;
 				it.remove();
 				continue;
 			}
@@ -243,6 +267,8 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			next.getValue().linkAtomicReference().set(query);
 			index.remove(query);
 		}
+
+		logger.info("Could not match {} stations", counter);
 	}
 
 	private void extractStations(Path path, Map<String, Station> stations, CountsOption countsOption) {
@@ -259,13 +285,16 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 				continue;
 
 			String id = row.getCell(0).getStringCellValue();
+			String lane = row.getCell(9).getStringCellValue();
+
+			//for some reason count stations on bus lanes have an own station id, but same coordinates like the regular stations and causing trouble in map matching
+			if (stations.containsKey(id) || "BUS".equals(lane) || countsOption.isIgnored(id))
+				continue;
+
 			String name = row.getCell(5).getStringCellValue();
 			String direction = row.getCell(8).getStringCellValue();
 			double x = row.getCell(11).getNumericCellValue();
 			double y = row.getCell(12).getNumericCellValue();
-
-			if (countsOption.isIgnored(id))
-				continue;
 
 			Station station = new Station(id, name, direction, new Coord(x, y));
 			stations.put(id, station);
@@ -305,10 +334,10 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			StringColumn id = StringColumn.create(ColumnNames.id);
 			DateColumn date = DateColumn.create(ColumnNames.date);
 			StringColumn hour = StringColumn.create(ColumnNames.hour);
-			DoubleColumn car = DoubleColumn.create(ColumnNames.car_volume);
-			DoubleColumn freight = DoubleColumn.create(ColumnNames.freight_volume);
-			DoubleColumn carSpeed = DoubleColumn.create(ColumnNames.car_avg_speed);
-			DoubleColumn freightSpeed = DoubleColumn.create(ColumnNames.freight_avg_speed);
+			DoubleColumn car = DoubleColumn.create(ColumnNames.carVolume);
+			DoubleColumn freight = DoubleColumn.create(ColumnNames.freightVolume);
+			DoubleColumn carSpeed = DoubleColumn.create(ColumnNames.carAvgSpeed);
+			DoubleColumn freightSpeed = DoubleColumn.create(ColumnNames.freightAvgSpeed);
 
 			for (CSVRecord row : records) {
 				id.append(row.get(0));
@@ -332,7 +361,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		//filter and aggregation
 		logger.info("Start Aggregation");
 		Table summarized = table.where(t -> t.dateColumn(ColumnNames.date).eval(dayFilter))
-				.summarize(ColumnNames.car_volume, ColumnNames.freight_volume, ColumnNames.car_avg_speed, ColumnNames.freight_avg_speed, mean)
+				.summarize(ColumnNames.carVolume, ColumnNames.freightVolume, ColumnNames.carAvgSpeed, ColumnNames.freightAvgSpeed, mean)
 				.by(ColumnNames.id, ColumnNames.hour);
 
 		//Column names were edited by summarize function
@@ -343,8 +372,8 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		try (CSVPrinter printer = csv.createPrinter(Path.of(outputString + scenario + ".avg_speed.csv"))) {
 			printer.print(ColumnNames.id);
 			printer.print(ColumnNames.hour);
-			printer.print(ColumnNames.car_avg_speed);
-			printer.print(ColumnNames.freight_avg_speed);
+			printer.print(ColumnNames.carAvgSpeed);
+			printer.print(ColumnNames.freightAvgSpeed);
 			printer.println();
 
 			int counter = 0;
@@ -355,7 +384,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 				Table idFiltered = summarized.copy().where(t -> t.stringColumn(ColumnNames.id).isEqualTo(key));
 
 				if (idFiltered.rowCount() != 24) {
-					logger.warn("Station {} does not contain hour values for the whole day!", key);
+					logger.warn("Station {} - {} does not contain hour values for the whole day!", key, station.name());
 					counter++;
 					continue;
 				}
@@ -364,16 +393,16 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 				Count<Link> freightCount = freightCounts.createAndAddCount(station.linkAtomicReference().get().getId(), station.getStationId());
 
 				for (tech.tablesaw.api.Row row : idFiltered) {
-					double car = row.getDouble(ColumnNames.car_volume);
+					double car = row.getDouble(ColumnNames.carVolume);
 					//in VIZ data hours starts at 0, in MATSim count data starts at 1
 					int hour = Integer.parseInt(row.getString(ColumnNames.hour)) + 1;
-					double freight = row.getDouble(ColumnNames.freight_volume);
+					double freight = row.getDouble(ColumnNames.freightVolume);
 					carCount.createVolume(hour, Math.round(car));
 					freightCount.createVolume(hour, Math.round(freight));
 
 					//print to file
-					double carSpeed = row.getDouble(ColumnNames.car_avg_speed);
-					double freightSpeed = row.getDouble(ColumnNames.freight_avg_speed);
+					double carSpeed = row.getDouble(ColumnNames.carAvgSpeed);
+					double freightSpeed = row.getDouble(ColumnNames.freightAvgSpeed);
 
 					printer.print(station.linkAtomicReference().get().getId().toString());
 					printer.print(hour);
@@ -388,14 +417,14 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		}
 	}
 
-	private static class ColumnNames{
+	private static class ColumnNames {
 		static String id = "id";
 		static String date = "date";
 		static String hour = "hour";
-		static String car_volume = "car_volume";
-		static String car_avg_speed = "car_avg_speed";
-		static String freight_volume = "freight_volume";
-		static String freight_avg_speed = "freight_avg_speed";
+		static String carVolume = "car_volume";
+		static String carAvgSpeed = "car_avg_speed";
+		static String freightVolume = "freight_volume";
+		static String freightAvgSpeed = "freight_avg_speed";
 	}
 
 }
