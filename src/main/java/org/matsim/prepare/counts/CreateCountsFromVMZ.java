@@ -2,19 +2,35 @@ package org.matsim.prepare.counts;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.ss.usermodel.Row;
+
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.locationtech.jts.geom.LineString;
+import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.network.Network;
 import org.matsim.application.MATSimAppCommand;
+import org.matsim.application.options.CrsOptions;
+import org.matsim.application.prepare.counts.NetworkIndex;
+import org.matsim.core.config.groups.NetworkConfigGroup;
+import org.matsim.core.network.NetworkUtils;
+import org.matsim.core.network.filter.NetworkFilterManager;
+import org.matsim.core.utils.geometry.CoordinateTransformation;
+import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.counts.Counts;
 import org.matsim.counts.CountsWriter;
+import org.matsim.prepare.berlinCounts.NetworkGeometryParser;
 import picocli.CommandLine;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.lang.String;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 @CommandLine.Command(
 		name = "counts-from-vmz",
@@ -30,8 +46,17 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 	@CommandLine.Option(names = "--csv", description = "Path to csv file with the mapping")
 	private Path csv;
 
+	@CommandLine.Option(names = "--network", description = "Path to network", required = true)
+	private Path network;
+
+	@CommandLine.Option(names = "--network-geometries", description = "path to *linkGeometries.csv", required = true)
+	private Path networkGeometries;
+
 	@CommandLine.Option(names = "--output", description = "Base path for the output")
 	private String output;
+
+	@CommandLine.Mixin
+	private final CrsOptions crs = new CrsOptions("EPSG:31468");
 
 	private final HashMap<Integer, BerlinCounts> berlinCountsMap = new HashMap<>();
 
@@ -43,10 +68,68 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 	public Integer call() throws Exception {
 
 		readExcelFile(excel.toString());
-		readMappingFile(csv.toString());
+//		readMappingFile(csv.toString());
+		matchWithNetwork(network);
 		createCountsFile(output);
 
 		return 0;
+	}
+
+	private void matchWithNetwork(Path network){
+
+		Network net;
+
+		{
+			Network unfiltered = NetworkUtils.readNetwork(network.toString());
+			NetworkFilterManager manager = new NetworkFilterManager(unfiltered, new NetworkConfigGroup());
+			manager.addLinkFilter(l -> !l.getId().toString().startsWith("pt_"));
+
+			net = manager.applyFilters();
+		}
+
+		CoordinateTransformation transformation = crs.getTransformation();
+
+		Map<Id<Link>, LineString> geometries = new NetworkGeometryParser(networkGeometries).parse();
+
+		NetworkIndex<BerlinCounts> index = new NetworkIndex<>(net, 50, toMatch -> {
+			BerlinCounts count = (BerlinCounts) toMatch;
+
+			Coord coord = count.getCoord();
+			Coord transform = transformation.transform(coord);
+			return MGC.coord2Point(transform);
+		});
+
+		index.addLinkFilter((link, berlinCounts) -> {
+			String orientation = berlinCounts.getOrientation();
+
+			Coord from = link.getFromNode().getCoord();
+			Coord to = link.getToNode().getCoord();
+
+			String linkDir = "";
+			if (to.getY() > from.getY()) {
+				linkDir += "nord";
+			} else
+				linkDir += "süd";
+
+			if (to.getX() > from.getX()) {
+				linkDir += "ost";
+			} else
+				linkDir += "west";
+
+			Pattern pattern = Pattern.compile(orientation, Pattern.CASE_INSENSITIVE);
+			return pattern.matcher(linkDir).find();
+		});
+
+		for(var it = berlinCountsMap.entrySet().iterator(); it.hasNext();){
+
+			Map.Entry<Integer, BerlinCounts> next = it.next();
+			BerlinCounts station = next.getValue();
+
+			Link link = index.query(station);
+
+			if(link == null)
+				it.remove();
+		}
 	}
 
 	/**
@@ -100,12 +183,8 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 				}
 			}
 		}
-		CountsWriter writerPkw = new CountsWriter(countsPkw);
-		CountsWriter writerLkw = new CountsWriter(countsLkw);
-		writerPkw.write(outputFile);
-
-		if (outputFile.contains("-car"))
-			writerLkw.write(outputFile.replace("-car", "-hgv"));
+		new CountsWriter(countsPkw).write(outputFile + "car_counts_from_vmz.xml");
+		new CountsWriter(countsLkw).write(outputFile + "freight_counts_from_vmz.xml");;
 	}
 
 	/**
@@ -150,12 +229,6 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 	 */
 	private static final class ExcelDataFormat {
 
-		private static final String[] sheet0 = {"MQ_ID", "DTVW_KFZ", "QUALITY"};
-		private static final String[] sheet1 = {"MQ_ID", "DTVW_LKW"};
-		private static final String[] sheet2 = {"MQ_ID", "PERC_LKW"};
-		private static final String[] sheet3 = {"MQ_ID", "HOUR", "PERC_Q_KFZ_TYPE", "PERC_Q_PKW_TYPE", "PERC_Q_LKW_TYPE"};
-		private static final String[] sheet4 = {"MQ_ID", "POSITION", "DETAIL", "ORIENTATION", "X_GK4", "Y_GK4", "linkid"};
-
 		public static HashMap<Integer, BerlinCounts> handleSheet(HashMap<Integer, BerlinCounts> berlinCountsMap, int i, XSSFSheet sheet) {
 			if (i == 0) {
 				for (int j = 1; j <= sheet.getLastRowNum(); j++) {
@@ -193,16 +266,21 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 					berlinCounts.setArrays(hour, PERC_Q_KFZ_TYPE, PERC_Q_PKW_TYPE, PERC_Q_LKW_TYPE);
 				}
 			} else if (i == 4) {
-				for (int j = 1; j <= sheet.getLastRowNum(); j++) {
-					BerlinCounts berlinCounts = berlinCountsMap.get((int) sheet.getRow(j).getCell(0).getNumericCellValue());
-					berlinCounts.setPosition(replaceUmlaute(sheet.getRow(j).getCell(1).getStringCellValue()));
-					if (sheet.getRow(j).getCell(2) != null) {
-						berlinCounts.setDetail(replaceUmlaute(sheet.getRow(j).getCell(2).getStringCellValue()));
-					} else {
-						berlinCounts.setDetail("");
-					}
-					berlinCounts.setOrientation(replaceUmlaute(sheet.getRow(j).getCell(3).getStringCellValue()));
-//                berlinCounts.setLinkid((int) sheet.getRow(j).getCell(6).getNumericCellValue());
+
+				for (Row row : sheet) {
+					int id = (int) row.getCell(0).getNumericCellValue();
+					BerlinCounts station = berlinCountsMap.get(id);
+
+					//get coord
+					double x = row.getCell(4).getNumericCellValue();
+					double y = row.getCell(5).getNumericCellValue();
+					station.setCoord(new Coord(x, y));
+
+					String position = row.getCell(1).getStringCellValue();
+					station.setPosition(replaceUmlaute(position));
+
+					String orientation = row.getCell(3).getStringCellValue();
+					station.setPosition(replaceUmlaute(orientation));
 				}
 			}
 			return berlinCountsMap;
@@ -245,24 +323,29 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 		private int linkid;
 		private String position;
 		private String orientation;
-		private String detail;
 		private boolean LKW_Anteil = false;
 		private boolean using = false;
+
+		private Coord coord;
+
+		public BerlinCounts(int MQ_ID) {
+			this.MQ_ID = MQ_ID;
+		}
 
 		public boolean isUsing() {
 			return using;
 		}
 
+		public Coord getCoord() {
+			return coord;
+		}
+
+		public void setCoord(Coord coord) {
+			this.coord = coord;
+		}
+
 		public void setUsing(boolean using) {
 			this.using = using;
-		}
-
-		public String getDetail() {
-			return detail;
-		}
-
-		public void setDetail(String detail) {
-			this.detail = detail;
 		}
 
 		public String getPosition() {
@@ -287,10 +370,6 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 
 		public void setLKW_Anteil(boolean LKW_Anteil) {
 			this.LKW_Anteil = LKW_Anteil;
-		}
-
-		public BerlinCounts(int MQ_ID) {
-			this.MQ_ID = MQ_ID;
 		}
 
 		public int getMQ_ID() {
@@ -370,7 +449,6 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 					", linkid=" + linkid +
 					", position='" + position + '\'' +
 					", orientation='" + orientation + '\'' +
-					", detail='" + detail + '\'' +
 					'}';
 		}
 	}
