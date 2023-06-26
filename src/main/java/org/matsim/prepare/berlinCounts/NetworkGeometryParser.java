@@ -28,7 +28,9 @@ import java.util.Map;
 
 /**
  * Parser for *network-linkGeometries.csv file.
+ * @deprecated part of network index. (TODO: remove before merge)
  * */
+@Deprecated
 public class NetworkGeometryParser {
 
 	private final Path filename;

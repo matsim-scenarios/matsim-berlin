@@ -3,15 +3,9 @@ package org.matsim.prepare.counts;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Shape;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.geotools.data.shapefile.shp.ShapefileWriter;
-import org.geotools.feature.FeatureTypes;
-import org.geotools.feature.simple.SimpleFeatureBuilder;
-import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
-import org.geotools.referencing.crs.DefaultGeocentricCRS;
-import org.locationtech.jts.geom.LineString;
+import org.geotools.referencing.operation.transform.IdentityTransform;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
@@ -24,20 +18,17 @@ import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.filter.NetworkFilterManager;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.core.utils.geometry.geotools.MGC;
-import org.matsim.core.utils.gis.ShapeFileReader;
-import org.matsim.core.utils.gis.ShapeFileWriter;
 import org.matsim.counts.Count;
 import org.matsim.counts.Counts;
 import org.matsim.counts.CountsWriter;
-import org.matsim.prepare.berlinCounts.NetworkGeometryParser;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.TransformException;
 import picocli.CommandLine;
-import scala.sys.process.ProcessBuilderImpl;
 
+import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 @CommandLine.Command(
@@ -83,10 +74,9 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 		return 0;
 	}
 
-	private void matchWithNetwork(Path network) {
+	private void matchWithNetwork(Path network) throws TransformException, IOException {
 
 		Network net;
-
 		{
 			Network unfiltered = NetworkUtils.readNetwork(network.toString());
 			NetworkFilterManager manager = new NetworkFilterManager(unfiltered, new NetworkConfigGroup());
@@ -96,10 +86,6 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 		}
 
 		CoordinateTransformation transformation = crs.getTransformation();
-
-		Map<Id<Link>, LineString> geometries = new NetworkGeometryParser(networkGeometries)
-				.setCoordinateTransformation(crs.getInputCRS(), crs.getTargetCRS())
-				.parse();
 
 		/*int id = 0;
 		SimpleFeatureTypeBuilder typeBuilder = new SimpleFeatureTypeBuilder();
@@ -114,16 +100,10 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 			feature.setDefaultGeometry(g);
 			features.add(feature);
 		}
+		 */
 
-		ShapeFileWriter.writeGeometries(features, this.output + "lineStrings.shp");*/
 
-		Map<Link, LineString> geometriesWithLinks = new HashMap<>();
-
-		for (var entry : geometries.entrySet())
-			geometriesWithLinks.put(net.getLinks().get(entry.getKey()), entry.getValue());
-
-		NetworkIndex<BerlinCount> index = new NetworkIndex<>(geometriesWithLinks, 50, toMatch -> {
-
+		NetworkIndex<BerlinCount> index = new NetworkIndex<>(net, NetworkIndex.readGeometriesFromSumo(networkGeometries.toString(), IdentityTransform.create(2)), 50, toMatch -> {
 			Coord coord = toMatch.coord;
 			Coord transform = transformation.transform(coord);
 			return MGC.coord2Point(transform);
