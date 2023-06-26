@@ -3,8 +3,14 @@ package org.matsim.prepare.counts;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Shape;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.geotools.data.shapefile.shp.ShapefileWriter;
+import org.geotools.feature.FeatureTypes;
+import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
+import org.geotools.referencing.crs.DefaultGeocentricCRS;
 import org.locationtech.jts.geom.LineString;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
@@ -18,15 +24,20 @@ import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.filter.NetworkFilterManager;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.core.utils.geometry.geotools.MGC;
+import org.matsim.core.utils.gis.ShapeFileReader;
+import org.matsim.core.utils.gis.ShapeFileWriter;
 import org.matsim.counts.Count;
 import org.matsim.counts.Counts;
 import org.matsim.counts.CountsWriter;
 import org.matsim.prepare.berlinCounts.NetworkGeometryParser;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import picocli.CommandLine;
+import scala.sys.process.ProcessBuilderImpl;
 
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @CommandLine.Command(
@@ -55,7 +66,7 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 	@CommandLine.Mixin
 	private final CrsOptions crs = new CrsOptions();
 
-	private final HashMap<Integer, BerlinCount> stations = new HashMap<>();
+	private final Map<Integer, BerlinCount> stations = new HashMap<>();
 
 	public static void main(String[] args) {
 		new CreateCountsFromVMZ().execute(args);
@@ -72,7 +83,7 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 		return 0;
 	}
 
-	private void matchWithNetwork(Path network){
+	private void matchWithNetwork(Path network) {
 
 		Network net;
 
@@ -86,23 +97,40 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 
 		CoordinateTransformation transformation = crs.getTransformation();
 
-		//TODO check geometry crs!
-		Map<Id<Link>, LineString> geometries = new NetworkGeometryParser(networkGeometries).parse();
+		Map<Id<Link>, LineString> geometries = new NetworkGeometryParser(networkGeometries)
+				.setCoordinateTransformation(crs.getInputCRS(), crs.getTargetCRS())
+				.parse();
+
+		/*int id = 0;
+		SimpleFeatureTypeBuilder typeBuilder = new SimpleFeatureTypeBuilder();
+		typeBuilder.setName("network-geometries");
+		typeBuilder.setSRS("EPSG:25832");
+		SimpleFeatureType type = typeBuilder.buildFeatureType();
+		List<SimpleFeature> features = new ArrayList<>();
+
+		for(var g: geometries.values()){
+			SimpleFeatureBuilder builder = new SimpleFeatureBuilder(type);
+			SimpleFeature feature = builder.buildFeature(String.valueOf(id++));
+			feature.setDefaultGeometry(g);
+			features.add(feature);
+		}
+
+		ShapeFileWriter.writeGeometries(features, this.output + "lineStrings.shp");*/
 
 		Map<Link, LineString> geometriesWithLinks = new HashMap<>();
 
-		for(var entry: geometries.entrySet())
+		for (var entry : geometries.entrySet())
 			geometriesWithLinks.put(net.getLinks().get(entry.getKey()), entry.getValue());
 
 		NetworkIndex<BerlinCount> index = new NetworkIndex<>(geometriesWithLinks, 50, toMatch -> {
 
-			Coord coord = toMatch.getCoord();
+			Coord coord = toMatch.coord;
 			Coord transform = transformation.transform(coord);
 			return MGC.coord2Point(transform);
 		});
 
 		index.addLinkFilter((link, berlinCounts) -> {
-			String orientation = berlinCounts.getOrientation();
+			String orientation = berlinCounts.orientation;
 
 			Coord from = link.getFromNode().getCoord();
 			Coord to = link.getToNode().getCoord();
@@ -122,38 +150,44 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 			return pattern.matcher(linkDir).find();
 		});
 
-		for(var it = stations.entrySet().iterator(); it.hasNext();){
+		int counter = 0;
+
+		for (var it = stations.entrySet().iterator(); it.hasNext();) {
 
 			Map.Entry<Integer, BerlinCount> next = it.next();
 			BerlinCount station = next.getValue();
 
 			Link link = index.query(station);
 
-			if(link == null)
+			if (link == null) {
 				it.remove();
+				counter++;
+			} else
+				station.linkId = link.getId();
 		}
+
+		log.info("Could not match {} stations.", counter);
 	}
 
-	/**
-	 * reads the given Excel file and creates an BerlinCount object for every count
-	 *
-	 */
 	private void readExcelFile(String excel) {
-		try {
-			XSSFWorkbook wb = new XSSFWorkbook(excel);
-			for (Sheet sheet : wb)
-				ExcelDataFormat.handleSheet(stations, sheet);
+		XSSFWorkbook wb;
 
+		try {
+			wb = new XSSFWorkbook(excel);
 		} catch (Exception e) {
-			log.error(e);
+			log.error("Error reading excel file", e);
+			throw new RuntimeException("Error reading excel file");
 		}
+
+		extractStations(wb.getSheet("Stammdaten"));
+		extractCarVolumes(wb.getSheet("DTVW_KFZ"));
+		extractFreightVolumes(wb.getSheet("DTVW_LKW"));
+		extractHourlyDistribution(wb.getSheet("typ.Ganglinien_Mo-Do"));
+		extractFreightShare(wb.getSheet("LKW-Anteile"));
 	}
 
-	/**
-	 * uses the BerlinCount object to create a car and a truck counts file for matsim
-	 */
 	private void createCountsFile(String outputFile) {
-		log.warn("Create count files.");
+		log.info("Create count files.");
 		Counts<Link> countsPkw = new Counts<>();
 		countsPkw.setYear(2018);
 		countsPkw.setDescription("data from the berliner senate to matsim counts");
@@ -164,21 +198,20 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 		int counter = 0;
 
 		for (BerlinCount station : stations.values()) {
-			if (!station.isUsing()) {
+			if (!station.using) {
 				continue;
 			}
-			Id<Link> linkId = Id.createLinkId(station.getLinkid());
-			Count<Link> car = countsPkw.createAndAddCount(linkId, station.getMQ_ID() + "_" + station.getPosition() + "_" + station.getOrientation());
+			Count<Link> car = countsPkw.createAndAddCount(station.linkId, station.id + "_" + station.position + "_" + station.orientation);
 			//create hour volumes from 'Tagesganglinie'
-			double[] PERC_Q_PKW_TYPE = station.getPERC_Q_KFZ_TYPE();
+			double[] carShareAtHour = station.carShareAtHour;
 			for (int i = 1; i < 25; i++) {
-				car.createVolume(i, (station.getDTVW_KFZ() * PERC_Q_PKW_TYPE[i - 1]));
+				car.createVolume(i, (station.carVolume * carShareAtHour[i - 1]));
 			}
-			if (station.isLKW_Anteil()) {
-				Count<Link> freight = countsLkw.createAndAddCount(linkId, station.getMQ_ID() + "_" + station.getPosition() + "_" + station.getOrientation());
-				double[] PERC_Q_LKW_TYPE = station.getPERC_Q_LKW_TYPE();
+			if (station.hasFreightShare) {
+				Count<Link> freight = countsLkw.createAndAddCount(station.linkId, station.id + "_" + station.position + "_" + station.orientation);
+				double[] freightShareAtHour = station.freightShareAtHour;
 				for (int i = 1; i < 25; i++) {
-					freight.createVolume(i, (station.getDTVW_LKW() * PERC_Q_LKW_TYPE[i - 1]));
+					freight.createVolume(i, (station.freightVolume * freightShareAtHour[i - 1]));
 				}
 			}
 
@@ -190,238 +223,134 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 		new CountsWriter(countsLkw).write(outputFile + "freight_counts_from_vmz.xml");
 	}
 
-	/**
-	 * a description for every excel sheet that is given in the input file to process the data correctly
-	 */
-	private static final class ExcelDataFormat {
+	private void extractStations(Sheet sheet) {
+		Iterator<Row> it = sheet.iterator();
+		//skip header row
+		it.next();
 
-		public static void handleSheet(HashMap<Integer, BerlinCount> berlinCountsMap, Sheet sheet) {
-			log.info("Sheet contains {} rows.", sheet.getLastRowNum());
-			String sheetName = sheet.getSheetName();
-			switch(sheetName){
-				case "DTVW_KFZ":
-					for (Row row : sheet) {
-						int id = (int) row.getCell(0).getNumericCellValue();
-						BerlinCount station = new BerlinCount(id);
-						station.setDTVW_KFZ((int) row.getCell(1).getNumericCellValue());
-						berlinCountsMap.put(station.getMQ_ID(), station);
-					}
-					break;
-				case "DTVW_LKW":
-					for (Row row: sheet) {
-						int id = (int) row.getCell(0).getNumericCellValue();
-						BerlinCount station = berlinCountsMap.get(id);
-						station.setDTVW_LKW((int) row.getCell(1).getNumericCellValue());
-					}
-					break;
-				case "LKW-Anteile":
-					for (Row row: sheet) {
-						int id = (int) row.getCell(0).getNumericCellValue();
-						BerlinCount station = berlinCountsMap.get(id);
-						station.setPERC_LKW(row.getCell(1).getNumericCellValue());
-						station.setLKW_Anteil(true);
-					}
-					break;
-				case "typ.Ganglinien_Mo-Do":
-					for (Row row: sheet) {
-						int id = (int) row.getCell(0).getNumericCellValue();
-						BerlinCount station = berlinCountsMap.get(id);
-						int hour = (int) row.getCell(1).getNumericCellValue();
-						double PERC_Q_KFZ_TYPE = 0.0;
-						double PERC_Q_PKW_TYPE = 0.0;
-						double PERC_Q_LKW_TYPE = 0.0;
-						if (row.getCell(2) != null) {
-							PERC_Q_KFZ_TYPE = row.getCell(2).getNumericCellValue();
-						}
-						if (row.getCell(3) != null) {
-							PERC_Q_PKW_TYPE = row.getCell(3).getNumericCellValue();
-						}
-						if (row.getCell(4) != null) {
-							PERC_Q_LKW_TYPE = row.getCell(4).getNumericCellValue();
-						}
-						station.setArrays(hour, PERC_Q_KFZ_TYPE, PERC_Q_PKW_TYPE, PERC_Q_LKW_TYPE);
-					}
-					break;
-				case "Stammdaten":
-					for (Row row : sheet) {
-						int id = (int) row.getCell(0).getNumericCellValue();
-						BerlinCount station = berlinCountsMap.get(id);
+		while (it.hasNext()) {
+			Row row = it.next();
+			int id = (int) (row.getCell(0).getNumericCellValue());
+			BerlinCount station = new BerlinCount(id);
 
-						//get coord
-						double x = row.getCell(4).getNumericCellValue();
-						double y = row.getCell(5).getNumericCellValue();
-						station.setCoord(new Coord(x, y));
+			//get coord
+			double x = row.getCell(4).getNumericCellValue();
+			double y = row.getCell(5).getNumericCellValue();
+			station.coord = new Coord(x, y);
 
-						String position = row.getCell(1).getStringCellValue();
-						station.setPosition(replaceUmlaute(position));
+			String position = row.getCell(1).getStringCellValue();
+			station.position = replaceUmlaute(position);
 
-						String orientation = row.getCell(3).getStringCellValue();
-						station.setPosition(replaceUmlaute(orientation));
-					}
-					break;
-				default:
+			String orientation = row.getCell(3).getStringCellValue();
+			station.orientation = replaceUmlaute(orientation);
 
+			this.stations.put(id, station);
+		}
+	}
+
+	private void extractCarVolumes(Sheet sheet) {
+		Iterator<Row> it = sheet.iterator();
+		//skip header row
+		it.next();
+
+		while (it.hasNext()) {
+			Row row = it.next();
+			int id = (int) row.getCell(0).getNumericCellValue();
+			BerlinCount station = this.stations.get(id);
+			station.carVolume = (int) row.getCell(1).getNumericCellValue();
+		}
+	}
+
+	private void extractFreightVolumes(Sheet sheet) {
+		Iterator<Row> it = sheet.iterator();
+		//skip header row
+		it.next();
+
+		while (it.hasNext()) {
+			Row row = it.next();
+			int id = (int) row.getCell(0).getNumericCellValue();
+			BerlinCount station = this.stations.get(id);
+			station.freightVolume = (int) row.getCell(1).getNumericCellValue();
+		}
+	}
+
+	private void extractHourlyDistribution(Sheet sheet) {
+		Iterator<Row> it = sheet.iterator();
+		//skip header row
+		it.next();
+
+		while (it.hasNext()) {
+			Row row = it.next();
+			int id = (int) row.getCell(0).getNumericCellValue();
+			BerlinCount station = this.stations.get(id);
+			int hour = (int) row.getCell(1).getNumericCellValue();
+			double carShareAtHour = 0.0;
+			double freightShareAtHour = 0.0;
+			if (row.getCell(3) != null) {
+				carShareAtHour = row.getCell(3).getNumericCellValue();
 			}
+			if (row.getCell(4) != null) {
+				freightShareAtHour = row.getCell(4).getNumericCellValue();
+			}
+			station.carShareAtHour[hour] = carShareAtHour;
+			station.freightShareAtHour[hour] = freightShareAtHour;
 		}
+	}
 
-		/**
-		 * replaces the german umlauts
-		 */
-		private static String replaceUmlaute(String str) {
-			str = str.replace("ü", "ue")
-					.replace("ö", "oe")
-					.replace("ä", "ae")
-					.replace("ß", "ss")
-					.replaceAll("Ü(?=[a-zäöüß ])", "Ue")
-					.replaceAll("Ö(?=[a-zäöüß ])", "Oe")
-					.replaceAll("Ä(?=[a-zäöüß ])", "Ae")
-					.replaceAll("Ü", "UE")
-					.replaceAll("Ö", "OE")
-					.replaceAll("Ä", "AE");
-			return str;
+	private void extractFreightShare(Sheet sheet) {
+		Iterator<Row> it = sheet.iterator();
+		//skip header row
+		it.next();
+
+		while (it.hasNext()) {
+			Row row = it.next();
+			int id = (int) row.getCell(0).getNumericCellValue();
+			BerlinCount station = stations.get(id);
+			station.hasFreightShare = true;
 		}
+	}
 
+	private String replaceUmlaute(String str) {
+		str = str.replace("ü", "ue")
+				.replace("ö", "oe")
+				.replace("ä", "ae")
+				.replace("ß", "ss")
+				.replaceAll("Ü(?=[a-zäöüß ])", "Ue")
+				.replaceAll("Ö(?=[a-zäöüß ])", "Oe")
+				.replaceAll("Ä(?=[a-zäöüß ])", "Ae")
+				.replaceAll("Ü", "UE")
+				.replaceAll("Ö", "OE")
+				.replaceAll("Ä", "AE");
+		return str;
 	}
 
 	/**
-	 * the BerlinCount object to save the scanned data for further processing
+	 * The BerlinCount object to save the scanned data for further processing.
 	 */
 	private static final class BerlinCount {
 
-		private int MQ_ID;
-		private int DTVW_KFZ;
-		private int DTVW_LKW;
-		private double PERC_LKW;
-		private double[] PERC_Q_KFZ_TYPE = new double[24];
-		private double[] PERC_Q_PKW_TYPE = new double[24];
-		private double[] PERC_Q_LKW_TYPE = new double[24];
-		private int linkid;
+		private final int id;
+		private int carVolume;
+		private int freightVolume;
+		private final double[] carShareAtHour = new double[24];
+		private final double[] freightShareAtHour = new double[24];
+		private Id<Link> linkId;
 		private String position;
 		private String orientation;
-		private boolean LKW_Anteil = false;
-		private boolean using = false;
+		private boolean hasFreightShare = false;
+		private final boolean using = false;
 
 		private Coord coord;
 
-		public BerlinCount(int MQ_ID) {
-			this.MQ_ID = MQ_ID;
-		}
-
-		public boolean isUsing() {
-			return using;
-		}
-
-		public Coord getCoord() {
-			return coord;
-		}
-
-		public void setCoord(Coord coord) {
-			this.coord = coord;
-		}
-
-		public void setUsing(boolean using) {
-			this.using = using;
-		}
-
-		public String getPosition() {
-			return position;
-		}
-
-		public void setPosition(String position) {
-			this.position = position;
-		}
-
-		public String getOrientation() {
-			return orientation;
-		}
-
-		public void setOrientation(String orientation) {
-			this.orientation = orientation;
-		}
-
-		public boolean isLKW_Anteil() {
-			return LKW_Anteil;
-		}
-
-		public void setLKW_Anteil(boolean LKW_Anteil) {
-			this.LKW_Anteil = LKW_Anteil;
-		}
-
-		public int getMQ_ID() {
-			return MQ_ID;
-		}
-
-		public void setMQ_ID(int MQ_ID) {
-			this.MQ_ID = MQ_ID;
-		}
-
-		public int getDTVW_KFZ() {
-			return DTVW_KFZ;
-		}
-
-		public void setDTVW_KFZ(int DTVW_KFZ) {
-			this.DTVW_KFZ = DTVW_KFZ;
-		}
-
-		public int getDTVW_LKW() {
-			return DTVW_LKW;
-		}
-
-		public void setDTVW_LKW(int DTVW_LKW) {
-			this.DTVW_LKW = DTVW_LKW;
-		}
-
-		public double getPERC_LKW() {
-			return PERC_LKW;
-		}
-
-		public void setPERC_LKW(double PERC_LKW) {
-			this.PERC_LKW = PERC_LKW;
-		}
-
-		public double[] getPERC_Q_KFZ_TYPE() {
-			return PERC_Q_KFZ_TYPE;
-		}
-
-		public void setPERC_Q_KFZ_TYPE(double[] PERC_Q_KFZ_TYPE) {
-			this.PERC_Q_KFZ_TYPE = PERC_Q_KFZ_TYPE;
-		}
-
-		public double[] getPERC_Q_PKW_TYPE() {
-			return PERC_Q_PKW_TYPE;
-		}
-
-		public void setPERC_Q_PKW_TYPE(double[] PERC_Q_PKW_TYPE) {
-			this.PERC_Q_PKW_TYPE = PERC_Q_PKW_TYPE;
-		}
-
-		public double[] getPERC_Q_LKW_TYPE() {
-			return PERC_Q_LKW_TYPE;
-		}
-
-		public void setPERC_Q_LKW_TYPE(double[] PERC_Q_LKW_TYPE) {
-			this.PERC_Q_LKW_TYPE = PERC_Q_LKW_TYPE;
-		}
-
-		public int getLinkid() {
-			return linkid;
-		}
-
-		public void setLinkid(int linkid) {
-			this.linkid = linkid;
-		}
-
-		public void setArrays(int i, double PERC_Q_KFZ_TYPE, double PERC_Q_PKW_TYPE, double PERC_Q_LKW_TYPE) {
-			this.PERC_Q_KFZ_TYPE[i] = PERC_Q_KFZ_TYPE;
-			this.PERC_Q_PKW_TYPE[i] = PERC_Q_PKW_TYPE;
-			this.PERC_Q_LKW_TYPE[i] = PERC_Q_LKW_TYPE;
+		BerlinCount(int id) {
+			this.id = id;
 		}
 
 		@Override
 		public String toString() {
 			return "BerlinCount{" +
-					"MQ_ID=" + MQ_ID +
-					", linkid=" + linkid +
+					"MQ_ID=" + id +
+					", linkid=" + linkId.toString() +
 					", position='" + position + '\'' +
 					", orientation='" + orientation + '\'' +
 					'}';

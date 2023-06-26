@@ -6,12 +6,19 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.csv.QuoteMode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.geotools.geometry.jts.JTS;
+import org.geotools.referencing.CRS;
+import org.geotools.referencing.operation.transform.IdentityTransform;
 import org.jfree.data.io.CSV;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.core.utils.geometry.CoordinateTransformation;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.TransformException;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -27,6 +34,7 @@ public class NetworkGeometryParser {
 	private final Path filename;
 	private final CSVFormat format;
 	private final Logger logger = LogManager.getLogger(NetworkGeometryParser.class);
+	private MathTransform transformation = IdentityTransform.create(2);
 
 	public NetworkGeometryParser(Path filename){
 		this(filename, CSVFormat.newFormat(',').builder().setHeader().setSkipHeaderRecord(true).setQuote('\"').build());
@@ -38,6 +46,24 @@ public class NetworkGeometryParser {
 
 		if (!filename.toString().endsWith(".csv"))
 			throw new RuntimeException("Network geometries must be provided as *.csv file!");
+	}
+
+	public NetworkGeometryParser setCoordinateTransformation(String inputCrs, String targetCrs){
+		this.transformation = getCoordinateTransformation(inputCrs, targetCrs);
+		return this;
+	}
+
+	private MathTransform getCoordinateTransformation(String inputCrs, String targetCrs) {
+
+		try {
+			return CRS.findMathTransform(
+					CRS.decode(inputCrs, true),
+					CRS.decode(targetCrs, true)
+			);
+		} catch (FactoryException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Please check the coordinate systems!");
+		}
 	}
 
 	/**
@@ -61,7 +87,7 @@ public class NetworkGeometryParser {
 				LineString link = parseCoordinates(raw, factory);
 				Id<Link> linkId = Id.createLinkId(idAsString);
 
-				network.put(linkId, link);
+				network.put(linkId, this.transform(link));
 
 			}
 		} catch (IOException e) {
@@ -69,6 +95,16 @@ public class NetworkGeometryParser {
 		}
 
 		return network;
+	}
+
+	private LineString transform(LineString link) {
+
+		try {
+			return (LineString) JTS.transform(link, this.transformation);
+		} catch (TransformException e) {
+			logger.error("Error transforming linestring.", e);
+			return null;
+		}
 	}
 
 	private LineString parseCoordinates(String coordinateSequence, GeometryFactory factory) {
