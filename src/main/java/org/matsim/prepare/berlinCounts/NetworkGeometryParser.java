@@ -3,8 +3,10 @@ package org.matsim.prepare.berlinCounts;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.csv.QuoteMode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jfree.data.io.CSV;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
@@ -27,14 +29,14 @@ public class NetworkGeometryParser {
 	private final Logger logger = LogManager.getLogger(NetworkGeometryParser.class);
 
 	public NetworkGeometryParser(Path filename){
-		this(filename, CSVFormat.newFormat('c'));
+		this(filename, CSVFormat.newFormat(',').builder().setHeader().setSkipHeaderRecord(true).setQuote('\"').build());
 	}
 
 	public NetworkGeometryParser(Path filename, CSVFormat format){
 		this.filename = filename;
 		this.format = format;
 
-		if (!filename.endsWith(".csv"))
+		if (!filename.toString().endsWith(".csv"))
 			throw new RuntimeException("Network geometries must be provided as *.csv file!");
 	}
 
