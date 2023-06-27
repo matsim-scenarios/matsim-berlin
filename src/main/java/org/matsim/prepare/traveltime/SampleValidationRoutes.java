@@ -115,12 +115,13 @@ public class SampleValidationRoutes implements MATSimAppCommand {
 			}
 		}
 
-		String out = output.getPath().toString().replace(".csv", "-api-" + api + ".csv.gz");
+		String out = output.getPath().toString().replace(".csv", "-api-" + api + ".csv");
 
 
 		try (RouteValidator val = switch (api) {
 			case google -> new GoogleRouteValidator(apiKey);
 			case woosmap -> new WoosMapRouteValidator(apiKey);
+			case mapbox -> new MapboxRouteValidator(apiKey);
 		}) {
 
 			try (CSVPrinter csv = new CSVPrinter(IOUtils.getBufferedWriter(out), CSVFormat.DEFAULT)) {
@@ -137,8 +138,10 @@ public class SampleValidationRoutes implements MATSimAppCommand {
 						}
 					}
 
-					if (i++ % 100 == 0)
+					if (i++ % 50 == 0) {
 						log.info("Queried {} routes", i - 1);
+						csv.flush();
+					}
 				}
 			}
 		}
@@ -202,7 +205,8 @@ public class SampleValidationRoutes implements MATSimAppCommand {
 
 	public enum Api {
 		google,
-		woosmap
+		woosmap,
+		mapbox
 	}
 
 	private record Route(Id<Node> fromNode, Id<Node> toNode, Coord from, Coord to, double travelTime, double dist) {

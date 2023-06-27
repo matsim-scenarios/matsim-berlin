@@ -20,23 +20,12 @@ import java.util.Map;
 /**
  * Fetch route information from Google Maps api.
  */
-public class GoogleRouteValidator implements RouteValidator {
+public class GoogleRouteValidator extends AbstractRouteValidator {
 
 	private static final String URL = "https://routes.googleapis.com/directions/v2:computeRoutes";
 
-	private final String apiKey;
-	private final ObjectMapper mapper;
-	private final CloseableHttpClient httpClient;
-
 	public GoogleRouteValidator(String apiKey) {
-		this.apiKey = apiKey;
-
-		mapper = new ObjectMapper();
-		mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-		mapper.registerModule(new JavaTimeModule());
-		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-
-		httpClient = HttpClients.createDefault();
+		super(apiKey);
 	}
 
 	@Override
@@ -77,11 +66,6 @@ public class GoogleRouteValidator implements RouteValidator {
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
-	}
-
-	@Override
-	public void close() throws Exception {
-		httpClient.close();
 	}
 
 	private static final class Request {
