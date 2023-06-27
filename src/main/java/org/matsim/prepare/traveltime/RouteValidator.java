@@ -8,7 +8,7 @@ import java.time.temporal.TemporalAdjusters;
 /**
  * Interface to calculate route information.
  */
-public interface RouteValidator {
+public interface RouteValidator extends AutoCloseable {
 
 	/**
 	 * Create departure time for a week day in the future.

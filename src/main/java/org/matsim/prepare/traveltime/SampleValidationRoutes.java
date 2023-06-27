@@ -38,7 +38,7 @@ import java.util.SplittableRandom;
 )
 @CommandSpec(
 	requireNetwork = true,
-	produces = {"routes_validation_set.csv", "routes_api_results.csv.gz"}
+	produces = {"routes-validation.csv"}
 )
 public class SampleValidationRoutes implements MATSimAppCommand {
 
@@ -52,8 +52,11 @@ public class SampleValidationRoutes implements MATSimAppCommand {
 	@CommandLine.Mixin
 	private ShpOptions shp;
 
-	@CommandLine.Option(names = "--google-api-key", description = "API key for google maps.")
-	private String googleKey;
+	@CommandLine.Option(names = "--api", description = "API service that should be used", defaultValue = "google")
+	private Api api;
+
+	@CommandLine.Option(names = "--api-key", description = "API key.")
+	private String apiKey;
 
 	@CommandLine.Option(names = "--num-routes", description = "Number of routes (per time bin)", defaultValue = "1000")
 	private int numRoutes;
@@ -104,9 +107,7 @@ public class SampleValidationRoutes implements MATSimAppCommand {
 
 		log.info("Sampled {} routes in range {}", routes.size(), distRange);
 
-		RouteValidator val = new GoogleRouteValidator(googleKey);
-
-		try (CSVPrinter csv = new CSVPrinter(Files.newBufferedWriter(output.getPath("routes_validation_set.csv")), CSVFormat.DEFAULT)) {
+		try (CSVPrinter csv = new CSVPrinter(Files.newBufferedWriter(output.getPath()), CSVFormat.DEFAULT)) {
 			csv.printRecord("from_node", "to_node", "dist", "travel_time", "geometry");
 			for (Route route : routes) {
 				csv.printRecord(route.fromNode, route.toNode, route.dist, route.travelTime,
@@ -114,22 +115,31 @@ public class SampleValidationRoutes implements MATSimAppCommand {
 			}
 		}
 
-		try (CSVPrinter csv = new CSVPrinter(IOUtils.getBufferedWriter(output.getPath("routes_api_results.csv.gz").toString()), CSVFormat.DEFAULT)) {
-			csv.printRecord("from_node", "to_node", "api", "hour", "dist", "travel_time");
+		String out = output.getPath().toString().replace(".csv", "-api-" + api + ".csv.gz");
 
-			int i = 0;
-			for (Route route : routes) {
-				for (int h : hours) {
-					try {
-						RouteValidator.Result res = val.calculate(route.from, route.to, h);
-						csv.printRecord(route.fromNode, route.toNode, val.name(), h, res.dist(), res.travelTime());
-					} catch (Exception e) {
-						log.warn("Could not retrieve result for route {}", route);
+
+		try (RouteValidator val = switch (api) {
+			case google -> new GoogleRouteValidator(apiKey);
+			case woosmap -> new WoosMapRouteValidator(apiKey);
+		}) {
+
+			try (CSVPrinter csv = new CSVPrinter(IOUtils.getBufferedWriter(out), CSVFormat.DEFAULT)) {
+				csv.printRecord("from_node", "to_node", "api", "hour", "dist", "travel_time");
+
+				int i = 0;
+				for (Route route : routes) {
+					for (int h : hours) {
+						try {
+							RouteValidator.Result res = val.calculate(route.from, route.to, h);
+							csv.printRecord(route.fromNode, route.toNode, val.name(), h, res.dist(), res.travelTime());
+						} catch (Exception e) {
+							log.warn("Could not retrieve result for route {}", route);
+						}
 					}
-				}
 
-				if (i++ % 100 == 0)
-					log.info("Queried {} routes", i);
+					if (i++ % 100 == 0)
+						log.info("Queried {} routes", i - 1);
+				}
 			}
 		}
 
@@ -188,6 +198,11 @@ public class SampleValidationRoutes implements MATSimAppCommand {
 			));
 		}
 		return result;
+	}
+
+	public enum Api {
+		google,
+		woosmap
 	}
 
 	private record Route(Id<Node> fromNode, Id<Node> toNode, Coord from, Coord to, double travelTime, double dist) {
