@@ -1,4 +1,4 @@
-package org.matsim.prepare.berlinCounts;
+package org.matsim.prepare.counts;
 
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.network.Link;

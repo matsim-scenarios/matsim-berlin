@@ -110,7 +110,7 @@ $p/berlin-$V-network-with-pt.xml.gz: $p/berlin-$V-network.xml.gz
 
 # TODO: Will be the updated network
 $p/berlin-v6.1-network.xml.gz: input/sumo.net.xml
-	$(sc) prepare network-from-sumo $< --output $@
+	$(sc) prepare network-from-sumo $< --target-crs $(CRS) --output $@
 
 	$(sc) prepare clean-network $@ --output $@ --modes car
 

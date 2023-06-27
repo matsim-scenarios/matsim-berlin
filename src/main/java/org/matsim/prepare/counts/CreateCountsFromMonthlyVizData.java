@@ -1,6 +1,5 @@
-package org.matsim.prepare.berlinCounts;
+package org.matsim.prepare.counts;
 
-import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
@@ -8,7 +7,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.geotools.referencing.operation.transform.IdentityTransform;
 import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.matsim.api.core.v01.Coord;
@@ -26,6 +27,7 @@ import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.counts.Count;
 import org.matsim.counts.Counts;
 import org.matsim.counts.CountsWriter;
+import org.opengis.referencing.operation.TransformException;
 import picocli.CommandLine;
 import tech.tablesaw.api.DateColumn;
 import tech.tablesaw.api.DoubleColumn;
@@ -33,7 +35,6 @@ import tech.tablesaw.api.StringColumn;
 import tech.tablesaw.api.Table;
 
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -158,43 +159,14 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		return factory.createLineString(coordinates);
 	}
 
-	private Map<Link, LineString> readNetworkGeometries(Path geometries, Map<Id<Link>, ? extends Link> links) {
-
-		logger.info("Parsing link geometries.");
-
-		Map<Link, LineString> network = new HashMap<>();
-
-		GeometryFactory factory = new GeometryFactory();
-
-		try {
-			CSVParser records = csv.getFormat().builder().setDelimiter(',').build().parse(new FileReader(geometries.toString()));
-
-			for (CSVRecord r : records) {
-
-				String idAsString = r.get("LinkId");
-				String raw = r.get("Geometry");
-
-				LineString link = parseCoordinates(raw, factory);
-
-				Id<Link> linkId = Id.createLinkId(idAsString);
-				if (links.containsKey(linkId))
-					network.put(links.get(linkId), link);
-			}
-		} catch (IOException e) {
-			logger.warn(e.getMessage());
-		}
-
-		return network;
-	}
-
-	private void matchWithNetwork(Path networkPath, Path geometries, Map<String, Station> stations, CountsOption countsOption) {
+	private void matchWithNetwork(Path networkPath, Path geometries, Map<String, Station> stations, CountsOption countsOption) throws TransformException, IOException {
 
 		Network network = NetworkUtils.readNetwork(networkPath.toString());
 		CoordinateTransformation transformation = crs.getTransformation();
 
-		Map<Link, LineString> networkGeometries = readNetworkGeometries(geometries, network.getLinks());
-		NetworkIndex<Station> index = new NetworkIndex<>(networkGeometries, 50, toMatch -> {
-			Coord coord = ((Station) toMatch).coord();
+		Map<Id<Link>, Geometry> networkGeometries = NetworkIndex.readGeometriesFromSumo(geometries.toString(), IdentityTransform.create(2));
+		NetworkIndex<Station> index = new NetworkIndex<>(network, networkGeometries, 50, toMatch -> {
+			Coord coord = toMatch.coord();
 			Coord transform = transformation.transform(coord);
 			return MGC.coord2Point(transform);
 		});
