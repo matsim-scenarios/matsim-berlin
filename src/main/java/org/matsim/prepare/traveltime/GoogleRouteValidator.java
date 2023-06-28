@@ -30,7 +30,7 @@ public class GoogleRouteValidator extends AbstractRouteValidator {
 
 	@Override
 	public String name() {
-		return "Google";
+		return "google";
 	}
 
 	@Override

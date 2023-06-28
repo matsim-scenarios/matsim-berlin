@@ -10,7 +10,7 @@ import java.io.UncheckedIOException;
 import java.util.Locale;
 
 /**
- * Validator for woos map.
+ * Validator for woos map. Appears to use HERE as datasource.
  */
 public class WoosMapRouteValidator extends AbstractRouteValidator {
 

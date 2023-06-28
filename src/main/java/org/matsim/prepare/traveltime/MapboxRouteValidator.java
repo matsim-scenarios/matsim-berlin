@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Locale;
 
+/**
+ * Access route data from mapbox
+ */
 public class MapboxRouteValidator extends AbstractRouteValidator {
 
 	private static final String URL = "https://api.mapbox.com/directions/v5/mapbox/driving-traffic/";
@@ -24,6 +27,14 @@ public class MapboxRouteValidator extends AbstractRouteValidator {
 
 	@Override
 	public Result calculate(Coord from, Coord to, int hour) {
+
+		// https://docs.mapbox.com/api/overview/#rate-limits
+		// 300 per minute
+		try {
+			Thread.sleep(200);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 
 		// https://docs.mapbox.com/api/navigation/directions/
 
