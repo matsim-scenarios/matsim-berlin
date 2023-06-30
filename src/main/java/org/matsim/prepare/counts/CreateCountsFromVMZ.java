@@ -1,5 +1,7 @@
 package org.matsim.prepare.counts;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Row;
@@ -25,10 +27,9 @@ import org.opengis.referencing.operation.TransformException;
 import picocli.CommandLine;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @CommandLine.Command(
@@ -51,6 +52,9 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 	@CommandLine.Option(names = "--network-geometries", description = "path to *linkGeometries.csv", required = true)
 	private Path networkGeometries;
 
+	@CommandLine.Option(names = "--use-road-names", description = "if road names should be used for map matching")
+	private boolean roadNames = false;
+
 	@CommandLine.Option(names = "--output", description = "Base path for the output")
 	private String output;
 
@@ -58,6 +62,7 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 	private final CrsOptions crs = new CrsOptions();
 
 	private final Map<Integer, BerlinCount> stations = new HashMap<>();
+	private final List<BerlinCount> unmatched = new ArrayList<>();
 
 	public static void main(String[] args) {
 		new CreateCountsFromVMZ().execute(args);
@@ -87,23 +92,7 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 
 		CoordinateTransformation transformation = crs.getTransformation();
 
-		/*int id = 0;
-		SimpleFeatureTypeBuilder typeBuilder = new SimpleFeatureTypeBuilder();
-		typeBuilder.setName("network-geometries");
-		typeBuilder.setSRS("EPSG:25832");
-		SimpleFeatureType type = typeBuilder.buildFeatureType();
-		List<SimpleFeature> features = new ArrayList<>();
-
-		for(var g: geometries.values()){
-			SimpleFeatureBuilder builder = new SimpleFeatureBuilder(type);
-			SimpleFeature feature = builder.buildFeature(String.valueOf(id++));
-			feature.setDefaultGeometry(g);
-			features.add(feature);
-		}
-		 */
-
-
-		NetworkIndex<BerlinCount> index = new NetworkIndex<>(net, NetworkIndex.readGeometriesFromSumo(networkGeometries.toString(), IdentityTransform.create(2)), 50, toMatch -> {
+		NetworkIndex<BerlinCount> index = new NetworkIndex<>(net, NetworkIndex.readGeometriesFromSumo(networkGeometries.toString(), IdentityTransform.create(2)), 100, toMatch -> {
 			Coord coord = toMatch.coord;
 			Coord transform = transformation.transform(coord);
 			return MGC.coord2Point(transform);
@@ -130,8 +119,6 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 			return pattern.matcher(linkDir).find();
 		});
 
-		int counter = 0;
-
 		for (var it = stations.entrySet().iterator(); it.hasNext();) {
 
 			Map.Entry<Integer, BerlinCount> next = it.next();
@@ -141,12 +128,14 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 
 			if (link == null) {
 				it.remove();
-				counter++;
-			} else
+				unmatched.add(station);
+			} else {
 				station.linkId = link.getId();
+				index.remove(link);
+			}
 		}
 
-		log.info("Could not match {} stations.", counter);
+		log.info("Could not match {} stations.", unmatched.size());
 	}
 
 	private void readExcelFile(String excel) {
@@ -178,9 +167,7 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 		int counter = 0;
 
 		for (BerlinCount station : stations.values()) {
-			if (!station.using) {
-				continue;
-			}
+
 			Count<Link> car = countsPkw.createAndAddCount(station.linkId, station.id + "_" + station.position + "_" + station.orientation);
 			//create hour volumes from 'Tagesganglinie'
 			double[] carShareAtHour = station.carShareAtHour;
@@ -201,6 +188,25 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 		log.info("Write down {} count stations to file", counter);
 		new CountsWriter(countsPkw).write(outputFile + "car_counts_from_vmz.xml");
 		new CountsWriter(countsLkw).write(outputFile + "freight_counts_from_vmz.xml");
+
+		log.info("Write down {} unmatched count stations to file", unmatched.size());
+		try (CSVPrinter printer = CSVFormat.Builder.create().setHeader("id", "position", "x", "y").build()
+				.print(Path.of(outputFile + "unmatched_stations.csv"), Charset.defaultCharset())) {
+
+			CoordinateTransformation transformation = crs.getTransformation();
+
+			for (BerlinCount count : unmatched) {
+				printer.print(count.id);
+				printer.print(count.position);
+				Coord transform = transformation.transform(count.coord);
+				printer.print(transform.getX());
+				printer.print(transform.getY());
+				printer.println();
+			}
+
+		} catch (IOException e) {
+			log.error("Error printing unmatched stations", e);
+		}
 	}
 
 	private void extractStations(Sheet sheet) {
@@ -221,8 +227,7 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 			String position = row.getCell(1).getStringCellValue();
 			station.position = replaceUmlaute(position);
 
-			String orientation = row.getCell(3).getStringCellValue();
-			station.orientation = replaceUmlaute(orientation);
+			station.orientation = row.getCell(3).getStringCellValue();
 
 			this.stations.put(id, station);
 		}
@@ -318,7 +323,6 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 		private String position;
 		private String orientation;
 		private boolean hasFreightShare = false;
-		private final boolean using = false;
 
 		private Coord coord;
 
