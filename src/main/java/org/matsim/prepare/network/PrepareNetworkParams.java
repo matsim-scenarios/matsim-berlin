@@ -63,6 +63,7 @@ public class PrepareNetworkParams implements MATSimAppCommand {
 				Id<Link> id = Id.createLinkId(row.get("edgeId"));
 
 				Object2DoubleOpenHashMap<String> ft = new Object2DoubleOpenHashMap<>();
+				ft.defaultReturnValue(Double.NaN);
 
 				for (String column : header) {
 					String v = row.get(column);

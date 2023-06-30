@@ -24,6 +24,9 @@ def build_datasets(network, inter, routes):
 
     aggr = df_r.groupby(["junctionType"])
     for g in aggr.groups:
+        if str(g) == "dead_end":
+            continue
+
         result["speedRelative_" + str(g)] = prepare_dataframe(aggr.get_group(g), target="speedRelative")
 
     aggr = df_i.groupby(["junctionType"])

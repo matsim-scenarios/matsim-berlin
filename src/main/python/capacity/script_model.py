@@ -195,7 +195,7 @@ for t in targets:
     for m in classifier:
         print("Running model", m)
 
-        study = optuna.create_study(direction='minimize')
+        study = optuna.create_study(sampler=optuna.samplers.TPESampler(seed=42), direction='minimize')
         study.optimize(objective(m, t), n_trials=n_trials, callbacks=[callback], show_progress_bar=True)
 
         models[t][m] = best
@@ -226,70 +226,68 @@ for t in targets:
 # Current models
 
 ####  speedRelative_priority
-Best model (XGBRegressor(alpha=0.016274331343132255, base_score=0.5, booster='gbtree',
+Best model (XGBRegressor(alpha=0.02177970660809249, base_score=0.5, booster='gbtree',
              callbacks=None, colsample_bylevel=1, colsample_bynode=0.9,
              colsample_bytree=0.9, early_stopping_rounds=None,
-             enable_categorical=False, eta=0.49738177270937495,
-             eval_metric='mae', feature_types=None, gamma=0.010989774140675113,
+             enable_categorical=False, eta=0.42368870348360776,
+             eval_metric='mae', feature_types=None, gamma=0.010202903364639485,
              gpu_id=-1, grow_policy='depthwise', importance_type=None,
-             interaction_constraints='', lambda=0.4808316830202329,
-             learning_rate=0.497381777, max_bin=256, max_cat_threshold=64,
+             interaction_constraints='', lambda=0.08513652356917698,
+             learning_rate=0.42368871, max_bin=256, max_cat_threshold=64,
              max_cat_to_onehot=4, max_delta_step=0, max_depth=4, max_leaves=0,
-             min_child_weight=2, missing=nan, monotone_constraints='()',
-             n_estimators=30, n_jobs=0, ...), 0.03486538178476313)
+             min_child_weight=9, missing=nan, monotone_constraints='()',
+             n_estimators=30, n_jobs=0, ...), 0.036465250251300194)
 ####  speedRelative_right_before_left
-Best model (LGBMRegressor(colsample_bytree=0.9, n_estimators=30, num_leaves=15,
-              objective='regression', random_state=1373158606,
-              reg_alpha=2.8781138265221893e-08, subsample=0.9,
-              subsample_freq=10), 0.03110904840177184)
+Best model (RandomForestRegressor(max_depth=4, n_estimators=25, oob_score=True,
+                      random_state=1373158606), 0.029128045291676417)
 ####  speedRelative_traffic_light
-Best model (XGBRegressor(alpha=0.18112228287174761, base_score=0.5, booster='gbtree',
+Best model (XGBRegressor(alpha=0.4114218691246758, base_score=0.5, booster='gbtree',
              callbacks=None, colsample_bylevel=1, colsample_bynode=0.9,
              colsample_bytree=0.9, early_stopping_rounds=None,
-             enable_categorical=False, eta=0.44431894139221145,
-             eval_metric='mae', feature_types=None, gamma=0.010592854880473093,
+             enable_categorical=False, eta=0.4558030077082193,
+             eval_metric='mae', feature_types=None, gamma=0.014543024252670228,
              gpu_id=-1, grow_policy='depthwise', importance_type=None,
-             interaction_constraints='', lambda=0.02730064085187793,
-             learning_rate=0.44431895, max_bin=256, max_cat_threshold=64,
-             max_cat_to_onehot=4, max_delta_step=0, max_depth=4, max_leaves=0,
-             min_child_weight=2, missing=nan, monotone_constraints='()',
-             n_estimators=30, n_jobs=0, ...), 0.07547469940758773)
-####  capacity_priority
-Best model (XGBRegressor(alpha=0.10354942228390128, base_score=0.5, booster='gbtree',
-             callbacks=None, colsample_bylevel=1, colsample_bynode=0.9,
-             colsample_bytree=0.9, early_stopping_rounds=None,
-             enable_categorical=False, eta=0.3219114758096538,
-             eval_metric='mae', feature_types=None, gamma=0.04441440963458821,
-             gpu_id=-1, grow_policy='depthwise', importance_type=None,
-             interaction_constraints='', lambda=0.037683052815746965,
-             learning_rate=0.321911484, max_bin=256, max_cat_threshold=64,
-             max_cat_to_onehot=4, max_delta_step=0, max_depth=4, max_leaves=0,
-             min_child_weight=8, missing=nan, monotone_constraints='()',
-             n_estimators=25, n_jobs=0, ...), 63.271886462249334)
-####  capacity_right_before_left
-Best model (XGBRegressor(alpha=0.776746384838071, base_score=0.5, booster='gbtree',
-             callbacks=None, colsample_bylevel=1, colsample_bynode=0.9,
-             colsample_bytree=0.9, early_stopping_rounds=None,
-             enable_categorical=False, eta=0.2968084020008939,
-             eval_metric='mae', feature_types=None, gamma=0.011351481475457127,
-             gpu_id=-1, grow_policy='depthwise', importance_type=None,
-             interaction_constraints='', lambda=0.01634910363853723,
-             learning_rate=0.296808392, max_bin=256, max_cat_threshold=64,
-             max_cat_to_onehot=4, max_delta_step=0, max_depth=4, max_leaves=0,
-             min_child_weight=2, missing=nan, monotone_constraints='()',
-             n_estimators=30, n_jobs=0, ...), 36.30614042669991)
-####  capacity_traffic_light
-Best model (XGBRegressor(alpha=0.01571462151622278, base_score=0.5, booster='gbtree',
-             callbacks=None, colsample_bylevel=1, colsample_bynode=0.9,
-             colsample_bytree=0.9, early_stopping_rounds=None,
-             enable_categorical=False, eta=0.4194660419570857,
-             eval_metric='mae', feature_types=None, gamma=0.873878271331525,
-             gpu_id=-1, grow_policy='depthwise', importance_type=None,
-             interaction_constraints='', lambda=0.8022157011051211,
-             learning_rate=0.419466048, max_bin=256, max_cat_threshold=64,
+             interaction_constraints='', lambda=0.09033625662221197,
+             learning_rate=0.455803007, max_bin=256, max_cat_threshold=64,
              max_cat_to_onehot=4, max_delta_step=0, max_depth=4, max_leaves=0,
              min_child_weight=5, missing=nan, monotone_constraints='()',
-             n_estimators=30, n_jobs=0, ...), 133.36648901538405)
+             n_estimators=30, n_jobs=0, ...), 0.06969269470129122)
+####  capacity_priority
+Best model (XGBRegressor(alpha=0.012823829390192915, base_score=0.5, booster='gbtree',
+             callbacks=None, colsample_bylevel=1, colsample_bynode=0.9,
+             colsample_bytree=0.9, early_stopping_rounds=None,
+             enable_categorical=False, eta=0.33318058063089306,
+             eval_metric='mae', feature_types=None, gamma=0.06449766585100719,
+             gpu_id=-1, grow_policy='depthwise', importance_type=None,
+             interaction_constraints='', lambda=0.10166688193548182,
+             learning_rate=0.333180577, max_bin=256, max_cat_threshold=64,
+             max_cat_to_onehot=4, max_delta_step=0, max_depth=4, max_leaves=0,
+             min_child_weight=3, missing=nan, monotone_constraints='()',
+             n_estimators=30, n_jobs=0, ...), 61.265829688103516)
+####  capacity_right_before_left
+Best model (XGBRegressor(alpha=0.4820795585549199, base_score=0.5, booster='gbtree',
+             callbacks=None, colsample_bylevel=1, colsample_bynode=0.9,
+             colsample_bytree=0.9, early_stopping_rounds=None,
+             enable_categorical=False, eta=0.34345978255494797,
+             eval_metric='mae', feature_types=None, gamma=0.011470132097872277,
+             gpu_id=-1, grow_policy='depthwise', importance_type=None,
+             interaction_constraints='', lambda=0.07293005595696954,
+             learning_rate=0.343459785, max_bin=256, max_cat_threshold=64,
+             max_cat_to_onehot=4, max_delta_step=0, max_depth=4, max_leaves=0,
+             min_child_weight=9, missing=nan, monotone_constraints='()',
+             n_estimators=30, n_jobs=0, ...), 36.788928046413986)
+####  capacity_traffic_light
+Best model (XGBRegressor(alpha=0.023706692661408867, base_score=0.5, booster='gbtree',
+             callbacks=None, colsample_bylevel=1, colsample_bynode=0.9,
+             colsample_bytree=0.9, early_stopping_rounds=None,
+             enable_categorical=False, eta=0.38082213314034685,
+             eval_metric='mae', feature_types=None, gamma=0.14157989343524963,
+             gpu_id=-1, grow_policy='depthwise', importance_type=None,
+             interaction_constraints='', lambda=0.010045523253098031,
+             learning_rate=0.380822122, max_bin=256, max_cat_threshold=64,
+             max_cat_to_onehot=4, max_delta_step=0, max_depth=4, max_leaves=0,
+             min_child_weight=6, missing=nan, monotone_constraints='()',
+             n_estimators=30, n_jobs=0, ...), 133.86620550200644)
 
 """
 

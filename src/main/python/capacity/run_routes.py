@@ -12,7 +12,10 @@ init_env()
 
 import sumolib.net
 import traci  # noqa
+
 from sumolib import checkBinary  # noqa
+from randomTrips import main, get_options
+
 import lxml.etree as ET
 
 import pandas as pd
@@ -40,16 +43,16 @@ def writeRouteFile(f_name, fromEdge, toEdge, veh, end, scenario):
         f.write(text)
 
 
-def writeDetectorFile(f_name, output):
+def writeDetectorFile(f_name, begin):
     """ Write files needed for analysis """
 
     # https://sumo.dlr.de/docs/Simulation/Output/Lane-_or_Edge-based_Traffic_Measures.html
 
     text = f"""<?xml version="1.0" encoding="UTF-8"?>
 	<additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
-	    <edgeData id="out" file="out.xml" excludeEmpty="true"/>
+	    <edgeData id="out" file="out.xml" begin="%d" excludeEmpty="true"/>
 	</additional>
-	"""
+	""" % begin
 
     with open(f_name, 'w') as f:
         f.write(text)
@@ -68,6 +71,10 @@ def read_result(out):
         }
         for a in ("traveltime", "density", "waitingTime", "timeLoss", "speed", "speedRelative"):
             d[a] = float(elem.attrib.get(a, float("nan")))
+
+        # Skip the non primary routes
+        if int(elem.attrib.get("entered", "0")) < 100 and int(elem.attrib.get("left", "0")) < 100:
+            continue
 
         data.append(d)
 
@@ -89,6 +96,7 @@ def run(args, routes, location_offset):
         p_network = join(args.runner, "filtered.net.xml")
         p_routes = join(args.runner, "route.rou.xml")
         p_detector = join(args.runner, "detector.add.xml")
+        p_trips = join(args.runner, "trips.trips.xml")
 
         # 1hour simulation plus travel time
         end = int(route.travel_time + 3600)
@@ -97,11 +105,17 @@ def run(args, routes, location_offset):
 
         # Nearly uncongested vehicle flow
         writeRouteFile(p_routes, route.fromEdge, route.toEdge, int(route.min_capacity * 0.3), end, args.scenario)
-        writeDetectorFile(p_detector, args.runner)
+        writeDetectorFile(p_detector, route.travel_time)
+
+        # Produce some very light traffic on the other roads
+        main(get_options(["-n", p_network, "-o", p_trips, "-r", join(args.runner, "random_routes.rou.xml"),
+                          "--validate", "-e", end, '-t type="vDist"',
+                          "--insertion-density", "10", "--fringe-factor", "max"]))
 
         p_scenario = join(args.runner, "scenario.sumocfg")
 
-        write_scenario(p_scenario, basename(p_network), basename(p_routes), basename(p_detector), args.step_length, end)
+        write_scenario(p_scenario, basename(p_network), basename(p_routes) + "," + "trips.trips.xml",
+                       basename(p_detector), args.step_length, end)
 
         try:
             go(p_scenario, p_network, end, route.fromEdge + "_" + route.toEdge, args)

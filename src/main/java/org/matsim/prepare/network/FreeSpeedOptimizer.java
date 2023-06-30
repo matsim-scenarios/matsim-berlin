@@ -270,7 +270,8 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 		public String toString() {
 			if (f == 0)
 				return "Request{" +
-					"b50=" + b50 +
+					"b30=" + b30 +
+					", b50=" + b50 +
 					", b90=" + b90 +
 					'}';
 

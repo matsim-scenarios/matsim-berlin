@@ -424,6 +424,9 @@ public class"""
         pre += "\t\t" + ft
 
     pre += """
+        for (int i = 0; i < data.length; i++)
+            if (Double.isNaN(data[i])) throw new IllegalArgumentException("Invalid data at index: " + i);
+    
         return score(data);
     }
     """
