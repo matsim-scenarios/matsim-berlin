@@ -5,7 +5,9 @@ import org.apache.logging.log4j.Logger;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.operation.transform.IdentityTransform;
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.MultiLineString;
+import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
@@ -16,6 +18,7 @@ import org.matsim.application.prepare.counts.NetworkIndex;
 import org.matsim.core.config.groups.NetworkConfigGroup;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.filter.NetworkFilterManager;
+import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.counts.Counts;
 import org.matsim.counts.CountsWriter;
 import org.matsim.run.RunOpenBerlinScenario;
@@ -27,6 +30,8 @@ import picocli.CommandLine;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -133,8 +138,23 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 
 		MathTransform transformation = getCoordinateTransformation(shp.getShapeCrs(), RunOpenBerlinScenario.CRS);
 
+		BiPredicate<Link, MultiLineString> filter = (link, multiLineString) -> {
+
+			Coordinate[] coordinates = multiLineString.getCoordinates();
+			Coordinate from = coordinates[0];
+			Coordinate to = coordinates[coordinates.length - 1];
+
+			Direction lsDirection = getLinkDirection(MGC.coordinate2Coord(from), MGC.coordinate2Coord(to));
+			Direction linkDirection = getLinkDirection(link.getFromNode().getCoord(), link.getToNode().getCoord());
+
+			return lsDirection.equals(linkDirection);
+		};
+
+		BiPredicate<Link, MultiLineString> filterOppositeDirection = (link, multiLineString) -> !filter.test(link, multiLineString);
+
 		log.info("Processing simple features.");
 		int counter = 0;
+		int nullCounter = 0;
 		for (SimpleFeature feature : features) {
 
 			counter++;
@@ -149,11 +169,18 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 			MultiLineString transformed = (MultiLineString) JTS.transform(ls, transformation);
 
 			// TODO: multiple queries depending on direction
+			// TODO: in case 'both directions': find opposite direction link
 
+			String direction = (String) feature.getAttribute("vricht");
 
-			Link matched = index.query(transformed);
+			Link matched = switch (direction) {
+				case "R" -> index.query(transformed, filter);
+				case "G" -> index.query(transformed, filterOppositeDirection);
+				default -> index.query(transformed);
+			};
+
 			if (matched == null) {
-				log.warn("Could not match feature {}. Maybe try with a bigger search range?", id);
+				nullCounter++;
 			} else {
 				index.remove(matched);
 
@@ -166,11 +193,31 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 			}
 		}
 
+		log.info("Could not match {} features", nullCounter);
+
 		log.info("Write results to {}", output);
 		new CountsWriter(car).write(output + "car-counts.xml.gz");
 		new CountsWriter(freight).write(output + "freight-counts.xml.gz");
 
 		return 0;
+	}
+
+	private Direction getLinkDirection(Coord from, Coord to) {
+
+		String vertical;
+		String horizontal;
+
+		if(from.getY() > to.getY()){
+			vertical = "nord";
+		} else
+			vertical = "süd";
+
+		if(from.getX() > to.getX()){
+			horizontal = "ost";
+		} else
+			horizontal = "west";
+
+		return new Direction(vertical, horizontal);
 	}
 
 	private List<Predicate<Link>> createRoadTypeFilter(List<String> types) {
@@ -192,6 +239,17 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 
 	private record Feature() {
 
+	}
+
+	private record Direction(String vertical, String horizontal){
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+			Direction direction = (Direction) o;
+			return direction.horizontal.equals(this.horizontal) && direction.vertical.equals(this.vertical);
+		}
 	}
 
 }
