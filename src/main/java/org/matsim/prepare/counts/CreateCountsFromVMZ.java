@@ -101,8 +101,8 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 		index.addLinkFilter((link, berlinCounts) -> {
 			String orientation = berlinCounts.orientation;
 
-			Coord from = link.getFromNode().getCoord();
-			Coord to = link.getToNode().getCoord();
+			Coord from = link.link().getFromNode().getCoord();
+			Coord to = link.link().getToNode().getCoord();
 
 			String linkDir = "";
 			if (to.getY() > from.getY()) {

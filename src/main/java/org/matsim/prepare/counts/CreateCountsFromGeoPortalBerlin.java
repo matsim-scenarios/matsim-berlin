@@ -3,11 +3,13 @@ package org.matsim.prepare.counts;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.geotools.geometry.jts.JTS;
+import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.operation.transform.IdentityTransform;
 import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.MultiLineString;
-import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
@@ -18,7 +20,6 @@ import org.matsim.application.prepare.counts.NetworkIndex;
 import org.matsim.core.config.groups.NetworkConfigGroup;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.filter.NetworkFilterManager;
-import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.counts.Counts;
 import org.matsim.counts.CountsWriter;
 import org.matsim.run.RunOpenBerlinScenario;
@@ -30,8 +31,6 @@ import picocli.CommandLine;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -138,19 +137,6 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 
 		MathTransform transformation = getCoordinateTransformation(shp.getShapeCrs(), RunOpenBerlinScenario.CRS);
 
-		BiPredicate<Link, MultiLineString> filter = (link, multiLineString) -> {
-
-			Coordinate[] coordinates = multiLineString.getCoordinates();
-			Coordinate from = coordinates[0];
-			Coordinate to = coordinates[coordinates.length - 1];
-
-			Direction lsDirection = getLinkDirection(MGC.coordinate2Coord(from), MGC.coordinate2Coord(to));
-			Direction linkDirection = getLinkDirection(link.getFromNode().getCoord(), link.getToNode().getCoord());
-
-			return lsDirection.equals(linkDirection);
-		};
-
-		BiPredicate<Link, MultiLineString> filterOppositeDirection = (link, multiLineString) -> !filter.test(link, multiLineString);
 
 		log.info("Processing simple features.");
 		int counter = 0;
@@ -168,57 +154,47 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 
 			MultiLineString transformed = (MultiLineString) JTS.transform(ls, transformation);
 
-			// TODO: multiple queries depending on direction
-			// TODO: in case 'both directions': find opposite direction link
-
 			String direction = (String) feature.getAttribute("vricht");
 
-			Link matched = switch (direction) {
-				case "R" -> index.query(transformed, filter);
-				case "G" -> index.query(transformed, filterOppositeDirection);
-				default -> index.query(transformed);
-			};
-
-			if (matched == null) {
-				nullCounter++;
-			} else {
-				index.remove(matched);
-
-				long carDTV = (Long) feature.getAttribute("dtvw_kfz");
-				long freightDTV = (Long) feature.getAttribute("dtvw_lkw");
-
-				String name = (String) feature.getAttribute("str_name");
-				car.createAndAddCount(matched.getId(), name).createVolume(1, carDTV);
-				freight.createAndAddCount(matched.getId(), name).createVolume(1, freightDTV);
+			switch (direction) {
+				case "R" -> handleMatch(feature, index.query(transformed, this::filterDirection), true);
+				case "G" -> handleMatch(feature, index.query(transformed, this::filterOppositeDirection), false);
+				case "B" -> {
+					handleMatch(feature, index.query(transformed, this::filterDirection), true);
+					handleMatch(feature, index.query(transformed, this::filterOppositeDirection), false);
+				}
+				default -> throw new IllegalStateException("Unknown direction " + direction);
 			}
+
 		}
 
 		log.info("Could not match {} features", nullCounter);
 
 		log.info("Write results to {}", output);
+
+		// TODO: replace counts and write to csv
+
 		new CountsWriter(car).write(output + "car-counts.xml.gz");
 		new CountsWriter(freight).write(output + "freight-counts.xml.gz");
 
 		return 0;
 	}
 
-	private Direction getLinkDirection(Coord from, Coord to) {
+	private void handleMatch(SimpleFeature feature, Link result, boolean inDirection) {
 
-		String vertical;
-		String horizontal;
+		// TODO: need different datastructure to store the results
+		// check if there is already a match
+		// one station can have two links (but only one per direction)
 
-		if(from.getY() > to.getY()){
-			vertical = "nord";
-		} else
-			vertical = "süd";
+		long carDTV = (Long) feature.getAttribute("dtvw_kfz");
+		long freightDTV = (Long) feature.getAttribute("dtvw_lkw");
 
-		if(from.getX() > to.getX()){
-			horizontal = "ost";
-		} else
-			horizontal = "west";
+		String name = (String) feature.getAttribute("str_name");
+		car.createAndAddCount(result.getId(), name).createVolume(1, carDTV);
+		freight.createAndAddCount(result.getId(), name).createVolume(1, freightDTV);
 
-		return new Direction(vertical, horizontal);
 	}
+
 
 	private List<Predicate<Link>> createRoadTypeFilter(List<String> types) {
 
@@ -237,19 +213,28 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 		return filter;
 	}
 
-	private record Feature() {
+	private boolean filterDirection(NetworkIndex.LinkGeometry link, MultiLineString other) {
+		Coordinate[] coordinates = other.getCoordinates();
+		Coordinate from = coordinates[0];
+		Coordinate to = coordinates[coordinates.length - 1];
 
+		GeometryFactory f = JTSFactoryFinder.getGeometryFactory();
+
+		double angle = NetworkIndex.angle((LineString) link.geometry(), f.createLineString(new Coordinate[]{from, to}));
+
+		return Math.abs(angle) < Math.PI / 2;
 	}
 
-	private record Direction(String vertical, String horizontal){
+	private boolean filterOppositeDirection(NetworkIndex.LinkGeometry link, MultiLineString other) {
+		Coordinate[] coordinates = other.getCoordinates();
+		Coordinate from = coordinates[0];
+		Coordinate to = coordinates[coordinates.length - 1];
 
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			Direction direction = (Direction) o;
-			return direction.horizontal.equals(this.horizontal) && direction.vertical.equals(this.vertical);
-		}
+		GeometryFactory f = JTSFactoryFinder.getGeometryFactory();
+
+		// Same as above, but to and from are reversed
+		double angle = NetworkIndex.angle((LineString) link.geometry(), f.createLineString(new Coordinate[]{to, from}));
+
+		return Math.abs(angle) < Math.PI / 2;
 	}
-
 }
