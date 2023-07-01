@@ -63,6 +63,12 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 	@CommandLine.Mixin
 	private InputOptions input = InputOptions.ofCommand(FreeSpeedOptimizer.class);
 
+	@CommandLine.Option(names = "--output", description = "Path to output network")
+	private Path output;
+
+	@CommandLine.Option(names = "--params", description = "Apply params and write to output if given")
+	private Path params;
+
 	@CommandLine.Parameters(arity = "1..*", description = "Input validation files loaded from APIs")
 	private List<String> validationFiles;
 
@@ -100,6 +106,15 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 		evaluateNetwork(new Request(0.5), "05");
 		evaluateNetwork(new Request(0.75), "075");
 		evaluateNetwork(new Request(0.9), "09");
+
+		if (output != null && params != null) {
+			Request p = mapper.readValue(params.toFile(), Request.class);
+			evaluateNetwork(p, null);
+			NetworkUtils.writeNetwork(network, output.toString());
+
+			return 0;
+		}
+
 
 		Server server = new Server(9090);
 
