@@ -116,6 +116,11 @@ $p/berlin-v6.1-network.xml.gz: input/sumo.net.xml
 
 	$(sc) prepare sample-network --network $@
 
+	# To update features and params, running python code is necessary
+	$(sc) prepare network-params --network $@ --input-features input/sumo.net-edges.csv.gz --output $@
+
+	$(sc) prepare network-freespeed --network $@ --params input/network-params.json --output $@
+
 $p/berlin-v6.1-network-with-pt.xml.gz: $p/berlin-v6.1-network.xml.gz
 	$(sc) prepare transit-from-gtfs --network $< --output=$p\
 	 --name berlin-v6.1 --date "2023-06-07" --target-crs $(CRS) \

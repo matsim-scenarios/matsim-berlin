@@ -45,6 +45,8 @@ import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.prepare.counts.CreateCountsFromGeoPortalBerlin;
 import org.matsim.prepare.counts.CreateCountsFromVMZ;
 import org.matsim.prepare.download.DownloadCommuterStatistic;
+import org.matsim.prepare.network.FreeSpeedOptimizer;
+import org.matsim.prepare.network.PrepareNetworkParams;
 import org.matsim.prepare.network.SampleNetwork;
 import org.matsim.prepare.opt.RunCountOptimization;
 import org.matsim.prepare.opt.SelectPlansFromIndex;
@@ -75,7 +77,8 @@ import java.util.stream.Collectors;
 	CreateCountsFromGeoPortalBerlin.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class,
 	MergePlans.class, SplitActivityTypesDuration.class, CleanPopulation.class, CleanAttributes.class,
 	CreateSmallScaleCommercialTrafficDemand.class, RunCountOptimization.class, SelectPlansFromIndex.class,
-	ExtractRelevantFreightTrips.class, CheckCarAvailability.class, FixSubtourModes.class
+	ExtractRelevantFreightTrips.class, CheckCarAvailability.class, FixSubtourModes.class,
+	PrepareNetworkParams.class, FreeSpeedOptimizer.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
 
