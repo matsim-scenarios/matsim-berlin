@@ -18,8 +18,8 @@ public enum Activities {
 	edu_higher(7, 19),
 	edu_other(7, 22),
 
-	work(6, 20),
-	work_business(8, 20),
+	work(6, 21),
+	work_business(8, 21),
 	personal_business(8, 20),
 	leisure(9, 27),
 	dining(8, 27),

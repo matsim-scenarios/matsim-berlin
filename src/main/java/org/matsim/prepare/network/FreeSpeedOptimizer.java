@@ -37,6 +37,7 @@ import org.matsim.core.router.FastDijkstraFactory;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
 import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.trafficmonitoring.FreeSpeedTravelTime;
+import org.matsim.core.utils.geometry.CoordUtils;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -142,12 +143,21 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 				double speed = speeds.getDouble(link.getId());
 
 				if (request.f == 0) {
-					if (allowedSpeed <= 31 / 3.6)
+					double speedFactor = (double) link.getAttributes().getAttribute("speed_Factor");
+
+					if (allowedSpeed <= 31 / 3.6) {
 						link.setFreespeed(speed * request.b30);
-					else if (allowedSpeed <= 51 / 3.6)
+						link.getAttributes().putAttribute("speed_factor", speedFactor * request.b30);
+
+					} else if (allowedSpeed <= 51 / 3.6) {
 						link.setFreespeed(speed * request.b50);
-					else if (allowedSpeed <= 91 / 3.6)
+						link.getAttributes().putAttribute("speed_factor", speedFactor * request.b50);
+					} else if (allowedSpeed <= 91 / 3.6) {
 						link.setFreespeed(speed * request.b90);
+						link.getAttributes().putAttribute("speed_factor", speedFactor * request.b90);
+					}
+
+
 				} else
 					// Old MATSim freespeed logic
 					link.setFreespeed(LinkProperties.calculateSpeedIfSpeedTag(allowedSpeed, request.f));
@@ -167,25 +177,25 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 		CSVPrinter csv = save != null ? new CSVPrinter(Files.newBufferedWriter(Path.of(save + "-eval.csv")), CSVFormat.DEFAULT) : null;
 
 		if (csv != null)
-			csv.printRecord("from_node", "to_node", "dist", "travel_time");
+			csv.printRecord("from_node", "to_node", "beeline_dist", "dist", "travel_time");
 
 		for (Object2DoubleMap.Entry<Entry> e : validationSet.object2DoubleEntrySet()) {
 
 			Entry r = e.getKey();
 
-			LeastCostPathCalculator.Path path = router.calcLeastCostPath(network.getNodes().get(r.fromNode), network.getNodes().get(r.toNode), 0, null, null);
+			Node fromNode = network.getNodes().get(r.fromNode);
+			Node toNode = network.getNodes().get(r.toNode);
+			LeastCostPathCalculator.Path path = router.calcLeastCostPath(fromNode, toNode, 0, null, null);
 
 			double distance = path.links.stream().mapToDouble(Link::getLength).sum();
 			double speed = distance / path.travelTime;
-
-			if (mse.getN() == 24)
-				log.debug("");
 
 			rmse.addValue(Math.pow(e.getDoubleValue() - speed, 2));
 			mse.addValue(Math.abs((e.getDoubleValue() - speed) * 3.6));
 
 			if (csv != null)
-				csv.printRecord(r.fromNode, r.toNode, (int) distance, (int) path.travelTime);
+				csv.printRecord(r.fromNode, r.toNode, (int) CoordUtils.calcEuclideanDistance(fromNode.getCoord(), toNode.getCoord()),
+					(int) distance, (int) path.travelTime);
 		}
 
 		if (csv != null)
@@ -247,7 +257,7 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 
 					SummaryStatistics stats = new SummaryStatistics();
 					// This is as kmh
-					e2.getValue().forEach(v -> stats.addValue(v*3.6));
+					e2.getValue().forEach(v -> stats.addValue(v * 3.6));
 
 					printer.printRecord(e.getKey().fromNode, e.getKey().toNode, e2.getIntKey(),
 						stats.getMin(), stats.getMax(), stats.getMean(), stats.getStandardDeviation());

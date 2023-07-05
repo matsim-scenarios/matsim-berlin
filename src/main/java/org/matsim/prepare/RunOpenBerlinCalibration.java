@@ -1,6 +1,5 @@
 package org.matsim.prepare;
 
-import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 import com.google.inject.Inject;
 import com.google.inject.TypeLiteral;
 import org.apache.logging.log4j.LogManager;
@@ -54,7 +53,7 @@ import org.matsim.run.Activities;
 import org.matsim.run.RunOpenBerlinScenario;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
-import org.matsim.smallScaleCommercialTrafficGeneration.CreateSmallScaleCommercialTrafficDemand;
+import org.matsim.smallScaleCommercialTrafficGeneration.GenerateSmallScaleCommercialTrafficDemand;
 import picocli.CommandLine;
 
 import java.math.BigDecimal;
@@ -76,7 +75,7 @@ import java.util.stream.Collectors;
 	CleanNetwork.class, SampleNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class,
 	CreateCountsFromGeoPortalBerlin.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class,
 	MergePlans.class, SplitActivityTypesDuration.class, CleanPopulation.class, CleanAttributes.class,
-	CreateSmallScaleCommercialTrafficDemand.class, RunCountOptimization.class, SelectPlansFromIndex.class,
+	GenerateSmallScaleCommercialTrafficDemand.class, RunCountOptimization.class, SelectPlansFromIndex.class,
 	ExtractRelevantFreightTrips.class, CheckCarAvailability.class, FixSubtourModes.class,
 	PrepareNetworkParams.class, FreeSpeedOptimizer.class
 })
@@ -148,7 +147,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		sw.defaultParams().mapZoomLevel = 9.1;
 
 		if (sample.isSet()) {
-			double sampleSize = sample.getSize() / 100d;
+			double sampleSize = sample.getSample();
 
 			config.qsim().setFlowCapFactor(sampleSize);
 			config.qsim().setStorageCapFactor(sampleSize);
@@ -157,10 +156,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			config.counts().setCountsScaleFactor(sampleSize);
 			config.plans().setInputFile(sample.adjustName(config.plans().getInputFile()));
 
-			sw.defaultParams().sampleSize = String.valueOf(sampleSize);
+			sw.defaultParams().sampleSize = sampleSize;
 		}
-
-		config.counts().setInputFile("./berlin-v6.0-counts-car-vmz.xml.gz");
 
 		// Required for all calibration strategies
 		for (String subpopulation : List.of("person", "businessTraffic", "businessTraffic_service")) {
@@ -349,8 +346,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
-
-				install(new SwissRailRaptorModule());
 				bind(AnalysisMainModeIdentifier.class).to(RoutingModeMainModeIdentifier.class);
 			}
 		});

@@ -23,6 +23,7 @@ import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
 import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.scenario.ProjectionUtils;
 import org.matsim.core.trafficmonitoring.FreeSpeedTravelTime;
+import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.core.utils.geometry.transformations.GeotoolsTransformation;
 import org.matsim.prepare.RunOpenBerlinCalibration;
 import picocli.CommandLine;
@@ -109,9 +110,11 @@ public class SampleValidationRoutes implements MATSimAppCommand {
 		log.info("Sampled {} routes in range {}", routes.size(), distRange);
 
 		try (CSVPrinter csv = new CSVPrinter(Files.newBufferedWriter(output.getPath()), CSVFormat.DEFAULT)) {
-			csv.printRecord("from_node", "to_node", "dist", "travel_time", "geometry");
+			csv.printRecord("from_node", "to_node", "beeline_dist", "dist", "travel_time", "geometry");
 			for (Route route : routes) {
-				csv.printRecord(route.fromNode, route.toNode, route.dist, route.travelTime,
+				csv.printRecord(route.fromNode, route.toNode,
+					CoordUtils.calcEuclideanDistance(network.getNodes().get(route.fromNode).getCoord(), network.getNodes().get(route.toNode).getCoord()),
+					route.dist, route.travelTime,
 					String.format(Locale.US, "MULTIPOINT(%.5f %.5f, %.5f %.5f)", route.from.getX(), route.from.getY(), route.to.getX(), route.to.getY()));
 			}
 		}

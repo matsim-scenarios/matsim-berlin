@@ -37,7 +37,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Data can be obtained at Data portal from Berlin:
@@ -49,36 +48,6 @@ import java.util.stream.Collectors;
 	produces = {"dtv_berlin.csv"}
 )
 public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
-
-
-	/**
-	 * TODO
-	 * <p>
-	 * Counts class has not the right structure
-	 * <p>
-	 * one station need to be matched to multiple links (because of both directions)
-	 * <p>
-	 * mapping.csv:
-	 * <p>
-	 * stationId;linkId
-	 * <p>
-	 * (station id can occur multiple times)
-	 * <p>
-	 * <p>
-	 * counts.csv:
-	 * <p>
-	 * stationId;geometry;volume
-	 * <p>
-	 * <p>
-	 * <p>
-	 * Analysis Class:
-	 * <p>
-	 * mapping + counts als Input
-	 * <p>
-	 * comparison.csv:
-	 * <p>
-	 * stationId;observed_volume;simulated_volume
-	 */
 
 	private static final Logger log = LogManager.getLogger(CreateCountsFromGeoPortalBerlin.class);
 

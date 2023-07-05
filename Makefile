@@ -200,44 +200,44 @@ $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
 	 --shp $p/area/area.shp --shp-crs $(CRS)\
 	 --output $@
 
-$p/berlin-businessTraffic-$V-25pct.plans.xml.gz:
+$p/berlin-commercialPersonTraffic-$V-25pct.plans.xml.gz:
 	$(sc) prepare generate-small-scale-commercial-traffic\
 	  input/commercialTraffic\
 	 --sample 0.25\
 	 --jspritIterations 1\
 	 --creationOption createNewCarrierFile\
 	 --landuseConfiguration useOSMBuildingsAndLanduse\
-	 --trafficType businessTraffic\
+	 --smallScaleCommercialTrafficType commercialPersonTraffic\
 	 --zoneShapeFileName $(berlin)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp\
 	 --buildingsShapeFileName $(berlin)/input/shp/buildings_BerlinBrandenburg_4326.shp\
 	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
 	 --shapeCRS "EPSG:4326"\
 	 --resistanceFactor "0.005"\
 	 --nameOutputPopulation $(notdir $@)\
-	 --PathOutput output/businessTraffic
+	 --pathOutput output/commercialPersonTraffic
 
 	mv output/businessTraffic/$(notdir $@) $@
 
-$p/berlin-freightTraffic-$V-25pct.plans.xml.gz:
+$p/berlin-goodsTraffic-$V-25pct.plans.xml.gz:
 	$(sc) prepare generate-small-scale-commercial-traffic\
 	  input/commercialTraffic\
 	 --sample 0.25\
 	 --jspritIterations 1\
 	 --creationOption createNewCarrierFile\
 	 --landuseConfiguration useOSMBuildingsAndLanduse\
-	 --trafficType freightTraffic\
+	 --smallScaleCommercialTrafficType goodsTraffic\
 	 --zoneShapeFileName $(berlin)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp\
 	 --buildingsShapeFileName $(berlin)/input/shp/buildings_BerlinBrandenburg_4326.shp\
 	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
 	 --shapeCRS "EPSG:4326"\
 	 --resistanceFactor "0.005"\
 	 --nameOutputPopulation $(notdir $@)\
-	 --PathOutput output/freightTraffic
+	 --pathOutput output/goodsTraffic
 
 	mv output/freightTraffic/$(notdir $@) $@
 
 # Depends on location choice runs and freight model
-$p/berlin-cadyts-input-$V-25pct.plans.xml.gz: $p/berlin-businessTraffic-$V-25pct.plans.xml.gz
+$p/berlin-cadyts-input-$V-25pct.plans.xml.gz: $p/berlin-commercialPersonTraffic-$V-25pct.plans.xml.gz
 	$(sc) prepare merge-plans output/lc-*/*output_selected_plans.xml.gz\
 		--output $@
 
@@ -272,7 +272,7 @@ eval-opt: $p/berlin-initial-$V-25pct.experienced_plans.xml.gz
 
 
 # These depend on the output of optimization runs
-$p/berlin-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz $p/berlin-freightTraffic-$V-25pct.plans.xml.gz $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
+$p/berlin-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz $p/berlin-goodsTraffic-$V-25pct.plans.xml.gz $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
 	$(sc) prepare filter-relevant-agents\
 	 --input $p/berlin-$V-25pct.plans_log_error.xml.gz --output $@\
 	 --shp input/v6.0/area/area.shp\

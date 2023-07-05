@@ -47,14 +47,14 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 		sw.defaultParams().mapZoomLevel = 9.1;
 
 		if (sample.isSet()) {
-			double sampleSize = sample.getSize() / 100d;
+			double sampleSize = sample.getSample();
 
 			config.qsim().setFlowCapFactor(sampleSize);
 			config.qsim().setStorageCapFactor(sampleSize);
 
 			// Counts can be scaled with sample size
 			config.counts().setCountsScaleFactor(sampleSize);
-			sw.defaultParams().sampleSize = String.valueOf(sampleSize);
+			sw.defaultParams().sampleSize = sampleSize;
 
 			config.controler().setRunId(sample.adjustName(config.controler().getRunId()));
 			config.plans().setInputFile(sample.adjustName(config.plans().getInputFile()));

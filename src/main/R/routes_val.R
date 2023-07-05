@@ -4,11 +4,12 @@ library(tidyverse)
 setwd("~/Development/matsim-scenarios/matsim-berlin")
 
 files <- fs::dir_ls(path = ".", glob = "routes-validation-api-*.csv")
-
 m05 <- read_csv("05-eval.csv") %>%
     mutate(speed=3.6*dist/travel_time) %>%
     mutate(api="MATSim @ 0.5") %>%
-    mutate(hour=21)
+    mutate(hour=21) %>%
+    mutate(detour=dist/beeline_dist)
+
 
 m09 <- read_csv("09-eval.csv") %>%
   mutate(speed=3.6*dist/travel_time) %>%
@@ -19,6 +20,8 @@ mopt <- read_csv("network-opt-eval.csv") %>%
   mutate(speed=3.6*dist/travel_time) %>%
   mutate(api="MATSim @ opt") %>%
   mutate(hour=21)
+
+val <- read_csv("routes-validation.csv")
 
 df <- read_csv(files)
 

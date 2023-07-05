@@ -174,8 +174,8 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		index.addLinkFilter((link, station) -> {
 			String direction = station.direction();
 
-			Coord from = link.getFromNode().getCoord();
-			Coord to = link.getToNode().getCoord();
+			Coord from = link.link().getFromNode().getCoord();
+			Coord to = link.link().getToNode().getCoord();
 
 			String linkDir = "";
 			if (to.getY() > from.getY()) {
@@ -191,7 +191,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			Pattern pattern = Pattern.compile(direction, Pattern.CASE_INSENSITIVE);
 			return pattern.matcher(linkDir).find();
 		});
-		index.addLinkFilter(((link, station) -> !link.getId().toString().startsWith("pt_")));
+		index.addLinkFilter(((link, station) -> !link.link().getId().toString().startsWith("pt_")));
 
 		if (roadNames) {
 			index.addLinkFilter((link, station) -> {
@@ -203,7 +203,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 				if (name.equals("straße des 17. juni"))
 					return true;
 
-				Object linkRoadName = link.getAttributes().getAttribute("name");
+				Object linkRoadName = link.link().getAttributes().getAttribute("name");
 
 				if (linkRoadName == null)
 					return true;

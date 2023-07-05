@@ -136,6 +136,9 @@
 		</parameterset>
 	</module>
 
+	<module name="counts">
+		<param name="inputCountsFile" value="./berlin-v6.0-counts-car-vmz.xml.gz"/>
+	</module>
 
 	<module name="ReplanningAnnealer" >
 		<param name="activateAnnealingModule" value="false" />
