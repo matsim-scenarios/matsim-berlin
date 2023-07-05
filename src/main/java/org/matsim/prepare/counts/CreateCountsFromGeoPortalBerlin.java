@@ -31,6 +31,10 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.MathTransform;
 import picocli.CommandLine;
+import tech.tablesaw.aggregate.AggregateFunctions;
+import tech.tablesaw.api.*;
+import tech.tablesaw.columns.Column;
+import tech.tablesaw.selection.Selection;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -67,6 +71,8 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 	private CountsOption counts = new CountsOption();
 	@CommandLine.Mixin
 	private ShpOptions shp = new ShpOptions();
+
+	private static final double peakPercentage = 0.09;
 
 	/**
 	 * Stores all mappings.
@@ -164,14 +170,116 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 
 		}
 
+		Table mapping = convertToTable(mappings.values(), filteredNetwork);
+
+		Table overview = Table.create(IntColumn.create("Number of stations"), IntColumn.create("Matched links"),
+				IntColumn.create("Double matches"), IntColumn.create("Count volumes matching flow capacity"));
+
+		Row row = overview.appendRow();
+		row.setInt("Number of stations", mapping.rowCount());
+
+		Selection directionSelection = mapping.booleanColumn("both_directions").isTrue();
+		int doubleMatched = mapping.where(directionSelection).rowCount();
+		row.setInt("Matched links", doubleMatched + mapping.rowCount());
+
+		row.setInt("Double matches", doubleMatched);
+
+		Selection validSelection = mapping.booleanColumn("is_valid").isTrue();
+		int nValid = mapping.where(validSelection).rowCount();
+		row.setInt("Count volumes matching flow capacity", nValid);
+
+		log.info("Write overview table to {}", output.getPath("mapping_overview.csv"));
+		overview.write().csv(output.getPath("mapping_overview.csv").toFile());
+
+		Table perType = mapping.summarize("road_type", AggregateFunctions.count).apply();
+		normalizeColumnNames(perType).write().csv(output.getPath("stations_per_road_type.csv").toFile());
+
 		return 0;
+	}
+
+	private Table normalizeColumnNames(Table table){
+
+		for (Column<?> c : table.columns()) {
+			String name = c.name();
+
+			int first = name.indexOf("[");
+			int last = name.indexOf("]");
+
+			if (first > -1 && last > -1) {
+				c.setName(c.name().substring(first + 1, last));
+			}
+		}
+
+		return table;
+	}
+
+	private Table convertToTable(Collection<Mapping> mappings, Network network) {
+
+		Map<Id<Link>, ? extends Link> links = network.getLinks();
+
+		Table mapping = Table.create(
+				StringColumn.create("station"), StringColumn.create("to_link"), StringColumn.create("from_link"), DoubleColumn.create("vol_car"),
+				DoubleColumn.create("vol_freight"),	DoubleColumn.create("to_capacity"), DoubleColumn.create("from_capacity"), BooleanColumn.create("both_directions"),
+				StringColumn.create("road_type"), BooleanColumn.create("is_valid"));
+
+		for (Mapping m : mappings) {
+			Row row = mapping.appendRow();
+
+			row.setString("station", m.station);
+			row.setString("to_link", m.toDirection.toString());
+			Id<Link> fromDirection = m.fromDirection;
+			String fromLink = fromDirection == null ? "": fromDirection.toString();
+			row.setString("from_link", fromLink);
+			row.setDouble("vol_car", m.avgCar);
+			row.setDouble("vol_freight", m.avgHGV());
+
+			Link toLink = links.get(Id.createLinkId(m.toDirection));
+
+			double toCapacity = toLink.getCapacity();
+			RoadType type = RoadType.valueOf(NetworkUtils.getHighwayType(toLink));
+			double fromCapacity = -1;
+
+			if (m.fromDirection != null) {
+				Link fromLinkObj = links.get(Id.createLinkId(m.fromDirection));
+				fromCapacity = fromLinkObj.getCapacity();
+				RoadType fromType = RoadType.valueOf(NetworkUtils.getHighwayType(fromLinkObj));
+
+				type = type.ordinal() > fromType.ordinal() ? type : fromType;
+
+				row.setString("road_type", type.toString());
+				row.setBoolean("both_directions", true);
+			} else {
+				row.setString("road_type", type.toString());
+				row.setBoolean("both_directions", false);
+			}
+
+			row.setBoolean("is_valid", isVolumeValid(m, toCapacity, fromCapacity));
+		}
+
+		return null;
+	}
+
+	public boolean isVolumeValid(Mapping mapping, double toCapacity, double fromCapacity) {
+
+		if(mapping.hasBothDirections()){
+			return (double) mapping.avgCar / 1.5 * peakPercentage <= toCapacity;
+		}
+
+		if(mapping.toDirection != null){
+			return (double) mapping.avgCar * peakPercentage <= toCapacity;
+		}
+
+		return (double) mapping.avgCar * peakPercentage <= fromCapacity;
 	}
 
 	private void handleMatch(SimpleFeature feature, Link toDirection, Link fromDirection) {
 
 		String name = (String) feature.getAttribute("str_name");
-		int carDTV = (int) feature.getAttribute("dtvw_kfz");
-		int freightDTV = (int) feature.getAttribute("dtvw_lkw");
+		// throws exceptions if attribute isn't casted to type 'long'
+		long carDTVLong = (long) feature.getAttribute("dtvw_kfz");
+		int carDTV = (int) carDTVLong;
+		long freightDTVLong = (long) feature.getAttribute("dtvw_lkw");
+		int freightDTV = (int) freightDTVLong;
 
 		Mapping m = new Mapping(name,
 			toDirection != null ? toDirection.getId() : null,
@@ -236,6 +344,20 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 	}
 
 	private record Mapping(String station, Id<Link> toDirection, Id<Link> fromDirection, int avgCar, int avgHGV) {
+
+		public boolean hasBothDirections(){
+			return fromDirection != null && toDirection != null;
+		}
+	}
+
+	private enum RoadType {
+		motorway,
+		trunk,
+		primary,
+		secondary,
+		tertiary,
+		residential,
+		unknown
 	}
 
 }
