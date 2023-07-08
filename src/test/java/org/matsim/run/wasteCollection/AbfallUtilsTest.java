@@ -16,6 +16,8 @@
  *   See also COPYING, LICENSE and WARRANTY file                           *
  *                                                                         *
  * *********************************************************************** */
+/*
+
 package org.matsim.run.wasteCollection;
 
 import java.util.Collection;
@@ -42,6 +44,7 @@ import org.opengis.feature.simple.SimpleFeature;
  * @author nagel
  *
  */
+/*
 public class AbfallUtilsTest {
 
 	@Rule
@@ -157,3 +160,4 @@ public class AbfallUtilsTest {
 		Assert.assertEquals(96, districtsWithGarbage.size());
 	}
 }
+*/

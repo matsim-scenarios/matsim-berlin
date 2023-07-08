@@ -1,3 +1,4 @@
+/*
 package org.matsim.run.wasteCollection;
 
 import java.util.Arrays;
@@ -30,6 +31,8 @@ import org.opengis.feature.simple.SimpleFeature;
  *         Abfallwirtschaft am Beispiel Berlins
  *
  */
+
+/*
 public class Run_Abfall {
 
 	static final Logger log = LogManager.getLogger(Run_Abfall.class);
@@ -66,7 +69,7 @@ public class Run_Abfall {
 		 * network, you have to select one of the Berlin cases. The beginning of the
 		 * name of the scenario shows you the needed network.
 		 */
-
+/*
 		netzwerkAuswahl netzwerkWahl = netzwerkAuswahl.berlinNetwork;
 		scenarioAuswahl scenarioWahl = null;
 		carrierChoice chosenCarrier = null;
@@ -224,6 +227,8 @@ public class Run_Abfall {
 		 * so that you can already have this information, while jsprit and matsim are
 		 * still running.
 		 */
+
+/*
 		AbfallUtils.outputSummaryShipments(scenario, day, carrierMap);
 		// jsprit
 
@@ -244,3 +249,4 @@ public class Run_Abfall {
 		AbfallUtils.createResultFile(scenario, carriers);
 	}
 }
+*/

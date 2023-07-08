@@ -45,7 +45,7 @@ import java.util.Map;
 public class RunBerlinWithMobBudget {
 
     private static double dailyMobilityBudget;
-    private static double shareOfIncome;
+    private static double klimaTaler;
     private static Map<Id<Person>, Double> personsEligibleForMobilityBudget = new HashMap<>();
 
 
@@ -58,7 +58,7 @@ public class RunBerlinWithMobBudget {
             };
         }
         dailyMobilityBudget = Double.parseDouble(args[0]);
-        shareOfIncome = Double.parseDouble(args[1]);
+        klimaTaler = Double.parseDouble(args[1]);
 
         String[] configArgs = new String[args.length - 2];
         for (int i = 2; i <= args.length - 1; i++) {
