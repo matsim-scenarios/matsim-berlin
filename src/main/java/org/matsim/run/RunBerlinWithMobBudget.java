@@ -83,7 +83,7 @@ public class RunBerlinWithMobBudget {
         Controler controler = RunBerlinScenario.prepareControler(scenario);
         addMobilityBudgetHandler(controler, mobilityBudgetEventHandler);
         if (distanceBasedMoneyReward != 0) {
-            DistanceBasedMoneyReward klimaTaler = new DistanceBasedMoneyReward(controler.getScenario().getConfig().plansCalcRoute().getBeelineDistanceFactors().get(TransportMode.walk), controler.getScenario().getNetwork(), distanceBasedMoneyRewardadd);
+            DistanceBasedMoneyReward klimaTaler = new DistanceBasedMoneyReward(controler.getScenario().getConfig().plansCalcRoute().getBeelineDistanceFactors().get(TransportMode.walk), controler.getScenario().getNetwork(), distanceBasedMoneyReward);
             addKlimaTaler(controler, klimaTaler);
         }
 
