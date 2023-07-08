@@ -245,7 +245,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		} else if (mode == CalibrationMode.routeChoice) {
 
 			// Re route for all populations
-			for (String subpopulation : List.of("person", "businessTraffic", "businessTraffic_service")) {
+			for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
 				config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
 					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
 					.setWeight(weight)
