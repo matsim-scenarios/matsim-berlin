@@ -213,6 +213,7 @@ $p/berlin-commercialPersonTraffic-$V-25pct.plans.xml.gz:
 	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
 	 --shapeCRS "EPSG:4326"\
 	 --resistanceFactor "0.005"\
+	 --numberOfPlanVariantsPerAgent 5\
 	 --nameOutputPopulation $(notdir $@)\
 	 --pathOutput output/commercialPersonTraffic
 
@@ -231,6 +232,7 @@ $p/berlin-goodsTraffic-$V-25pct.plans.xml.gz:
 	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
 	 --shapeCRS "EPSG:4326"\
 	 --resistanceFactor "0.005"\
+	 --numberOfPlanVariantsPerAgent 5\
 	 --nameOutputPopulation $(notdir $@)\
 	 --pathOutput output/goodsTraffic
 
