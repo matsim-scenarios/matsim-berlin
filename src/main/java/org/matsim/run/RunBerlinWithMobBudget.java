@@ -30,8 +30,13 @@ import org.matsim.api.core.v01.population.Plan;
 import org.matsim.core.config.Config;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.population.PopulationUtils;
+import org.matsim.core.population.algorithms.TripsToLegsAlgorithm;
+import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.policies.MobilityBudgetEventHandler;
+import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -70,7 +75,6 @@ public class RunBerlinWithMobBudget {
             Double budget = entry.getValue();
             personsEligibleForMobilityBudget.put(person, budget);
         }
-
         MobilityBudgetEventHandler mobilityBudgetEventHandler = new MobilityBudgetEventHandler(personsEligibleForMobilityBudget);
 
         Controler controler = RunBerlinScenario.prepareControler(scenario);
@@ -99,6 +103,21 @@ public class RunBerlinWithMobBudget {
                 }
                 if (transportModeList.contains(TransportMode.car)) {
                     persons2Budget.put(personId, value);
+                    Plan planNoCar = PopulationUtils.createPlan();
+                    PopulationUtils.copyFromTo(plan, planNoCar);
+                    List<TripStructureUtils.Trip> tripsNewPlan = TripStructureUtils.getTrips(planNoCar);
+                    PopulationUtils.resetRoutes(planNoCar);
+                    for (TripStructureUtils.Trip trip: tripsNewPlan) {
+                        List<Leg> listLegs = trip.getLegsOnly();
+                        for (Leg leg: listLegs) {
+                            if (leg.getMode().equals(TransportMode.car)) {
+                                leg.setMode(TransportMode.walk);
+                            }
+                        }
+                    }
+                    MainModeIdentifier OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier = new OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier();
+                    new TripsToLegsAlgorithm(OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier).run(planNoCar);
+                    person.addPlan(planNoCar);
                 }
             }
         }
