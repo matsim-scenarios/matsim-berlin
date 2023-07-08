@@ -21,6 +21,8 @@ package org.matsim.run;
  * *********************************************************************** */
 
 
+import org.locationtech.jts.algorithm.Distance;
+import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -34,6 +36,7 @@ import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.algorithms.TripsToLegsAlgorithm;
 import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.core.router.TripStructureUtils;
+import org.matsim.policies.DistanceBasedMoneyReward;
 import org.matsim.policies.MobilityBudgetEventHandler;
 import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier;
 
@@ -45,7 +48,7 @@ import java.util.Map;
 public class RunBerlinWithMobBudget {
 
     private static double dailyMobilityBudget;
-    private static double klimaTaler;
+    private static double distanceBasedMoneyReward;
     private static Map<Id<Person>, Double> personsEligibleForMobilityBudget = new HashMap<>();
 
 
@@ -58,7 +61,7 @@ public class RunBerlinWithMobBudget {
             };
         }
         dailyMobilityBudget = Double.parseDouble(args[0]);
-        klimaTaler = Double.parseDouble(args[1]);
+        distanceBasedMoneyReward = Double.parseDouble(args[1]);
 
         String[] configArgs = new String[args.length - 2];
         for (int i = 2; i <= args.length - 1; i++) {
@@ -79,6 +82,10 @@ public class RunBerlinWithMobBudget {
 
         Controler controler = RunBerlinScenario.prepareControler(scenario);
         addMobilityBudgetHandler(controler, mobilityBudgetEventHandler);
+        if (distanceBasedMoneyReward != 0) {
+            DistanceBasedMoneyReward klimaTaler = new DistanceBasedMoneyReward(controler.getScenario().getConfig().plansCalcRoute().getBeelineDistanceFactors().get(TransportMode.walk), controler.getScenario().getNetwork(), distanceBasedMoneyRewardadd);
+            addKlimaTaler(controler, klimaTaler);
+        }
 
         controler.run();
 
@@ -135,5 +142,14 @@ public class RunBerlinWithMobBudget {
         });
     }
 
-
+    public static void addKlimaTaler(Controler controler, DistanceBasedMoneyReward klimaTaler) {
+        controler.addOverridingModule(new AbstractModule() {
+            @Override
+            public void install() {
+                addEventHandlerBinding().toInstance(klimaTaler);
+                addControlerListenerBinding().toInstance(klimaTaler);
+                new PersonMoneyEventsAnalysisModule();
+            }
+        });
+    }
 }
