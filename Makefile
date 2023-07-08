@@ -216,7 +216,7 @@ $p/berlin-commercialPersonTraffic-$V-25pct.plans.xml.gz:
 	 --nameOutputPopulation $(notdir $@)\
 	 --pathOutput output/commercialPersonTraffic
 
-	mv output/businessTraffic/$(notdir $@) $@
+	mv output/commercialPersonTraffic/$(notdir $@) $@
 
 $p/berlin-goodsTraffic-$V-25pct.plans.xml.gz:
 	$(sc) prepare generate-small-scale-commercial-traffic\
@@ -234,7 +234,7 @@ $p/berlin-goodsTraffic-$V-25pct.plans.xml.gz:
 	 --nameOutputPopulation $(notdir $@)\
 	 --pathOutput output/goodsTraffic
 
-	mv output/freightTraffic/$(notdir $@) $@
+	mv output/goodsTraffic/$(notdir $@) $@
 
 # Depends on location choice runs and freight model
 $p/berlin-cadyts-input-$V-25pct.plans.xml.gz: $p/berlin-commercialPersonTraffic-$V-25pct.plans.xml.gz

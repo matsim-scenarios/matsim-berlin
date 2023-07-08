@@ -50,6 +50,11 @@ import static org.matsim.prepare.CreateMATSimFacilities.IGNORED_LINK_TYPES;
 @SuppressWarnings("unchecked")
 public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
+	/**
+	 * Detour factor for car routes, which was determined based on sampled routes.
+	 */
+	private static final double DETOUR_FACTOR = 1.56;
+
 	private static final Logger log = LogManager.getLogger(InitLocationChoice.class);
 
 	@CommandLine.Option(names = "--input", description = "Path to input population, can be a pattern if * is used.", required = true)
@@ -195,9 +200,11 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 					act.setLinkId(null);
 					ActivityFacility location = null;
 
-					// target leg distance in meter
+					// target leg distance in km
 					Object origDist = act.getAttributes().getAttribute("orig_dist");
-					double dist = (double) origDist * 1000;
+
+					// Distance will be reduced
+					double dist = (double) origDist * 1000 / DETOUR_FACTOR;
 
 					if (fixedLocations.containsKey(type)) {
 						location = fixedLocations.get(type);
@@ -325,9 +332,8 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 	 * General logic to filter coordinate within target distance.
 	 */
 	private boolean checkDistanceBound(double target, Coord refCoord, Coord other, double factor) {
-		// Thresholds are asymmetric because of the direct distance factor
-		double lower = target * 0.7 * (2 - factor);
-		double upper = target * 1.1 * factor;
+		double lower = target * 0.8 * (2 - factor);
+		double upper = target * 1.15 * factor;
 
 		double dist = CoordUtils.calcEuclideanDistance(refCoord, other);
 		return dist >= lower && dist <= upper;

@@ -25,6 +25,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static org.matsim.prepare.RunOpenBerlinCalibration.roundCoord;
+
 @CommandLine.Command(
 		name = "facilities",
 		description = "Creates MATSim facilities from shape-file and network"
@@ -90,7 +92,7 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 				continue;
 			}
 
-			ActivityFacility facility = f.createActivityFacility(id, RunOpenBerlinCalibration.roundCoord(new Coord(x.getAsDouble(), y.getAsDouble())));
+			ActivityFacility facility = f.createActivityFacility(id, roundCoord(new Coord(x.getAsDouble(), y.getAsDouble())));
 			for (String act : h.activities) {
 				facility.addActivityOption(f.createActivityOption(act));
 			}
@@ -158,10 +160,10 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		int max = n * 10;
 		for (int i = 0; i < max && result.size() < n; i++) {
 
-			Coord coord = new Coord(
+			Coord coord = roundCoord(new Coord(
 					bbox.getMinX() + (bbox.getMaxX() - bbox.getMinX()) * rnd.nextDouble(),
 					bbox.getMinY() + (bbox.getMaxY() - bbox.getMinY()) * rnd.nextDouble()
-			);
+			));
 
 			try {
 				if (geometry.contains(MGC.coord2Point(coord))) {
