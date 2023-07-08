@@ -3,7 +3,8 @@ package org.matsim.analysis;
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,7 +36,7 @@ String tunnelLinkCSVInputFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/m
 String planfreeLinkCSVInputFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5.planfree-linkIDs.csv";
 
 	
-	private static final Logger log = Logger.getLogger(RunBerlinAccidentsTest.class);
+	private static final Logger log = LogManager.getLogger(RunBerlinAccidentsTest.class);
 	
 	
 	@Test

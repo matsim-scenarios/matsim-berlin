@@ -19,16 +19,26 @@
 
 package org.matsim.run;
 
+import ch.sbb.matsim.routing.pt.raptor.RaptorIntermodalAccessEgress;
 import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.matsim.analysis.RunPersonTripAnalysis;
+import org.matsim.analysis.linkpaxvolumes.LinkPaxVolumesAnalysisModule;
+import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
+import org.matsim.analysis.pt.stop2stop.PtStop2StopAnalysisModule;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Plan;
 import org.matsim.contrib.drt.routing.DrtRoute;
 import org.matsim.contrib.drt.routing.DrtRouteFactory;
+import org.matsim.contrib.roadpricing.RoadPricing;
+import org.matsim.contrib.roadpricing.RoadPricingConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
@@ -42,17 +52,23 @@ import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.gbl.Gbl;
 import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.population.routes.RouteFactories;
+import org.matsim.core.replanning.choosers.ForceInnovationStrategyChooser;
+import org.matsim.core.replanning.choosers.StrategyChooser;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.scoring.functions.PersonScoringParametersFromPersonAttributes;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
+import org.matsim.core.utils.geometry.transformations.TransformationFactory;
+import org.matsim.extensions.pt.PtExtensionsConfigGroup;
+import org.matsim.extensions.pt.replanning.singleTripStrategies.ChangeSingleTripModeAndRoute;
+import org.matsim.extensions.pt.replanning.singleTripStrategies.RandomSingleTripReRoute;
+import org.matsim.extensions.pt.routing.EnhancedRaptorIntermodalAccessEgress;
 import org.matsim.prepare.population.AssignIncome;
-import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
+import org.matsim.run.drt.OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier;
 import org.matsim.run.drt.RunDrtOpenBerlinScenario;
-import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Random;
+import java.io.IOException;
+import java.util.*;
 
 import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType.FastAStarLandmarks;
 
@@ -109,12 +125,40 @@ public final class RunBerlinScenario {
 			public void install() {
 				addTravelTimeBinding( TransportMode.ride ).to( networkTravelTime() );
 				addTravelDisutilityFactoryBinding( TransportMode.ride ).to( carTravelDisutilityFactoryKey() );
-				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifier.class);
+				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier.class);
+
+				addPlanStrategyBinding("RandomSingleTripReRoute").toProvider(RandomSingleTripReRoute.class);
+				addPlanStrategyBinding("ChangeSingleTripModeAndRoute").toProvider(ChangeSingleTripModeAndRoute.class);
+
+				bind(RaptorIntermodalAccessEgress.class).to(EnhancedRaptorIntermodalAccessEgress.class);
 				
 				//use income-dependent marginal utility of money for scoring
-				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class).in(Singleton.class);
+				bind(ScoringParametersForPerson.class).to(PersonScoringParametersFromPersonAttributes.class).in(Singleton.class);
+
+				// set Plantypes to keep the initial selected plan up to the last iteration
+				BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(controler.getConfig(), BerlinExperimentalConfigGroup.class);
+				if (!berlinCfg.getPlanTypeOverwriting().equals(BerlinExperimentalConfigGroup.PlanTypeOverwriting.NO_OVERWRITE)) {
+					PlanTypeOverwriter overwriter = new PlanTypeOverwriter(berlinCfg, scenario.getPopulation());
+					addControlerListenerBinding().toInstance(overwriter);
+				}
+
+				// analysis output
+				if (berlinCfg.getAnalysisLevel().equals(BerlinExperimentalConfigGroup.AnalysisLevel.FULL)) {
+					install(new LinkPaxVolumesAnalysisModule());
+					install(new PtStop2StopAnalysisModule());
+					install(new PersonMoneyEventsAnalysisModule());
+				}
+
+				// use forced innovation every 10 iterations
+				bind(new TypeLiteral<StrategyChooser<Plan, Person>>() {}).toInstance(new ForceInnovationStrategyChooser<>(10, ForceInnovationStrategyChooser.Permute.yes));
+
 			}
 		} );
+
+		RoadPricingConfigGroup roadPricingConfigGroup = ConfigUtils.addOrGetModule(scenario.getConfig(), RoadPricingConfigGroup.class);
+		if (roadPricingConfigGroup.getTollLinksFile() != null) {
+			RoadPricing.configure( controler );
+		}
 
 		return controler;
 	}
@@ -133,12 +177,22 @@ public final class RunBerlinScenario {
 		 */
 		final Scenario scenario = ScenarioUtils.createScenario( config );
 
+		BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
+
 		RouteFactories routeFactories = scenario.getPopulation().getFactory().getRouteFactories();
 		routeFactories.setRouteFactory(DrtRoute.class, new DrtRouteFactory());
 		
 		ScenarioUtils.loadScenario(scenario);
+		// add NetworkModesToAddToAllCarLinks
+		for (Link link: scenario.getNetwork().getLinks().values()) {
+			Set<String> allowedModes = link.getAllowedModes();
+			if (allowedModes.contains(TransportMode.car)) {
+				Set<String> extendedAllowedModes = new HashSet<>(allowedModes);
+				extendedAllowedModes.addAll(berlinCfg.getNetworkModesToAddToAllCarLinks());
+				link.setAllowedModes(extendedAllowedModes);
+			}
+		}
 
-		BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
 		if (berlinCfg.getPopulationDownsampleFactor() != 1.0) {
 			downsample(scenario.getPopulation().getPersons(), berlinCfg.getPopulationDownsampleFactor());
 		}
@@ -158,9 +212,11 @@ public final class RunBerlinScenario {
 		
 		ConfigGroup[] customModulesToAdd;
 		if (additionalInformation == RunDrtOpenBerlinScenario.AdditionalInformation.acceptUnknownParamsBerlinConfig) {
-			customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(true)};
+			customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(true),
+					new PtExtensionsConfigGroup()};
 		} else {
-			customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(false)};
+			customModulesToAdd = new ConfigGroup[]{new BerlinExperimentalConfigGroup(false),
+					new PtExtensionsConfigGroup()};
 		}
 		ConfigGroup[] customModulesAll = new ConfigGroup[customModules.length + customModulesToAdd.length];
 		
@@ -209,7 +265,44 @@ public final class RunBerlinScenario {
 
 		return config ;
 	}
-
+	
+	public static void runAnalysis(Controler controler) {
+		Config config = controler.getConfig();
+		
+		String modesString = "";
+		for (String mode: config.planCalcScore().getAllModes()) {
+			modesString = modesString + mode + ",";
+		}
+		// remove last ","
+		if (modesString.length() < 2) {
+			log.error("no valid mode found");
+			modesString = null;
+		} else {
+			modesString = modesString.substring(0, modesString.length() - 1);
+		}
+		
+		String[] args = new String[] {
+				config.controler().getOutputDirectory(),
+				config.controler().getRunId(),
+				"null", // TODO: reference run, hard to automate
+				"null", // TODO: reference run, hard to automate
+				config.global().getCoordinateSystem(),
+				"https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-bezirke/bezirke_berlin.shp",
+				TransformationFactory.DHDN_GK4,
+				"SCHLUESSEL",
+				"home",
+				"10", // TODO: scaling factor, should be 10 for 10pct scenario and 100 for 1pct scenario
+				"null", // visualizationScriptInputDirectory
+				modesString
+		};
+		
+		try {
+			RunPersonTripAnalysis.main(args);
+		} catch (IOException e) {
+			log.error(e.getStackTrace());
+			throw new RuntimeException(e.getMessage());
+		}
+	}
 	
 	private static void downsample( final Map<Id<Person>, ? extends Person> map, final double sample ) {
 		final Random rnd = MatsimRandom.getLocalInstance();

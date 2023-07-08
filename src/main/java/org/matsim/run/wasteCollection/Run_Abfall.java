@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -108,7 +110,7 @@ public class Run_Abfall {
 			chosenCarrier = carrierChoice.carriersFromInputFile;
 		}
 
-		log.setLevel(Level.INFO);
+//		log.setLevel(Level.INFO); // method no longer exists
 
 		// MATSim config
 		Config config = ConfigUtils.createConfig();

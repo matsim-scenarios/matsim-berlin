@@ -17,16 +17,16 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.analysis;
+package org.matsim.analysis.emissions;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.emissions.EmissionModule;
 import org.matsim.contrib.emissions.HbefaVehicleCategory;
+import org.matsim.contrib.emissions.VspHbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup.DetailedVsAverageLookupBehavior;
-import org.matsim.contrib.emissions.utils.EmissionsConfigGroup.HbefaRoadTypeSource;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup.NonScenarioVehicles;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
@@ -45,16 +45,26 @@ import org.matsim.vehicles.VehicleUtils;
 * @author ikaddoura
 */
 
-public class RunOfflineAirPollutionAnalysis {
+public class RunOfflineAirPollutionAnalysisByVehicleCategory {
 	
 	private final String runDirectory;
 	private final String runId;
 	private final String hbefaWarmFile;
 	private final String hbefaColdFile;
 	private final String analysisOutputDirectory;
-
+	
+	public RunOfflineAirPollutionAnalysisByVehicleCategory(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
+		this.runDirectory = runDirectory;
+		this.runId = runId;
+		this.hbefaWarmFile = hbefaFileWarm;
+		this.hbefaColdFile = hbefaFileCold;
+		
+		if (!analysisOutputDirectory.endsWith("/")) analysisOutputDirectory = analysisOutputDirectory + "/";
+		this.analysisOutputDirectory = analysisOutputDirectory;
+	}
+	
 	public static void main(String[] args) {
-				
+		
 		if (args.length == 1) {
 			String rootDirectory = args[0];
 			if (!rootDirectory.endsWith("/")) rootDirectory = rootDirectory + "/";
@@ -65,7 +75,7 @@ public class RunOfflineAirPollutionAnalysis {
 			final String hbefaFileCold = "shared-svn/projects/matsim-germany/hbefa/hbefa-files/v3.2/EFA_ColdStart_vehcat_2005average.txt";
 			final String hbefaFileWarm = "shared-svn/projects/matsim-germany/hbefa/hbefa-files/v3.2/EFA_HOT_vehcat_2005average.txt";
 			
-			RunOfflineAirPollutionAnalysis analysis = new RunOfflineAirPollutionAnalysis(
+			RunOfflineAirPollutionAnalysisByVehicleCategory analysis = new RunOfflineAirPollutionAnalysisByVehicleCategory(
 					rootDirectory + runDirectory,
 					runId,
 					rootDirectory + hbefaFileWarm,
@@ -77,19 +87,9 @@ public class RunOfflineAirPollutionAnalysis {
 			throw new RuntimeException("Please set the root directory. Aborting...");
 		}
 	}
-	
-	public RunOfflineAirPollutionAnalysis(String runDirectory, String runId, String hbefaFileWarm, String hbefaFileCold, String analysisOutputDirectory) {
-		this.runDirectory = runDirectory;
-		this.runId = runId;
-		this.hbefaWarmFile = hbefaFileWarm;
-		this.hbefaColdFile = hbefaFileCold;
-		
-		if (!analysisOutputDirectory.endsWith("/")) analysisOutputDirectory = analysisOutputDirectory + "/";
-		this.analysisOutputDirectory = analysisOutputDirectory;
-	}
 
 	void run() {
-
+		
 		Config config = ConfigUtils.createConfig();
 		config.vehicles().setVehiclesFile(runDirectory + runId + ".output_vehicles.xml.gz");
 		config.network().setInputFile(runDirectory + runId + ".output_network.xml.gz");
@@ -105,62 +105,15 @@ public class RunOfflineAirPollutionAnalysis {
 		eConfig.setDetailedVsAverageLookupBehavior(DetailedVsAverageLookupBehavior.directlyTryAverageTable);
 		eConfig.setAverageColdEmissionFactorsFile(this.hbefaColdFile);
 		eConfig.setAverageWarmEmissionFactorsFile(this.hbefaWarmFile);
-		eConfig.setHbefaRoadTypeSource(HbefaRoadTypeSource.fromLinkAttributes);
 		eConfig.setNonScenarioVehicles(NonScenarioVehicles.ignore);
 		
 		final String emissionEventOutputFile = analysisOutputDirectory + runId + ".emission.events.offline.xml.gz";
 		final String eventsFile = runDirectory + runId + ".output_events.xml.gz";
 		
 		Scenario scenario = ScenarioUtils.loadScenario(config);
+		
 		// network
-		for (Link link : scenario.getNetwork().getLinks().values()) {
-
-			double freespeed = Double.NaN;
-
-			if (link.getFreespeed() <= 13.888889) {
-				freespeed = link.getFreespeed() * 2;
-				// for non motorway roads, the free speed level was reduced
-			} else {
-				freespeed = link.getFreespeed();
-				// for motorways, the original speed levels seems ok.
-			}
-			
-			if(freespeed <= 8.333333333){ //30kmh
-				link.getAttributes().putAttribute("hbefa_road_type", "URB/Access/30");
-			} else if(freespeed <= 11.111111111){ //40kmh
-				link.getAttributes().putAttribute("hbefa_road_type", "URB/Access/40");
-			} else if(freespeed <= 13.888888889){ //50kmh
-				double lanes = link.getNumberOfLanes();
-				if(lanes <= 1.0){
-					link.getAttributes().putAttribute("hbefa_road_type", "URB/Local/50");
-				} else if(lanes <= 2.0){
-					link.getAttributes().putAttribute("hbefa_road_type", "URB/Distr/50");
-				} else if(lanes > 2.0){
-					link.getAttributes().putAttribute("hbefa_road_type", "URB/Trunk-City/50");
-				} else{
-					throw new RuntimeException("NoOfLanes not properly defined");
-				}
-			} else if(freespeed <= 16.666666667){ //60kmh
-				double lanes = link.getNumberOfLanes();
-				if(lanes <= 1.0){
-					link.getAttributes().putAttribute("hbefa_road_type", "URB/Local/60");
-				} else if(lanes <= 2.0){
-					link.getAttributes().putAttribute("hbefa_road_type", "URB/Trunk-City/60");
-				} else if(lanes > 2.0){
-					link.getAttributes().putAttribute("hbefa_road_type", "URB/MW-City/60");
-				} else{
-					throw new RuntimeException("NoOfLanes not properly defined");
-				}
-			} else if(freespeed <= 19.444444444){ //70kmh
-				link.getAttributes().putAttribute("hbefa_road_type", "URB/MW-City/70");
-			} else if(freespeed <= 22.222222222){ //80kmh
-				link.getAttributes().putAttribute("hbefa_road_type", "URB/MW-Nat./80");
-			} else if(freespeed > 22.222222222){ //faster
-				link.getAttributes().putAttribute("hbefa_road_type", "RUR/MW/>130");
-			} else{
-				throw new RuntimeException("Link not considered...");
-			}			
-		}
+		new VspHbefaRoadTypeMapping().addHbefaMappings(scenario.getNetwork());
 		
 		// vehicles
 
@@ -217,7 +170,7 @@ public class RunOfflineAirPollutionAnalysis {
         matsimEventsReader.readFile(eventsFile);
         eventsManager.finishProcessing();
 
-        emissionEventWriter.closeFile();	
+        emissionEventWriter.closeFile();
 	}
 
 }

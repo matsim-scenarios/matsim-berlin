@@ -89,9 +89,10 @@ public class AbfallChessboardUtils {
 		double latestFinishingTime = 14 * 3600;
 
 		CarrierVehicle newCarrierVehicle =  CarrierVehicle.Builder
-			.newInstance(Id.create(vehicleName, Vehicle.class), Id.createLinkId(linkChessboardDepot))
+			.newInstance(Id.create(vehicleName, Vehicle.class), Id.createLinkId(linkChessboardDepot),
+					carrierVehicleTypes.getVehicleTypes().get(carrierVehicleTypes.getVehicleTypes().values().iterator().next().getId()))
 			.setEarliestStart(earliestStartingTime).setLatestEnd(latestFinishingTime)
-			.setTypeId(carrierVehicleTypes.getVehicleTypes().values().iterator().next().getId()).build();
+			.build();
 
 //		AbfallUtils.createGarbageTruck(vehicleName, linkChessboardDepot, earliestStartingTime, latestFinishingTime);
 

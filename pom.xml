@@ -4,13 +4,20 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.matsim-scenarios</groupId>
 	<artifactId>matsim-berlin</artifactId>
-	<version>5.5.3</version>
+	<version>5.6.x-SNAPSHOT</version>
 
 	<name>MATSim Open Berlin scenario project</name>
 	<description>MATSim Open Berlin scenario project</description>
 
 	<properties>
-		<matsim.version>15.0-PR2276</matsim.version> <!-- 18.05.2021-->
+		<!-- release -->
+		<!--<matsim.version>13.0</matsim.version>-->
+
+		<!-- PR-labelled release -->
+<!--		<matsim.version>15.0-PR2331</matsim.version>-->
+
+		<!-- snapshot == not recommended: rather use PR-labelled release!-->
+		<matsim.version>15.0-SNAPSHOT</matsim.version>
 	</properties>
 
 	<repositories>
@@ -34,12 +41,6 @@
 		</repository>
 
 		<repository>
-			<!-- Required for MATSim snaphots -->
-			<id>ojo-snapshots</id>
-			<url>http://oss.jfrog.org/libs-snapshot</url>
-		</repository>
-
-		<repository>
 			<id>de.topobyte</id>
 			<url>https://mvn.topobyte.de</url>
 		</repository>
@@ -47,11 +48,6 @@
 		<repository>
 			<id>com.slimjars.trove4j</id>
 			<url>https://mvn.slimjars.com</url>
-		</repository>
-
-		<repository>
-			<id>SBB</id>
-			<url>https://schweizerischebundesbahnen.bintray.com/simba.mvn</url>
 		</repository>
 
 	</repositories>
@@ -104,7 +100,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.13.1</version>
+			<version>4.13.2</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -124,6 +120,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.matsim</groupId>
+			<artifactId>matsim-examples</artifactId>
+			<version>${matsim.version}</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>analysis</artifactId>
 			<version>${matsim.version}</version>
@@ -137,8 +139,8 @@
 
 		<dependency>
 			<groupId>com.github.matsim-org</groupId>
-			<artifactId>GTFS2MATSim</artifactId>
-			<version>11.2</version>
+			<artifactId>gtfs2matsim</artifactId>
+			<version>13.0</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>gt-epsg-hsql</artifactId>
@@ -155,16 +157,46 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>roadpricing</artifactId>
+			<version>${matsim.version}</version>
+		</dependency>
+
+		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>opt-drt</artifactId>
-			<version>d61d2c8294</version>
+			<version>0d94df59ec</version>
 		</dependency>
 		
 		<dependency>
 	    	<groupId>com.github.matsim-vsp</groupId>
 	    	<artifactId>matsim-analysis</artifactId>
-		<version>933a6dd</version>
+	    	<version>23bfbfc865</version>
         </dependency>
+
+		<dependency>
+			<groupId>com.github.matsim-vsp</groupId>
+			<artifactId>pt-extensions</artifactId>
+			<version>c6253b0a53</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.matsim</groupId>
+					<artifactId>matsim</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.matsim.contrib</groupId>
+					<artifactId>drt</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.matsim.contrib</groupId>
+					<artifactId>dvrp</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.matsim.contrib</groupId>
+					<artifactId>vsp</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
 		<dependency>
 		<!-- This is the matsim "freight" contrib: -->
@@ -203,8 +235,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.3.2</version>
 				<configuration>
-					<source>11</source>
-					<target>11</target>
+					<source>16</source>
+					<target>16</target>
 					<showWarnings>false</showWarnings>
 					<showDeprecation>false</showDeprecation>
 					<encoding>UTF-8</encoding>
@@ -286,7 +318,6 @@
 					</execution>
 				</executions>
 			</plugin>
-
 		</plugins>
 	</build>
 

@@ -37,9 +37,6 @@ import com.google.inject.Inject;
 
 /**
  * Based on {@link TransportPlanningMainModeIdentifier}
- *
- * ModeStatsControlerListener takes modes from scoreConfig.getAllModes() and ignores everything else.
- * So keep this in mind before using this class.
  * 
  * @author nagel / gleich
  *
@@ -58,6 +55,7 @@ public final class OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier impleme
 		modeHierarchy.add( "bicycle" ); // TransportMode.bike is not registered as main mode, only "bicycle" ;
 		modeHierarchy.add( TransportMode.ride ) ;
 		modeHierarchy.add( TransportMode.car ) ;
+		modeHierarchy.add( "car2" ) ;
 		for (String drtMode: drtModes) {
 			modeHierarchy.add( drtMode ) ;
 		}
@@ -83,17 +81,8 @@ public final class OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier impleme
 				continue;
 			}
 			if (mode.equals(TransportMode.non_network_walk)) {
-				// skip, this is only a helper mode for access, egress and pt transfers
+				// skip, this is only a helper mode in case walk is routed on the network
 				continue;
-			}
-			if (mode.equals(TransportMode.transit_walk)) {
-				mode = TransportMode.walk;
-			} else {
-				for (String drtMode: drtModes) {
-					if (mode.equals(drtMode + "_fallback")) {// transit_walk / drt_walk / ... to be replaced by _fallback soon
-						mode = TransportMode.walk;
-					}
-				}
 			}
 			modesFound.add(mode);
 			index = modeHierarchy.indexOf( mode ) ;

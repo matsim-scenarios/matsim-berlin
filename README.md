@@ -32,7 +32,7 @@ The **MATSim input files, output files, analysis data and visualizations** are l
 
 ## Note
 
-Handling of large files within git is not without problems (git lfs files are not included in the zip download; we have to pay; ...).  In consequence, large files, both on the input and on the output side, reside at https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin . Please check out the latest release / the latest numbered branch since those are stable. The master branch is an potentially unstable development head. 
+Handling of large files within git is not without problems (git lfs files are not included in the zip download; we have to pay; ...).  In consequence, large files, both on the input and on the output side, reside at https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin .  
 
 ----
 ## Simple things (without installing/running MATSim)
@@ -138,7 +138,7 @@ java -jar [FILENAME].jar
 <dependency>
   <groupId>com.github.matsim-scenarios</groupId>
   <artifactId>matsim-berlin</artifactId>
-  <version>5.5.3</version>
+  <version>5.6</version>
 </dependency>
 ```
 
@@ -164,4 +164,4 @@ controler.run
 
 For more information about the scenario generation, see VSP working paper # 19-01 under https://www.vsp.tu-berlin.de/publications/vspwp .
 
-For more information about MATSim, see here: https://www.matsim.org/.
+For more information about MATSim, see here: https://www.matsim.org/

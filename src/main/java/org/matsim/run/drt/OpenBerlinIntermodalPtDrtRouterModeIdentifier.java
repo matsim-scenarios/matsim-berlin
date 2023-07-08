@@ -51,6 +51,7 @@ public final class OpenBerlinIntermodalPtDrtRouterModeIdentifier implements Anal
 		modeHierarchy.add( "bicycle" ); // TransportMode.bike is not registered as main mode, only "bicycle" ;
 		modeHierarchy.add( TransportMode.ride ) ;
 		modeHierarchy.add( TransportMode.car ) ;
+		modeHierarchy.add( "car2" ) ;
 		for (String drtMode: drtModes) {
 			modeHierarchy.add( drtMode ) ;
 		}
@@ -75,17 +76,8 @@ public final class OpenBerlinIntermodalPtDrtRouterModeIdentifier implements Anal
 				continue;
 			}
 			if (mode.equals(TransportMode.non_network_walk)) {
-				// skip, this is only a helper mode for access, egress and pt transfers
+				// skip, this is only a helper mode in case walk is routed on the network
 				continue;
-			}
-			if (mode.equals(TransportMode.transit_walk)) {
-				mode = TransportMode.pt;
-			} else {
-				for (String drtMode: drtModes) {
-					if (mode.equals(drtMode + "_fallback")) {// transit_walk / drt_walk / ... to be replaced by _fallback soon
-						mode = drtMode;
-					}
-				}
 			}
 			index = modeHierarchy.indexOf( mode ) ;
 			if ( index < 0 ) {

@@ -21,7 +21,8 @@ package org.matsim.run.drt;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,7 +31,6 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.api.core.v01.population.PopulationFactory;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.router.TripRouter;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.pt.PtConstants;
 import org.matsim.testcases.MatsimTestUtils;
@@ -40,7 +40,7 @@ import org.matsim.testcases.MatsimTestUtils;
  *
  */
 public class OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifierTest {
-	private static final Logger log = Logger.getLogger( OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifierTest.class ) ;
+	private static final Logger log = LogManager.getLogger( OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifierTest.class ) ;
 	
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 	
@@ -82,36 +82,6 @@ public class OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifierTest {
 		}
 		
 		log.info("Running test0... Done.");
-	}
-	
-	@Test
-	public final void testDrtPtFallbackModesRecognition() {
-		log.info("Running testDrtPtFallbackModesRecognition...");
-		
-		OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier mainModeIdentifier = new OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier();
-		
-		Scenario scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
-		PopulationFactory factory = scenario.getPopulation().getFactory();
-		
-		{
-			List<PlanElement> planElements = new ArrayList<>();
-			planElements.add(factory.createLeg(TransportMode.transit_walk));
-			Assert.assertEquals("Wrong mode!", TransportMode.walk, mainModeIdentifier.identifyMainMode(planElements));
-		}
-		
-		{
-			List<PlanElement> planElements = new ArrayList<>();
-			planElements.add(factory.createLeg(TripRouter.getFallbackMode(TransportMode.drt)));
-			Assert.assertEquals("Wrong mode!", TransportMode.walk, mainModeIdentifier.identifyMainMode(planElements));
-		}
-		
-		{
-			List<PlanElement> planElements = new ArrayList<>();
-			planElements.add(factory.createLeg(TripRouter.getFallbackMode("drt2")));
-			Assert.assertEquals("Wrong mode!", TransportMode.walk, mainModeIdentifier.identifyMainMode(planElements));
-		}
-		
-		log.info("Running testDrtPtFallbackModesRecognition... Done.");
 	}
 	
 	@Test
