@@ -24,7 +24,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
@@ -46,7 +47,7 @@ import org.matsim.counts.MatsimCountsReader;
 
 public class WriteCountsFileAndUpdateLinkIDs {
 	
-	private final Logger log = Logger.getLogger(WriteCountsFileAndUpdateLinkIDs.class);
+	private final Logger log = LogManager.getLogger(WriteCountsFileAndUpdateLinkIDs.class);
 
 	private Network network;
 	private Counts<Link> inputCounts;

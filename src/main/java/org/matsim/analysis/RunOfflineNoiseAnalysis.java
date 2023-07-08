@@ -19,7 +19,8 @@
 
 package org.matsim.analysis;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.contrib.noise.MergeNoiseCSVFile;
 import org.matsim.contrib.noise.NoiseConfigGroup;
@@ -35,7 +36,7 @@ import org.matsim.core.scenario.ScenarioUtils;
  *
  */
 public class RunOfflineNoiseAnalysis {
-	private static final Logger log = Logger.getLogger(RunOfflineNoiseAnalysis.class);
+	private static final Logger log = LogManager.getLogger(RunOfflineNoiseAnalysis.class);
 	
 	private final String runDirectory;
 	private final String runId;

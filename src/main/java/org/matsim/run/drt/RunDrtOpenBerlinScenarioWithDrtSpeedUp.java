@@ -19,7 +19,9 @@
 
 package org.matsim.run.drt;
 
-import org.apache.log4j.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
@@ -37,7 +39,7 @@ import org.matsim.run.RunBerlinScenario;
 */
 
 public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
-	private static final Logger log = Logger.getLogger(RunDrtOpenBerlinScenarioWithDrtSpeedUp.class);
+	private static final Logger log = LogManager.getLogger(RunDrtOpenBerlinScenarioWithDrtSpeedUp.class);
 
 	public static void main(String[] args) {
 		for (String arg : args) {
@@ -67,8 +69,7 @@ public class RunDrtOpenBerlinScenarioWithDrtSpeedUp {
 				ConfigUtils.addOrGetModule(scenario.getConfig(), MultiModeOptDrtConfigGroup.class));
 		
 		controler.run() ;
-		
-		RunBerlinScenario.runAnalysis(controler);
+
 	}
 
 }

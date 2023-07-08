@@ -19,7 +19,8 @@
 
 package org.matsim.run.accessibility;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.locationtech.jts.geom.Envelope;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -43,7 +44,7 @@ import java.util.List;
  */
 public final class RunBerlinScenarioWithAccessibilities {
 
-	private static final Logger log = Logger.getLogger(RunBerlinScenarioWithAccessibilities.class);
+	private static final Logger log = LogManager.getLogger(RunBerlinScenarioWithAccessibilities.class);
 
 	// Accessibility configurations
 	private static final boolean push2Geoserver = false; // Set true for run on server

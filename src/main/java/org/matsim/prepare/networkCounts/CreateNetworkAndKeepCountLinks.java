@@ -28,8 +28,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Network;
@@ -70,7 +70,7 @@ import org.matsim.core.utils.io.tabularFileParser.TabularFileParserConfig;
  */
 public class CreateNetworkAndKeepCountLinks {
 	
-	private final Logger log = Logger.getLogger(CreateNetworkAndKeepCountLinks.class);
+	private final Logger log = LogManager.getLogger(CreateNetworkAndKeepCountLinks.class);
 
 	private final String INPUT_OSMFILE ;
 	private final List<String> INPUT_COUNT_NODE_MAPPINGS;

@@ -10,7 +10,7 @@
 	<description>MATSim Open Berlin scenario project</description>
 
 	<properties>
-		<matsim.version>14.0-PR1512</matsim.version> <!-- 18.05.2021-->
+		<matsim.version>15.0-PR2276</matsim.version> <!-- 18.05.2021-->
 	</properties>
 
 	<repositories>
