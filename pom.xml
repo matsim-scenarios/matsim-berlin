@@ -133,7 +133,7 @@
 		<dependency>
 			<groupId>org.optaplanner</groupId>
 			<artifactId>optaplanner-core</artifactId>
-			<version>8.35.0.Final</version>
+			<version>9.41.0.Final</version>
 		</dependency>
 
 		<dependency>
