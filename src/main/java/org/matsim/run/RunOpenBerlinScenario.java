@@ -74,7 +74,7 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 				new StrategyConfigGroup.StrategySettings()
 					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
 					.setWeight(0.15)
-					.setSubpopulation("person")
+					.setSubpopulation(subpopulation)
 			);
 		}
 
