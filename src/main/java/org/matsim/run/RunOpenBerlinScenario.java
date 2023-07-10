@@ -22,13 +22,12 @@ import java.util.List;
 @MATSimApplication.Prepare()
 public class RunOpenBerlinScenario extends MATSimApplication {
 
-	private static final Logger log = LogManager.getLogger(RunOpenBerlinCalibration.class);
-
 	public static final String VERSION = "6.0";
 	public static final String CRS = "EPSG:25832";
-
+	private static final Logger log = LogManager.getLogger(RunOpenBerlinCalibration.class);
 	@CommandLine.Mixin
 	private final SampleOptions sample = new SampleOptions(25, 10, 1);
+
 	public RunOpenBerlinScenario() {
 		super(String.format("input/v%s/berlin-v%s-base-calib.config.xml", VERSION, VERSION));
 	}
@@ -63,21 +62,21 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 		Activities.addScoringParams(config, true);
 
 		// Required for all calibration strategies
-		for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
+		for (String subpopulation : List.of("person", "freight", "goodsTraffic", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
 			config.strategy().addStrategySettings(
 				new StrategyConfigGroup.StrategySettings()
 					.setStrategyName(DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta)
 					.setWeight(1.0)
 					.setSubpopulation(subpopulation)
 			);
-		}
 
-		config.strategy().addStrategySettings(
-			new StrategyConfigGroup.StrategySettings()
-				.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
-				.setWeight(0.15)
-				.setSubpopulation("person")
-		);
+			config.strategy().addStrategySettings(
+				new StrategyConfigGroup.StrategySettings()
+					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
+					.setWeight(0.15)
+					.setSubpopulation("person")
+			);
+		}
 
 		config.strategy().addStrategySettings(
 			new StrategyConfigGroup.StrategySettings()
