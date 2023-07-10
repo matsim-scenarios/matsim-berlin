@@ -95,6 +95,7 @@ public class SampleValidationRoutes implements MATSimAppCommand {
 	}
 
 	@Override
+	@SuppressWarnings({"IllegalCatch", "NestedTryDepth"})
 	public Integer call() throws Exception {
 
 		Network network = input.getNetwork();
@@ -253,6 +254,9 @@ public class SampleValidationRoutes implements MATSimAppCommand {
 		return result;
 	}
 
+	/**
+	 * Defines different available API services.
+	 */
 	public enum Api {
 		none,
 		google,

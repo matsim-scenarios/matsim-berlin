@@ -10,7 +10,7 @@ import java.io.UncheckedIOException;
 import java.util.Locale;
 
 /**
- * Access route data from mapbox
+ * Access route data from mapbox.
  */
 public class MapboxRouteValidator extends AbstractRouteValidator {
 
