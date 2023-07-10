@@ -197,7 +197,7 @@ $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
 	 --network ../public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/germany-europe-network.xml.gz\
 	 --input-crs $(CRS)\
 	 --target-crs $(CRS)\
-	 --shp $p/area/area.shp --shp-crs $(CRS)\
+	 --shp $p/area/area.shp\
 	 --cut-on-boundary\
 	 --output $@
 
@@ -283,7 +283,7 @@ $p/berlin-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-net
 	 --network $(word 2,$^)
 
 	$(sc) prepare split-activity-types-duration\
- 	 --exclude start,end\
+ 	 --exclude service_start,service_end\
 	 --input $@ --output $@
 
 	$(sc) prepare check-car-avail --input $@ --output $@ --mode walk
