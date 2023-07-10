@@ -1,13 +1,6 @@
 package org.matsim.prepare.traveltime;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.matsim.api.core.v01.Coord;
@@ -77,17 +70,17 @@ public class GoogleRouteValidator extends AbstractRouteValidator {
 		ZonedDateTime departureTime;
 		String units = "METRIC";
 
-		public Request(Coord from, Coord to, int hour) {
+		Request(Coord from, Coord to, int hour) {
 			origin = new Location(from);
 			destination = new Location(to);
 			departureTime = RouteValidator.createDateTime(hour);
 		}
 	}
 
-	private final static class Location {
+	private static final class Location {
 		final Map<String, Object> location;
 
-		public Location(Coord coord) {
+		Location(Coord coord) {
 
 			location = Map.of("latLng", Map.of(
 				"latitude", coord.getY(),

@@ -39,7 +39,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /**
- * Data can be obtained at Data portal from Berlin:
+ * Data can be obtained at Data portal from Berlin.
  * <a href="https://fbinter.stadt-berlin.de/fb/?loginkey=alphaDataStart&alphaDataId=s_vmengen2019@senstadt">GeoPortal Berlin</a>
  */
 @CommandLine.Command(name = "counts-from-geoportal", description = "Creates MATSim counts from Berlin FIS Broker count data")

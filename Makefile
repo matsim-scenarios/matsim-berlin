@@ -286,6 +286,8 @@ $p/berlin-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-net
  	 --exclude commercial_start,commercial_end,freight_start,freight_end\
 	 --input $@ --output $@
 
+	$(sc) prepare set-car-avail --input $@ --output $@
+
 	$(sc) prepare check-car-avail --input $@ --output $@ --mode walk
 
 	$(sc) prepare fix-subtour-modes --input $@ --output $@

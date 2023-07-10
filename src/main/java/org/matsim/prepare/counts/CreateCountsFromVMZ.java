@@ -143,7 +143,7 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 
 		try {
 			wb = new XSSFWorkbook(excel);
-		} catch (Exception e) {
+		} catch (IOException e) {
 			log.error("Error reading excel file", e);
 			throw new RuntimeException("Error reading excel file");
 		}

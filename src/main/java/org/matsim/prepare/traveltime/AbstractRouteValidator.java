@@ -18,7 +18,7 @@ abstract class AbstractRouteValidator implements RouteValidator {
 
 	protected final CloseableHttpClient httpClient;
 
-	public AbstractRouteValidator(String apiKey) {
+	AbstractRouteValidator(String apiKey) {
 		this.apiKey = apiKey;
 
 		mapper = new ObjectMapper();
