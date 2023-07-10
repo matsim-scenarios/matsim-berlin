@@ -283,7 +283,7 @@ $p/berlin-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-net
 	 --network $(word 2,$^)
 
 	$(sc) prepare split-activity-types-duration\
- 	 --exclude service_start,service_end\
+ 	 --exclude commercial_start,commercial_end,freight_start,freight_end\
 	 --input $@ --output $@
 
 	$(sc) prepare check-car-avail --input $@ --output $@ --mode walk
