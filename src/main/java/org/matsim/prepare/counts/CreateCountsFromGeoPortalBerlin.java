@@ -57,7 +57,7 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 	@CommandLine.Mixin
 	private OutputOptions output = OutputOptions.ofCommand(CreateCountsFromGeoPortalBerlin.class);
 
-	@CommandLine.Option(names = "--network-geometries", description = "path to *linkGeometries.csv", required = true)
+	@CommandLine.Option(names = "--network-geometries", description = "path to *linkGeometries.csv")
 	private Path networkGeometries;
 
 	@CommandLine.Option(names = "--road-type", description = "road type patterns to filter the network")
@@ -115,7 +115,9 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 		}
 
 		log.info("Build Index.");
-		NetworkIndex<MultiLineString> index = new NetworkIndex<>(filteredNetwork,
+		NetworkIndex<MultiLineString> index = networkGeometries == null ?
+				new NetworkIndex<>(filteredNetwork, 20, toMatch -> toMatch):
+				new NetworkIndex<>(filteredNetwork,
 				NetworkIndex.readGeometriesFromSumo(networkGeometries.toString(), IdentityTransform.create(2)),
 				20, toMatch -> toMatch);
 
@@ -160,7 +162,9 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 			Set<Mapping> ms = new HashSet<>(mappings.values());
 
 			for (Mapping m : ms) {
-				csv.printRecord(m.station, m.toDirection, m.fromDirection, m.avgCar, m.avgHGV);
+				String to = m.toDirection != null ? m.toDirection.toString(): "";
+				String from = m.fromDirection != null ? m.fromDirection.toString(): "";
+				csv.printRecord(m.station, to, from, m.avgCar, m.avgHGV);
 			}
 
 		}
