@@ -75,7 +75,7 @@ import java.util.stream.Collectors;
 	MergePlans.class, SplitActivityTypesDuration.class, CleanPopulation.class, CleanAttributes.class,
 	GenerateSmallScaleCommercialTrafficDemand.class, RunCountOptimization.class, SelectPlansFromIndex.class,
 	ExtractRelevantFreightTrips.class, CheckCarAvailability.class, FixSubtourModes.class,
-	PrepareNetworkParams.class, FreeSpeedOptimizer.class
+	PrepareNetworkParams.class, FreeSpeedOptimizer.class, SetCarAvailabilityByAge.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
 
