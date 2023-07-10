@@ -34,8 +34,6 @@ import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.replanning.choosers.ForceInnovationStrategyChooser;
 import org.matsim.core.replanning.choosers.StrategyChooser;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
-import org.matsim.core.router.AnalysisMainModeIdentifier;
-import org.matsim.core.router.RoutingModeMainModeIdentifier;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.SumScoringFunction;
@@ -109,7 +107,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	 * Round to two digits.
 	 */
 	public static double roundNumber(double x) {
-		return BigDecimal.valueOf(x).setScale(2, RoundingMode.HALF_UP).doubleValue();
+		return BigDecimal.valueOf(x).setScale(2, RoundingMode.HALF_EVEN).doubleValue();
 	}
 
 	/**
@@ -145,6 +143,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		sw.defaultParams().mapCenter = "13.39,52.51";
 		sw.defaultParams().mapZoomLevel = 9.1;
+		sw.defaultParams().shp = "./area/area.shp";
 
 		if (sample.isSet()) {
 			double sampleSize = sample.getSample();
@@ -160,7 +159,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		}
 
 		// Required for all calibration strategies
-		for (String subpopulation : List.of("person", "businessTraffic", "businessTraffic_service")) {
+		for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
 			config.strategy().addStrategySettings(
 				new StrategyConfigGroup.StrategySettings()
 					.setStrategyName(DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta)
@@ -194,6 +193,11 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 			config.strategy().setFractionOfIterationsToDisableInnovation(0.8);
 			config.planCalcScore().setFractionOfIterationsToStartScoreMSA(0.8);
+
+			// Routes are not relaxed yet, and there should not be too heavy congestion
+			// factors are increased to accommodate for more than usual traffic
+			config.qsim().setFlowCapFactor(config.qsim().getFlowCapFactor() * 1.5);
+			config.qsim().setStorageCapFactor(config.qsim().getStorageCapFactor() * 1.5);
 
 			FrozenTastesConfigGroup dccg = ConfigUtils.addOrGetModule(config, FrozenTastesConfigGroup.class);
 
@@ -241,7 +245,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		} else if (mode == CalibrationMode.routeChoice) {
 
 			// Re route for all populations
-			for (String subpopulation : List.of("person", "businessTraffic", "businessTraffic_service")) {
+			for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
 				config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
 					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
 					.setWeight(weight)
@@ -301,8 +305,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			controler.addOverridingModule(new AbstractModule() {
 				@Override
 				public void install() {
-					binder().bind(new TypeLiteral<StrategyChooser<Plan, Person>>() {
-					}).toInstance(new ForceInnovationStrategyChooser<>(5, ForceInnovationStrategyChooser.Permute.no));
+					binder().bind(new TypeLiteral<StrategyChooser<Plan, Person>>() {}).toInstance(new ForceInnovationStrategyChooser<>(5, ForceInnovationStrategyChooser.Permute.no));
 				}
 			});
 
@@ -342,13 +345,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		}
 
 		controler.addOverridingModule(new SimWrapperModule());
-
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				bind(AnalysisMainModeIdentifier.class).to(RoutingModeMainModeIdentifier.class);
-			}
-		});
 	}
 
 	@Override

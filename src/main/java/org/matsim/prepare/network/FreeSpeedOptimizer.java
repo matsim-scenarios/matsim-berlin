@@ -214,7 +214,6 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 		// entry to hour and list of speeds
 		Map<Entry, Int2ObjectMap<DoubleList>> entries = new LinkedHashMap<>();
 
-
 		for (String file : validationFiles) {
 
 			log.info("Loading {}", file);
@@ -239,7 +238,7 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 
 		Object2DoubleMap<Entry> result = new Object2DoubleOpenHashMap<>();
 
-		try (CSVPrinter printer = new CSVPrinter(Files.newBufferedWriter(Path.of("routes-std.csv")), CSVFormat.DEFAULT)) {
+		try (CSVPrinter printer = new CSVPrinter(Files.newBufferedWriter(Path.of("routes-ref.csv")), CSVFormat.DEFAULT)) {
 
 			printer.printRecord("from_node", "to_node", "hour", "min", "max", "mean", "std");
 

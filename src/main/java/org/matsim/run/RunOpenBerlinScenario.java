@@ -2,6 +2,7 @@ package org.matsim.run;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.application.MATSimApplication;
 import org.matsim.application.options.SampleOptions;
 import org.matsim.core.config.Config;
@@ -10,11 +11,9 @@ import org.matsim.core.config.groups.StrategyConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
-import org.matsim.core.router.AnalysisMainModeIdentifier;
-import org.matsim.core.router.RoutingModeMainModeIdentifier;
+import org.matsim.prepare.RunOpenBerlinCalibration;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
-import org.matsim.prepare.RunOpenBerlinCalibration;
 import picocli.CommandLine;
 
 import java.util.List;
@@ -45,6 +44,7 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 
 		sw.defaultParams().mapCenter = "13.39,52.51";
 		sw.defaultParams().mapZoomLevel = 9.1;
+		sw.defaultParams().shp = "./area/area.shp";
 
 		if (sample.isSet()) {
 			double sampleSize = sample.getSample();
@@ -63,7 +63,7 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 		Activities.addScoringParams(config, true);
 
 		// Required for all calibration strategies
-		for (String subpopulation : List.of("person", "businessTraffic", "businessTraffic_service")) {
+		for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
 			config.strategy().addStrategySettings(
 				new StrategyConfigGroup.StrategySettings()
 					.setStrategyName(DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta)
@@ -103,7 +103,10 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
-				bind(AnalysisMainModeIdentifier.class).to(RoutingModeMainModeIdentifier.class);
+
+				addTravelTimeBinding(TransportMode.ride).to(networkTravelTime());
+				addTravelDisutilityFactoryBinding(TransportMode.ride).to(carTravelDisutilityFactoryKey());
+
 			}
 		});
 

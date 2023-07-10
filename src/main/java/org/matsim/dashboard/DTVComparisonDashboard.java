@@ -7,7 +7,12 @@ import org.matsim.simwrapper.Layout;
 import org.matsim.simwrapper.viz.PieChart;
 import org.matsim.simwrapper.viz.Table;
 
-public class GeoDataCountsDashboard implements Dashboard {
+public class DTVComparisonDashboard implements Dashboard {
+
+	@Override
+	public double priority() {
+		return -1;
+	}
 
 	@Override
 	public void configure(Header header, Layout layout) {

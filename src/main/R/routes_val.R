@@ -61,3 +61,12 @@ ggplot(aggr, aes(x=hour)) +
   geom_line(mapping = aes(y=min)) + 
   geom_line(mapping = aes(y=mean)) + 
   geom_line(mapping = aes(y=max))
+
+#########
+
+
+trips <- read_csv("src/main/python/table-trips.csv") %>%
+      mutate(speed=gis_length / (duration/60)) %>%
+      mutate(across(where(is.numeric), ~na_if(., Inf))) %>%
+      drop_na()
+

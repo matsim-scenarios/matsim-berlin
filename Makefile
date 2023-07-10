@@ -198,6 +198,7 @@ $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
 	 --input-crs $(CRS)\
 	 --target-crs $(CRS)\
 	 --shp $p/area/area.shp --shp-crs $(CRS)\
+	 --cut-on-boundary\
 	 --output $@
 
 $p/berlin-commercialPersonTraffic-$V-25pct.plans.xml.gz:
@@ -213,10 +214,11 @@ $p/berlin-commercialPersonTraffic-$V-25pct.plans.xml.gz:
 	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
 	 --shapeCRS "EPSG:4326"\
 	 --resistanceFactor "0.005"\
+	 --numberOfPlanVariantsPerAgent 5\
 	 --nameOutputPopulation $(notdir $@)\
 	 --pathOutput output/commercialPersonTraffic
 
-	mv output/businessTraffic/$(notdir $@) $@
+	mv output/commercialPersonTraffic/$(notdir $@) $@
 
 $p/berlin-goodsTraffic-$V-25pct.plans.xml.gz:
 	$(sc) prepare generate-small-scale-commercial-traffic\
@@ -231,10 +233,11 @@ $p/berlin-goodsTraffic-$V-25pct.plans.xml.gz:
 	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
 	 --shapeCRS "EPSG:4326"\
 	 --resistanceFactor "0.005"\
+	 --numberOfPlanVariantsPerAgent 5\
 	 --nameOutputPopulation $(notdir $@)\
 	 --pathOutput output/goodsTraffic
 
-	mv output/freightTraffic/$(notdir $@) $@
+	mv output/goodsTraffic/$(notdir $@) $@
 
 # Depends on location choice runs and freight model
 $p/berlin-cadyts-input-$V-25pct.plans.xml.gz: $p/berlin-commercialPersonTraffic-$V-25pct.plans.xml.gz
@@ -253,12 +256,12 @@ $p/berlin-initial-$V-25pct.experienced_plans.xml.gz:
      	 --sample-size 0.25\
      	 --samples 0.05 0.01\
 
-ERROR_METRIC ?= abs_error
+ERROR_METRIC ?= log_error
 eval-opt: $p/berlin-initial-$V-25pct.experienced_plans.xml.gz
 	$(sc) prepare run-count-opt\
 	 --input $<\
-	 --network $p/berlin-v6.0-network-with-pt.xml.gz\
-     --counts $p/berlin-v6.0-counts-car-vmz.xml.gz\
+	 --network $p/berlin-$V-network-with-pt.xml.gz\
+     --counts $p/berlin-$V-counts-car-vmz.xml.gz\
 	 --output $p/berlin-$V-25pct.plans_selection_$(ERROR_METRIC).csv\
 	 --metric $(ERROR_METRIC)
 
