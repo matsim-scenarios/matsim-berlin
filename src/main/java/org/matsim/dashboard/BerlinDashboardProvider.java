@@ -30,7 +30,16 @@ public class BerlinDashboardProvider implements DashboardProvider {
 			refData = refURL.toString();
 		}
 
-		return List.of(trips, new DTVComparisonDashboard(), new TravelTimeComparisonDashboard(refData));
+		URL dtvURL = IOUtils.extendUrl(config.getContext(), "berlin-v6.0-dtv.csv.gz");
+		String dtvData;
+		try {
+			dtvData = new File(dtvURL.toURI()).getAbsolutePath();
+		} catch (URISyntaxException e) {
+			dtvData = dtvURL.toString();
+		}
+
+
+		return List.of(trips, new DTVComparisonDashboard(dtvData), new TravelTimeComparisonDashboard(refData));
 	}
 
 }
