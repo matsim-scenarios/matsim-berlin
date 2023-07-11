@@ -5,10 +5,12 @@ import org.matsim.application.prepare.network.CreateGeoJsonNetwork;
 import org.matsim.simwrapper.Dashboard;
 import org.matsim.simwrapper.Header;
 import org.matsim.simwrapper.Layout;
-import org.matsim.simwrapper.viz.Bar;
 import org.matsim.simwrapper.viz.MapPlot;
-import org.matsim.simwrapper.viz.PieChart;
-import org.matsim.simwrapper.viz.Table;
+import org.matsim.simwrapper.viz.Plotly;
+import tech.tablesaw.plotly.components.Axis;
+import tech.tablesaw.plotly.traces.BarTrace;
+
+import java.util.List;
 
 /**
  * Dashboard to compare dtv quality.
@@ -29,44 +31,65 @@ public class DTVComparisonDashboard implements Dashboard {
 	@Override
 	public void configure(Header header, Layout layout) {
 
-		header.title = "Daily traffic volume analysis dashboard";
-		header.description = "Analysis of count data source provided by 'FIS-Broker' (Open geo-data portal by Berlin)";
+		header.title = "DTV";
+		header.description = "Analysis of dtv data provided by 'FIS-Broker' (Open geo-data portal by Berlin). Error metrics: under: < 0.75; over: > 1.25";
 
-		// TODO: dtvPath needs to be used in the args
+		layout.row("overview")
+			.el(Plotly.class, (viz, data) -> {
 
-		layout.row("mapping")
-			.el(PieChart.class, (viz, data) -> {
+				viz.title = "DTV comparison";
+				viz.description = "over all roads";
 
-				viz.dataset = data.compute(DTVAnalysis.class, "stations_per_road_type.csv");
-				viz.title = "Mapped count stations per road type";
-				viz.height = 10.0;
-			}).el(Table.class, (viz, data) -> {
+				Plotly.DataSet ds = viz.addDataset(data.compute(DTVAnalysis.class, "dtv_quality_per_road_type.csv", "--input-dtv", dtvPath))
+					.aggregate(List.of("quality"), "n", Plotly.AggrFunc.SUM);
 
-				viz.dataset = data.compute(DTVAnalysis.class, "mapping_overview.csv");
-				viz.enableFilter = false;
-				viz.title = "Characteristics";
+				viz.layout = tech.tablesaw.plotly.components.Layout.builder()
+					.barMode(tech.tablesaw.plotly.components.Layout.BarMode.STACK)
+					.xAxis(Axis.builder().title("Number").build())
+					.build();
+
+				viz.addTrace(BarTrace.builder(Plotly.OBJ_INPUT, Plotly.INPUT).orientation(BarTrace.Orientation.HORIZONTAL).build(), ds.mapping()
+					.x("n")
+					.name("quality", Plotly.ColorScheme.RdYlBu)
+				);
+			}).el(Plotly.class, (viz, data) -> {
+
+				viz.title = "DTV comparison";
+				viz.description = "by road type";
+
+				Plotly.DataSet ds = viz.addDataset(data.compute(DTVAnalysis.class, "dtv_quality_per_road_type.csv", "--input-dtv", dtvPath));
+
+				viz.layout = tech.tablesaw.plotly.components.Layout.builder()
+					.yAxis(Axis.builder().title("Share").build())
+					.barMode(tech.tablesaw.plotly.components.Layout.BarMode.STACK)
+					.build();
+
+				viz.addTrace(BarTrace.builder(Plotly.OBJ_INPUT, Plotly.INPUT).build(), ds.mapping()
+					.x("road_type")
+					.y("share")
+					.name("quality", Plotly.ColorScheme.RdYlBu)
+				);
+
 			});
 
 		layout.row("map")
 			.el(MapPlot.class, (viz, data) -> {
-				viz.title = "Estimation quality";
-				viz.height = 8.0D;
+				viz.title = "Relative traffic volumes";
+				viz.height = 8.0;
+
 				viz.setShape(data.compute(CreateGeoJsonNetwork.class, "network.geojson", "--with-properties"), "id");
-				viz.addDataset("counts", data.compute(DTVAnalysis.class, "day_quality_per_road_type.csv"));
+				viz.addDataset("dtv", data.compute(DTVAnalysis.class, "dtv_comparison.csv", "--input-dtv", dtvPath));
+
 				viz.center = data.context().getCenter();
 				viz.zoom = data.context().mapZoomLevel;
+
+				viz.display.lineColor.dataset = "dtv";
+				viz.display.lineColor.columnName = "quality";
+				viz.display.lineColor.join = "link_id";
+				viz.display.lineColor.setColorRamp(Plotly.ColorScheme.RdYlBu, 3, false);
+
+				// 8px
 				viz.display.lineWidth.dataset = "@8";
 			});
-
-		layout.row("aggregation").el(Bar.class, (viz, data) -> {
-
-		});
-
-		/*
-		 * TODO
-		 *  peak hour comparision
-		 *  whole day comaprision
-		 *  map plot for both comparision?
-		 * */
 	}
 }

@@ -45,6 +45,22 @@ public class PrepareNetworkParams implements MATSimAppCommand {
 		new PrepareNetworkParams().execute(args);
 	}
 
+	/**
+	 * Theoretical capacity.
+	 */
+	private static double capacityEstimate(double v) {
+
+		// headway
+		double tT = 1.2;
+
+		// car length
+		double lL = 7.0;
+
+		double Qc = v / (v * tT + lL);
+
+		return 3600 * Qc;
+	}
+
 	@Override
 	public Integer call() throws Exception {
 
@@ -111,9 +127,19 @@ public class PrepareNetworkParams implements MATSimAppCommand {
 
 		boolean modified = false;
 
-		if (perLane < cap * 0.4) {
-			log.warn("Increasing capacity per lane on {} ({}, {}) from {} to {}", link.getId(), type, junctionType, perLane, cap * 0.4);
-			perLane = cap * 0.4;
+		// Minimum thresholds
+		double threshold = switch (junctionType) {
+			// traffic light can reduce capacity at least to 50% (with equal green split)
+			case "traffic_light" -> 0.4;
+			case "right_before_left" -> 0.6;
+			// Motorways are kept at their max theoretical capacity
+			case "priority" -> type.startsWith("motorway") ? 1 : 0.8;
+			default -> throw new IllegalArgumentException("Unknown type: " + junctionType);
+		};
+
+		if (perLane < cap * threshold) {
+			log.warn("Increasing capacity per lane on {} ({}, {}) from {} to {}", link.getId(), type, junctionType, perLane, cap * threshold);
+			perLane = cap * threshold;
 			modified = true;
 		}
 
@@ -151,23 +177,6 @@ public class PrepareNetworkParams implements MATSimAppCommand {
 
 		link.setFreespeed((double) link.getAttributes().getAttribute("allowed_speed") * speedFactor);
 		link.getAttributes().putAttribute("speed_factor", speedFactor);
-	}
-
-
-	/**
-	 * Theoretical capacity.
-	 */
-	private static double capacityEstimate(double v) {
-
-		// headway
-		double tT = 1.2;
-
-		// car length
-		double lL = 7.0;
-
-		double Qc = v / (v * tT + lL);
-
-		return 3600 * Qc;
 	}
 
 }

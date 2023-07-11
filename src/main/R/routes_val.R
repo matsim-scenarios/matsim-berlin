@@ -70,3 +70,13 @@ trips <- read_csv("src/main/python/table-trips.csv") %>%
       mutate(across(where(is.numeric), ~na_if(., Inf))) %>%
       drop_na()
 
+
+trips %>% 
+  group_by(main_mode) %>% 
+  summarise(speed=mean(speed))
+
+######
+
+
+capacity <- read_csv("dtv_links_capacity.csv")
+sum(capacity$is_valid, na.rm = TRUE) / length(capacity$is_valid)
