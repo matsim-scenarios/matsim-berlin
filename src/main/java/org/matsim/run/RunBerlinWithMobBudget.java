@@ -86,9 +86,7 @@ public class RunBerlinWithMobBudget {
             DistanceBasedMoneyReward klimaTaler = new DistanceBasedMoneyReward(controler.getScenario().getConfig().plansCalcRoute().getBeelineDistanceFactors().get(TransportMode.walk), controler.getScenario().getNetwork(), distanceBasedMoneyReward);
             addKlimaTaler(controler, klimaTaler);
         }
-
         controler.run();
-
     }
 
 
