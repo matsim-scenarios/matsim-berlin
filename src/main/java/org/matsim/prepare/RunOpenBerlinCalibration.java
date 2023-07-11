@@ -6,9 +6,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
+import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.MATSimApplication;
 import org.matsim.application.options.SampleOptions;
@@ -31,9 +34,12 @@ import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
+import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.replanning.choosers.ForceInnovationStrategyChooser;
 import org.matsim.core.replanning.choosers.StrategyChooser;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
+import org.matsim.core.router.RoutingModeMainModeIdentifier;
+import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.SumScoringFunction;
@@ -59,6 +65,7 @@ import java.math.RoundingMode;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -93,7 +100,10 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	private double weight;
 	@CommandLine.Option(names = "--population", description = "Path to population")
 	private Path populationPath;
-	@CommandLine.Option(names = "--scale-factor", description = "Scale factor for capacity.", defaultValue = "1")
+	@CommandLine.Option(names = "--all-car", description = "All plans will use car mode. Capacity is adjusted automatically by 4.85", defaultValue = "false")
+	private boolean allCar;
+
+	@CommandLine.Option(names = "--scale-factor", description = "Scale factor for capacity to avoid congestions.", defaultValue = "1.5")
 	private double scaleFactor;
 
 	@CommandLine.Option(names = "--plan-index", description = "Only use one plan with specified index")
@@ -148,14 +158,27 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		if (sample.isSet()) {
 			double sampleSize = sample.getSample();
 
-			config.qsim().setFlowCapFactor(sampleSize);
-			config.qsim().setStorageCapFactor(sampleSize);
+			double countScale = allCar ? 4.85 : 1;
+
+			config.qsim().setFlowCapFactor(sampleSize * countScale);
+			config.qsim().setStorageCapFactor(sampleSize * countScale);
 
 			// Counts can be scaled with sample size
-			config.counts().setCountsScaleFactor(sampleSize);
+			config.counts().setCountsScaleFactor(sampleSize * countScale);
 			config.plans().setInputFile(sample.adjustName(config.plans().getInputFile()));
 
-			sw.defaultParams().sampleSize = sampleSize;
+			sw.defaultParams().sampleSize = sampleSize * countScale;
+		}
+
+		// Routes are not relaxed yet, and there should not be too heavy congestion
+		// factors are increased to accommodate for more than usual traffic
+		config.qsim().setFlowCapFactor(config.qsim().getFlowCapFactor() * scaleFactor);
+		config.qsim().setStorageCapFactor(config.qsim().getStorageCapFactor() * scaleFactor);
+
+		log.info("Running with flow and storage capacity: {} / {}", config.qsim().getFlowCapFactor(), config.qsim().getStorageCapFactor());
+
+		if (allCar) {
+			config.transit().setUseTransit(false);
 		}
 
 		// Required for all calibration strategies
@@ -193,11 +216,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 			config.strategy().setFractionOfIterationsToDisableInnovation(0.8);
 			config.planCalcScore().setFractionOfIterationsToStartScoreMSA(0.8);
-
-			// Routes are not relaxed yet, and there should not be too heavy congestion
-			// factors are increased to accommodate for more than usual traffic
-			config.qsim().setFlowCapFactor(config.qsim().getFlowCapFactor() * 1.5);
-			config.qsim().setStorageCapFactor(config.qsim().getStorageCapFactor() * 1.5);
 
 			FrozenTastesConfigGroup dccg = ConfigUtils.addOrGetModule(config, FrozenTastesConfigGroup.class);
 
@@ -244,7 +262,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		} else if (mode == CalibrationMode.routeChoice) {
 
-			// Re route for all populations
+			// Re-route for all populations
 			for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
 				config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
 					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
@@ -257,9 +275,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 			iterations = 0;
 			config.controler().setLastIteration(0);
-
-			config.qsim().setFlowCapFactor(config.qsim().getFlowCapFactor() * scaleFactor);
-			config.qsim().setStorageCapFactor(config.qsim().getStorageCapFactor() * scaleFactor);
 
 		} else
 			throw new IllegalStateException("Mode not implemented:" + mode);
@@ -294,6 +309,32 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 				toRemove.forEach(person::removePlan);
 			}
 		}
+
+		if (allCar) {
+
+			RoutingModeMainModeIdentifier mmi = new RoutingModeMainModeIdentifier();
+
+			for (Person person : scenario.getPopulation().getPersons().values()) {
+				for (Plan plan : person.getPlans()) {
+					final List<PlanElement> planElements = plan.getPlanElements();
+					final List<TripStructureUtils.Trip> trips = TripStructureUtils.getTrips(plan);
+
+					for (TripStructureUtils.Trip trip : trips) {
+						final List<PlanElement> fullTrip =
+							planElements.subList(
+								planElements.indexOf(trip.getOriginActivity()) + 1,
+								planElements.indexOf(trip.getDestinationActivity()));
+
+						if (!Objects.equals(mmi.identifyMainMode(fullTrip), TransportMode.car)) {
+							fullTrip.clear();
+							Leg leg = PopulationUtils.createLeg(TransportMode.car);
+							TripStructureUtils.setRoutingMode(leg, TransportMode.car);
+							fullTrip.add(leg);
+						}
+					}
+				}
+			}
+		}
 	}
 
 	@Override
@@ -305,7 +346,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			controler.addOverridingModule(new AbstractModule() {
 				@Override
 				public void install() {
-					binder().bind(new TypeLiteral<StrategyChooser<Plan, Person>>() {}).toInstance(new ForceInnovationStrategyChooser<>(5, ForceInnovationStrategyChooser.Permute.no));
+					binder().bind(new TypeLiteral<StrategyChooser<Plan, Person>>() {
+					}).toInstance(new ForceInnovationStrategyChooser<>(5, ForceInnovationStrategyChooser.Permute.no));
 				}
 			});
 

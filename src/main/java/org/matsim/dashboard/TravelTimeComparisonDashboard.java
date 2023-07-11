@@ -41,15 +41,15 @@ public class TravelTimeComparisonDashboard implements Dashboard {
 
 				viz.interactive = Plotly.Interactive.slider;
 				viz.layout = tech.tablesaw.plotly.components.Layout.builder()
-					.yAxis(Axis.builder().title("Observed mean travel time [km/h]").build())
-					.xAxis(Axis.builder().title("Simulated mean travel time [km/h]").build())
+					.xAxis(Axis.builder().title("Observed historical mean speed [km/h]").build())
+					.yAxis(Axis.builder().title("Simulated mean speed [km/h]").build())
 					.build();
 
 				Plotly.DataSet ds = viz.addDataset(data.compute(TravelTimeComparison.class, "travel_time_comparison_by_route.csv", "--input-ref", refData));
 
 				viz.addTrace(ScatterTrace.builder(Plotly.INPUT, Plotly.INPUT).build(), ds.mapping()
-					.y("mean")
-					.x("simulated")
+					.x("mean")
+					.y("simulated")
 					.text("from_node")
 					.name("hour")
 				);
