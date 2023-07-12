@@ -20,6 +20,7 @@ import org.matsim.counts.Count;
 import org.matsim.counts.Counts;
 import org.matsim.counts.MatsimCountsReader;
 import org.matsim.counts.Volume;
+import org.matsim.prepare.RunOpenBerlinCalibration;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
 import picocli.CommandLine;
@@ -46,6 +47,9 @@ public class RunCountOptimization implements MATSimAppCommand {
 
 	@CommandLine.Option(names = "--counts", description = "Path to counts", required = true)
 	private Path countsPath;
+
+	@CommandLine.Option(names = "--all-car", description = "Plans have been created with the all car option and counts should be scaled. ", defaultValue = "false")
+	private boolean allCar;
 
 	@CommandLine.Option(names = "--metric")
 	private ErrorMetric metric = ErrorMetric.abs_error;
@@ -85,6 +89,8 @@ public class RunCountOptimization implements MATSimAppCommand {
 				if (volumes.containsKey(i)) {
 					int idx = k * H + i;
 					counts[idx] = (int) volumes.get(i).getValue();
+					if (allCar)
+						counts[idx] = (int) (counts[idx] * RunOpenBerlinCalibration.CAR_FACTOR);
 				}
 			}
 
@@ -132,9 +138,14 @@ public class RunCountOptimization implements MATSimAppCommand {
 
 		Set<Id<Link>> links = linkCounts.getCounts().keySet();
 
-		int scale = (int) (1 / sampleSize);
+		// TODO: determin scaling with all car plans
+		// TODO: commercial agent need to be scaled with car share
+
+		SplittableRandom rnd = new SplittableRandom(0);
 
 		for (Person person : population.getPersons().values()) {
+
+			int scale = (int) (1 / sampleSize);
 
 			Int2IntMap[] plans = new Int2IntMap[maxK];
 			for (int i = 0; i < plans.length; i++) {
@@ -144,9 +155,15 @@ public class RunCountOptimization implements MATSimAppCommand {
 			boolean keep = false;
 
 			int offset = 0;
-			// Commercial traffic, can also be removed completely
-			if (person.getId().toString().startsWith("Berlin_"))
+			// Commercial traffic, which can be chosen to not be included at all
+			if (person.getId().toString().startsWith("commercialPersonTraffic")) {
+
 				offset = 1;
+				// if other trips have been scaled, these unscaled trips are scaled as well
+				if (allCar)
+					// scale with mean of CAR_FACTOR
+					scale += (rnd.nextDouble() < 0.85 ? 5: 4);
+			}
 
 			// Index for plan
 			int k = offset;

@@ -70,7 +70,7 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 	@CommandLine.Option(names = "--params", description = "Apply params and write to output if given")
 	private Path params;
 
-	@CommandLine.Parameters(arity = "1..*", description = "Input validation files loaded from APIs")
+	@CommandLine.Parameters(arity = "0..*", description = "Input validation files loaded from APIs")
 	private List<String> validationFiles;
 
 	private Network network;
@@ -116,7 +116,6 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 			return 0;
 		}
 
-
 		Server server = new Server(9090);
 
 		ServletHandler handler = new ServletHandler();
@@ -143,7 +142,7 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 				double speed = speeds.getDouble(link.getId());
 
 				if (request.f == 0) {
-					double speedFactor = (double) link.getAttributes().getAttribute("speed_Factor");
+					double speedFactor = (double) link.getAttributes().getAttribute("speed_factor");
 
 					if (allowedSpeed <= 31 / 3.6) {
 						link.setFreespeed(speed * request.b30);
@@ -214,27 +213,28 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 		// entry to hour and list of speeds
 		Map<Entry, Int2ObjectMap<DoubleList>> entries = new LinkedHashMap<>();
 
-		for (String file : validationFiles) {
+		if (validationFiles != null)
+			for (String file : validationFiles) {
 
-			log.info("Loading {}", file);
+				log.info("Loading {}", file);
 
-			try (CSVParser parser = new CSVParser(Files.newBufferedReader(Path.of(file)),
-				CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).build())) {
+				try (CSVParser parser = new CSVParser(Files.newBufferedReader(Path.of(file)),
+					CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).build())) {
 
-				for (CSVRecord r : parser) {
-					Entry e = new Entry(Id.createNodeId(r.get("from_node")), Id.createNodeId(r.get("to_node")));
-					double speed = Double.parseDouble(r.get("dist")) / Double.parseDouble(r.get("travel_time"));
+					for (CSVRecord r : parser) {
+						Entry e = new Entry(Id.createNodeId(r.get("from_node")), Id.createNodeId(r.get("to_node")));
+						double speed = Double.parseDouble(r.get("dist")) / Double.parseDouble(r.get("travel_time"));
 
-					if (!Double.isFinite(speed)) {
-						log.warn("Invalid entry {}", r);
-						continue;
+						if (!Double.isFinite(speed)) {
+							log.warn("Invalid entry {}", r);
+							continue;
+						}
+
+						Int2ObjectMap<DoubleList> perHour = entries.computeIfAbsent(e, (k) -> new Int2ObjectLinkedOpenHashMap<>());
+						perHour.computeIfAbsent(Integer.parseInt(r.get("hour")), k -> new DoubleArrayList()).add(speed);
 					}
-
-					Int2ObjectMap<DoubleList> perHour = entries.computeIfAbsent(e, (k) -> new Int2ObjectLinkedOpenHashMap<>());
-					perHour.computeIfAbsent(Integer.parseInt(r.get("hour")), k -> new DoubleArrayList()).add(speed);
 				}
 			}
-		}
 
 		Object2DoubleMap<Entry> result = new Object2DoubleOpenHashMap<>();
 

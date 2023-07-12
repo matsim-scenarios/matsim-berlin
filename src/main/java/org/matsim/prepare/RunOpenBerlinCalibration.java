@@ -87,6 +87,10 @@ import java.util.stream.Collectors;
 public class RunOpenBerlinCalibration extends MATSimApplication {
 
 	/**
+	 * Scaling factor if all persons use car (~20.6% share).
+	 */
+	public static final double CAR_FACTOR = 4.85;
+	/**
 	 * Flexible activities, which need to be known for location choice and during generation.
 	 * A day can not end on a flexible activity.
 	 */
@@ -96,11 +100,11 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	private final SampleOptions sample = new SampleOptions(100, 25, 10, 1);
 	@CommandLine.Option(names = "--mode", description = "Calibration mode that should be run.")
 	private CalibrationMode mode;
-	@CommandLine.Option(names = "--weight", description = "Strategy weight for calibration config.", defaultValue = "1")
+	@CommandLine.Option(names = "--weight", description = "Strategy weight.", defaultValue = "1")
 	private double weight;
-	@CommandLine.Option(names = "--population", description = "Path to population")
+	@CommandLine.Option(names = "--population", description = "Path to population.")
 	private Path populationPath;
-	@CommandLine.Option(names = "--all-car", description = "All plans will use car mode. Capacity is adjusted automatically by 4.85", defaultValue = "false")
+	@CommandLine.Option(names = "--all-car", description = "All plans will use car mode. Capacity is adjusted automatically by " + CAR_FACTOR, defaultValue = "false")
 	private boolean allCar;
 
 	@CommandLine.Option(names = "--scale-factor", description = "Scale factor for capacity to avoid congestions.", defaultValue = "1.5")
@@ -158,7 +162,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		if (sample.isSet()) {
 			double sampleSize = sample.getSample();
 
-			double countScale = allCar ? 4.85 : 1;
+			double countScale = allCar ? CAR_FACTOR : 1;
 
 			config.qsim().setFlowCapFactor(sampleSize * countScale);
 			config.qsim().setStorageCapFactor(sampleSize * countScale);
@@ -178,6 +182,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		log.info("Running with flow and storage capacity: {} / {}", config.qsim().getFlowCapFactor(), config.qsim().getStorageCapFactor());
 
 		if (allCar) {
+			log.info("Converting all agents to car plans.");
 			config.transit().setUseTransit(false);
 		}
 
