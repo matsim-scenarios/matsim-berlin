@@ -105,6 +105,9 @@ public class RunCountOptimization implements MATSimAppCommand {
 
 		log.info("Collected {} relevant plans", persons.size());
 
+		if (allCar)
+			log.info("Scaled counts by car factor of {}", RunOpenBerlinCalibration.CAR_FACTOR);
+
 		// Error scales are very different so different betas are needed
 		double beta = switch (metric) {
 			case abs_error -> 1;
@@ -137,9 +140,6 @@ public class RunCountOptimization implements MATSimAppCommand {
 		List<PlanPerson> persons = new ArrayList<>();
 
 		Set<Id<Link>> links = linkCounts.getCounts().keySet();
-
-		// TODO: determin scaling with all car plans
-		// TODO: commercial agent need to be scaled with car share
 
 		SplittableRandom rnd = new SplittableRandom(0);
 

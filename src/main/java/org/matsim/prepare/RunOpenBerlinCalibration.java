@@ -181,10 +181,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		log.info("Running with flow and storage capacity: {} / {}", config.qsim().getFlowCapFactor(), config.qsim().getStorageCapFactor());
 
-		if (allCar) {
-			log.info("Converting all agents to car plans.");
+		if (allCar)
 			config.transit().setUseTransit(false);
-		}
 
 		// Required for all calibration strategies
 		for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
@@ -301,6 +299,9 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		 */
 
 		if (planIndex != null) {
+
+			log.info("Using plan with index {}", planIndex);
+
 			for (Person person : scenario.getPopulation().getPersons().values()) {
 				List<? extends Plan> plans = person.getPlans();
 				Set<Plan> toRemove = new HashSet<>();
@@ -316,6 +317,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		}
 
 		if (allCar) {
+
+			log.info("Converting all agents to car plans.");
 
 			RoutingModeMainModeIdentifier mmi = new RoutingModeMainModeIdentifier();
 
