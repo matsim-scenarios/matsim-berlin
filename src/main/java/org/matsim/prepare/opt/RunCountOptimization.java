@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @CommandLine.Command(name = "run-count-opt", description = "Select plans to match counts data")
 public class RunCountOptimization implements MATSimAppCommand {
 
-	private static final Logger log = LogManager.getLogger(RunCountOptimization.class);
+	static final Logger log = LogManager.getLogger(RunCountOptimization.class);
 
 	private static final int H = 24;
 

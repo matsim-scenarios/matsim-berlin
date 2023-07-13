@@ -85,6 +85,8 @@ public final class PlanAssignmentProblem implements Iterable<PlanPerson> {
 		calc.resetWorkingSolution(this);
 		score = calc.calculateScore();
 
+		RunCountOptimization.log.info("Iterating {} iters with prob {} and beta {}", n, prob, beta);
+
 		SplittableRandom rnd = new SplittableRandom(0);
 
 		double step = prob / n;
@@ -94,9 +96,12 @@ public final class PlanAssignmentProblem implements Iterable<PlanPerson> {
 			calc.resetWorkingSolution(this);
 			score = calc.calculateScore();
 
+			if (n % 500 == 0)
+				RunCountOptimization.log.info("Iteration {} score: {}", n, score);
+
 			// Best p and beta are not known, so it will be annealed
 			double p = prob - step * i;
-			double b = beta - (beta/n) * i;
+			double b = beta - (beta / n) * i;
 
 			for (PlanPerson person : persons) {
 
