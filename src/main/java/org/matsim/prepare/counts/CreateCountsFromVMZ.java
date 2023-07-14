@@ -4,6 +4,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -13,6 +14,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.application.MATSimAppCommand;
+import org.matsim.application.options.CountsOption;
 import org.matsim.application.options.CrsOptions;
 import org.matsim.application.prepare.counts.NetworkIndex;
 import org.matsim.core.config.groups.NetworkConfigGroup;
@@ -52,14 +54,14 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 	@CommandLine.Option(names = "--network-geometries", description = "path to *linkGeometries.csv", required = true)
 	private Path networkGeometries;
 
-	@CommandLine.Option(names = "--use-road-names", description = "if road names should be used for map matching")
-	private boolean roadNames = false;
-
 	@CommandLine.Option(names = "--output", description = "Base path for the output")
 	private String output;
 
 	@CommandLine.Mixin
 	private final CrsOptions crs = new CrsOptions();
+
+	@CommandLine.Mixin
+	private final CountsOption counts = new CountsOption();
 
 	private final Map<Integer, BerlinCount> stations = new HashMap<>();
 	private final List<BerlinCount> unmatched = new ArrayList<>();
@@ -80,6 +82,11 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 	}
 
 	private void matchWithNetwork(Path network) throws TransformException, IOException {
+
+		/*
+		* TODO
+		*  how to handle count station outside of berlin?
+		* */
 
 		Network net;
 		{
@@ -119,10 +126,23 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 			return pattern.matcher(linkDir).find();
 		});
 
+		Map<Id<Link>, ? extends Link> links = net.getLinks();
+
 		for (var it = stations.entrySet().iterator(); it.hasNext();) {
 
 			Map.Entry<Integer, BerlinCount> next = it.next();
 			BerlinCount station = next.getValue();
+
+			if(counts.isIgnored(String.valueOf(next.getKey()))) {
+				it.remove();
+				continue;
+			}
+
+			Id<Link> manuallyMatched = counts.isManuallyMatched(String.valueOf(next.getKey()));
+			if(manuallyMatched != null && links.containsKey(manuallyMatched)){
+				station.linkId = manuallyMatched;
+				index.remove(links.get(manuallyMatched));
+			}
 
 			Link link = index.query(station);
 
@@ -271,12 +291,14 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 			int hour = (int) row.getCell(1).getNumericCellValue();
 			double carShareAtHour = 0.0;
 			double freightShareAtHour = 0.0;
-			if (row.getCell(3) != null) {
-				carShareAtHour = row.getCell(3).getNumericCellValue();
+
+			if (row.getCell(2) != null) {
+				carShareAtHour = row.getCell(2).getNumericCellValue();
 			}
 			if (row.getCell(4) != null) {
 				freightShareAtHour = row.getCell(4).getNumericCellValue();
 			}
+
 			station.carShareAtHour[hour] = carShareAtHour;
 			station.freightShareAtHour[hour] = freightShareAtHour;
 		}
