@@ -127,6 +127,16 @@ $p/berlin-v6.1-network-with-pt.xml.gz: $p/berlin-v6.1-network.xml.gz
 	 $(germany)/gtfs/complete-pt-2023-06-06.zip\
 	 --shp $p/pt-area/pt-area.shp
 
+$p/berlin-v6.1-car-counts-from-vmz.xml.gz: $p/berlin-v6.1-network.xml.gz
+	$(sc) prepare counts-from-vmz\
+	--excel ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx\
+	--network $<\
+	--network-geometries $p/berlin-v6.1-network-linkGeometries.csv\
+	--output $p\
+	--version berlin-$(V)\
+	--input-crs EPSG:31468\
+	--target-crs $(CRS)
+
 # TODO: naming scheme must be updated
 $p/berlin-$V-car-counts.xml.gz: $p/berlin-$V-network.xml.gz
 	$(sc) prepare create-counts\
