@@ -4,7 +4,6 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -84,9 +83,9 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 	private void matchWithNetwork(Path network) throws TransformException, IOException {
 
 		/*
-		* TODO
-		*  how to handle count station outside of berlin?
-		* */
+		 * TODO
+		 *  how to handle count station outside of berlin?
+		 * */
 
 		Network net;
 		{
@@ -128,18 +127,18 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 
 		Map<Id<Link>, ? extends Link> links = net.getLinks();
 
-		for (var it = stations.entrySet().iterator(); it.hasNext();) {
+		for (var it = stations.entrySet().iterator(); it.hasNext(); ) {
 
 			Map.Entry<Integer, BerlinCount> next = it.next();
 			BerlinCount station = next.getValue();
 
-			if(counts.isIgnored(String.valueOf(next.getKey()))) {
+			if (counts.isIgnored(String.valueOf(next.getKey()))) {
 				it.remove();
 				continue;
 			}
 
 			Id<Link> manuallyMatched = counts.isManuallyMatched(String.valueOf(next.getKey()));
-			if(manuallyMatched != null && links.containsKey(manuallyMatched)){
+			if (manuallyMatched != null && links.containsKey(manuallyMatched)) {
 				station.linkId = manuallyMatched;
 				index.remove(links.get(manuallyMatched));
 			}
