@@ -44,9 +44,6 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 	@CommandLine.Option(names = "--excel", description = "Path to excel file containing the counts")
 	private Path excel;
 
-	@CommandLine.Option(names = "--csv", description = "Path to csv file with the mapping")
-	private Path csv;
-
 	@CommandLine.Option(names = "--network", description = "Path to network", required = true)
 	private Path network;
 
@@ -73,7 +70,6 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 	public Integer call() throws Exception {
 
 		readExcelFile(excel.toString());
-//		readMappingFile(csv.toString());
 		matchWithNetwork(network);
 		createCountsFile(output);
 
