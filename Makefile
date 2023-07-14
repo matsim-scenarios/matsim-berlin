@@ -135,7 +135,8 @@ $p/berlin-v6.1-car-counts-from-vmz.xml.gz: $p/berlin-v6.1-network.xml.gz
 	--output $p\
 	--version berlin-$(V)\
 	--input-crs EPSG:31468\
-	--target-crs $(CRS)
+	--target-crs $(CRS)\
+	--ignored-counts input/v6.0/ignored_6_1.csv
 
 # TODO: naming scheme must be updated
 $p/berlin-$V-car-counts.xml.gz: $p/berlin-$V-network.xml.gz
@@ -144,12 +145,6 @@ $p/berlin-$V-car-counts.xml.gz: $p/berlin-$V-network.xml.gz
 	 --shp $(berlin)/Verkehrsmengen_DTVw_2019.zip\
 	 --output $p/berlin-$V-
 	# TODO: output argument not ideal
-
-$p/berlin-$V-counts-car-vmz.xml.gz:
-	$(sc) prepare counts-from-vmz\
-	 --csv ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/CountsId_to_linkId.csv\
-	 --excel ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx\
- 	 --output $@
 
 $p/berlin-$V-facilities.xml.gz: $p/berlin-$V-network.xml.gz input/facilities.shp
 	$(sc) prepare facilities --network $< --shp $(word 2,$^)\
