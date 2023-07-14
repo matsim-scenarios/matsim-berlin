@@ -47,8 +47,11 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 	@CommandLine.Option(names = "--network", description = "Path to network", required = true)
 	private Path network;
 
-	@CommandLine.Option(names = "--network-geometries", description = "path to *linkGeometries.csv", required = true)
+	@CommandLine.Option(names = "--network-geometries", description = "path to *linkGeometries.csv")
 	private Path networkGeometries;
+
+	@CommandLine.Option(names = "--version", description = "scenario version")
+	private String version = "";
 
 	@CommandLine.Option(names = "--output", description = "Base path for the output")
 	private String output;
@@ -94,11 +97,15 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 
 		CoordinateTransformation transformation = crs.getTransformation();
 
-		NetworkIndex<BerlinCount> index = new NetworkIndex<>(net, NetworkIndex.readGeometriesFromSumo(networkGeometries.toString(), IdentityTransform.create(2)), 100, toMatch -> {
+		NetworkIndex.GeometryGetter<BerlinCount> getter = toMatch -> {
 			Coord coord = toMatch.coord;
 			Coord transform = transformation.transform(coord);
 			return MGC.coord2Point(transform);
-		});
+		};
+
+		NetworkIndex<BerlinCount> index = networkGeometries != null ?
+				new NetworkIndex<>(net, NetworkIndex.readGeometriesFromSumo(networkGeometries.toString(), IdentityTransform.create(2)), 100, getter):
+				new NetworkIndex<>(net, 100, getter);
 
 		index.addLinkFilter((link, berlinCounts) -> {
 			String orientation = berlinCounts.orientation;
@@ -200,9 +207,12 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 			counter++;
 		}
 
+		if (!version.isBlank())
+			version += "-";
+
 		log.info("Write down {} count stations to file", counter);
-		new CountsWriter(countsPkw).write(outputFile + "car_counts_from_vmz.xml");
-		new CountsWriter(countsLkw).write(outputFile + "freight_counts_from_vmz.xml");
+		new CountsWriter(countsPkw).write(outputFile + version + "car-counts-from-vmz.xml");
+		new CountsWriter(countsLkw).write(outputFile + version + "freight-counts-from-vmz.xml");
 
 		log.info("Write down {} unmatched count stations to file", unmatched.size());
 		try (CSVPrinter printer = CSVFormat.Builder.create().setHeader("id", "position", "x", "y").build()
