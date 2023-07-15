@@ -8,10 +8,7 @@ import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.api.core.v01.population.Leg;
-import org.matsim.api.core.v01.population.Person;
-import org.matsim.api.core.v01.population.Plan;
-import org.matsim.api.core.v01.population.PlanElement;
+import org.matsim.api.core.v01.population.*;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.MATSimApplication;
 import org.matsim.application.options.SampleOptions;
@@ -45,7 +42,9 @@ import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.SumScoringFunction;
 import org.matsim.core.scoring.functions.ScoringParameters;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
+import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.prepare.counts.CreateCountsFromGeoPortalBerlin;
+import org.matsim.prepare.counts.CreateCountsFromVMZOld;
 import org.matsim.prepare.counts.CreateCountsFromVMZ;
 import org.matsim.prepare.download.DownloadCommuterStatistic;
 import org.matsim.prepare.network.FreeSpeedOptimizer;
@@ -78,7 +77,7 @@ import java.util.stream.Collectors;
 	LookupRegioStaR.class, ExtractFacilityShp.class, DownSamplePopulation.class, DownloadCommuterStatistic.class,
 	RunActitopp.class, CreateNetworkFromSumo.class, CreateTransitScheduleFromGtfs.class,
 	CleanNetwork.class, SampleNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class,
-	CreateCountsFromGeoPortalBerlin.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class,
+	CreateCountsFromGeoPortalBerlin.class, CreateCountsFromVMZOld.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class,
 	MergePlans.class, SplitActivityTypesDuration.class, CleanPopulation.class, CleanAttributes.class,
 	GenerateSmallScaleCommercialTrafficDemand.class, RunCountOptimization.class, SelectPlansFromIndex.class,
 	ExtractRelevantFreightTrips.class, CheckCarAvailability.class, FixSubtourModes.class,
@@ -333,16 +332,32 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 								planElements.indexOf(trip.getOriginActivity()) + 1,
 								planElements.indexOf(trip.getDestinationActivity()));
 
-						if (!Objects.equals(mmi.identifyMainMode(fullTrip), TransportMode.car)) {
+						double dist = CoordUtils.calcEuclideanDistance(getCoord(scenario, trip.getOriginActivity()), getCoord(scenario, trip.getDestinationActivity()));
+
+						// very short trips remain walk
+						String desiredMode = dist <= 100 ? TransportMode.walk : TransportMode.car;
+
+						if (!Objects.equals(mmi.identifyMainMode(fullTrip), desiredMode)) {
 							fullTrip.clear();
-							Leg leg = PopulationUtils.createLeg(TransportMode.car);
-							TripStructureUtils.setRoutingMode(leg, TransportMode.car);
+							Leg leg = PopulationUtils.createLeg(desiredMode);
+							TripStructureUtils.setRoutingMode(leg, desiredMode);
 							fullTrip.add(leg);
 						}
 					}
 				}
 			}
 		}
+	}
+
+	private Coord getCoord(Scenario scenario, Activity act) {
+
+		if (act.getCoord() != null)
+			return act.getCoord();
+
+		if (act.getFacilityId() != null)
+			return scenario.getActivityFacilities().getFacilities().get(act.getFacilityId()).getCoord();
+
+		return scenario.getNetwork().getLinks().get(act.getLinkId()).getCoord();
 	}
 
 	@Override

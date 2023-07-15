@@ -130,7 +130,7 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 
 		Map<Id<Link>, ? extends Link> links = net.getLinks();
 
-		for (var it = stations.entrySet().iterator(); it.hasNext(); ) {
+		for (var it = stations.entrySet().iterator(); it.hasNext();) {
 
 			Map.Entry<Integer, BerlinCount> next = it.next();
 			BerlinCount station = next.getValue();
@@ -194,7 +194,7 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 			//create hour volumes from 'Tagesganglinie'
 			double[] carShareAtHour = station.carShareAtHour;
 			for (int i = 1; i < 25; i++) {
-				car.createVolume(i, (station.carVolume * carShareAtHour[i - 1]));
+				car.createVolume(i, ( (station.totalVolume - station.freightVolume) * carShareAtHour[i - 1]));
 			}
 			if (station.hasFreightShare) {
 				Count<Link> freight = countsLkw.createAndAddCount(station.linkId, station.id + "_" + station.position + "_" + station.orientation);
@@ -211,8 +211,8 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 			version += "-";
 
 		log.info("Write down {} count stations to file", counter);
-		new CountsWriter(countsPkw).write(outputFile + version + "car-counts-from-vmz.xml");
-		new CountsWriter(countsLkw).write(outputFile + version + "freight-counts-from-vmz.xml");
+		new CountsWriter(countsPkw).write(outputFile + version + "counts-car-vmz.xml.gz");
+		new CountsWriter(countsLkw).write(outputFile + version + "counts-freight-vmz.xml.gz");
 
 		log.info("Write down {} unmatched count stations to file", unmatched.size());
 		try (CSVPrinter printer = CSVFormat.Builder.create().setHeader("id", "position", "x", "y").build()
@@ -267,7 +267,7 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 			Row row = it.next();
 			int id = (int) row.getCell(0).getNumericCellValue();
 			BerlinCount station = this.stations.get(id);
-			station.carVolume = (int) row.getCell(1).getNumericCellValue();
+			station.totalVolume = (int) row.getCell(1).getNumericCellValue();
 		}
 	}
 
@@ -342,7 +342,7 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 	private static final class BerlinCount {
 
 		private final int id;
-		private int carVolume;
+		private int totalVolume;
 		private int freightVolume;
 		private final double[] carShareAtHour = new double[24];
 		private final double[] freightShareAtHour = new double[24];

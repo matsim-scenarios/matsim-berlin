@@ -234,7 +234,7 @@ public class RunCountOptimization implements MATSimAppCommand {
 		solver.addEventListener(event -> {
 
 			// Only log every x seconds
-			if (ts.get() + 30_000 < System.currentTimeMillis()) {
+			if (ts.get() + 60_000 < System.currentTimeMillis()) {
 				log.info("New best solution: {}", event.getNewBestScore());
 				ts.set(System.currentTimeMillis());
 			}

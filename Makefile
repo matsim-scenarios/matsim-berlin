@@ -91,7 +91,7 @@ input/sumo.net.xml: input/network.osm
 	 --osm-files $< -o=$@
 
 
-$p/berlin-$V-network.xml.gz:
+$p/berlin-v6.0-network.xml.gz:
 	# Use 5.x network
 	$(sc) prepare reproject-network\
 	 --input $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz\
@@ -102,13 +102,12 @@ $p/berlin-$V-network.xml.gz:
 	 --target-crs $(CRS)
 
 
-$p/berlin-$V-network-with-pt.xml.gz: $p/berlin-$V-network.xml.gz
+$p/berlin-v6.0-network-with-pt.xml.gz: $p/berlin-v6.0-network.xml.gz
 	# Copy 5.x network stuff
 	cp $< $@
 	cp $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-transit-vehicles.xml.gz $p/berlin-v6.0-transitVehicles.xml.gz
 
 
-# TODO: Will be the updated network
 $p/berlin-v6.1-network.xml.gz: input/sumo.net.xml
 	$(sc) prepare network-from-sumo $< --target-crs $(CRS) --output $@
 
@@ -123,28 +122,26 @@ $p/berlin-v6.1-network.xml.gz: input/sumo.net.xml
 
 $p/berlin-v6.1-network-with-pt.xml.gz: $p/berlin-v6.1-network.xml.gz
 	$(sc) prepare transit-from-gtfs --network $< --output=$p\
-	 --name berlin-v6.1 --date "2023-06-07" --target-crs $(CRS) \
+	 --name berlin-$V --date "2023-06-07" --target-crs $(CRS) \
 	 $(germany)/gtfs/complete-pt-2023-06-06.zip\
 	 --shp $p/pt-area/pt-area.shp
 
-$p/berlin-v6.1-car-counts-from-vmz.xml.gz: $p/berlin-v6.1-network.xml.gz
+$p/berlin-v6.1-counts-car-vmz.xml.gz: $p/berlin-v6.1-network.xml.gz
 	$(sc) prepare counts-from-vmz\
-	--excel ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx\
-	--network $<\
-	--network-geometries $p/berlin-v6.1-network-linkGeometries.csv\
-	--output $p\
-	--version berlin-$(V)\
-	--input-crs EPSG:31468\
-	--target-crs $(CRS)\
-	--ignored-counts input/v6.0/ignored_6_1.csv
-
-# TODO: naming scheme must be updated
-$p/berlin-$V-car-counts.xml.gz: $p/berlin-$V-network.xml.gz
-	$(sc) prepare create-counts\
+	 --excel ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx\
 	 --network $<\
-	 --shp $(berlin)/Verkehrsmengen_DTVw_2019.zip\
-	 --output $p/berlin-$V-
-	# TODO: output argument not ideal
+	 --network-geometries $p/berlin-v6.0-network-linkGeometries.csv\
+	 --output $p/\
+	 --version berlin-$(V)\
+	 --input-crs EPSG:31468\
+	 --target-crs $(CRS)\
+	 --ignored-counts input/ignored_counts.csv
+
+input/v6.0/berlin-v6.0-counts-car-vmz.xml.gz:
+	$(sc) prepare counts-from-vmz-old\
+	 --csv ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/CountsId_to_linkId.csv\
+	 --excel ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx\
+ 	 --output $@
 
 $p/berlin-$V-facilities.xml.gz: $p/berlin-$V-network.xml.gz input/facilities.shp
 	$(sc) prepare facilities --network $< --shp $(word 2,$^)\
@@ -173,18 +170,12 @@ $p/berlin-static-$V-25pct.plans.xml.gz: $p/berlin-only-$V-25pct.plans.xml.gz $p/
 	$(sc) prepare lookup-regiostar --input $@ --output $@ --xls $(germany)/RegioStaR-Referenzdateien.xlsx
 
 
-$p/berlin-activities-$V-25pct.plans-1.xml.gz: $p/berlin-static-$V-25pct.plans.xml.gz
-	# Create five separate sets of activities
-	$(sc) prepare activity-sampling --seed 2 --input $< --output $(subst plans-1,plans-2,$@) --persons src/main/python/table-persons.csv --activities src/main/python/table-activities.csv
-	$(sc) prepare activity-sampling --seed 3 --input $< --output $(subst plans-1,plans-3,$@) --persons src/main/python/table-persons.csv --activities src/main/python/table-activities.csv
-	$(sc) prepare activity-sampling --seed 4 --input $< --output $(subst plans-1,plans-4,$@) --persons src/main/python/table-persons.csv --activities src/main/python/table-activities.csv
-	$(sc) prepare activity-sampling --seed 5 --input $< --output $(subst plans-1,plans-5,$@) --persons src/main/python/table-persons.csv --activities src/main/python/table-activities.csv
-
+$p/berlin-activities-$V-25pct.plans.xml.gz: $p/berlin-static-$V-25pct.plans.xml.gz
 	$(sc) prepare activity-sampling --seed 1 --input $< --output $@ --persons src/main/python/table-persons.csv --activities src/main/python/table-activities.csv
 
-$p/berlin-initial-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans-1.xml.gz $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
+$p/berlin-initial-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans.xml.gz $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
 	$(sc) prepare init-location-choice\
-	 --input "$(subst plans-1,plans-*,$<)"\
+	 --input $<\
 	 --output $@\
 	 --facilities $(word 2,$^)\
 	 --network $(word 3,$^)\
@@ -192,9 +183,9 @@ $p/berlin-initial-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans-1.x
 	 --commuter $(germany)/regionalstatistik/commuter.csv\
 
 	# For debugging and visualization
-	$(sc) prepare downsample-population $p/berlin-initial-$V-25pct.plans-1.xml.gz\
+	$(sc) prepare downsample-population $@\
 		 --sample-size 0.25\
-		 --samples 0.1\
+		 --samples 0.1 0.01\
 
 
 $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
@@ -244,12 +235,9 @@ $p/berlin-goodsTraffic-$V-25pct.plans.xml.gz:
 
 	mv output/goodsTraffic/$(notdir $@) $@
 
-# Depends on location choice runs and freight model
-$p/berlin-cadyts-input-$V-25pct.plans.xml.gz: $p/berlin-commercialPersonTraffic-$V-25pct.plans.xml.gz
-	$(sc) prepare merge-plans output/lc-*/*output_selected_plans.xml.gz\
-		--output $@
-
-	$(sc) prepare merge-populations $@ $< --output $@
+$p/berlin-cadyts-input-$V-25pct.plans.xml.gz: $p/berlin-initial-$V-25pct.plans.xml.gz $p/berlin-commercialPersonTraffic-$V-25pct.plans.xml.gz
+	$(sc) prepare merge-populations $^\
+	 --output $@
 
 # This file requires eval runs
 $p/berlin-initial-$V-25pct.experienced_plans.xml.gz:
@@ -275,7 +263,7 @@ eval-opt: $p/berlin-initial-$V-25pct.experienced_plans.xml.gz
  	 --csv $p/berlin-$V-25pct.plans_selection_$(ERROR_METRIC).csv\
  	 --output $p/berlin-$V-25pct.plans_$(ERROR_METRIC).xml.gz
 
-	$(sc) run --mode "eval" --output "output/eval-$(ERROR_METRIC)" --25pct --population "berlin-$V-25pct.plans_$(ERROR_METRIC).xml.gz"\
+	$(sc) run --mode "eval" --all-car --output "output/eval-$(ERROR_METRIC)" --25pct --population "berlin-$V-25pct.plans_$(ERROR_METRIC).xml.gz"\
 	 --config $p/berlin-$V-base-calib.config.xml
 
 
@@ -304,7 +292,7 @@ $p/berlin-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-net
 		 --sample-size 0.25\
 		 --samples 0.1 0.01 0.001\
 
-prepare-calibration: $p/berlin-initial-$V-25pct.plans.xml.gz
+prepare-calibration: $p/berlin-cadyts-input-$V-25pct.plans.xml.gz $p/berlin-$V-network-with-pt.xml.gz $p/berlin-$V-counts-car-vmz.xml.gz
 	echo "Done"
 
 prepare: $p/berlin-$V-25pct.plans.xml.gz $p/berlin-$V-network-with-pt.xml.gz

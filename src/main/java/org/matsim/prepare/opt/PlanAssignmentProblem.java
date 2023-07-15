@@ -91,13 +91,28 @@ public final class PlanAssignmentProblem implements Iterable<PlanPerson> {
 
 		double step = prob / n;
 
+		double best = score.score().doubleValue();
+		int noBest = 0;
+
 		for (int i = 0; i < n; i++) {
 
 			calc.resetWorkingSolution(this);
 			score = calc.calculateScore();
 
-			if (n % 500 == 0)
-				RunCountOptimization.log.info("Iteration {} score: {}", n, score);
+			if (i % 100 == 0)
+				RunCountOptimization.log.info("Iteration {} score: {}", i, score);
+
+			if (score.score().doubleValue() >= best) {
+				best = score.score().doubleValue();
+				noBest = 0;
+			} else {
+				noBest++;
+			}
+
+			if (noBest >= 30) {
+				RunCountOptimization.log.info("Stopping after {} with score: {}", i, score);
+				break;
+			}
 
 			// Best p and beta are not known, so it will be annealed
 			double p = prob - step * i;

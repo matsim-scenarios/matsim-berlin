@@ -33,10 +33,7 @@ import org.matsim.run.RunOpenBerlinScenario;
 import org.opengis.feature.simple.SimpleFeature;
 import picocli.CommandLine;
 
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -57,11 +54,14 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 	private static final Logger log = LogManager.getLogger(InitLocationChoice.class);
 
-	@CommandLine.Option(names = "--input", description = "Path to input population, can be a pattern if * is used.", required = true)
+	@CommandLine.Option(names = "--input", description = "Path to input population.")
 	private Path input;
 
 	@CommandLine.Option(names = "--output", description = "Path to output population", required = true)
 	private Path output;
+
+	@CommandLine.Option(names = "--k", description = "Number of choices to generate", defaultValue = "5")
+	private int k;
 
 	@CommandLine.Option(names = "--commuter", description = "Path to commuter.csv", required = true)
 	private Path commuterPath;
@@ -74,6 +74,9 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 	@CommandLine.Option(names = "--sample", description = "Sample size of the population", defaultValue = "0.25")
 	private double sample;
+
+	@CommandLine.Option(names = "--seed", description = "Seed used to sample locations", defaultValue = "1")
+	private long seed;
 
 	@CommandLine.Mixin
 	private ShpOptions shp;
@@ -99,6 +102,15 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		new InitLocationChoice().execute(args);
 	}
 
+	private static Coord rndCoord(SplittableRandom rnd, double dist, Coord origin) {
+		var angle = rnd.nextDouble() * Math.PI * 2;
+
+		var x = Math.cos(angle) * dist;
+		var y = Math.sin(angle) * dist;
+
+		return new Coord(RunOpenBerlinCalibration.roundNumber(origin.getX() + x), RunOpenBerlinCalibration.roundNumber(origin.getY() + y));
+	}
+
 	@Override
 	public Integer call() throws Exception {
 
@@ -106,8 +118,6 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 			log.error("Shape file with commuter zones is required.");
 			return 2;
 		}
-
-		ctxs = ThreadLocal.withInitial(Context::new);
 
 		Network completeNetwork = NetworkUtils.readNetwork(networkPath.toString());
 		TransportModeNetworkFilter filter = new TransportModeNetworkFilter(completeNetwork);
@@ -142,35 +152,50 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		// Build all trees
 		trees.values().forEach(STRtree::build);
 
-		PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:**/" + input.getFileName().toString());
+		log.info("Using input file: {}", input);
 
-		List<Path> input = Files.list(this.input.getParent())
-			.filter(matcher::matches)
-			.sorted()
-			.toList();
+		List<Population> populations = new ArrayList<>();
 
-		log.info("Using input files: {}", input);
+		for (int i = 0; i < k; i++) {
 
-		int i = 1;
-		for (Path p : input) {
+			long seed = this.seed + i;
 
+			log.info("Generating plan {} with seed {}", i , seed);
+
+			ctxs = ThreadLocal.withInitial(() -> new Context(seed));
 			commuter = new CommuterAssignment(zones, commuterPath, sample);
 
-			Population population = PopulationUtils.readPopulation(p.toString());
+			Population population = PopulationUtils.readPopulation(input.toString());
 			ParallelPersonAlgorithmUtils.run(population, 8, this);
 
-			String filename = output.toString().replace("plans.xml.gz", "plans-" + i + ".xml.gz");
-			PopulationUtils.writePopulation(population, filename);
+			populations.add(population);
 
-			log.info("Written population to {}", filename);
 			log.info("Processed {} activities with {} warnings", total.get(), warning.get());
 
 			total.set(0);
 			warning.set(0);
-
-			i++;
 		}
 
+
+		Population population = populations.get(0);
+
+		// Merge all plans into the first population
+		for (int i = 1; i < populations.size(); i++) {
+
+			Population pop = populations.get(i);
+
+			for (Person p : pop.getPersons().values()) {
+				Person destPerson = population.getPersons().get(p.getId());
+				if (destPerson == null) {
+					log.warn("Person {} not present in all populations.", p.getId());
+					continue;
+				}
+
+				destPerson.addPlan(p.getPlans().get(0));
+			}
+		}
+
+		PopulationUtils.writePopulation(population, output.toString());
 
 		return 0;
 	}
@@ -289,7 +314,6 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		return workPlace;
 	}
 
-
 	/**
 	 * Sample a coordinate for which the associated link is not one of the ignored types.
 	 */
@@ -339,17 +363,12 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		return dist >= lower && dist <= upper;
 	}
 
-	private static Coord rndCoord(SplittableRandom rnd, double dist, Coord origin) {
-		var angle = rnd.nextDouble() * Math.PI * 2;
-
-		var x = Math.cos(angle) * dist;
-		var y = Math.sin(angle) * dist;
-
-		return new Coord(RunOpenBerlinCalibration.roundNumber(origin.getX() + x), RunOpenBerlinCalibration.roundNumber(origin.getY() + y));
-	}
-
 	private static final class Context {
-		private final SplittableRandom rnd = new SplittableRandom(1);
+		private final SplittableRandom rnd;
+
+		Context(long seed) {
+			rnd = new SplittableRandom(seed);
+		}
 	}
 
 }
