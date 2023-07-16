@@ -263,7 +263,7 @@ eval-opt: $p/berlin-initial-$V-25pct.experienced_plans.xml.gz
  	 --csv $p/berlin-$V-25pct.plans_selection_$(ERROR_METRIC).csv\
  	 --output $p/berlin-$V-25pct.plans_$(ERROR_METRIC).xml.gz
 
-	$(sc) run --mode "eval" --all-car --output "output/eval-$(ERROR_METRIC)" --25pct --population "berlin-$V-25pct.plans_$(ERROR_METRIC).xml.gz"\
+	$(sc) run --mode "routeChoice" --iterations 20 --all-car --output "output/eval-$(ERROR_METRIC)" --25pct --population "berlin-$V-25pct.plans_$(ERROR_METRIC).xml.gz"\
 	 --config $p/berlin-$V-base-calib.config.xml
 
 

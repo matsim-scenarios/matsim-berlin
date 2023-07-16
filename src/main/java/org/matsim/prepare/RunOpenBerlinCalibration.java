@@ -40,12 +40,11 @@ import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.SumScoringFunction;
-import org.matsim.core.scoring.functions.ScoringParameters;
-import org.matsim.core.scoring.functions.ScoringParametersForPerson;
+import org.matsim.core.scoring.functions.*;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.prepare.counts.CreateCountsFromGeoPortalBerlin;
-import org.matsim.prepare.counts.CreateCountsFromVMZOld;
 import org.matsim.prepare.counts.CreateCountsFromVMZ;
+import org.matsim.prepare.counts.CreateCountsFromVMZOld;
 import org.matsim.prepare.download.DownloadCommuterStatistic;
 import org.matsim.prepare.network.FreeSpeedOptimizer;
 import org.matsim.prepare.network.PrepareNetworkParams;
@@ -230,36 +229,23 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		} else if (mode == CalibrationMode.cadyts) {
 
-			/*
-			for (String subpopulation : List.of("person", "businessTraffic", "businessTraffic_service")) {
+			// Re-route for all populations
+			for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
 				config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
-						.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
-						.setWeight(weight)
-						.setSubpopulation(subpopulation)
+					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
+					.setWeight(weight)
+					.setSubpopulation(subpopulation)
 				);
 			}
-
-			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
-					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.TimeAllocationMutator)
-					.setWeight(weight)
-					.setSubpopulation("person")
-			);
-			 */
-			// Set high flow capacity
-			config.qsim().setFlowCapFactor(config.qsim().getFlowCapFactor() * 4);
-			config.qsim().setStorageCapFactor(config.qsim().getStorageCapFactor() * 4);
-
-			config.timeAllocationMutator().setMutationRange(15 * 60);
-			config.timeAllocationMutator().setAffectingDuration(false);
-
-			config.counts().setInputFile("./berlin-v6.0-counts-car-vmz.xml.gz");
 
 			config.controler().setRunId("cadyts");
 			config.controler().setOutputDirectory("./output/cadyts-" + scaleFactor);
 
-			// No innovation switch-off needed
-			config.planCalcScore().setFractionOfIterationsToStartScoreMSA(1.0);
-			config.strategy().setFractionOfIterationsToDisableInnovation(1.0);
+			config.planCalcScore().setFractionOfIterationsToStartScoreMSA(0.75);
+			config.strategy().setFractionOfIterationsToDisableInnovation(0.75);
+			// Need to store more plans because of plan types
+			config.strategy().setMaxAgentPlanMemorySize(8);
+
 			config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.ignore);
 
 		} else if (mode == CalibrationMode.routeChoice) {
@@ -287,7 +273,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	@Override
 	protected void prepareScenario(Scenario scenario) {
 
-		/*
+
 		if (mode == CalibrationMode.cadyts)
 			// each initial plan needs a separate type, so it won't be removed
 			for (Person person : scenario.getPopulation().getPersons().values()) {
@@ -295,7 +281,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 					person.getPlans().get(i).setType(String.valueOf(i));
 				}
 			}
-		 */
 
 		if (planIndex != null) {
 
@@ -391,16 +376,12 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 					final ScoringParameters params = parameters.getScoringParameters(person);
 
-					// Only cadyts is scored
-//					sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(params, controler.getScenario().getNetwork()));
-//					sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(params));
-//					sumScoringFunction.addScoringFunction(new CharyparNagelAgentStuckScoring(params));
-
-					// TODO: change the scoring type in the cadyts module
-					// to FLOW VEHH
+					sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(params, controler.getScenario().getNetwork()));
+					sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(params));
+					sumScoringFunction.addScoringFunction(new CharyparNagelAgentStuckScoring(params));
 
 					final CadytsScoring<Link> scoringFunction = new CadytsScoring<>(person.getSelectedPlan(), config, cadytsContext);
-					scoringFunction.setWeightOfCadytsCorrection(weight * config.planCalcScore().getBrainExpBeta());
+					scoringFunction.setWeightOfCadytsCorrection(10 * config.planCalcScore().getBrainExpBeta());
 					sumScoringFunction.addScoringFunction(scoringFunction);
 
 					return sumScoringFunction;
