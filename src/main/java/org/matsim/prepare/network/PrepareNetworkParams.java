@@ -19,6 +19,7 @@ import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.utils.io.IOUtils;
 import picocli.CommandLine;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -61,15 +62,14 @@ public class PrepareNetworkParams implements MATSimAppCommand {
 		return 3600 * Qc;
 	}
 
-	@Override
-	public Integer call() throws Exception {
+	/**
+	 * Read network edge features from csv.
+	 */
+	static Map<Id<Link>, Feature> readFeatures(String input, int size) throws IOException {
 
-		Network network = input.getNetwork();
+		Map<Id<Link>, Feature> features = new IdMap<>(Link.class, size);
 
-		Map<Id<Link>, Object2DoubleMap<String>> features = new IdMap<>(Link.class, network.getLinks().size());
-		Map<Id<Link>, String> types = new IdMap<>(Link.class, network.getLinks().size());
-
-		try (CSVParser reader = new CSVParser(IOUtils.getBufferedReader(input.getPath("features.csv")),
+		try (CSVParser reader = new CSVParser(IOUtils.getBufferedReader(input),
 			CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).build())) {
 
 			List<String> header = reader.getHeaderNames();
@@ -91,13 +91,23 @@ public class PrepareNetworkParams implements MATSimAppCommand {
 					}
 				}
 
-				features.put(id, ft);
-				types.put(id, row.get("junctionType"));
+				features.put(id, new Feature(row.get("junctionType"), ft));
 			}
 		}
 
+		return features;
+	}
+
+	@Override
+	public Integer call() throws Exception {
+
+		Network network = input.getNetwork();
+
+		Map<Id<Link>, Feature> features = readFeatures(input.getPath("features.csv"), network.getLinks().size());
+
 		for (Link link : network.getLinks().values()) {
-			applyChanges(link, types.get(link.getId()), features.get(link.getId()));
+			Feature ft = features.get(link.getId());
+			applyChanges(link, ft.junctionType, ft.features);
 		}
 
 		log.warn("Observed {} warnings out of {} links", warn, network.getLinks().size());
@@ -177,6 +187,9 @@ public class PrepareNetworkParams implements MATSimAppCommand {
 
 		link.setFreespeed((double) link.getAttributes().getAttribute("allowed_speed") * speedFactor);
 		link.getAttributes().putAttribute("speed_factor", speedFactor);
+	}
+
+	record Feature(String junctionType, Object2DoubleMap<String> features) {
 	}
 
 }

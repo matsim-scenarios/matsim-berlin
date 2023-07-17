@@ -283,7 +283,7 @@ $p/berlin-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-net
 
 	$(sc) prepare check-car-avail --input $@ --output $@ --mode walk
 
-	$(sc) prepare fix-subtour-modes --input $@ --output $@
+	$(sc) prepare fix-subtour-modes --input $@ --output $@ --coord-dist 100
 
 	$(sc) prepare merge-populations $@ $(word 3,$^) $(word 4,$^)\
 		--output $@
