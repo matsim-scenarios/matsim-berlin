@@ -381,7 +381,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 					sumScoringFunction.addScoringFunction(new CharyparNagelAgentStuckScoring(params));
 
 					final CadytsScoring<Link> scoringFunction = new CadytsScoring<>(person.getSelectedPlan(), config, cadytsContext);
-					scoringFunction.setWeightOfCadytsCorrection(10 * config.planCalcScore().getBrainExpBeta());
+					scoringFunction.setWeightOfCadytsCorrection(30 * config.planCalcScore().getBrainExpBeta());
 					sumScoringFunction.addScoringFunction(scoringFunction);
 
 					return sumScoringFunction;
