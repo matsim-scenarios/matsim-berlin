@@ -33,9 +33,9 @@ public class StuckEventHandler implements PersonStuckEventHandler {
         manager.addHandler(new StuckEventHandler(listOfStuckEvents));
         manager.initProcessing();
         MatsimEventsReader matsimEventsReader = new MatsimEventsReader(manager);
-        matsimEventsReader.readFile("/Users/gregorr/Desktop/Test/TryToWriteAPaper/KlimaTaler/KlimaTaler1000/KlimaTaler1000.output_events.xml.gz");
+        matsimEventsReader.readFile("/Users/gregorr/Desktop/Test/TryToWriteAPaper/berlinMobBudget/output/mobBUdget1000_secondPlanAndPunishmentForStuckEvents/mobBUdget1000_secondPlanAndPunishmentForStuckEvents.output_events.xml.gz");
         manager.finishProcessing();
-        writeResults("/Users/gregorr/Desktop/Test/TryToWriteAPaper/KlimaTaler/KlimaTaler1000/", listOfStuckEvents);
+        writeResults("/Users/gregorr/Desktop/Test/TryToWriteAPaper/berlinMobBudget/output/mobBUdget1000_secondPlanAndPunishmentForStuckEvents/", listOfStuckEvents);
     }
 
 

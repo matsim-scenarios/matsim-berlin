@@ -56,7 +56,7 @@ public class MobilityBudgetEventHandler implements PersonDepartureEventHandler, 
         }
 
         for (Id<Person> personId: personWhoAreStuck) {
-            event.getServices().getEvents().processEvent(new PersonMoneyEvent(Time.MIDNIGHT, personId, 10000, "punishmentForBeingStuck", null));
+            event.getServices().getEvents().processEvent(new PersonMoneyEvent(Time.MIDNIGHT, personId, -10000, "punishmentForBeingStuck", null));
         }
     }
 

@@ -13,7 +13,7 @@
 		<param name="writePlansInterval" value="50" />
 	</module>
 	<module name="global" >
-		<param name="coordinateSystem" value="EPSG:31468" />
+		<param name="coordinateSystem" value="GK4" />
 		<param name="insistingOnDeprecatedConfigVersion" value="false" />
 		<param name="numberOfThreads" value="8" />
 	</module>
