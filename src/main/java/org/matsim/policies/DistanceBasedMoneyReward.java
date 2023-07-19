@@ -23,9 +23,6 @@ import java.util.Map;
 public class DistanceBasedMoneyReward implements PersonDepartureEventHandler,
         PersonArrivalEventHandler,
         AfterMobsimListener,
-        PersonEntersVehicleEventHandler,
-        PersonLeavesVehicleEventHandler,
-        LinkLeaveEventHandler,
         ActivityStartEventHandler {
 
     private final Map<Id<Person>, Double> distanceTravelledWalk = new HashMap<>();
@@ -64,6 +61,23 @@ public class DistanceBasedMoneyReward implements PersonDepartureEventHandler,
                 }
             }
         }
+
+        if (event.getLegMode().equals("bicycle")) {
+            Id<Link> linkId = event.getLinkId();
+            Coord endcoord = network.getLinks().get(linkId).getCoord();
+            Coord startCoord = this.agentDepartureLocations.get(event.getPersonId());
+            if (startCoord != null) {
+                double beelineDistance = CoordUtils.calcEuclideanDistance(startCoord, endcoord);
+                double distance = beelineDistance * beelineDistanceFactor;
+                if (!distanceTravelledBike.containsKey(event.getPersonId())) {
+                    distanceTravelledBike.put(event.getPersonId(), distance);
+                } else {
+                    distance = distanceTravelledBike.get(event.getPersonId()) + distance;
+                    distanceTravelledBike.replace(event.getPersonId(), distance);
+                }
+            }
+        }
+
     }
 
     @Override
@@ -77,24 +91,13 @@ public class DistanceBasedMoneyReward implements PersonDepartureEventHandler,
             }
 
             if (event.getRoutingMode().equals(TransportMode.bike) || event.getRoutingMode().equals("bicycle")) {
-                if (!distanceTravelledBike.containsKey(event.getPersonId())) {
-                    distanceTravelledBike.put(event.getPersonId(), 0.0);
-                }
+                Id<Link> linkId = event.getLinkId();
+                Coord coord = network.getLinks().get(linkId).getCoord();
+                this.agentDepartureLocations.put(event.getPersonId(), coord);
             }
         }
     }
 
-    @Override
-    public void handleEvent(PersonEntersVehicleEvent personEntersVehicleEvent) {
-        vehicles2Persons.put(personEntersVehicleEvent.getVehicleId(), personEntersVehicleEvent.getPersonId());
-    }
-
-    @Override
-    public void handleEvent(PersonLeavesVehicleEvent personLeavesVehicleEvent) {
-        if (vehicles2Persons.containsKey(personLeavesVehicleEvent.getVehicleId())) {
-            vehicles2Persons.remove(personLeavesVehicleEvent.getVehicleId());
-        }
-    }
 
     @Override
     public void reset(int iteration) {
@@ -128,21 +131,6 @@ public class DistanceBasedMoneyReward implements PersonDepartureEventHandler,
             afterMobsimEvent.getServices().getEvents().processEvent(new PersonMoneyEvent(Time.MIDNIGHT, person, klimaTaler, "klimaTalerForPt", null));
         }
     }
-
-    @Override
-    public void handleEvent(LinkLeaveEvent linkLeaveEvent) {
-        if (vehicles2Persons.containsKey(linkLeaveEvent.getVehicleId())) {
-            Id<Person> personId = vehicles2Persons.get(linkLeaveEvent.getVehicleId());
-            if (distanceTravelledBike.containsKey(personId)) {
-                double linkLength = network.getLinks().get(linkLeaveEvent.getLinkId()).getLength();
-                double distanceTravelled = distanceTravelledBike.get(personId) + linkLength;
-                distanceTravelledBike.replace(personId, distanceTravelled);
-            }
-        }
-
-    }
-
-
 
 
     @Override
