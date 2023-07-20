@@ -136,6 +136,7 @@ public class RunBerlinWithMobBudget {
             public void install() {
                 addEventHandlerBinding().toInstance(mobilityBudgetEventHandler);
                 addControlerListenerBinding().toInstance(mobilityBudgetEventHandler);
+                new PersonMoneyEventsAnalysisModule();
             }
         });
     }
