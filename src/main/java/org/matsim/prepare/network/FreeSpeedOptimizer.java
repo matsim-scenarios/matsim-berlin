@@ -200,7 +200,7 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 		if (csv != null)
 			csv.close();
 
-		log.info("{}, rmse: {}, mse: {}", request, rmse.getMean(), mse.getMean());
+		log.info("{}, rmse: {}, mae: {}", request, rmse.getMean(), mse.getMean());
 
 		return DoubleDoublePair.of(rmse.getMean(), mse.getMean());
 	}
