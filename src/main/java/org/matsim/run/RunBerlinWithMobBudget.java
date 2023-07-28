@@ -110,13 +110,14 @@ public class RunBerlinWithMobBudget {
                     persons2Budget.put(personId, value);
                     Plan planNoCar = PopulationUtils.createPlan();
                     PopulationUtils.copyFromTo(plan, planNoCar);
+                    planNoCar.setType("noCarPlan");
                     List<TripStructureUtils.Trip> tripsNewPlan = TripStructureUtils.getTrips(planNoCar);
                     PopulationUtils.resetRoutes(planNoCar);
                     for (TripStructureUtils.Trip trip: tripsNewPlan) {
                         List<Leg> listLegs = trip.getLegsOnly();
                         for (Leg leg: listLegs) {
                             if (leg.getMode().equals(TransportMode.car)) {
-                                leg.setMode(TransportMode.walk);
+                                leg.setMode("bicycle");
                             }
                         }
                     }
