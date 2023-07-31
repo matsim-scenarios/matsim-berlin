@@ -8,6 +8,7 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.*;
@@ -175,8 +176,10 @@ public class RunCountOptimization implements MATSimAppCommand {
 				for (PlanElement el : plan.getPlanElements()) {
 					if (el instanceof Leg leg) {
 
-						if (!leg.getMode().equals("car"))
+						if (!leg.getMode().equals(TransportMode.car))
 							continue;
+
+						// TODO: scale travel time with factor from the leg
 
 						if (leg.getRoute() instanceof NetworkRoute route) {
 							boolean relevant = route.getLinkIds().stream().anyMatch(links::contains);
