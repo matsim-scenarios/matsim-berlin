@@ -103,8 +103,8 @@
 			Euro/day: 11.76*(1+0.2017448) = 14.13252
 			Euro/m: 0.00022*(1+0.2017448) = 0.0002643839 -->
 
-			<!-- 0.6 -> inflation adusted -->
-			<param name="performing" value="0.688"/>
+			<!-- 6 -> inflation adjusted -->
+			<param name="performing" value="6.88"/>
 
 			<parameterset type="modeParams">
 				<param name="constant" value="-1.0"/>
