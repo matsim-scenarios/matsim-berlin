@@ -67,7 +67,7 @@
 	</module>
 
 	<module name="subtourModeChoice">
-		<param name="modes" value="car,pt,bike,walk"/>
+		<param name="modes" value="car,pt,bike,walk,ride"/>
 		<param name="chainBasedModes" value="car,bike"/>
 		<param name="considerCarAvailability" value="true"/>
 		<param name="behavior" value="betweenAllAndFewerConstraints"/>
@@ -102,6 +102,10 @@
 			<!-- car prices 2012->2022: inflation (110.2-91.7)/91.7 = 0.2017448
 			Euro/day: 11.76*(1+0.2017448) = 14.13252
 			Euro/m: 0.00022*(1+0.2017448) = 0.0002643839 -->
+
+			<!-- 0.6 -> inflation adusted -->
+			<param name="performing" value="0.688"/>
+
 			<parameterset type="modeParams">
 				<param name="constant" value="-1.0"/>
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0"/>
