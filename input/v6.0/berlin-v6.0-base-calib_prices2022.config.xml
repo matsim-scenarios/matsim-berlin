@@ -117,7 +117,7 @@
 				<param name="constant" value="-1.0"/>
 				<!-- (alpha+gamma)*beta_performing+(alpha+1)*mgl_util_travelling_car -->
 				<!-- (2.0+1.0)*6+(2.0+1)*0.0 -->
-				<param name="marginalUtilityOfTraveling_util_hr" value="18.0"/>
+				<param name="marginalUtilityOfTraveling_util_hr" value="-18.0"/>
 				<param name="mode" value="ride"/>
 				<param name="monetaryDistanceRate" value="-0.00052"/> <!-- 2*car -->
 				<param name="dailyMonetaryConstant" value="-0.0"/>
