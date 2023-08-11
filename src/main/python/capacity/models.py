@@ -7,7 +7,6 @@ from time import time
 
 import numpy as np
 import pandas as pd
-
 import sklearn
 import sklearn.compose
 import sklearn.ensemble
@@ -400,12 +399,14 @@ def model_to_java(name, model, scaler, df):
 
     code = m2c.export_to_java(model, "org.matsim.prepare.network", name)
 
+    code, params = replace_params(code)
+
     imp = """import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
     
 /**
 * Generated model, do not modify.
 */
-public class"""
+public final class"""
 
     code = code.replace("public class", imp)
     code = code.replace(name, name + " implements FeatureRegressor")
@@ -415,23 +416,93 @@ public class"""
     idx = code.index("public static double score")
 
     pre = """
+    public static %s INSTANCE = new %s();
+    public static final double[] DEFAULT_PARAMS = %s;
+
     @Override
     public double predict(Object2DoubleMap<String> ft) {
+        return predict(ft, DEFAULT_PARAMS);
+    }
+    
+    @Override
+    public double[] getData(Object2DoubleMap<String> ft) {
         double[] data = new double[%d];
-""" % len(features)
+""" % (name, name, str(params).replace("[", "{").replace("]", "}"), len(features))
 
     for ft in features:
         pre += "\t\t" + ft
 
     pre += """
+        return data;
+    }
+    
+    @Override
+    public double predict(Object2DoubleMap<String> ft, double[] params) {
+
+        double[] data = getData(ft);
         for (int i = 0; i < data.length; i++)
             if (Double.isNaN(data[i])) throw new IllegalArgumentException("Invalid data at index: " + i);
     
-        return score(data);
+        return score(data, params);
     }
     """
 
+    code = code.replace("score(double[] input)", "score(double[] input, double[] params)")
+
     return f"{code[:idx]}{pre}{code[idx:]}"
+
+
+def model_to_py(name, model, scaler, df):
+    import m2cgen as m2c
+
+    code = m2c.export_to_python(model, function_name="score")
+
+    code, params = replace_params(code)
+
+    code = code.replace("input", "inputs")
+    code = code.replace("(inputs):", "(params, inputs):")
+
+    features = "\t\t".join([f"data[{i}] = {s}\n" for i, s in enumerate(model_features(scaler, df))])
+    features = features.replace(".getDouble(", ".get(")
+
+    code = """def features(ft, data):
+\t\t%s
+params = %s
+""" % (features, params) + code
+
+    code += """
+def batch_loss(params, inputs, targets):
+    error = 0
+    for x, y in zip(inputs, targets):
+        preds = score(params, x)
+        error += (preds - y) ** 2
+    return error
+"""
+
+    return code
+
+
+def replace_params(code):
+    """ Replaces and collects model parameters """
+
+    pattern = re.compile(r"(var\d+) = (-?\d+.\d+)")
+
+    params = []
+    new_code = ''
+    start = 0
+
+    for m in pattern.finditer(code):
+        end, newstart = m.span()
+        new_code += code[start:end]
+        rep = "%s = params[%d]" % (m.group(1), len(params))
+        new_code += rep
+        start = newstart
+
+        params.append(float(m.group(2)))
+
+    new_code += code[start:]
+
+    return new_code, params
 
 
 def model_features(scaler, df):

@@ -16,7 +16,7 @@ import seaborn as sns
 
 import optuna
 
-from models import create_regressor, model_to_java
+from models import create_regressor, model_to_java, model_to_py
 from features import build_datasets
 
 #%%
@@ -210,14 +210,20 @@ for t in targets:
     m = best_model(models[t].values(), t)
     
     print("Best model", m)
-    
-    code = model_to_java(t, m[0], scaler[t], get(None, t)[0])
-    
-    makedirs("code", exist_ok=True)
 
-    with open(join("code", t.capitalize() + ".java"), "w") as f:
+    makedirs("gen_code", exist_ok=True)
+    
+    with open(join("gen_code", "__init__.py"), "w") as f:
+        f.write("")
+
+    with open(join("gen_code", t.capitalize() + ".java"), "w") as f:
+        code = model_to_java(t, m[0], scaler[t], get(None, t)[0])
         f.write(code)
 
+    with open(join("gen_code", t + ".py"), "w") as f:
+        code = model_to_py(t, m[0], scaler[t], get(None, t)[0])
+        f.write("# -*- coding: utf-8 -*-\n")
+        f.write(code)
 
 #%%
 

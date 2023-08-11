@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
-import it.unimi.dsi.fastutil.doubles.DoubleDoublePair;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -45,9 +44,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.DoubleStream;
 
 @CommandLine.Command(
@@ -55,7 +52,8 @@ import java.util.stream.DoubleStream;
 	description = "Start server for freespeed optimization."
 )
 @CommandSpec(
-	requireNetwork = true
+	requireNetwork = true,
+	requires = "features.csv"
 )
 public class FreeSpeedOptimizer implements MATSimAppCommand {
 
@@ -75,6 +73,7 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 
 	private Network network;
 	private Object2DoubleMap<Entry> validationSet;
+	private Map<Id<Link>, PrepareNetworkParams.Feature> features;
 
 	private ObjectMapper mapper;
 
@@ -99,7 +98,8 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 			speeds.put(link.getId(), link.getFreespeed());
 		}
 
-		validationSet = readValidation();
+		validationSet = readValidation(validationFiles);
+		features = PrepareNetworkParams.readFeatures(input.getPath("features.csv"), network.getLinks().size());
 
 		log.info("Initial score:");
 		evaluateNetwork(null, "init");
@@ -133,29 +133,45 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 		return 0;
 	}
 
-	private DoubleDoublePair evaluateNetwork(Request request, String save) throws IOException {
+	private Result evaluateNetwork(Request request, String save) throws IOException {
+
+		Map<Id<Link>, double[]> attributes = new HashMap<>();
 
 		if (request != null) {
 			for (Link link : network.getLinks().values()) {
 
 				double allowedSpeed = NetworkUtils.getAllowedSpeed(link);
-				double speed = speeds.getDouble(link.getId());
 
 				if (request.f == 0) {
-					double speedFactor = (double) link.getAttributes().getAttribute("speed_factor");
 
-					if (allowedSpeed <= 31 / 3.6) {
-						link.setFreespeed(speed * request.b30);
-						link.getAttributes().putAttribute("speed_factor", speedFactor * request.b30);
+					PrepareNetworkParams.Feature ft = features.get(link.getId());
+					String type = NetworkUtils.getHighwayType(link);
 
-					} else if (allowedSpeed <= 51 / 3.6) {
-						link.setFreespeed(speed * request.b50);
-						link.getAttributes().putAttribute("speed_factor", speedFactor * request.b50);
-					} else if (allowedSpeed <= 91 / 3.6) {
-						link.setFreespeed(speed * request.b90);
-						link.getAttributes().putAttribute("speed_factor", speedFactor * request.b90);
+					if (type.startsWith("motorway")) {
+						link.setFreespeed(allowedSpeed);
+						continue;
 					}
 
+					FeatureRegressor speedModel = switch (ft.junctionType()) {
+						case "traffic_light" -> Speedrelative_traffic_light.INSTANCE;
+						case "right_before_left" -> Speedrelative_right_before_left.INSTANCE;
+						case "priority" -> Speedrelative_priority.INSTANCE;
+						default -> throw new IllegalArgumentException("Unknown type: " + ft.junctionType());
+					};
+
+					double[] p = switch (ft.junctionType()) {
+						case "traffic_light" -> request.traffic_light;
+						case "right_before_left" -> request.rbl;
+						case "priority" -> request.priority;
+						default -> throw new IllegalArgumentException("Unknown type: " + ft.junctionType());
+					};
+
+					double speedFactor = Math.max(0.25, speedModel.predict(ft.features(), p));
+
+					attributes.put(link.getId(), speedModel.getData(ft.features()));
+
+					link.setFreespeed((double) link.getAttributes().getAttribute("allowed_speed") * speedFactor);
+					link.getAttributes().putAttribute("speed_factor", speedFactor);
 
 				} else
 					// Old MATSim freespeed logic
@@ -178,22 +194,49 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 		if (csv != null)
 			csv.printRecord("from_node", "to_node", "beeline_dist", "dist", "travel_time");
 
+		List<Data> priority = new ArrayList<>();
+		List<Data> rbl = new ArrayList<>();
+		List<Data> traffic_light = new ArrayList<>();
+
 		for (Object2DoubleMap.Entry<Entry> e : validationSet.object2DoubleEntrySet()) {
 
 			Entry r = e.getKey();
 
-			Node fromNode = network.getNodes().get(r.fromNode);
-			Node toNode = network.getNodes().get(r.toNode);
+			Node fromNode = network.getNodes().get(r.fromNode());
+			Node toNode = network.getNodes().get(r.toNode());
 			LeastCostPathCalculator.Path path = router.calcLeastCostPath(fromNode, toNode, 0, null, null);
 
+			// iterate over the path, calc better correction
 			double distance = path.links.stream().mapToDouble(Link::getLength).sum();
 			double speed = distance / path.travelTime;
+
+			double correction = speed / e.getDoubleValue();
+
+			for (Link link : path.links) {
+
+				if (!attributes.containsKey(link.getId()))
+					continue;
+
+				PrepareNetworkParams.Feature ft = features.get(link.getId());
+				double[] input = attributes.get(link.getId());
+				double speedFactor = (double) link.getAttributes().getAttribute("speed_factor");
+
+				List<Data> category = switch (ft.junctionType()) {
+					case "traffic_light" -> traffic_light;
+					case "right_before_left" -> rbl;
+					case "priority" -> priority;
+					default -> throw new IllegalArgumentException("not happening");
+				};
+
+				category.add(new Data(input, speedFactor, speedFactor / correction));
+			}
+
 
 			rmse.addValue(Math.pow(e.getDoubleValue() - speed, 2));
 			mse.addValue(Math.abs((e.getDoubleValue() - speed) * 3.6));
 
 			if (csv != null)
-				csv.printRecord(r.fromNode, r.toNode, (int) CoordUtils.calcEuclideanDistance(fromNode.getCoord(), toNode.getCoord()),
+				csv.printRecord(r.fromNode(), r.toNode(), (int) CoordUtils.calcEuclideanDistance(fromNode.getCoord(), toNode.getCoord()),
 					(int) distance, (int) path.travelTime);
 		}
 
@@ -202,13 +245,13 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 
 		log.info("{}, rmse: {}, mae: {}", request, rmse.getMean(), mse.getMean());
 
-		return DoubleDoublePair.of(rmse.getMean(), mse.getMean());
+		return new Result(rmse.getMean(), mse.getMean(), priority, rbl, traffic_light);
 	}
 
 	/**
 	 * Collect highest observed speed.
 	 */
-	private Object2DoubleMap<Entry> readValidation() throws IOException {
+	static Object2DoubleMap<Entry> readValidation(List<String> validationFiles) throws IOException {
 
 		// entry to hour and list of speeds
 		Map<Entry, Int2ObjectMap<DoubleList>> entries = new LinkedHashMap<>();
@@ -272,14 +315,21 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 	private record Entry(Id<Node> fromNode, Id<Node> toNode) {
 	}
 
+	private record Data(double[] x, double yPred, double yTrue) {
+
+	}
+
+	private record Result(double rmse, double mse, List<Data> priority, List<Data> rbl, List<Data> traffic_light) {}
+
+
 	/**
 	 * JSON request containing desired parameters.
 	 */
 	private static final class Request {
 
-		double b30;
-		double b50;
-		double b90;
+		double[] priority;
+		double[] rbl;
+		double[] traffic_light;
 
 		double f;
 
@@ -294,9 +344,9 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 		public String toString() {
 			if (f == 0)
 				return "Request{" +
-					"b30=" + b30 +
-					", b50=" + b50 +
-					", b90=" + b90 +
+					"priority=" + priority.length +
+					", rbl=" + rbl.length +
+					", traffic_light=" + traffic_light.length +
 					'}';
 
 			return "Request{f=" + f + "}";
@@ -311,7 +361,7 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 			Request request = mapper.readValue(req.getInputStream(), Request.class);
 
 			boolean save = req.getRequestURI().equals("/save");
-			DoubleDoublePair stats = evaluateNetwork(request, save ? "network-opt" : null);
+			Result stats = evaluateNetwork(request, save ? "network-opt" : null);
 
 			if (save)
 				NetworkUtils.writeNetwork(network, "network-opt.xml.gz");
@@ -320,8 +370,7 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 
 			PrintWriter writer = resp.getWriter();
 
-			// target value
-			writer.println(stats.rightDouble());
+			mapper.writeValue(writer, stats);
 
 			writer.close();
 		}
