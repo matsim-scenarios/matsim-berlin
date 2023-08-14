@@ -1,4 +1,4 @@
-package org.matsim.prepare.traveltime;
+package org.matsim.prepare.traveltime.api;
 
 import org.matsim.api.core.v01.Coord;
 
@@ -34,10 +34,12 @@ public interface RouteValidator extends AutoCloseable {
 	/**
 	 * Calculate route information between two coordinates. Coordinates are always in WGS84.
 	 */
-	Result calculate(Coord from, Coord to, int hour);
+	Result retrieve(Coord from, Coord to, int hour);
 
 	/**
 	 * Result for one query.
+	 * @param travelTime travel time in seconds
+	 * @param dist distance of route in meter
 	 */
 	record Result(int hour, int travelTime, int dist) {
 	}

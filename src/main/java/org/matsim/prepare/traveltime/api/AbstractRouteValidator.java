@@ -1,4 +1,4 @@
-package org.matsim.prepare.traveltime;
+package org.matsim.prepare.traveltime.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;

@@ -1,4 +1,4 @@
-package org.matsim.prepare.traveltime;
+package org.matsim.prepare.traveltime.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.hc.core5.http.ContentType;
@@ -27,7 +27,7 @@ public class GoogleRouteValidator extends AbstractRouteValidator {
 	}
 
 	@Override
-	public Result calculate(Coord from, Coord to, int hour) {
+	public Result retrieve(Coord from, Coord to, int hour) {
 
 		try {
 

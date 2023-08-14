@@ -1,9 +1,14 @@
 package org.matsim.prepare.traveltime;
 
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
+import it.unimi.dsi.fastutil.doubles.DoubleList;
+import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Coord;
@@ -28,11 +33,13 @@ import org.matsim.core.utils.geometry.transformations.GeotoolsTransformation;
 import org.matsim.prepare.RunOpenBerlinCalibration;
 import picocli.CommandLine;
 
+import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @CommandLine.Command(
 	name = "sample-validation-routes",
@@ -54,11 +61,8 @@ public class SampleValidationRoutes implements MATSimAppCommand {
 	@CommandLine.Mixin
 	private ShpOptions shp;
 
-	@CommandLine.Option(names = "--api", description = "API service that should be used", defaultValue = "google")
-	private Api api;
-
-	@CommandLine.Option(names = "--api-key", description = "API key.")
-	private String apiKey;
+	@CommandLine.Option(names = "--api", description = "Mapping of api to key")
+	private Map<RouteApi, String> api;
 
 	@CommandLine.Option(names = "--num-routes", description = "Number of routes (per time bin)", defaultValue = "1000")
 	private int numRoutes;
@@ -94,6 +98,39 @@ public class SampleValidationRoutes implements MATSimAppCommand {
 		new SampleValidationRoutes().execute(args);
 	}
 
+	/**
+	 * Read the produced API files and collect the speeds by hour.
+	 */
+	public static Map<FromToNodes, Int2ObjectMap<DoubleList>> readValidation(List<String> validationFiles) throws IOException {
+
+		// entry to hour and list of speeds
+		Map<FromToNodes, Int2ObjectMap<DoubleList>> entries = new LinkedHashMap<>();
+
+		for (String file : validationFiles) {
+
+			log.info("Loading {}", file);
+
+			try (CSVParser parser = new CSVParser(Files.newBufferedReader(Path.of(file)),
+				CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).build())) {
+
+				for (CSVRecord r : parser) {
+					FromToNodes e = new FromToNodes(Id.createNodeId(r.get("from_node")), Id.createNodeId(r.get("to_node")));
+					double speed = Double.parseDouble(r.get("dist")) / Double.parseDouble(r.get("travel_time"));
+
+					if (!Double.isFinite(speed)) {
+						log.warn("Invalid entry {}", r);
+						continue;
+					}
+
+					Int2ObjectMap<DoubleList> perHour = entries.computeIfAbsent(e, (k) -> new Int2ObjectLinkedOpenHashMap<>());
+					perHour.computeIfAbsent(Integer.parseInt(r.get("hour")), k -> new DoubleArrayList()).add(speed);
+				}
+			}
+		}
+
+		return entries;
+	}
+
 	@Override
 	@SuppressWarnings({"IllegalCatch", "NestedTryDepth"})
 	public Integer call() throws Exception {
@@ -120,82 +157,58 @@ public class SampleValidationRoutes implements MATSimAppCommand {
 			}
 		}
 
-		Path out = Path.of(output.getPath().toString().replace(".csv", "-api-" + api + ".csv"));
-
-		if (api == Api.none) {
+		if (api.isEmpty()) {
 			log.info("Not querying API.");
 			return 0;
 		}
 
-		// Collect existing entries to support resuming
-		Set<Entry> entries = new HashSet<>();
-		OpenOption open;
-		if (Files.exists(out)) {
-			open = StandardOpenOption.APPEND;
-			try (CSVParser csv = new CSVParser(Files.newBufferedReader(out), CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).build())) {
-				for (CSVRecord r : csv) {
-					entries.add(new Entry(
-						Id.createNodeId(r.get("from_node")),
-						Id.createNodeId(r.get("to_node")),
-						r.get("api"),
-						Integer.parseInt(r.get("hour")))
-					);
-				}
+		List<String> files = new ArrayList<>();
+
+		log.info("Fetching APIs: {}", api.keySet());
+
+		// Run all services in parallel
+		try (ExecutorService executor = Executors.newCachedThreadPool()) {
+			List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+			for (Map.Entry<RouteApi, String> e : api.entrySet()) {
+
+				Path out = Path.of(output.getPath().toString().replace(".csv", "-api-" + api + ".csv"));
+				futures.add(
+					CompletableFuture.runAsync(new FetchRoutesTask(e.getKey(), e.getValue(), routes, hours, out), executor)
+				);
+
+				files.add(out.toString());
 			}
 
-		} else
-			open = StandardOpenOption.CREATE_NEW;
+			CompletableFuture<Void> all = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+			all.join();
+		}
 
+		Map<FromToNodes, Int2ObjectMap<DoubleList>> res = readValidation(files);
 
-		try (RouteValidator val = switch (api) {
-			case google -> new GoogleRouteValidator(apiKey);
-			case woosmap -> new WoosMapRouteValidator(apiKey);
-			case mapbox -> new MapboxRouteValidator(apiKey);
-			case here -> new HereRouteValidator(apiKey);
-			case tomtom -> new TomTomRouteValidator(apiKey);
-			case none -> null;
-		}) {
+		Path ref = Path.of(output.getPath().toString().replace(".csv", "-ref.csv"));
 
-			try (CSVPrinter csv = new CSVPrinter(Files.newBufferedWriter(out, open), CSVFormat.DEFAULT)) {
+		// Write the reference file
+		try (CSVPrinter printer = new CSVPrinter(Files.newBufferedWriter(ref), CSVFormat.DEFAULT)) {
+			printer.printRecord("from_node", "to_node", "hour", "min", "max", "mean", "std");
 
-				if (open == StandardOpenOption.CREATE_NEW) {
-					csv.printRecord("from_node", "to_node", "api", "hour", "dist", "travel_time");
-					csv.flush();
-				}
+			// Target values
+			for (Map.Entry<FromToNodes, Int2ObjectMap<DoubleList>> e : res.entrySet()) {
 
-				int i = 0;
-				for (Route route : routes) {
-					for (int h : hours) {
+				Int2ObjectMap<DoubleList> perHour = e.getValue();
+				for (Int2ObjectMap.Entry<DoubleList> e2 : perHour.int2ObjectEntrySet()) {
 
-						// Skip entries already present
-						Entry e = new Entry(route.fromNode, route.toNode, val.name(), h);
-						if (entries.contains(e))
-							continue;
+					SummaryStatistics stats = new SummaryStatistics();
+					// This is as kmh
+					e2.getValue().forEach(v -> stats.addValue(v * 3.6));
 
-						try {
-							RouteValidator.Result res = val.calculate(route.from, route.to, h);
-							csv.printRecord(route.fromNode, route.toNode, val.name(), h, res.dist(), res.travelTime());
-						} catch (Exception ex) {
-							log.warn("Could not retrieve result for route {} (retrying)", route, ex);
-
-							try {
-								Thread.sleep(30_000);
-								RouteValidator.Result res = val.calculate(route.from, route.to, h);
-								csv.printRecord(route.fromNode, route.toNode, val.name(), h, res.dist(), res.travelTime());
-							} catch (Exception ex2) {
-								log.error("Failed to retrieve result for {}", route, ex);
-							}
-						}
-					}
-
-					csv.flush();
-
-					if (i++ % 50 == 0) {
-						log.info("Processed {} routes", i - 1);
-					}
+					printer.printRecord(e.getKey().fromNode, e.getKey().toNode, e2.getIntKey(),
+						stats.getMin(), stats.getMax(), stats.getMean(), stats.getStandardDeviation());
 				}
 			}
 		}
+
+		log.info("All done.");
 
 		return 0;
 	}
@@ -255,21 +268,12 @@ public class SampleValidationRoutes implements MATSimAppCommand {
 	}
 
 	/**
-	 * Defines different available API services.
+	 * Key as pair of from and to node.
 	 */
-	public enum Api {
-		none,
-		google,
-		woosmap,
-		mapbox,
-		here,
-		tomtom
+	public record FromToNodes(Id<Node> fromNode, Id<Node> toNode) {
 	}
 
-	private record Route(Id<Node> fromNode, Id<Node> toNode, Coord from, Coord to, double travelTime, double dist) {
-	}
-
-	private record Entry(Id<Node> fromNode, Id<Node> toNode, String api, int hour) {
+	record Route(Id<Node> fromNode, Id<Node> toNode, Coord from, Coord to, double travelTime, double dist) {
 	}
 
 }

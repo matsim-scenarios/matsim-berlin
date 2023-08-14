@@ -37,6 +37,7 @@ import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
 import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.trafficmonitoring.FreeSpeedTravelTime;
 import org.matsim.core.utils.geometry.CoordUtils;
+import org.matsim.prepare.traveltime.SampleValidationRoutes;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -72,7 +73,7 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 	private List<String> validationFiles;
 
 	private Network network;
-	private Object2DoubleMap<Entry> validationSet;
+	private Object2DoubleMap<SampleValidationRoutes.FromToNodes> validationSet;
 	private Map<Id<Link>, PrepareNetworkParams.Feature> features;
 
 	private ObjectMapper mapper;
@@ -198,9 +199,9 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 		List<Data> rbl = new ArrayList<>();
 		List<Data> traffic_light = new ArrayList<>();
 
-		for (Object2DoubleMap.Entry<Entry> e : validationSet.object2DoubleEntrySet()) {
+		for (Object2DoubleMap.Entry<SampleValidationRoutes.FromToNodes> e : validationSet.object2DoubleEntrySet()) {
 
-			Entry r = e.getKey();
+			SampleValidationRoutes.FromToNodes r = e.getKey();
 
 			Node fromNode = network.getNodes().get(r.fromNode());
 			Node toNode = network.getNodes().get(r.toNode());
@@ -249,70 +250,29 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 	}
 
 	/**
-	 * Collect highest observed speed.
+	 * Calculate the target speed.
 	 */
-	static Object2DoubleMap<Entry> readValidation(List<String> validationFiles) throws IOException {
+	static Object2DoubleMap<SampleValidationRoutes.FromToNodes> readValidation(List<String> validationFiles) throws IOException {
 
 		// entry to hour and list of speeds
-		Map<Entry, Int2ObjectMap<DoubleList>> entries = new LinkedHashMap<>();
+		Map<SampleValidationRoutes.FromToNodes, Int2ObjectMap<DoubleList>> entries = SampleValidationRoutes.readValidation(validationFiles);
 
-		if (validationFiles != null)
-			for (String file : validationFiles) {
+		Object2DoubleMap<SampleValidationRoutes.FromToNodes> result = new Object2DoubleOpenHashMap<>();
 
-				log.info("Loading {}", file);
+		// Target values
+		for (Map.Entry<SampleValidationRoutes.FromToNodes, Int2ObjectMap<DoubleList>> e : entries.entrySet()) {
 
-				try (CSVParser parser = new CSVParser(Files.newBufferedReader(Path.of(file)),
-					CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).build())) {
+			Int2ObjectMap<DoubleList> perHour = e.getValue();
 
-					for (CSVRecord r : parser) {
-						Entry e = new Entry(Id.createNodeId(r.get("from_node")), Id.createNodeId(r.get("to_node")));
-						double speed = Double.parseDouble(r.get("dist")) / Double.parseDouble(r.get("travel_time"));
-
-						if (!Double.isFinite(speed)) {
-							log.warn("Invalid entry {}", r);
-							continue;
-						}
-
-						Int2ObjectMap<DoubleList> perHour = entries.computeIfAbsent(e, (k) -> new Int2ObjectLinkedOpenHashMap<>());
-						perHour.computeIfAbsent(Integer.parseInt(r.get("hour")), k -> new DoubleArrayList()).add(speed);
-					}
-				}
-			}
-
-		Object2DoubleMap<Entry> result = new Object2DoubleOpenHashMap<>();
-
-		try (CSVPrinter printer = new CSVPrinter(Files.newBufferedWriter(Path.of("routes-ref.csv")), CSVFormat.DEFAULT)) {
-
-			printer.printRecord("from_node", "to_node", "hour", "min", "max", "mean", "std");
-
-			// Target values
-			for (Map.Entry<Entry, Int2ObjectMap<DoubleList>> e : entries.entrySet()) {
-
-				Int2ObjectMap<DoubleList> perHour = e.getValue();
-
-				// Use avg from all values for 3:00 and 21:00
-				double avg = DoubleStream.concat(perHour.get(3).doubleStream(), perHour.get(21).doubleStream())
-					.average().orElseThrow();
+			// Use avg from all values for 3:00 and 21:00
+			double avg = DoubleStream.concat(perHour.get(3).doubleStream(), perHour.get(21).doubleStream())
+				.average().orElseThrow();
 
 
-				for (Int2ObjectMap.Entry<DoubleList> e2 : perHour.int2ObjectEntrySet()) {
-
-					SummaryStatistics stats = new SummaryStatistics();
-					// This is as kmh
-					e2.getValue().forEach(v -> stats.addValue(v * 3.6));
-
-					printer.printRecord(e.getKey().fromNode, e.getKey().toNode, e2.getIntKey(),
-						stats.getMin(), stats.getMax(), stats.getMean(), stats.getStandardDeviation());
-				}
-
-				result.put(e.getKey(), avg);
-			}
+			result.put(e.getKey(), avg);
 		}
 
 		return result;
-	}
-
-	private record Entry(Id<Node> fromNode, Id<Node> toNode) {
 	}
 
 	private record Data(double[] x, double yPred, double yTrue) {
