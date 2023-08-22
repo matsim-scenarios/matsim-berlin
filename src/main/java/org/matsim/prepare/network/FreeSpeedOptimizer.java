@@ -29,6 +29,7 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Node;
 import org.matsim.application.CommandSpec;
 import org.matsim.application.MATSimAppCommand;
+import org.matsim.application.analysis.traffic.traveltime.SampleValidationRoutes;
 import org.matsim.application.options.InputOptions;
 import org.matsim.contrib.osm.networkReader.LinkProperties;
 import org.matsim.core.network.NetworkUtils;
@@ -37,7 +38,6 @@ import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
 import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.trafficmonitoring.FreeSpeedTravelTime;
 import org.matsim.core.utils.geometry.CoordUtils;
-import org.matsim.prepare.traveltime.SampleValidationRoutes;
 import picocli.CommandLine;
 
 import java.io.File;

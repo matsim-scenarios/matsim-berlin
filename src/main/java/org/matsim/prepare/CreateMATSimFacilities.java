@@ -14,6 +14,7 @@ import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.options.ShpOptions;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
+import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.facilities.*;
 import org.opengis.feature.simple.SimpleFeature;
@@ -24,8 +25,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static org.matsim.prepare.RunOpenBerlinCalibration.roundCoord;
 
 @CommandLine.Command(
 		name = "facilities",
@@ -92,7 +91,7 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 				continue;
 			}
 
-			ActivityFacility facility = f.createActivityFacility(id, roundCoord(new Coord(x.getAsDouble(), y.getAsDouble())));
+			ActivityFacility facility = f.createActivityFacility(id, CoordUtils.round(new Coord(x.getAsDouble(), y.getAsDouble())));
 			for (String act : h.activities) {
 				facility.addActivityOption(f.createActivityOption(act));
 			}
@@ -160,7 +159,7 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		int max = n * 10;
 		for (int i = 0; i < max && result.size() < n; i++) {
 
-			Coord coord = roundCoord(new Coord(
+			Coord coord = CoordUtils.round(new Coord(
 					bbox.getMinX() + (bbox.getMaxX() - bbox.getMinX()) * rnd.nextDouble(),
 					bbox.getMinY() + (bbox.getMaxY() - bbox.getMinY()) * rnd.nextDouble()
 			));
