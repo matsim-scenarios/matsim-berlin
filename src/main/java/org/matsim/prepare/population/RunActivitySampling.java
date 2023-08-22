@@ -1,4 +1,4 @@
-package org.matsim.prepare;
+package org.matsim.prepare.population;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;

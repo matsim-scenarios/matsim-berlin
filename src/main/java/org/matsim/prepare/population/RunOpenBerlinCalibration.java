@@ -1,4 +1,4 @@
-package org.matsim.prepare;
+package org.matsim.prepare.population;
 
 import com.google.inject.Inject;
 import com.google.inject.TypeLiteral;
@@ -42,6 +42,7 @@ import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.SumScoringFunction;
 import org.matsim.core.scoring.functions.*;
 import org.matsim.core.utils.geometry.CoordUtils;
+import org.matsim.prepare.*;
 import org.matsim.prepare.counts.CreateCountsFromGeoPortalBerlin;
 import org.matsim.prepare.counts.CreateCountsFromVMZ;
 import org.matsim.prepare.counts.CreateCountsFromVMZOld;
@@ -75,7 +76,7 @@ import java.util.stream.Collectors;
 	CreateLandUseShp.class, CreateBerlinPopulation.class, CreateBrandenburgPopulation.class, MergePopulations.class,
 	LookupRegioStaR.class, ExtractFacilityShp.class, DownSamplePopulation.class, DownloadCommuterStatistic.class,
 	RunActitopp.class, CreateNetworkFromSumo.class, CreateTransitScheduleFromGtfs.class,
-	CleanNetwork.class, SampleNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class,
+	CleanNetwork.class, SampleNetwork.class, ExtractFacilityShp.CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class,
 	CreateCountsFromGeoPortalBerlin.class, CreateCountsFromVMZOld.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class,
 	MergePlans.class, SplitActivityTypesDuration.class, CleanPopulation.class, CleanAttributes.class,
 	GenerateSmallScaleCommercialTrafficDemand.class, RunCountOptimization.class, SelectPlansFromIndex.class,
@@ -92,7 +93,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	 * Flexible activities, which need to be known for location choice and during generation.
 	 * A day can not end on a flexible activity.
 	 */
-	static final Set<String> FLEXIBLE_ACTS = Set.of("shop_daily", "shop_other", "leisure", "dining");
+	public static final Set<String> FLEXIBLE_ACTS = Set.of("shop_daily", "shop_other", "leisure", "dining");
 	private static final Logger log = LogManager.getLogger(RunOpenBerlinCalibration.class);
 	@CommandLine.Mixin
 	private final SampleOptions sample = new SampleOptions(100, 25, 10, 1);

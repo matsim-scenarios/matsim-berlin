@@ -1,4 +1,4 @@
-package org.matsim.prepare;
+package org.matsim.prepare.population;
 
 import org.apache.commons.math3.distribution.EnumeratedDistribution;
 import org.apache.commons.math3.random.MersenneTwister;

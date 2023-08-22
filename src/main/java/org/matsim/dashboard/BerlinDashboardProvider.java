@@ -7,6 +7,7 @@ import org.matsim.simwrapper.Dashboard;
 import org.matsim.simwrapper.DashboardProvider;
 import org.matsim.simwrapper.SimWrapper;
 import org.matsim.simwrapper.dashboard.TrafficCountsDashboard;
+import org.matsim.simwrapper.dashboard.TravelTimeComparisonDashboard;
 import org.matsim.simwrapper.dashboard.TripDashboard;
 
 import java.util.List;

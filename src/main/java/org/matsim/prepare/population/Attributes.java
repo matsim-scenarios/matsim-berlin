@@ -1,4 +1,4 @@
-package org.matsim.prepare;
+package org.matsim.prepare.population;
 
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;

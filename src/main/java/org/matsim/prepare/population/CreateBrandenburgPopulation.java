@@ -1,4 +1,4 @@
-package org.matsim.prepare;
+package org.matsim.prepare.population;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -33,7 +33,7 @@ import java.util.SplittableRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.matsim.prepare.CreateBerlinPopulation.generateId;
+import static org.matsim.prepare.population.CreateBerlinPopulation.generateId;
 import static org.matsim.prepare.download.CalculateEmployedPopulation.*;
 
 @CommandLine.Command(

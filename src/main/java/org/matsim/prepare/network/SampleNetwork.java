@@ -27,7 +27,7 @@ import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
 import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.utils.geometry.geotools.MGC;
-import org.matsim.prepare.RunOpenBerlinCalibration;
+import org.matsim.prepare.population.RunOpenBerlinCalibration;
 import org.matsim.vehicles.Vehicle;
 import picocli.CommandLine;
 

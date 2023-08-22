@@ -11,6 +11,7 @@ import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.algorithms.ParallelPersonAlgorithmUtils;
 import org.matsim.core.population.algorithms.PersonAlgorithm;
+import org.matsim.prepare.population.Attributes;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
@@ -22,6 +23,7 @@ import java.util.SplittableRandom;
 		name = "actitopp",
 		description = "Run actiTopp activity generation"
 )
+@Deprecated
 public class RunActitopp implements MATSimAppCommand, PersonAlgorithm {
 
 	private static final Logger log = LogManager.getLogger(RunActitopp.class);
