@@ -35,6 +35,7 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.algorithms.TripsToLegsAlgorithm;
 import org.matsim.core.router.MainModeIdentifier;
+import org.matsim.core.router.TripRouter;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.policies.DistanceBasedMoneyReward;
 import org.matsim.policies.MobilityBudgetEventHandler;
@@ -85,8 +86,32 @@ public class RunBerlinWithMobBudget {
         if (distanceBasedMoneyReward != 0) {
             DistanceBasedMoneyReward klimaTaler = new DistanceBasedMoneyReward(controler.getScenario().getConfig().plansCalcRoute().getBeelineDistanceFactors().get(TransportMode.walk), controler.getScenario().getNetwork(), distanceBasedMoneyReward);
             addKlimaTaler(controler, klimaTaler);
+            for (Person person : scenario.getPopulation().getPersons().values()) {
+                if (!person.getId().toString().contains("commercial")) {
+                    Plan plan = person.getSelectedPlan();
+                    Plan copyOfPlan = PopulationUtils.createPlan(person);
+
+                    PopulationUtils.copyFromTo(plan, copyOfPlan);
+                    copyOfPlan.setType("noCar");
+                    PopulationUtils.resetRoutes(copyOfPlan);
+                    List<TripStructureUtils.Trip> trips = TripStructureUtils.getTrips(copyOfPlan);
+                    for (TripStructureUtils.Trip trip: trips) {
+                        List<Leg> listLegs = trip.getLegsOnly();
+                        for (Leg leg: listLegs) {
+                            if (leg.getMode().equals(TransportMode.car)) {
+                                Leg replacementLeg = PopulationUtils.createLeg("bicycle");
+                                TripStructureUtils.setRoutingMode(replacementLeg, "bicycle");
+                                TripRouter.insertTrip(copyOfPlan, trip.getOriginActivity(), List.of(replacementLeg), trip.getDestinationActivity());
+                            }
+                        }
+                    }
+                    person.addPlan(copyOfPlan);
+                }
+            }
         }
+
         controler.run();
+
     }
 
 
@@ -108,7 +133,7 @@ public class RunBerlinWithMobBudget {
                 }
                 if (transportModeList.contains(TransportMode.car)) {
                     persons2Budget.put(personId, value);
-                    Plan planNoCar = PopulationUtils.createPlan();
+                   /* Plan planNoCar = PopulationUtils.createPlan();
                     PopulationUtils.copyFromTo(plan, planNoCar);
                     planNoCar.setType("noCarPlan");
                     List<TripStructureUtils.Trip> tripsNewPlan = TripStructureUtils.getTrips(planNoCar);
@@ -123,7 +148,7 @@ public class RunBerlinWithMobBudget {
                     }
                     MainModeIdentifier OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier = new OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier();
                     new TripsToLegsAlgorithm(OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier).run(planNoCar);
-                    person.addPlan(planNoCar);
+                    person.addPlan(planNoCar);*/
                 }
             }
         }
