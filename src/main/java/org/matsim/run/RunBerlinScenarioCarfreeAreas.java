@@ -20,10 +20,10 @@ public class RunBerlinScenarioCarfreeAreas {
      */
     enum CarfreeAreas {highlySuitableArea, moreSuitableArea, ratherSuitableArea, lessSuitableArea}
 
-    static String highlySuitableAreaPath = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/avoev/shp-files/shp-berlin-planungsraum-ohne-hundekopf/shp-berlin-planungsraum-ohne-hundekopf.shp";
-    static String moreSuitableAreaPath = "pathToPublicSVN";
-    static String ratherSuitableAreaPath = "pathToPublicSVN";
-    static String lessSuitableAreaPath = "pathToPublicSVN";
+    static String highlySuitableAreaPath = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/geo/Superblocks/superblocks_cat1_shp/SuperblocksCat1withCoord.shp";
+    static String moreSuitableAreaPath = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/geo/Superblocks/superblocks_cat2_shp/SuperblocksCat2withCoord.shp";
+    static String ratherSuitableAreaPath = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/geo/Superblocks/superblocks_cat3_shp/SuperblocksCat3withCoord.shp";
+    static String lessSuitableAreaPath = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/geo/Superblocks/superblocks_cat4_shp/SuperblocksCat4withCoord.shp";
 
     private static final Logger log = Logger.getLogger(RunBerlinScenarioCarfreeAreas.class );
 
@@ -46,7 +46,6 @@ public class RunBerlinScenarioCarfreeAreas {
         String [] configArgs = new String[]{args[0]};
 
         Config config = RunBerlinScenario.prepareConfig(configArgs);
-        config.controler().setLastIteration(0);
 
         Scenario scenario = RunBerlinScenario.prepareScenario(config);
 
