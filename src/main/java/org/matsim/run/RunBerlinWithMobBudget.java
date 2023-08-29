@@ -89,6 +89,7 @@ public class RunBerlinWithMobBudget {
             for (Person person : scenario.getPopulation().getPersons().values()) {
                 if (!person.getId().toString().contains("commercial")) {
                     Plan plan = person.getSelectedPlan();
+                    plan.setType("carPlan");
                     Plan copyOfPlan = PopulationUtils.createPlan(person);
 
                     PopulationUtils.copyFromTo(plan, copyOfPlan);
