@@ -1,4 +1,4 @@
-package org.matsim.prepare.population;
+package org.matsim.prepare;
 
 import com.google.inject.Inject;
 import com.google.inject.TypeLiteral;
@@ -42,7 +42,6 @@ import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.SumScoringFunction;
 import org.matsim.core.scoring.functions.*;
 import org.matsim.core.utils.geometry.CoordUtils;
-import org.matsim.prepare.*;
 import org.matsim.prepare.counts.CreateCountsFromGeoPortalBerlin;
 import org.matsim.prepare.counts.CreateCountsFromVMZ;
 import org.matsim.prepare.counts.CreateCountsFromVMZOld;
@@ -52,6 +51,7 @@ import org.matsim.prepare.network.PrepareNetworkParams;
 import org.matsim.prepare.network.SampleNetwork;
 import org.matsim.prepare.opt.RunCountOptimization;
 import org.matsim.prepare.opt.SelectPlansFromIndex;
+import org.matsim.prepare.population.*;
 import org.matsim.run.Activities;
 import org.matsim.run.RunOpenBerlinScenario;
 import org.matsim.simwrapper.SimWrapperConfigGroup;

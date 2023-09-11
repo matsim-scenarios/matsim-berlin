@@ -21,7 +21,7 @@ import org.matsim.counts.Count;
 import org.matsim.counts.Counts;
 import org.matsim.counts.MatsimCountsReader;
 import org.matsim.counts.Volume;
-import org.matsim.prepare.population.RunOpenBerlinCalibration;
+import org.matsim.prepare.RunOpenBerlinCalibration;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
 import picocli.CommandLine;

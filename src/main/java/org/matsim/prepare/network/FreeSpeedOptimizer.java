@@ -56,6 +56,7 @@ import java.util.stream.DoubleStream;
 	requireNetwork = true,
 	requires = "features.csv"
 )
+@Deprecated
 public class FreeSpeedOptimizer implements MATSimAppCommand {
 
 	private static final Logger log = LogManager.getLogger(FreeSpeedOptimizer.class);
@@ -89,6 +90,9 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 
 	@Override
 	public Integer call() throws Exception {
+
+		// TODO: must be reusable class
+		// TODO: evaluate many factors (f) and write results to csv
 
 		network = input.getNetwork();
 		mapper = new ObjectMapper();

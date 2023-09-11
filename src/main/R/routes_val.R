@@ -28,13 +28,23 @@ df <- read_csv(files)
 df <- df %>%
     filter(api != "Google" & api != "here") %>%
     mutate(api=ifelse(api=="woosmap", "here", api)) %>%
-    mutate(speed=3.6*dist/travel_time)
+    mutate(speed=3.6*dist/travel_time) %>%
+    mutate(across(where(is.numeric), ~na_if(., Inf))) %>%
+    drop_na()
+
+aggr <- df %>% 
+  group_by(hour, api) %>% 
+  summarise(speed=mean(speed))
+
+ggplot(aggr, aes(x=hour, y=speed, color=api)) +
+    labs(title = "Avg. speed per hour") +
+    geom_line(size=1.5)
 
 std <- read_csv("routes-std.csv") %>%
     filter(hour!=22)
 
-ggplot(filter(bind_rows(df, mopt), hour==21), aes(x=api, y=speed, fill=api)) + 
-  labs(title = "Avg. speed at 21:00") + 
+ggplot(filter(bind_rows(df, ms), hour==21), aes(x=api, y=speed, fill=api)) + 
+  labs(title = "Speed at 21:00") + 
   geom_violin(trim = T) +
   geom_boxplot(width=0.1, fill="white")
 
@@ -77,6 +87,23 @@ trips %>%
 
 ######
 
-
 capacity <- read_csv("dtv_links_capacity.csv")
 sum(capacity$is_valid, na.rm = TRUE) / length(capacity$is_valid)
+
+
+ft <- read_csv("input/sumo.net-edges.csv.gz")
+
+######
+
+freight <- read_csv("count_error_by_hour.csv")
+freight_h <- read_csv("count_comparison_by_hour.csv") %>% group_by(hour) %>%
+              summarise(observed=mean(observed_traffic_volume), simulated=mean(simulated_traffic_volume))
+
+ggplot(freight, aes(x=hour)) +
+    geom_line(aes(y=mean_bias))
+
+ggplot(freight_h, aes(x=hour)) + 
+    labs(title = "Observed vs. simulated freight counts") +
+    ylab("Mean vehicles /h") +
+    geom_line(aes(y=observed, color="observed"), size=2) +
+    geom_line(aes(y=simulated, color="simulated"), size=2)

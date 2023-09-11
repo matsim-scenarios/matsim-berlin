@@ -31,6 +31,7 @@ import java.util.Map;
 	requires = "features.csv",
 	produces = "network.xml.gz"
 )
+@Deprecated
 public class PrepareNetworkParams implements MATSimAppCommand {
 
 	private static final Logger log = LogManager.getLogger(PrepareNetworkParams.class);

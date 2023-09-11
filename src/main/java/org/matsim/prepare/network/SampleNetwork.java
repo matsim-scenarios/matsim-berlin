@@ -27,7 +27,7 @@ import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
 import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.utils.geometry.geotools.MGC;
-import org.matsim.prepare.population.RunOpenBerlinCalibration;
+import org.matsim.prepare.RunOpenBerlinCalibration;
 import org.matsim.vehicles.Vehicle;
 import picocli.CommandLine;
 
@@ -37,11 +37,15 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Now available in the contrib.
+ */
 @CommandLine.Command(
 	name = "sample-network",
 	description = "Sample nodes and junctions ids from network"
 )
 @CommandSpec(requireNetwork = true, produces = {"intersections.txt", "edges.txt", "routes.txt"})
+@Deprecated
 public class SampleNetwork implements MATSimAppCommand {
 	private static final Logger log = LogManager.getLogger(SampleNetwork.class);
 
