@@ -22,6 +22,7 @@ package org.matsim.analysis;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.lang.mutable.MutableDouble;
 import org.apache.log4j.Logger;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.matsim.api.core.v01.BasicLocation;
@@ -38,6 +39,8 @@ import org.matsim.core.api.internal.HasPersonId;
 import org.matsim.core.events.EventsUtils;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.router.TripStructureUtils;
+import org.matsim.core.utils.geometry.CoordinateTransformation;
+import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.run.drt.BerlinShpUtils;
 import org.matsim.utils.gis.shp2matsim.ShpGeometryUtils;
@@ -52,28 +55,30 @@ public class RunZonalCarKMAnalysis {
 
 	private static final String BERLIN_SHP = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-shp/berlin.shp";
 	private static final String HUNDEKOPF_SHP = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/projects/pave/shp-files/berlin-planungsraum-hundekopf/berlin-hundekopf-based-on-planungsraum.shp";
-	private static final String BERLIN_LINKS = "scenarios/berlinLinks.txt";
-	private static final String HUNDEKOPF_LINKS = "scenarios/hundekopfLinks.txt";
+	private static final String BERLIN_LINKS = "scenarios/berlinLinks-v6.txt";
+	private static final String HUNDEKOPF_LINKS = "scenarios/hundekopfLinks-v6.txt";
 
-	private static final String EVENTS_FILE = "D:/git/playground-schlenther/scenarios/output/berlin-v5.5-0.1pct/replaceCarByDRT-hundekopfTest-testPop/hundekopfTest.output_events.xml.gz";
 
-	private static String NETWORK = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz";
+//			"https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/output-berlinv5.5/berlin-v5.5.3-10pct.output_events.xml.gz";
+	private static final String EVENTS_FILE = "//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/matsim-berlin/calibration-3rd/mode-choice-new-prices-v12_10pct/runs/004/004.output_events.xml.gz";
 
-	private static final String OUTPUT = "D:/git/playground-schlenther/scenarios/output/berlin-v5.5-0.1pct/replaceCarByDRT-hundekopfTest-testPop/hundekopfTest."
-			+ "carKMAnalysis.tsv";
+	private static String NETWORK = "//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/matsim-berlin/calibration-3rd/mode-choice-new-prices-v12_10pct/runs/004/004.output_network.xml.gz";
+	private static final CoordinateTransformation NETWORK_2_SHAPE_TRANSFORMATION = TransformationFactory.getCoordinateTransformation("EPSG:25832", TransformationFactory.DHDN_GK4);
+
+//	"D:/svn/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/output-berlinv5.5/berlin-v5.5.3-"
+	private static final String OUTPUT_PATH = "//sshfs.r/schlenther@cluster.math.tu-berlin.de/net/ils/matsim-berlin/calibration-3rd/mode-choice-new-prices-v12_10pct/runs/004/004.";
 
 	public static void main(String[] args) {
-
-		List<PreparedGeometry> berlinGeoms = ShpGeometryUtils.loadPreparedGeometries(IOUtils.resolveFileOrResource(BERLIN_SHP));
-		List<PreparedGeometry> hundekopfGeoms = ShpGeometryUtils.loadPreparedGeometries(IOUtils.resolveFileOrResource(HUNDEKOPF_SHP));
 
 		Network network = NetworkUtils.readNetwork(NETWORK);
 
 		{
-//			//only needed once
-//			log.info("start assigning links to zones");
-//			writeLinksInAreaToTxt(network, berlinGeoms, BERLIN_LINKS);
-//			writeLinksInAreaToTxt(network, hundekopfGeoms, HUNDEKOPF_LINKS);
+//			//only needed once in order to create local txt files and save
+			List<PreparedGeometry> berlinGeoms = ShpGeometryUtils.loadPreparedGeometries(IOUtils.resolveFileOrResource(BERLIN_SHP));
+			List<PreparedGeometry> hundekopfGeoms = ShpGeometryUtils.loadPreparedGeometries(IOUtils.resolveFileOrResource(HUNDEKOPF_SHP));
+			log.info("start assigning links to zones");
+			writeLinksInAreaToTxt(network, berlinGeoms, BERLIN_LINKS, NETWORK_2_SHAPE_TRANSFORMATION);
+			writeLinksInAreaToTxt(network, hundekopfGeoms, HUNDEKOPF_LINKS, NETWORK_2_SHAPE_TRANSFORMATION);
 		}
 
 		Set<Id<Link>> berlinLinks = readLinksInAreaTxt(BERLIN_LINKS);
@@ -83,7 +88,10 @@ public class RunZonalCarKMAnalysis {
 		areas[0] = berlinLinks;
 		areas[1] = hundekopfLinks;
 
-		ActivityInZoneHandler activitiesInZoneHandler = new ActivityInZoneHandler(HUNDEKOPF_SHP, Set.of(0, -100, -250, -500, -1000, -2000), network);
+		ActivityInZoneHandler activitiesInZoneHandler = new ActivityInZoneHandler(HUNDEKOPF_SHP,
+				Set.of(0, -100, -250, -500, -1000, -2000),
+				network,
+				NETWORK_2_SHAPE_TRANSFORMATION);
 
 		PersonalZonalCarKMHandler personalZonalCarKMHandler = new PersonalZonalCarKMHandler(network,
 				(Set<Id<Link>>[]) areas);
@@ -95,9 +103,29 @@ public class RunZonalCarKMAnalysis {
 		EventsUtils.readEvents(manager, EVENTS_FILE);
 		manager.finishProcessing();
 
+		writeOutput(activitiesInZoneHandler, personalZonalCarKMHandler);
+
+	}
+
+	private static void writeOutput(ActivityInZoneHandler activitiesInZoneHandler, PersonalZonalCarKMHandler personalZonalCarKMHandler) {
 		try {
-			CSVPrinter printer = new CSVPrinter(IOUtils.getBufferedWriter(OUTPUT), CSVFormat.DEFAULT
-					.withHeader("buffer\tpersonWithActsCount\tcarKMofThosePersonsInBerlin\tcarKMofThosePersonsInHundekopf")
+			MutableDouble totalBerlinKM = new MutableDouble(0);
+			MutableDouble totalHundekopfKM = new MutableDouble(0);
+
+			personalZonalCarKMHandler.carDrivers2KMInZone.values().stream()
+					.forEach(doubles -> {
+						totalBerlinKM.add(doubles[0]);
+						totalHundekopfKM.add(doubles[1]);
+					});
+
+			BufferedWriter writer =  new BufferedWriter(new FileWriter(OUTPUT_PATH + "zonalCarKM_total_persons.tsv"));
+			writer.write("berlinCarKm;" + (totalBerlinKM));
+			writer.newLine();
+			writer.write("hundeKopfCarKm;" + (totalHundekopfKM));
+			writer.close();
+
+			CSVPrinter printer = new CSVPrinter(IOUtils.getBufferedWriter(OUTPUT_PATH + "zonalCarKM_ofActivePersons_persons.tsv"), CSVFormat.DEFAULT
+					.withHeader("buffer\tpersonsWithAtLeast1ActinZone\tcarKMofThosePersonsInBerlin\tpercentageOFTotalBerlinCarKM\tcarKMofThosePersonsInHundekopf\tpercentageOfTotalHundekopfCarKM")
 					.withDelimiter('\t'));
 			activitiesInZoneHandler.personsWithActivityInZoneWithBuffer
 					.forEach( (buffer, persons) -> {
@@ -111,7 +139,7 @@ public class RunZonalCarKMAnalysis {
 							//else the person did not use car
 						}
 						try {
-							printer.printRecord(buffer, persons.size(), berlinKM, hundekopfKM);
+							printer.printRecord(buffer, persons.size(), berlinKM, (berlinKM / totalBerlinKM.doubleValue()), hundekopfKM, (hundekopfKM / totalHundekopfKM.doubleValue()));
 						} catch (IOException e) {
 							throw new RuntimeException(e);
 						}
@@ -120,21 +148,21 @@ public class RunZonalCarKMAnalysis {
 			printer.flush();
 			printer.close();
 
+
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-
 	}
 
-	static void writeLinksInAreaToTxt(Network network, List<PreparedGeometry> geoms, String txtFile){
+	static void writeLinksInAreaToTxt(Network network, List<PreparedGeometry> geoms, String txtFile, CoordinateTransformation network2ShapeTransformation){
 		log.info("will try to write to file " + txtFile);
 		try {
 			BufferedWriter writer = new BufferedWriter(new FileWriter(txtFile));
 			writer.write("linkIds");
 			network.getLinks().values().stream()
 					.forEach(link -> {
-						if(ShpGeometryUtils.isCoordInPreparedGeometries(link.getToNode().getCoord(), geoms)
-								|| ShpGeometryUtils.isCoordInPreparedGeometries(link.getFromNode().getCoord(), geoms) ){
+						if(ShpGeometryUtils.isCoordInPreparedGeometries(network2ShapeTransformation.transform(link.getToNode().getCoord()), geoms)
+								|| ShpGeometryUtils.isCoordInPreparedGeometries(network2ShapeTransformation.transform(link.getFromNode().getCoord()), geoms) ){
 							try {
 								writer.newLine();
 								writer.write(link.getId().toString());
@@ -179,12 +207,13 @@ class ActivityInZoneHandler implements ActivityStartEventHandler, ActivityEndEve
 	final Map<Integer, Set<Id<Person>>> personsWithActivityInZoneWithBuffer = new HashMap<>();
 	private final BerlinShpUtils berlinShpUtils;
 	private final Network network;
+	private final CoordinateTransformation network2ShapeTransformation;
 
-
-	ActivityInZoneHandler(String pathToZoneFile, Set<Integer> buffers, Network network) {
+	ActivityInZoneHandler(String pathToZoneFile, Set<Integer> buffers, Network network, CoordinateTransformation network2ShapeTransformation) {
 		this.network = network;
 		buffers.forEach(buffer -> personsWithActivityInZoneWithBuffer.put(buffer, new HashSet<>()));
 		this.berlinShpUtils = new BerlinShpUtils(pathToZoneFile);
+		this.network2ShapeTransformation = network2ShapeTransformation;
 	}
 
 	@Override
@@ -207,17 +236,19 @@ class ActivityInZoneHandler implements ActivityStartEventHandler, ActivityEndEve
 		Id<Link> linkId = ((HasLinkId) event).getLinkId();
 
 //		if (!(personId.toString().contains("drt"))) {
+		if(!personId.toString().contains("freight")) {
 			for (Integer buffer : personsWithActivityInZoneWithBuffer.keySet()) {
 				Set<Id<Person>> personsInBufferZone = personsWithActivityInZoneWithBuffer.get(buffer);
 				if (!personsInBufferZone.contains(personId)) {
 					coord = coord != null ? coord : network.getLinks().get(linkId).getToNode().getCoord();
+					Coord transformed = network2ShapeTransformation.transform(coord);
 
-					if (berlinShpUtils.isCoordInDrtServiceAreaWithBuffer(coord, buffer)) {
+					if (berlinShpUtils.isCoordInDrtServiceAreaWithBuffer(transformed, buffer)) {
 						personsInBufferZone.add(personId);
 					}
 				}
 			}
-//		}
+		}
 	}
 
 	@Override
@@ -249,7 +280,9 @@ class PersonalZonalCarKMHandler implements PersonDepartureEventHandler, LinkEnte
 		if(person != null){
 			for (int i = 0; i < subAreas.length; i++) {
 				Set<Id<Link>> subArea = subAreas[i];
-				if(subArea.contains(event.getLinkId())) carDrivers2KMInZone.get(person)[i] += network.getLinks().get(event.getLinkId()).getLength() / 1000;
+				if(subArea.contains(event.getLinkId())){
+					carDrivers2KMInZone.get(person)[i] += network.getLinks().get(event.getLinkId()).getLength() / 1000;
+				}
 			}
 		}
 	}
