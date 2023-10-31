@@ -145,12 +145,12 @@
 		<dependency>
 			<groupId>de.topobyte</groupId>
 			<artifactId>osm4j-pbf</artifactId>
-			<version>1.2.0</version>
+			<version>1.3.0</version>
 		</dependency>
 		<dependency>
 			<groupId>de.topobyte</groupId>
 			<artifactId>osm4j-geometry</artifactId>
-			<version>1.2.0</version>
+			<version>1.3.0</version>
 		</dependency>
 
 		<dependency>
@@ -294,7 +294,7 @@
 				<configuration>
 					<forkCount>1</forkCount>
 					<!-- avoid out of memory errors: -->
-					<argLine>@{argLine} -Xmx9500m -Djava.awt.headless=true -Dmatsim.preferLocalDtds=true</argLine>
+					<argLine>@{argLine} -Xmx6500m -Djava.awt.headless=true -Dmatsim.preferLocalDtds=true</argLine>
 					<!--necessary in tu berlin gitlab. BUT not good in other places, so solve by command line switch only where needed.  kai, nov'18-->
 					<!--<useSystemClassLoader>false</useSystemClassLoader>-->
 				</configuration>
@@ -400,7 +400,7 @@
 					<failsOnError>true</failsOnError>
 					<failOnViolation>true</failOnViolation>
 					<linkXRef>false</linkXRef>
-					<excludes>**/legacy/**,**/prepare/network/**</excludes>
+					<excludes>**/legacy/**,**/prepare/network/**,**/prepare/counts/CreateCountsFromVMZOld.java</excludes>
 				</configuration>
 				<executions>
 					<execution>

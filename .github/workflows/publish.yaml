@@ -17,4 +17,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     env:
-      MAVEN_OPTS: -Xmx10G
+      MAVEN_OPTS: -Xmx512m
