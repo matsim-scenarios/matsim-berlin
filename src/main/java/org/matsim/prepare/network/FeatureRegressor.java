@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 /**
  * Predictor interface for regression.
  */
+@Deprecated
 public interface FeatureRegressor {
 
 

@@ -6,10 +6,10 @@
 		<artifactId>matsim-all</artifactId>
 
 		<!-- PR-labelled release -->
-		<version>16.0-PR2738</version>
+<!--		<version>16.0-PR2738</version>-->
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
-<!--		<version>16.0-SNAPSHOT</version>-->
+		<version>16.0-SNAPSHOT</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -145,12 +145,12 @@
 		<dependency>
 			<groupId>de.topobyte</groupId>
 			<artifactId>osm4j-pbf</artifactId>
-			<version>1.2.0</version>
+			<version>1.3.0</version>
 		</dependency>
 		<dependency>
 			<groupId>de.topobyte</groupId>
 			<artifactId>osm4j-geometry</artifactId>
-			<version>1.2.0</version>
+			<version>1.3.0</version>
 		</dependency>
 
 		<dependency>
