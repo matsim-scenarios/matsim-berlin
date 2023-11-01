@@ -108,6 +108,7 @@ $p/berlin-v6.0-network-with-pt.xml.gz: $p/berlin-v6.0-network.xml.gz
 	cp $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-transit-vehicles.xml.gz $p/berlin-v6.0-transitVehicles.xml.gz
 
 
+# TODO: Not part of 6.0 release, but planned for future versions
 $p/berlin-v6.1-network.xml.gz: input/sumo.net.xml
 	$(sc) prepare network-from-sumo $< --target-crs $(CRS) --output $@
 
@@ -196,6 +197,9 @@ $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
 	 --shp $p/area/area.shp\
 	 --cut-on-boundary\
 	 --output $@
+
+# TODO: commercial traffic needs to be updated, and network mode correctly mapped
+# TODO: both types can be in one file in future
 
 $p/berlin-commercialPersonTraffic-$V-25pct.plans.xml.gz:
 	$(sc) prepare generate-small-scale-commercial-traffic\
