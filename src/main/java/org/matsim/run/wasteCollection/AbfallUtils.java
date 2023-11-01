@@ -1,18 +1,13 @@
 package org.matsim.run.wasteCollection;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import com.graphhopper.jsprit.analysis.toolbox.Plotter;
+import com.graphhopper.jsprit.core.algorithm.VehicleRoutingAlgorithm;
+import com.graphhopper.jsprit.core.algorithm.box.SchrimpfFactory;
+import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
+import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolution;
+import com.graphhopper.jsprit.core.util.Solutions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.locationtech.jts.geom.Geometry;
@@ -23,16 +18,7 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.freight.FreightConfigGroup;
-import org.matsim.contrib.freight.carrier.Carrier;
-import org.matsim.contrib.freight.carrier.CarrierPlan;
-import org.matsim.contrib.freight.carrier.CarrierPlanXmlWriterV2;
-import org.matsim.contrib.freight.carrier.CarrierShipment;
-import org.matsim.contrib.freight.carrier.CarrierUtils;
-import org.matsim.contrib.freight.carrier.CarrierVehicleTypes;
-import org.matsim.contrib.freight.carrier.Carriers;
-import org.matsim.contrib.freight.carrier.ScheduledTour;
-import org.matsim.contrib.freight.carrier.TimeWindow;
-import org.matsim.contrib.freight.carrier.Tour;
+import org.matsim.contrib.freight.carrier.*;
 import org.matsim.contrib.freight.carrier.Tour.Delivery;
 import org.matsim.contrib.freight.carrier.Tour.Leg;
 import org.matsim.contrib.freight.carrier.Tour.Pickup;
@@ -56,14 +42,13 @@ import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.vehicles.VehicleType;
 import org.opengis.feature.simple.SimpleFeature;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-import com.graphhopper.jsprit.analysis.toolbox.Plotter;
-import com.graphhopper.jsprit.core.algorithm.VehicleRoutingAlgorithm;
-import com.graphhopper.jsprit.core.algorithm.box.SchrimpfFactory;
-import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
-import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolution;
-import com.graphhopper.jsprit.core.util.Solutions;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * @author Ricardo Ewert
@@ -90,9 +75,9 @@ class AbfallUtils {
 	static String linkMpsReinickendorf = "59055";
 	static String linkUmladestationGradestrasse = "71781";
 	static String linkGruenauerStr = "97944";
-	static List<String> districtsWithShipments = new ArrayList<>();
-	static List<String> districtsWithNoShipments = new ArrayList<>();
-	static HashMap<String, String> dataEnt = new HashMap<>();
+	static List<String> districtsWithShipments = new ArrayList<String>();
+	static List<String> districtsWithNoShipments = new ArrayList<String>();
+	static HashMap<String, String> dataEnt = new HashMap<String, String>();
 	static Multimap<String, String> linksInDistricts;
 	static boolean streetAlreadyInGarbageLinks = false;
 
@@ -406,7 +391,7 @@ class AbfallUtils {
 				garbageToCollect = (int) ((double) districtInformation.getAttribute(day) * 1000);
 				dumpId = garbageDumps.get(districtInformation.getAttribute(dataEnt.get(day)));
 				usedCarrier = districtInformation.getAttribute("Depot").toString();
-				if (oneCarrierForEachDistrict) {
+				if (oneCarrierForEachDistrict == true) {
 					district = districtInformation.getAttribute("Ortsteil").toString();
 					Carrier newCarrier = createSingleCarrier(usedCarrier, carrierMap, district);
 					carrierMap.put(district, newCarrier);
@@ -448,7 +433,7 @@ class AbfallUtils {
 			distanceWithShipments = 0;
 			garbageLinks.clear();
 		}
-		if (oneCarrierForEachDistrict) {
+		if (oneCarrierForEachDistrict == true) {
 			carrierMap.remove("Nordring");
 			carrierMap.remove("MalmoeerStr");
 			carrierMap.remove("Forckenbeck");
@@ -643,6 +628,7 @@ class AbfallUtils {
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
+				install(new CarrierModule());
 //                bind(CarrierPlanStrategyManagerFactory.class).toInstance( null );
 //                bind(CarrierScoringFunctionFactory.class).toInstance(null );
 			}
@@ -650,11 +636,10 @@ class AbfallUtils {
 
 		return controler;
 	}
-
-//	/**
-//	 * @param scenario
-//	 * @return
-//	 */
+	/**
+	 * @param scenario
+	 * @return
+	 */
 //	private static CarrierScoringFunctionFactoryImpl createMyScoringFunction2(final Scenario scenario) {
 //
 //		return new CarrierScoringFunctionFactoryImpl(scenario.getNetwork());
@@ -859,7 +844,7 @@ class AbfallUtils {
 					}
 				}
 				allCollectedGarbage = sizeForckenbeck + sizeMalmooer + sizeNordring + sizeGradestrasse + sizeChessboard;
-				powerConsumptionTour = (distanceTour / 1000) * energyConsumptionPerDistance
+				powerConsumptionTour = (double) (distanceTour / 1000) * energyConsumptionPerDistance
 						+ (double) (sizeTour / 1000) * energyConsumptionPerWeight;
 
 				if (scheduledTour.getVehicle().getId().toString().contains("TruckForckenbeck")) {
@@ -1007,7 +992,7 @@ class AbfallUtils {
 			}
 			writer.write("\n" + "Fahrzeug: \t\t\t\t\t\t\t\t\t\t\t\t\t" + vehicleTypeId + "\n");
 			writer.write(
-					"Kapazität je Fahrzeug: \t\t\t\t\t\t\t\t\t\t" + (capacityTruck / 1000) + " Tonnen\n\n");
+					"Kapazität je Fahrzeug: \t\t\t\t\t\t\t\t\t\t" + ((double) capacityTruck / 1000) + " Tonnen\n\n");
 			writer.write("Volumen der Mülltonne: \t\t\t\t\t\t\t\t\t\t" + volumeDustbin + " Liter\n");
 			writer.write(
 					"ServiceTime pro Mülltonne:\t\t\t\t\t\t\t\t\t" + secondsServiceTimePerDustbin + " Sekunden\n\n");
@@ -1031,7 +1016,7 @@ class AbfallUtils {
 					writer.write("\t\t\tFahrstrecke Durchschnitt:\t\t" + Math.round(averageTourDistanceForckenbeck)
 							+ " km\n");
 
-					if (electricCar) {
+					if (electricCar == true) {
 						writer.write("\t\t\tEnergieverbrauch Summe:\t\t\t" + powerConsumptionForckenbeck + " kwh\n");
 						writer.write("\t\t\tEnergieverbrauch Max:\t\t\t" + maxPowerConsumptionForckenbeck + " kwh\n");
 						writer.write("\t\t\tEnergieverbrauch Min:\t\t\t" + minPowerConsumptionForckenbeck + " kwh\n");
@@ -1180,6 +1165,10 @@ class AbfallUtils {
 	}
 
 	/**
+	 * @param scenario
+	 * @param carriers
+	 * @param vehicleTypes
+	 * @throws IOException
 	 */
 
 	@SuppressWarnings("null")
@@ -1242,7 +1231,8 @@ class AbfallUtils {
 						numCollections++;
 
 					}
-					if (element instanceof Leg legElement) {
+					if (element instanceof Tour.Leg) {
+						Tour.Leg legElement = (Tour.Leg) element;
 						if (legElement.getRoute().getDistance() != 0)
 							distanceTour = distanceTour
 									+ RouteUtils.calcDistance((NetworkRoute) legElement.getRoute(), 0, 0, network);
@@ -1284,8 +1274,8 @@ class AbfallUtils {
 								+ singleVehicleType.getCostInformation().getFixedCosts() + " €");
 				if (singleVehicleType.getEngineInformation().getAttributes().getAttribute("fuelType")
 						.equals("electricity")) {
-					double electricityConsumptionPer100km;
-					double electricityCapacityinkWh;
+					double electricityConsumptionPer100km = 0;
+					double electricityCapacityinkWh = 0;
 					electricityConsumptionPer100km = (double) singleVehicleType.getEngineInformation().getAttributes()
 							.getAttribute("engeryConsumptionPerKm");
 					electricityCapacityinkWh = (double) singleVehicleType.getEngineInformation().getAttributes()
@@ -1306,7 +1296,7 @@ class AbfallUtils {
 				int consumption = 0;
 				double distanceRange = 0;
 				double electricityCapacityinkWh = 0;
-				double electricityConsumptionPerkm;
+				double electricityConsumptionPerkm = 0;
 
 				for (VehicleType singleVehicleType : vehicleTypes.getVehicleTypes().values()) {
 
@@ -1341,8 +1331,8 @@ class AbfallUtils {
 		writer.close();
 		log.info("Output geschrieben");
 		log.info("### Done.");
-		if (!toursWithOverconsumption.isEmpty())
-			throw new Exception("The tour(s) " + toursWithOverconsumption
+		if (toursWithOverconsumption.isEmpty() == false)
+			throw new Exception("The tour(s) " + toursWithOverconsumption.toString()
 					+ " have a higher consumption then their capacity");
 
 	}

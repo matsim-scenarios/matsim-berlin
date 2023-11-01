@@ -146,7 +146,7 @@ public class Run_Abfall {
 			vehicleTypesFileLocation =  inputVehicleTypes;
 			carriersFileLocation = inputCarriersWithMediumBatteryVehicle;
 			break;
-		case carriersFromInputFile:			
+		case carriersFromInputFile:
 			break;
 		default:
 			new RuntimeException("no carriers selected.");
