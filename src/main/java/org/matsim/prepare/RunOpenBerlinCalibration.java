@@ -113,7 +113,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	private Integer planIndex;
 
 	public RunOpenBerlinCalibration() {
-		super("input/v6.0/berlin-v6.0-base-calib.config.xml");
+		super("input/v6.0/berlin-v6.0.config.xml");
 	}
 
 	/**
@@ -153,10 +153,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		Activities.addScoringParams(config, mode != CalibrationMode.locationChoice);
 
 		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
-
-		sw.defaultParams().mapCenter = "13.39,52.51";
-		sw.defaultParams().mapZoomLevel = 9.1;
-		sw.defaultParams().shp = "./area/area.shp";
 
 		if (sample.isSet()) {
 			double sampleSize = sample.getSample();

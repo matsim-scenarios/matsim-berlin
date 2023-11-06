@@ -19,17 +19,17 @@ import picocli.CommandLine;
 import java.util.List;
 
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = RunOpenBerlinScenario.VERSION, mixinStandardHelpOptions = true)
-@MATSimApplication.Prepare()
 public class RunOpenBerlinScenario extends MATSimApplication {
+
+	private static final Logger log = LogManager.getLogger(RunOpenBerlinCalibration.class);
 
 	public static final String VERSION = "6.0";
 	public static final String CRS = "EPSG:25832";
-	private static final Logger log = LogManager.getLogger(RunOpenBerlinCalibration.class);
 	@CommandLine.Mixin
 	private final SampleOptions sample = new SampleOptions(25, 10, 1);
 
 	public RunOpenBerlinScenario() {
-		super(String.format("input/v%s/berlin-v%s-base-calib.config.xml", VERSION, VERSION));
+		super(String.format("input/v%s/berlin-v%s.config.xml", VERSION, VERSION));
 	}
 
 	public static void main(String[] args) {
@@ -40,10 +40,6 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 	protected Config prepareConfig(Config config) {
 
 		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
-
-		sw.defaultParams().mapCenter = "13.39,52.51";
-		sw.defaultParams().mapZoomLevel = 9.1;
-		sw.defaultParams().shp = "./area/area.shp";
 
 		if (sample.isSet()) {
 			double sampleSize = sample.getSample();
@@ -56,6 +52,7 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 			sw.defaultParams().sampleSize = sampleSize;
 
 			config.controler().setRunId(sample.adjustName(config.controler().getRunId()));
+			config.controler().setOutputDirectory(sample.adjustName(config.controler().getOutputDirectory()));
 			config.plans().setInputFile(sample.adjustName(config.plans().getInputFile()));
 		}
 

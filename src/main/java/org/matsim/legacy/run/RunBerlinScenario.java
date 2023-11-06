@@ -25,7 +25,6 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.matsim.legacy.analysis.RunPersonTripAnalysis;
 import org.matsim.analysis.linkpaxvolumes.LinkPaxVolumesAnalysisModule;
 import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
 import org.matsim.analysis.pt.stop2stop.PtStop2StopAnalysisModule;
@@ -294,12 +293,8 @@ public final class RunBerlinScenario {
 				modesString
 		};
 
-		try {
-			RunPersonTripAnalysis.main(args);
-		} catch (IOException e) {
-			log.error(e.getStackTrace());
-			throw new RuntimeException(e.getMessage());
-		}
+		// Removed so that the dependency could be dropped
+		// RunPersonTripAnalysis.main(args);
 	}
 
 	private static void downsample( final Map<Id<Person>, ? extends Person> map, final double sample ) {
