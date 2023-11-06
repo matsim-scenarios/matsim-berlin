@@ -18,7 +18,8 @@ public class RunOpenBerlinScenarioTest {
 		int code = MATSimApplication.execute(RunOpenBerlinScenario.class,
 			"--1pct",
 			"--output", utils.getOutputDirectory(),
-			"--iterations", "2"
+			"--iterations", "2",
+			"--config:simwrapper.defaultDashboards", "disabled"
 		);
 
 		assertThat(code).isEqualTo(0);
