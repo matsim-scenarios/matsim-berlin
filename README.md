@@ -1,4 +1,4 @@
-![Build Status](https://github.com/matsim-scenarios/matsim-berlin/workflows/build/badge.svg?branch=main)
+[![Build Status](https://github.com/matsim-scenarios/matsim-berlin/actions/workflows/build.yaml/badge.svg?branch=main)](https://github.com/matsim-scenarios/matsim-berlin/actions/workflows/build.yaml)
 ![license](https://img.shields.io/github/license/matsim-scenarios/matsim-berlin.svg)
 ![JDK](https://img.shields.io/badge/JDK-17+-green.svg)
 
