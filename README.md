@@ -162,3 +162,8 @@ controler.run
 For more information about the scenario generation, see VSP working paper # 19-01 under https://www.vsp.tu-berlin.de/publications/vspwp .
 
 For more information about MATSim, see here: https://www.matsim.org/
+
+## Internal documentation
+
+Internal documentation can be found here:
+https://docs.google.com/document/d/133CuXaMuWL0NcstyFHodk4y7J5yFLy9nrLtbBVpNWzM/edit?usp=drive_link
