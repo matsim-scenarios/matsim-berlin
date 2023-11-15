@@ -82,16 +82,13 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 	@CommandLine.Mixin
 	private ShpOptions shp;
 
-
-	private Map<String, STRtree> trees;
+	private FacilityIndex facilities;
 
 	private Long2ObjectMap<SimpleFeature> zones;
 
 	private CommuterAssignment commuter;
 
 	private Network network;
-
-	private ActivityFacilities facilities = FacilitiesUtils.createActivityFacilities();
 
 	private ThreadLocal<Context> ctxs;
 
@@ -130,28 +127,6 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 		log.info("Read {} zones", zones.size());
 
-
-		new MatsimFacilitiesReader(RunOpenBerlinScenario.CRS, RunOpenBerlinScenario.CRS, facilities)
-			.readFile(facilityPath.toString());
-
-		Set<String> activities = facilities.getFacilities().values().stream()
-			.flatMap(a -> a.getActivityOptions().keySet().stream())
-			.collect(Collectors.toSet());
-
-		log.info("Found activity types: {}", activities);
-
-		trees = new HashMap<>();
-		for (String act : activities) {
-
-			NavigableMap<Id<ActivityFacility>, ActivityFacility> afs = facilities.getFacilitiesForActivityType(act);
-			for (ActivityFacility af : afs.values()) {
-				STRtree index = trees.computeIfAbsent(act, k -> new STRtree());
-				index.insert(MGC.coord2Point(af.getCoord()).getEnvelopeInternal(), af);
-			}
-		}
-
-		// Build all trees
-		trees.values().forEach(STRtree::build);
 
 		log.info("Using input file: {}", input);
 
@@ -241,11 +216,11 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 						location = sampleCommute(ctx, dist, lastCoord, (long) person.getAttributes().getAttribute(Attributes.ARS));
 					}
 
-					if (location == null && trees.containsKey(type)) {
+					if (location == null && facilities.index.containsKey(type)) {
 						// Needed for lambda
 						final Coord refCoord = lastCoord;
 
-						List<ActivityFacility> query = trees.get(type).query(MGC.coord2Point(lastCoord).buffer(dist * 1.2).getEnvelopeInternal());
+						List<ActivityFacility> query = facilities.index.get(type).query(MGC.coord2Point(lastCoord).buffer(dist * 1.2).getEnvelopeInternal());
 
 						// Distance should be within the bounds
 						List<ActivityFacility> res = query.stream().filter(f -> checkDistanceBound(dist, refCoord, f.getCoord(), 1)).toList();
@@ -271,7 +246,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 						lastCoord = c;
 
 						// An activity with type could not be put into correct facility.
-						if (trees.containsKey(type)) {
+						if (facilities.index.containsKey(type)) {
 							warning.incrementAndGet();
 						}
 
@@ -287,7 +262,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 				if (act.getCoord() != null)
 					lastCoord = act.getCoord();
 				else if (act.getFacilityId() != null)
-					lastCoord = facilities.getFacilities().get(act.getFacilityId()).getCoord();
+					lastCoord = facilities.all.getFacilities().get(act.getFacilityId()).getCoord();
 
 			}
 		}
@@ -298,7 +273,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 	 */
 	private ActivityFacility sampleCommute(Context ctx, double dist, Coord refCoord, long ars) {
 
-		STRtree index = trees.get("work");
+		STRtree index = facilities.index.get("work");
 
 		ActivityFacility workPlace = null;
 
