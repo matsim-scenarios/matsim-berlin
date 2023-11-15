@@ -122,11 +122,12 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		network = NetworkUtils.createNetwork();
 		filter.filter(network, Set.of(TransportMode.car));
 
+		facilities = new FacilityIndex(facilityPath.toString());
+
 		zones = new Long2ObjectOpenHashMap<>(shp.readFeatures().stream()
 			.collect(Collectors.toMap(ft -> Long.parseLong((String) ft.getAttribute("ARS")), ft -> ft)));
 
 		log.info("Read {} zones", zones.size());
-
 
 		log.info("Using input file: {}", input);
 
