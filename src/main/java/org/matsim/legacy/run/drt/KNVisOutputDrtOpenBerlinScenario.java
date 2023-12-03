@@ -31,7 +31,7 @@ import org.matsim.contrib.drt.run.DrtControlerCreator;
 import org.matsim.contrib.otfvis.OTFVisLiveModule;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
+import org.matsim.core.config.groups.ScoringConfigGroup;
 import org.matsim.core.config.groups.QSimConfigGroup;
 import org.matsim.core.config.groups.QSimConfigGroup.SnapshotStyle;
 import org.matsim.core.controler.Controler;
@@ -67,18 +67,18 @@ public class KNVisOutputDrtOpenBerlinScenario {
 		Config config = RunDrtOpenBerlinScenario.prepareConfig( RunDrtOpenBerlinScenario.AdditionalInformation.acceptUnknownParamsBerlinConfig,
 				new String[] {base + runID + "/" + runID + ".output_config_reduced.xml"} ) ;
 
-		config.network().setInputFile( config.controler().getRunId() + ".output_network.xml.gz" );
+		config.network().setInputFile( config.controller().getRunId() + ".output_network.xml.gz" );
 
-		config.plans().setInputFile( config.controler().getRunId() + ".output_plans.xml.gz" );
+		config.plans().setInputFile( config.controller().getRunId() + ".output_plans.xml.gz" );
 //		config.plans().setInputFile( "/Users/kainagel/git/berlin-matsim/popSel.xml.gz" );
 
-		config.transit().setTransitScheduleFile( config.controler().getRunId() + ".output_transitSchedule.xml.gz" );
+		config.transit().setTransitScheduleFile( config.controller().getRunId() + ".output_transitSchedule.xml.gz" );
 
 		config.global().setNumberOfThreads(6);
 
-		config.controler()
+		config.controller()
 				.setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
-		config.controler().setLastIteration(0);
+		config.controller().setLastIteration(0);
 
 		final OTFVisConfigGroup otfVisConfigGroup = ConfigUtils.addOrGetModule(config, OTFVisConfigGroup.class);
 		otfVisConfigGroup.setDrawTransitFacilityIds(false);
@@ -91,7 +91,7 @@ public class KNVisOutputDrtOpenBerlinScenario {
 		//				drtCfg.addParameterSet(new DrtSpeedUpParams());
 		//			}
 		//		}
-		for (final PlanCalcScoreConfigGroup.ActivityParams params : config.planCalcScore().getActivityParams()) {
+		for (final ScoringConfigGroup.ActivityParams params : config.scoring().getActivityParams()) {
 			if (params.getActivityType().endsWith("interaction")) {
 				params.setScoringThisActivityAtAll(false);
 			}

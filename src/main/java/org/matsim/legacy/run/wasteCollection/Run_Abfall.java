@@ -11,17 +11,12 @@ import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.contrib.freight.carrier.Carrier;
-import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
-import org.matsim.contrib.freight.carrier.CarrierPlanXmlWriterV2;
-import org.matsim.contrib.freight.carrier.CarrierVehicleTypes;
-import org.matsim.contrib.freight.carrier.Carriers;
-import org.matsim.contrib.freight.controler.FreightUtils;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.gis.ShapeFileReader;
+import org.matsim.freight.carriers.*;
 import org.opengis.feature.simple.SimpleFeature;
 
 /**
@@ -116,12 +111,12 @@ public class Run_Abfall {
 
 		switch (netzwerkWahl) {
 		case originalChessboard:
-			config.controler().setOutputDirectory("output/original_Chessboard/04_Distances");
+			config.controller().setOutputDirectory("output/original_Chessboard/04_Distances");
 			config.network().setInputFile(original_Chessboard);
 			break;
 		case berlinNetwork:
 			// Berlin scenario network
-			config.controler().setOutputDirectory(outputLocation);
+			config.controller().setOutputDirectory(outputLocation);
 			config.network().setInputFile(berlin);
 			if (networkChangeEventsFileLocation != "") {
 				log.info("Setting networkChangeEventsInput file: " + networkChangeEventsFileLocation);
@@ -152,10 +147,10 @@ public class Run_Abfall {
 		}
 		config = AbfallUtils.prepareConfig(config, 0, vehicleTypesFileLocation, carriersFileLocation);
 		Scenario scenario = ScenarioUtils.loadScenario(config);
-		FreightUtils.loadCarriersAccordingToFreightConfig(scenario);
+		CarriersUtils.loadCarriersAccordingToFreightConfig(scenario);
 
 		// creates carrier
-		Carriers carriers = FreightUtils.addOrGetCarriers(scenario);
+		Carriers carriers = CarriersUtils.addOrGetCarriers(scenario);
 		HashMap<String, Carrier> carrierMap = AbfallUtils.createCarrier(carriers);
 
 		Map<Id<Link>, ? extends Link> allLinks = scenario.getNetwork().getLinks();
@@ -168,18 +163,18 @@ public class Run_Abfall {
 		switch (scenarioWahl) {
 		case chessboardTotalGarbageToCollect:
 			int kgGarbageToCollect = 12 * 1000;
-			CarrierVehicleTypes carrierVehicleTypes = FreightUtils.getCarrierVehicleTypes(scenario);
+			CarrierVehicleTypes carrierVehicleTypes = CarriersUtils.getCarrierVehicleTypes(scenario);
 			AbfallChessboardUtils.createShipmentsForChessboardI(carrierMap, kgGarbageToCollect, allLinks,
 					volumeDustbinInLiters, secondsServiceTimePerDustbin, scenario, carriers);
-			FleetSize fleetSize = FleetSize.INFINITE;
+			CarrierCapabilities.FleetSize fleetSize = CarrierCapabilities.FleetSize.INFINITE;
 			AbfallChessboardUtils.createCarriersForChessboard(carriers, fleetSize, carrierVehicleTypes);
 			break;
 		case chessboardGarbagePerMeterToCollect:
 			double kgGarbagePerMeterToCollect = 0.2;
-			CarrierVehicleTypes carrierVehicleTypes2 = FreightUtils.getCarrierVehicleTypes(scenario);
+			CarrierVehicleTypes carrierVehicleTypes2 = CarriersUtils.getCarrierVehicleTypes(scenario);
 			AbfallChessboardUtils.createShipmentsForChessboardII(carrierMap, kgGarbagePerMeterToCollect, allLinks,
 					volumeDustbinInLiters, secondsServiceTimePerDustbin, scenario, carriers);
-			FleetSize fleetSize2 = FleetSize.INFINITE;
+			CarrierCapabilities.FleetSize fleetSize2 = CarrierCapabilities.FleetSize.INFINITE;
 			AbfallChessboardUtils.createCarriersForChessboard(carriers, fleetSize2, carrierVehicleTypes2);
 			break;
 		case berlinSelectedDistricts:
@@ -236,7 +231,7 @@ public class Run_Abfall {
 		controler.run();
 
 		new CarrierPlanXmlWriterV2(carriers)
-				.write(scenario.getConfig().controler().getOutputDirectory() + "/output_CarrierPlans.xml");
+				.write(scenario.getConfig().controller().getOutputDirectory() + "/output_CarrierPlans.xml");
 
 		AbfallUtils.outputSummary(districtsWithGarbage, scenario, carrierMap, day, volumeDustbinInLiters,
 				secondsServiceTimePerDustbin);

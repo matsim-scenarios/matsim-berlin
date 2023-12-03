@@ -33,7 +33,7 @@ import org.matsim.application.analysis.traffic.traveltime.SampleValidationRoutes
 import org.matsim.application.options.InputOptions;
 import org.matsim.contrib.osm.networkReader.LinkProperties;
 import org.matsim.core.network.NetworkUtils;
-import org.matsim.core.router.FastDijkstraFactory;
+import org.matsim.core.router.DijkstraFactory;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
 import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.trafficmonitoring.FreeSpeedTravelTime;
@@ -189,7 +189,7 @@ public class FreeSpeedOptimizer implements MATSimAppCommand {
 
 		FreeSpeedTravelTime tt = new FreeSpeedTravelTime();
 		OnlyTimeDependentTravelDisutility util = new OnlyTimeDependentTravelDisutility(tt);
-		LeastCostPathCalculator router = new FastDijkstraFactory(false).createPathCalculator(network, util, tt);
+		LeastCostPathCalculator router = new DijkstraFactory(false).createPathCalculator(network, util, tt);
 
 		SummaryStatistics rmse = new SummaryStatistics();
 		SummaryStatistics mse = new SummaryStatistics();

@@ -28,8 +28,9 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.ConfigWriter;
-import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
-import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.TypicalDurationScoreComputation;
+import org.matsim.core.config.groups.ScoringConfigGroup;
+import org.matsim.core.config.groups.ScoringConfigGroup.ActivityParams;
+import org.matsim.core.config.groups.ScoringConfigGroup.TypicalDurationScoreComputation;
 import org.matsim.core.population.io.PopulationWriter;
 import org.matsim.core.scenario.ScenarioUtils;
 
@@ -104,11 +105,11 @@ public class SplitActivityTypesBasedOnDuration {
 		}
 
 		for (ActivityParams actParams : newActivityParams) {
-			scenario.getConfig().planCalcScore().addActivityParams(actParams);
+			scenario.getConfig().scoring().addActivityParams(actParams);
 		}
 
 		log.info("New activity parameters: ");
-		for (ActivityParams actParams : scenario.getConfig().planCalcScore().getActivityParams()) {
+		for (ActivityParams actParams : scenario.getConfig().scoring().getActivityParams()) {
 			initialActivityParams.add(actParams);
 			log.info(" -> " + actParams.getActivityType());
 		}

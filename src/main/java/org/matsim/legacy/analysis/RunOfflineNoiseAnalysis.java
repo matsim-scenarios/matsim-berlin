@@ -73,8 +73,8 @@ public class RunOfflineNoiseAnalysis {
 		config.global().setCoordinateSystem("GK4");
 		config.network().setInputFile(runDirectory + runId + ".output_network.xml.gz");
 		config.plans().setInputFile(runDirectory + runId + ".output_plans.xml.gz");
-		config.controler().setOutputDirectory(runDirectory);
-		config.controler().setRunId(runId);
+		config.controller().setOutputDirectory(runDirectory);
+		config.controller().setRunId(runId);
 
 		// adjust the default noise parameters
 

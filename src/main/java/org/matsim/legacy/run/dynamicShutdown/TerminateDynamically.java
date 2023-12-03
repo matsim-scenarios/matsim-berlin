@@ -21,7 +21,7 @@
 
  package org.matsim.legacy.run.dynamicShutdown;
 
-import org.matsim.core.config.groups.ControlerConfigGroup;
+import org.matsim.core.config.groups.ControllerConfigGroup;
 import org.matsim.core.controler.TerminationCriterion;
 
 import javax.inject.Inject;
@@ -39,7 +39,7 @@ public class TerminateDynamically implements TerminationCriterion {
 	private final DynamicShutdownControlerListenerImpl convergenceDynamicShutdown;
 
 	@Inject
-	TerminateDynamically(ControlerConfigGroup controlerConfigGroup, DynamicShutdownControlerListenerImpl convergenceDynamicShutdown) {
+	TerminateDynamically(ControllerConfigGroup controlerConfigGroup, DynamicShutdownControlerListenerImpl convergenceDynamicShutdown) {
 		this.lastIteration = controlerConfigGroup.getLastIteration();
 		this.convergenceDynamicShutdown = convergenceDynamicShutdown;
 	}

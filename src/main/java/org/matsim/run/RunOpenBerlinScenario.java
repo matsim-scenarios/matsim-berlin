@@ -7,7 +7,7 @@ import org.matsim.application.MATSimApplication;
 import org.matsim.application.options.SampleOptions;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.config.groups.StrategyConfigGroup;
+import org.matsim.core.config.groups.ReplanningConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
@@ -51,8 +51,8 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 			config.counts().setCountsScaleFactor(sampleSize);
 			sw.defaultParams().sampleSize = sampleSize;
 
-			config.controler().setRunId(sample.adjustName(config.controler().getRunId()));
-			config.controler().setOutputDirectory(sample.adjustName(config.controler().getOutputDirectory()));
+			config.controller().setRunId(sample.adjustName(config.controller().getRunId()));
+			config.controller().setOutputDirectory(sample.adjustName(config.controller().getOutputDirectory()));
 			config.plans().setInputFile(sample.adjustName(config.plans().getInputFile()));
 		}
 
@@ -60,30 +60,30 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 
 		// Required for all calibration strategies
 		for (String subpopulation : List.of("person", "freight", "goodsTraffic", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
-			config.strategy().addStrategySettings(
-				new StrategyConfigGroup.StrategySettings()
+			config.replanning().addStrategySettings(
+				new ReplanningConfigGroup.StrategySettings()
 					.setStrategyName(DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta)
 					.setWeight(1.0)
 					.setSubpopulation(subpopulation)
 			);
 
-			config.strategy().addStrategySettings(
-				new StrategyConfigGroup.StrategySettings()
+			config.replanning().addStrategySettings(
+				new ReplanningConfigGroup.StrategySettings()
 					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
 					.setWeight(0.15)
 					.setSubpopulation(subpopulation)
 			);
 		}
 
-		config.strategy().addStrategySettings(
-			new StrategyConfigGroup.StrategySettings()
+		config.replanning().addStrategySettings(
+			new ReplanningConfigGroup.StrategySettings()
 				.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.TimeAllocationMutator)
 				.setWeight(0.15)
 				.setSubpopulation("person")
 		);
 
-		config.strategy().addStrategySettings(
-			new StrategyConfigGroup.StrategySettings()
+		config.replanning().addStrategySettings(
+			new ReplanningConfigGroup.StrategySettings()
 				.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.SubtourModeChoice)
 				.setWeight(0.15)
 				.setSubpopulation("person")

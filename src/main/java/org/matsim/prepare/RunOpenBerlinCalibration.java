@@ -25,8 +25,8 @@ import org.matsim.contrib.locationchoice.frozenepsilons.FrozenTastes;
 import org.matsim.contrib.locationchoice.frozenepsilons.FrozenTastesConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
-import org.matsim.core.config.groups.StrategyConfigGroup;
+import org.matsim.core.config.groups.ReplanningConfigGroup;
+import org.matsim.core.config.groups.ScoringConfigGroup;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
@@ -141,13 +141,13 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			throw new IllegalArgumentException("Population path is required [--population]");
 		}
 
-		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
+		config.controller().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
 
 		log.info("Running {} calibration {}", mode, populationPath);
 
 		config.plans().setInputFile(populationPath.toString());
-		config.controler().setRunId(mode.toString());
-		config.planCalcScore().setWriteExperiencedPlans(true);
+		config.controller().setRunId(mode.toString());
+		config.scoring().setWriteExperiencedPlans(true);
 
 		// Location choice does not work with the split types
 		Activities.addScoringParams(config, mode != CalibrationMode.locationChoice);
@@ -181,8 +181,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		// Required for all calibration strategies
 		for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
-			config.strategy().addStrategySettings(
-				new StrategyConfigGroup.StrategySettings()
+			config.replanning().addStrategySettings(
+				new ReplanningConfigGroup.StrategySettings()
 					.setStrategyName(DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta)
 					.setWeight(1.0)
 					.setSubpopulation(subpopulation)
@@ -194,26 +194,26 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		if (mode == CalibrationMode.locationChoice) {
 
-			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
+			config.replanning().addStrategySettings(new ReplanningConfigGroup.StrategySettings()
 				.setStrategyName(FrozenTastes.LOCATION_CHOICE_PLAN_STRATEGY)
 				.setWeight(weight)
 				.setSubpopulation("person")
 			);
 
-			config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
+			config.replanning().addStrategySettings(new ReplanningConfigGroup.StrategySettings()
 				.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
 				.setWeight(weight / 5)
 				.setSubpopulation("person")
 			);
 
 			// Overwrite these to fix scoring warnings
-			config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("work").setTypicalDuration(8 * 3600));
-			config.planCalcScore().addActivityParams(new PlanCalcScoreConfigGroup.ActivityParams("pt interaction").setTypicalDuration(30));
+			config.scoring().addActivityParams(new ScoringConfigGroup.ActivityParams("work").setTypicalDuration(8 * 3600));
+			config.scoring().addActivityParams(new ScoringConfigGroup.ActivityParams("pt interaction").setTypicalDuration(30));
 
 			config.vspExperimental().setAbleToOverwritePtInteractionParams(true);
 
-			config.strategy().setFractionOfIterationsToDisableInnovation(0.8);
-			config.planCalcScore().setFractionOfIterationsToStartScoreMSA(0.8);
+			config.replanning().setFractionOfIterationsToDisableInnovation(0.8);
+			config.scoring().setFractionOfIterationsToStartScoreMSA(0.8);
 
 			FrozenTastesConfigGroup dccg = ConfigUtils.addOrGetModule(config, FrozenTastesConfigGroup.class);
 
@@ -228,20 +228,20 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 			// Re-route for all populations
 			for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
-				config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
+				config.replanning().addStrategySettings(new ReplanningConfigGroup.StrategySettings()
 					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
 					.setWeight(weight)
 					.setSubpopulation(subpopulation)
 				);
 			}
 
-			config.controler().setRunId("cadyts");
-			config.controler().setOutputDirectory("./output/cadyts-" + scaleFactor);
+			config.controller().setRunId("cadyts");
+			config.controller().setOutputDirectory("./output/cadyts-" + scaleFactor);
 
-			config.planCalcScore().setFractionOfIterationsToStartScoreMSA(0.75);
-			config.strategy().setFractionOfIterationsToDisableInnovation(0.75);
+			config.scoring().setFractionOfIterationsToStartScoreMSA(0.75);
+			config.replanning().setFractionOfIterationsToDisableInnovation(0.75);
 			// Need to store more plans because of plan types
-			config.strategy().setMaxAgentPlanMemorySize(8);
+			config.replanning().setMaxAgentPlanMemorySize(8);
 
 			config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.ignore);
 
@@ -249,7 +249,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 			// Re-route for all populations
 			for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
-				config.strategy().addStrategySettings(new StrategyConfigGroup.StrategySettings()
+				config.replanning().addStrategySettings(new ReplanningConfigGroup.StrategySettings()
 					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
 					.setWeight(weight)
 					.setSubpopulation(subpopulation)
@@ -259,7 +259,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		} else if (mode == CalibrationMode.eval) {
 
 			iterations = 0;
-			config.controler().setLastIteration(0);
+			config.controller().setLastIteration(0);
 
 		} else
 			throw new IllegalStateException("Mode not implemented:" + mode);
@@ -378,7 +378,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 					sumScoringFunction.addScoringFunction(new CharyparNagelAgentStuckScoring(params));
 
 					final CadytsScoring<Link> scoringFunction = new CadytsScoring<>(person.getSelectedPlan(), config, cadytsContext);
-					scoringFunction.setWeightOfCadytsCorrection(30 * config.planCalcScore().getBrainExpBeta());
+					scoringFunction.setWeightOfCadytsCorrection(30 * config.scoring().getBrainExpBeta());
 					sumScoringFunction.addScoringFunction(scoringFunction);
 
 					return sumScoringFunction;

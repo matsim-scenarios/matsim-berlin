@@ -3,18 +3,12 @@ package org.matsim.legacy.run.wasteCollection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.contrib.freight.carrier.Carrier;
-import org.matsim.contrib.freight.carrier.CarrierCapabilities;
-import org.matsim.contrib.freight.carrier.CarrierVehicle;
-import org.matsim.contrib.freight.carrier.CarrierVehicleTypeLoader;
-import org.matsim.contrib.freight.carrier.CarrierVehicleTypes;
-import org.matsim.contrib.freight.carrier.Carriers;
+import org.matsim.freight.carriers.*;
 import org.matsim.vehicles.Vehicle;
-import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
-import org.matsim.contrib.freight.carrier.CarrierImpl;
 
 public class AbfallChessboardUtils {
 
@@ -42,10 +36,11 @@ public class AbfallChessboardUtils {
 			}
 		}
 		Id<Link> linkDumpId = Id.createLinkId(linkChessboardDump);
-		AbfallUtils.createShipmentsForCarrierII(garbageToCollect, volumeBigDustbin, serviceTimePerBigTrashcan,
-				distanceWithShipments, garbageLinks, scenario, carrierChessboard, linkDumpId, carriers);
-		AbfallUtils.districtsWithShipments.add("Chessboard");
-		carriers.addCarrier(carrierChessboard);
+		throw new UnsupportedOperationException("These lines below have not been updated to the new API.");
+//		AbfallUtils.createShipmentsForCarrierII(garbageToCollect, volumeBigDustbin, serviceTimePerBigTrashcan,
+//				distanceWithShipments, garbageLinks, scenario, carrierChessboard, linkDumpId );
+//		AbfallUtils.districtsWithShipments.add("Chessboard");
+//		carriers.addCarrier(carrierChessboard);
 
 	}
 
@@ -70,10 +65,11 @@ public class AbfallChessboardUtils {
 			}
 		}
 		Id<Link> linkDumpId = Id.createLinkId(linkChessboardDump);
-		AbfallUtils.createShipmentsForCarrierI(garbagePerMeterToCollect, volumeBigDustbin, serviceTimePerBigTrashcan,
-				garbageLinks, scenario, carrierChessboard, linkDumpId, carriers);
-		AbfallUtils.districtsWithShipments.add("Chessboard");
-		carriers.addCarrier(carrierChessboard);
+		throw new UnsupportedOperationException("These lines below have not been updated to the new API.");
+//		AbfallUtils.createShipmentsForCarrierI(garbagePerMeterToCollect, volumeBigDustbin, serviceTimePerBigTrashcan,
+//				garbageLinks, scenario, carrierChessboard, linkDumpId, carriers);
+//		AbfallUtils.districtsWithShipments.add("Chessboard");
+//		carriers.addCarrier(carrierChessboard);
 
 	}
 
@@ -83,7 +79,7 @@ public class AbfallChessboardUtils {
 	 *
 	 * @param
 	 */
-	static void createCarriersForChessboard(Carriers carriers, FleetSize fleetSize, CarrierVehicleTypes carrierVehicleTypes) {
+	static void createCarriersForChessboard(Carriers carriers, CarrierCapabilities.FleetSize fleetSize, CarrierVehicleTypes carrierVehicleTypes) {
 		String vehicleName = "TruckChessboard";
 		double earliestStartingTime = 6 * 3600;
 		double latestFinishingTime = 14 * 3600;
@@ -98,7 +94,8 @@ public class AbfallChessboardUtils {
 
 		// define Carriers
 
-		defineCarriersChessboard(carriers, newCarrierVehicle, fleetSize, carrierVehicleTypes);
+		throw new UnsupportedOperationException("These lines below have not been updated to the new API.");
+//		defineCarriersChessboard(carriers, newCarrierVehicle, fleetSize, carrierVehicleTypes);
 	}
 
 	/**
@@ -108,7 +105,7 @@ public class AbfallChessboardUtils {
 	 * @param
 	 *
 	 */
-	private static void defineCarriersChessboard(Carriers carriers, CarrierVehicle vehicleDepot, FleetSize fleetSize, CarrierVehicleTypes carrierVehicleTypes) {
+	private static void defineCarriersChessboard(Carriers carriers, CarrierVehicle vehicleDepot, CarrierCapabilities.FleetSize fleetSize, CarrierVehicleTypes carrierVehicleTypes) {
 		CarrierCapabilities carrierCapabilities = CarrierCapabilities.Builder.newInstance()
 				.addType(carrierVehicleTypes.getVehicleTypes().values().iterator().next()).addVehicle(vehicleDepot).setFleetSize(fleetSize).build();
 
