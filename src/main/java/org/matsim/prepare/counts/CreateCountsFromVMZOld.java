@@ -9,6 +9,8 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.counts.Counts;
 import org.matsim.counts.CountsWriter;
+import org.matsim.counts.Measurable;
+import org.matsim.counts.MeasurementLocation;
 import picocli.CommandLine;
 
 import java.io.*;
@@ -77,36 +79,35 @@ public class CreateCountsFromVMZOld implements MATSimAppCommand {
 	 * @param outputFile
 	 */
 	private void createCountsFile(String outputFile) {
-		Counts<Link> countsPkw = new Counts();
-		countsPkw.setYear(2018);
-		countsPkw.setDescription("data from the berliner senate to matsim counts");
-		Counts<Link> countsLkw = new Counts();
-		countsLkw.setYear(2018);
-		countsLkw.setDescription("data from the berliner senate to matsim counts");
+		Counts<Link> counts = new Counts<>();
+		counts.setYear(2018);
+		counts.setDescription("data from the berliner senate to matsim counts");
 
 		for (BerlinCounts berlinCounts : berlinCountsMap.values()) {
 			if (!berlinCounts.isUsing()) {
 				continue;
 			}
-			countsPkw.createAndAddCount(Id.createLinkId(berlinCounts.getLinkid()), berlinCounts.getMQ_ID() + "_" + berlinCounts.getPosition() + "_" + berlinCounts.getOrientation());
+
+			MeasurementLocation<Link> station = counts.createAndAddMeasureLocation(Id.createLinkId(berlinCounts.getLinkid()), berlinCounts.getMQ_ID() + "_" + berlinCounts.getPosition() + "_" + berlinCounts.getOrientation());
+			Measurable carVolume = station.createVolume();
+
 			double[] PERC_Q_PKW_TYPE = berlinCounts.getPERC_Q_KFZ_TYPE();
 			for (int i = 1; i < 25; i++) {
-				countsPkw.getCount(Id.createLinkId(berlinCounts.getLinkid())).createVolume(i, ( (berlinCounts.getDTVW_KFZ() - berlinCounts.getDTVW_LKW()) * PERC_Q_PKW_TYPE[i - 1]));
+				carVolume.setAtHour(i -1, ( (berlinCounts.getDTVW_KFZ() - berlinCounts.getDTVW_LKW()) * PERC_Q_PKW_TYPE[i - 1]));
 			}
+
 			if (berlinCounts.isLKW_Anteil()) {
-				countsLkw.createAndAddCount(Id.createLinkId(berlinCounts.getLinkid()), berlinCounts.getMQ_ID() + "_" + berlinCounts.getPosition() + "_" + berlinCounts.getOrientation());
+
+				Measurable truckVolume = station.createVolume("freight");
+
 				double[] PERC_Q_LKW_TYPE = berlinCounts.getPERC_Q_LKW_TYPE();
 				for (int i = 1; i < 25; i++) {
-					countsLkw.getCount(Id.createLinkId(berlinCounts.getLinkid())).createVolume(i, (berlinCounts.getDTVW_LKW() * PERC_Q_LKW_TYPE[i - 1]));
+					truckVolume.setAtHour(i-1, (berlinCounts.getDTVW_LKW() * PERC_Q_LKW_TYPE[i - 1]));
 				}
 			}
 		}
-		CountsWriter writerPkw = new CountsWriter(countsPkw);
-		CountsWriter writerLkw = new CountsWriter(countsLkw);
-		writerPkw.write(outputFile);
 
-		if (outputFile.contains("-car"))
-			writerLkw.write(outputFile.replace("-car", "-hgv"));
+		new CountsWriter(counts).write(outputFile);
 	}
 
 	/**

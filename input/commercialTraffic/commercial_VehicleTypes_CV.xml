@@ -29,7 +29,7 @@
 		<networkMode networkMode="car"/>
 		<flowEfficiencyFactor factor="1.0"/>
 	</vehicleType>
-	
+
 	<vehicleType id="vwCaddy">
 
 		<description>VW Caddy 2.0 Maxi TDI</description>
@@ -165,7 +165,7 @@
 		</costInformation>
 		<passengerCarEquivalents pce="4.0"/>
 		<maximumVelocity meterPerSecond="22.22"/>
-		<networkMode networkMode="car"/>
+		<networkMode networkMode="freight"/>
 		<flowEfficiencyFactor factor="1.0"/>
 	</vehicleType>
 </vehicleDefinitions>
