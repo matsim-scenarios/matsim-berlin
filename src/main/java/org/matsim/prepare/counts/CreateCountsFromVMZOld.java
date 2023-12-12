@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.counts.Counts;
@@ -98,7 +99,7 @@ public class CreateCountsFromVMZOld implements MATSimAppCommand {
 
 			if (berlinCounts.isLKW_Anteil()) {
 
-				Measurable truckVolume = station.createVolume("freight");
+				Measurable truckVolume = station.createVolume(TransportMode.truck);
 
 				double[] PERC_Q_LKW_TYPE = berlinCounts.getPERC_Q_LKW_TYPE();
 				for (int i = 1; i < 25; i++) {

@@ -52,6 +52,7 @@ input/PLR_2013_2020.csv:
 	rm atlas.zip
 
 $(berlin)/input/shp/Planungsraum_EPSG_25833.shp:
+	# This link is broken, the file is available in the public svn
 	curl https://www.stadtentwicklung.berlin.de/planen/basisdaten_stadtentwicklung/lor/download/LOR_SHP_EPSG_25833.zip -o tmp.zip
 	unzip tmp.zip -d $(berlin)/input
 	rm tmp.zip
@@ -97,8 +98,9 @@ $p/berlin-v6.1-network.xml.gz:
 	 --input $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz\
 	 --transit-schedule $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz\
 	 --output $@\
- 	 --output-transit $p/berlin-v6.0-transitSchedule.xml.gz\
+ 	 --output-transit $p/berlin-v6.1-transitSchedule.xml.gz\
 	 --input-crs EPSG:31468\
+	 --mode freight=truck\
 	 --target-crs $(CRS)
 
 
@@ -201,7 +203,7 @@ $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
 
 $p/berlin-small-scale-commercialTraffic-$V-25pct.plans.xml.gz:
 	$(sc) prepare generate-small-scale-commercial-traffic\
-	  input/commercialTraffic\
+	  input/commercialTraffic/config_demand.xml\
 	 --sample 0.25\
 	 --jspritIterations 1\
 	 --creationOption createNewCarrierFile\

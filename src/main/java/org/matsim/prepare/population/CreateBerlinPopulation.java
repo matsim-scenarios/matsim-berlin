@@ -80,7 +80,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 	@SuppressWarnings("IllegalCatch")
 	public Integer call() throws Exception {
 
-		if (shp.getShapeFile() == null) {
+		if (!shp.isDefined()) {
 			log.error("Shape file with LOR zones is required.");
 			return 2;
 		}
@@ -93,7 +93,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 
 		// Collect all LORs
 		for (SimpleFeature ft : fts) {
-			lors.put((String) ft.getAttribute("SCHLUESSEL"), (MultiPolygon) ft.getDefaultGeometry());
+			lors.put((String) ft.getAttribute("PLR_ID"), (MultiPolygon) ft.getDefaultGeometry());
 		}
 
 		log.info("Found {} LORs", lors.size());
@@ -157,6 +157,11 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 				AgeGroup.MIDDLE, 1.0 - young - old,
 				AgeGroup.OLD, old
 		));
+
+		if (!lors.containsKey(raumID)) {
+			log.warn("LOR {} not found", raumID);
+			return;
+		}
 
 		MultiPolygon geom = lors.get(raumID);
 

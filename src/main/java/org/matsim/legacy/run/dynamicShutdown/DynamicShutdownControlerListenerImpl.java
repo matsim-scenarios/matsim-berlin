@@ -186,7 +186,9 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
         boolean modeConverged = false;
         if (!activeMetricsMode.isEmpty()) {
             String metricType = "mode";
-            Map<String, Map<Integer, Double>> modeHistories = modeStatsControlerListener.getModeHistories();
+			if (true)
+				throw new RuntimeException(" modeStatsControlerListener.getModeHistories() not implemented anymore.  Check if this is still needed.");
+            Map<String, Map<Integer, Double>> modeHistories =null;
             bestFitLineGeneric(prevIteration, modeHistories, slopesMode, activeMetricsMode);
             produceDynShutdownGraphs(modeHistories, slopesMode, metricType, activeMetricsMode, cfg.getModeThreshold(), iteration);
 
