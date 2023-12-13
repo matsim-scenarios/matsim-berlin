@@ -113,7 +113,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	private Integer planIndex;
 
 	public RunOpenBerlinCalibration() {
-		super("input/v6.0/berlin-v6.0.config.xml");
+		super("input/v6.1/berlin-v6.1.config.xml");
 	}
 
 	/**

@@ -199,15 +199,14 @@ $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
 	 --cut-on-boundary\
 	 --output $@
 
-# TODO: commercial traffic needs to be updated, and network mode correctly mapped
-
-$p/berlin-small-scale-commercialTraffic-$V-25pct.plans.xml.gz:
+$p/berlin-small-scale-commercialTraffic-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
 	$(sc) prepare generate-small-scale-commercial-traffic\
-	  input/commercialTraffic/config_demand.xml\
+	  input/$V/berlin-$V.config.xml\
 	 --sample 0.25\
 	 --jspritIterations 1\
 	 --creationOption createNewCarrierFile\
 	 --landuseConfiguration useOSMBuildingsAndLanduse\
+	 --network $(notdir $<)\
 	 --smallScaleCommercialTrafficType completeSmallScaleCommercialTraffic\
 	 --zoneShapeFileName $(berlin)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp\
 	 --buildingsShapeFileName $(berlin)/input/shp/buildings_BerlinBrandenburg_4326.shp\
@@ -219,7 +218,6 @@ $p/berlin-small-scale-commercialTraffic-$V-25pct.plans.xml.gz:
 	 --pathOutput output/commercialPersonTraffic
 
 	mv output/commercialPersonTraffic/$(notdir $@) $@
-
 
 
 $p/berlin-cadyts-input-$V-25pct.plans.xml.gz: $p/berlin-initial-$V-25pct.plans.xml.gz $p/berlin-small-scale-commercialTraffic-$V-25pct.plans.xml.gz
