@@ -157,7 +157,7 @@ $p/berlin-only-$V-25pct.plans.xml.gz: input/PLR_2013_2020.csv $(berlin)/input/sh
 		--output $@
 
 
-$p/brandeburg-only-$V-25pct.plans.xml.gz: input/landuse.shp
+$p/brandenburg-only-$V-25pct.plans.xml.gz: input/landuse.shp
 	$(sc) prepare brandenburg-population\
 	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp\
 	 --population $(germany)/regionalstatistik/population.csv\
@@ -165,7 +165,7 @@ $p/brandeburg-only-$V-25pct.plans.xml.gz: input/landuse.shp
  	 --landuse $< --landuse-filter residential\
  	 --output $@
 
-$p/berlin-static-$V-25pct.plans.xml.gz: $p/berlin-only-$V-25pct.plans.xml.gz $p/brandeburg-only-$V-25pct.plans.xml.gz
+$p/berlin-static-$V-25pct.plans.xml.gz: $p/berlin-only-$V-25pct.plans.xml.gz $p/brandenburg-only-$V-25pct.plans.xml.gz
 	$(sc) prepare merge-populations $^\
 	 --output $@
 
