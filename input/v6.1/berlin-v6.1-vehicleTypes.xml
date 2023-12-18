@@ -38,6 +38,18 @@
 		<networkMode networkMode="truck"/>
 	</vehicleType>
 
+	<vehicleType id="truck">
+		<attributes>
+			<attribute name="accessTimeInSecondsPerPerson" class="java.lang.Double">1</attribute>
+			<attribute name="doorOperationMode" class="org.matsim.vehicles.VehicleType$DoorOperationMode">serial</attribute>
+			<attribute name="egressTimeInSecondsPerPerson" class="java.lang.Double">1</attribute>
+		</attributes>
+		<length meter="15.0"/>
+		<width meter="1.0"/>
+		<passengerCarEquivalents pce="3.5"/>
+		<networkMode networkMode="truck"/>
+	</vehicleType>
+
 	<!-- Specific types for commercial traffic -->
 
 	<vehicleType id="golf1.4">

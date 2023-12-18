@@ -35,7 +35,8 @@ import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.replanning.choosers.ForceInnovationStrategyChooser;
 import org.matsim.core.replanning.choosers.StrategyChooser;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
-import org.matsim.core.router.RoutingModeMainModeIdentifier;
+import org.matsim.core.router.DefaultAnalysisMainModeIdentifier;
+import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.ScoringFunctionFactory;
@@ -301,7 +302,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 			log.info("Converting all agents to car plans.");
 
-			RoutingModeMainModeIdentifier mmi = new RoutingModeMainModeIdentifier();
+			MainModeIdentifier mmi = new DefaultAnalysisMainModeIdentifier();
 
 			for (Person person : scenario.getPopulation().getPersons().values()) {
 				for (Plan plan : person.getPlans()) {
@@ -309,17 +310,28 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 					final List<TripStructureUtils.Trip> trips = TripStructureUtils.getTrips(plan);
 
 					for (TripStructureUtils.Trip trip : trips) {
+
 						final List<PlanElement> fullTrip =
 							planElements.subList(
 								planElements.indexOf(trip.getOriginActivity()) + 1,
 								planElements.indexOf(trip.getDestinationActivity()));
 
+						String mode = mmi.identifyMainMode(fullTrip);
+
+						// Already car, nothing to do
+						if (Objects.equals(mode, TransportMode.car) || Objects.equals(mode, TransportMode.truck))
+							continue;
+
 						double dist = CoordUtils.calcEuclideanDistance(getCoord(scenario, trip.getOriginActivity()), getCoord(scenario, trip.getDestinationActivity()));
 
-						// very short trips remain walk
-						String desiredMode = dist <= 100 ? TransportMode.walk : TransportMode.car;
+						// short bike and walk trips are not changed
+						if (dist <= 500 && (Objects.equals(mode, TransportMode.walk) || Objects.equals(mode, TransportMode.bike)))
+							continue;
 
-						if (!Objects.equals(mmi.identifyMainMode(fullTrip), desiredMode)) {
+						// rest of the trips is set to walk if below threshold, car otherwise
+						String desiredMode = dist <= 500 ? TransportMode.walk : TransportMode.car;
+
+						if (!Objects.equals(mode, desiredMode)) {
 							fullTrip.clear();
 							Leg leg = PopulationUtils.createLeg(desiredMode);
 							TripStructureUtils.setRoutingMode(leg, desiredMode);

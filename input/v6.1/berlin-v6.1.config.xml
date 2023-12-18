@@ -176,7 +176,7 @@
 	</module>
 
 	<module name="counts">
-		<param name="inputCountsFile" value="./berlin-v6.0-counts-car-vmz.xml.gz"/>
+		<param name="inputCountsFile" value="./berlin-v6.1-counts-car-vmz.xml.gz"/>
 	</module>
 
 	<module name="ReplanningAnnealer" >

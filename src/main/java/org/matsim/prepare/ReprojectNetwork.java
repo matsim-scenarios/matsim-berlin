@@ -2,12 +2,14 @@ package org.matsim.prepare;
 
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.network.Node;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.options.CrsOptions;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.pt.transitSchedule.api.TransitScheduleWriter;
 import picocli.CommandLine;
 
@@ -55,6 +57,10 @@ public class ReprojectNetwork implements MATSimAppCommand {
 
 		// Scenario loader does the reprojection for the network
 		Scenario scenario = ScenarioUtils.loadScenario(config);
+
+		for (Node node : scenario.getNetwork().getNodes().values()) {
+			node.setCoord(CoordUtils.round(node.getCoord()));
+		}
 
 		if (!remapModes.isEmpty()) {
 			for (Link link : scenario.getNetwork().getLinks().values()) {
