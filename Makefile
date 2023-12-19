@@ -289,7 +289,7 @@ clean-plans:
 	 --remove-unselected-plans\
 	 --output mode-choice-final/runs/004/berlin-$V-10pct.plans.xml.gz
 
-prepare-calibration: $p/berlin-cadyts-input-$V-25pct.plans.xml.gz $p/berlin-$V-network-with-pt.xml.gz $p/berlin-$V-counts-car-vmz.xml.gz
+prepare-calibration: $p/berlin-cadyts-input-$V-25pct.plans.xml.gz $p/berlin-$V-network-with-pt.xml.gz $p/berlin-$V-counts-vmz.xml.gz
 	echo "Done"
 
 prepare: $p/berlin-$V-25pct.plans.xml.gz $p/berlin-$V-network-with-pt.xml.gz
