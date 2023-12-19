@@ -288,8 +288,11 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 				List<? extends Plan> plans = person.getPlans();
 				Set<Plan> toRemove = new HashSet<>();
 
+				// make sure that one plan is always selected, even if there are less plans than index
+				int idx = planIndex % plans.size();
+
 				for (int i = 0; i < plans.size(); i++) {
-					if (i == planIndex) {
+					if (i == idx) {
 						person.setSelectedPlan(plans.get(i));
 					} else
 						toRemove.add(plans.get(i));

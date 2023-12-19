@@ -107,7 +107,7 @@ $p/berlin-v6.1-network.xml.gz:
 $p/berlin-v6.1-network-with-pt.xml.gz: $p/berlin-v6.1-network.xml.gz
 	# Copy 5.x network stuff
 	cp $< $@
-	cp $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-transit-vehicles.xml.gz $p/berlin-v6.0-transitVehicles.xml.gz
+	cp $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-transit-vehicles.xml.gz $p/berlin-v6.1-transitVehicles.xml.gz
 
 $p/berlin-v6.1-counts-vmz.xml.gz:
 	$(sc) prepare counts-from-vmz-old\
