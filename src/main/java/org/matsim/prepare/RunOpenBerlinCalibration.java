@@ -228,7 +228,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		} else if (mode == CalibrationMode.cadyts) {
 
 			// Re-route for all populations
-			for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
+			for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service", "goodsTraffic")) {
 				config.replanning().addStrategySettings(new ReplanningConfigGroup.StrategySettings()
 					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
 					.setWeight(weight)
