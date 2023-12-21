@@ -4,7 +4,7 @@
 import os
 import argparse
 
-from matsim.scenariogen.data import read_all
+from matsim.scenariogen.data import TripMode, read_all
 from matsim.scenariogen.data.preparation import prepare_persons, create_activities
 
 if __name__ == "__main__":
@@ -22,6 +22,9 @@ if __name__ == "__main__":
 
     hh, persons, trips = read_all([args.directory + "Berlin+Umland", args.directory + "Brandenburg"],
                                       regio=args.regiostar)
+
+    # Motorcycles are counted as cars
+    trips.loc[trips.main_mode == TripMode.MOTORCYCLE, "main_mode"] = TripMode.CAR
 
     hh.to_csv(args.output + "-households.csv")
     trips.to_csv(args.output + "-trips.csv")

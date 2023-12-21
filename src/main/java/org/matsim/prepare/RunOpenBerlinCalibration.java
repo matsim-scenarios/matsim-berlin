@@ -63,7 +63,6 @@ import picocli.CommandLine;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -285,19 +284,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			log.info("Using plan with index {}", planIndex);
 
 			for (Person person : scenario.getPopulation().getPersons().values()) {
-				List<? extends Plan> plans = person.getPlans();
-				Set<Plan> toRemove = new HashSet<>();
-
-				// make sure that one plan is always selected, even if there are less plans than index
-				int idx = planIndex % plans.size();
-
-				for (int i = 0; i < plans.size(); i++) {
-					if (i == idx) {
-						person.setSelectedPlan(plans.get(i));
-					} else
-						toRemove.add(plans.get(i));
-				}
-				toRemove.forEach(person::removePlan);
+				SelectPlansFromIndex.selectPlanWithIndex(person, planIndex);
 			}
 		}
 
@@ -322,17 +309,19 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 						String mode = mmi.identifyMainMode(fullTrip);
 
 						// Already car, nothing to do
-						if (Objects.equals(mode, TransportMode.car) || Objects.equals(mode, TransportMode.truck))
+						if (Objects.equals(mode, TransportMode.car) ||
+							Objects.equals(mode, TransportMode.truck) ||
+							Objects.equals(mode, "freight"))
 							continue;
 
 						double dist = CoordUtils.calcEuclideanDistance(getCoord(scenario, trip.getOriginActivity()), getCoord(scenario, trip.getDestinationActivity()));
 
 						// short bike and walk trips are not changed
-						if (dist <= 500 && (Objects.equals(mode, TransportMode.walk) || Objects.equals(mode, TransportMode.bike)))
+						if (dist <= 350 && (Objects.equals(mode, TransportMode.walk) || Objects.equals(mode, TransportMode.bike)))
 							continue;
 
 						// rest of the trips is set to walk if below threshold, car otherwise
-						String desiredMode = dist <= 500 ? TransportMode.walk : TransportMode.car;
+						String desiredMode = dist <= 350 ? TransportMode.walk : TransportMode.car;
 
 						if (!Objects.equals(mode, desiredMode)) {
 							fullTrip.clear();
@@ -399,8 +388,14 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 					return sumScoringFunction;
 				}
 			});
-
 		}
+
+		controler.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				addControlerListenerBinding().to(ExtendExperiencedPlansListener.class);
+			}
+		});
 
 		controler.addOverridingModule(new SimWrapperModule());
 	}

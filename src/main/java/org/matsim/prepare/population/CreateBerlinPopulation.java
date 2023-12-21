@@ -37,43 +37,74 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 @CommandLine.Command(
-		name = "berlin-population",
-		description = "Create synthetic population for berlin."
+	name = "berlin-population",
+	description = "Create synthetic population for berlin."
 )
 public class CreateBerlinPopulation implements MATSimAppCommand {
 
 	private static final NumberFormat FMT = NumberFormat.getInstance(Locale.GERMAN);
 
 	private static final Logger log = LogManager.getLogger(CreateBerlinPopulation.class);
-
+	private final CoordinateTransformation ct = new GeotoolsTransformation("EPSG:25833", "EPSG:25832");
 	@CommandLine.Option(names = "--input", description = "Path to input csv data", required = true)
 	private Path input;
-
 	@CommandLine.Mixin
 	private LanduseOptions landuse = new LanduseOptions();
-
 	@CommandLine.Mixin
 	private ShpOptions shp = new ShpOptions();
-
 	@CommandLine.Option(names = "--output", description = "Path to output population", required = true)
 	private Path output;
-
 	@CommandLine.Option(names = "--year", description = "Year to use statistics from", defaultValue = "2019")
 	private int year;
-
 	@CommandLine.Option(names = "--sample", description = "Sample size to generate", defaultValue = "0.25")
 	private double sample;
-
 	private Map<String, MultiPolygon> lors;
-
 	private SplittableRandom rnd;
-
 	private Population population;
-
-	private final CoordinateTransformation ct = new GeotoolsTransformation("EPSG:25833", "EPSG:25832");
 
 	public static void main(String[] args) {
 		new CreateBerlinPopulation().execute(args);
+	}
+
+	/**
+	 * Generate a new unique id within population.
+	 */
+	public static Id<Person> generateId(Population population, String prefix, SplittableRandom rnd) {
+
+		Id<Person> id;
+		byte[] bytes = new byte[4];
+		do {
+			rnd.nextBytes(bytes);
+			id = Id.createPersonId(prefix + "_" + HexFormat.of().formatHex(bytes));
+
+		} while (population.getPersons().containsKey(id));
+
+		return id;
+	}
+
+	/**
+	 * Samples a home coordinates from geometry and landuse.
+	 */
+	public static Coord sampleHomeCoordinate(MultiPolygon geometry, String crs, LanduseOptions landuse, SplittableRandom rnd) {
+
+		Envelope bbox = geometry.getEnvelopeInternal();
+
+		int i = 0;
+		Coord coord;
+		do {
+			coord = landuse.select(crs, () -> new Coord(
+				bbox.getMinX() + (bbox.getMaxX() - bbox.getMinX()) * rnd.nextDouble(),
+				bbox.getMinY() + (bbox.getMaxY() - bbox.getMinY()) * rnd.nextDouble()
+			));
+
+			i++;
+
+		} while (!geometry.contains(MGC.coord2Point(coord)) && i < 1500);
+
+		if (i == 1500)
+			log.warn("Invalid coordinate generated");
+
+		return RunOpenBerlinCalibration.roundCoord(coord);
 	}
 
 	@Override
@@ -93,7 +124,10 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 
 		// Collect all LORs
 		for (SimpleFeature ft : fts) {
-			lors.put((String) ft.getAttribute("PLR_ID"), (MultiPolygon) ft.getDefaultGeometry());
+			// Support both old and new key for different shape files
+			String key = ft.getAttribute("SCHLUESSEL") != null ? "SCHLUESSEL" : "PLR_ID";
+
+			lors.put((String) ft.getAttribute(key), (MultiPolygon) ft.getDefaultGeometry());
 		}
 
 		log.info("Found {} LORs", lors.size());
@@ -153,9 +187,9 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 		var sex = new EnumeratedAttributeDistribution<>(Map.of("f", quota, "m", 1 - quota));
 		var employment = new EnumeratedAttributeDistribution<>(Map.of(true, 1 - unemployed, false, unemployed));
 		var ageGroup = new EnumeratedAttributeDistribution<>(Map.of(
-				AgeGroup.YOUNG, young,
-				AgeGroup.MIDDLE, 1.0 - young - old,
-				AgeGroup.OLD, old
+			AgeGroup.YOUNG, young,
+			AgeGroup.MIDDLE, 1.0 - young - old,
+			AgeGroup.OLD, old
 		));
 
 		if (!lors.containsKey(raumID)) {
@@ -207,48 +241,6 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 
 			population.addPerson(person);
 		}
-	}
-
-	/**
-	 * Generate a new unique id within population.
-	 */
-	public static Id<Person> generateId(Population population, String prefix, SplittableRandom rnd) {
-
-		Id<Person> id;
-		byte[] bytes = new byte[4];
-		do {
-			rnd.nextBytes(bytes);
-			id = Id.createPersonId(prefix + "_" + HexFormat.of().formatHex(bytes));
-
-		} while (population.getPersons().containsKey(id));
-
-		return id;
-	}
-
-
-	/**
-	 * Samples a home coordinates from geometry and landuse.
-	 */
-	public static Coord sampleHomeCoordinate(MultiPolygon geometry, String crs, LanduseOptions landuse, SplittableRandom rnd) {
-
-		Envelope bbox = geometry.getEnvelopeInternal();
-
-		int i = 0;
-		Coord coord;
-		do {
-			coord = landuse.select(crs, () -> new Coord(
-					bbox.getMinX() + (bbox.getMaxX() - bbox.getMinX()) * rnd.nextDouble(),
-					bbox.getMinY() + (bbox.getMaxY() - bbox.getMinY()) * rnd.nextDouble()
-			));
-
-			i++;
-
-		} while (!geometry.contains(MGC.coord2Point(coord)) && i < 1500);
-
-		if (i == 1500)
-			log.warn("Invalid coordinate generated");
-
-		return RunOpenBerlinCalibration.roundCoord(coord);
 	}
 
 	private enum AgeGroup {

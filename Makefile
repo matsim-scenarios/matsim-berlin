@@ -239,7 +239,7 @@ eval-opt: $p/berlin-initial-$V-25pct.experienced_plans.xml.gz
 	$(sc) prepare run-count-opt\
 	 --input $<\
 	 --network $p/berlin-$V-network-with-pt.xml.gz\
-     --counts $p/berlin-$V-counts-car-vmz.xml.gz\
+     --counts $p/berlin-$V-counts-vmz.xml.gz\
 	 --output $p/berlin-$V-25pct.plans_selection_$(ERROR_METRIC).csv\
 	 --metric $(ERROR_METRIC)
 
