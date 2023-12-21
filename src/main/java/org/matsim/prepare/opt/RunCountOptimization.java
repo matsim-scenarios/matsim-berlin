@@ -17,10 +17,7 @@ import org.matsim.application.options.CsvOptions;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.routes.NetworkRoute;
-import org.matsim.counts.Count;
-import org.matsim.counts.Counts;
-import org.matsim.counts.MatsimCountsReader;
-import org.matsim.counts.Volume;
+import org.matsim.counts.*;
 import org.matsim.prepare.RunOpenBerlinCalibration;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
@@ -48,6 +45,9 @@ public class RunCountOptimization implements MATSimAppCommand {
 
 	@CommandLine.Option(names = "--counts", description = "Path to counts", required = true)
 	private Path countsPath;
+
+	@CommandLine.Option(names = "--network-mode", description = "Path to vehicle types", defaultValue = TransportMode.car)
+	private String networkMode;
 
 	@CommandLine.Option(names = "--all-car", description = "Plans have been created with the all car option and counts should be scaled. ", defaultValue = "false")
 	private boolean allCar;
@@ -79,23 +79,27 @@ public class RunCountOptimization implements MATSimAppCommand {
 
 		new MatsimCountsReader(linkCounts).readFile(countsPath.toString());
 
-		int[] counts = new int[linkCounts.getCounts().size() * H];
+		Map<Id<Link>, MeasurementLocation<Link>> countStations = linkCounts.getMeasureLocations();
+
+		int[] counts = new int[countStations.size() * H];
 
 		linkMapping = new Object2IntLinkedOpenHashMap<>();
 
 		int k = 0;
-		for (Count<Link> value : linkCounts.getCounts().values()) {
-			Map<Integer, Volume> volumes = value.getVolumes();
+		for (MeasurementLocation<Link> station : countStations.values()){
+			// hard coded to car calibration
+			Measurable volumes = station.getVolumesForMode(networkMode);
 			for (int i = 0; i < H; i++) {
-				if (volumes.containsKey(i)) {
+				OptionalDouble v = volumes.getAtHour(i);
+				if (v.isPresent()) {
 					int idx = k * H + i;
-					counts[idx] = (int) volumes.get(i).getValue();
+					counts[idx] = (int) v.getAsDouble();
 					if (allCar)
 						counts[idx] = (int) (counts[idx] * RunOpenBerlinCalibration.CAR_FACTOR);
 				}
 			}
 
-			linkMapping.put(value.getId(), k++);
+			linkMapping.put(station.getRefId(), k++);
 		}
 
 		Network network = NetworkUtils.readNetwork(networkPath.toString());
@@ -140,7 +144,7 @@ public class RunCountOptimization implements MATSimAppCommand {
 		Population population = PopulationUtils.readPopulation(input.toString());
 		List<PlanPerson> persons = new ArrayList<>();
 
-		Set<Id<Link>> links = linkCounts.getCounts().keySet();
+		Set<Id<Link>> links = linkCounts.getMeasureLocations().keySet();
 
 		SplittableRandom rnd = new SplittableRandom(0);
 
@@ -158,8 +162,6 @@ public class RunCountOptimization implements MATSimAppCommand {
 			int offset = 0;
 			// Commercial traffic, which can be chosen to not be included at all
 			if (person.getId().toString().startsWith("commercialPersonTraffic")) {
-
-				offset = 1;
 				// if other trips have been scaled, these unscaled trips are scaled as well
 				if (allCar)
 					// scale with mean of CAR_FACTOR
@@ -176,6 +178,7 @@ public class RunCountOptimization implements MATSimAppCommand {
 				for (PlanElement el : plan.getPlanElements()) {
 					if (el instanceof Leg leg) {
 
+						// TODO: other leg modes
 						if (!leg.getMode().equals(TransportMode.car))
 							continue;
 

@@ -1,5 +1,7 @@
 package org.matsim.run;
 
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.TransportMode;
@@ -11,6 +13,8 @@ import org.matsim.core.config.groups.ReplanningConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
+import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
+import org.matsim.core.router.util.TravelTime;
 import org.matsim.prepare.RunOpenBerlinCalibration;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
@@ -96,15 +100,24 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 	protected void prepareControler(Controler controler) {
 
 		controler.addOverridingModule(new SimWrapperModule());
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
 
-				addTravelTimeBinding(TransportMode.ride).to(networkTravelTime());
-				addTravelDisutilityFactoryBinding(TransportMode.ride).to(carTravelDisutilityFactoryKey());
-
-			}
-		});
+		controler.addOverridingModule(new TravelTimeBinding());
 
 	}
+
+	/**
+	 * Add travel time bindings for ride and freight modes, which are not actually network modes.
+	 */
+	public static final class TravelTimeBinding extends AbstractModule {
+		@Override
+		public void install() {
+			addTravelTimeBinding(TransportMode.ride).to(networkTravelTime());
+			addTravelDisutilityFactoryBinding(TransportMode.ride).to(carTravelDisutilityFactoryKey());
+
+			addTravelTimeBinding("freight").to(Key.get(TravelTime.class, Names.named(TransportMode.truck)));
+			addTravelDisutilityFactoryBinding("freight").to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
+
+		}
+	}
+
 }

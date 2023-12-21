@@ -65,9 +65,10 @@ public class ReprojectNetwork implements MATSimAppCommand {
 		if (!remapModes.isEmpty()) {
 			for (Link link : scenario.getNetwork().getLinks().values()) {
 				Set<String> modes = new HashSet<>(link.getAllowedModes());
+
+				// Only add mode without removing
 				remapModes.forEach((oldMode, newMode) -> {
 					if (modes.contains(oldMode)) {
-						modes.remove(oldMode);
 						modes.add(newMode);
 					}
 				});

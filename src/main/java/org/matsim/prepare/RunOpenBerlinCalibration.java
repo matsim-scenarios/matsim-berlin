@@ -397,6 +397,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			}
 		});
 
+		controler.addOverridingModule(new RunOpenBerlinScenario.TravelTimeBinding());
 		controler.addOverridingModule(new SimWrapperModule());
 	}
 

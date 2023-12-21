@@ -39,7 +39,7 @@
 		<param name="inputFacilitiesFile" value="./berlin-v6.1-facilities.xml.gz"/>
 	</module>
 	<module name="planscalcroute">
-		<param name="networkModes" value="car,truck,ride"/>
+		<param name="networkModes" value="car,truck,freight,ride"/>
 		<param name="accessEgressType" value="accessEgressModeToLink"/>
 		<parameterset type="teleportedModeParameters">
 			<param name="beelineDistanceFactor" value="1.3"/>
@@ -170,7 +170,7 @@
 				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="monetaryDistanceRate" value="-4.0E-4" />
-				<param name="mode" value="truck" />
+				<param name="mode" value="freight" />
 			</parameterset>
 		</parameterset>
 	</module>
