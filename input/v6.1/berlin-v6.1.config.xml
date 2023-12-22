@@ -53,7 +53,7 @@
 		</parameterset>
 	</module>
 	<module name="qsim">
-		<param name="mainMode" value="car,truck"/>
+		<param name="mainMode" value="car,truck,freight"/>
 		<param name="flowCapacityFactor" value="0.25"/>
 		<param name="storageCapacityFactor" value="0.25"/>
 		<param name="numberOfThreads" value="12"/>
@@ -171,6 +171,15 @@
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="monetaryDistanceRate" value="-4.0E-4" />
 				<param name="mode" value="freight" />
+			</parameterset>
+			<parameterset type="modeParams" >
+				<param name="constant" value="0.0" />
+				<param name="dailyMonetaryConstant" value="0.0" />
+				<param name="dailyUtilityConstant" value="0.0" />
+				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="monetaryDistanceRate" value="-4.0E-4" />
+				<param name="mode" value="truck" />
 			</parameterset>
 		</parameterset>
 	</module>
