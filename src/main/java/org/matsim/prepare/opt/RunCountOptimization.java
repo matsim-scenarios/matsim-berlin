@@ -17,7 +17,10 @@ import org.matsim.application.options.CsvOptions;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.routes.NetworkRoute;
-import org.matsim.counts.*;
+import org.matsim.counts.Counts;
+import org.matsim.counts.MatsimCountsReader;
+import org.matsim.counts.Measurable;
+import org.matsim.counts.MeasurementLocation;
 import org.matsim.prepare.RunOpenBerlinCalibration;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
@@ -86,7 +89,7 @@ public class RunCountOptimization implements MATSimAppCommand {
 		linkMapping = new Object2IntLinkedOpenHashMap<>();
 
 		int k = 0;
-		for (MeasurementLocation<Link> station : countStations.values()){
+		for (MeasurementLocation<Link> station : countStations.values()) {
 			// hard coded to car calibration
 			Measurable volumes = station.getVolumesForMode(networkMode);
 			for (int i = 0; i < H; i++) {
@@ -166,7 +169,7 @@ public class RunCountOptimization implements MATSimAppCommand {
 				// if other trips have been scaled, these unscaled trips are scaled as well
 				if (allCar)
 					// scale with mean of CAR_FACTOR
-					scale += (rnd.nextDouble() < 0.85 ? 5: 4);
+					scale *= (rnd.nextDouble() < 0.85 ? 5 : 4);
 			}
 
 			// Index for plan
