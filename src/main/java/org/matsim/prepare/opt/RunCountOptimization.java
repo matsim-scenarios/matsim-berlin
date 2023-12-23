@@ -160,8 +160,9 @@ public class RunCountOptimization implements MATSimAppCommand {
 			boolean keep = false;
 
 			int offset = 0;
-			// Commercial traffic, which can be chosen to not be included at all
-			if (person.getId().toString().startsWith("commercialPersonTraffic")) {
+
+			// commercial traffic is scaled here
+			if (!person.getId().toString().startsWith("person")) {
 				// if other trips have been scaled, these unscaled trips are scaled as well
 				if (allCar)
 					// scale with mean of CAR_FACTOR
