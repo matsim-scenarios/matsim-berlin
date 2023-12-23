@@ -249,15 +249,15 @@ eval-opt: $p/berlin-initial-$V-25pct.experienced_plans.xml.gz
  	 --output $p/berlin-$V-25pct.plans_$(ERROR_METRIC).xml.gz
 
 	$(sc) run --mode "routeChoice" --iterations 20 --all-car --output "output/eval-$(ERROR_METRIC)" --25pct --population "berlin-$V-25pct.plans_$(ERROR_METRIC).xml.gz"\
-	 --config $p/berlin-$V-base-calib.config.xml
+	 --config $p/berlin-$V.config.xml
 
 
 # TODO: these needs to be renamed to plans-initial, because they are uncalibrated at this stage
 # These depend on the output of optimization runs
-$p/berlin-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz $p/berlin-goodsTraffic-$V-25pct.plans.xml.gz $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
+$p/berlin-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
 	$(sc) prepare filter-relevant-agents\
 	 --input $p/berlin-$V-25pct.plans_log_error.xml.gz --output $@\
-	 --shp input/v6.0/area/area.shp\
+	 --shp input/$V/area/area.shp\
 	 --facilities $<\
 	 --network $(word 2,$^)
 
@@ -271,7 +271,7 @@ $p/berlin-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-net
 
 	$(sc) prepare fix-subtour-modes --input $@ --output $@ --coord-dist 100
 
-	$(sc) prepare merge-populations $@ $(word 3,$^) $(word 4,$^)\
+	$(sc) prepare merge-populations $@ $(word 3,$^)\
 		--output $@
 
 	$(sc) prepare downsample-population $@\

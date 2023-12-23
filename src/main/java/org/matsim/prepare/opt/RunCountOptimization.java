@@ -178,14 +178,23 @@ public class RunCountOptimization implements MATSimAppCommand {
 				for (PlanElement el : plan.getPlanElements()) {
 					if (el instanceof Leg leg) {
 
-						// TODO: other leg modes
-						if (!leg.getMode().equals(TransportMode.car))
+						Object networkMode = leg.getAttributes().getAttribute("networkMode");
+						if (!Objects.equals(networkMode, this.networkMode))
 							continue;
 
-						// TODO: scale travel time with factor from the leg
-
 						if (leg.getRoute() instanceof NetworkRoute route) {
+							double travelTime = leg.getTravelTime().orElseThrow(() -> new IllegalStateException("No travel time for leg"));
+							double freeTravelTime = route.getLinkIds().stream()
+								.map(id -> network.getLinks().get(id))
+								// Use ceil because traversal over links is always whole seconds during simulation
+								.mapToDouble(l -> Math.ceil(l.getLength() / l.getFreespeed()))
+								.sum();
+
 							boolean relevant = route.getLinkIds().stream().anyMatch(links::contains);
+
+							// The actual travel time per link is not known
+							// The overall deviation is applied to all links equally
+							double factor = travelTime / freeTravelTime;
 
 							double time = leg.getDepartureTime().seconds();
 
@@ -196,7 +205,7 @@ public class RunCountOptimization implements MATSimAppCommand {
 									Link link = network.getLinks().get(linkId);
 
 									// Assume free speed travel time
-									time += link.getLength() / link.getFreespeed() + 1;
+									time += Math.ceil(link.getLength() / link.getFreespeed()) * factor;
 
 									if (linkMapping.containsKey(linkId)) {
 										int idx = linkMapping.getInt(linkId);
