@@ -3,6 +3,7 @@
 <config>
 	<module name="TimeAllocationMutator">
 		<param name="mutationRange" value="1800.0"/>
+		<param name="mutateAroundInitialEndTimeOnly" value="true"/>
 	</module>
 	<module name="controler">
 		<param name="lastIteration" value="500"/>
@@ -22,7 +23,7 @@
 		<param name="inputNetworkFile" value="./berlin-v6.1-network-with-pt.xml.gz"/>
 	</module>
 	<module name="plans">
-		<param name="inputPlansFile" value="./berlin-v6.1-25pct.plans.xml.gz"/>
+		<param name="inputPlansFile" value="./berlin-v6.1-25pct.plans-initial.xml.gz"/>
 		<param name="removingUnnecessaryPlanAttributes" value="true"/>
 	</module>
 	<module name="vehicles">

@@ -23,11 +23,11 @@ public class BerlinDashboardProvider implements DashboardProvider {
 		TripDashboard trips = new TripDashboard("mode_share_ref.csv", "mode_share_per_dist_ref.csv", "mode_users_ref.csv");
 		trips.setAnalysisArgs("--match-id", "^berlin.+", "--shp-filter", "none");
 
-		// TODO: the freight mode is not separated correctly from car yet
+		// TODO: Freight counts should go into extra tab on counts dashboard
 		return List.of(
 			trips,
 			new TravelTimeComparisonDashboard(ApplicationUtils.resolve(config.getContext(), "berlin-v" + RunOpenBerlinScenario.VERSION + "-routes-ref.csv.gz")),
-			Dashboard.customize(new TrafficCountsDashboard(ApplicationUtils.resolve(config.getContext(), "berlin-v" + RunOpenBerlinScenario.VERSION + "-counts-hgv-vmz.xml.gz"), Set.of("freight")))
+			Dashboard.customize(new TrafficCountsDashboard(ApplicationUtils.resolve(config.getContext(), "berlin-v" + RunOpenBerlinScenario.VERSION + "-counts-vmz.xml.gz"), Set.of("truck")))
 				.title("Truck counts")
 				.context("freight")
 		);

@@ -252,9 +252,8 @@ eval-opt: $p/berlin-initial-$V-25pct.experienced_plans.xml.gz
 	 --config $p/berlin-$V.config.xml
 
 
-# TODO: these needs to be renamed to plans-initial, because they are uncalibrated at this stage
 # These depend on the output of optimization runs
-$p/berlin-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
+$p/berlin-$V-25pct.plans-initial.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
 	$(sc) prepare filter-relevant-agents\
 	 --input $p/berlin-$V-25pct.plans_log_error.xml.gz --output $@\
 	 --shp input/$V/area/area.shp\
@@ -278,19 +277,22 @@ $p/berlin-$V-25pct.plans.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-net
 		 --sample-size 0.25\
 		 --samples 0.1 0.01 0.001\
 
-clean-plans:
+$p/berlin-$V-25pct.plans.xml.gz:
+	$(sc) prepare clean-population\
+	 --plans mode-choice-10pct/runs/004/004.output_plans.xml.gz\
+	 --remove-unselected-plans\
+	 --output mode-choice-final/runs/004/berlin-$V-10pct.plans.xml.gz
+
 	$(sc) prepare clean-population\
 	 --plans mode-choice-final-25pct/runs/004/004.output_plans.xml.gz\
 	 --remove-unselected-plans\
-	 --output mode-choice-final-25pct/runs/004/berlin-$V-25pct.plans.xml.gz
-
-	$(sc) prepare clean-population\
-	 --plans mode-choice-final/runs/004/004.output_plans.xml.gz\
-	 --remove-unselected-plans\
-	 --output mode-choice-final/runs/004/berlin-$V-10pct.plans.xml.gz
+	 --output $@
 
 prepare-calibration: $p/berlin-cadyts-input-$V-25pct.plans.xml.gz $p/berlin-$V-network-with-pt.xml.gz $p/berlin-$V-counts-vmz.xml.gz
 	echo "Done"
 
-prepare: $p/berlin-$V-25pct.plans.xml.gz $p/berlin-$V-network-with-pt.xml.gz
+prepare-initial: $p/berlin-$V-25pct.plans-initial.xml.gz $p/berlin-$V-network-with-pt.xml.gz
+	echo "Done"
+
+prepare: $p/berlin-$V-25pct.plans.xml.gz
 	echo "Done"
