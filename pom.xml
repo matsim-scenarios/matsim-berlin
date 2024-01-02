@@ -6,10 +6,10 @@
 		<artifactId>matsim-all</artifactId>
 
 		<!-- PR-labelled release -->
-<!--		<version>16.0-PR2990</version>-->
+		<version>16.0-PR3032</version>
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
-		<version>16.0-SNAPSHOT</version>
+<!--		<version>16.0-SNAPSHOT</version>-->
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -254,8 +254,13 @@
 
 		<!-- Include the JUnit testing library.  Not transitive. -->
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
 			<scope>test</scope>
 		</dependency>
 
