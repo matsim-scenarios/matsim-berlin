@@ -86,9 +86,9 @@ import java.util.stream.Collectors;
 public class RunOpenBerlinCalibration extends MATSimApplication {
 
 	/**
-	 * Scaling factor if all persons use car (~20.6% share).
+	 * Scaling factor if all persons use car (~20% share).
 	 */
-	public static final double CAR_FACTOR = 4.85;
+	public static final int CAR_FACTOR = 5;
 	/**
 	 * Flexible activities, which need to be known for location choice and during generation.
 	 * A day can not end on a flexible activity.
@@ -96,7 +96,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	public static final Set<String> FLEXIBLE_ACTS = Set.of("shop_daily", "shop_other", "leisure", "dining");
 	private static final Logger log = LogManager.getLogger(RunOpenBerlinCalibration.class);
 	@CommandLine.Mixin
-	private final SampleOptions sample = new SampleOptions(100, 25, 10, 1);
+	private final SampleOptions sample = new SampleOptions(25, 10, 3, 1);
 	@CommandLine.Option(names = "--mode", description = "Calibration mode that should be run.")
 	private CalibrationMode mode;
 	@CommandLine.Option(names = "--weight", description = "Strategy weight.", defaultValue = "1")

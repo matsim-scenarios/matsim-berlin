@@ -46,7 +46,12 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 	/**
 	 * Detour factor for car routes, which was determined based on sampled routes.
 	 */
-	private static final double DETOUR_FACTOR = 1.56;
+	private static final double DETOUR_FACTOR = 1.46;
+
+	/**
+	 * Factor for short trips < 2000m.
+	 */
+	private static final double DETOUR_FACTOR_SHORT = 1.3;
 
 	private static final Logger log = LogManager.getLogger(InitLocationChoice.class);
 
@@ -198,10 +203,11 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 					ActivityFacility location = null;
 
 					// target leg distance in km
-					Object origDist = act.getAttributes().getAttribute("orig_dist");
+					double origDist = (double) act.getAttributes().getAttribute("orig_dist");
 
 					// Distance will be reduced
-					double dist = (double) origDist * 1000 / DETOUR_FACTOR;
+					double detourFactor = origDist <= 2000 ? DETOUR_FACTOR_SHORT : DETOUR_FACTOR;
+					double dist = origDist * 1000 / detourFactor;
 
 					if (fixedLocations.containsKey(type)) {
 						location = fixedLocations.get(type);

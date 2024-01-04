@@ -169,7 +169,7 @@ public class RunCountOptimization implements MATSimAppCommand {
 				// if other trips have been scaled, these unscaled trips are scaled as well
 				if (allCar)
 					// scale with mean of CAR_FACTOR
-					scale *= (rnd.nextDouble() < 0.85 ? 5 : 4);
+					scale *= RunOpenBerlinCalibration.CAR_FACTOR;
 			}
 
 			// Index for plan
