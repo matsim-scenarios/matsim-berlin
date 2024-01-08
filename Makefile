@@ -187,7 +187,7 @@ $p/berlin-initial-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans.xml
 	# For debugging and visualization
 	$(sc) prepare downsample-population $@\
 		 --sample-size 0.25\
-		 --samples 0.1 0.01\
+		 --samples 0.1 0.03 0.01\
 
 
 $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
@@ -275,7 +275,7 @@ $p/berlin-$V-25pct.plans-initial.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berli
 
 	$(sc) prepare downsample-population $@\
 		 --sample-size 0.25\
-		 --samples 0.1 0.01 0.001\
+		 --samples 0.1 0.03 0.01 0.001\
 
 $p/berlin-$V-25pct.plans.xml.gz:
 	$(sc) prepare clean-population\

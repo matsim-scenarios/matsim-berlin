@@ -104,7 +104,7 @@
 		<param name="vspDefaultsCheckingLevel" value="abort"/>
 	</module>
 
-	<module name="planCalcScore">
+	<module name="scoring">
 		<param name="fractionOfIterationsToStartScoreMSA" value="0.8"/>
 		<parameterset type="scoringParameters">
 			<param name="marginalUtilityOfMoney" value="1.0"/>
@@ -183,6 +183,24 @@
 				<param name="mode" value="truck" />
 			</parameterset>
 		</parameterset>
+	</module>
+
+	<module name="vspScoring">
+
+		<!-- Scored by distance group -->
+		<parameterset type="modeParams">
+			<param name="mode" value="car" />
+		</parameterset>
+		<parameterset type="modeParams">
+			<param name="mode" value="ride" />
+		</parameterset>
+		<parameterset type="modeParams">
+			<param name="mode" value="pt" />
+		</parameterset>
+		<parameterset type="modeParams">
+			<param name="mode" value="bike" />
+		</parameterset>
+
 	</module>
 
 	<module name="counts">

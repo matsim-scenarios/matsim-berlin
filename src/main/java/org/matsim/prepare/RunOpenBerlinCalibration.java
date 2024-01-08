@@ -55,6 +55,7 @@ import org.matsim.prepare.opt.SelectPlansFromIndex;
 import org.matsim.prepare.population.*;
 import org.matsim.run.Activities;
 import org.matsim.run.RunOpenBerlinScenario;
+import org.matsim.run.scoring.VspScoringModule;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
 import org.matsim.smallScaleCommercialTrafficGeneration.GenerateSmallScaleCommercialTrafficDemand;
@@ -398,6 +399,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		});
 
 		controler.addOverridingModule(new RunOpenBerlinScenario.TravelTimeBinding());
+		controler.addOverridingModule(new VspScoringModule());
 		controler.addOverridingModule(new SimWrapperModule());
 	}
 

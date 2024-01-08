@@ -16,6 +16,7 @@ import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.prepare.RunOpenBerlinCalibration;
+import org.matsim.run.scoring.VspScoringModule;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
 import picocli.CommandLine;
@@ -102,6 +103,8 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 		controler.addOverridingModule(new SimWrapperModule());
 
 		controler.addOverridingModule(new TravelTimeBinding());
+
+		controler.addOverridingModule(new VspScoringModule());
 
 	}
 
