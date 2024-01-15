@@ -34,7 +34,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import static org.matsim.prepare.ExtractFacilityShp.CreateMATSimFacilities.IGNORED_LINK_TYPES;
+import static org.matsim.prepare.CreateMATSimFacilities.IGNORED_LINK_TYPES;
 
 @CommandLine.Command(
 	name = "init-location-choice",
