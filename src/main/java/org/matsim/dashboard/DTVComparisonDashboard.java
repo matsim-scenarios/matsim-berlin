@@ -5,6 +5,7 @@ import org.matsim.application.prepare.network.CreateGeoJsonNetwork;
 import org.matsim.simwrapper.Dashboard;
 import org.matsim.simwrapper.Header;
 import org.matsim.simwrapper.Layout;
+import org.matsim.simwrapper.viz.ColorScheme;
 import org.matsim.simwrapper.viz.MapPlot;
 import org.matsim.simwrapper.viz.Plotly;
 import tech.tablesaw.plotly.components.Axis;
@@ -50,7 +51,7 @@ public class DTVComparisonDashboard implements Dashboard {
 
 				viz.addTrace(BarTrace.builder(Plotly.OBJ_INPUT, Plotly.INPUT).orientation(BarTrace.Orientation.HORIZONTAL).build(), ds.mapping()
 					.x("n")
-					.name("quality", Plotly.ColorScheme.RdYlBu)
+					.name("quality", ColorScheme.RdYlBu)
 				);
 			}).el(Plotly.class, (viz, data) -> {
 
@@ -67,7 +68,7 @@ public class DTVComparisonDashboard implements Dashboard {
 				viz.addTrace(BarTrace.builder(Plotly.OBJ_INPUT, Plotly.INPUT).build(), ds.mapping()
 					.x("road_type")
 					.y("share")
-					.name("quality", Plotly.ColorScheme.RdYlBu)
+					.name("quality", ColorScheme.RdYlBu)
 				);
 
 			});
@@ -86,7 +87,7 @@ public class DTVComparisonDashboard implements Dashboard {
 				viz.display.lineColor.dataset = "dtv";
 				viz.display.lineColor.columnName = "quality";
 				viz.display.lineColor.join = "link_id";
-				viz.display.lineColor.setColorRamp(Plotly.ColorScheme.RdYlBu, 3, false);
+				viz.display.lineColor.setColorRamp(ColorScheme.RdYlBu, 3, false);
 
 				// 8px
 				viz.display.lineWidth.dataset = "@8";

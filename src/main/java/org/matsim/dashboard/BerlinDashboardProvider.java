@@ -1,5 +1,6 @@
 package org.matsim.dashboard;
 
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.application.ApplicationUtils;
 import org.matsim.core.config.Config;
 import org.matsim.run.RunOpenBerlinScenario;
@@ -23,13 +24,12 @@ public class BerlinDashboardProvider implements DashboardProvider {
 		TripDashboard trips = new TripDashboard("mode_share_ref.csv", "mode_share_per_dist_ref.csv", "mode_users_ref.csv");
 		trips.setAnalysisArgs("--match-id", "^berlin.+", "--shp-filter", "none");
 
-		// TODO: Freight counts should go into extra tab on counts dashboard
 		return List.of(
 			trips,
 			new TravelTimeComparisonDashboard(ApplicationUtils.resolve(config.getContext(), "berlin-v" + RunOpenBerlinScenario.VERSION + "-routes-ref.csv.gz")),
-			Dashboard.customize(new TrafficCountsDashboard(ApplicationUtils.resolve(config.getContext(), "berlin-v" + RunOpenBerlinScenario.VERSION + "-counts-vmz.xml.gz"), Set.of("truck")))
-				.title("Truck counts")
-				.context("freight")
+			new TrafficCountsDashboard()
+				.withModes(TransportMode.car, Set.of(TransportMode.car))
+				.withModes(TransportMode.truck, Set.of(TransportMode.truck, "freight"))
 		);
 	}
 
