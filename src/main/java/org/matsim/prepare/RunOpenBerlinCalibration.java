@@ -167,7 +167,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			config.counts().setCountsScaleFactor(sampleSize * countScale);
 			config.plans().setInputFile(sample.adjustName(config.plans().getInputFile()));
 
-			sw.defaultParams().sampleSize = sampleSize * countScale;
+			sw.sampleSize = sampleSize * countScale;
 		}
 
 		// Routes are not relaxed yet, and there should not be too heavy congestion

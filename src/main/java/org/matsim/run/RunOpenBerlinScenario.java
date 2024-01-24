@@ -54,7 +54,7 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 
 			// Counts can be scaled with sample size
 			config.counts().setCountsScaleFactor(sampleSize);
-			sw.defaultParams().sampleSize = sampleSize;
+			sw.sampleSize = sampleSize;
 
 			config.controller().setRunId(sample.adjustName(config.controller().getRunId()));
 			config.controller().setOutputDirectory(sample.adjustName(config.controller().getOutputDirectory()));
