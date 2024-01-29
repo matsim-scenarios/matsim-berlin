@@ -19,6 +19,9 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 
+/**
+ * This class runs one iteration of MATSim and tracks the execution time into a csv file.
+ */
 public class RunQsimComparison extends RunOpenBerlinScenario {
 
 	public static void main(String[] args) {

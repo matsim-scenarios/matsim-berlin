@@ -7,7 +7,6 @@ import org.apache.logging.log4j.Logger;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.index.strtree.STRtree;
 import org.matsim.api.core.v01.Coord;
-import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
@@ -25,12 +24,8 @@ import org.matsim.core.population.algorithms.PersonAlgorithm;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.core.utils.geometry.geotools.MGC;
-import org.matsim.facilities.ActivityFacilities;
 import org.matsim.facilities.ActivityFacility;
-import org.matsim.facilities.FacilitiesUtils;
-import org.matsim.facilities.MatsimFacilitiesReader;
 import org.matsim.prepare.RunOpenBerlinCalibration;
-import org.matsim.run.RunOpenBerlinScenario;
 import org.opengis.feature.simple.SimpleFeature;
 import picocli.CommandLine;
 
@@ -92,9 +87,9 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 	private ThreadLocal<Context> ctxs;
 
-	private AtomicLong total = new AtomicLong();
+	private final AtomicLong total = new AtomicLong();
 
-	private AtomicLong warning = new AtomicLong();
+	private final AtomicLong warning = new AtomicLong();
 
 	public static void main(String[] args) {
 		new InitLocationChoice().execute(args);
