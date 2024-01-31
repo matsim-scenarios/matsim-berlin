@@ -24,7 +24,7 @@ public class CalcIncome implements PersonAlgorithm {
 	private static final int[] INCOME_GROUPS = new int[]{450, 500, 900, 1500, 2000, 2600, 3000, 3600, 4600, 5600, 8000};
 
 	/**
-	 *  Distribution per economic status. See python file extract income.
+	 * Distribution per economic status. See python file extract income.
 	 */
 	private static final Map<String, double[]> INCOME_DIST = Map.of(
 		"very_low", new double[]{0.086, 0.342, 0.343, 0.165, 0.058, 0.004, 0.002, 0.000, 0.000, 0.000},
@@ -77,7 +77,7 @@ public class CalcIncome implements PersonAlgorithm {
 		double perPerson = (double) income / hh;
 
 		// Minimum income is "Regelsatz"
-		PersonUtils.setIncome(person,  Math.max(450, perPerson));
+		PersonUtils.setIncome(person, Math.max(450, perPerson));
 	}
 
 }
