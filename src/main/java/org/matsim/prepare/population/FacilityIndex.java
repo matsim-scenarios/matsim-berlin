@@ -31,7 +31,7 @@ final class FacilityIndex {
 	 */
 	final Map<String, STRtree> index = new HashMap<>();
 
-	public FacilityIndex(String facilityPath) {
+	FacilityIndex(String facilityPath) {
 
 		new MatsimFacilitiesReader(RunOpenBerlinScenario.CRS, RunOpenBerlinScenario.CRS, all)
 			.readFile(facilityPath);
