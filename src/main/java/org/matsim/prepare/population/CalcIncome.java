@@ -19,8 +19,9 @@ public class CalcIncome implements PersonAlgorithm {
 
 	/**
 	 * Income groups in Euro. The last element is the maximum income in the model, which is not known but defined.
+	 * The minimum is also defined as well.
 	 */
-	private static final int[] INCOME_GROUPS = new int[]{0, 500, 900, 1500, 2000, 2600, 3000, 3600, 4600, 5600, 8000};
+	private static final int[] INCOME_GROUPS = new int[]{400, 500, 900, 1500, 2000, 2600, 3000, 3600, 4600, 5600, 8000};
 
 	/**
 	 *  Distribution per economic status. See python file extract income.
