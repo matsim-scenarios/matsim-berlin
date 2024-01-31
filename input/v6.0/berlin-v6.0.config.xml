@@ -8,7 +8,7 @@
 		<param name="lastIteration" value="500"/>
 		<param name="overwriteFiles" value="failIfDirectoryExists"/>
 		<param name="runId" value="berlin-v6.0"/>
-		<param name="outputDirectory" value="./output/berlin-v6.0-25pct"/>
+		<param name="outputDirectory" value="./output/berlin-v6.0-10pct"/>
 		<param name="writeEventsInterval" value="100"/>
 		<param name="writePlansInterval" value="100"/>
 		<param name="routingAlgorithmType" value="SpeedyALT"/>
@@ -54,8 +54,8 @@
 	</module>
 	<module name="qsim">
 		<param name="mainMode" value="car,freight"/>
-		<param name="flowCapacityFactor" value="0.25"/>
-		<param name="storageCapacityFactor" value="0.25"/>
+		<param name="flowCapacityFactor" value="0.1"/>
+		<param name="storageCapacityFactor" value="0.1"/>
 		<param name="numberOfThreads" value="12"/>
 		<param name="startTime" value="00:00:00"/>
 		<param name="endTime" value="36:00:00"/>
@@ -86,7 +86,7 @@
 			<param name="context" value="" />
 			<param name="mapCenter" value="13.39,52.51" />
 			<param name="mapZoomLevel" value="9.1" />
-			<param name="sampleSize" value="0.25" />
+			<param name="sampleSize" value="0.1" />
 			<param name="shp" value="./area/area.shp" />
 		</parameterset>
 	</module>

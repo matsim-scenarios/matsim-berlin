@@ -348,7 +348,7 @@
 							<goal>shade</goal>
 						</goals>
 						<configuration>
-							<outputFile>${project.basedir}/${project.build.finalName}.jar</outputFile>
+							<outputFile>${project.basedir}/${project.build.finalName}-${git.commit.id.describe-short}.jar</outputFile>
 							<transformers>
 								<!-- This bit sets the main class for the executable jar as you otherwise would with the assembly plugin -->
 								<transformer
