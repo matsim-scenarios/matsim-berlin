@@ -59,12 +59,11 @@ import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.extensions.pt.PtExtensionsConfigGroup;
 import org.matsim.extensions.pt.routing.EnhancedRaptorIntermodalAccessEgress;
-import org.matsim.legacy.prepare.population.AssignIncome;
 import org.matsim.legacy.run.drt.OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier;
 import org.matsim.legacy.run.drt.RunDrtOpenBerlinScenario;
+import org.matsim.prepare.population.AssignIncome;
 import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
-import java.io.IOException;
 import java.util.*;
 
 import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType.FastAStarLandmarks;
@@ -194,7 +193,7 @@ public final class RunBerlinScenario {
 			downsample(scenario.getPopulation().getPersons(), berlinCfg.getPopulationDownsampleFactor());
 		}
 
-		AssignIncome.assignIncomeToPersonSubpopulationAccordingToGermanyAverage(scenario.getPopulation());
+		AssignIncome.assignIncomeToPersons(scenario.getPopulation());
 		return scenario;
 	}
 

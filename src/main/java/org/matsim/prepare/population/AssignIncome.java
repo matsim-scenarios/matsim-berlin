@@ -1,6 +1,7 @@
 package org.matsim.prepare.population;
 
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.algorithms.PersonAlgorithm;
@@ -10,9 +11,17 @@ import java.util.SplittableRandom;
 /**
  * Draw income from german wide distribution.
  */
-public class CalcIncome implements PersonAlgorithm {
+public class AssignIncome implements PersonAlgorithm {
 
 	private final SplittableRandom rnd = new SplittableRandom(1234);
+
+	/**
+	 * Assign income on whole population.
+	 */
+	public static void assignIncomeToPersons(Population population) {
+		AssignIncome assignIncome = new AssignIncome();
+		population.getPersons().values().forEach(assignIncome::run);
+	}
 
 	@Override
 	public void run(Person person) {

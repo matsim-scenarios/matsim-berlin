@@ -14,7 +14,7 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.prepare.RunOpenBerlinCalibration;
-import org.matsim.prepare.population.CalcIncome;
+import org.matsim.prepare.population.AssignIncome;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
 import picocli.CommandLine;
@@ -99,7 +99,7 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 	@Override
 	protected void prepareScenario(Scenario scenario) {
 
-		CalcIncome income = new CalcIncome();
+		AssignIncome income = new AssignIncome();
 
 		// Calculate the income for each person, in next versions this might also be done during creation of the population
 		scenario.getPopulation().getPersons().values().forEach(income::run);
