@@ -21,7 +21,7 @@ public class CalcIncome implements PersonAlgorithm {
 	 * Income groups in Euro. The last element is the maximum income in the model, which is not known but defined.
 	 * The minimum is also defined as well.
 	 */
-	private static final int[] INCOME_GROUPS = new int[]{400, 500, 900, 1500, 2000, 2600, 3000, 3600, 4600, 5600, 8000};
+	private static final int[] INCOME_GROUPS = new int[]{450, 500, 900, 1500, 2000, 2600, 3000, 3600, 4600, 5600, 8000};
 
 	/**
 	 *  Distribution per economic status. See python file extract income.
@@ -74,7 +74,10 @@ public class CalcIncome implements PersonAlgorithm {
 		int income = rnd.nextInt(INCOME_GROUPS[idx], INCOME_GROUPS[idx + 1]);
 
 		// Income is divided equally to household
-		PersonUtils.setIncome(person, (double) income / hh);
+		double perPerson = (double) income / hh;
+
+		// Minimum income is "Regelsatz"
+		PersonUtils.setIncome(person,  Math.max(450, perPerson));
 	}
 
 }
