@@ -37,7 +37,7 @@ public class RunQsimComparison extends RunOpenBerlinScenario {
 		config.controler().setLastIteration(0);
 
 		// don't write any events, as this slows down the qsim
-		config.controler().setWriteEventsInterval(0);
+		//config.controler().setWriteEventsInterval(0);
 
 		// rust_qsim has no pt
 		config.transit().setUseTransit(false);
@@ -76,10 +76,9 @@ public class RunQsimComparison extends RunOpenBerlinScenario {
 			var now = Instant.now();
 			var duration = Duration.between(start, now);
 			var size = config.qsim().getNumberOfThreads();
-
 			var filename = Paths.get(outDir.getOutputFilename("instrument-mobsim.csv"));
 			try (var writer = Files.newBufferedWriter(filename); var p = new CSVPrinter(writer, createWriteFormat("timestamp", "func", "duration", "size"))) {
-				p.printRecord(Instant.now().getNano(), "org.matsim.core.mobsim.qsim.run", duration.getNano(), size);
+				p.printRecord(Instant.now().getNano(), "org.matsim.core.mobsim.qsim.run", duration.toNanos(), size);
 			} catch (IOException ex) {
 				throw new RuntimeException(ex);
 			}
