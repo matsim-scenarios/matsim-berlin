@@ -46,8 +46,8 @@ final class FacilityIndex {
 
 			NavigableMap<Id<ActivityFacility>, ActivityFacility> afs = all.getFacilitiesForActivityType(act);
 			for (ActivityFacility af : afs.values()) {
-				STRtree index = this.index.computeIfAbsent(act, k -> new STRtree());
-				index.insert(MGC.coord2Point(af.getCoord()).getEnvelopeInternal(), af);
+				STRtree idx = this.index.computeIfAbsent(act, k -> new STRtree());
+				idx.insert(MGC.coord2Point(af.getCoord()).getEnvelopeInternal(), af);
 			}
 		}
 
