@@ -14,15 +14,17 @@ import org.matsim.core.config.groups.ReplanningConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
+import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
+import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.prepare.RunOpenBerlinCalibration;
+import org.matsim.prepare.population.AssignIncome;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
 import picocli.CommandLine;
 import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
-import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
-
 import java.util.List;
+import org.matsim.run.scoring.VspScoringModule;
 
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = RunOpenBerlinScenario.VERSION, mixinStandardHelpOptions = true)
 public class RunOpenBerlinScenario extends MATSimApplication {
