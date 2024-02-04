@@ -1,16 +1,17 @@
 #!/bin/bash --login
-#$ -l h_rt=790000
-#$ -j y
-#$ -m a
-#$ -cwd
-#$ -pe mp 16
-#$ -l mem_free=4G
-#$ -N calib-berlin
+#SBATCH --time=200:00:00
+#SBATCH --output=logfile_%x-%j.log
+#SBATCH --partition=smp
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=32G
+#SBATCH --job-name=calib-berlin
 
 date
 hostname
 
-command="python -u calibrate.py"
+command="python -u calibrate_dist.py"
 
 echo ""
 echo "command is $command"
