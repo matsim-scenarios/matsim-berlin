@@ -111,7 +111,7 @@
 			Euro/day: 11.76*(1+0.2017448) = 14.13252
 			Euro/m: 0.000124*(1+0.2017448) = 0.00014901635 -->
 
-			<!-- 6 -> inflation adjusted -->
+			<!-- 6.0 -> inflation adjusted (2017->2022) -->
 			<param name="performing" value="6.88"/>
 
 			<parameterset type="modeParams">
