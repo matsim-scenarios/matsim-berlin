@@ -13,22 +13,28 @@ import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DetailedPersonScoringParameters implements ScoringParametersForPerson {
 
 	/**
-	 * Cache instances of {@link ActivityUtilityParameters} for each activity type.
-	 * All params are the same for each person.
+	 * Cache instances of {@link ActivityUtilityParameters} for each subpopulation.
 	 */
-	private final Map<String, ActivityUtilityParameters> utilParams = new TreeMap<>();
+	private final Map<String, Map<String, ActivityUtilityParameters>> activityParamsPerSubpopulation = new ConcurrentHashMap<>();
 
 	/**
 	 * Cache instances of {@link ModeUtilityParameters} for each mode.
 	 */
 	private final Map<String, DistanceGroupModeUtilityParameters> modeParams = new TreeMap<>();
 
+	private final Scenario scenario;
+	private final VspScoringConfigGroup vspScoring;
+
 	@Inject
-	private Scenario scenario;
+	public DetailedPersonScoringParameters(Scenario scenario) {
+		this.scenario = scenario;
+		this.vspScoring = ConfigUtils.addOrGetModule(scenario.getConfig(), VspScoringConfigGroup.class);
+	}
 
 	@Override
 	public ScoringParameters getScoringParameters(Person person) {
@@ -38,24 +44,20 @@ public class DetailedPersonScoringParameters implements ScoringParametersForPers
 
 		ScoringConfigGroup.ScoringParameterSet scoringParameters = scoring.getScoringParameters(subpopulation);
 
-		Map<String, ActivityUtilityParameters> personParams = new TreeMap<>();
-
-		for (ScoringConfigGroup.ActivityParams params : scoringParameters.getActivityParams()) {
-			ActivityUtilityParameters p = utilParams.computeIfAbsent(params.getActivityType(), k -> {
+		Map<String, ActivityUtilityParameters> personParams = this.activityParamsPerSubpopulation.computeIfAbsent(subpopulation, k -> {
+			Map<String, ActivityUtilityParameters> activityParams = new TreeMap<>();
+			for (ScoringConfigGroup.ActivityParams params : scoringParameters.getActivityParams()) {
 				ActivityUtilityParameters.Builder factory = new ActivityUtilityParameters.Builder(params);
-				return factory.build();
-			});
-
-			personParams.put(params.getActivityType(), p);
-		}
+				activityParams.put(params.getActivityType(), factory.build());
+			}
+			return activityParams;
+		});
 
 		ScoringParameters.Builder builder = new ScoringParameters.Builder(scoring, scoringParameters, personParams,
 			scenario.getConfig().scenario());
 
 		// TODO: not configurable at the moment
-		if (subpopulation.equals("person")) {
-
-			VspScoringConfigGroup vspScoring = ConfigUtils.addOrGetModule(scenario.getConfig(), VspScoringConfigGroup.class);
+		if ("person".equals(subpopulation)) {
 
 			for (Map.Entry<String, VspScoringConfigGroup.ModeParams> e : vspScoring.getModeParams().entrySet()) {
 
