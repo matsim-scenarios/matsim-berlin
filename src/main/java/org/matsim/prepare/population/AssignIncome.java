@@ -42,9 +42,6 @@ public class AssignIncome implements PersonAlgorithm {
 		double income = 0.;
 		double rndDouble = rnd.nextDouble();
 
-		// Disable SonarQube code duplication for this block
-		// BEGIN-NOSCAN
-
 		if (rndDouble <= 0.1) income = 826.;
 		else if (rndDouble <= 0.2) income = 1142.;
 		else if (rndDouble <= 0.3) income = 1399.;
@@ -57,7 +54,6 @@ public class AssignIncome implements PersonAlgorithm {
 		else {
 			income = 4329.;
 		}
-		// END-NOSCAN
 
 		PersonUtils.setIncome(person, income);
 	}
