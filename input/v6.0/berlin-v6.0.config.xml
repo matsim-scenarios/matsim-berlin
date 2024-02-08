@@ -87,7 +87,7 @@
 			<param name="mapCenter" value="13.39,52.51" />
 			<param name="mapZoomLevel" value="9.1" />
 			<param name="sampleSize" value="0.1" />
-			<param name="shp" value="./area/area.shp" />
+			<param name="shp" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.0/input/area.shp" />
 		</parameterset>
 	</module>
 
@@ -176,7 +176,7 @@
 	</module>
 
 	<module name="counts">
-		<param name="inputCountsFile" value="./berlin-v6.0-counts-car-vmz.xml.gz"/>
+		<param name="inputCountsFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.0/input/berlin-v6.0-counts-car-vmz.xml.gz"/>
 	</module>
 
 	<module name="ReplanningAnnealer" >
