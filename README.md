@@ -15,7 +15,7 @@ Currently, there are multiple versions of the MATSim Open Berlin model:
 
 ### 10pct scenario (`input/v6.0`)
 
-This scenario contains a 25pct sample of the Greater Berlin population; road capacities are accordingly reduced. The scenario is calibrated taking into consideration the traffic counts, modal split and mode-specific trip distance distributions.
+This scenario contains both 10pct and 1pct sample of the Greater Berlin population; road capacities are accordingly reduced. The scenario is calibrated taking into consideration the traffic counts, modal split and mode-specific trip distance distributions.
 
 
 ## Licenses
