@@ -13,9 +13,9 @@ This repository provides an open MATSim transport model for Berlin, provided by 
 
 Currently, there are multiple versions of the MATSim Open Berlin model:
 
-### 25pct scenario (`input/v6.0`)
+### 10pct scenario (`input/v6.0`)
 
-This scenario contains a 25pct sample of the Greater Berlin population; road capacities are accordingly reduced. The scenario is calibrated taking into consideration the traffic counts, modal split and mode-specific trip distance distributions.
+This scenario contains both 10pct and 1pct sample of the Greater Berlin population; road capacities are accordingly reduced. The scenario is calibrated taking into consideration the traffic counts, modal split and mode-specific trip distance distributions.
 
 
 ## Licenses
@@ -34,12 +34,12 @@ Handling of large files within git is not without problems (git lfs files are no
 ----
 ## Simple things (without installing/running MATSim)
 
-### Movies
+### Use SimWrapper dashboards
 
-1. Go to https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/
-1. Decide for a scenario that you find interesting (e.g. `berlin-v6.0`) and go into that directory.
-1. Inside there, look for an `output-*` directory that you find interesting and go into that directory.
-1. Inside there, look for `movie-*` files.  You can't watch them directly, but there are various ways to download them. You can watch them then. Try that.
+1. Open SimWrapper at https://simwrapper.github.io/site/ .
+1. Select Explore Data Sources -> VSP Public-SVN .
+1. Navigate to de -> berlin -> berlin-v6.0 (https://simwrapper.github.io/site/public/de/berlin/berlin-v6.0).
+1. Enjoy the dashboards and visualizations.
 
 ### Run VIA on output files
 
@@ -80,17 +80,16 @@ This will update your repository to the newest version.
 
 ----
 ## Run the MATSim Berlin scenario ...
+
+(Requires either cloning or downloading the repository.)
+
 <details>
 <summary>    
     <h3>... using a runnable jar file</h3>
-</summary>    
-(Requires either cloning or downloading the repository.)
+</summary>
 
-1. Depending on the version of matsim-berlin you have selected, you might have to create the jar file yourself. 
-    1. **For version v5.4 or earlier:** <br/> 
-    There should be a file directly in the `matsim-berlin` directory with name approximately as `matsim-berlin-5.x-jar-with-dependencies.jar`.
-    1. **For version v5.5 or later:** <br/> 
-    You can build an executable jar-file by executing one of the following commands in the top directory. 
+1. Depending on the version of matsim-berlin you have selected, you might have to create the jar file yourself.
+    1. You can build an executable jar-file by executing one of the following commands in the top directory. 
 This will download all necessary dependencies (it might take a while the first time it is run) and dump the jar into the top directory.
         1. `./mvnw clean package -DskipTests=true`    
         1. or on Windows: `mvnw.cmd clean package -DskipTests=true`
@@ -110,7 +109,6 @@ java -jar [FILENAME].jar
     <summary>
 <h3>... using an IDE, e.g. Eclipse, IntelliJ - Alternative 1: use cloned/downloaded matsim-berlin repository</h3>
     </summary>
-(Requires either cloning or downloading the repository.)
 
 1. Set up the project in your IDE.
 1. Make sure the project is configured as maven project.
@@ -118,47 +116,13 @@ java -jar [FILENAME].jar
 1. "Open" the output directory.  You can drag files into VIA as was already done above.
 1. Edit the config file or adjust the run class. Re-run MATSim.
 </details>
-<details>    
-<summary><h3>... using an IDE, e.g. Eclipse, IntelliJ - Alternative 2: use matsim-berlin as a maven dependency</h3></summary>
-
-1. Clone the matsim-example-project: https://github.com/matsim-org/matsim-example-project
-2. Add a maven dependency to the open berlin project by writing the following to the pom file:
-
-```xml
-<repository>
-  <id>jitpack.io</id>
-  <url>https://jitpack.io</url>
-</repository>
-```
-
-```xml
-<dependency>
-  <groupId>com.github.matsim-scenarios</groupId>
-  <artifactId>matsim-berlin</artifactId>
-  <version>5.6</version>
-</dependency>
-```
-
-3. Write your own run class and make sure to execute the required public methods in RunBerlinScenario:
-
-```
-Config config = RunBerlinScenario.prepareConfig( args ) ;
-// possibly modify config here
-
-Scenario scenario = RunBerlinScenario.prepareScenario( config ) ;
-// possibly modify scenario here
-
-Controler controler = RunBerlinScenario.prepareControler( scenario ) ;
-// possibly modify controler here, e.g. add your own module
-
-controler.run
-
-```
-</details>
 
 ---
 ## More information
 
-For more information about the scenario generation, see VSP working paper # 19-01 under https://www.vsp.tu-berlin.de/publications/vspwp .
-
 For more information about MATSim, see here: https://www.matsim.org/
+
+## Internal documentation
+
+Internal documentation can be found here:
+https://docs.google.com/document/d/133CuXaMuWL0NcstyFHodk4y7J5yFLy9nrLtbBVpNWzM/edit?usp=drive_link

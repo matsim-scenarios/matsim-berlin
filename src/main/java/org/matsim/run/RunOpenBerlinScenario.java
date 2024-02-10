@@ -2,6 +2,7 @@ package org.matsim.run;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.application.MATSimApplication;
 import org.matsim.application.options.SampleOptions;
@@ -11,10 +12,13 @@ import org.matsim.core.config.groups.StrategyConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
+import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.prepare.RunOpenBerlinCalibration;
+import org.matsim.prepare.population.AssignIncome;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
 import picocli.CommandLine;
+import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
 import java.util.List;
 
@@ -26,7 +30,7 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 	public static final String VERSION = "6.0";
 	public static final String CRS = "EPSG:25832";
 	@CommandLine.Mixin
-	private final SampleOptions sample = new SampleOptions(25, 10, 1);
+	private final SampleOptions sample = new SampleOptions( 10, 25, 1);
 
 	public RunOpenBerlinScenario() {
 		super(String.format("input/v%s/berlin-v%s.config.xml", VERSION, VERSION));
@@ -93,6 +97,16 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 	}
 
 	@Override
+	protected void prepareScenario(Scenario scenario) {
+
+		AssignIncome income = new AssignIncome();
+
+		// Calculate the income for each person, in next versions this might also be done during creation of the population
+		scenario.getPopulation().getPersons().values().forEach(income::run);
+
+	}
+
+	@Override
 	protected void prepareControler(Controler controler) {
 
 		controler.addOverridingModule(new SimWrapperModule());
@@ -102,6 +116,8 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 
 				addTravelTimeBinding(TransportMode.ride).to(networkTravelTime());
 				addTravelDisutilityFactoryBinding(TransportMode.ride).to(carTravelDisutilityFactoryKey());
+
+				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class).asEagerSingleton();
 
 			}
 		});

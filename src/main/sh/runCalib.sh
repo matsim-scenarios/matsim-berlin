@@ -1,11 +1,12 @@
 #!/bin/bash --login
-#$ -l h_rt=790000
-#$ -j y
-#$ -m a
-#$ -cwd
-#$ -pe mp 8
-#$ -l mem_free=6G
-#$ -N calib-scenario
+#SBATCH --time=200:00:00
+#SBATCH --output=logfile_%x-%j.log
+#SBATCH --partition=smp
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=64G
+#SBATCH --job-name=calib-berlin
 
 date
 hostname
