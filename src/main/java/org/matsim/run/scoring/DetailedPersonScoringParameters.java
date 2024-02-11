@@ -20,55 +20,51 @@ public class DetailedPersonScoringParameters implements ScoringParametersForPers
 	/**
 	 * Cache instances of {@link ActivityUtilityParameters} for each subpopulation.
 	 */
-	private final Map<String, Map<String, ActivityUtilityParameters>> activityParamsPerSubpopulation = new ConcurrentHashMap<>();
+	private final Map<String, ScoringParameters> cache = new ConcurrentHashMap<>();
 
-	/**
-	 * Cache instances of {@link ModeUtilityParameters} for each mode.
-	 */
-	private final Map<String, DistanceGroupModeUtilityParameters> modeParams = new TreeMap<>();
 
 	private final Scenario scenario;
 	private final VspScoringConfigGroup vspScoring;
+	private final ScoringConfigGroup scoring;
 
 	@Inject
 	public DetailedPersonScoringParameters(Scenario scenario) {
 		this.scenario = scenario;
 		this.vspScoring = ConfigUtils.addOrGetModule(scenario.getConfig(), VspScoringConfigGroup.class);
+		this.scoring = scenario.getConfig().scoring();
 	}
 
 	@Override
 	public ScoringParameters getScoringParameters(Person person) {
 
-		ScoringConfigGroup scoring = scenario.getConfig().scoring();
 		String subpopulation = PopulationUtils.getSubpopulation(person);
 
-		ScoringConfigGroup.ScoringParameterSet scoringParameters = scoring.getScoringParameters(subpopulation);
+		return this.cache.computeIfAbsent(subpopulation, k -> {
 
-		Map<String, ActivityUtilityParameters> personParams = this.activityParamsPerSubpopulation.computeIfAbsent(subpopulation, k -> {
+			ScoringConfigGroup.ScoringParameterSet scoringParameters = scoring.getScoringParameters(k);
+
 			Map<String, ActivityUtilityParameters> activityParams = new TreeMap<>();
 			for (ScoringConfigGroup.ActivityParams params : scoringParameters.getActivityParams()) {
 				ActivityUtilityParameters.Builder factory = new ActivityUtilityParameters.Builder(params);
 				activityParams.put(params.getActivityType(), factory.build());
 			}
-			return activityParams;
-		});
 
-		ScoringParameters.Builder builder = new ScoringParameters.Builder(scoring, scoringParameters, personParams,
-			scenario.getConfig().scenario());
+			ScoringParameters.Builder builder = new ScoringParameters.Builder(scoring,
+				scoringParameters, activityParams, scenario.getConfig().scenario());
 
-		// TODO: not configurable at the moment
-		if ("person".equals(subpopulation)) {
+			if ("person".equals(k)) {
 
-			for (Map.Entry<String, VspScoringConfigGroup.ModeParams> e : vspScoring.getModeParams().entrySet()) {
+				for (Map.Entry<String, VspScoringConfigGroup.ModeParams> e : vspScoring.getModeParams().entrySet()) {
 
-				ModeUtilityParameters params = builder.getModeParameters(e.getKey());
-				DistanceGroupModeUtilityParameters p = modeParams.computeIfAbsent(e.getKey(),
-					k -> new DistanceGroupModeUtilityParameters(params, vspScoring.getDistGroups(), e.getValue()));
+					ModeUtilityParameters params = builder.getModeParameters(e.getKey());
+					DistanceGroupModeUtilityParameters p = new DistanceGroupModeUtilityParameters(params,
+						vspScoring.getDistGroups(), e.getValue());
 
-				builder.setModeParameters(e.getKey(), p);
+					builder.setModeParameters(e.getKey(), p);
+				}
 			}
-		}
 
-		return builder.build();
+			return builder.build();
+		});
 	}
 }
