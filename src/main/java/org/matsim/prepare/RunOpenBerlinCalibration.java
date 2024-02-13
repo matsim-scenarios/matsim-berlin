@@ -54,7 +54,7 @@ import org.matsim.prepare.opt.RunCountOptimization;
 import org.matsim.prepare.opt.SelectPlansFromIndex;
 import org.matsim.prepare.population.*;
 import org.matsim.run.Activities;
-import org.matsim.run.RunOpenBerlinScenario;
+import org.matsim.run.OpenBerlinScenario;
 import org.matsim.run.scoring.VspScoringModule;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
@@ -72,7 +72,7 @@ import java.util.stream.Collectors;
 /**
  * This scenario class is used for run a MATSim scenario in various stages of the calibration process.
  */
-@CommandLine.Command(header = ":: Open Berlin Calibration ::", version = RunOpenBerlinScenario.VERSION, mixinStandardHelpOptions = true)
+@CommandLine.Command(header = ":: Open Berlin Calibration ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true)
 @MATSimApplication.Prepare({
 	CreateLandUseShp.class, CreateBerlinPopulation.class, CreateBrandenburgPopulation.class, MergePopulations.class,
 	LookupRegioStaR.class, ExtractFacilityShp.class, DownSamplePopulation.class, DownloadCommuterStatistic.class,
@@ -398,7 +398,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			}
 		});
 
-		controler.addOverridingModule(new RunOpenBerlinScenario.TravelTimeBinding());
+		controler.addOverridingModule(new OpenBerlinScenario.TravelTimeBinding());
 		controler.addOverridingModule(new VspScoringModule());
 		controler.addOverridingModule(new SimWrapperModule());
 	}

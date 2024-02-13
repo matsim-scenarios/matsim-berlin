@@ -16,7 +16,7 @@ public class RunOpenBerlinScenarioTest {
 	@Test
 	public void pct1() {
 
-		int code = MATSimApplication.execute(RunOpenBerlinScenario.class,
+		int code = MATSimApplication.execute(OpenBerlinScenario.class,
 			"--1pct",
 			"--output", utils.getOutputDirectory(),
 			"--iterations", "2",

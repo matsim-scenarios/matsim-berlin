@@ -3,7 +3,7 @@ package org.matsim.dashboard;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.application.ApplicationUtils;
 import org.matsim.core.config.Config;
-import org.matsim.run.RunOpenBerlinScenario;
+import org.matsim.run.OpenBerlinScenario;
 import org.matsim.simwrapper.Dashboard;
 import org.matsim.simwrapper.DashboardProvider;
 import org.matsim.simwrapper.SimWrapper;
@@ -26,7 +26,7 @@ public class BerlinDashboardProvider implements DashboardProvider {
 
 		return List.of(
 			trips,
-			new TravelTimeComparisonDashboard(ApplicationUtils.resolve(config.getContext(), "berlin-v" + RunOpenBerlinScenario.VERSION + "-routes-ref.csv.gz")),
+			new TravelTimeComparisonDashboard(ApplicationUtils.resolve(config.getContext(), "berlin-v" + OpenBerlinScenario.VERSION + "-routes-ref.csv.gz")),
 			new TrafficCountsDashboard()
 				.withModes(TransportMode.car, Set.of(TransportMode.car))
 				.withModes(TransportMode.truck, Set.of(TransportMode.truck, "freight"))

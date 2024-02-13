@@ -29,7 +29,7 @@ import org.locationtech.jts.geom.*;
 import org.locationtech.jts.index.strtree.STRtree;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.options.CrsOptions;
-import org.matsim.run.RunOpenBerlinScenario;
+import org.matsim.run.OpenBerlinScenario;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.referencing.crs.CRSAuthorityFactory;
@@ -68,7 +68,7 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 	@CommandLine.Option(names = "--activity-mapping", description = "Path to activity napping json", required = true)
 	private Path mappingPath;
 	@CommandLine.Mixin
-	private CrsOptions crs = new CrsOptions("EPSG:4326", RunOpenBerlinScenario.CRS);
+	private CrsOptions crs = new CrsOptions("EPSG:4326", OpenBerlinScenario.CRS);
 	/**
 	 * Maps types to feature index.
 	 */

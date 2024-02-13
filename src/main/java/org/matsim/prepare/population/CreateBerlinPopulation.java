@@ -24,7 +24,7 @@ import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.core.utils.geometry.transformations.GeotoolsTransformation;
 import org.matsim.prepare.RunOpenBerlinCalibration;
-import org.matsim.run.RunOpenBerlinScenario;
+import org.matsim.run.OpenBerlinScenario;
 import org.opengis.feature.simple.SimpleFeature;
 import picocli.CommandLine;
 
@@ -155,7 +155,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 
 		PopulationUtils.sortPersons(population);
 
-		ProjectionUtils.putCRS(population, RunOpenBerlinScenario.CRS);
+		ProjectionUtils.putCRS(population, OpenBerlinScenario.CRS);
 		PopulationUtils.writePopulation(population, output.toString());
 
 		return 0;
