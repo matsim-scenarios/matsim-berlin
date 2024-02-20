@@ -22,7 +22,7 @@
 		<param name="inputNetworkFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.0/input/berlin-v6.0-network-with-pt.xml.gz"/>
 	</module>
 	<module name="plans">
-		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.0/input/berlin-v6.0-10pct.plans-initial.xml.gz"/>
+		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.0/input/berlin-v6.0-10pct.plans.xml.gz"/>
 		<param name="removingUnnecessaryPlanAttributes" value="true"/>
 	</module>
 	<module name="vehicles">
@@ -113,7 +113,7 @@
 			<param name="performing" value="6.88"/>
 
 			<parameterset type="modeParams">
-				<param name="constant" value="-0.0755500887608388" />
+				<param name="constant" value="-0.6269580844054548" />
 				<!-- result of the calibration, lower than full vehicle ownership cost which gave too unattractive car mode in calibration -->
 				<param name="dailyMonetaryConstant" value="-3.0" />
 				<param name="dailyUtilityConstant" value="0" />
@@ -124,7 +124,7 @@
 				<param name="mode" value="car" />
 			</parameterset>
 			<parameterset type="modeParams">
-				<param name="constant" value="-1.9859492397945049" />
+				<param name="constant" value="-1.3788242711735" />
 				<param name="dailyMonetaryConstant" value="0.0" />
 				<param name="dailyUtilityConstant" value="0.0" />
 				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
@@ -136,7 +136,7 @@
 				<param name="mode" value="ride" />
 			</parameterset>
 			<parameterset type="modeParams">
-				<param name="constant" value="-0.4241511885826721" />
+				<param name="constant" value="-0.24909103628514367" />
 				<!-- 2022: 4-trips AB 10Euro -> 2.5 Eu/trip. yearly 761 Eu / 250 days = 3.04 Eu/day -->
 				<param name="dailyMonetaryConstant" value="-3.0" />
 				<param name="dailyUtilityConstant" value="0.0" />
@@ -146,7 +146,7 @@
 				<param name="mode" value="pt" />
 			</parameterset>
 			<parameterset type="modeParams">
-				<param name="constant" value="-2.3715451400624588" />
+				<param name="constant" value="-2.2321797854695955" />
 				<param name="dailyMonetaryConstant" value="0.0" />
 				<param name="dailyUtilityConstant" value="0.0" />
 				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
