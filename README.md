@@ -1,4 +1,4 @@
-![Build Status](https://github.com/matsim-scenarios/matsim-berlin/workflows/build/badge.svg?branch=main)
+[![Build Status](https://github.com/matsim-scenarios/matsim-berlin/actions/workflows/build.yaml/badge.svg?branch=main)](https://github.com/matsim-scenarios/matsim-berlin/actions/workflows/build.yaml)
 ![license](https://img.shields.io/github/license/matsim-scenarios/matsim-berlin.svg)
 ![JDK](https://img.shields.io/badge/JDK-17+-green.svg)
 
@@ -15,7 +15,7 @@ Currently, there are multiple versions of the MATSim Open Berlin model:
 
 ### 10pct scenario (`input/v6.0`)
 
-This scenario contains a 25pct sample of the Greater Berlin population; road capacities are accordingly reduced. The scenario is calibrated taking into consideration the traffic counts, modal split and mode-specific trip distance distributions.
+This scenario contains both 10pct and 1pct sample of the Greater Berlin population; road capacities are accordingly reduced. The scenario is calibrated taking into consideration the traffic counts, modal split and mode-specific trip distance distributions.
 
 
 ## Licenses
