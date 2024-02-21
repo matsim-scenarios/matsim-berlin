@@ -10,10 +10,10 @@ from matsim.calibration import create_calibration, ASCDistCalibrator, constraint
 modes = ["walk", "car", "pt", "bike", "ride"]
 fixed_mode = "walk"
 initial = {
-    "bike": -2.14,
-    "pt": -0.39,
-    "car": -0.30,
-    "ride": -1.20
+    "bike": -2.23,
+    "pt": -0.25,
+    "car": -0.62,
+    "ride": -1.37
 }
 
 target = pd.read_csv("mode_share_ref.csv")

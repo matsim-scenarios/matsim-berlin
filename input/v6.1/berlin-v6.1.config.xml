@@ -185,24 +185,6 @@
 		</parameterset>
 	</module>
 
-	<module name="vspScoring">
-
-		<!-- Scored by distance group -->
-		<parameterset type="modeParams">
-			<param name="mode" value="car" />
-		</parameterset>
-		<parameterset type="modeParams">
-			<param name="mode" value="ride" />
-		</parameterset>
-		<parameterset type="modeParams">
-			<param name="mode" value="pt" />
-		</parameterset>
-		<parameterset type="modeParams">
-			<param name="mode" value="bike" />
-		</parameterset>
-
-	</module>
-
 	<module name="counts">
 		<param name="inputCountsFile" value="./berlin-v6.1-counts-vmz.xml.gz"/>
 	</module>

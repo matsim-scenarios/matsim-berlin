@@ -12,6 +12,7 @@ if __name__ == "__main__":
     trips = trip_filter(trips)
     trips = trips[trips.valid]
     trips = trips[(~trips.from_zone.isna()) & (~trips.to_zone.isna())]
+    trips = trips[(~trips.from_location.isna()) & (~trips.to_location.isna())]
 
     # Duplication factor
     factor = 3

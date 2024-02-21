@@ -109,6 +109,15 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		return new Coord(RunOpenBerlinCalibration.roundNumber(origin.getX() + x), RunOpenBerlinCalibration.roundNumber(origin.getY() + y));
 	}
 
+	/**
+	 * Approximate beeline dist from known traveled distance. Distance will be reduced by a fixed detour factor.
+	 * Dist in meter.
+	 */
+	public static double beelineDist(double travelDist) {
+		double detourFactor = travelDist <= 2000 ? DETOUR_FACTOR_SHORT : DETOUR_FACTOR;
+		return travelDist * 1000 / detourFactor;
+	}
+
 	@Override
 	public Integer call() throws Exception {
 
@@ -206,8 +215,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 					double origDist = (double) act.getAttributes().getAttribute("orig_dist");
 
 					// Distance will be reduced
-					double detourFactor = origDist <= 2000 ? DETOUR_FACTOR_SHORT : DETOUR_FACTOR;
-					double dist = origDist * 1000 / detourFactor;
+					double dist = beelineDist(origDist);
 
 					if (fixedLocations.containsKey(type)) {
 						location = fixedLocations.get(type);
