@@ -24,7 +24,6 @@ import org.matsim.simwrapper.SimWrapperModule;
 import picocli.CommandLine;
 import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 import java.util.List;
-import org.matsim.run.scoring.VspScoringModule;
 
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true)
 public class OpenBerlinScenario extends MATSimApplication {
@@ -117,7 +116,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		controler.addOverridingModule(new TravelTimeBinding());
 
-		controler.addOverridingModule(new VspScoringModule());
+//		controler.addOverridingModule(new VspScoringModule());
 
 	}
 

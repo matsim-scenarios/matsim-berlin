@@ -12,15 +12,14 @@ import de.topobyte.osm4j.geometry.GeometryBuilder;
 import de.topobyte.osm4j.pbf.seq.PbfIterator;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import me.tongfei.progressbar.ProgressBar;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.geotools.data.DefaultTransaction;
 import org.geotools.data.FileDataStoreFactorySpi;
-import org.geotools.data.Transaction;
+import org.geotools.data.collection.ListFeatureCollection;
 import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.shapefile.ShapefileDataStoreFactory;
 import org.geotools.data.simple.SimpleFeatureStore;
-import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.geometry.jts.JTS;
@@ -67,8 +66,12 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 	private Path output;
 	@CommandLine.Option(names = "--activity-mapping", description = "Path to activity napping json", required = true)
 	private Path mappingPath;
+	@CommandLine.Option(names = "--exclude", description = "Exclude these activities types from the output", split = ",", defaultValue = "")
+	private Set<String> exclude;
+
 	@CommandLine.Mixin
 	private CrsOptions crs = new CrsOptions("EPSG:4326", OpenBerlinScenario.CRS);
+
 	/**
 	 * Maps types to feature index.
 	 */
@@ -102,6 +105,7 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 		config.types.values().stream()
 			.flatMap(c -> c.values.values().stream())
 			.flatMap(Collection::stream)
+			.filter(t -> !exclude.contains(t))
 			.distinct()
 			.sorted()
 			.forEach(e -> types.put(e, types.size()));
@@ -182,18 +186,21 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 
 		SimpleFeatureStore source = (SimpleFeatureStore) ds.getFeatureSource();
 		SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(featureType);
-		DefaultFeatureCollection collection = new DefaultFeatureCollection(null, featureType);
+		ListFeatureCollection collection = new ListFeatureCollection(featureType);
 
-		Transaction transaction = new DefaultTransaction("create");
-		source.setTransaction(transaction);
+//		Transaction transaction = new DefaultTransaction("create");
+//		source.setTransaction(transaction);
 
 		addFeatures(entities, featureBuilder, collection);
 		addFeatures(landuse, featureBuilder, collection);
 		addFeatures(pois, featureBuilder, collection);
 
 		source.addFeatures(collection);
-		transaction.commit();
-		transaction.close();
+//		transaction.commit();
+
+		log.info("Wrote {} features", collection.size());
+
+//		transaction.close();
 
 		ds.dispose();
 
@@ -205,7 +212,8 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 	 */
 	private void processIntersection(List<Feature> list, STRtree index) {
 
-		Iterator<Feature> it = list.iterator();
+		Iterator<Feature> it = ProgressBar.wrap(list.iterator(), "Assigning features");
+
 		while (it.hasNext()) {
 			Feature ft = it.next();
 
@@ -233,8 +241,8 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 		}
 	}
 
-	private void addFeatures(List<Feature> fts, SimpleFeatureBuilder featureBuilder, DefaultFeatureCollection collection) {
-		for (Feature ft : fts) {
+	private void addFeatures(List<Feature> fts, SimpleFeatureBuilder featureBuilder, ListFeatureCollection collection) {
+		for (Feature ft : ProgressBar.wrap(fts, "Creating features")) {
 			// Relations are ignored at this point
 			if (!ft.bits.isEmpty())
 				collection.add(ft.createFeature(featureBuilder));
