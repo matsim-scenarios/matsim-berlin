@@ -137,7 +137,7 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 				for (String mode : modes) {
 					header.add(String.format("plan_%d_%s_usage", i, mode));
 					header.add(String.format("plan_%d_%s_km", i, mode));
-					header.add(String.format("plan_%d_%s_hour", i, mode));
+					header.add(String.format("plan_%d_%s_hours", i, mode));
 				}
 				header.add(String.format("plan_%d_available", i));
 

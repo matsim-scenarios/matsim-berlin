@@ -143,10 +143,6 @@ public class PlanBuilder {
 	 */
 	private Person createPerson(String id, int seq, List<Row> trips) {
 
-		// FIXME: for faster testing
-		if (rnd.nextDouble() > 0.1)
-			return null;
-
 		Person person = f.createPerson(Id.createPersonId(id + "_" + seq));
 
 		PersonUtils.setCarAvail(person, trips.get(0).getInt("p_age") >= 18 ? "always" : "never");

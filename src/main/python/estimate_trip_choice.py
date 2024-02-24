@@ -12,7 +12,7 @@ from scipy.special import softmax
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate the trip choice model")
-    parser.add_argument("--input", help="Path to the input file", type=str, default="../../../choices.csv")
+    parser.add_argument("--input", help="Path to the input file", type=str, default="../../../trip-choices.csv")
     parser.add_argument("--modes", nargs="+", help="Modes to include in the model", type=str,
                         default=["walk", "pt", "car", "bike"])
 

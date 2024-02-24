@@ -153,9 +153,9 @@ public class ComputeTripChoices implements MATSimAppCommand {
 			List<String> header = new ArrayList<>(List.of("p_id", "seq", "trip_n", "choice", "beelineDist"));
 
 			for (String mode : modes) {
-				header.add(mode + "_travelDist");
-				header.add(mode + "_travelTime");
-				header.add(mode + "_walkDist");
+				header.add(mode + "_km");
+				header.add(mode + "_hours");
+				header.add(mode + "_walk_km");
 				header.add(mode + "_valid");
 			}
 
@@ -186,7 +186,7 @@ public class ComputeTripChoices implements MATSimAppCommand {
 		String choice = trip.getLegsOnly().get(0).getMode();
 
 		List<Object> row = new ArrayList<>(List.of(person.getId(), person.getAttributes().getAttribute("seq"),
-			trip.getTripAttributes().getAttribute("n"), modes.indexOf(choice) + 1, beelineDist));
+			trip.getTripAttributes().getAttribute("n"), modes.indexOf(choice) + 1, beelineDist / 1000));
 
 		for (String mode : modes) {
 
@@ -217,7 +217,7 @@ public class ComputeTripChoices implements MATSimAppCommand {
 				return null;
 			}
 
-			row.addAll(List.of(travelDistance, travelTime, walkDistance, valid));
+			row.addAll(List.of(travelDistance / 1000, travelTime / 3600, walkDistance / 1000, valid));
 		}
 
 		return row;
