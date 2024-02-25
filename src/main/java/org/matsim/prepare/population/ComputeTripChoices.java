@@ -112,7 +112,7 @@ public class ComputeTripChoices implements MATSimAppCommand {
 
 		List<Person> persons = builder.createPlans(input);
 		// Progress bar will be inaccurate
-		ProgressBar pb = new ProgressBar("Computing choices",  persons.size() * 2L);
+		ProgressBar pb = new ProgressBar("Computing choices",  persons.size() * 3L);
 
 		SplittableRandom rnd = new SplittableRandom();
 

@@ -57,7 +57,7 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	private Path input;
 	@CommandLine.Option(names = "--facilities", description = "Shp file with facilities", required = true)
 	private Path facilities;
-	@CommandLine.Option(names = "--top-k", description = "Use top k estimates", defaultValue = "10")
+	@CommandLine.Option(names = "--top-k", description = "Use top k estimates", defaultValue = "9")
 	private int topK;
 	@CommandLine.Option(names = "--modes", description = "Modes to include in estimation", split = ",")
 	private Set<String> modes;
@@ -92,7 +92,6 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 
 		Controler controler = this.scenario.createControler();
 
-
 		controler.addOverridingModule(InformedModeChoiceModule.newBuilder()
 			.withLegEstimator(DefaultLegScoreEstimator.class, ModeOptions.ConsiderIfCarAvailable.class, "car")
 			.withLegEstimator(DefaultLegScoreEstimator.class, ModeOptions.AlwaysAvailable.class, "bike", "walk", "pt", "ride")
@@ -100,6 +99,7 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 
 		InformedModeChoiceConfigGroup imc = ConfigUtils.addOrGetModule(config, InformedModeChoiceConfigGroup.class);
 		imc.setTopK(topK);
+		imc.setModes(modes);
 
 		Injector injector = controler.getInjector();
 
@@ -132,14 +132,14 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 			header.add("person");
 			header.add("choice");
 
-			for (int i = 0; i < topK; i++) {
+			for (int i = 1; i <= topK; i++) {
 
 				for (String mode : modes) {
 					header.add(String.format("plan_%d_%s_usage", i, mode));
 					header.add(String.format("plan_%d_%s_km", i, mode));
 					header.add(String.format("plan_%d_%s_hours", i, mode));
 				}
-				header.add(String.format("plan_%d_available", i));
+				header.add(String.format("plan_%d_valid", i));
 
 			}
 
@@ -173,18 +173,23 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 
 		row.add(person.getId());
 		// choice, always the first one
-		row.add(0);
+		row.add(1);
 
 		existing.applyTo(plan);
 		ctx.router.run(plan);
 
 		row.addAll(convert(plan));
+		// available choice
+		row.add(1);
 
 		// top k candidates
 		List<PlanCandidate> candidates = ctx.generator.generate(model);
 
 		int i = 1;
 		for (PlanCandidate candidate : candidates) {
+
+			if (i >= topK)
+				break;
 
 			// Skip if the same as the existing plan
 			if (Arrays.equals(candidate.getModes(), model.getCurrentModes()))
@@ -195,6 +200,7 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 			row.addAll(convert(plan));
 			// available choice
 			row.add(1);
+			i++;
 		}
 
 		for (int j = i; j < topK; j++) {

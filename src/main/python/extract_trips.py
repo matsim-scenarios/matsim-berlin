@@ -14,6 +14,10 @@ if __name__ == "__main__":
     trips = trips[(~trips.from_zone.isna()) & (~trips.to_zone.isna())]
     trips = trips[(~trips.from_location.isna()) & (~trips.to_location.isna())]
 
+    trips_hh = trips.merge(hh, left_on="hh_id", right_index=True)
+
+    trips = trips[trips_hh.location == "Berlin"]
+
     # Duplication factor
     factor = 3
 
