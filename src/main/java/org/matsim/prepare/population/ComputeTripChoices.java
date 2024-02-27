@@ -94,7 +94,7 @@ public class ComputeTripChoices implements MATSimAppCommand {
 		Controler controler = this.scenario.createControler();
 
 		// Run for one iteration to collect travel times
-//		controler.run();
+		controler.run();
 
 		Injector injector = controler.getInjector();
 

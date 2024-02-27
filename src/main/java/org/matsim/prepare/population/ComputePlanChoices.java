@@ -25,10 +25,11 @@ import org.matsim.core.population.algorithms.PersonAlgorithm;
 import org.matsim.core.router.*;
 import org.matsim.core.utils.timing.TimeInterpretation;
 import org.matsim.modechoice.*;
+import org.matsim.modechoice.constraints.RelaxedMassConservationConstraint;
 import org.matsim.modechoice.estimators.DefaultLegScoreEstimator;
+import org.matsim.modechoice.estimators.FixedCostsEstimator;
 import org.matsim.modechoice.search.TopKChoicesGenerator;
 import picocli.CommandLine;
-import scala.util.parsing.combinator.testing.Str;
 
 import javax.annotation.Nullable;
 import java.nio.file.Files;
@@ -93,13 +94,17 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 		Controler controler = this.scenario.createControler();
 
 		controler.addOverridingModule(InformedModeChoiceModule.newBuilder()
+			.withFixedCosts(FixedCostsEstimator.DailyConstant.class, "car")
 			.withLegEstimator(DefaultLegScoreEstimator.class, ModeOptions.ConsiderIfCarAvailable.class, "car")
 			.withLegEstimator(DefaultLegScoreEstimator.class, ModeOptions.AlwaysAvailable.class, "bike", "walk", "pt", "ride")
+			.withConstraint(RelaxedMassConservationConstraint.class)
 			.build());
 
 		InformedModeChoiceConfigGroup imc = ConfigUtils.addOrGetModule(config, InformedModeChoiceConfigGroup.class);
 		imc.setTopK(topK);
 		imc.setModes(modes);
+
+		controler.run();
 
 		Injector injector = controler.getInjector();
 

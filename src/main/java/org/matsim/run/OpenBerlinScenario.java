@@ -19,6 +19,8 @@ import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.prepare.RunOpenBerlinCalibration;
 import org.matsim.prepare.population.AssignIncome;
+import org.matsim.run.scoring.VspScoringConfigGroup;
+import org.matsim.run.scoring.VspScoringModule;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
 import picocli.CommandLine;
@@ -116,8 +118,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		controler.addOverridingModule(new TravelTimeBinding());
 
-//		controler.addOverridingModule(new VspScoringModule());
-
+		if (ConfigUtils.hasModule(controler.getConfig(), VspScoringConfigGroup.class)) {
+			controler.addOverridingModule(new VspScoringModule());
+		}
 	}
 
 	/**

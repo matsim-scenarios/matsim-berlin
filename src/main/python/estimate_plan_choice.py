@@ -21,7 +21,7 @@ if __name__ == "__main__":
     df.drop(columns=["person"], inplace=True)
 
     # TODO: for testing only
-    df = df.sample(frac=0.05)
+    df = df.sample(frac=0.1)
 
     # Convert all the columns to numeric
     df = df * 1
@@ -43,9 +43,8 @@ if __name__ == "__main__":
         asc = Beta(f"ASC_{mode}", 0, None, None, 1 if mode == "walk" else 0)
 
         # Pt does not have its own random parameter
-        if mode == "walk" or mode == "pt":
+        if True or mode == "walk" or mode == "pt":
             ASC[mode] = asc
-
         else:
             # The random parameter
             asc_s = Beta(f"ASC_{mode}_s", 1, None, None, 0)
@@ -54,7 +53,7 @@ if __name__ == "__main__":
     # TODO: distance specific utility parameters
 
     # B_TIME = Beta('B_TIME', 0, None, None, 0)
-    B_COST = Beta('B_COST', 0.5, 0, 1, 0)
+    B_COST = Beta('B_COST', 0.5, 0, 0, 0)
 
     U = {}
     AV = {}
@@ -63,11 +62,11 @@ if __name__ == "__main__":
 
     # fixed_costs = defaultdict(lambda: 0.0, car=-14.13, pt=-3)
     fixed_costs = defaultdict(lambda: 0.0, car=-3, pt=-3)
-    km_costs = defaultdict(lambda: 0.0, car=-0.149)
+    km_costs = defaultdict(lambda: 0.0, car=-0.149, ride=-0.149)
 
     time_cost = -6.88
 
-    for i in range(1, k):
+    for i in range(1, k + 1):
         u = 0
         for mode in modes:
             # Is 1 if a mode was used once
@@ -78,18 +77,24 @@ if __name__ == "__main__":
             u += ASC[mode] * v[f"plan_{i}_{mode}_usage"]
             u += time_cost * v[f"plan_{i}_{mode}_hours"]
 
-            u += FIXED_COSTS * B_COST * bioDraws('B_TIME_RND', 'UNIFORM_ANTI')
+            # u += FIXED_COSTS * B_COST * bioDraws('B_TIME_RND', 'NORMAL_ANTI')
+            u += FIXED_COSTS
             u += KM_COSTS
 
             if mode == "ride":
                 u += time_cost * v[f"plan_{i}_{mode}_hours"]
 
+            if mode != "walk":
+                slope = Beta(f"B_{mode}_DIST", 0, None, None, 0)
+                u += slope * v[f"plan_{i}_{mode}_km"]
+
         U[i] = u
         AV[i] = v[f"plan_{i}_valid"]
 
-    prob = models.logit(U, AV, v["choice"])
+    # prob = models.logit(U, AV, v["choice"])
+    # logprob = log(MonteCarlo(prob))
 
-    logprob = log(MonteCarlo(prob))
+    logprob = models.loglogit(U, AV, v["choice"])
 
     biogeme = bio.BIOGEME(database, logprob)
 
