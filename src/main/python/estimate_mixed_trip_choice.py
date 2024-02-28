@@ -21,9 +21,14 @@ if __name__ == "__main__":
 
     df_wide = pd.read_csv(args.input)
 
-    #df_wide = df_wide.sample(frac=0.1)
-
     modes = list(df_wide.columns.str.extract(r"([a-zA-z]+)_valid", expand=False).dropna().unique())
+
+    #df_wide["p_id"] = df_wide["p_id"].str.replace(r"_\d+$", "", regex=True)
+    df_wide["p_id"] = df_wide["p_id"].astype('category').cat.codes
+
+    sample = set(df_wide.p_id.sample(frac=0.1))
+    df_wide = df_wide[df_wide.p_id.isin(sample)]
+
     print("Modes:", modes)
     print("Number of choices:", len(df_wide))
 
@@ -41,9 +46,6 @@ if __name__ == "__main__":
             df_wide[f"{mode}_costs"] += -6.88 * df_wide[f"{mode}_hours"]
 
         df_wide = df_wide.drop(columns=[f"{mode}_walk_km"])
-
-    df_wide["p_id"] = df_wide["p_id"].str.replace(r"_\d+$", "", regex=True)
-    df_wide["p_id"] = df_wide["p_id"].astype('category').cat.codes
 
     varying = list(df_wide.columns.str.extract(r"walk_([a-zA-z]+)", expand=False).dropna().unique())
 

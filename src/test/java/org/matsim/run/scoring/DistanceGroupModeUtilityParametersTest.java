@@ -1,5 +1,6 @@
 package org.matsim.run.scoring;
 
+import it.unimi.dsi.fastutil.doubles.DoubleList;
 import org.junit.jupiter.api.Test;
 import org.matsim.core.scoring.functions.ModeUtilityParameters;
 
@@ -14,53 +15,56 @@ class DistanceGroupModeUtilityParametersTest {
 		0, 0, 0
 	);
 
-	private static VspScoringConfigGroup.ModeParams params(List<Integer> dists, List<Double> utils) {
-		VspScoringConfigGroup.ModeParams p = new VspScoringConfigGroup.ModeParams();
-
-		p.setDistUtil(0, utils.get(0));
-
-		for (int i = 0; i < utils.size() - 1; i++) {
-			p.setDistUtil(dists.get(i), utils.get(i + 1));
-		}
-
-		return p;
+	private static DistanceGroupModeUtilityParameters params(ModeUtilityParameters base,
+															 List<Integer> dists, DoubleList utils) {
+		return new DistanceGroupModeUtilityParameters(
+			base,
+			new DistanceGroupModeUtilityParameters.DeltaBuilder(),
+			IndividualPersonScoringParameters.calcDistanceGroups(dists, utils));
 	}
 
 	@Test
 	void empty() {
 
-		DistanceGroupModeUtilityParameters m = new DistanceGroupModeUtilityParameters(base, List.of(), new VspScoringConfigGroup.ModeParams());
+		DistanceGroupModeUtilityParameters m = params(base, List.of(), DoubleList.of());
 
-		assertThat(m.calcDistUtility(1000)).isEqualTo(-1000);
-		assertThat(m.calcDistUtility(0)).isEqualTo(0);
-		assertThat(m.calcDistUtility(5000)).isEqualTo(-5000);
+		// Delta will be 0 for any distance
+		assertThat(m.calcUtilityDistDelta(1000)).isEqualTo(0);
+		assertThat(m.calcUtilityDistDelta(0)).isEqualTo(0);
+		assertThat(m.calcUtilityDistDelta(5000)).isEqualTo(0);
 
 	}
 
 	@Test
-	void groups() {
+	void manyGroups() {
 
 		List<Integer> dists = List.of(1000, 5000, 10000);
-		DistanceGroupModeUtilityParameters m = new DistanceGroupModeUtilityParameters(
-			base,
-			dists,
-			params(dists, List.of(-1d, -0.5d, -0.1d, -0.001d))
-		);
 
+		DistanceGroupModeUtilityParameters m = params(base, dists, DoubleList.of(-1d, -0.5d, -0.1d, -0.001d));
 
-		assertThat(m.calcDistUtility(0)).isEqualTo(0);
-		assertThat(m.calcDistUtility(500)).isEqualTo(-500);
-		assertThat(m.calcDistUtility(1000)).isEqualTo(-1000);
+		assertThat(m.calcUtilityDistDelta(0)).isEqualTo(0);
+		assertThat(m.calcUtilityDistDelta(500)).isEqualTo(-500);
+		assertThat(m.calcUtilityDistDelta(1000)).isEqualTo(-1000);
 
-		assertThat(m.calcDistUtility(1500)).isEqualTo(-1250d);
-		assertThat(m.calcDistUtility(2000)).isEqualTo(-1500d);
+		assertThat(m.calcUtilityDistDelta(1500)).isEqualTo(-1250d);
+		assertThat(m.calcUtilityDistDelta(2000)).isEqualTo(-1500d);
 
-		assertThat(m.calcDistUtility(5000)).isEqualTo(-3000d);
-		assertThat(m.calcDistUtility(8000)).isEqualTo(-3300d);
+		assertThat(m.calcUtilityDistDelta(5000)).isEqualTo(-3000d);
+		assertThat(m.calcUtilityDistDelta(8000)).isEqualTo(-3300d);
 
-		assertThat(m.calcDistUtility(10000)).isEqualTo(-3500d);
-		assertThat(m.calcDistUtility(15000)).isEqualTo(-3505d);
+		assertThat(m.calcUtilityDistDelta(10000)).isEqualTo(-3500d);
+		assertThat(m.calcUtilityDistDelta(15000)).isEqualTo(-3505d);
 
+	}
+
+	@Test
+	void oneGroup() {
+
+		DistanceGroupModeUtilityParameters m = params(base, List.of(1000), DoubleList.of(-1, -0.5d));
+
+		assertThat(m.calcUtilityDistDelta(0)).isEqualTo(0);
+		assertThat(m.calcUtilityDistDelta(500)).isEqualTo(-500);
+		assertThat(m.calcUtilityDistDelta(1000)).isEqualTo(-1000);
 
 	}
 }

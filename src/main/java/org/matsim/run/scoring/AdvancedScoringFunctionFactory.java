@@ -12,7 +12,7 @@ import org.matsim.core.scoring.functions.*;
 /**
  * Same as {@link org.matsim.core.scoring.functions.CharyparNagelScoringFunctionFactory} but with {@link PiecewiseLinearlLegScoring}.
  */
-public class VspScoringFunctionFactory implements ScoringFunctionFactory {
+public class AdvancedScoringFunctionFactory implements ScoringFunctionFactory {
 
 	@Inject
 	private Config config;

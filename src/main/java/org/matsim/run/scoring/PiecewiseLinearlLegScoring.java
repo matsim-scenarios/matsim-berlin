@@ -137,7 +137,12 @@ public class PiecewiseLinearlLegScoring implements org.matsim.core.scoring.SumSc
 			Route route = leg.getRoute();
 			double dist = route.getDistance();
 
-			tmpScore += distParams.calcDistUtility(dist);
+			// Apply the default distance scoring parameter.
+			if (modeParams.marginalUtilityOfDistance_m != 0) {
+				tmpScore += modeParams.marginalUtilityOfDistance_m * dist;
+			}
+
+			tmpScore += distParams.calcUtilityDistDelta(dist);
 
 		} else {
 
