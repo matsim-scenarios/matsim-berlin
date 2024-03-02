@@ -272,7 +272,7 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 	private record Context(ContinuousDistribution.Sampler normal, ContinuousDistribution.Sampler tn) {
 
 		Context() {
-			this(NormalDistribution.of(0,1).createSampler(RandomSource.KISS.create(123L)),
+			this(NormalDistribution.of(0, 1).createSampler(RandomSource.KISS.create(123L)),
 				TruncatedNormalDistribution.of(0, 1, 0, Double.POSITIVE_INFINITY)
 					.createSampler(RandomSource.KISS.create(123L))
 			);
