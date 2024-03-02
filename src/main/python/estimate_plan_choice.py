@@ -90,8 +90,6 @@ if __name__ == "__main__":
         "TN": (tn_generator, "truncated normal generator for mixed logit")
     })
 
-    print(tn_generator(10, 10))
-
     mixed_logit = True
 
     ASC = {}
