@@ -16,15 +16,14 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
-import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.prepare.RunOpenBerlinCalibration;
 import org.matsim.prepare.population.AssignIncome;
-import org.matsim.run.scoring.VspScoringConfigGroup;
-import org.matsim.run.scoring.VspScoringModule;
+import org.matsim.run.scoring.AdvancedScoringConfigGroup;
+import org.matsim.run.scoring.AdvancedScoringModule;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
 import picocli.CommandLine;
-import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
+
 import java.util.List;
 
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true)
@@ -118,8 +117,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		controler.addOverridingModule(new TravelTimeBinding());
 
-		if (ConfigUtils.hasModule(controler.getConfig(), VspScoringConfigGroup.class)) {
-			controler.addOverridingModule(new VspScoringModule());
+		if (ConfigUtils.hasModule(controler.getConfig(), AdvancedScoringConfigGroup.class)) {
+			controler.addOverridingModule(new AdvancedScoringModule());
 		}
 	}
 
@@ -134,8 +133,6 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 			addTravelTimeBinding("freight").to(Key.get(TravelTime.class, Names.named(TransportMode.truck)));
 			addTravelDisutilityFactoryBinding("freight").to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
-
-			bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class).asEagerSingleton();
 		}
 	}
 

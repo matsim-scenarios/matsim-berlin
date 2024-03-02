@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE config SYSTEM "http://www.matsim.org/files/dtd/config_v2.dtd">
 <config>
-	<module name="TimeAllocationMutator">
+	<module name="timeAllocationMutator">
 		<param name="mutationRange" value="1800.0"/>
 		<param name="mutateAroundInitialEndTimeOnly" value="true"/>
 	</module>
-	<module name="controler">
+	<module name="controller">
 		<param name="lastIteration" value="500"/>
 		<param name="overwriteFiles" value="failIfDirectoryExists"/>
 		<param name="runId" value="berlin-v6.1"/>
@@ -39,7 +39,7 @@
 		<param name="facilitiesSource" value="fromFile"/>
 		<param name="inputFacilitiesFile" value="./berlin-v6.1-facilities.xml.gz"/>
 	</module>
-	<module name="planscalcroute">
+	<module name="routing">
 		<param name="networkModes" value="car,truck,freight,ride"/>
 		<param name="accessEgressType" value="accessEgressModeToLink"/>
 		<parameterset type="teleportedModeParameters">
@@ -203,7 +203,7 @@
 			<param name="endValue" value="0.01" />
 		</parameterset>
 	</module>
-	<module name="strategy">
+	<module name="replanning">
 		<param name="fractionOfIterationsToDisableInnovation" value="0.8"/>
 		<!-- Strategies are added in code -->
 	</module>

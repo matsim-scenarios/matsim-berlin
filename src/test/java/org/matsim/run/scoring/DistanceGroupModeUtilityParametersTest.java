@@ -37,34 +37,52 @@ class DistanceGroupModeUtilityParametersTest {
 
 	@Test
 	void manyGroups() {
-
 		List<Integer> dists = List.of(1000, 5000, 10000);
 
-		DistanceGroupModeUtilityParameters m = params(base, dists, DoubleList.of(-1d, -0.5d, -0.1d, -0.001d));
+		DistanceGroupModeUtilityParameters m = params(base, dists, DoubleList.of(-1d, -0.5d, -0.1d));
 
 		assertThat(m.calcUtilityDistDelta(0)).isEqualTo(0);
-		assertThat(m.calcUtilityDistDelta(500)).isEqualTo(-500);
-		assertThat(m.calcUtilityDistDelta(1000)).isEqualTo(-1000);
+		assertThat(m.calcUtilityDistDelta(500)).isEqualTo(-0.5);
+		assertThat(m.calcUtilityDistDelta(1000)).isEqualTo(-1);
 
-		assertThat(m.calcUtilityDistDelta(1500)).isEqualTo(-1250d);
-		assertThat(m.calcUtilityDistDelta(2000)).isEqualTo(-1500d);
+		assertThat(m.calcUtilityDistDelta(3000)).isEqualTo(-0.75);
 
-		assertThat(m.calcUtilityDistDelta(5000)).isEqualTo(-3000d);
-		assertThat(m.calcUtilityDistDelta(8000)).isEqualTo(-3300d);
+		assertThat(m.calcUtilityDistDelta(5000)).isEqualTo(-0.5);
 
-		assertThat(m.calcUtilityDistDelta(10000)).isEqualTo(-3500d);
-		assertThat(m.calcUtilityDistDelta(15000)).isEqualTo(-3505d);
+		assertThat(m.calcUtilityDistDelta(10000)).isEqualTo(-0.1d);
+		assertThat(m.calcUtilityDistDelta(20000)).isEqualTo(-0.2d);
+
+	}
+
+	@Test
+	void mixedSigns() {
+
+		List<Integer> dists = List.of(1000, 2000, 3000);
+
+		DistanceGroupModeUtilityParameters m = params(base, dists, DoubleList.of(-1d, 1d, 0));
+
+		assertThat(m.calcUtilityDistDelta(0)).isEqualTo(0);
+		assertThat(m.calcUtilityDistDelta(500)).isEqualTo(-0.5);
+		assertThat(m.calcUtilityDistDelta(1000)).isEqualTo(-1);
+		assertThat(m.calcUtilityDistDelta(1500)).isEqualTo(0);
+
+		assertThat(m.calcUtilityDistDelta(2000)).isEqualTo(1);
+
+		assertThat(m.calcUtilityDistDelta(3000)).isEqualTo(0);
+		assertThat(m.calcUtilityDistDelta(5000)).isEqualTo(0);
+
 
 	}
 
 	@Test
 	void oneGroup() {
 
-		DistanceGroupModeUtilityParameters m = params(base, List.of(1000), DoubleList.of(-1, -0.5d));
+		DistanceGroupModeUtilityParameters m = params(base, List.of(1000), DoubleList.of(-1));
 
 		assertThat(m.calcUtilityDistDelta(0)).isEqualTo(0);
-		assertThat(m.calcUtilityDistDelta(500)).isEqualTo(-500);
-		assertThat(m.calcUtilityDistDelta(1000)).isEqualTo(-1000);
+		assertThat(m.calcUtilityDistDelta(500)).isEqualTo(-0.5);
+		assertThat(m.calcUtilityDistDelta(1000)).isEqualTo(-1);
+		assertThat(m.calcUtilityDistDelta(2000)).isEqualTo(-2);
 
 	}
 }

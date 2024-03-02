@@ -4,6 +4,10 @@ import com.google.inject.Inject;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
+import org.apache.commons.rng.simple.RandomSource;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
+import org.apache.commons.statistics.distribution.NormalDistribution;
+import org.apache.commons.statistics.distribution.TruncatedNormalDistribution;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -54,7 +58,7 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 	/**
 	 * Thread-local random number generator.
 	 */
-	private final ThreadLocal<SplittableRandom> rnd = ThreadLocal.withInitial(SplittableRandom::new);
+	private final ThreadLocal<Context> rnd = ThreadLocal.withInitial(() -> new Context());
 	private final Scenario scenario;
 	private final ScoringConfigGroup basicScoring;
 	private final TransitConfigGroup transitConfig;
@@ -98,21 +102,28 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 
 		DistanceGroup[] groups = new DistanceGroup[copy.size()];
 
-		for (int i = 0; i < copy.size(); i++) {
-
-			int dist = copy.get(i);
-			double util = distUtils.getDouble(i);
-
-			double constant;
-			if (i == 0)
-				constant = 0;
-			else {
-				DistanceGroup prev = groups[i - 1];
-				constant = prev.constant() + prev.util_m() * (dist - prev.dist());
-			}
-
-			groups[i] = new DistanceGroup(dist, constant, util);
+		if (groups.length - 1 != distUtils.size()) {
+			log.error("Distance groups: {}, utils: {}", dists, distUtils);
+			throw new IllegalArgumentException("Distance groups and distance utilities must have the same size.");
 		}
+
+
+		for (int i = 0; i < copy.size() - 1; i++) {
+
+			double dist = copy.get(i);
+			double nextDist = copy.get(i + 1);
+
+			double constant = i == 0 ? 0 : distUtils.getDouble(i - 1);
+			double next = distUtils.getDouble(i);
+
+
+			groups[i] = new DistanceGroup(dist, constant, (next - constant) / (nextDist - dist));
+		}
+
+		// Last open ended dist group
+		int lastDist = copy.get(copy.size() - 1);
+		double lastUtil = distUtils.getDouble(distUtils.size() - 1);
+		groups[copy.size() - 1] = new DistanceGroup(lastDist, lastUtil, lastUtil / lastDist);
 
 		return groups;
 	}
@@ -125,13 +136,14 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 			"Make sure to set this attribute only to appropriate agents (i.e. true 'persons' and not freight agents) \n" +
 			"Income values <= 0 are ignored. Agents that have negative or 0 income will use the marginalUtilityOfMoney in their subpopulation's scoring params..");
 		OptionalDouble averageIncome = population.getPersons().values().stream()
-			.filter(person -> PersonUtils.getIncome(person) != null) //consider only agents that have a specific income provided
+			//consider only agents that have a specific income provided
+			.filter(person -> PersonUtils.getIncome(person) != null)
 			.mapToDouble(PersonUtils::getIncome)
 			.filter(dd -> dd > 0)
 			.average();
 
 		if (averageIncome.isEmpty()) {
-			throw new RuntimeException("you are using " + this.getClass() + " but there is not a single income attribute in the population! " +
+			throw new RuntimeException("you have enabled income dependent scoring but there is not a single income attribute in the population! " +
 				"If you are not aiming for person-specific marginalUtilityOfMoney, better use other PersonScoringParams, e.g. SubpopulationPersonScoringParams, which have higher performance." +
 				"Otherwise, please provide income attributes in the population...");
 		} else {
@@ -207,7 +219,7 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 				DistanceGroupModeUtilityParameters.DeltaBuilder delta = mode.getValue();
 
 				// These arrays are re-used if possible
-				DistanceGroup[] groups = distGroups.computeIfAbsent(delta.getUtilsDistance(), k -> calcDistanceGroups(scoring.distGroups, k));
+				DistanceGroup[] groups = distGroups.computeIfAbsent(delta.getPerDistGroup(), k -> calcDistanceGroups(scoring.distGroups, k));
 
 				DistanceGroupModeUtilityParameters p = new DistanceGroupModeUtilityParameters(params, delta, groups);
 				builder.setModeParameters(mode.getKey(), p);
@@ -223,7 +235,7 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 
 				if (groups != null) {
 					for (DistanceGroup group : groups) {
-						values.put("%s_dist_%.0f".formatted(mode.getKey(), group.dist()), group.util_m());
+						values.put("%s_dist_%.0f".formatted(mode.getKey(), group.dist()), group.utilPerM());
 					}
 				}
 
@@ -239,18 +251,31 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 	 */
 	private void addDeltaParams(DistanceGroupModeUtilityParameters.DeltaBuilder delta, AdvancedScoringConfigGroup.ModeParams params, Person person) {
 
-		SplittableRandom rnd = this.rnd.get();
+		ContinuousDistribution.Sampler normal = this.rnd.get().normal;
+		ContinuousDistribution.Sampler tn = this.rnd.get().tn;
 
 		switch (params.varConstant) {
 			case fixed -> delta.constant += params.deltaConstant;
-			case normal -> delta.constant += rnd.nextGaussian() * params.deltaConstant;
+			case normal -> delta.constant += normal.sample() * params.deltaConstant;
+			case truncatedNormal -> delta.constant += tn.sample() * params.deltaConstant;
 			default -> throw new IllegalArgumentException("Unsupported varConstant: " + params.varConstant);
 		}
 
 		switch (params.varDailyConstant) {
 			case fixed -> delta.dailyUtilityConstant += params.deltaDailyConstant;
-			case normal -> delta.dailyUtilityConstant += rnd.nextGaussian() * params.deltaDailyConstant;
+			case normal -> delta.dailyUtilityConstant += normal.sample() * params.deltaDailyConstant;
+			case truncatedNormal -> delta.dailyUtilityConstant += tn.sample() * params.deltaDailyConstant;
 			default -> throw new IllegalArgumentException("Unsupported varDailyConstant: " + params.varDailyConstant);
+		}
+	}
+
+	private record Context(ContinuousDistribution.Sampler normal, ContinuousDistribution.Sampler tn) {
+
+		Context() {
+			this(NormalDistribution.of(0,1).createSampler(RandomSource.KISS.create(123L)),
+				TruncatedNormalDistribution.of(0, 1, 0, Double.POSITIVE_INFINITY)
+					.createSampler(RandomSource.KISS.create(123L))
+			);
 		}
 	}
 }

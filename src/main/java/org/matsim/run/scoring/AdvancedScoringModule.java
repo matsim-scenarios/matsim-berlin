@@ -1,10 +1,8 @@
 package org.matsim.run.scoring;
 
-import com.google.inject.Key;
 import jakarta.inject.Singleton;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
-import org.matsim.core.controler.listener.ControlerListener;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 
 /**

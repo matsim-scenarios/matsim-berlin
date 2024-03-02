@@ -32,7 +32,7 @@ def filter_modes(df):
 study, obj = create_calibration(
     "calib",
     ASCDistCalibrator(modes, initial, target, lr=utils.linear_scheduler(start=0.3, interval=15),
-                      constraints=dict(ride=constraints.negative, walk=constraints.zero)),
+                      fixed_mode_dist="car", constraints=dict(ride=constraints.negative, walk=constraints.zero)),
     "matsim-berlin-6.1-SNAPSHOT.jar",
     "../../../input/v6.1/berlin-v6.1.config.xml",
     args="--1pct --iterations 0",

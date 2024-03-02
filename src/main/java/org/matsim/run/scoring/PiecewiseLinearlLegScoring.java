@@ -35,7 +35,6 @@ import org.matsim.core.scoring.functions.ModeUtilityParameters;
 import org.matsim.core.scoring.functions.ScoringParameters;
 import org.matsim.pt.PtConstants;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -43,13 +42,14 @@ import java.util.Set;
  * This is a copy of {@link org.matsim.core.scoring.functions.CharyparNagelLegScoring}.
  * Distance utilities are scored with different linear functions per distance group.
  */
-public class PiecewiseLinearlLegScoring implements org.matsim.core.scoring.SumScoringFunction.LegScoring, org.matsim.core.scoring.SumScoringFunction.ArbitraryEventScoring {
+@SuppressWarnings("checkstyle")
+public final class PiecewiseLinearlLegScoring implements org.matsim.core.scoring.SumScoringFunction.LegScoring, org.matsim.core.scoring.SumScoringFunction.ArbitraryEventScoring {
 	// yyyy URL in above javadoc is broken.  kai, feb'17
 
 	private static final Logger log = LogManager.getLogger(PiecewiseLinearlLegScoring.class);
 	private static int ccc = 0;
 	/**
-	 * The parameters used for scoring
+	 * The parameters used for scoring.
 	 */
 	protected final ScoringParameters params;
 	private final Set<String> ptModes;
@@ -70,24 +70,6 @@ public class PiecewiseLinearlLegScoring implements org.matsim.core.scoring.SumSc
 		this.marginalUtilityOfMoney = this.params.marginalUtilityOfMoney;
 	}
 
-	/**
-	 * Scoring with person-specific marginal utility of money
-	 */
-	public PiecewiseLinearlLegScoring(final ScoringParameters params, double marginalUtilityOfMoney, Network network, Set<String> ptModes) {
-		this.params = params;
-		this.network = network;
-		this.ptModes = ptModes;
-		this.modesAlreadyConsideredForDailyConstants = new HashSet<>();
-		this.marginalUtilityOfMoney = marginalUtilityOfMoney;
-	}
-
-	/**
-	 * Scoring with pt modes set to 'pt'
-	 */
-	public PiecewiseLinearlLegScoring(final ScoringParameters params, Network network) {
-		this(params, network, new HashSet<>(Collections.singletonList("pt")));
-	}
-
 	@Override
 	public void finish() {
 
@@ -98,9 +80,13 @@ public class PiecewiseLinearlLegScoring implements org.matsim.core.scoring.SumSc
 		return this.score;
 	}
 
+	/**
+	 * Calculate the score for a leg.
+	 */
 	protected double calcLegScore(final double departureTime, final double arrivalTime, final Leg leg) {
 		double tmpScore = 0.0;
-		double travelTime = arrivalTime - departureTime; // travel time in seconds
+		// travel time in seconds
+		double travelTime = arrivalTime - departureTime;
 		ModeUtilityParameters modeParams = this.params.modeParams.get(leg.getMode());
 
 		if (modeParams == null) {
@@ -119,7 +105,8 @@ public class PiecewiseLinearlLegScoring implements org.matsim.core.scoring.SumSc
 
 			if (modeParams.monetaryDistanceCostRate != 0.0) {
 				Route route = leg.getRoute();
-				double dist = route.getDistance(); // distance in meters
+				// distance in meters
+				double dist = route.getDistance();
 				if (Double.isNaN(dist)) {
 					if (ccc < 10) {
 						ccc++;
@@ -150,7 +137,8 @@ public class PiecewiseLinearlLegScoring implements org.matsim.core.scoring.SumSc
 			if (modeParams.marginalUtilityOfDistance_m != 0.0
 				|| modeParams.monetaryDistanceCostRate != 0.0) {
 				Route route = leg.getRoute();
-				double dist = route.getDistance(); // distance in meters
+				// distance in meters
+				double dist = route.getDistance();
 				if ( Double.isNaN(dist) ) {
 					if ( ccc<10 ) {
 						ccc++ ;

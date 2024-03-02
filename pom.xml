@@ -261,6 +261,17 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-math3</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-statistics-distribution</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-rng-simple</artifactId>
+			<version>1.5</version>
+		</dependency>
+
 
 		<!-- Include the JUnit testing library.  Not transitive. -->
 		<dependency>

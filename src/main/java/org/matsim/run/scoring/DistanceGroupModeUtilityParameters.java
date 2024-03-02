@@ -41,35 +41,35 @@ public class DistanceGroupModeUtilityParameters extends ModeUtilityParameters {
 			group = groups[i];
 		}
 
-		return group.constant() + group.util_m() * (dist - group.dist());
+		return group.constant() + group.utilPerM() * (dist - group.dist());
 	}
 
-	public static final class DeltaBuilder {
+	static final class DeltaBuilder {
 
-		private final DoubleList utilsDistance = new DoubleArrayList();
+		private final DoubleList perDistGroup = new DoubleArrayList();
 		double constant;
 		double dailyUtilityConstant;
 
-		public DoubleList getUtilsDistance() {
-			return utilsDistance;
+		public DoubleList getPerDistGroup() {
+			return perDistGroup;
 		}
 
 		/**
 		 * Sum delta of distance utilities.
 		 */
 		public void addUtilsDistance(AdvancedScoringConfigGroup.ModeParams params) {
-			if (params.deltaUtilsDistance != null && !params.deltaUtilsDistance.isEmpty()) {
-				if (utilsDistance.isEmpty()) {
-					utilsDistance.addAll(params.deltaUtilsDistance);
+			if (params.deltaPerDistGroup != null && !params.deltaPerDistGroup.isEmpty()) {
+				if (perDistGroup.isEmpty()) {
+					perDistGroup.addAll(params.deltaPerDistGroup);
 					return;
 				}
 
-				if (utilsDistance.size() != params.deltaUtilsDistance.size()) {
+				if (perDistGroup.size() != params.deltaPerDistGroup.size()) {
 					throw new IllegalArgumentException("Distance utility parameters do not match");
 				}
 
-				for (int i = 0; i < utilsDistance.size(); i++) {
-					utilsDistance.set(i, utilsDistance.getDouble(i) + params.deltaUtilsDistance.get(i));
+				for (int i = 0; i < perDistGroup.size(); i++) {
+					perDistGroup.set(i, perDistGroup.getDouble(i) + params.deltaPerDistGroup.get(i));
 				}
 			}
 		}

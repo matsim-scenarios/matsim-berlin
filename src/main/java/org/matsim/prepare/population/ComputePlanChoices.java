@@ -103,6 +103,7 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 		InformedModeChoiceConfigGroup imc = ConfigUtils.addOrGetModule(config, InformedModeChoiceConfigGroup.class);
 		imc.setTopK(topK);
 		imc.setModes(modes);
+		imc.setConstraintCheck(InformedModeChoiceConfigGroup.ConstraintCheck.none);
 
 		controler.run();
 
@@ -143,17 +144,18 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 					header.add(String.format("plan_%d_%s_usage", i, mode));
 					header.add(String.format("plan_%d_%s_km", i, mode));
 					header.add(String.format("plan_%d_%s_hours", i, mode));
+					header.add(String.format("plan_%d_%s_ride_hours", i, mode));
+					header.add(String.format("plan_%d_%s_n_switches", i, mode));
 				}
 				header.add(String.format("plan_%d_valid", i));
-
 			}
 
 			csv.printRecord(header);
 
-            for (List<Object> row : rows) {
-                csv.printRecord(row);
-            }
-        }
+			for (List<Object> row : rows) {
+				csv.printRecord(row);
+			}
+		}
 
 
 		return 0;
@@ -227,9 +229,7 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 		List<Object> row = new ArrayList<>();
 		if (plan == null) {
 			for (String ignored : modes) {
-				row.add(0);
-				row.add(0);
-				row.add(0);
+				row.addAll(List.of(0, 0, 0, 0, 0));
 			}
 
 			return row;
@@ -242,6 +242,8 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 			row.add(modeStats.usage);
 			row.add(modeStats.travelDistance / 1000);
 			row.add(modeStats.travelTime / 3600);
+			row.add(modeStats.rideTime / 3600);
+			row.add(modeStats.numSwitches);
 		}
 
 
@@ -259,7 +261,10 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 
 			int usage = 0;
 			double travelTime = 0;
+			double rideTime = 0;
 			double travelDistance = 0;
+			long switches = 0;
+
 			for (TripStructureUtils.Trip trip : TripStructureUtils.getTrips(plan)) {
 				List<Leg> legs = trip.getLegsOnly();
 				String mainMode = mmi.identifyMainMode(legs);
@@ -267,16 +272,21 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 					usage++;
 					travelTime += legs.stream().mapToDouble(l -> l.getRoute().getTravelTime().seconds()).sum();
 					travelDistance += legs.stream().mapToDouble(l -> l.getRoute().getDistance()).sum();
+					rideTime += legs.stream().filter(l -> l.getMode().equals(mode))
+						.mapToDouble(l -> l.getRoute().getTravelTime().seconds()).sum();
+
+					// This is mainly used for PT, to count the number of switches
+					switches += legs.stream().filter(l -> l.getMode().equals(mode)).count() - 1;
 				}
 			}
 
-			stats.put(mode, new ModeStats(usage, travelTime, travelDistance));
+			stats.put(mode, new ModeStats(usage, travelTime, travelDistance, rideTime, switches));
 		}
 
 		return stats;
 	}
 
-	private record ModeStats(int usage, double travelTime, double travelDistance) {
+	private record ModeStats(int usage, double travelTime, double travelDistance, double rideTime, long numSwitches) {
 	}
 
 	private record Ctx(PlanRouter router, TopKChoicesGenerator generator) {

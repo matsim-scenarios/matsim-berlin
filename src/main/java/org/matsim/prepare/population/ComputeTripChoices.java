@@ -6,7 +6,6 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Network;
@@ -27,16 +26,12 @@ import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.facilities.FacilitiesUtils;
 import org.matsim.facilities.Facility;
 import org.matsim.utils.objectattributes.attributable.AttributesImpl;
-import org.matsim.vehicles.Vehicle;
-import org.matsim.vehicles.VehicleType;
-import org.matsim.vehicles.VehicleUtils;
 import picocli.CommandLine;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.SplittableRandom;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -112,7 +107,7 @@ public class ComputeTripChoices implements MATSimAppCommand {
 
 		List<Person> persons = builder.createPlans(input);
 		// Progress bar will be inaccurate
-		ProgressBar pb = new ProgressBar("Computing choices",  persons.size() * 3L);
+		ProgressBar pb = new ProgressBar("Computing choices", persons.size() * 3L);
 
 		SplittableRandom rnd = new SplittableRandom();
 

@@ -7,8 +7,55 @@ from collections import defaultdict
 import biogeme.biogeme as bio
 import biogeme.database as db
 import biogeme.models as models
+import numpy as np
 import pandas as pd
 from biogeme.expressions import Beta, bioDraws, log, MonteCarlo
+from scipy.stats import truncnorm
+
+TN = truncnorm(0, np.inf)
+
+
+def tn_generator(sample_size: int, number_of_draws: int) -> np.ndarray:
+    """
+    User-defined random number generator to the database.
+    See the numpy.random documentation to obtain a list of other distributions.
+    """
+    return TN.rvs((sample_size, number_of_draws))
+
+
+def calc_costs(df, k, modes):
+    # Cost parameter from current berlin model
+
+    fixed_costs = defaultdict(lambda: 0.0, car=-15, pt=-3)
+    km_costs = defaultdict(lambda: 0.0, car=-0.149, ride=-0.149)
+    time_cost = -6.88
+
+    for i in range(1, k + 1):
+
+        df[f"plan_{i}_costs"] = 0
+
+        for mode in modes:
+
+            df[f"plan_{i}_{mode}_fixed_cost"] = (df[f"plan_{i}_{mode}_usage"] > 0) * fixed_costs[mode]
+            df[f"plan_{i}_{mode}_used"] = (df[f"plan_{i}_{mode}_usage"] > 0) * 1
+
+            df[f"plan_{i}_costs"] += df[f"plan_{i}_{mode}_km"] * km_costs[mode]
+
+            # Add configured time costs
+            df[f"plan_{i}_costs"] += time_cost * df[f"plan_{i}_{mode}_hours"]
+
+            # Add additional ride time costs
+            if mode == "ride":
+                df[f"plan_{i}_costs"] += time_cost * df[f"plan_{i}_{mode}_hours"]
+
+            if mode == "pt":
+                df[f"plan_{i}_costs"] += (df[f"plan_{i}_pt_usage"] > 0) * fixed_costs[mode]
+
+        # Defragment df
+        df = df.copy()
+
+    return df
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate choice model for daily trip usage")
@@ -21,7 +68,7 @@ if __name__ == "__main__":
     df.drop(columns=["person"], inplace=True)
 
     # TODO: for testing only
-    df = df.sample(frac=0.1)
+    df = df.sample(frac=0.2)
 
     # Convert all the columns to numeric
     df = df * 1
@@ -34,8 +81,18 @@ if __name__ == "__main__":
     modes = list(df.columns.str.extract(r"_([a-zA-z]+)_usage", expand=False).dropna().unique())
     print("Modes: ", modes)
 
+    df = calc_costs(df, k, modes)
+
     database = db.Database("data/plan-choices", df)
     v = database.variables
+
+    database.setRandomNumberGenerators({
+        "TN": (tn_generator, "truncated normal generator for mixed logit")
+    })
+
+    print(tn_generator(10, 10))
+
+    mixed_logit = True
 
     ASC = {}
     for mode in modes:
@@ -50,54 +107,37 @@ if __name__ == "__main__":
             asc_s = Beta(f"ASC_{mode}_s", 1, None, None, 0)
             ASC[mode] = asc + asc_s * bioDraws(f"ASC_{mode}_RND", "NORMAL_ANTI")
 
-    # TODO: distance specific utility parameters
+    B_UTIL = Beta('B_CAR_UTIL', 0, None, None, 0)
+    B_UTIL_S = Beta('B_CAR_UTIL_SD', 1, None, None, 0)
 
-    # B_TIME = Beta('B_TIME', 0, None, None, 0)
-    B_COST = Beta('B_COST', 0.5, 0, 0, 0)
+    B_TIME_RND = B_UTIL + B_UTIL_S * bioDraws('B_CAR_UTIL_RND', 'TN')
 
     U = {}
     AV = {}
 
-    # Cost parameter from current berlin model
-
-    # fixed_costs = defaultdict(lambda: 0.0, car=-14.13, pt=-3)
-    fixed_costs = defaultdict(lambda: 0.0, car=-3, pt=-3)
-    km_costs = defaultdict(lambda: 0.0, car=-0.149, ride=-0.149)
-
-    time_cost = -6.88
-
     for i in range(1, k + 1):
-        u = 0
+        u = v[f"plan_{i}_car_fixed_cost"]
+        u += v[f"plan_{i}_costs"]
+        u -= v[f"plan_{i}_pt_n_switches"]
+
         for mode in modes:
-            # Is 1 if a mode was used once
-            FIXED_COSTS = database.DefineVariable(f"plan_{i}_{mode}_fixed_cost",
-                                                  fixed_costs[mode] * (v[f"plan_{i}_{mode}_usage"] > 0))
-            KM_COSTS = database.DefineVariable(f"plan_{i}_{mode}_km_cost", km_costs[mode] * v[f"plan_{i}_{mode}_km"])
-
             u += ASC[mode] * v[f"plan_{i}_{mode}_usage"]
-            u += time_cost * v[f"plan_{i}_{mode}_hours"]
 
-            # u += FIXED_COSTS * B_COST * bioDraws('B_TIME_RND', 'NORMAL_ANTI')
-            u += FIXED_COSTS
-            u += KM_COSTS
-
-            if mode == "ride":
-                u += time_cost * v[f"plan_{i}_{mode}_hours"]
-
-            if mode != "walk":
-                slope = Beta(f"B_{mode}_DIST", 0, None, None, 0)
-                u += slope * v[f"plan_{i}_{mode}_km"]
+        if mixed_logit:
+            u += v[f"plan_{i}_car_used"] * B_TIME_RND
 
         U[i] = u
         AV[i] = v[f"plan_{i}_valid"]
 
-    # prob = models.logit(U, AV, v["choice"])
-    # logprob = log(MonteCarlo(prob))
-
-    logprob = models.loglogit(U, AV, v["choice"])
+    if mixed_logit:
+        prob = models.logit(U, AV, v["choice"])
+        logprob = log(MonteCarlo(prob))
+    else:
+        logprob = models.loglogit(U, AV, v["choice"])
 
     biogeme = bio.BIOGEME(database, logprob)
 
+    biogeme.calculateNullLoglikelihood(AV)
     biogeme.modelName = "plan_choice"
     biogeme.generate_pickle = False
 

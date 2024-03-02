@@ -9,6 +9,7 @@ import java.util.*;
 /**
  * Stores scoring parameters for {@link AdvancedScoringModule}.
  */
+@SuppressWarnings("checkstyle:VisibilityModifier")
 public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 
 	private static final String GROUP_NAME = "advancedScoring";
@@ -25,6 +26,8 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 
 
 	// TODO: maybe option to re-assign variations or use them from attributes
+	// TODO: could load the random variations from a file, helper function to only generate the variations
+	// TODO: reference population?, for which the loglikelihood could be calculated
 
 	public AdvancedScoringConfigGroup() {
 		super(GROUP_NAME);
@@ -56,6 +59,10 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 		}
 	}
 
+	/**
+	 * Scoring parameters for a specific group of agents.
+	 * This group allows arbitrary attributes to be defined, which are matched against person attributes.
+	 */
 	public static final class ScoringParameters extends ReflectiveConfigGroup {
 
 		private static final String GROUP_NAME = "scoringParameters";
@@ -163,15 +170,18 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 		public VariationType varDailyConstant = VariationType.fixed;
 
 		@Parameter
-		@Comment("[utils/m] for each distance group.")
-		public List<Double> deltaUtilsDistance;
+		@Comment("total delta utility per dist group.")
+		public List<Double> deltaPerDistGroup;
 
 		public ModeParams() {
 			super(GROUP_NAME);
 		}
 	}
 
+	/**
+	 * Variate values with random draw from specific distribution.
+	 */
 	public enum VariationType {
-		fixed, normal
+		fixed, normal, truncatedNormal
 	}
 }
