@@ -2,14 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-from collections import defaultdict
-
 import biogeme.biogeme as bio
 import biogeme.database as db
 import biogeme.models as models
 import numpy as np
 import pandas as pd
 from biogeme.expressions import Beta, bioDraws, log, MonteCarlo
+from collections import defaultdict
 from scipy.stats import truncnorm
 
 TN = truncnorm(0, np.inf)
@@ -32,16 +31,23 @@ def calc_costs(df, k, modes):
 
     for i in range(1, k + 1):
 
+        # Costs will also include time costs
         df[f"plan_{i}_costs"] = 0
+        # Price is only monetary costs
+        df[f"plan_{i}_price"] = 0
+
+        df[f"plan_{i}_tt_hours"] = 0
 
         for mode in modes:
 
             df[f"plan_{i}_{mode}_fixed_cost"] = (df[f"plan_{i}_{mode}_usage"] > 0) * fixed_costs[mode]
             df[f"plan_{i}_{mode}_used"] = (df[f"plan_{i}_{mode}_usage"] > 0) * 1
 
-            df[f"plan_{i}_costs"] += df[f"plan_{i}_{mode}_km"] * km_costs[mode]
+            df[f"plan_{i}_price"] += df[f"plan_{i}_{mode}_fixed_cost"] + df[f"plan_{i}_{mode}_km"] * km_costs[mode]
+            df[f"plan_{i}_tt_hours"] += df[f"plan_{i}_{mode}_hours"]
 
             # Add configured time costs
+            df[f"plan_{i}_costs"] += df[f"plan_{i}_{mode}_km"] * km_costs[mode]
             df[f"plan_{i}_costs"] += time_cost * df[f"plan_{i}_{mode}_hours"]
 
             # Add additional ride time costs
