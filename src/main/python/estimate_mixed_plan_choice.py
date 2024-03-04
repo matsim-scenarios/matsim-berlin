@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-
 import numpy as np
 import pandas as pd
 from xlogit import MixedLogit
@@ -13,6 +12,8 @@ from estimate_plan_choice import calc_costs
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate the plan choice mixed logit model")
     parser.add_argument("--input", help="Path to the input file", type=str, default="../../../plan-choices.csv")
+    parser.add_argument("--n-draws", help="Number of draws for the estimation", type=int, default=1500)
+    parser.add_argument("--sample", help="Use sample of choice data", type=float, default=0.2)
 
     args = parser.parse_args()
 
@@ -30,8 +31,8 @@ if __name__ == "__main__":
 
     # sample = set(df_wide.person.sample(frac=0.2))
     # df_wide = df_wide[df_wide.person.isin(sample)]
-    df_wide = df_wide.sample(frac=0.2)
-
+    if args.sample < 1:
+        df_wide = df_wide.sample(frac=args.sample)
 
     print("Modes:", modes)
     print("Number of choices:", len(df_wide))
@@ -61,7 +62,7 @@ if __name__ == "__main__":
     model.fit(X=df[varnames], y=df['choice'], varnames=varnames,
               alts=df['alt'], ids=df['custom_id'], avail=df['valid'],
               addit=df["costs"] + df["car_fixed_cost"] - df["pt_n_switches"],
-              randvars={"car_used": "tn", "bike_usage": "n", "pt_usage": "n", "ride_usage": "n"}, n_draws=1500,
+              randvars={"car_used": "tn", "bike_usage": "n", "pt_usage": "n", "ride_usage": "n"}, n_draws=args.n_draws,
               optim_method='L-BFGS-B')
 
     model.summary()

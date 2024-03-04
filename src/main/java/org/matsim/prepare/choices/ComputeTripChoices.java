@@ -1,4 +1,4 @@
-package org.matsim.prepare.population;
+package org.matsim.prepare.choices;
 
 import com.google.inject.Injector;
 import me.tongfei.progressbar.ProgressBar;
