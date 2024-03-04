@@ -52,6 +52,7 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	 * Rows for the result table.
 	 */
 	private final Queue<List<Object>> rows = new ConcurrentLinkedQueue<>();
+	private final MainModeIdentifier mmi = new DefaultAnalysisMainModeIdentifier();
 	@CommandLine.Mixin
 	private ScenarioOptions scenario;
 	@CommandLine.Mixin
@@ -68,8 +69,6 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	private Path output;
 	private ThreadLocal<Ctx> thread;
 	private ProgressBar pb;
-	private final MainModeIdentifier mmi = new DefaultAnalysisMainModeIdentifier();
-
 
 	public static void main(String[] args) {
 		new ComputePlanChoices().execute(args);
@@ -100,7 +99,6 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 			.withLegEstimator(DefaultLegScoreEstimator.class, ModeOptions.ConsiderIfCarAvailable.class, "car")
 			.withLegEstimator(DefaultLegScoreEstimator.class, ModeOptions.AlwaysAvailable.class, "bike", "walk", "pt", "ride")
 			.withConstraint(RelaxedMassConservationConstraint.class)
-			.withActivityEstimator(DefaultActivityEstimator.class)
 			.build());
 
 		InformedModeChoiceConfigGroup imc = ConfigUtils.addOrGetModule(config, InformedModeChoiceConfigGroup.class);
@@ -125,9 +123,9 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 				new PlanRouter(injector.getInstance(TripRouter.class),
 					TimeInterpretation.create(PlansConfigGroup.ActivityDurationInterpretation.tryEndTimeThenDuration,
 						PlansConfigGroup.TripDurationHandling.ignoreDelays)),
-				injector.getInstance(TopKChoicesGenerator.class),
+				new DiversePlanCandidateGenerator(topK, injector.getInstance(TopKChoicesGenerator.class)),
 				new PseudoScorer(injector, population)
-				)
+			)
 		);
 
 
@@ -178,41 +176,24 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 
 		Ctx ctx = thread.get();
 
-		List<String[]> chosen = new ArrayList<>();
-		chosen.add(model.getCurrentModes());
-
-		// Chosen candidate from data
-		PlanCandidate existing = ctx.generator.generatePredefined(model, chosen).get(0);
-
 		List<Object> row = new ArrayList<>();
 
 		row.add(person.getId());
 		// choice, always the first one
 		row.add(1);
 
-		// TODO: apply method might also shift times to better fit the schedule
-		existing.applyTo(plan);
-		ctx.router.run(plan);
-
-		row.addAll(convert(plan, ctx.scorer));
-		// available choice
-		row.add(1);
-
-		// top k candidates
 		List<PlanCandidate> candidates = ctx.generator.generate(model);
 
-		int i = 1;
+		int i = 0;
 		for (PlanCandidate candidate : candidates) {
 
 			if (i >= topK)
 				break;
 
-			// Skip if the same as the existing plan
-			if (Arrays.equals(candidate.getModes(), model.getCurrentModes()))
-				continue;
-
+			// TODO: apply method might also shift times to better fit the schedule
 			candidate.applyTo(plan);
 			ctx.router.run(plan);
+
 			row.addAll(convert(plan, ctx.scorer));
 			// available choice
 			row.add(1);
@@ -257,8 +238,6 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 
 		Map<String, ModeStats> stats = collect(plan);
 
-		// at the moment pseudo scorer only considers activities, therefore the total score is used
-		Object2DoubleMap<String> scores = scorer.score(plan);
 
 		for (String mode : modes) {
 			ModeStats modeStats = stats.get(mode);
@@ -269,7 +248,10 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 			row.add(modeStats.numSwitches);
 		}
 
-		row.add(scores.getDouble("score"));
+		// pseudo scorer commented out currently
+//		Object2DoubleMap<String> scores = scorer.score(plan);
+//		row.add(scores.getDouble("score"));
+		row.add(0);
 
 
 		return row;
@@ -314,6 +296,6 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	private record ModeStats(int usage, double travelTime, double travelDistance, double rideTime, long numSwitches) {
 	}
 
-	private record Ctx(PlanRouter router, TopKChoicesGenerator generator, PseudoScorer scorer) {
+	private record Ctx(PlanRouter router, DiversePlanCandidateGenerator generator, PseudoScorer scorer) {
 	}
 }

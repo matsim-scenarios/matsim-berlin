@@ -23,11 +23,18 @@ def tn_generator(sample_size: int, number_of_draws: int) -> np.ndarray:
 
 
 def calc_costs(df, k, modes):
-    # Cost parameter from current berlin model
 
+    # Cost parameter from current berlin model
     fixed_costs = defaultdict(lambda: 0.0, car=-15, pt=-3)
     km_costs = defaultdict(lambda: 0.0, car=-0.149, ride=-0.149)
     time_cost = -6.88
+
+    # Normalize activity utilities to be near zero
+    # columns = [f"plan_{i}_act_util" for i in range(1, k + 1)]
+    # for t in df.itertuples():
+    #     utils = df.loc[t.Index, columns]
+    #     df.loc[t.Index, columns] -= utils.max()
+
 
     for i in range(1, k + 1):
 
@@ -48,6 +55,7 @@ def calc_costs(df, k, modes):
 
             # Add configured time costs
             df[f"plan_{i}_costs"] += df[f"plan_{i}_{mode}_km"] * km_costs[mode]
+            # Add time costs the overall costs
             df[f"plan_{i}_costs"] += time_cost * df[f"plan_{i}_{mode}_hours"]
 
             # Add additional ride time costs
