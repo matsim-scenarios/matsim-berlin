@@ -4,7 +4,7 @@
 import argparse
 import numpy as np
 import pandas as pd
-from xlogit import MixedLogit
+from xlogit import MixedLogit, MultinomialLogit
 from xlogit.utils import wide_to_long
 
 from estimate_plan_choice import calc_costs
@@ -13,6 +13,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate the plan choice mixed logit model")
     parser.add_argument("--input", help="Path to the input file", type=str, default="../../../plan-choices.csv")
     parser.add_argument("--n-draws", help="Number of draws for the estimation", type=int, default=1500)
+    parser.add_argument("--batch-size", help="Batch size for the estimation", type=int, default=None)
     parser.add_argument("--sample", help="Use sample of choice data", type=float, default=0.2)
 
     args = parser.parse_args()
@@ -60,9 +61,11 @@ if __name__ == "__main__":
     # varnames += ["pt_ride_hours", "car_ride_hours", "bike_ride_hours"]
 
     model.fit(X=df[varnames], y=df['choice'], varnames=varnames,
-              alts=df['alt'], ids=df['custom_id'], avail=df['valid'],
-              addit=df["costs"] + df["car_fixed_cost"] - df["pt_n_switches"],
-              randvars={"car_used": "tn", "bike_usage": "n", "pt_usage": "n", "ride_usage": "n"}, n_draws=args.n_draws,
+              alts=df['alt'], ids=df['custom_id'], avail=df['valid'], random_state=0,
+              addit=df["costs"] + df["car_fixed_cost"] - df["pt_n_switches"], #)
+              # randvars={"car_used": "tn"},
+              randvars={"car_used": "tn", "bike_usage": "n", "pt_usage": "n", "ride_usage": "n"},
+              n_draws=args.n_draws, batch_size=args.batch_size,
               optim_method='L-BFGS-B')
 
     model.summary()
