@@ -7,10 +7,7 @@ import org.matsim.modechoice.PlanCandidate;
 import org.matsim.modechoice.PlanModel;
 import org.matsim.modechoice.search.TopKChoicesGenerator;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Generator to create candidates with different modes.
@@ -23,15 +20,16 @@ public class DiversePlanCandidateGenerator implements CandidateGenerator {
 	private final TopKChoicesGenerator gen;
 
 	private List<Set<String>> carTypes = List.of(
+		Set.of("car", "walk"),
 		Set.of("car", "bike", "walk", "pt"),
-		Set.of("bike", "walk", "pt"),
+		Set.of("ride", "bike", "walk"),
 		Set.of("walk", "bike"),
 		Set.of("walk", "pt")
 	);
 
 	private List<Set<String>> rideTypes = List.of(
+		Set.of("ride", "walk"),
 		Set.of("ride", "bike", "walk", "pt"),
-		Set.of("bike", "walk", "pt"),
 		Set.of("walk", "bike"),
 		Set.of("walk", "pt")
 	);
@@ -44,33 +42,30 @@ public class DiversePlanCandidateGenerator implements CandidateGenerator {
 	@Override
 	public List<PlanCandidate> generate(PlanModel planModel, @Nullable Set<String> consideredModes, @Nullable boolean[] mask) {
 
-		if (mask != null) {
-			throw new UnsupportedOperationException("Masking is not supported for this generator");
-		}
-
 		List<String[]> chosen = new ArrayList<>();
 		chosen.add(planModel.getCurrentModes());
 
 		// Chosen candidate from data
 		PlanCandidate existing = gen.generatePredefined(planModel, chosen).get(0);
 
-		Set<PlanCandidate> candidates = new LinkedHashSet<>();
-		candidates.add(existing);
-
+		List<PlanCandidate> candidates = new ArrayList<>();
 		boolean carUser = PersonUtils.canUseCar(planModel.getPerson());
 
 		List<Set<String>> types = carUser ? carTypes : rideTypes;
 
 		for (Set<String> modes : types) {
-			List<PlanCandidate> tmp = gen.generate(planModel, modes, null);
+			List<PlanCandidate> tmp = gen.generate(planModel, modes, mask);
 
 			// Use two candidates from every option
-			if (tmp.size() <= 2)
+			if (tmp.size() <= 3)
 				candidates.addAll(tmp);
 			else
-				candidates.addAll(tmp.subList(0, 2));
+				candidates.addAll(tmp.subList(0, 3));
 		}
 
-		return candidates.stream().limit(topK).toList();
+		Collections.sort(candidates);
+		candidates.add(0, existing);
+
+		return candidates.stream().distinct().limit(topK).toList();
 	}
 }

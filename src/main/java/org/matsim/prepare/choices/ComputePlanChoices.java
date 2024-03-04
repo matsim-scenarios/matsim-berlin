@@ -1,7 +1,6 @@
 package org.matsim.prepare.choices;
 
 import com.google.inject.Injector;
-import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import me.tongfei.progressbar.ProgressBar;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -29,7 +28,6 @@ import org.matsim.modechoice.*;
 import org.matsim.modechoice.constraints.RelaxedMassConservationConstraint;
 import org.matsim.modechoice.estimators.DefaultActivityEstimator;
 import org.matsim.modechoice.estimators.DefaultLegScoreEstimator;
-import org.matsim.modechoice.estimators.FixedCostsEstimator;
 import org.matsim.modechoice.search.TopKChoicesGenerator;
 import picocli.CommandLine;
 
@@ -95,10 +93,10 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 		Controler controler = this.scenario.createControler();
 
 		controler.addOverridingModule(InformedModeChoiceModule.newBuilder()
-			.withFixedCosts(FixedCostsEstimator.DailyConstant.class, "car")
 			.withLegEstimator(DefaultLegScoreEstimator.class, ModeOptions.ConsiderIfCarAvailable.class, "car")
 			.withLegEstimator(DefaultLegScoreEstimator.class, ModeOptions.AlwaysAvailable.class, "bike", "walk", "pt", "ride")
 			.withConstraint(RelaxedMassConservationConstraint.class)
+			.withActivityEstimator(DefaultActivityEstimator.class)
 			.build());
 
 		InformedModeChoiceConfigGroup imc = ConfigUtils.addOrGetModule(config, InformedModeChoiceConfigGroup.class);
