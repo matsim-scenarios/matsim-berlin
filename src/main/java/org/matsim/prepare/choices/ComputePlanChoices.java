@@ -26,8 +26,8 @@ import org.matsim.core.router.*;
 import org.matsim.core.utils.timing.TimeInterpretation;
 import org.matsim.modechoice.*;
 import org.matsim.modechoice.constraints.RelaxedMassConservationConstraint;
-import org.matsim.modechoice.estimators.DefaultActivityEstimator;
 import org.matsim.modechoice.estimators.DefaultLegScoreEstimator;
+import org.matsim.modechoice.estimators.FixedCostsEstimator;
 import org.matsim.modechoice.search.TopKChoicesGenerator;
 import picocli.CommandLine;
 
@@ -50,7 +50,6 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	 * Rows for the result table.
 	 */
 	private final Queue<List<Object>> rows = new ConcurrentLinkedQueue<>();
-	private final MainModeIdentifier mmi = new DefaultAnalysisMainModeIdentifier();
 	@CommandLine.Mixin
 	private ScenarioOptions scenario;
 	@CommandLine.Mixin
@@ -67,6 +66,8 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	private Path output;
 	private ThreadLocal<Ctx> thread;
 	private ProgressBar pb;
+	private MainModeIdentifier mmi = new DefaultAnalysisMainModeIdentifier();
+
 
 	public static void main(String[] args) {
 		new ComputePlanChoices().execute(args);
@@ -93,10 +94,10 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 		Controler controler = this.scenario.createControler();
 
 		controler.addOverridingModule(InformedModeChoiceModule.newBuilder()
+			.withFixedCosts(FixedCostsEstimator.DailyConstant.class, "car")
 			.withLegEstimator(DefaultLegScoreEstimator.class, ModeOptions.ConsiderIfCarAvailable.class, "car")
 			.withLegEstimator(DefaultLegScoreEstimator.class, ModeOptions.AlwaysAvailable.class, "bike", "walk", "pt", "ride")
 			.withConstraint(RelaxedMassConservationConstraint.class)
-			.withActivityEstimator(DefaultActivityEstimator.class)
 			.build());
 
 		InformedModeChoiceConfigGroup imc = ConfigUtils.addOrGetModule(config, InformedModeChoiceConfigGroup.class);
@@ -110,26 +111,23 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 
 		PlanBuilder.addVehiclesToScenario(injector.getInstance(Scenario.class));
 
+		thread = ThreadLocal.withInitial(() ->
+			new Ctx(
+				new PlanRouter(injector.getInstance(TripRouter.class),
+					TimeInterpretation.create(PlansConfigGroup.ActivityDurationInterpretation.tryEndTimeThenDuration,
+						PlansConfigGroup.TripDurationHandling.ignoreDelays)),
+				new BestKPlanGenerator(topK, injector.getInstance(TopKChoicesGenerator.class)))
+		);
+
 		Population population = PopulationUtils.createPopulation(config);
 
 		PlanBuilder builder = new PlanBuilder(shp, new ShpOptions(facilities, null, null), population.getFactory());
 
 		builder.createPlans(input).forEach(population::addPerson);
 
-		thread = ThreadLocal.withInitial(() ->
-			new Ctx(
-				new PlanRouter(injector.getInstance(TripRouter.class),
-					TimeInterpretation.create(PlansConfigGroup.ActivityDurationInterpretation.tryEndTimeThenDuration,
-						PlansConfigGroup.TripDurationHandling.ignoreDelays)),
-				new DiversePlanCandidateGenerator(topK, injector.getInstance(TopKChoicesGenerator.class)),
-				new PseudoScorer(injector, population)
-			)
-		);
-
-
 		pb = new ProgressBar("Computing plan choices", population.getPersons().size());
 
-		ParallelPersonAlgorithmUtils.run(population, Runtime.getRuntime().availableProcessors() - 1, this);
+		ParallelPersonAlgorithmUtils.run(population, Runtime.getRuntime().availableProcessors(), this);
 
 		pb.close();
 
@@ -149,8 +147,6 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 					header.add(String.format("plan_%d_%s_ride_hours", i, mode));
 					header.add(String.format("plan_%d_%s_n_switches", i, mode));
 				}
-
-				header.add(String.format("plan_%d_act_util", i));
 				header.add(String.format("plan_%d_valid", i));
 			}
 
@@ -191,27 +187,17 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 			// TODO: apply method might also shift times to better fit the schedule
 			candidate.applyTo(plan);
 			ctx.router.run(plan);
-
-			row.addAll(convert(plan, ctx.scorer));
+			row.addAll(convert(plan));
 			// available choice
 			row.add(1);
 			i++;
 		}
 
 		for (int j = i; j < topK; j++) {
-			row.addAll(convert(null, ctx.scorer));
+			row.addAll(convert(null));
 			// not available
 			row.add(0);
 		}
-
-		// Clean up routes, which use a lot of memory
-		plan.getPlanElements().forEach(el -> {
-			if (el instanceof Leg leg) {
-				leg.setRoute(null);
-			}
-		});
-
-		model.reset();
 
 		rows.add(row);
 
@@ -221,7 +207,7 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	/**
 	 * Create one csv entry row for a plan.
 	 */
-	private List<Object> convert(@Nullable Plan plan, PseudoScorer scorer) {
+	private List<Object> convert(@Nullable Plan plan) {
 
 		List<Object> row = new ArrayList<>();
 		if (plan == null) {
@@ -229,13 +215,10 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 				row.addAll(List.of(0, 0, 0, 0, 0));
 			}
 
-			row.add(0);
-
 			return row;
 		}
 
 		Map<String, ModeStats> stats = collect(plan);
-
 
 		for (String mode : modes) {
 			ModeStats modeStats = stats.get(mode);
@@ -245,11 +228,6 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 			row.add(modeStats.rideTime / 3600);
 			row.add(modeStats.numSwitches);
 		}
-
-		// pseudo scorer commented out currently
-//		Object2DoubleMap<String> scores = scorer.score(plan);
-//		row.add(scores.getDouble("score"));
-		row.add(0);
 
 
 		return row;
@@ -294,6 +272,6 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	private record ModeStats(int usage, double travelTime, double travelDistance, double rideTime, long numSwitches) {
 	}
 
-	private record Ctx(PlanRouter router, DiversePlanCandidateGenerator generator, PseudoScorer scorer) {
+	private record Ctx(PlanRouter router, CandidateGenerator generator) {
 	}
 }
