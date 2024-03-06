@@ -15,6 +15,7 @@ if __name__ == "__main__":
     parser.add_argument("--n-draws", help="Number of draws for the estimation", type=int, default=1500)
     parser.add_argument("--batch-size", help="Batch size for the estimation", type=int, default=None)
     parser.add_argument("--sample", help="Use sample of choice data", type=float, default=0.2)
+    parser.add_argument("--seed", help="Random seed", type=int, default=0)
 
     args = parser.parse_args()
 
@@ -33,7 +34,7 @@ if __name__ == "__main__":
     # sample = set(df_wide.person.sample(frac=0.2))
     # df_wide = df_wide[df_wide.person.isin(sample)]
     if args.sample < 1:
-        df_wide = df_wide.sample(frac=args.sample)
+        df_wide = df_wide.sample(frac=args.sample, random_state=args.seed)
 
     print("Modes:", modes)
     print("Number of choices:", len(df_wide))
@@ -61,7 +62,7 @@ if __name__ == "__main__":
     # varnames += ["pt_ride_hours", "car_ride_hours", "bike_ride_hours"]
 
     model.fit(X=df[varnames], y=df['choice'], varnames=varnames,
-              alts=df['alt'], ids=df['custom_id'], avail=df['valid'], random_state=0,
+              alts=df['alt'], ids=df['custom_id'], avail=df['valid'], random_state=args.seed,
               addit=df["costs"] + df["car_fixed_cost"] - df["pt_n_switches"], #)
               # randvars={"car_used": "tn"},
               randvars={"car_used": "tn", "bike_usage": "n", "pt_usage": "n", "ride_usage": "n"},

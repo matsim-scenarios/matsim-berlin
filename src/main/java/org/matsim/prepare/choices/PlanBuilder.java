@@ -17,7 +17,9 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.PopulationFactory;
 import org.matsim.application.options.ShpOptions;
+import org.matsim.application.prepare.population.SplitActivityTypesDuration;
 import org.matsim.core.population.PersonUtils;
+import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.prepare.population.InitLocationChoice;
 import org.matsim.vehicles.Vehicle;
@@ -52,9 +54,16 @@ public class PlanBuilder {
 	 */
 	private final Object2LongMap<Location> features = new Object2LongOpenHashMap<>();
 
+	private final SplitActivityTypesDuration splitDuration = new SplitActivityTypesDuration();
+
 	private final SplittableRandom rnd = new SplittableRandom();
 
 	private final PopulationFactory f;
+
+	/**
+	 * Drop plans with more than this number of trips.
+	 */
+	private int maxTripNumber = 0;
 
 	public PlanBuilder(ShpOptions zones, ShpOptions facilities, PopulationFactory f) {
 		// Collect all zones
@@ -75,6 +84,14 @@ public class PlanBuilder {
 		}
 
 		this.f = f;
+	}
+
+	/**
+	 * Set the maximum number of trips in a plan.
+	 */
+	public PlanBuilder setMaxTripNumber(int maxTripNumber) {
+		this.maxTripNumber = maxTripNumber;
+		return this;
 	}
 
 	/**
@@ -120,9 +137,13 @@ public class PlanBuilder {
 
 				if (!pId.equals(currentPerson) || seq != currentSeq) {
 					if (!trips.isEmpty()) {
-						Person person = createPerson(pId, seq, trips);
-						if (person != null)
-							result.add(person);
+
+						// Filter person with too many trips
+						if (maxTripNumber <= 0 || trips.size() <= maxTripNumber) {
+							Person person = createPerson(pId, seq, trips);
+							if (person != null)
+								result.add(person);
+						}
 
 						trips.clear();
 					}
@@ -146,6 +167,7 @@ public class PlanBuilder {
 
 		Person person = f.createPerson(Id.createPersonId(id + "_" + seq));
 
+		PopulationUtils.putSubpopulation(person, "person");
 		PersonUtils.setCarAvail(person, trips.get(0).getInt("p_age") >= 18 ? "always" : "never");
 
 		VehicleUtils.insertVehicleIdsIntoPersonAttributes(person, Map.of("car", Id.createVehicleId("car"),
@@ -158,14 +180,19 @@ public class PlanBuilder {
 		if (trip == null)
 			return null;
 
-		Activity act = f.createActivityFromCoord("act", trip.first());
-		act.setEndTime(trips.get(0).getInt("departure") * 60);
+		// source-destination purpose
+		String sd = trips.get(0).getString("sd_group");
+
+		Activity act = f.createActivityFromCoord(sd.startsWith("home") ? "home": "other", trip.first());
+		int departure = trips.get(0).getInt("departure") * 60;
+		act.setEndTime(departure);
 		act.getAttributes().putAttribute("n", trips.get(0).getInt("n"));
 
 		plan.addActivity(act);
 		plan.addLeg(f.createLeg(trips.get(0).getString("main_mode")));
 
-		act = f.createActivityFromCoord("act", trip.second());
+		act = f.createActivityFromCoord(trips.get(0).getString("purpose"), trip.second());
+		act.setStartTime(departure + trips.get(0).getInt("duration") * 60);
 		plan.addActivity(act);
 
 		for (int i = 1; i < trips.size(); i++) {
@@ -176,12 +203,14 @@ public class PlanBuilder {
 			if (dest == null)
 				return null;
 
-			act.setEndTime(row.getInt("departure") * 60);
+			departure = row.getInt("departure") * 60;
+			act.setEndTime(departure);
 			act.getAttributes().putAttribute("n", row.getInt("n"));
 
 			plan.addLeg(f.createLeg(row.getString("main_mode")));
 
-			act = f.createActivityFromCoord("act", dest);
+			act = f.createActivityFromCoord(row.getString("purpose"), dest);
+			act.setStartTime(departure + row.getInt("duration") * 60);
 			plan.addActivity(act);
 		}
 
@@ -189,6 +218,8 @@ public class PlanBuilder {
 		person.getAttributes().putAttribute("seq", seq);
 		person.addPlan(plan);
 		person.setSelectedPlan(plan);
+
+		splitDuration.run(person);
 
 		return person;
 	}
