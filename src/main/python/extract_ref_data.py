@@ -11,7 +11,7 @@ def person_filter(df):
     df = df[df.reporting_day <= 4]
     df = df[df.location == "Berlin"]
 
-    df["age_group"] = preparation.cut(df.age, [0, 18, 66, np.inf])
+    df["age"] = preparation.cut(df.age, [0, 18, 66, np.inf])
 
     preparation.fill(df, "economic_status", EconomicStatus.UNKNOWN)
 
@@ -35,7 +35,7 @@ if __name__ == "__main__":
         d + "Berlin+Umland",
         person_filter, trip_filter,
         run_create_ref_data.InvalidHandling.REMOVE_TRIPS,
-        ref_groups=["age_group", "economic_status"]
+        ref_groups=["age", "economic_status"]
     )
 
     print(result.share)

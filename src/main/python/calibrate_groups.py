@@ -9,15 +9,8 @@ from matsim.calibration import create_calibration, ASCDistCalibrator, constraint
 
 modes = ["walk", "car", "pt", "bike", "ride"]
 fixed_mode = "walk"
-initial = {
-    "bike": -1.6,
-    "pt": 0.2,
-    "car": -0.4,
-    "ride": -1.2
-}
 
-target = pd.read_csv("mode_share_ref.csv")
-
+target = pd.read_csv("mode_share_per_group_dist_ref.csv")
 
 def filter_persons(persons):
     df = persons[persons.person.str.startswith("berlin")]
@@ -31,7 +24,8 @@ def filter_modes(df):
 
 study, obj = create_calibration(
     "calib",
-    ASCDistCalibrator(modes, initial, target, fixed_mode_dist="car",
+    ASCDistCalibrator(modes, "run11.yaml", target, fixed_mode_dist="car",
+                      groups=["age"],
                       lr=utils.linear_scheduler(start=0.3, interval=15),
                       dist_lr=utils.linear_dist_scheduler(start_rate=0.3, end_rate=3.5, end_km=25),
                       constraints=dict(ride=constraints.negative, walk=constraints.zero)),

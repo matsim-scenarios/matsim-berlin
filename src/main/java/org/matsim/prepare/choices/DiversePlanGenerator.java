@@ -11,30 +11,13 @@ import java.util.*;
 
 /**
  * Generator to create candidates with different modes.
- * Makes some assumptions about what modes should be included, or left out.
- * See defined types for the mixture of available modes.
  */
-public class DiversePlanCandidateGenerator implements CandidateGenerator {
+public class DiversePlanGenerator implements CandidateGenerator {
 
 	private final int topK;
 	private final TopKChoicesGenerator gen;
 
-	private List<Set<String>> carTypes = List.of(
-		Set.of("car", "walk"),
-		Set.of("car", "bike", "walk", "pt"),
-		Set.of("ride", "bike", "walk"),
-		Set.of("walk", "bike"),
-		Set.of("walk", "pt")
-	);
-
-	private List<Set<String>> rideTypes = List.of(
-		Set.of("ride", "walk"),
-		Set.of("ride", "bike", "walk", "pt"),
-		Set.of("walk", "bike"),
-		Set.of("walk", "pt")
-	);
-
-	DiversePlanCandidateGenerator(int topK, TopKChoicesGenerator generator) {
+	DiversePlanGenerator(int topK, TopKChoicesGenerator generator) {
 		this.topK = topK;
 		this.gen = generator;
 	}
@@ -51,16 +34,14 @@ public class DiversePlanCandidateGenerator implements CandidateGenerator {
 		List<PlanCandidate> candidates = new ArrayList<>();
 		boolean carUser = PersonUtils.canUseCar(planModel.getPerson());
 
-		List<Set<String>> types = carUser ? carTypes : rideTypes;
+		HashSet<String> modes = new HashSet<>(consideredModes);
+		modes.remove(carUser ? "ride": "car");
 
-		for (Set<String> modes : types) {
-			List<PlanCandidate> tmp = gen.generate(planModel, modes, mask);
 
-			// Use two candidates from every option
-			if (tmp.size() <= 3)
-				candidates.addAll(tmp);
-			else
-				candidates.addAll(tmp.subList(0, 3));
+		for (String mode : modes) {
+			List<PlanCandidate> tmp = gen.generate(planModel, Set.of(mode), mask);
+			if (!tmp.isEmpty())
+				candidates.add(tmp.get(0));
 		}
 
 		Collections.sort(candidates);

@@ -16,6 +16,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch-size", help="Batch size for the estimation", type=int, default=None)
     parser.add_argument("--sample", help="Use sample of choice data", type=float, default=0.2)
     parser.add_argument("--seed", help="Random seed", type=int, default=0)
+    parser.add_argument("--mnl", help="Use MNL instead of mixed logit", action="store_true")
 
     args = parser.parse_args()
 
@@ -54,19 +55,30 @@ if __name__ == "__main__":
 
     MixedLogit.check_if_gpu_available()
 
-    model = MixedLogit()
 
     # ASC is present as mode_usage
     varnames = [f"{mode}_usage" for mode in modes if mode != "walk" and mode != "car"] + ["car_used"]
-
     # varnames += ["pt_ride_hours", "car_ride_hours", "bike_ride_hours"]
 
-    model.fit(X=df[varnames], y=df['choice'], varnames=varnames,
-              alts=df['alt'], ids=df['custom_id'], avail=df['valid'], random_state=args.seed,
-              addit=df["costs"] + df["car_fixed_cost"] - df["pt_n_switches"], #)
-              # randvars={"car_used": "tn"},
-              randvars={"car_used": "tn", "bike_usage": "n", "pt_usage": "n", "ride_usage": "n"},
-              n_draws=args.n_draws, batch_size=args.batch_size,
-              optim_method='L-BFGS-B')
+    # Additive costs
+    addit = df["costs"] + df["car_fixed_cost"] - df["pt_n_switches"]
+
+    if not args.mnl:
+        model = MixedLogit()
+        model.fit(X=df[varnames], y=df['choice'], varnames=varnames,
+                  alts=df['alt'], ids=df['custom_id'], avail=df['valid'], random_state=args.seed,
+                  addit=addit,
+                  # randvars={"car_used": "tn"},
+                  randvars={"car_used": "tn", "bike_usage": "n", "pt_usage": "n", "ride_usage": "n"},
+                  n_draws=args.n_draws, batch_size=args.batch_size,
+                  optim_method='L-BFGS-B')
+
+    else:
+        varnames += ["car_usage"]
+
+        model = MultinomialLogit()
+        model.fit(X=df[varnames], y=df['choice'], varnames=varnames,
+                  alts=df['alt'], ids=df['custom_id'], avail=df['valid'], random_state=args.seed,
+                  addit=addit)
 
     model.summary()

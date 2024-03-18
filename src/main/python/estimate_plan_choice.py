@@ -109,7 +109,7 @@ if __name__ == "__main__":
     ASC = {}
     for mode in modes:
         # Base asc
-        asc = Beta(f"ASC_{mode}", 0, None, None, 1 if mode == "walk" else 0)
+        asc = Beta(f"ASC_{mode}", 0, None, None, 1 if mode in ("walk", "car") else 0)
 
         # Pt does not have its own random parameter
         if True or mode == "walk" or mode == "pt":
@@ -119,8 +119,8 @@ if __name__ == "__main__":
             asc_s = Beta(f"ASC_{mode}_s", 1, None, None, 0)
             ASC[mode] = asc + asc_s * bioDraws(f"ASC_{mode}_RND", "NORMAL_ANTI")
 
-    B_UTIL = Beta('B_CAR_UTIL', 0, None, None, 0)
-    B_UTIL_S = Beta('B_CAR_UTIL_SD', 1, None, None, 0)
+    B_UTIL = Beta('B_CAR_UTIL', 10, 0, 20, 0)
+    B_UTIL_S = Beta('B_CAR_UTIL_SD', 1, 0, 10, 0)
 
     B_TIME_RND = B_UTIL + B_UTIL_S * bioDraws('B_CAR_UTIL_RND', 'TN')
 
