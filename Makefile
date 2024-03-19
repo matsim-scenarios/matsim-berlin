@@ -103,15 +103,19 @@ $p/berlin-v6.1-network.xml.gz:
 	 --mode freight=truck\
 	 --target-crs $(CRS)
 
+ 	# Apply v5 fixes
+	$(sc) prepare fix-network-v5 --input $@ --output $@
+
 
 $p/berlin-v6.1-network-with-pt.xml.gz: $p/berlin-v6.1-network.xml.gz
 	# Copy 5.x network stuff
 	cp $< $@
+
 	cp $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-transit-vehicles.xml.gz $p/berlin-v6.1-transitVehicles.xml.gz
 
 $p/berlin-v6.1-counts-vmz.xml.gz:
 	$(sc) prepare counts-from-vmz-old\
-	 --csv ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/CountsId_to_linkId.csv\
+	 --csv ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/CountsId_to_linkId_v2.csv\
 	 --excel ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx\
  	 --output $@
 

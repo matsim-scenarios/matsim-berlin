@@ -34,7 +34,7 @@ public class DiversePlanGenerator implements CandidateGenerator {
 		List<PlanCandidate> candidates = new ArrayList<>();
 		boolean carUser = PersonUtils.canUseCar(planModel.getPerson());
 
-		HashSet<String> modes = new HashSet<>(consideredModes);
+		Set<String> modes = new HashSet<>(consideredModes);
 		modes.remove(carUser ? "ride": "car");
 
 

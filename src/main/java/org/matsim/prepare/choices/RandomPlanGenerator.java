@@ -18,12 +18,12 @@ public class RandomPlanGenerator implements CandidateGenerator {
 	private final TopKChoicesGenerator gen;
 	private final SplittableRandom rnd = new SplittableRandom(0);
 
-    public RandomPlanGenerator(int topK, TopKChoicesGenerator generator) {
-        this.topK = topK;
+	public RandomPlanGenerator(int topK, TopKChoicesGenerator generator) {
+		this.topK = topK;
 		this.gen = generator;
 	}
 
-    @Override
+	@Override
 	public List<PlanCandidate> generate(PlanModel planModel, @Nullable Set<String> consideredModes, @Nullable boolean[] mask) {
 
 		List<String[]> chosen = new ArrayList<>();

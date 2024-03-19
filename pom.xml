@@ -9,7 +9,7 @@
 <!--		<version>16.0-PR3129</version>-->
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
-		<version>16.0-SNAPSHOT</version>
+		<version>16.0-PR3172</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>

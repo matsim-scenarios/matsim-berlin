@@ -59,11 +59,14 @@ final class PseudoScorer {
 		ScoringFunction scoring = this.scoring.getScoringFunctionForAgent(plan.getPerson().getId());
 
 		result.setLength(0);
-		scoring.explainScore(result);
+		if (true)
+			throw new UnsupportedOperationException("This functionality depends on code that is not yet available in MATSim core");
+//		scoring.explainScore(result);
 
 		Object2DoubleOpenHashMap<String> scores = new Object2DoubleOpenHashMap<>();
 
-		String[] split = result.toString().split(ScoringFunction.SCORE_DELIMITER);
+		String[] split = new String[0];
+//		String[] split = result.toString().split(ScoringFunction.SCORE_DELIMITER);
 		for (String s : split) {
 			String[] kv = s.split("=");
 			if (kv.length > 1) {

@@ -62,6 +62,8 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	private int topK;
 	@CommandLine.Option(names = "--modes", description = "Modes to include in estimation", split = ",")
 	private Set<String> modes;
+	@CommandLine.Option(names = "--time-util-only", description = "Reset scoring for estimation and only use time utility", defaultValue = "false")
+	private boolean timeUtil;
 	@CommandLine.Option(names = "--calc-scores", description = "Perform pseudo scoring for each plan", defaultValue = "false")
 	private boolean calcScores;
 	@CommandLine.Option(names = "--plan-candidates", description = "Method to generate plan candidates", defaultValue = "bestK")
@@ -94,6 +96,27 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 		config.controller().setOutputDirectory("choice-output");
 		config.controller().setLastIteration(0);
 		config.controller().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
+
+		if (timeUtil) {
+			// All utilities expect travel time become zero
+			config.scoring().setMarginalUtlOfWaitingPt_utils_hr(0);
+			config.scoring().setUtilityOfLineSwitch(0);
+
+			config.scoring().getModes().values().forEach(m -> {
+				// Only time goes into the score
+				m.setMarginalUtilityOfTraveling(-config.scoring().getPerforming_utils_hr());
+				m.setConstant(0);
+				m.setMarginalUtilityOfDistance(0);
+				m.setDailyMonetaryConstant(0);
+				m.setMonetaryDistanceRate(0);
+			});
+		}
+
+		// This method only produces two choices
+		if (planCandidates == PlanCandidates.carAlternative) {
+			log.info("Setting top k to 2 for car alternative");
+			topK = 2;
+		}
 
 		Controler controler = this.scenario.createControler();
 
@@ -131,6 +154,7 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 					case bestK -> new BestKPlanGenerator(topK, injector.getInstance(TopKChoicesGenerator.class));
 					case diverse -> new DiversePlanGenerator(topK, injector.getInstance(TopKChoicesGenerator.class));
 					case random -> new RandomPlanGenerator(topK, injector.getInstance(TopKChoicesGenerator.class));
+					case carAlternative -> new ExclusiveCarPlanGenerator(injector.getInstance(TopKChoicesGenerator.class));
 				},
 				calcScores ? new PseudoScorer(injector, population) : null
 			)
@@ -188,6 +212,12 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 		row.add(1);
 
 		List<PlanCandidate> candidates = ctx.generator.generate(model, modes, null);
+
+		// skip possible error cases
+		if (candidates == null) {
+			pb.step();
+			return;
+		}
 
 		int i = 0;
 		for (PlanCandidate candidate : candidates) {
@@ -285,8 +315,11 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 		return stats;
 	}
 
+	/**
+	 * Define how candidates are generated.
+	 */
 	public enum PlanCandidates {
-		bestK, diverse, random
+		bestK, diverse, random, carAlternative
 	}
 
 	private record ModeStats(int usage, double travelTime, double travelDistance, double rideTime, long numSwitches) {
