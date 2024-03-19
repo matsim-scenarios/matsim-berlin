@@ -55,14 +55,23 @@ public class ExclusiveCarPlanGenerator implements CandidateGenerator {
 
 		} else {
 			modes.add(carMode);
-			alternative = generator.generate(planModel, modes, mask).get(0);
+			List<PlanCandidate> choices = generator.generate(planModel, modes, mask);
+
+			if (choices.isEmpty())
+				return null;
+
+			alternative = choices.get(0);
 
 			// The generated plan might not contain the car mode, remove other modes that might be better
-			if (!ArrayUtils.contains(planModel.getCurrentModes(), carMode)) {
+			if (!ArrayUtils.contains(alternative.getModes(), carMode)) {
 				modes.remove(TransportMode.pt);
 				modes.remove(TransportMode.bike);
 
-				alternative = generator.generate(planModel, modes, mask).get(0);
+				choices = generator.generate(planModel, modes, mask);
+				if (choices.isEmpty())
+					return null;
+
+				alternative = choices.get(0);
 			}
 		}
 
