@@ -72,8 +72,6 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 		 */
 		private final Map<String, ModeParams> modeParams = new HashMap<>();
 
-		// TODO: option to match as list
-
 		public ScoringParameters() {
 			super(GROUP_NAME, true);
 		}
@@ -81,23 +79,16 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 		/**
 		 * Checks if the given attributes match the config. If true these parameters are applicable to tbe object.
 		 */
-		public boolean matchObject(Attributes attr) {
-
-			// TODO: special case int <-> double and numbers
-			// boolean values
-			// allow lists
-
-			// TODO: matching is not yet correct
-			// TODO: add test
+		public boolean matchObject(Attributes attr, Map<String, Category> categories) {
 
 			for (Map.Entry<String, String> e : this.getParams().entrySet()) {
 				// might be null if not defined
 				Object objValue = attr.getAttribute(e.getKey());
+				String category = categories.get(e.getKey()).categorize(objValue);
 
 				// compare as string
-				if (!Objects.toString(objValue).equals(e.getValue()))
+				if (!Objects.toString(category).equals(e.getValue()))
 					return false;
-
 			}
 
 			return true;

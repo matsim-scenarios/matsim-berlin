@@ -11,7 +11,7 @@ from estimate_plan_choice import calc_costs
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate the plan choice mixed logit model")
-    parser.add_argument("--input", help="Path to the input file", type=str, default="../../../plan-choices.csv")
+    parser.add_argument("--input", help="Path to the input file", type=str, default="../../../plan-choices-random.csv")
     parser.add_argument("--n-draws", help="Number of draws for the estimation", type=int, default=1500)
     parser.add_argument("--batch-size", help="Batch size for the estimation", type=int, default=None)
     parser.add_argument("--sample", help="Use sample of choice data", type=float, default=0.2)
@@ -59,6 +59,7 @@ if __name__ == "__main__":
     # ASC is present as mode_usage
     varnames = [f"{mode}_usage" for mode in modes if mode != "walk" and mode != "car"] + ["car_used"]
     # varnames += ["pt_ride_hours", "car_ride_hours", "bike_ride_hours"]
+    # varnames = ["car_used", "car_usage"]
 
     # Additive costs
     addit = df["costs"] + df["car_fixed_cost"] - df["pt_n_switches"]
@@ -70,11 +71,12 @@ if __name__ == "__main__":
                   addit=addit,
                   # randvars={"car_used": "tn"},
                   randvars={"car_used": "tn", "bike_usage": "n", "pt_usage": "n", "ride_usage": "n"},
-                  n_draws=args.n_draws, batch_size=args.batch_size,
+                  fixedvars={"car_used": None},
+                  n_draws=args.n_draws, batch_size=args.batch_size, halton=True, skip_std_errs=True,
                   optim_method='L-BFGS-B')
 
     else:
-        varnames += ["car_usage"]
+        #varnames += ["car_usage"]
 
         model = MultinomialLogit()
         model.fit(X=df[varnames], y=df['choice'], varnames=varnames,
