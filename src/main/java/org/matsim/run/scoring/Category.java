@@ -15,18 +15,18 @@ public final class Category {
 	 */
 	private final Set<String> values;
 
-    /**
-     * Groups of values that have been subsumed under a single category.
-     * These are values separated by ,
-     */
-    private final Map<String, String> grouped;
+	/**
+	 * Groups of values that have been subsumed under a single category.
+	 * These are values separated by ,
+	 */
+	private final Map<String, String> grouped;
 
-    /**
+	/**
 	 * Range categories.
 	 */
 	private final List<Range> ranges;
 
-    public Category(Set<String> values) {
+	public Category(Set<String> values) {
 		this.values = values;
 		this.grouped = new HashMap<>();
 		for (String v : values) {
@@ -121,13 +121,12 @@ public final class Category {
 	}
 
 	/**
+	 * Number range.
 	 * @param left  Left bound of the range.
 	 * @param right Right bound of the range. (exclusive)
 	 * @param label Label of this group.
 	 */
 	private record Range(double left, double right, String label) {
-
-
 	}
 
 }
