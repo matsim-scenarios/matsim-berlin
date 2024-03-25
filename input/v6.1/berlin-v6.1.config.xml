@@ -187,6 +187,7 @@
 
 	<module name="counts">
 		<param name="inputCountsFile" value="./berlin-v6.1-counts-vmz.xml.gz"/>
+		<param name="countsScaleFactor" value="0.1"/>
 	</module>
 
 	<module name="ReplanningAnnealer" >
