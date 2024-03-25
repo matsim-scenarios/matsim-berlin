@@ -190,20 +190,19 @@
 		<param name="countsScaleFactor" value="0.1"/>
 	</module>
 
-	<module name="ReplanningAnnealer" >
-		<param name="activateAnnealingModule" value="false" />
-		<parameterset type="AnnealingVariable" >
+	<module name="ReplanningAnnealer">
+		<param name="activateAnnealingModule" value="false"/>
+		<!--	<parameterset type="AnnealingVariable" >
 			<param name="annealParameter" value="globalInnovationRate" />
 			<param name="annealType" value="sigmoid" />
 			<param name="subpopulation" value="person" />
-			<!-- this parameter enters the exponential and sigmoid formulas. May be an iteration or a share, i.e. 0.5 for halfLife at 50% of iterations. Exponential: startValue / exp(it/halfLife) -->
 			<param name="halfLife" value="0.5" />
-			<!-- sigmoid: 1/(1+e^(shapeFactor*(it - halfLife))); geometric: startValue * shapeFactor^it; msa: startValue / it^shapeFactor -->
 			<param name="shapeFactor" value="0.01" />
 			<param name="startValue" value="0.6" />
 			<param name="endValue" value="0.01" />
-		</parameterset>
+		</parameterset> -->
 	</module>
+
 	<module name="replanning">
 		<param name="fractionOfIterationsToDisableInnovation" value="0.8"/>
 		<!-- Strategies are added in code -->
