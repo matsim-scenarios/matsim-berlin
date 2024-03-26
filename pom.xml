@@ -9,7 +9,7 @@
 <!--		<version>16.0-PR3129</version>-->
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
-		<version>16.0-PR3172</version>
+		<version>16.0-PR3184</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -348,7 +348,7 @@
 			<plugin>
 				<groupId>io.github.git-commit-id</groupId>
 				<artifactId>git-commit-id-maven-plugin</artifactId>
-				<version>5.0.0</version>
+				<version>8.0.2</version>
 				<executions>
 					<execution>
 						<id>get-the-git-infos</id>
@@ -359,7 +359,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<failOnNoGitDirectory>false</failOnNoGitDirectory>
+					<failOnNoGitDirectory>true</failOnNoGitDirectory>
 				</configuration>
 			</plugin>
 
@@ -374,7 +374,7 @@
 							<goal>shade</goal>
 						</goals>
 						<configuration>
-							<outputFile>${project.basedir}/${project.build.finalName}-${git.commit.id.describe-short}.jar</outputFile>
+							<outputFile>${project.basedir}/${project.build.finalName}-${git.commit.id.abbrev}.jar</outputFile>
 							<transformers>
 								<!-- This bit sets the main class for the executable jar as you otherwise would with the assembly plugin -->
 								<transformer
@@ -384,7 +384,7 @@
 										<Specification-Vendor>org.matsim</Specification-Vendor>
 										<Implementation-Vendor>org.matsim</Implementation-Vendor>
 										<Implementation-Version>${project.version}</Implementation-Version>
-										<SCM-Revision>${git.commit.id.describe-short}</SCM-Revision>
+										<SCM-Revision>${git.commit.id.describe}</SCM-Revision>
 										<Multi-Release>true</Multi-Release>
 									</manifestEntries>
 								</transformer>

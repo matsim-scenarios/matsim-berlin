@@ -1,0 +1,31 @@
+#  Log-Likelihood= -18666.835
+#    AIC= 37347.671
+#    BIC= 37403.096
+scoring:
+  scoringParameters:
+  - modeParams:
+    - mode: walk
+      constant: 0
+    - mode: car
+      constant: 0
+      dailyMonetaryConstant: -15
+      dailyUtilityConstant: 11.7984186
+    - mode: pt
+      constant: -2.6854229
+    - mode: bike
+      constant: -3.5121002
+    - mode: ride
+      constant: -2.4418511
+advancedScoring:
+  scoringParameters:
+  - subpopulation: person
+    modeParams:
+    - mode: car
+      deltaDailyConstant: 6.0423849
+      varDailyConstant: truncatedNormal
+    - mode: bike
+      deltaConstant: 2.5190080
+      varConstant: normal
+    - mode: pt
+      deltaConstant: 3.3171491
+      varConstant: normal

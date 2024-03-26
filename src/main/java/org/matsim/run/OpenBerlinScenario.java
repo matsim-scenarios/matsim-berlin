@@ -31,7 +31,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 	private static final Logger log = LogManager.getLogger(RunOpenBerlinCalibration.class);
 
-	public static final String VERSION = "6.1";
+	public static final String VERSION = "6.2";
 	public static final String CRS = "EPSG:25832";
 	@CommandLine.Mixin
 	private final SampleOptions sample = new SampleOptions(10, 25, 3, 1);

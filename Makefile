@@ -1,7 +1,7 @@
 
 
 JAR := matsim-berlin-*.jar
-V := v6.1
+V := v6.2
 CRS := EPSG:25832
 
 p := input/$V
@@ -10,7 +10,6 @@ berlin := ../public-svn/matsim/scenarios/countries/de/berlin/berlin-$V
 
 MEMORY ?= 20G
 REGIONS := brandenburg
-SHP_FILES=$(patsubst %, input/shp/%-latest-free.shp.zip, $(REGIONS))
 
 osmosis := osmosis/bin/osmosis
 
@@ -22,10 +21,6 @@ sc := java -Xmx$(MEMORY) -XX:+UseParallelGC -cp $(JAR) org.matsim.prepare.RunOpe
 $(JAR):
 	mvn package
 
-${SHP_FILES}:
-	mkdir -p input/shp
-	curl https://download.geofabrik.de/europe/germany/$(@:input/shp/%=%) -o $@
-
 input/brandenburg.osm.pbf:
 	curl https://download.geofabrik.de/europe/germany/brandenburg-230101.osm.pbf -o $@
 
@@ -33,11 +28,6 @@ input/brandenburg.osm.pbf:
 $(germany)/RegioStaR-Referenzdateien.xlsx:
 	curl https://mcloud.de/downloads/mcloud/536149D1-2902-4975-9F7D-253191C0AD07/RegioStaR-Referenzdateien.xlsx -o $@
 
-input/landuse.shp: ${SHP_FILES}
-	mkdir -p input/landuse
-	$(sc) prepare create-landuse-shp $^\
-	 --target-crs ${CRS}\
-	 --output $@
 
 input/facilities.shp: input/brandenburg.osm.pbf
 	$(sc) prepare facility-shp\
@@ -92,35 +82,7 @@ input/sumo.net.xml: input/network.osm
 	 --osm-files $< -o=$@
 
 
-$p/berlin-v6.1-network.xml.gz:
-	# Use 5.x network
-	$(sc) prepare reproject-network\
-	 --input $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz\
-	 --transit-schedule $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz\
-	 --output $@\
- 	 --output-transit $p/berlin-v6.1-transitSchedule.xml.gz\
-	 --input-crs EPSG:31468\
-	 --mode freight=truck\
-	 --target-crs $(CRS)
-
- 	# Apply v5 fixes
-	$(sc) prepare fix-network-v5 --input $@ --output $@
-
-
-$p/berlin-v6.1-network-with-pt.xml.gz: $p/berlin-v6.1-network.xml.gz
-	# Copy 5.x network stuff
-	cp $< $@
-
-	cp $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-transit-vehicles.xml.gz $p/berlin-v6.1-transitVehicles.xml.gz
-
-$p/berlin-v6.1-counts-vmz.xml.gz:
-	$(sc) prepare counts-from-vmz-old\
-	 --csv ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/CountsId_to_linkId_v2.csv\
-	 --excel ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx\
- 	 --output $@
-
-# TODO: Not part of 6.0 release, but planned for future versions
-$p/berlin-v6.2-network.xml.gz: input/sumo.net.xml
+$p/berlin-$V-network.xml.gz: input/sumo.net.xml
 	$(sc) prepare network-from-sumo $< --target-crs $(CRS) --output $@
 
 	$(sc) prepare clean-network $@ --output $@ --modes car
@@ -132,13 +94,13 @@ $p/berlin-v6.2-network.xml.gz: input/sumo.net.xml
 
 	$(sc) prepare network-freespeed --network $@ --params input/network-params.json --output $@
 
-$p/berlin-v6.2-network-with-pt.xml.gz: $p/berlin-v6.2-network.xml.gz
+$p/berlin-$V-network-with-pt.xml.gz: $p/berlin-$V-network.xml.gz
 	$(sc) prepare transit-from-gtfs --network $< --output=$p\
 	 --name berlin-$V --date "2023-06-07" --target-crs $(CRS) \
 	 $(germany)/gtfs/complete-pt-2023-06-06.zip\
 	 --shp $p/pt-area/pt-area.shp
 
-$p/berlin-v6.2-counts-vmz.xml.gz: $p/berlin-v6.1-network.xml.gz
+$p/berlin-$V-counts-vmz.xml.gz: $p/berlin-$V-network.xml.gz
 	$(sc) prepare counts-from-vmz\
 	 --excel ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx\
 	 --network $<\

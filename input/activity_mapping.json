@@ -25,7 +25,8 @@
     "university": ["edu_higher", "work"],
     "college": ["edu_higher", "work"],
     "sports_hall": ["leisure", "work"],
-    "stadium": ["leisure", "work"]
+    "stadium": ["leisure", "work"],
+    "apartments": ["resident"]
   },
   "amenity": {
     "bar": ["leisure", "work", "delivery", "dining"],
@@ -79,7 +80,8 @@
     "depot": ["depot"],
     "port": ["depot"],
     "quary": ["depot"],
-    "religious": ["religious"]
+    "religious": ["religious"],
+    "residential": ["resident"]
   },
   "leisure": {
     "adult_gaming_centre": ["leisure", "work"],
