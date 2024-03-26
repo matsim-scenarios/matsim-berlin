@@ -1,49 +1,51 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import calibration
+from matsim.calibration import create_calibration, ASCCalibrator, utils
 
 # %%
 
-modes = ["walk", "car", "pt", "bike"]
+modes = ["walk", "car", "pt", "bike", "ride"]
 fixed_mode = "walk"
 initial = {
-    "bike": -2,
-    "pt": 0,
-    "car": 0,
-    "ride": -4
+    "bike": -2.23,
+    "pt": -0.25,
+    "car": -0.62,
+    "ride": -1.37
 }
 
 # Original modal split
 target = {
-    "walk": 0.3026,
-    "bike": 0.1883,
-    "pt": 0.2437,
-    "car": 0.2046,
-    "ride": 0.0608
+    "walk": 0.296769,
+    "bike": 0.177878,
+    "pt": 0.265073,
+    "car": 0.200673,
+    "ride": 0.059607
 }
 
-def f(persons):
+
+def filter_persons(persons):
     df = persons[persons.person.str.startswith("berlin")]
     print("Filtered %s persons" % len(df))
     return df
 
+
 def filter_modes(df):
     return df[df.main_mode.isin(modes)]
 
-study, obj = calibration.create_mode_share_study(
+
+study, obj = create_calibration(
     "calib",
+    ASCCalibrator(modes, initial, target, lr=utils.linear_scheduler(start=0.3, interval=15)),
     "matsim-berlin-6.x-SNAPSHOT.jar",
-    "../input/v6.0/berlin-v6.0-base-calib.config.xml",
-    modes, target,
-    initial_asc=initial,
-    args="--10pct --config:TimeAllocationMutator.mutationRange=600",
-    jvm_args="-Xmx55G -Xms55G -XX:+AlwaysPreTouch -XX:+UseParallelGC",
-    lr=calibration.linear_lr_scheduler(start=0.3, interval=10),
-    person_filter=f, map_trips=filter_modes,
-    chain_runs=calibration.default_chain_scheduler
+    "../input/v6.1/berlin-v6.1.config.xml",
+    args="--10pct",
+    jvm_args="-Xmx60G -Xms60G -XX:+AlwaysPreTouch -XX:+UseParallelGC",
+    transform_persons=filter_persons,
+    transform_trips=filter_modes,
+    chain_runs=utils.default_chain_scheduler, debug=False
 )
 
 # %%
 
-study.optimize(obj, 10)
+study.optimize(obj, 4)

@@ -37,16 +37,16 @@ public class RunBerlinAccidents {
 	String plans = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.plans.xml.gz";
 
 	Config config = RunBerlinScenario.prepareConfig(args);
-	config.controler().setOutputDirectory(outputFile);
-	config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
-	config.controler().setLastIteration(500);
+	config.controller().setOutputDirectory(outputFile);
+	config.controller().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
+	config.controller().setLastIteration(500);
 	config.plans().setInputFile(plans);
 
 	AccidentsConfigGroup accidentsSettings = ConfigUtils.addOrGetModule(config, AccidentsConfigGroup.class);
 	accidentsSettings.setEnableAccidentsModule(true);
 	accidentsSettings.setScaleFactor(10);
   config.network().setInputFile(BVWPNetwork);
-  config.planCalcScore().getModes().get("car").setMonetaryDistanceRate(-0.0004);
+  config.scoring().getModes().get("car").setMonetaryDistanceRate(-0.0004);
 
 	Scenario scenario = RunBerlinScenario.prepareScenario(config);
 

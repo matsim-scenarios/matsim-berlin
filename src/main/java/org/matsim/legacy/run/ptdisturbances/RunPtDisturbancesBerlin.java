@@ -19,7 +19,7 @@
 
 package org.matsim.legacy.run.ptdisturbances;
 
-import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType.FastAStarLandmarks;
+import static org.matsim.core.config.groups.ControllerConfigGroup.RoutingAlgorithmType.AStarLandmarks;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,8 +43,9 @@ import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
-import org.matsim.core.config.groups.PlansCalcRouteConfigGroup;
+import org.matsim.core.config.groups.RoutingConfigGroup;
+import org.matsim.core.config.groups.ScoringConfigGroup.ActivityParams;
+import org.matsim.core.config.groups.ScoringConfigGroup;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
@@ -304,47 +305,47 @@ public final class RunPtDisturbancesBerlin {
 
 		final Config config = ConfigUtils.loadConfig( args[ 0 ], customModules ); // I need this to set the context
 
-		config.controler().setRoutingAlgorithmType( FastAStarLandmarks );
-		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
-		config.controler().setLastIteration(0);
+		config.controller().setRoutingAlgorithmType( AStarLandmarks );
+		config.controller().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
+		config.controller().setLastIteration(0);
 
 		config.transit().setBoardingAcceptance( TransitConfigGroup.BoardingAcceptance.checkStopOnly );
 
 		config.subtourModeChoice().setProbaForRandomSingleTripMode( 0.5 );
 
-		config.plansCalcRoute().setRoutingRandomness( 3. );
-		config.plansCalcRoute().removeModeRoutingParams(TransportMode.ride);
-		config.plansCalcRoute().removeModeRoutingParams(TransportMode.pt);
-		config.plansCalcRoute().removeModeRoutingParams(TransportMode.bike);
-		config.plansCalcRoute().removeModeRoutingParams("undefined");
+		config.routing().setRoutingRandomness( 3. );
+		config.routing().removeModeRoutingParams(TransportMode.ride);
+		config.routing().removeModeRoutingParams(TransportMode.pt);
+		config.routing().removeModeRoutingParams(TransportMode.bike);
+		config.routing().removeModeRoutingParams("undefined");
 
 		config.network().setTimeVariantNetwork(true);
 
 		// TransportMode.non_network_walk has no longer a default,
 		// in the long run: copy from walk; for now: use the parameter set given in the config (for backward compatibility)
-//		ModeRoutingParams walkRoutingParams = config.plansCalcRoute().getOrCreateModeRoutingParams(TransportMode.walk);
+//		ModeRoutingParams walkRoutingParams = config.routing().getOrCreateModeRoutingParams(TransportMode.walk);
 //		ModeRoutingParams non_network_walk_routingParams = new ModeRoutingParams(TransportMode.non_network_walk);
 //		non_network_walk_routingParams.setBeelineDistanceFactor(walkRoutingParams.getBeelineDistanceFactor());
 //		non_network_walk_routingParams.setTeleportedModeSpeed(walkRoutingParams.getTeleportedModeSpeed());
-//		config.plansCalcRoute().addModeRoutingParams(non_network_walk_routingParams);
+//		config.routing().addModeRoutingParams(non_network_walk_routingParams);
 
 		config.qsim().setInsertingWaitingVehiclesBeforeDrivingVehicles( true );
 
 		// vsp defaults
 		config.vspExperimental().setVspDefaultsCheckingLevel( VspExperimentalConfigGroup.VspDefaultsCheckingLevel.info );
-		config.plansCalcRoute().setAccessEgressType(PlansCalcRouteConfigGroup.AccessEgressType.accessEgressModeToLink);
+		config.routing().setAccessEgressType(RoutingConfigGroup.AccessEgressType.accessEgressModeToLink);
 		config.qsim().setUsingTravelTimeCheckInTeleportation( true );
 		config.qsim().setTrafficDynamics( TrafficDynamics.kinematicWaves );
 
 		// activities:
 		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
-			config.planCalcScore().addActivityParams( new ActivityParams( "home_" + ii + ".0" ).setTypicalDuration( ii ) );
-			config.planCalcScore().addActivityParams( new ActivityParams( "work_" + ii + ".0" ).setTypicalDuration( ii ).setOpeningTime(6. * 3600. ).setClosingTime(20. * 3600. ) );
-			config.planCalcScore().addActivityParams( new ActivityParams( "leisure_" + ii + ".0" ).setTypicalDuration( ii ).setOpeningTime(9. * 3600. ).setClosingTime(27. * 3600. ) );
-			config.planCalcScore().addActivityParams( new ActivityParams( "shopping_" + ii + ".0" ).setTypicalDuration( ii ).setOpeningTime(8. * 3600. ).setClosingTime(20. * 3600. ) );
-			config.planCalcScore().addActivityParams( new ActivityParams( "other_" + ii + ".0" ).setTypicalDuration( ii ) );
+			config.scoring().addActivityParams( new ActivityParams( "home_" + ii + ".0" ).setTypicalDuration( ii ) );
+			config.scoring().addActivityParams( new ActivityParams( "work_" + ii + ".0" ).setTypicalDuration( ii ).setOpeningTime(6. * 3600. ).setClosingTime(20. * 3600. ) );
+			config.scoring().addActivityParams( new ActivityParams( "leisure_" + ii + ".0" ).setTypicalDuration( ii ).setOpeningTime(9. * 3600. ).setClosingTime(27. * 3600. ) );
+			config.scoring().addActivityParams( new ActivityParams( "shopping_" + ii + ".0" ).setTypicalDuration( ii ).setOpeningTime(8. * 3600. ).setClosingTime(20. * 3600. ) );
+			config.scoring().addActivityParams( new ActivityParams( "other_" + ii + ".0" ).setTypicalDuration( ii ) );
 		}
-		config.planCalcScore().addActivityParams( new ActivityParams( "freight" ).setTypicalDuration( 12.*3600. ) );
+		config.scoring().addActivityParams( new ActivityParams( "freight" ).setTypicalDuration( 12.*3600. ) );
 
 		ConfigUtils.applyCommandline( config, typedArgs ) ;
 

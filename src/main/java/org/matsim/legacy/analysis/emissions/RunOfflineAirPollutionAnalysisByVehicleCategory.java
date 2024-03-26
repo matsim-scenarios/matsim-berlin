@@ -96,8 +96,8 @@ public class RunOfflineAirPollutionAnalysisByVehicleCategory {
 		config.transit().setVehiclesFile(runDirectory + runId + ".output_transitVehicles.xml.gz");
 		config.global().setCoordinateSystem("GK4");
 		config.plans().setInputFile(null);
-		config.parallelEventHandling().setNumberOfThreads(null);
-		config.parallelEventHandling().setEstimatedNumberOfEvents(null);
+		config.eventsManager().setNumberOfThreads(null);
+		config.eventsManager().setEstimatedNumberOfEvents(null);
 		config.global().setNumberOfThreads(1);
 
 		EmissionsConfigGroup eConfig = ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);

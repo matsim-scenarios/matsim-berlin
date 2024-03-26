@@ -10,6 +10,8 @@ jobs:
       - uses: actions/setup-java@v3
         with:
           java-version: 17
+          architecture: x64
+          distribution: adopt
 
       - name: Publish package
         run: mvn --batch-mode deploy
@@ -17,4 +19,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     env:
-      MAVEN_OPTS: -Xmx10G
+      MAVEN_OPTS: -Xmx512m

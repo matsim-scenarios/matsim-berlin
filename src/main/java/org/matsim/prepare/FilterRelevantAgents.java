@@ -31,7 +31,7 @@ import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.facilities.ActivityFacilities;
 import org.matsim.facilities.FacilitiesUtils;
 import org.matsim.facilities.MatsimFacilitiesReader;
-import org.matsim.run.RunOpenBerlinScenario;
+import org.matsim.run.OpenBerlinScenario;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
@@ -89,10 +89,10 @@ public class FilterRelevantAgents implements MATSimAppCommand, PersonAlgorithm {
 		filter.filter(network, Set.of(TransportMode.car));
 
 		geometry = shp.getGeometry();
-		ct = shp.createTransformation(RunOpenBerlinScenario.CRS);
+		ct = shp.createTransformation(OpenBerlinScenario.CRS);
 
 		facilities = FacilitiesUtils.createActivityFacilities();
-		new MatsimFacilitiesReader(RunOpenBerlinScenario.CRS, RunOpenBerlinScenario.CRS, facilities)
+		new MatsimFacilitiesReader(OpenBerlinScenario.CRS, OpenBerlinScenario.CRS, facilities)
 				.readFile(facilityPath.toString());
 
 		ctxs = ThreadLocal.withInitial(() -> this.createRouter(network));

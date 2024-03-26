@@ -85,7 +85,7 @@ public final class RunBerlinScenarioWithAccessibilities {
 
         Config config = RunBerlinScenario.prepareConfig(args, customModulesAll);
 
-        config.controler().setOutputDirectory("../../shared-svn/projects/accessibility-berlin/output/v4/5000_8h05_school/");
+        config.controller().setOutputDirectory("../../shared-svn/projects/accessibility-berlin/output/v4/5000_8h05_school/");
 
         File opportunitiesFile = new File("../../shared-svn/projects/accessibility-berlin/osm/berlin/amenities/2018-05-30/facilities_classified.xml");
         config.facilities().setInputFile(opportunitiesFile.getAbsolutePath());
@@ -103,7 +103,7 @@ public final class RunBerlinScenarioWithAccessibilities {
         acg.setComputingAccessibilityForMode(Modes4Accessibility.pt, true);
         acg.setOutputCrs(config.global().getCoordinateSystem());
 
-        config.controler().setLastIteration(0);
+        config.controller().setLastIteration(0);
 
         return config ;
     }
@@ -145,7 +145,7 @@ public final class RunBerlinScenarioWithAccessibilities {
         final int populationThreshold = 0;
 
         String osName = System.getProperty("os.name");
-        String workingDirectory = config.controler().getOutputDirectory();
+        String workingDirectory = config.controller().getOutputDirectory();
         for (String actType : activityTypes) {
             String actSpecificWorkingDirectory = workingDirectory + actType + "/";
             for (Modes4Accessibility mode : ((AccessibilityConfigGroup) config.getModules().get(AccessibilityConfigGroup.GROUP_NAME)).getIsComputingMode()) {

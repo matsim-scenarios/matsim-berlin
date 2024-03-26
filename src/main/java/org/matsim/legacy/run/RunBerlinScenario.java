@@ -25,7 +25,6 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.matsim.legacy.analysis.RunPersonTripAnalysis;
 import org.matsim.analysis.linkpaxvolumes.LinkPaxVolumesAnalysisModule;
 import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
 import org.matsim.analysis.pt.stop2stop.PtStop2StopAnalysisModule;
@@ -42,8 +41,8 @@ import org.matsim.contrib.roadpricing.RoadPricingConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
-import org.matsim.core.config.groups.PlansCalcRouteConfigGroup;
+import org.matsim.core.config.groups.ScoringConfigGroup.ActivityParams;
+import org.matsim.core.config.groups.RoutingConfigGroup;
 import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
@@ -60,15 +59,14 @@ import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.extensions.pt.PtExtensionsConfigGroup;
 import org.matsim.extensions.pt.routing.EnhancedRaptorIntermodalAccessEgress;
-import org.matsim.legacy.prepare.population.AssignIncome;
 import org.matsim.legacy.run.drt.OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier;
 import org.matsim.legacy.run.drt.RunDrtOpenBerlinScenario;
+import org.matsim.prepare.population.AssignIncome;
 import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
-import java.io.IOException;
 import java.util.*;
 
-import static org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType.FastAStarLandmarks;
+import static org.matsim.core.config.groups.ControllerConfigGroup.RoutingAlgorithmType.AStarLandmarks;
 
 /**
 * @author ikaddoura
@@ -195,7 +193,7 @@ public final class RunBerlinScenario {
 			downsample(scenario.getPopulation().getPersons(), berlinCfg.getPopulationDownsampleFactor());
 		}
 
-		AssignIncome.assignIncomeToPersonSubpopulationAccordingToGermanyAverage(scenario.getPopulation());
+		AssignIncome.assignIncomeToPersons(scenario.getPopulation());
 		return scenario;
 	}
 
@@ -231,33 +229,33 @@ public final class RunBerlinScenario {
 
 		final Config config = ConfigUtils.loadConfig( args[ 0 ], customModulesAll );
 
-		config.controler().setRoutingAlgorithmType( FastAStarLandmarks );
+		config.controller().setRoutingAlgorithmType( AStarLandmarks );
 
 		config.subtourModeChoice().setProbaForRandomSingleTripMode( 0.5 );
 
-		config.plansCalcRoute().setRoutingRandomness( 3. );
-		config.plansCalcRoute().removeModeRoutingParams(TransportMode.ride);
-		config.plansCalcRoute().removeModeRoutingParams(TransportMode.pt);
-		config.plansCalcRoute().removeModeRoutingParams(TransportMode.bike);
-		config.plansCalcRoute().removeModeRoutingParams("undefined");
+		config.routing().setRoutingRandomness( 3. );
+		config.routing().removeModeRoutingParams(TransportMode.ride);
+		config.routing().removeModeRoutingParams(TransportMode.pt);
+		config.routing().removeModeRoutingParams(TransportMode.bike);
+		config.routing().removeModeRoutingParams("undefined");
 
 		config.qsim().setInsertingWaitingVehiclesBeforeDrivingVehicles( true );
 
 		// vsp defaults
 		config.vspExperimental().setVspDefaultsCheckingLevel( VspExperimentalConfigGroup.VspDefaultsCheckingLevel.info );
-		config.plansCalcRoute().setAccessEgressType(PlansCalcRouteConfigGroup.AccessEgressType.accessEgressModeToLink);
+		config.routing().setAccessEgressType(RoutingConfigGroup.AccessEgressType.accessEgressModeToLink);
 		config.qsim().setUsingTravelTimeCheckInTeleportation( true );
 		config.qsim().setTrafficDynamics( TrafficDynamics.kinematicWaves );
 
 		// activities:
 		for ( long ii = 600 ; ii <= 97200; ii+=600 ) {
-			config.planCalcScore().addActivityParams( new ActivityParams( "home_" + ii + ".0" ).setTypicalDuration( ii ) );
-			config.planCalcScore().addActivityParams( new ActivityParams( "work_" + ii + ".0" ).setTypicalDuration( ii ).setOpeningTime(6. * 3600. ).setClosingTime(20. * 3600. ) );
-			config.planCalcScore().addActivityParams( new ActivityParams( "leisure_" + ii + ".0" ).setTypicalDuration( ii ).setOpeningTime(9. * 3600. ).setClosingTime(27. * 3600. ) );
-			config.planCalcScore().addActivityParams( new ActivityParams( "shopping_" + ii + ".0" ).setTypicalDuration( ii ).setOpeningTime(8. * 3600. ).setClosingTime(20. * 3600. ) );
-			config.planCalcScore().addActivityParams( new ActivityParams( "other_" + ii + ".0" ).setTypicalDuration( ii ) );
+			config.scoring().addActivityParams( new ActivityParams( "home_" + ii + ".0" ).setTypicalDuration( ii ) );
+			config.scoring().addActivityParams( new ActivityParams( "work_" + ii + ".0" ).setTypicalDuration( ii ).setOpeningTime(6. * 3600. ).setClosingTime(20. * 3600. ) );
+			config.scoring().addActivityParams( new ActivityParams( "leisure_" + ii + ".0" ).setTypicalDuration( ii ).setOpeningTime(9. * 3600. ).setClosingTime(27. * 3600. ) );
+			config.scoring().addActivityParams( new ActivityParams( "shopping_" + ii + ".0" ).setTypicalDuration( ii ).setOpeningTime(8. * 3600. ).setClosingTime(20. * 3600. ) );
+			config.scoring().addActivityParams( new ActivityParams( "other_" + ii + ".0" ).setTypicalDuration( ii ) );
 		}
-		config.planCalcScore().addActivityParams( new ActivityParams( "freight" ).setTypicalDuration( 12.*3600. ) );
+		config.scoring().addActivityParams( new ActivityParams( "freight" ).setTypicalDuration( 12.*3600. ) );
 
 		ConfigUtils.applyCommandline( config, typedArgs ) ;
 
@@ -268,7 +266,7 @@ public final class RunBerlinScenario {
 		Config config = controler.getConfig();
 
 		String modesString = "";
-		for (String mode: config.planCalcScore().getAllModes()) {
+		for (String mode: config.scoring().getAllModes()) {
 			modesString = modesString + mode + ",";
 		}
 		// remove last ","
@@ -280,8 +278,8 @@ public final class RunBerlinScenario {
 		}
 
 		String[] args = new String[] {
-				config.controler().getOutputDirectory(),
-				config.controler().getRunId(),
+				config.controller().getOutputDirectory(),
+				config.controller().getRunId(),
 				"null", // TODO: reference run, hard to automate
 				"null", // TODO: reference run, hard to automate
 				config.global().getCoordinateSystem(),
@@ -294,12 +292,8 @@ public final class RunBerlinScenario {
 				modesString
 		};
 
-		try {
-			RunPersonTripAnalysis.main(args);
-		} catch (IOException e) {
-			log.error(e.getStackTrace());
-			throw new RuntimeException(e.getMessage());
-		}
+		// Removed so that the dependency could be dropped
+		// RunPersonTripAnalysis.main(args);
 	}
 
 	private static void downsample( final Map<Id<Person>, ? extends Person> map, final double sample ) {

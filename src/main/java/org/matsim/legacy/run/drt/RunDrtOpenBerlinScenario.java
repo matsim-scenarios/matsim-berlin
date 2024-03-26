@@ -169,7 +169,7 @@ public final class RunDrtOpenBerlinScenario {
 
 		Config config = RunBerlinScenario.prepareConfig( additionalInformation, args, customModulesAll ) ;
 
-		DrtConfigs.adjustMultiModeDrtConfig(MultiModeDrtConfigGroup.get(config), config.planCalcScore(), config.plansCalcRoute());
+		DrtConfigs.adjustMultiModeDrtConfig(MultiModeDrtConfigGroup.get(config), config.scoring(), config.routing());
 
 		return config ;
 	}

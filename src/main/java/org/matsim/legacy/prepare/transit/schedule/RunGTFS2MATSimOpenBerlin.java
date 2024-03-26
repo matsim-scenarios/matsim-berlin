@@ -397,9 +397,9 @@ public class RunGTFS2MATSimOpenBerlin {
 
 	private static void runOneIteration(Scenario scenario, String outputDirectory) {
 		new File(outputDirectory).mkdirs();
-		scenario.getConfig().controler().setOutputDirectory(outputDirectory);
-		scenario.getConfig().controler().setLastIteration(0);
-		scenario.getConfig().controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
+		scenario.getConfig().controller().setOutputDirectory(outputDirectory);
+		scenario.getConfig().controller().setLastIteration(0);
+		scenario.getConfig().controller().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 
 		scenario.getConfig().transit().setUseTransit(true);
 

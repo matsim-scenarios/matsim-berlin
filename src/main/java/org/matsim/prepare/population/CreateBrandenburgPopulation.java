@@ -21,7 +21,7 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.scenario.ProjectionUtils;
-import org.matsim.run.RunOpenBerlinScenario;
+import org.matsim.run.OpenBerlinScenario;
 import org.opengis.feature.simple.SimpleFeature;
 import picocli.CommandLine;
 
@@ -124,7 +124,7 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 
 		PopulationUtils.sortPersons(population);
 
-		ProjectionUtils.putCRS(population, RunOpenBerlinScenario.CRS);
+		ProjectionUtils.putCRS(population, OpenBerlinScenario.CRS);
 		PopulationUtils.writePopulation(population, output.toString());
 
 		return 0;
@@ -170,7 +170,7 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 			// All persons will be employed until employed population is empty.
 			PersonUtils.setEmployed(person, employed.subtract(1 / sample, age));
 
-			Coord coord = CreateBerlinPopulation.sampleHomeCoordinate(geom, RunOpenBerlinScenario.CRS, landuse, rnd);
+			Coord coord = CreateBerlinPopulation.sampleHomeCoordinate(geom, OpenBerlinScenario.CRS, landuse, rnd);
 
 			person.getAttributes().putAttribute(Attributes.HOME_X, coord.getX());
 			person.getAttributes().putAttribute(Attributes.HOME_Y, coord.getY());

@@ -66,7 +66,7 @@
 		<!-- The Coordinates Reference System in which the coordinates are expressed in the input file. At import, the coordinates will be converted to the coordinate system defined in "global", and willbe converted back at export. If not specified, no conversion happens. -->
 		<param name="inputCRS" value="EPSG:25832" />
 		<param name="inputChangeEventsFile" value="null" />
-		<param name="inputNetworkFile" value="../v6.0/berlin-v6.0-network.xml.gz" />
+		<param name="inputNetworkFile" value="../v6.1/berlin-v6.1-network.xml.gz" />
 		<param name="laneDefinitionsFile" value="null" />
 		<param name="timeVariantNetwork" value="false" />
 	</module>
@@ -560,8 +560,6 @@
 		<param name="travelTimeAggregator" value="optimistic" />
 		<!-- The size of the time bin (in sec) into which the link travel times are aggregated for the router -->
 		<param name="travelTimeBinSize" value="900" />
-		<!-- possible values: TravelTimeCalculatorArray TravelTimeCalculatorHashMap  -->
-		<param name="travelTimeCalculator" value="TravelTimeCalculatorArray" />
 		<!-- How to deal with link entry times at different positions during the time bin. Currently supported: average, linearinterpolation -->
 		<param name="travelTimeGetter" value="average" />
 	</module>

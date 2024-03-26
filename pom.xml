@@ -6,16 +6,16 @@
 		<artifactId>matsim-all</artifactId>
 
 		<!-- PR-labelled release -->
-<!--		<version>16.0-PR2738</version>-->
+<!--		<version>16.0-PR3129</version>-->
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
-		<version>16.0-SNAPSHOT</version>
+		<version>16.0-PR3184</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.matsim-scenarios</groupId>
 	<artifactId>matsim-berlin</artifactId>
-	<version>6.x-SNAPSHOT</version>
+	<version>6.1-SNAPSHOT</version>
 
 	<name>MATSim Open Berlin scenario</name>
 	<description>MATSim Open Berlin scenario</description>
@@ -114,54 +114,8 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.github.kit-ifv</groupId>
-			<artifactId>actitopp</artifactId>
-			<version>1.9.1</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-server</artifactId>
-			<version>11.0.15</version>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-servlet</artifactId>
-			<version>11.0.15</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.optaplanner</groupId>
-			<artifactId>optaplanner-core</artifactId>
-			<version>9.41.0.Final</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.poi</groupId>
-			<artifactId>poi-ooxml</artifactId>
-			<version>5.2.3</version>
-		</dependency>
-
-		<dependency>
-			<groupId>de.topobyte</groupId>
-			<artifactId>osm4j-pbf</artifactId>
-			<version>1.3.0</version>
-		</dependency>
-		<dependency>
-			<groupId>de.topobyte</groupId>
-			<artifactId>osm4j-geometry</artifactId>
-			<version>1.3.0</version>
-		</dependency>
-
-		<dependency>
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>common</artifactId>
-			<version>${matsim.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.matsim.contrib</groupId>
-			<artifactId>analysis</artifactId>
 			<version>${matsim.version}</version>
 		</dependency>
 
@@ -195,17 +149,16 @@
 			<artifactId>roadpricing</artifactId>
 			<version>${matsim.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>small-scale-traffic-generation</artifactId>
+			<version>${matsim.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>opt-drt</artifactId>
 			<version>0d94df59ec</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.github.matsim-vsp</groupId>
-			<artifactId>matsim-analysis</artifactId>
-			<version>23bfbfc865</version>
 		</dependency>
 
 		<dependency>
@@ -256,23 +209,94 @@
 
 		</dependency>
 
+		<!-- Non MATSim dependencies -->
+
+		<dependency>
+			<groupId>com.github.kit-ifv</groupId>
+			<artifactId>actitopp</artifactId>
+			<version>1.9.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-server</artifactId>
+			<version>11.0.15</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-servlet</artifactId>
+			<version>11.0.15</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.optaplanner</groupId>
+			<artifactId>optaplanner-core</artifactId>
+			<version>9.41.0.Final</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>5.2.5</version>
+		</dependency>
+
+		<dependency>
+			<groupId>de.topobyte</groupId>
+			<artifactId>osm4j-pbf</artifactId>
+			<version>1.3.0</version>
+		</dependency>
+		<dependency>
+			<groupId>de.topobyte</groupId>
+			<artifactId>osm4j-geometry</artifactId>
+			<version>1.3.0</version>
+		</dependency>
+		<dependency>
+			<groupId>me.tongfei</groupId>
+			<artifactId>progressbar</artifactId>
+			<version>0.10.0</version>
+		</dependency>
 
 		<!-- for weighted random draw: https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-math3</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-statistics-distribution</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-rng-simple</artifactId>
+			<version>1.5</version>
+		</dependency>
+
 
 		<!-- Include the JUnit testing library.  Not transitive. -->
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<!--MATSim test infrastructure.  Not transitive.-->
+			<groupId>org.matsim</groupId>
+			<artifactId>matsim</artifactId>
+			<type>test-jar</type>
+			<version>${matsim.version}</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -294,7 +318,7 @@
 				<configuration>
 					<forkCount>1</forkCount>
 					<!-- avoid out of memory errors: -->
-					<argLine>@{argLine} -Xmx9500m -Djava.awt.headless=true -Dmatsim.preferLocalDtds=true</argLine>
+					<argLine>@{argLine} -Xmx6500m -Djava.awt.headless=true -Dmatsim.preferLocalDtds=true</argLine>
 					<!--necessary in tu berlin gitlab. BUT not good in other places, so solve by command line switch only where needed.  kai, nov'18-->
 					<!--<useSystemClassLoader>false</useSystemClassLoader>-->
 				</configuration>
@@ -324,7 +348,7 @@
 			<plugin>
 				<groupId>io.github.git-commit-id</groupId>
 				<artifactId>git-commit-id-maven-plugin</artifactId>
-				<version>5.0.0</version>
+				<version>8.0.2</version>
 				<executions>
 					<execution>
 						<id>get-the-git-infos</id>
@@ -335,7 +359,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<failOnNoGitDirectory>false</failOnNoGitDirectory>
+					<failOnNoGitDirectory>true</failOnNoGitDirectory>
 				</configuration>
 			</plugin>
 
@@ -350,7 +374,7 @@
 							<goal>shade</goal>
 						</goals>
 						<configuration>
-							<outputFile>${project.basedir}/${project.build.finalName}.jar</outputFile>
+							<outputFile>${project.basedir}/${project.build.finalName}-${git.commit.id.abbrev}.jar</outputFile>
 							<transformers>
 								<!-- This bit sets the main class for the executable jar as you otherwise would with the assembly plugin -->
 								<transformer
@@ -360,7 +384,7 @@
 										<Specification-Vendor>org.matsim</Specification-Vendor>
 										<Implementation-Vendor>org.matsim</Implementation-Vendor>
 										<Implementation-Version>${project.version}</Implementation-Version>
-										<SCM-Revision>${git.commit.id.describe-short}</SCM-Revision>
+										<SCM-Revision>${git.commit.id.describe}</SCM-Revision>
 										<Multi-Release>true</Multi-Release>
 									</manifestEntries>
 								</transformer>
@@ -400,7 +424,7 @@
 					<failsOnError>true</failsOnError>
 					<failOnViolation>true</failOnViolation>
 					<linkXRef>false</linkXRef>
-					<excludes>**/legacy/**,**/prepare/network/**</excludes>
+					<excludes>**/legacy/**,**/prepare/network/**,**/prepare/counts/CreateCountsFromVMZOld.java</excludes>
 				</configuration>
 				<executions>
 					<execution>
@@ -462,5 +486,13 @@
 			<url>https://jitpack.io</url>
 		</repository>
 	</repositories>
+
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>GitHub Packages</name>
+			<url>https://maven.pkg.github.com/matsim-scenarios/matsim-berlin</url>
+		</repository>
+	</distributionManagement>
 
 </project>

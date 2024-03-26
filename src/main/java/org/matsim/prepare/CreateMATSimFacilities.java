@@ -37,7 +37,7 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 	/**
 	 * Filter link types that don't have a facility associated.
 	 */
-	static final Set<String> IGNORED_LINK_TYPES = Set.of("motorway", "trunk",
+	public static final Set<String> IGNORED_LINK_TYPES = Set.of("motorway", "trunk",
 			"motorway_link", "trunk_link", "secondary_link", "primary_link");
 
 	@CommandLine.Option(names = "--network", required = true, description = "Path to car network")

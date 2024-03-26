@@ -7,7 +7,6 @@ import org.apache.logging.log4j.Logger;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.index.strtree.STRtree;
 import org.matsim.api.core.v01.Coord;
-import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
@@ -25,12 +24,8 @@ import org.matsim.core.population.algorithms.PersonAlgorithm;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.core.utils.geometry.geotools.MGC;
-import org.matsim.facilities.ActivityFacilities;
 import org.matsim.facilities.ActivityFacility;
-import org.matsim.facilities.FacilitiesUtils;
-import org.matsim.facilities.MatsimFacilitiesReader;
 import org.matsim.prepare.RunOpenBerlinCalibration;
-import org.matsim.run.RunOpenBerlinScenario;
 import org.opengis.feature.simple.SimpleFeature;
 import picocli.CommandLine;
 
@@ -39,7 +34,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import static org.matsim.prepare.ExtractFacilityShp.CreateMATSimFacilities.IGNORED_LINK_TYPES;
+import static org.matsim.prepare.CreateMATSimFacilities.IGNORED_LINK_TYPES;
 
 @CommandLine.Command(
 	name = "init-location-choice",
@@ -51,7 +46,12 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 	/**
 	 * Detour factor for car routes, which was determined based on sampled routes.
 	 */
-	private static final double DETOUR_FACTOR = 1.56;
+	private static final double DETOUR_FACTOR = 1.46;
+
+	/**
+	 * Factor for short trips < 2000m.
+	 */
+	private static final double DETOUR_FACTOR_SHORT = 1.3;
 
 	private static final Logger log = LogManager.getLogger(InitLocationChoice.class);
 
@@ -82,16 +82,13 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 	@CommandLine.Mixin
 	private ShpOptions shp;
 
-
-	private Map<String, STRtree> trees;
+	private FacilityIndex facilities;
 
 	private Long2ObjectMap<SimpleFeature> zones;
 
 	private CommuterAssignment commuter;
 
 	private Network network;
-
-	private ActivityFacilities facilities = FacilitiesUtils.createActivityFacilities();
 
 	private ThreadLocal<Context> ctxs;
 
@@ -112,6 +109,15 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		return new Coord(RunOpenBerlinCalibration.roundNumber(origin.getX() + x), RunOpenBerlinCalibration.roundNumber(origin.getY() + y));
 	}
 
+	/**
+	 * Approximate beeline dist from known traveled distance. Distance will be reduced by a fixed detour factor.
+	 * Dist in meter.
+	 */
+	public static double beelineDist(double travelDist) {
+		double detourFactor = travelDist <= 2000 ? DETOUR_FACTOR_SHORT : DETOUR_FACTOR;
+		return travelDist * 1000 / detourFactor;
+	}
+
 	@Override
 	public Integer call() throws Exception {
 
@@ -125,33 +131,12 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		network = NetworkUtils.createNetwork();
 		filter.filter(network, Set.of(TransportMode.car));
 
+		facilities = new FacilityIndex(facilityPath.toString());
+
 		zones = new Long2ObjectOpenHashMap<>(shp.readFeatures().stream()
 			.collect(Collectors.toMap(ft -> Long.parseLong((String) ft.getAttribute("ARS")), ft -> ft)));
 
 		log.info("Read {} zones", zones.size());
-
-
-		new MatsimFacilitiesReader(RunOpenBerlinScenario.CRS, RunOpenBerlinScenario.CRS, facilities)
-			.readFile(facilityPath.toString());
-
-		Set<String> activities = facilities.getFacilities().values().stream()
-			.flatMap(a -> a.getActivityOptions().keySet().stream())
-			.collect(Collectors.toSet());
-
-		log.info("Found activity types: {}", activities);
-
-		trees = new HashMap<>();
-		for (String act : activities) {
-
-			NavigableMap<Id<ActivityFacility>, ActivityFacility> afs = facilities.getFacilitiesForActivityType(act);
-			for (ActivityFacility af : afs.values()) {
-				STRtree index = trees.computeIfAbsent(act, k -> new STRtree());
-				index.insert(MGC.coord2Point(af.getCoord()).getEnvelopeInternal(), af);
-			}
-		}
-
-		// Build all trees
-		trees.values().forEach(STRtree::build);
 
 		log.info("Using input file: {}", input);
 
@@ -227,10 +212,10 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 					ActivityFacility location = null;
 
 					// target leg distance in km
-					Object origDist = act.getAttributes().getAttribute("orig_dist");
+					double origDist = (double) act.getAttributes().getAttribute("orig_dist");
 
 					// Distance will be reduced
-					double dist = (double) origDist * 1000 / DETOUR_FACTOR;
+					double dist = beelineDist(origDist);
 
 					if (fixedLocations.containsKey(type)) {
 						location = fixedLocations.get(type);
@@ -241,11 +226,11 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 						location = sampleCommute(ctx, dist, lastCoord, (long) person.getAttributes().getAttribute(Attributes.ARS));
 					}
 
-					if (location == null && trees.containsKey(type)) {
+					if (location == null && facilities.index.containsKey(type)) {
 						// Needed for lambda
 						final Coord refCoord = lastCoord;
 
-						List<ActivityFacility> query = trees.get(type).query(MGC.coord2Point(lastCoord).buffer(dist * 1.2).getEnvelopeInternal());
+						List<ActivityFacility> query = facilities.index.get(type).query(MGC.coord2Point(lastCoord).buffer(dist * 1.2).getEnvelopeInternal());
 
 						// Distance should be within the bounds
 						List<ActivityFacility> res = query.stream().filter(f -> checkDistanceBound(dist, refCoord, f.getCoord(), 1)).toList();
@@ -271,7 +256,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 						lastCoord = c;
 
 						// An activity with type could not be put into correct facility.
-						if (trees.containsKey(type)) {
+						if (facilities.index.containsKey(type)) {
 							warning.incrementAndGet();
 						}
 
@@ -287,7 +272,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 				if (act.getCoord() != null)
 					lastCoord = act.getCoord();
 				else if (act.getFacilityId() != null)
-					lastCoord = facilities.getFacilities().get(act.getFacilityId()).getCoord();
+					lastCoord = facilities.all.getFacilities().get(act.getFacilityId()).getCoord();
 
 			}
 		}
@@ -298,7 +283,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 	 */
 	private ActivityFacility sampleCommute(Context ctx, double dist, Coord refCoord, long ars) {
 
-		STRtree index = trees.get("work");
+		STRtree index = facilities.index.get("work");
 
 		ActivityFacility workPlace = null;
 

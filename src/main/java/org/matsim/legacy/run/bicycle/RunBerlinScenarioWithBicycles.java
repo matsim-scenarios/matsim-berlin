@@ -23,7 +23,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.contrib.bicycle.BicycleConfigGroup;
-import org.matsim.contrib.bicycle.Bicycles;
+import org.matsim.contrib.bicycle.BicycleModule;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.controler.Controler;
@@ -53,7 +53,9 @@ public final class RunBerlinScenarioWithBicycles {
 
 	public static Controler prepareControler( Scenario scenario ) {
 		Controler controler = RunBerlinScenario.prepareControler( scenario ) ;
-		Bicycles.addAsOverridingModule(controler);
+
+		// Add bicycle module
+		controler.addOverridingModule(new BicycleModule());
 
 		return controler;
 	}
@@ -76,10 +78,10 @@ public final class RunBerlinScenarioWithBicycles {
 		}
 
 		Config config = RunBerlinScenario.prepareConfig( args, customModulesAll ) ;
-		config.plansCalcRoute().removeModeRoutingParams("bicycle");
+		config.routing().removeModeRoutingParams("bicycle");
 
 		//
-		config.controler().setLastIteration(0);
+		config.controller().setLastIteration(0);
 		//
 
 		return config ;

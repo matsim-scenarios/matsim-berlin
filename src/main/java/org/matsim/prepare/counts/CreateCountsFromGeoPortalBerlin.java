@@ -25,7 +25,7 @@ import org.matsim.core.config.groups.NetworkConfigGroup;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.filter.NetworkFilterManager;
 import org.matsim.core.utils.geometry.geotools.MGC;
-import org.matsim.run.RunOpenBerlinScenario;
+import org.matsim.run.OpenBerlinScenario;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.MathTransform;
@@ -117,7 +117,7 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 		// Compare two line strings
 		index.setDistanceCalculator(NetworkIndex::minHausdorffDistance);
 
-		MathTransform transformation = getCoordinateTransformation(shp.getShapeCrs(), RunOpenBerlinScenario.CRS);
+		MathTransform transformation = getCoordinateTransformation(shp.getShapeCrs(), OpenBerlinScenario.CRS);
 
 		log.info("Processing features.");
 		int counter = 0;
