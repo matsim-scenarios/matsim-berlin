@@ -75,9 +75,10 @@ input/sumo.net.xml: input/network.osm
 	 --tls.guess-signals true --tls.discard-simple --tls.join --tls.default-type actuated\
 	 --junctions.join --junctions.corner-detail 5\
 	 --roundabouts.guess --remove-edges.isolated\
-	 --no-internal-links --keep-edges.by-vclass passenger\
-	 --remove-edges.by-vclass hov,tram,rail,rail_urban,rail_fast,pedestrian,bicycle\
+	 --no-internal-links --keep-edges.by-vclass passenger,truck,bicycle\
+	 --remove-edges.by-vclass hov,tram,rail,rail_urban,rail_fast,pedestrian\
 	 --output.original-names --output.street-names\
+	 --osm.lane-access true	--osm.bike-access true\
 	 --proj "+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"\
 	 --osm-files $< -o=$@
 
@@ -85,7 +86,12 @@ input/sumo.net.xml: input/network.osm
 $p/berlin-$V-network.xml.gz: input/sumo.net.xml
 	$(sc) prepare network-from-sumo $< --target-crs $(CRS) --output $@
 
-	$(sc) prepare clean-network $@ --output $@ --modes car
+	$(sc) prepare clean-network $@ --output $@ --modes car,ride,truck
+
+	$(sc) prepare reproject-network\
+	 --input $@	--output $@\
+	 --input-crs $(CRS) --target-crs $(CRS)\
+	 --mode truck=freight\
 
 	$(sc) prepare apply-network-params freespeed capacity\
  	  --network $@ --output $@\
