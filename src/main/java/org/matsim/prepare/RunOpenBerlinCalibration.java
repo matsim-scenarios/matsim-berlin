@@ -16,6 +16,7 @@ import org.matsim.application.prepare.CreateLandUseShp;
 import org.matsim.application.prepare.freight.tripExtraction.ExtractRelevantFreightTrips;
 import org.matsim.application.prepare.network.CleanNetwork;
 import org.matsim.application.prepare.network.CreateNetworkFromSumo;
+import org.matsim.application.prepare.network.params.ApplyNetworkParams;
 import org.matsim.application.prepare.population.*;
 import org.matsim.application.prepare.pt.CreateTransitScheduleFromGtfs;
 import org.matsim.contrib.cadyts.car.CadytsCarModule;
@@ -49,10 +50,6 @@ import org.matsim.prepare.counts.CreateCountsFromGeoPortalBerlin;
 import org.matsim.prepare.counts.CreateCountsFromVMZ;
 import org.matsim.prepare.counts.CreateCountsFromVMZOld;
 import org.matsim.prepare.download.DownloadCommuterStatistic;
-import org.matsim.prepare.network.FixNetworkV5;
-import org.matsim.prepare.network.FreeSpeedOptimizer;
-import org.matsim.prepare.network.PrepareNetworkParams;
-import org.matsim.prepare.network.SampleNetwork;
 import org.matsim.prepare.opt.RunCountOptimization;
 import org.matsim.prepare.opt.SelectPlansFromIndex;
 import org.matsim.prepare.population.*;
@@ -80,12 +77,12 @@ import java.util.stream.Collectors;
 	CreateLandUseShp.class, CreateBerlinPopulation.class, CreateBrandenburgPopulation.class, MergePopulations.class,
 	LookupRegioStaR.class, ExtractFacilityShp.class, DownSamplePopulation.class, DownloadCommuterStatistic.class,
 	RunActitopp.class, CreateNetworkFromSumo.class, CreateTransitScheduleFromGtfs.class,
-	CleanNetwork.class, SampleNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class,
+	CleanNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class,
 	CreateCountsFromGeoPortalBerlin.class, CreateCountsFromVMZOld.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class,
 	MergePlans.class, SplitActivityTypesDuration.class, CleanPopulation.class, CleanAttributes.class,
-	GenerateSmallScaleCommercialTrafficDemand.class, RunCountOptimization.class, SelectPlansFromIndex.class, FixNetworkV5.class,
+	GenerateSmallScaleCommercialTrafficDemand.class, RunCountOptimization.class, SelectPlansFromIndex.class,
 	ExtractRelevantFreightTrips.class, CheckCarAvailability.class, FixSubtourModes.class, ComputeTripChoices.class, ComputePlanChoices.class,
-	PrepareNetworkParams.class, FreeSpeedOptimizer.class, SetCarAvailabilityByAge.class
+	ApplyNetworkParams.class, SetCarAvailabilityByAge.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
 

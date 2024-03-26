@@ -1,8 +1,9 @@
 package org.matsim.prepare.network;
 
-import org.matsim.application.prepare.network.opt.FeatureRegressor;
-import org.matsim.application.prepare.network.opt.NetworkModel;
+import org.matsim.application.prepare.network.params.FeatureRegressor;
+import org.matsim.application.prepare.network.params.NetworkModel;
 
+@SuppressWarnings("unused")
 public class BerlinNetworkParams implements NetworkModel {
 	@Override
 	public FeatureRegressor capacity(String junctionType) {

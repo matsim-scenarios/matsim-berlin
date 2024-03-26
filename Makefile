@@ -87,11 +87,11 @@ $p/berlin-$V-network.xml.gz: input/sumo.net.xml
 
 	$(sc) prepare clean-network $@ --output $@ --modes car
 
-	#$(sc) prepare sample-network --network $@
+	$(sc) prepare apply-network-params freespeed capacity\
+ 	  --network $@ --output $@\
+	  --input-features $p/berlin-$V-network-ft.csv.gz\
+	  --model org.matsim.prepare.network.BerlinNetworkParams\
 
-	# To update features and params, running python code is necessary
-	#$(sc) prepare network-params --network $@ --input-features input/sumo.net-edges.csv.gz --output $@
-	#$(sc) prepare network-freespeed --network $@ --params input/network-params.json --output $@
 
 $p/berlin-$V-network-with-pt.xml.gz: $p/berlin-$V-network.xml.gz
 	$(sc) prepare transit-from-gtfs --network $< --output=$p\
@@ -103,7 +103,7 @@ $p/berlin-$V-counts-vmz.xml.gz: $p/berlin-$V-network.xml.gz
 	$(sc) prepare counts-from-vmz\
 	 --excel ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx\
 	 --network $<\
-	 --network-geometries $p/berlin-v6.2-network-linkGeometries.csv\
+	 --network-geometries $p/berlin-$V-network-linkGeometries.csv\
 	 --output $p/\
 	 --version berlin-$(V)\
 	 --input-crs EPSG:31468\
