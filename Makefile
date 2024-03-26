@@ -110,30 +110,29 @@ $p/berlin-$V-counts-vmz.xml.gz: $p/berlin-$V-network.xml.gz
 	 --excel ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx\
 	 --network $<\
 	 --network-geometries $p/berlin-$V-network-linkGeometries.csv\
-	 --output $p/\
-	 --version berlin-$(V)\
+	 --output $@\
 	 --input-crs EPSG:31468\
 	 --target-crs $(CRS)\
-	 --ignored-counts input/ignored_counts.csv
+	 --counts-mapping input/counts_mapping.csv
 
 $p/berlin-$V-facilities.xml.gz: $p/berlin-$V-network.xml.gz input/facilities.shp
 	$(sc) prepare facilities --network $< --shp $(word 2,$^)\
 	 --output $@
 
-$p/berlin-only-$V-25pct.plans.xml.gz: input/PLR_2013_2020.csv $(berlin)/input/shp/Planungsraum_EPSG_25833.shp input/landuse.shp
+$p/berlin-only-$V-25pct.plans.xml.gz: input/PLR_2013_2020.csv $(berlin)/input/shp/Planungsraum_EPSG_25833.shp input/facilities.shp
 	$(sc) prepare berlin-population\
 		--input $<\
 		--shp $(word 2,$^) --shp-crs EPSG:25833\
-		--landuse $(word 3,$^) --landuse-filter residential\
+		--facilities $(word 3,$^) --facilities-attr resident\
 		--output $@
 
 
-$p/brandenburg-only-$V-25pct.plans.xml.gz: input/landuse.shp
+$p/brandenburg-only-$V-25pct.plans.xml.gz: input/facilities.shp
 	$(sc) prepare brandenburg-population\
 	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp\
 	 --population $(germany)/regionalstatistik/population.csv\
 	 --employees $(germany)/regionalstatistik/employed.json\
- 	 --landuse $< --landuse-filter residential\
+ 	 --facilities $< --facilities-attr resident\
  	 --output $@
 
 $p/berlin-static-$V-25pct.plans.xml.gz: $p/berlin-only-$V-25pct.plans.xml.gz $p/brandenburg-only-$V-25pct.plans.xml.gz

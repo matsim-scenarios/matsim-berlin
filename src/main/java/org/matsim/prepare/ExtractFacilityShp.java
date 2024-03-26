@@ -59,6 +59,12 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 	 * Usually large areas such as parks, campus, etc.
 	 */
 	private static final double MAX_ASSIGN = 50_000;
+
+	/**
+	 * Percentage of minimum required intersection.
+	 */
+	private static final double INTERSECT_THRESHOLD = 0.2;
+
 	private final GeometryBuilder geometryBuilder = new GeometryBuilder();
 	@CommandLine.Option(names = "--input", description = "Path to input .pbf file", required = true)
 	private Path pbf;
@@ -161,11 +167,11 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 		}
 		index.build();
 
-		processIntersection(landuse, index);
+		processIntersection(landuse, index, INTERSECT_THRESHOLD);
 
 		log.info("Remaining landuse shapes after assignment: {} ", landuse.size());
 
-		processIntersection(pois, index);
+		processIntersection(pois, index, 0);
 
 		log.info("Remaining POI after assignment: {}", pois.size());
 
@@ -210,7 +216,7 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 	/**
 	 * Tags buildings within that intersections with geometries from list. Used geometries are removed from the list.
 	 */
-	private void processIntersection(List<Feature> list, STRtree index) {
+	private void processIntersection(List<Feature> list, STRtree index, double threshold) {
 
 		Iterator<Feature> it = ProgressBar.wrap(list.iterator(), "Assigning features");
 
@@ -222,16 +228,25 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 			boolean used = false;
 			for (Feature other : query) {
 				// Assign other features to the buildings
+				double otherArea = other.geometry.getArea();
 				try {
-					if (ft.geometry.intersects(other.geometry) && other.geometry.getArea() < MAX_ASSIGN) {
-						other.assign(ft);
-						used = true;
+					if (ft.geometry.intersects(other.geometry) && otherArea < MAX_ASSIGN) {
+
+						double intersectArea = ft.geometry.intersection(other.geometry).getArea();
+						if (intersectArea / otherArea > threshold) {
+							other.assign(ft);
+							used = true;
+						}
 					}
 				} catch (TopologyException e) {
 					// some geometries are not well defined
-					if (ft.geometry.getBoundary().intersects(other.geometry.getBoundary()) && other.geometry.getArea() < MAX_ASSIGN) {
-						other.assign(ft);
-						used = true;
+					if (ft.geometry.getBoundary().intersects(other.geometry.getBoundary()) && otherArea < MAX_ASSIGN) {
+
+						double intersectArea = ft.geometry.getBoundary().intersection(other.geometry.getBoundary()).getArea();
+						if (intersectArea / otherArea > threshold) {
+							other.assign(ft);
+							used = true;
+						}
 					}
 				}
 			}

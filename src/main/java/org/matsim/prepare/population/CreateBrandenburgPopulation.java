@@ -2,6 +2,7 @@ package org.matsim.prepare.population;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import me.tongfei.progressbar.ProgressBar;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -15,7 +16,6 @@ import org.matsim.api.core.v01.population.Population;
 import org.matsim.api.core.v01.population.PopulationFactory;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.options.CsvOptions;
-import org.matsim.application.options.LanduseOptions;
 import org.matsim.application.options.ShpOptions;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.population.PersonUtils;
@@ -33,8 +33,9 @@ import java.util.SplittableRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static org.matsim.prepare.download.CalculateEmployedPopulation.Employment;
+import static org.matsim.prepare.download.CalculateEmployedPopulation.Entry;
 import static org.matsim.prepare.population.CreateBerlinPopulation.generateId;
-import static org.matsim.prepare.download.CalculateEmployedPopulation.*;
 
 @CommandLine.Command(
 		name = "brandenburg-population",
@@ -62,7 +63,7 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 	private ShpOptions shp = new ShpOptions();
 
 	@CommandLine.Mixin
-	private LanduseOptions landuse = new LanduseOptions();
+	private FacilityOptions facilities = new FacilityOptions();
 
 	private final CsvOptions csv = new CsvOptions(CSVFormat.Predefined.Default);
 
@@ -98,7 +99,7 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 
 		try (CSVParser parser = csv.createParser(stats)) {
 
-			for (CSVRecord row : parser) {
+			for (CSVRecord row : ProgressBar.wrap(parser.getRecords(), "Processing persons")) {
 
 				String code = row.get("code");
 
@@ -170,7 +171,7 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 			// All persons will be employed until employed population is empty.
 			PersonUtils.setEmployed(person, employed.subtract(1 / sample, age));
 
-			Coord coord = CreateBerlinPopulation.sampleHomeCoordinate(geom, OpenBerlinScenario.CRS, landuse, rnd);
+			Coord coord = CreateBerlinPopulation.sampleHomeCoordinate(geom, OpenBerlinScenario.CRS, facilities, rnd);
 
 			person.getAttributes().putAttribute(Attributes.HOME_X, coord.getX());
 			person.getAttributes().putAttribute(Attributes.HOME_Y, coord.getY());

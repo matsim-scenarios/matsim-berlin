@@ -1,5 +1,6 @@
 package org.matsim.prepare.population;
 
+import me.tongfei.progressbar.ProgressBar;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -14,7 +15,6 @@ import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.api.core.v01.population.PopulationFactory;
 import org.matsim.application.MATSimAppCommand;
-import org.matsim.application.options.LanduseOptions;
 import org.matsim.application.options.ShpOptions;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.population.PersonUtils;
@@ -49,7 +49,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 	@CommandLine.Option(names = "--input", description = "Path to input csv data", required = true)
 	private Path input;
 	@CommandLine.Mixin
-	private LanduseOptions landuse = new LanduseOptions();
+	private FacilityOptions facilities = new FacilityOptions();
 	@CommandLine.Mixin
 	private ShpOptions shp = new ShpOptions();
 	@CommandLine.Option(names = "--output", description = "Path to output population", required = true)
@@ -85,14 +85,14 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 	/**
 	 * Samples a home coordinates from geometry and landuse.
 	 */
-	public static Coord sampleHomeCoordinate(MultiPolygon geometry, String crs, LanduseOptions landuse, SplittableRandom rnd) {
+	public static Coord sampleHomeCoordinate(MultiPolygon geometry, String crs, FacilityOptions facilities, SplittableRandom rnd) {
 
 		Envelope bbox = geometry.getEnvelopeInternal();
 
 		int i = 0;
 		Coord coord;
 		do {
-			coord = landuse.select(crs, () -> new Coord(
+			coord = facilities.select(crs, () -> new Coord(
 				bbox.getMinX() + (bbox.getMaxX() - bbox.getMinX()) * rnd.nextDouble(),
 				bbox.getMinY() + (bbox.getMaxY() - bbox.getMinY()) * rnd.nextDouble()
 			));
@@ -136,7 +136,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 
 		try (CSVParser reader = new CSVParser(Files.newBufferedReader(input, Charset.forName("windows-1252")), format.build())) {
 
-			for (CSVRecord row : reader) {
+			for (CSVRecord row : ProgressBar.wrap(reader.getRecords(), "Processing LORs")) {
 
 				int year = Integer.parseInt(row.get("Jahr"));
 				if (this.year != year)
@@ -165,8 +165,6 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 
 		String raumID = row.get("RaumID");
 		int n = Integer.parseInt(row.get("Einwohnerinnen und Einwohner (EW) insgesamt"));
-
-		log.info("Processing {} with {} inhabitants", raumID, n);
 
 		double young = FMT.parse(row.get("Anteil der unter 18-Jährigen an Einwohnerinnen und Einwohner (EW) gesamt")).doubleValue() / 100;
 		double old = FMT.parse(row.get("Anteil der 65-Jährigen und älter an Einwohnerinnen und Einwohner (EW) gesamt")).doubleValue() / 100;
@@ -224,7 +222,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 				PersonUtils.setEmployed(person, false);
 			}
 
-			Coord coord = ct.transform(sampleHomeCoordinate(geom, "EPSG:25833", landuse, rnd));
+			Coord coord = ct.transform(sampleHomeCoordinate(geom, "EPSG:25833", facilities, rnd));
 
 			person.getAttributes().putAttribute(Attributes.HOME_X, coord.getX());
 			person.getAttributes().putAttribute(Attributes.HOME_Y, coord.getY());

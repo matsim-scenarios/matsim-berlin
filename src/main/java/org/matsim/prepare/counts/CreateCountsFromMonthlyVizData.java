@@ -17,7 +17,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.application.MATSimAppCommand;
-import org.matsim.application.options.CountsOption;
+import org.matsim.application.options.CountsOptions;
 import org.matsim.application.options.CrsOptions;
 import org.matsim.application.options.CsvOptions;
 import org.matsim.application.prepare.counts.NetworkIndex;
@@ -80,7 +80,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	private final CrsOptions crs = new CrsOptions();
 
 	@CommandLine.Mixin
-	CountsOption counts = new CountsOption();
+	private final CountsOptions counts = new CountsOptions();
 
 	private final Map<String, Station> stations = new HashMap<>();
 	private final Logger logger = LogManager.getLogger(CreateCountsFromMonthlyVizData.class);
@@ -159,7 +159,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		return factory.createLineString(coordinates);
 	}
 
-	private void matchWithNetwork(Path networkPath, Path geometries, Map<String, Station> stations, CountsOption countsOption) throws TransformException, IOException {
+	private void matchWithNetwork(Path networkPath, Path geometries, Map<String, Station> stations, CountsOptions countsOption) throws TransformException, IOException {
 
 		Network network = NetworkUtils.readNetwork(networkPath.toString());
 		CoordinateTransformation transformation = crs.getTransformation();
@@ -243,7 +243,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		logger.info("Could not match {} stations", counter);
 	}
 
-	private void extractStations(Path path, Map<String, Station> stations, CountsOption countsOption) {
+	private void extractStations(Path path, Map<String, Station> stations, CountsOptions countsOption) {
 
 		XSSFSheet sheet;
 		try (XSSFWorkbook wb = new XSSFWorkbook(path.toString())) {

@@ -16,7 +16,7 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.application.CommandSpec;
 import org.matsim.application.MATSimAppCommand;
-import org.matsim.application.options.CountsOption;
+import org.matsim.application.options.CountsOptions;
 import org.matsim.application.options.InputOptions;
 import org.matsim.application.options.OutputOptions;
 import org.matsim.application.options.ShpOptions;
@@ -69,7 +69,7 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 	@CommandLine.Option(names = "--network-geometries", description = "path to *linkGeometries.csv")
 	private Path networkGeometries;
 	@CommandLine.Mixin
-	private CountsOption counts = new CountsOption();
+	private CountsOptions counts = new CountsOptions();
 	@CommandLine.Mixin
 	private ShpOptions shp = new ShpOptions();
 
