@@ -8,8 +8,8 @@
 	<module name="controller">
 		<param name="lastIteration" value="500"/>
 		<param name="overwriteFiles" value="failIfDirectoryExists"/>
-		<param name="runId" value="berlin-v6.1"/>
-		<param name="outputDirectory" value="./output/berlin-v6.1-10pct"/>
+		<param name="runId" value="berlin-v6.2"/>
+		<param name="outputDirectory" value="./output/berlin-v6.2-10pct"/>
 		<param name="writeEventsInterval" value="100"/>
 		<param name="writePlansInterval" value="100"/>
 		<param name="routingAlgorithmType" value="SpeedyALT"/>
@@ -20,24 +20,24 @@
 		<param name="numberOfThreads" value="16"/>
 	</module>
 	<module name="network">
-		<param name="inputNetworkFile" value="./berlin-v6.1-network-with-pt.xml.gz"/>
+		<param name="inputNetworkFile" value="./berlin-v6.2-network-with-pt.xml.gz"/>
 	</module>
 	<module name="plans">
-		<param name="inputPlansFile" value="./berlin-v6.1-25pct.plans-initial.xml.gz"/>
+		<param name="inputPlansFile" value="./berlin-v6.2-25pct.plans-initial.xml.gz"/>
 		<param name="removingUnnecessaryPlanAttributes" value="true"/>
 	</module>
 	<module name="vehicles">
 		<param name="vehiclesFile"
-			   value="./berlin-v6.1-vehicleTypes.xml"/>
+			   value="./berlin-v6.2-vehicleTypes.xml"/>
 	</module>
 	<module name="transit">
-		<param name="transitScheduleFile" value="./berlin-v6.1-transitSchedule.xml.gz"/>
+		<param name="transitScheduleFile" value="./berlin-v6.2-transitSchedule.xml.gz"/>
 		<param name="useTransit" value="true"/>
-		<param name="vehiclesFile" value="./berlin-v6.1-transitVehicles.xml.gz"/>
+		<param name="vehiclesFile" value="./berlin-v6.2-transitVehicles.xml.gz"/>
 	</module>
 	<module name="facilities">
 		<param name="facilitiesSource" value="fromFile"/>
-		<param name="inputFacilitiesFile" value="./berlin-v6.1-facilities.xml.gz"/>
+		<param name="inputFacilitiesFile" value="./berlin-v6.2-facilities.xml.gz"/>
 	</module>
 	<module name="routing">
 		<param name="networkModes" value="car,truck,freight,ride"/>
@@ -186,7 +186,7 @@
 	</module>
 
 	<module name="counts">
-		<param name="inputCountsFile" value="./berlin-v6.1-counts-vmz.xml.gz"/>
+		<param name="inputCountsFile" value="./berlin-v6.2-counts-vmz.xml.gz"/>
 		<param name="countsScaleFactor" value="0.1"/>
 	</module>
 

@@ -79,12 +79,14 @@ input/sumo.net.xml: input/network.osm
 	 --remove-edges.by-vclass hov,tram,rail,rail_urban,rail_fast,pedestrian\
 	 --output.original-names --output.street-names\
 	 --osm.lane-access true	--osm.bike-access true\
+	 --osm.all-attributes\
+	 --osm.extra-attributes bus:lanes,bus:lanes:forward,bus:lanes:backward,cycleway,cycleway:right,cycleway:left\
 	 --proj "+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"\
 	 --osm-files $< -o=$@
 
 
 $p/berlin-$V-network.xml.gz: input/sumo.net.xml
-	$(sc) prepare network-from-sumo $< --target-crs $(CRS) --output $@
+	$(sc) prepare network-from-sumo $< --target-crs $(CRS) --lane-restrictions REDUCE_CAR_LANES --output $@
 
 	$(sc) prepare clean-network $@ --output $@ --modes car,ride,truck
 
