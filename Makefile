@@ -174,15 +174,21 @@ $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
 $p/berlin-small-scale-commercialTraffic-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
 	$(sc) prepare generate-small-scale-commercial-traffic\
 	  input/$V/berlin-$V.config.xml\
+	 --pathToInvestigationAreaData input/commercialTraffic/investigationAreaData.csv\
 	 --sample 0.25\
-	 --jspritIterations 1\
+	 --jspritIterations 10\
 	 --creationOption createNewCarrierFile\
 	 --landuseConfiguration useOSMBuildingsAndLanduse\
 	 --network $(notdir $<)\
 	 --smallScaleCommercialTrafficType completeSmallScaleCommercialTraffic\
+	 --regionsShapeFileName $(berlin)/input/shp/region_4326.shp\
+	 --regionsShapeRegionColumn "GEN"\
 	 --zoneShapeFileName $(berlin)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp\
+	 --zoneShapeFileNameColumn "id"\
 	 --buildingsShapeFileName $(berlin)/input/shp/buildings_BerlinBrandenburg_4326.shp\
+	 --shapeFileBuildingTypeColumn "type"\
 	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
+	 --shapeFileLanduseTypeColumn "fclass"\
 	 --shapeCRS "EPSG:4326"\
 	 --resistanceFactor "0.005"\
 	 --numberOfPlanVariantsPerAgent 5\
