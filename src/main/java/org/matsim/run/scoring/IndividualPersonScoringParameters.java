@@ -81,23 +81,8 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 		this.scoring = ConfigUtils.addOrGetModule(scenario.getConfig(), AdvancedScoringConfigGroup.class);
 		this.transitConfig = scenario.getConfig().transit();
 		this.globalAvgIncome = computeAvgIncome(scenario.getPopulation());
-		this.categories = buildCategories(this.scoring);
+		this.categories = Category.fromConfigParams(this.scoring.getScoringParameters());
 		this.cache = new IdMap<>(Person.class, scenario.getPopulation().getPersons().size());
-	}
-
-	static Map<String, Category> buildCategories(AdvancedScoringConfigGroup scoring) {
-
-		Map<String, Set<String>> categories = new HashMap<>();
-
-		// Collect all values
-		for (AdvancedScoringConfigGroup.ScoringParameters parameter : scoring.getScoringParameters()) {
-			for (Map.Entry<String, String> kv : parameter.getParams().entrySet()) {
-				categories.computeIfAbsent(kv.getKey(), k -> new HashSet<>()).add(kv.getValue());
-			}
-		}
-
-		return categories.entrySet().stream()
-			.collect(HashMap::new, (m, e) -> m.put(e.getKey(), new Category(e.getValue())), HashMap::putAll);
 	}
 
 	static DistanceGroup[] calcDistanceGroups(List<Integer> dists, DoubleList distUtils) {
@@ -223,7 +208,7 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 
 			for (AdvancedScoringConfigGroup.ScoringParameters parameter : scoring.getScoringParameters()) {
 
-				if (parameter.matchObject(person.getAttributes(), categories)) {
+				if (Category.matchAttributesWithConfig(person.getAttributes(), parameter, categories)) {
 					for (Map.Entry<String, AdvancedScoringConfigGroup.ModeParams> mode : parameter.getModeParams().entrySet()) {
 
 						DistanceGroupModeUtilityParameters.DeltaBuilder b =
