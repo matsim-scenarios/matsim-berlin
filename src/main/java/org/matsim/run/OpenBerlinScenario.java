@@ -102,12 +102,6 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 	@Override
 	protected void prepareScenario(Scenario scenario) {
-
-		AssignIncome income = new AssignIncome();
-
-		// Calculate the income for each person, in next versions this might also be done during creation of the population
-		scenario.getPopulation().getPersons().values().forEach(income::run);
-
 	}
 
 	@Override
