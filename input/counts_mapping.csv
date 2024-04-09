@@ -14,7 +14,7 @@ MQ_ID;linkid;Using;Kommentar;Check
 10226;119051;;same as 10225;
 10228;;;;
 10282;86724;;same as 10282;
-10287;9211;;same as 10286, don't know what LM means;Zählung sehr niedrig, 2017 - 2018 Baustelle und Straße stark verengt
+10287;9211;;same as 10286, don't know what LM means;Zählung sehr niedrig, 2017 - 2018 Baustelle und Straße stark verengt;
 10292;107646;;same as 10266;
 10368;88714;;same as 10367;
 10381;106347;;same as 106347;
@@ -49,8 +49,11 @@ MQ_ID;linkid;Using;Kommentar;Check
 20060;;;same as 20058;
 20064;;;same as 20062;
 20070;;;same as 20069;
+20071;4500170;x;Wexstraße;
+20073;4536796;x;Wexstraße – Einfahrt;
 20074;;;same as 20071;
 20076;98319;;unclear;
+20082;199287251;x;Einfahrt von A103;
 20083;;;same as 20078;
 20087;;;same as 20085;
 20092;;;same as 20090;
@@ -58,14 +61,18 @@ MQ_ID;linkid;Using;Kommentar;Check
 20108;;;same as 20105;
 20109;;;same as 20105;
 20111;144032;;unclear;
+20115;138554956;x;Ausfahrt von A103;
 20116;;;unclear, same as 20111;
 20122;;;same as 20121;
 20123;;;same as 20121;
+20135;;;same as 20139;
 20137;;;same as 20135;
+20139;x;83917720;ca. 600 m nach AS Gradestraße;
 20140;;;same as 20139;
 20141;;;same as 20139;
 20142;;;unclear, should be same as 20139, but loses 6000 cars;
 20147;;;same as 20145;
+20148;4526509;x;Buschkrugallee – Einfahrt;
 20149;51291;;;
 20150;;;same as 20149;
 20153;;;same as 20152;

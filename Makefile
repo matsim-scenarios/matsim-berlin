@@ -51,7 +51,7 @@ $(berlin)/input/shp/Planungsraum_EPSG_25833.shp:
 input/network.osm: input/brandenburg.osm.pbf
 
 	$(osmosis) --rb file=$<\
-	 --tf accept-ways highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction,residential,living_street\
+	 --tf accept-ways highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction,residential,living_street,unclassified\
 	 --bounding-polygon file="$p/area/area.poly"\
 	 --used-node --wb input/network-detailed.osm.pbf
 
