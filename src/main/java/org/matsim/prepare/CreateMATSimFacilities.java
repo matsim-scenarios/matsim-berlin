@@ -22,7 +22,6 @@ import picocli.CommandLine;
 
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -84,23 +83,17 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 
 		List<SimpleFeature> fts = shp.readFeatures();
 
-		Map<Id<Link>, Holder> data = new ConcurrentHashMap<>();
-
-		fts.parallelStream().forEach(ft -> processFeature(ft, carOnlyNetwork, data));
+		List<Holder> data = fts.parallelStream()
+			.map(ft -> processFeature(ft, carOnlyNetwork))
+			.filter(Objects::nonNull)
+			.toList();
 
 		ActivityFacilities facilities = FacilitiesUtils.createActivityFacilities();
 
 		SplittableRandom rnd = new SplittableRandom();
 		ActivityFacilitiesFactory f = facilities.getFactory();
 
-		for (Map.Entry<Id<Link>, Holder> e : data.entrySet()) {
-
-			Holder h = e.getValue();
-
-			// May not contain relevant activities (residential)
-			if (h.activities.isEmpty()) {
-				continue;
-			}
+		for (Holder h : data) {
 
 			// Create mean coordinate
 			OptionalDouble x = h.coords.stream().mapToDouble(Coord::getX).average();
@@ -132,10 +125,11 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 	/**
 	 * Sample points and choose link with the nearest points. Aggregate everything so there is at most one facility per link.
 	 */
-	private void processFeature(SimpleFeature ft, Network network, Map<Id<Link>, Holder> data) {
+	private Holder processFeature(SimpleFeature ft, Network network) {
 
-		// Actual id is the last part
-		String[] id = ft.getID().split("\\.");
+		Set<String> activities = activities(ft);
+		if (activities.isEmpty())
+			return null;
 
 		// Pairs of coords and corresponding links
 		List<Coord> coords = samplePoints((MultiPolygon) ft.getDefaultGeometry(), 23);
@@ -147,7 +141,7 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 
 		// Everything could be filtered and map empty
 		if (map.isEmpty())
-			return;
+			return null;
 
 		List<Map.Entry<Id<Link>, Long>> counts = map.entrySet().stream().sorted(Map.Entry.comparingByValue())
 				.toList();
@@ -155,11 +149,7 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		// The "main" link of the facility
 		Id<Link> link = counts.get(counts.size() - 1).getKey();
 
-		Holder holder = data.computeIfAbsent(link, k -> new Holder(ConcurrentHashMap.newKeySet(), ConcurrentHashMap.newKeySet(), Collections.synchronizedList(new ArrayList<>())));
-
-		holder.ids.add(id[id.length - 1]);
-		holder.activities.addAll(activities(ft));
-
+		Holder holder = new Holder(link, activities, new ArrayList<>());
 		// Search for the original drawn coordinate of the associated link
 		for (int i = 0; i < links.size(); i++) {
 			if (links.get(i).equals(link)) {
@@ -167,6 +157,8 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 				break;
 			}
 		}
+
+		return holder;
 	}
 
 	/**
@@ -243,7 +235,7 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 	/**
 	 * Temporary data holder for facilities.
 	 */
-	private record Holder(Set<String> ids, Set<String> activities, List<Coord> coords) {
+	private record Holder(Id<Link> linkId, Set<String> activities, List<Coord> coords) {
 
 	}
 
