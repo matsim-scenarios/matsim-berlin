@@ -53,6 +53,22 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		new CreateMATSimFacilities().execute(args);
 	}
 
+	/**
+	 * Generate a new unique id within population.
+	 */
+	public static Id<ActivityFacility> generateId(ActivityFacilities facilities, SplittableRandom rnd) {
+
+		Id<ActivityFacility> id;
+		byte[] bytes = new byte[3];
+		do {
+			rnd.nextBytes(bytes);
+			id = Id.create( "f" + HexFormat.of().formatHex(bytes), ActivityFacility.class);
+
+		} while (facilities.getFacilities().containsKey(id));
+
+		return id;
+	}
+
 	@Override
 	public Integer call() throws Exception {
 
@@ -74,13 +90,17 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 
 		ActivityFacilities facilities = FacilitiesUtils.createActivityFacilities();
 
+		SplittableRandom rnd = new SplittableRandom();
 		ActivityFacilitiesFactory f = facilities.getFactory();
 
 		for (Map.Entry<Id<Link>, Holder> e : data.entrySet()) {
 
 			Holder h = e.getValue();
 
-			Id<ActivityFacility> id = Id.create(String.join("_", h.ids), ActivityFacility.class);
+			// May not contain relevant activities (residential)
+			if (h.activities.isEmpty()) {
+				continue;
+			}
 
 			// Create mean coordinate
 			OptionalDouble x = h.coords.stream().mapToDouble(Coord::getX).average();
@@ -90,6 +110,8 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 				log.warn("Empty coordinate (Should never happen)");
 				continue;
 			}
+
+			Id<ActivityFacility> id = generateId(facilities, rnd);
 
 			ActivityFacility facility = f.createActivityFacility(id, CoordUtils.round(new Coord(x.getAsDouble(), y.getAsDouble())));
 			for (String act : h.activities) {
