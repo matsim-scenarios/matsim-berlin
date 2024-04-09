@@ -16,8 +16,14 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
+import org.matsim.modechoice.InformedModeChoiceModule;
+import org.matsim.modechoice.ModeOptions;
+import org.matsim.modechoice.ScheduledModeChoiceModule;
+import org.matsim.modechoice.constraints.RelaxedMassConservationConstraint;
+import org.matsim.modechoice.estimators.DefaultActivityEstimator;
+import org.matsim.modechoice.estimators.DefaultLegScoreEstimator;
+import org.matsim.modechoice.estimators.FixedCostsEstimator;
 import org.matsim.prepare.RunOpenBerlinCalibration;
-import org.matsim.prepare.population.AssignIncome;
 import org.matsim.run.scoring.AdvancedScoringConfigGroup;
 import org.matsim.run.scoring.AdvancedScoringModule;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
@@ -122,6 +128,19 @@ public class OpenBerlinScenario extends MATSimApplication {
 	public static final class TravelTimeBinding extends AbstractModule {
 		@Override
 		public void install() {
+
+			install(InformedModeChoiceModule.newBuilder()
+				.withFixedCosts(FixedCostsEstimator.DailyConstant.class, TransportMode.car, TransportMode.pt)
+				.withLegEstimator(DefaultLegScoreEstimator.class, ModeOptions.ConsiderIfCarAvailable.class, TransportMode.car)
+				.withLegEstimator(DefaultLegScoreEstimator.class, ModeOptions.AlwaysAvailable.class,
+					TransportMode.walk, TransportMode.ride, TransportMode.pt, TransportMode.bike)
+				.withConstraint(RelaxedMassConservationConstraint.class)
+				.withActivityEstimator(DefaultActivityEstimator.class)
+				.build());
+
+			install(ScheduledModeChoiceModule.newBuilder()
+				.build());
+
 			addTravelTimeBinding(TransportMode.ride).to(networkTravelTime());
 			addTravelDisutilityFactoryBinding(TransportMode.ride).to(carTravelDisutilityFactoryKey());
 

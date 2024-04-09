@@ -77,11 +77,20 @@
 	</module>
 
 	<module name="informedModeChoice">
-		<param name="modes" value="car,pt,bike,walk"/>
-		<param name="topK" value="5"/>
-		<param name="constraintCheck" value="warn"/>
+		<param name="modes" value="car,pt,bike,walk,ride"/>
+		<param name="topK" value="14"/>
+		<param name="constraintCheck" value="repair"/>
 	</module>
 
+	<module name="scheduledModeChoice">
+		<param name="scheduleIterations" value="24"/>
+		<param name="adjustTargetIterations" value="true" />
+		<param name="subpopulations" value="person" />
+		<parameterset type="modeTargetParameters" >
+			<param name="subpopulation" value="person" />
+			<param name="shares" value="car=0.2" />
+		</parameterset>
+	</module>
 
 	<module name="simwrapper" >
 		<parameterset type="params" >
