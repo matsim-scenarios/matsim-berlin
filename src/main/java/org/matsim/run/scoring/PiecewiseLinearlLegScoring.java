@@ -51,11 +51,11 @@ public final class PiecewiseLinearlLegScoring implements org.matsim.core.scoring
 	/**
 	 * The parameters used for scoring.
 	 */
-	protected final ScoringParameters params;
+	private final ScoringParameters params;
 	private final Set<String> ptModes;
 	private final double marginalUtilityOfMoney;
-	protected double score;
-	protected Network network;
+	private double score;
+	private Network network;
 	private boolean nextEnterVehicleIsFirstOfTrip = true;
 	private boolean nextStartPtLegIsFirstOfTrip = true;
 	private boolean currentLegIsPtLeg = false;
@@ -83,15 +83,14 @@ public final class PiecewiseLinearlLegScoring implements org.matsim.core.scoring
 	/**
 	 * Calculate the score for a leg.
 	 */
-	protected double calcLegScore(final double departureTime, final double arrivalTime, final Leg leg) {
+    private double calcLegScore(final double departureTime, final double arrivalTime, final Leg leg) {
 		double tmpScore = 0.0;
 		// travel time in seconds
 		double travelTime = arrivalTime - departureTime;
 		ModeUtilityParameters modeParams = this.params.modeParams.get(leg.getMode());
 
 		if (modeParams == null) {
-			if (leg.getMode().equals(TransportMode.transit_walk) || leg.getMode().equals(TransportMode.non_network_walk)
-				|| leg.getMode().equals(TransportMode.non_network_walk)) {
+			if (leg.getMode().equals(TransportMode.transit_walk) || leg.getMode().equals(TransportMode.non_network_walk)) {
 				modeParams = this.params.modeParams.get(TransportMode.walk);
 			} else {
 //				modeParams = this.params.modeParams.get(TransportMode.other);
