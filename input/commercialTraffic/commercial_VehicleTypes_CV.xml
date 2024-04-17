@@ -5,11 +5,10 @@
 	<vehicleType id="golf1.4">
 
 		<description>Golf 1.4 Trendline</description>
-		<capacity seats="4" standingRoomInPersons="0" other="0">
-
-		</capacity>
+		<capacity seats="4" standingRoomInPersons="0" other="0"/>
 		<length meter="7.5"/>
 		<width meter="1.0"/>
+		<maximumVelocity meterPerSecond="38.89"/>
 		<engineInformation>
 			<attributes>
 				<attribute name="HbefaVehicleCategory" class="java.lang.String">PASSENGER_CAR</attribute>
@@ -25,19 +24,17 @@
 			</attributes>
 		</costInformation>
 		<passengerCarEquivalents pce="1.0"/>
-		<maximumVelocity meterPerSecond="38.89"/>
 		<networkMode networkMode="car"/>
 		<flowEfficiencyFactor factor="1.0"/>
 	</vehicleType>
-	
+
 	<vehicleType id="vwCaddy">
 
 		<description>VW Caddy 2.0 Maxi TDI</description>
-		<capacity seats="4" standingRoomInPersons="0" other="0">
-
-		</capacity>
+		<capacity seats="4" standingRoomInPersons="0" other="0"/>
 		<length meter="7.5"/>
 		<width meter="1.0"/>
+		<maximumVelocity meterPerSecond="38.89"/>
 		<engineInformation>
 			<attributes>
 				<attribute name="HbefaVehicleCategory" class="java.lang.String">PASSENGER_CAR</attribute>
@@ -53,7 +50,6 @@
 			</attributes>
 		</costInformation>
 		<passengerCarEquivalents pce="1.0"/>
-		<maximumVelocity meterPerSecond="38.89"/>
 		<networkMode networkMode="car"/>
 		<flowEfficiencyFactor factor="1.0"/>
 	</vehicleType>
@@ -61,11 +57,10 @@
 	<vehicleType id="mercedes313">
 
 		<description>Mercedes 313 CDI</description>
-		<capacity seats="1" standingRoomInPersons="0" other="0">
-
-		</capacity>
+		<capacity seats="1" standingRoomInPersons="0" other="0"/>
 		<length meter="7.5"/>
 		<width meter="1.0"/>
+		<maximumVelocity meterPerSecond="38.89"/>
 		<engineInformation>
 			<attributes>
 				<attribute name="HbefaVehicleCategory" class="java.lang.String">LIGHT_COMMERCIAL_VEHICLE</attribute>
@@ -81,7 +76,6 @@
 			</attributes>
 		</costInformation>
 		<passengerCarEquivalents pce="1.0"/>
-		<maximumVelocity meterPerSecond="38.89"/>
 		<networkMode networkMode="car"/>
 		<flowEfficiencyFactor factor="1.0"/>
 	</vehicleType>
@@ -89,11 +83,10 @@
 	<vehicleType id="light8t">
 
 		<description>Light Vehicle 7.5t</description>
-		<capacity seats="1" standingRoomInPersons="0" other="10.0">
-
-		</capacity>
+		<capacity seats="1" standingRoomInPersons="0" other="10.0"/>
 		<length meter="7.5"/>
 		<width meter="1.0"/>
+		<maximumVelocity meterPerSecond="22.22"/>
 		<engineInformation>
 			<attributes>
 				<attribute name="HbefaVehicleCategory" class="java.lang.String">LIGHT_COMMERCIAL_VEHICLE</attribute>
@@ -109,19 +102,17 @@
 			</attributes>
 		</costInformation>
 		<passengerCarEquivalents pce="2.0"/>
-		<maximumVelocity meterPerSecond="22.22"/>
-		<networkMode networkMode="freight"/>
+		<networkMode networkMode="truck"/>
 		<flowEfficiencyFactor factor="1.0"/>
 	</vehicleType>
 
 	<vehicleType id="medium18t">
 
 		<description>Medium Vehicle 18t</description>
-		<capacity seats="1" standingRoomInPersons="0" other="16.0">
-
-		</capacity>
+		<capacity seats="1" standingRoomInPersons="0" other="16.0"/>
 		<length meter="7.5"/>
 		<width meter="1.0"/>
+		<maximumVelocity meterPerSecond="22.22"/>
 		<engineInformation>
 			<attributes>
 				<attribute name="HbefaVehicleCategory" class="java.lang.String">HEAVY_GOODS_VEHICLE</attribute>
@@ -137,18 +128,16 @@
 			</attributes>
 		</costInformation>
 		<passengerCarEquivalents pce="3.0"/>
-		<maximumVelocity meterPerSecond="22.22"/>
-		<networkMode networkMode="freight"/>
+		<networkMode networkMode="truck"/>
 		<flowEfficiencyFactor factor="1.0"/>
 	</vehicleType>
 	<vehicleType id="heavy40t">
 
 		<description>Heavy Vehicle 40t</description>
-		<capacity seats="1" standingRoomInPersons="0" other="33.0">
-
-		</capacity>
+		<capacity seats="1" standingRoomInPersons="0" other="33.0"/>
 		<length meter="7.5"/>
 		<width meter="1.0"/>
+		<maximumVelocity meterPerSecond="22.22"/>
 		<engineInformation>
 			<attributes>
 				<attribute name="HbefaVehicleCategory" class="java.lang.String">HEAVY_GOODS_VEHICLE</attribute>
@@ -164,8 +153,7 @@
 			</attributes>
 		</costInformation>
 		<passengerCarEquivalents pce="4.0"/>
-		<maximumVelocity meterPerSecond="22.22"/>
-		<networkMode networkMode="car"/>
+		<networkMode networkMode="truck"/>
 		<flowEfficiencyFactor factor="1.0"/>
 	</vehicleType>
 </vehicleDefinitions>

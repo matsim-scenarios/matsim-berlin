@@ -6,16 +6,16 @@
 		<artifactId>matsim-all</artifactId>
 
 		<!-- PR-labelled release -->
-		<version>16.0-PR2738</version>
+<!--		<version>16.0-PR3129</version>-->
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
-<!--		<version>16.0-SNAPSHOT</version>-->
+		<version>16.0-PR3172</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.matsim-scenarios</groupId>
 	<artifactId>matsim-berlin</artifactId>
-	<version>6.0</version>
+	<version>6.1</version>
 
 	<name>MATSim Open Berlin scenario</name>
 	<description>MATSim Open Berlin scenario</description>
@@ -149,6 +149,11 @@
 			<artifactId>roadpricing</artifactId>
 			<version>${matsim.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>small-scale-traffic-generation</artifactId>
+			<version>${matsim.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
@@ -232,7 +237,7 @@
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
-			<version>5.2.3</version>
+			<version>5.2.5</version>
 		</dependency>
 
 		<dependency>
@@ -245,17 +250,38 @@
 			<artifactId>osm4j-geometry</artifactId>
 			<version>1.3.0</version>
 		</dependency>
+		<dependency>
+			<groupId>me.tongfei</groupId>
+			<artifactId>progressbar</artifactId>
+			<version>0.10.0</version>
+		</dependency>
 
 		<!-- for weighted random draw: https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-math3</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-statistics-distribution</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-rng-simple</artifactId>
+			<version>1.5</version>
+		</dependency>
+
 
 		<!-- Include the JUnit testing library.  Not transitive. -->
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
 			<scope>test</scope>
 		</dependency>
 

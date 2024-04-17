@@ -10,7 +10,7 @@ import org.matsim.application.options.InputOptions;
 import org.matsim.application.options.OutputOptions;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.events.EventsUtils;
-import org.matsim.core.router.FastDijkstraFactory;
+import org.matsim.core.router.DijkstraFactory;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
 import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.router.util.TravelTime;
@@ -73,8 +73,8 @@ public class TravelTimeComparison implements MATSimAppCommand {
 
 		OnlyTimeDependentTravelDisutility util = new OnlyTimeDependentTravelDisutility(tt);
 
-		LeastCostPathCalculator congestedRouter = new FastDijkstraFactory(false).createPathCalculator(network, util, tt);
-		LeastCostPathCalculator freeflowRouter = new FastDijkstraFactory(false).createPathCalculator(network, new OnlyTimeDependentTravelDisutility(fs), fs);
+		LeastCostPathCalculator congestedRouter = new DijkstraFactory(false).createPathCalculator(network, util, tt);
+		LeastCostPathCalculator freeflowRouter = new DijkstraFactory(false).createPathCalculator(network, new OnlyTimeDependentTravelDisutility(fs), fs);
 
 		data.addColumns(
 			DoubleColumn.create("simulated", data.rowCount()),

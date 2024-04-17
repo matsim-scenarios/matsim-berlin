@@ -66,10 +66,10 @@ public class RunDirectWalkAnalysis {
 
         Config config = ConfigUtils.loadConfig(configFile);
 
-        if (!runId.equals(config.controler().getRunId()))
+        if (!runId.equals(config.controller().getRunId()))
             throw new RuntimeException("Given run ID " + runId + " doesn't match the run ID given in the config file. Aborting...");
 
-        config.controler().setOutputDirectory(runDirectory);
+        config.controller().setOutputDirectory(runDirectory);
         config.plans().setInputFile(populationFile);
         config.network().setInputFile(networkFile);
         config.vehicles().setVehiclesFile(null);

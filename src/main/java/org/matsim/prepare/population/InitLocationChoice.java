@@ -34,7 +34,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import static org.matsim.prepare.ExtractFacilityShp.CreateMATSimFacilities.IGNORED_LINK_TYPES;
+import static org.matsim.prepare.CreateMATSimFacilities.IGNORED_LINK_TYPES;
 
 @CommandLine.Command(
 	name = "init-location-choice",
@@ -46,7 +46,12 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 	/**
 	 * Detour factor for car routes, which was determined based on sampled routes.
 	 */
-	private static final double DETOUR_FACTOR = 1.56;
+	private static final double DETOUR_FACTOR = 1.46;
+
+	/**
+	 * Factor for short trips < 2000m.
+	 */
+	private static final double DETOUR_FACTOR_SHORT = 1.3;
 
 	private static final Logger log = LogManager.getLogger(InitLocationChoice.class);
 
@@ -102,6 +107,15 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		var y = Math.sin(angle) * dist;
 
 		return new Coord(RunOpenBerlinCalibration.roundNumber(origin.getX() + x), RunOpenBerlinCalibration.roundNumber(origin.getY() + y));
+	}
+
+	/**
+	 * Approximate beeline dist from known traveled distance. Distance will be reduced by a fixed detour factor.
+	 * Dist in meter.
+	 */
+	public static double beelineDist(double travelDist) {
+		double detourFactor = travelDist <= 2000 ? DETOUR_FACTOR_SHORT : DETOUR_FACTOR;
+		return travelDist * 1000 / detourFactor;
 	}
 
 	@Override
@@ -198,10 +212,10 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 					ActivityFacility location = null;
 
 					// target leg distance in km
-					Object origDist = act.getAttributes().getAttribute("orig_dist");
+					double origDist = (double) act.getAttributes().getAttribute("orig_dist");
 
 					// Distance will be reduced
-					double dist = (double) origDist * 1000 / DETOUR_FACTOR;
+					double dist = beelineDist(origDist);
 
 					if (fixedLocations.containsKey(type)) {
 						location = fixedLocations.get(type);

@@ -17,10 +17,10 @@ import org.matsim.application.options.CsvOptions;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.routes.NetworkRoute;
-import org.matsim.counts.Count;
 import org.matsim.counts.Counts;
 import org.matsim.counts.MatsimCountsReader;
-import org.matsim.counts.Volume;
+import org.matsim.counts.Measurable;
+import org.matsim.counts.MeasurementLocation;
 import org.matsim.prepare.RunOpenBerlinCalibration;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
@@ -48,6 +48,9 @@ public class RunCountOptimization implements MATSimAppCommand {
 
 	@CommandLine.Option(names = "--counts", description = "Path to counts", required = true)
 	private Path countsPath;
+
+	@CommandLine.Option(names = "--network-mode", description = "Path to vehicle types", defaultValue = TransportMode.car)
+	private String networkMode;
 
 	@CommandLine.Option(names = "--all-car", description = "Plans have been created with the all car option and counts should be scaled. ", defaultValue = "false")
 	private boolean allCar;
@@ -79,23 +82,27 @@ public class RunCountOptimization implements MATSimAppCommand {
 
 		new MatsimCountsReader(linkCounts).readFile(countsPath.toString());
 
-		int[] counts = new int[linkCounts.getCounts().size() * H];
+		Map<Id<Link>, MeasurementLocation<Link>> countStations = linkCounts.getMeasureLocations();
+
+		int[] counts = new int[countStations.size() * H];
 
 		linkMapping = new Object2IntLinkedOpenHashMap<>();
 
 		int k = 0;
-		for (Count<Link> value : linkCounts.getCounts().values()) {
-			Map<Integer, Volume> volumes = value.getVolumes();
+		for (MeasurementLocation<Link> station : countStations.values()) {
+			// hard coded to car calibration
+			Measurable volumes = station.getVolumesForMode(networkMode);
 			for (int i = 0; i < H; i++) {
-				if (volumes.containsKey(i)) {
+				OptionalDouble v = volumes.getAtHour(i);
+				if (v.isPresent()) {
 					int idx = k * H + i;
-					counts[idx] = (int) volumes.get(i).getValue();
+					counts[idx] = (int) v.getAsDouble();
 					if (allCar)
 						counts[idx] = (int) (counts[idx] * RunOpenBerlinCalibration.CAR_FACTOR);
 				}
 			}
 
-			linkMapping.put(value.getId(), k++);
+			linkMapping.put(station.getRefId(), k++);
 		}
 
 		Network network = NetworkUtils.readNetwork(networkPath.toString());
@@ -140,7 +147,7 @@ public class RunCountOptimization implements MATSimAppCommand {
 		Population population = PopulationUtils.readPopulation(input.toString());
 		List<PlanPerson> persons = new ArrayList<>();
 
-		Set<Id<Link>> links = linkCounts.getCounts().keySet();
+		Set<Id<Link>> links = linkCounts.getMeasureLocations().keySet();
 
 		SplittableRandom rnd = new SplittableRandom(0);
 
@@ -156,14 +163,13 @@ public class RunCountOptimization implements MATSimAppCommand {
 			boolean keep = false;
 
 			int offset = 0;
-			// Commercial traffic, which can be chosen to not be included at all
-			if (person.getId().toString().startsWith("commercialPersonTraffic")) {
 
-				offset = 1;
+			// commercial traffic is scaled here
+			if (!person.getId().toString().startsWith("person")) {
 				// if other trips have been scaled, these unscaled trips are scaled as well
 				if (allCar)
 					// scale with mean of CAR_FACTOR
-					scale += (rnd.nextDouble() < 0.85 ? 5: 4);
+					scale *= RunOpenBerlinCalibration.CAR_FACTOR;
 			}
 
 			// Index for plan
@@ -176,13 +182,23 @@ public class RunCountOptimization implements MATSimAppCommand {
 				for (PlanElement el : plan.getPlanElements()) {
 					if (el instanceof Leg leg) {
 
-						if (!leg.getMode().equals(TransportMode.car))
+						Object networkMode = leg.getAttributes().getAttribute("networkMode");
+						if (!Objects.equals(networkMode, this.networkMode))
 							continue;
 
-						// TODO: scale travel time with factor from the leg
-
 						if (leg.getRoute() instanceof NetworkRoute route) {
+							double travelTime = leg.getTravelTime().orElseThrow(() -> new IllegalStateException("No travel time for leg"));
+							double freeTravelTime = route.getLinkIds().stream()
+								.map(id -> network.getLinks().get(id))
+								// Use ceil because traversal over links is always whole seconds during simulation
+								.mapToDouble(l -> Math.ceil(l.getLength() / l.getFreespeed()))
+								.sum();
+
 							boolean relevant = route.getLinkIds().stream().anyMatch(links::contains);
+
+							// The actual travel time per link is not known
+							// The overall deviation is applied to all links equally
+							double factor = travelTime / freeTravelTime;
 
 							double time = leg.getDepartureTime().seconds();
 
@@ -193,7 +209,7 @@ public class RunCountOptimization implements MATSimAppCommand {
 									Link link = network.getLinks().get(linkId);
 
 									// Assume free speed travel time
-									time += link.getLength() / link.getFreespeed() + 1;
+									time += Math.ceil(link.getLength() / link.getFreespeed()) * factor;
 
 									if (linkMapping.containsKey(linkId)) {
 										int idx = linkMapping.getInt(linkId);

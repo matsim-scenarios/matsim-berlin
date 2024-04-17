@@ -8,9 +8,9 @@ import org.matsim.analysis.ScoreStatsControlerListener.ScoreItem;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
-import org.matsim.core.config.groups.ControlerConfigGroup;
-import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
-import org.matsim.core.config.groups.StrategyConfigGroup;
+import org.matsim.core.config.groups.ControllerConfigGroup;
+import org.matsim.core.config.groups.ScoringConfigGroup;
+import org.matsim.core.config.groups.ReplanningConfigGroup;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.events.IterationStartsEvent;
 import org.matsim.core.controler.events.ShutdownEvent;
@@ -23,11 +23,11 @@ import org.matsim.core.replanning.PlanStrategyImpl;
 import org.matsim.core.replanning.ReplanningUtils;
 import org.matsim.core.replanning.StrategyManager;
 import org.matsim.core.utils.io.IOUtils;
-import org.matsim.core.utils.io.UncheckedIOException;
 
 import javax.inject.Inject;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.*;
 
 /**
@@ -46,10 +46,10 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
 
     private static final Logger log = LogManager.getLogger(StrategyManager.class);
 
-    private final ControlerConfigGroup controlerConfigGroup;
+    private final ControllerConfigGroup controlerConfigGroup;
     private final ScoreStats scoreStats;
-    private final PlanCalcScoreConfigGroup scoreConfig;
-    private final StrategyConfigGroup strategyConfigGroup;
+    private final ScoringConfigGroup scoreConfig;
+    private final ReplanningConfigGroup strategyConfigGroup;
     private final ModeStatsControlerListener modeStatsControlerListener;
     private final ModeChoiceCoverageControlerListener modeChoiceCoverageControlerListener;
     private final Scenario scenario;
@@ -77,10 +77,10 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
     private List<String> activeMetricsModeCC = new ArrayList<>();
 
     @Inject
-    DynamicShutdownControlerListenerImpl(ControlerConfigGroup controlerConfigGroup, ScoreStats scoreStats,
+    DynamicShutdownControlerListenerImpl(ControllerConfigGroup controlerConfigGroup, ScoreStats scoreStats,
                                          ModeStatsControlerListener modeStatsControlerListener, StrategyManager strategyManager,
-                                         StrategyConfigGroup strategyConfigGroup, Scenario scenario, OutputDirectoryHierarchy controlerIO,
-                                        PlanCalcScoreConfigGroup scoreConfig,
+                                         ReplanningConfigGroup strategyConfigGroup, Scenario scenario, OutputDirectoryHierarchy controlerIO,
+                                        ScoringConfigGroup scoreConfig,
                                          ModeChoiceCoverageControlerListener modeChoiceCoverageControlerListener) {
 
         this.scenario = scenario;
@@ -186,7 +186,9 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
         boolean modeConverged = false;
         if (!activeMetricsMode.isEmpty()) {
             String metricType = "mode";
-            Map<String, Map<Integer, Double>> modeHistories = modeStatsControlerListener.getModeHistories();
+			if (true)
+				throw new RuntimeException(" modeStatsControlerListener.getModeHistories() not implemented anymore.  Check if this is still needed.");
+            Map<String, Map<Integer, Double>> modeHistories =null;
             bestFitLineGeneric(prevIteration, modeHistories, slopesMode, activeMetricsMode);
             produceDynShutdownGraphs(modeHistories, slopesMode, metricType, activeMetricsMode, cfg.getModeThreshold(), iteration);
 
@@ -411,7 +413,7 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
 
 
         Set<String> subpopulations = new HashSet<>();
-        for (StrategyConfigGroup.StrategySettings setting : this.scenario.getConfig().strategy().getStrategySettings()) {
+        for (ReplanningConfigGroup.StrategySettings setting : this.scenario.getConfig().replanning().getStrategySettings()) {
             subpopulations.add(setting.getSubpopulation());
             if (subpopulations.size() == 0) subpopulations.add(null);
         }
@@ -436,7 +438,7 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
         }
     }
 
-    private void generateMetricLists(PlanCalcScoreConfigGroup scoreConfig) {
+    private void generateMetricLists(ScoringConfigGroup scoreConfig) {
         switch (cfg.getScorePolicyChosen()) {
             case ON_FULL:
                 activeMetricsScore = new ArrayList<>(Arrays.asList(

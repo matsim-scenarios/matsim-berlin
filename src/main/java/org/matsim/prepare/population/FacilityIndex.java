@@ -9,7 +9,7 @@ import org.matsim.facilities.ActivityFacilities;
 import org.matsim.facilities.ActivityFacility;
 import org.matsim.facilities.FacilitiesUtils;
 import org.matsim.facilities.MatsimFacilitiesReader;
-import org.matsim.run.RunOpenBerlinScenario;
+import org.matsim.run.OpenBerlinScenario;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +33,7 @@ final class FacilityIndex {
 
 	FacilityIndex(String facilityPath) {
 
-		new MatsimFacilitiesReader(RunOpenBerlinScenario.CRS, RunOpenBerlinScenario.CRS, all)
+		new MatsimFacilitiesReader(OpenBerlinScenario.CRS, OpenBerlinScenario.CRS, all)
 			.readFile(facilityPath);
 
 		Set<String> activities = all.getFacilities().values().stream()

@@ -127,8 +127,8 @@ public class RunOfflineAirPollutionAnalysisByEngineInformationWithDrt {
 		config.transit().setVehiclesFile(runDirectory + runId + ".output_transitVehicles.xml.gz");
 		config.global().setCoordinateSystem("EPSG:31468");
 		config.plans().setInputFile(null);
-		config.parallelEventHandling().setNumberOfThreads(null);
-		config.parallelEventHandling().setEstimatedNumberOfEvents(null);
+		config.eventsManager().setNumberOfThreads(null);
+		config.eventsManager().setEstimatedNumberOfEvents(null);
 		config.global().setNumberOfThreads(1);
 
 		EmissionsConfigGroup eConfig = ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);

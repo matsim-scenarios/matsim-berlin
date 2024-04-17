@@ -1,7 +1,8 @@
 package org.matsim.run;
 
-import org.junit.Rule;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.matsim.application.MATSimApplication;
 import org.matsim.testcases.MatsimTestUtils;
 
@@ -9,13 +10,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class RunOpenBerlinScenarioTest {
 
-	@Rule
+	@RegisterExtension
 	public MatsimTestUtils utils = new MatsimTestUtils();
 
 	@Test
 	public void pct1() {
 
-		int code = MATSimApplication.execute(RunOpenBerlinScenario.class,
+		int code = MATSimApplication.execute(OpenBerlinScenario.class,
 			"--1pct",
 			"--output", utils.getOutputDirectory(),
 			"--iterations", "2",
