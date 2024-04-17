@@ -54,13 +54,13 @@ public final class PiecewiseLinearlLegScoring implements org.matsim.core.scoring
 	private final ScoringParameters params;
 	private final Set<String> ptModes;
 	private final double marginalUtilityOfMoney;
+	private final Set<String> modesAlreadyConsideredForDailyConstants;
 	private double score;
 	private Network network;
 	private boolean nextEnterVehicleIsFirstOfTrip = true;
 	private boolean nextStartPtLegIsFirstOfTrip = true;
 	private boolean currentLegIsPtLeg = false;
 	private double lastActivityEndTime = Double.NaN;
-	private final Set<String> modesAlreadyConsideredForDailyConstants;
 
 	public PiecewiseLinearlLegScoring(final ScoringParameters params, Network network, Set<String> ptModes) {
 		this.params = params;
@@ -83,7 +83,7 @@ public final class PiecewiseLinearlLegScoring implements org.matsim.core.scoring
 	/**
 	 * Calculate the score for a leg.
 	 */
-    private double calcLegScore(final double departureTime, final double arrivalTime, final Leg leg) {
+	private double calcLegScore(final double departureTime, final double arrivalTime, final Leg leg) {
 		double tmpScore = 0.0;
 		// travel time in seconds
 		double travelTime = arrivalTime - departureTime;
@@ -138,14 +138,14 @@ public final class PiecewiseLinearlLegScoring implements org.matsim.core.scoring
 				Route route = leg.getRoute();
 				// distance in meters
 				double dist = route.getDistance();
-				if ( Double.isNaN(dist) ) {
-					if ( ccc<10 ) {
-						ccc++ ;
+				if (Double.isNaN(dist)) {
+					if (ccc < 10) {
+						ccc++;
 						LogManager.getLogger(this.getClass()).warn("distance is NaN. Will make score of this plan NaN. Possible reason: Simulation does not report " +
 							"a distance for this trip. Possible reason for that: mode is teleported and router does not " +
-							"write distance into plan.  Needs to be fixed or these plans will die out.") ;
-						if ( ccc==10 ) {
-							LogManager.getLogger(this.getClass()).warn(Gbl.FUTURE_SUPPRESSED) ;
+							"write distance into plan.  Needs to be fixed or these plans will die out.");
+						if (ccc == 10) {
+							LogManager.getLogger(this.getClass()).warn(Gbl.FUTURE_SUPPRESSED);
 						}
 					}
 				}
