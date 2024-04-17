@@ -20,10 +20,10 @@
 		<param name="numberOfThreads" value="16"/>
 	</module>
 	<module name="network">
-		<param name="inputNetworkFile" value="./berlin-v6.1-network-with-pt.xml.gz"/>
+		<param name="inputNetworkFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.1/input/berlin-v6.1-network-with-pt.xml.gz"/>
 	</module>
 	<module name="plans">
-		<param name="inputPlansFile" value="./berlin-v6.1-25pct.plans-initial.xml.gz"/>
+		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.1/input/berlin-v6.1-10pct.plans.xml.gz"/>
 		<param name="removingUnnecessaryPlanAttributes" value="true"/>
 	</module>
 	<module name="vehicles">
@@ -31,13 +31,13 @@
 			   value="./berlin-v6.1-vehicleTypes.xml"/>
 	</module>
 	<module name="transit">
-		<param name="transitScheduleFile" value="./berlin-v6.1-transitSchedule.xml.gz"/>
+		<param name="transitScheduleFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.1/input/berlin-v6.1-transitSchedule.xml.gz"/>
 		<param name="useTransit" value="true"/>
-		<param name="vehiclesFile" value="./berlin-v6.1-transitVehicles.xml.gz"/>
+		<param name="vehiclesFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.1/input/berlin-v6.1-transitVehicles.xml.gz"/>
 	</module>
 	<module name="facilities">
 		<param name="facilitiesSource" value="fromFile"/>
-		<param name="inputFacilitiesFile" value="./berlin-v6.1-facilities.xml.gz"/>
+		<param name="inputFacilitiesFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.1/input/berlin-v6.1-facilities.xml.gz"/>
 	</module>
 	<module name="routing">
 		<param name="networkModes" value="car,truck,freight,ride"/>
@@ -186,7 +186,7 @@
 	</module>
 
 	<module name="counts">
-		<param name="inputCountsFile" value="./berlin-v6.1-counts-vmz.xml.gz"/>
+		<param name="inputCountsFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.1/input/berlin-v6.1-counts-vmz.xml.gz"/>
 		<param name="countsScaleFactor" value="0.1"/>
 	</module>
 

@@ -281,16 +281,15 @@ $p/berlin-$V-25pct.plans-initial.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berli
 		 --sample-size 0.25\
 		 --samples 0.1 0.03 0.01 0.001\
 
-$p/berlin-$V-25pct.plans.xml.gz:
+$p/berlin-$V-10pct.plans.xml.gz:
 	$(sc) prepare clean-population\
-	 --plans mode-choice-10pct/runs/004/004.output_plans.xml.gz\
-	 --remove-unselected-plans\
-	 --output mode-choice-final/runs/004/berlin-$V-10pct.plans.xml.gz
-
-	$(sc) prepare clean-population\
-	 --plans mode-choice-final-25pct/runs/004/004.output_plans.xml.gz\
+	 --plans mode-choice-10pct-default-v2/runs/008/008.output_plans.xml.gz\
 	 --remove-unselected-plans\
 	 --output $@
+
+	$(sc) prepare downsample-population $@\
+		--sample-size 0.1\
+		--samples 0.03 0.01 0.001\
 
 prepare-calibration: $p/berlin-cadyts-input-$V-25pct.plans.xml.gz $p/berlin-$V-network-with-pt.xml.gz $p/berlin-$V-counts-vmz.xml.gz
 	echo "Done"
@@ -298,5 +297,5 @@ prepare-calibration: $p/berlin-cadyts-input-$V-25pct.plans.xml.gz $p/berlin-$V-n
 prepare-initial: $p/berlin-$V-25pct.plans-initial.xml.gz $p/berlin-$V-network-with-pt.xml.gz
 	echo "Done"
 
-prepare: $p/berlin-$V-25pct.plans.xml.gz
+prepare: $p/berlin-$V-10pct.plans.xml.gz
 	echo "Done"
