@@ -3,13 +3,13 @@
 All notable changes to this project will be documented in this file. 
 
 
-### 6.1 (2024-03-26)
+### 6.1 (2024-04-17)
 
 - Trips from survey data are filtered slightly different
-  - Previously trips that did not have the flag `E_WEG_GUELTIG`, where filtered out.
+  - Previously, trips that did not have the flag `E_WEG_GUELTIG`, have been ignored.
   - However, this flag is not considered in SrV reports, or the Berlin website that reports the modal share.
-  - To be more in line with these reports, these trips are now not filtered as well.
-  - This leads to slightly different mode shares from the previous version.
+  - To be more consistent with these reports, these trips are now considered as well.
+  - This leads to slightly different mode shares compared to the previous version.
 
 - Commercial traffic was updated to include recent changes
   - Temporal distribution was updated according to survey data
