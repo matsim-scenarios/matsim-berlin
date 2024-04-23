@@ -24,12 +24,15 @@ $(JAR):
 input/brandenburg.osm.pbf:
 	curl https://download.geofabrik.de/europe/germany/brandenburg-230101.osm.pbf -o $@
 
+input/facilities.osm.pbf:
+	# Same OSM version as reference visitations
+	curl https://download.geofabrik.de/europe/germany/brandenburg-210101.osm.pbf -o $@
 
 $(germany)/RegioStaR-Referenzdateien.xlsx:
 	curl https://mcloud.de/downloads/mcloud/536149D1-2902-4975-9F7D-253191C0AD07/RegioStaR-Referenzdateien.xlsx -o $@
 
 
-input/facilities.shp: input/brandenburg.osm.pbf
+input/facilities.gpkg: input/brandenburg.osm.pbf
 	$(sc) prepare facility-shp\
 	 --activity-mapping input/activity_mapping.json\
 	 --input $<\
@@ -117,11 +120,11 @@ $p/berlin-$V-counts-vmz.xml.gz: $p/berlin-$V-network.xml.gz
 	 --target-crs $(CRS)\
 	 --counts-mapping input/counts_mapping.csv
 
-$p/berlin-$V-facilities.xml.gz: $p/berlin-$V-network.xml.gz input/facilities.shp
+$p/berlin-$V-facilities.xml.gz: $p/berlin-$V-network.xml.gz input/facilities.gpkg
 	$(sc) prepare facilities --network $< --shp $(word 2,$^)\
 	 --output $@
 
-$p/berlin-only-$V-25pct.plans.xml.gz: input/PLR_2013_2020.csv $(berlin)/input/shp/Planungsraum_EPSG_25833.shp input/facilities.shp
+$p/berlin-only-$V-25pct.plans.xml.gz: input/PLR_2013_2020.csv $(berlin)/input/shp/Planungsraum_EPSG_25833.shp input/facilities.gpkg
 	$(sc) prepare berlin-population\
 		--input $<\
 		--shp $(word 2,$^) --shp-crs EPSG:25833\
@@ -129,7 +132,7 @@ $p/berlin-only-$V-25pct.plans.xml.gz: input/PLR_2013_2020.csv $(berlin)/input/sh
 		--output $@
 
 
-$p/brandenburg-only-$V-25pct.plans.xml.gz: input/facilities.shp
+$p/brandenburg-only-$V-25pct.plans.xml.gz: input/facilities.gpkg
 	$(sc) prepare brandenburg-population\
 	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp\
 	 --population $(germany)/regionalstatistik/population.csv\

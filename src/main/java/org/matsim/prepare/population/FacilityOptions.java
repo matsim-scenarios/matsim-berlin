@@ -7,8 +7,8 @@ import org.matsim.application.options.ShpOptions;
 import picocli.CommandLine;
 
 import javax.annotation.Nullable;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -42,9 +42,10 @@ public class FacilityOptions {
 			return index;
 
 
-		ShpOptions shp = new ShpOptions(facilityPath, null, StandardCharsets.UTF_8);
+		ShpOptions shp = ShpOptions.ofGeoPkg(facilityPath.toString(), null);
 
-		index = shp.createIndex(queryCRS, attr, ft -> Boolean.TRUE.equals(ft.getAttribute(attr)));
+		index = shp.createIndex(queryCRS, attr, ft -> Boolean.TRUE.equals(ft.getAttribute(attr))
+			|| Objects.equals(ft.getAttribute(attr), 1));
 
 		log.info("Read {} features for {} facilities", index.size(), attr);
 

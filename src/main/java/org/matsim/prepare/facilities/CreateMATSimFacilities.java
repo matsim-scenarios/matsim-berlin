@@ -1,5 +1,10 @@
-package org.matsim.prepare;
+package org.matsim.prepare.facilities;
 
+import com.google.common.math.Quantiles;
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.locationtech.jts.geom.Envelope;
@@ -17,6 +22,7 @@ import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.facilities.*;
+import org.matsim.prepare.population.Attributes;
 import org.opengis.feature.simple.SimpleFeature;
 import picocli.CommandLine;
 
@@ -88,6 +94,19 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 			.filter(Objects::nonNull)
 			.toList();
 
+		// Compute statistics on the attraction values
+		DescriptiveStatistics work = new DescriptiveStatistics();
+		DescriptiveStatistics other = new DescriptiveStatistics();
+
+		for (Holder d : data) {
+			work.addValue(d.attractionWork);
+			other.addValue(d.attractionOther);
+		}
+
+		// Upper bounds for attraction
+		double workUpper = work.getPercentile(95);
+		double otherUpper = other.getPercentile(95);
+
 		ActivityFacilities facilities = FacilitiesUtils.createActivityFacilities();
 
 		SplittableRandom rnd = new SplittableRandom();
@@ -110,6 +129,14 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 			for (String act : h.activities) {
 				facility.addActivityOption(f.createActivityOption(act));
 			}
+
+			// Filter outliers from the attraction
+			facility.getAttributes().putAttribute(Attributes.ATTRACTION_WORK,
+				Math.min(Math.max(h.attractionWork, 1), workUpper)
+			);
+			facility.getAttributes().putAttribute(Attributes.ATTRACTION_OTHER,
+				Math.min(Math.max(h.attractionOther, 1), otherUpper)
+			);
 
 			facilities.addActivityFacility(facility);
 		}
@@ -143,13 +170,26 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		if (map.isEmpty())
 			return null;
 
+		Object2DoubleMap<String> features = new Object2DoubleOpenHashMap<>();
+		for (int i = 0; i < ft.getAttributeCount(); i++) {
+			if (ft.getAttribute(i) instanceof Number number) {
+				features.put(ft.getFeatureType().getDescriptor(i).getLocalName(), number.doubleValue());
+			}
+		}
+
+		double area = (double) ft.getAttribute("area");
+
 		List<Map.Entry<Id<Link>, Long>> counts = map.entrySet().stream().sorted(Map.Entry.comparingByValue())
 				.toList();
 
 		// The "main" link of the facility
 		Id<Link> link = counts.get(counts.size() - 1).getKey();
 
-		Holder holder = new Holder(link, activities, new ArrayList<>());
+		Holder holder = new Holder(link, activities, new ArrayList<>(),
+			area * FacilityAttractionModelWork.INSTANCE.predict(features, null),
+			area * FacilityAttractionModelOther.INSTANCE.predict(features, null)
+		);
+
 		// Search for the original drawn coordinate of the associated link
 		for (int i = 0; i < links.size(); i++) {
 			if (links.get(i).equals(link)) {
@@ -199,43 +239,52 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 	private Set<String> activities(SimpleFeature ft) {
 		Set<String> act = new HashSet<>();
 
-		if (Boolean.TRUE == ft.getAttribute("work")) {
+		if (hasAttribute(ft, "work")) {
 			act.add("work");
 			act.add("work_business");
 		}
-		if (Boolean.TRUE == ft.getAttribute("shop")) {
+		if (hasAttribute(ft, "shop")) {
 			act.add("shop_other");
 		}
-		if (Boolean.TRUE == ft.getAttribute("shop_daily")) {
+		if (hasAttribute(ft, "shop_daily")) {
 			act.add("shop_other");
 			act.add("shop_daily");
 		}
-		if (Boolean.TRUE == ft.getAttribute("leisure"))
+		if (hasAttribute(ft, "leisure"))
 			act.add("leisure");
-		if (Boolean.TRUE == ft.getAttribute("dining"))
+		if (hasAttribute(ft, "dining"))
 			act.add("dining");
-		if (Boolean.TRUE == ft.getAttribute("edu_higher"))
+		if (hasAttribute(ft, "edu_higher"))
 			act.add("edu_higher");
-		if (Boolean.TRUE == ft.getAttribute("edu_prim")) {
+		if (hasAttribute(ft, "edu_prim")) {
 			act.add("edu_primary");
 			act.add("edu_secondary");
 		}
-		if (Boolean.TRUE == ft.getAttribute("edu_kiga"))
+		if (hasAttribute(ft, "edu_kiga"))
 			act.add("edu_kiga");
-		if (Boolean.TRUE == ft.getAttribute("edu_other"))
+		if (hasAttribute(ft, "edu_other"))
 			act.add("edu_other");
-		if (Boolean.TRUE == ft.getAttribute("p_business") || Boolean.TRUE == ft.getAttribute("medical") || Boolean.TRUE == ft.getAttribute("religious")) {
+		if (hasAttribute(ft, "p_business") || hasAttribute(ft, "medical") || hasAttribute(ft, "religious")) {
 			act.add("personal_business");
-			act.add("work_business");
 		}
+		if (hasAttribute(ft, "p_business"))
+			act.add("work_business");
 
 		return act;
+	}
+
+	private static boolean hasAttribute(SimpleFeature ft, String name) {
+		return ft.getAttribute(name) != null &&
+			(Boolean.TRUE.equals(ft.getAttribute(name)) ||
+				(ft.getAttribute(name) instanceof Number number && number.intValue() > 0)
+			);
 	}
 
 	/**
 	 * Temporary data holder for facilities.
 	 */
-	private record Holder(Id<Link> linkId, Set<String> activities, List<Coord> coords) {
+	private record Holder(Id<Link> linkId, Set<String> activities, List<Coord> coords,
+						  double attractionWork, double attractionOther) {
 
 	}
 

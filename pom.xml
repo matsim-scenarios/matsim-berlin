@@ -6,10 +6,10 @@
 		<artifactId>matsim-all</artifactId>
 
 		<!-- PR-labelled release -->
-		<version>16.0-PR3193</version>
+		<version>2025.0-PR3228</version>
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
-<!--		<version>16.0-SNAPSHOT</version>-->
+<!--		<version>2025.0-SNAPSHOT</version>-->
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -424,7 +424,7 @@
 					<failsOnError>true</failsOnError>
 					<failOnViolation>true</failOnViolation>
 					<linkXRef>false</linkXRef>
-					<excludes>**/legacy/**,**/prepare/network/**,**/prepare/counts/CreateCountsFromVMZOld.java</excludes>
+					<excludes>**/legacy/**,**/prepare/network/**,**/prepare/facilities/**,**/prepare/counts/CreateCountsFromVMZOld.java</excludes>
 				</configuration>
 				<executions>
 					<execution>

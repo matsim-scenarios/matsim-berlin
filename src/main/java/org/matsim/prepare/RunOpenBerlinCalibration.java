@@ -50,6 +50,8 @@ import org.matsim.prepare.counts.CreateCountsFromGeoPortalBerlin;
 import org.matsim.prepare.counts.CreateCountsFromVMZ;
 import org.matsim.prepare.counts.CreateCountsFromVMZOld;
 import org.matsim.prepare.download.DownloadCommuterStatistic;
+import org.matsim.prepare.facilities.CreateMATSimFacilities;
+import org.matsim.prepare.facilities.ExtractFacilityGeoPkg;
 import org.matsim.prepare.opt.RunCountOptimization;
 import org.matsim.prepare.opt.SelectPlansFromIndex;
 import org.matsim.prepare.population.*;
@@ -75,7 +77,7 @@ import java.util.stream.Collectors;
 @CommandLine.Command(header = ":: Open Berlin Calibration ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true)
 @MATSimApplication.Prepare({
 	CreateLandUseShp.class, CreateBerlinPopulation.class, CreateBrandenburgPopulation.class, MergePopulations.class,
-	LookupRegioStaR.class, ExtractFacilityShp.class, DownSamplePopulation.class, DownloadCommuterStatistic.class,
+	LookupRegioStaR.class, ExtractFacilityGeoPkg.class, DownSamplePopulation.class, DownloadCommuterStatistic.class,
 	RunActitopp.class, CreateNetworkFromSumo.class, CreateTransitScheduleFromGtfs.class,
 	CleanNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class,
 	CreateCountsFromGeoPortalBerlin.class, CreateCountsFromVMZOld.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class,
