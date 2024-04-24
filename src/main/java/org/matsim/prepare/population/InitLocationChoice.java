@@ -114,10 +114,11 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 	/**
 	 * Approximate beeline dist from known traveled distance. Distance will be reduced by a fixed detour factor.
-	 * Dist in meter.
+	 * @param travelDist distance in km
+	 * @return beeline distance in meters
 	 */
 	public static double beelineDist(double travelDist) {
-		double detourFactor = travelDist <= 2000 ? DETOUR_FACTOR_SHORT : DETOUR_FACTOR;
+		double detourFactor = travelDist <= 2 ? DETOUR_FACTOR_SHORT : DETOUR_FACTOR;
 		return travelDist * 1000 / detourFactor;
 	}
 

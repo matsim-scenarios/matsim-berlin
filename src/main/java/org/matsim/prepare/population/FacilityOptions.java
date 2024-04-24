@@ -42,7 +42,7 @@ public class FacilityOptions {
 			return index;
 
 
-		ShpOptions shp = ShpOptions.ofGeoPkg(facilityPath.toString(), null);
+		ShpOptions shp = ShpOptions.ofLayer(facilityPath.toString(), null);
 
 		index = shp.createIndex(queryCRS, attr, ft -> Boolean.TRUE.equals(ft.getAttribute(attr))
 			|| Objects.equals(ft.getAttribute(attr), 1));
