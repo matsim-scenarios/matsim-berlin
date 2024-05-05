@@ -47,12 +47,12 @@ import static org.matsim.prepare.facilities.CreateMATSimFacilities.IGNORED_LINK_
 public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 	/**
-	 * Detour factor for car routes, which was determined based on sampled routes.
+	 * Detour factor for routes > 3000m. Factor is based on data, but adjusted to better match distance distribution.
 	 */
-	private static final double DETOUR_FACTOR = 1.46;
+	private static final double DETOUR_FACTOR = 1.25;
 
 	/**
-	 * Factor for short trips < 2000m.
+	 * Factor for short trips < 3000m. Factor was calculated based on data.
 	 */
 	private static final double DETOUR_FACTOR_SHORT = 1.3;
 
@@ -118,7 +118,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 	 * @return beeline distance in meters
 	 */
 	public static double beelineDist(double travelDist) {
-		double detourFactor = travelDist <= 2 ? DETOUR_FACTOR_SHORT : DETOUR_FACTOR;
+		double detourFactor = travelDist <= 3 ? DETOUR_FACTOR_SHORT : DETOUR_FACTOR;
 		return travelDist * 1000 / detourFactor;
 	}
 
