@@ -6,7 +6,7 @@
 		<artifactId>matsim-all</artifactId>
 
 		<!-- PR-labelled release -->
-		<version>2025.0-PR3228</version>
+		<version>2025.0-PR3160</version>
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
 <!--		<version>2025.0-SNAPSHOT</version>-->
@@ -27,7 +27,7 @@
 
 		<main.class>org.matsim.run.RunOpenBerlinScenario</main.class>
 
-		<maven.compiler.release>17</maven.compiler.release>
+		<maven.compiler.release>21</maven.compiler.release>
 	</properties>
 
 	<dependencies>
