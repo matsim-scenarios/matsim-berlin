@@ -91,7 +91,7 @@ input/sumo.net.xml: input/network.osm
 $p/berlin-$V-network.xml.gz: input/sumo.net.xml
 	$(sc) prepare network-from-sumo $< --target-crs $(CRS) --lane-restrictions REDUCE_CAR_LANES --output $@
 
-	$(sc) prepare clean-network $@ --output $@ --modes car,ride,truck
+	$(sc) prepare clean-network $@ --output $@ --modes car,ride,truck --remove-turn-restrictions
 
 	$(sc) prepare reproject-network\
 	 --input $@	--output $@\

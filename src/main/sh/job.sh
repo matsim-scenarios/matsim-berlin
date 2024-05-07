@@ -50,7 +50,7 @@ echo ""
 echo "command is $command"
 
 echo ""
-module add java/17
+module add java/21
 java -version
 
 $command
