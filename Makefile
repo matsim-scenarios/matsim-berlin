@@ -174,17 +174,12 @@ $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
 	 --cut-on-boundary\
 	 --output $@
 
-$p/berlin-small-scale-commercialTraffic-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
-	$(sc) prepare generate-small-scale-commercial-traffic\
-	  input/$V/berlin-$V.config.xml\
-	 --pathToInvestigationAreaData input/commercialTraffic/investigationAreaData.csv\
-	 --sample 0.25\
-	 --jspritIterations 10\
-	 --creationOption createNewCarrierFile\
+$p/commercialFacilities.xml.gz:
+	$(sc) prepare create-data-distribution-of-structure-data\
+	 --outputFacilityFile §@\
+	 --outputDataDistributionFile $p/dataDistributionPerZone.csv\
 	 --landuseConfiguration useOSMBuildingsAndLanduse\
-	 --network $(notdir $<)\
-	 --smallScaleCommercialTrafficType completeSmallScaleCommercialTraffic\
-	 --regionsShapeFileName $(berlin)/input/shp/region_4326.shp\
+ 	 --regionsShapeFileName $(berlin)/input/shp/region_4326.shp\
 	 --regionsShapeRegionColumn "GEN"\
 	 --zoneShapeFileName $(berlin)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp\
 	 --zoneShapeFileNameColumn "id"\
@@ -193,7 +188,23 @@ $p/berlin-small-scale-commercialTraffic-$V-25pct.plans.xml.gz: $p/berlin-$V-netw
 	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
 	 --shapeFileLanduseTypeColumn "fclass"\
 	 --shapeCRS "EPSG:4326"\
-	 --resistanceFactor "0.005"\
+	 --pathToInvestigationAreaData input/commercialTraffic/investigationAreaData.csv\
+
+	mv output/commercialPersonTraffic/$(notdir $@) $@
+
+$p/berlin-small-scale-commercialTraffic-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz $p/commercialFacilities.xml.gz
+	$(sc) prepare generate-small-scale-commercial-traffic\
+	  input/$V/berlin-$V.config.xml\
+	 --pathToDataDistributionToZones $p/dataDistributionPerZone.csv\
+	 --pathToCommercialFacilities $(word 2,$^)\
+	 --sample 0.25\
+	 --jspritIterations 10\
+	 --creationOption createNewCarrierFile\
+	 --network $(notdir $<)\
+	 --smallScaleCommercialTrafficType completeSmallScaleCommercialTraffic\
+	 --zoneShapeFileName $(berlin)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp\
+	 --zoneShapeFileNameColumn "id"\
+	 --shapeCRS "EPSG:4326"\
 	 --numberOfPlanVariantsPerAgent 5\
 	 --nameOutputPopulation $(notdir $@)\
 	 --pathOutput output/commercialPersonTraffic
