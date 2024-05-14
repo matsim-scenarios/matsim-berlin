@@ -83,7 +83,7 @@ input/sumo.net.xml: input/network.osm
 	 --output.original-names --output.street-names\
 	 --osm.lane-access true	--osm.bike-access true\
 	 --osm.all-attributes\
-	 --osm.extra-attributes bus:lanes,bus:lanes:forward,bus:lanes:backward,cycleway,cycleway:right,cycleway:left\
+	 --osm.extra-attributes tunnel,highway,traffic_sign,bus:lanes,bus:lanes:forward,bus:lanes:backward,cycleway,cycleway:right,cycleway:left\
 	 --proj "+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"\
 	 --osm-files $< -o=$@
 
@@ -91,7 +91,7 @@ input/sumo.net.xml: input/network.osm
 $p/berlin-$V-network.xml.gz: input/sumo.net.xml
 	$(sc) prepare network-from-sumo $< --target-crs $(CRS) --lane-restrictions REDUCE_CAR_LANES --output $@
 
-	$(sc) prepare clean-network $@ --output $@ --modes car,ride,truck --remove-turn-restrictions
+	$(sc) prepare clean-network $@  --output $@ --modes car,ride,truck --remove-turn-restrictions
 
 	$(sc) prepare reproject-network\
 	 --input $@	--output $@\
@@ -102,6 +102,11 @@ $p/berlin-$V-network.xml.gz: input/sumo.net.xml
  	  --network $@ --output $@\
 	  --input-features $p/berlin-$V-network-ft.csv.gz\
 	  --model org.matsim.prepare.network.BerlinNetworkParams\
+
+	$(sc) prepare apply-network-params capacity\
+ 	  --network $@ --output $@\
+	  --input-features $p/berlin-$V-network-ft.csv.gz\
+	  --model org.matsim.application.prepare.network.params.hbs.HBSNetworkParams
 
 
 $p/berlin-$V-network-with-pt.xml.gz: $p/berlin-$V-network.xml.gz
@@ -176,7 +181,7 @@ $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
 
 $p/commercialFacilities.xml.gz:
 	$(sc) prepare create-data-distribution-of-structure-data\
-	 --outputFacilityFile §@\
+	 --outputFacilityFile $@\
 	 --outputDataDistributionFile $p/dataDistributionPerZone.csv\
 	 --landuseConfiguration useOSMBuildingsAndLanduse\
  	 --regionsShapeFileName $(berlin)/input/shp/region_4326.shp\
@@ -188,15 +193,13 @@ $p/commercialFacilities.xml.gz:
 	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
 	 --shapeFileLanduseTypeColumn "fclass"\
 	 --shapeCRS "EPSG:4326"\
-	 --pathToInvestigationAreaData input/commercialTraffic/investigationAreaData.csv\
-
-	mv output/commercialPersonTraffic/$(notdir $@) $@
+	 --pathToInvestigationAreaData $p/commercialTraffic/investigationAreaData.csv
 
 $p/berlin-small-scale-commercialTraffic-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz $p/commercialFacilities.xml.gz
 	$(sc) prepare generate-small-scale-commercial-traffic\
 	  input/$V/berlin-$V.config.xml\
 	 --pathToDataDistributionToZones $p/dataDistributionPerZone.csv\
-	 --pathToCommercialFacilities $(word 2,$^)\
+	 --pathToCommercialFacilities $(notdir $(word 2,$^))\
 	 --sample 0.25\
 	 --jspritIterations 10\
 	 --creationOption createNewCarrierFile\
