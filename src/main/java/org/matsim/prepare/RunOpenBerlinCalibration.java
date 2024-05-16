@@ -57,6 +57,7 @@ import org.matsim.prepare.opt.SelectPlansFromIndex;
 import org.matsim.prepare.population.*;
 import org.matsim.run.Activities;
 import org.matsim.run.OpenBerlinScenario;
+import org.matsim.run.scoring.AdvancedScoringConfigGroup;
 import org.matsim.run.scoring.AdvancedScoringModule;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
@@ -162,7 +163,9 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		if (sample.isSet()) {
 			double sampleSize = sample.getSample();
 
-			double countScale = allCar ? CAR_FACTOR : 1;
+			// All car leads to much more congestion even if scaled up compared to a normal run
+			// therefore scaling is increased a bit more
+			double countScale = allCar ? CAR_FACTOR * 1.2 : 1;
 
 			config.qsim().setFlowCapFactor(sampleSize * countScale);
 			config.qsim().setStorageCapFactor(sampleSize * countScale);
@@ -253,10 +256,11 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		} else if (mode == CalibrationMode.routeChoice) {
 
 			// Re-route for all populations
+			// Weight is decreased, force innovation is used
 			for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service", "goodsTraffic")) {
 				config.replanning().addStrategySettings(new ReplanningConfigGroup.StrategySettings()
 					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
-					.setWeight(weight)
+					.setWeight(weight / 8)
 					.setSubpopulation(subpopulation)
 				);
 			}
@@ -393,6 +397,14 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 					return sumScoringFunction;
 				}
 			});
+		} else if (mode == CalibrationMode.routeChoice) {
+
+			controler.addOverridingModule(new AbstractModule() {
+				@Override
+				public void install() {
+					binder().bind(new TypeLiteral<StrategyChooser<Plan, Person>>() {}).toInstance(new ForceInnovationStrategyChooser<>((int) Math.ceil(1.0 / weight), ForceInnovationStrategyChooser.Permute.yes));
+				}
+			});
 		}
 
 		controler.addOverridingModule(new AbstractModule() {
@@ -403,8 +415,11 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		});
 
 		controler.addOverridingModule(new OpenBerlinScenario.TravelTimeBinding());
-		controler.addOverridingModule(new AdvancedScoringModule());
 		controler.addOverridingModule(new SimWrapperModule());
+
+		if (ConfigUtils.hasModule(controler.getConfig(), AdvancedScoringConfigGroup.class)) {
+			controler.addOverridingModule(new AdvancedScoringModule());
+		}
 	}
 
 	@Override

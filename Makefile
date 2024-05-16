@@ -101,12 +101,15 @@ $p/berlin-$V-network.xml.gz: input/sumo.net.xml
 	$(sc) prepare apply-network-params freespeed capacity\
  	  --network $@ --output $@\
 	  --input-features $p/berlin-$V-network-ft.csv.gz\
-	  --model org.matsim.prepare.network.BerlinNetworkParams\
+	  --model org.matsim.prepare.network.BerlinNetworkParams
 
 	$(sc) prepare apply-network-params capacity\
  	  --network $@ --output $@\
 	  --input-features $p/berlin-$V-network-ft.csv.gz\
-	  --model org.matsim.application.prepare.network.params.hbs.HBSNetworkParams
+	  --road-types residential,living_street\
+	  --capacity-bounds 0.3\
+	  --model org.matsim.application.prepare.network.params.hbs.HBSNetworkParams\
+	  --decrease-only
 
 
 $p/berlin-$V-network-with-pt.xml.gz: $p/berlin-$V-network.xml.gz

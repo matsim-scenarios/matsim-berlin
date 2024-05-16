@@ -130,12 +130,13 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 				facility.addActivityOption(f.createActivityOption(act));
 			}
 
-			// Filter outliers from the attraction
+			// Filter outliers from the attraction and normalize the attraction
+			// This warrant for further investigate as the best way to normalize the attraction is not yet known
 			facility.getAttributes().putAttribute(Attributes.ATTRACTION_WORK,
-				Math.min(Math.max(h.attractionWork, 1), workUpper)
+				Math.min(Math.max(h.attractionWork / 5, 1), workUpper)
 			);
 			facility.getAttributes().putAttribute(Attributes.ATTRACTION_OTHER,
-				Math.min(Math.max(h.attractionOther, 1), otherUpper)
+				Math.min(Math.max(h.attractionOther / 5, 1), otherUpper)
 			);
 
 			facilities.addActivityFacility(facility);
