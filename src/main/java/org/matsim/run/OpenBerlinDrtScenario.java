@@ -115,15 +115,15 @@ public class OpenBerlinDrtScenario extends OpenBerlinScenario{
 		//drt only works with the following sim start time interpretation
 		config.qsim().setSimStarttimeInterpretation(QSimConfigGroup.StarttimeInterpretation.onlyUseStarttime);
 
-		MultiModeDrtConfigGroup multiMideDrtCfg = MultiModeDrtConfigGroup.get(config);
-		DrtConfigs.adjustMultiModeDrtConfig(multiMideDrtCfg, config.scoring(), config.routing());
+		MultiModeDrtConfigGroup multiModeDrtCfg = MultiModeDrtConfigGroup.get(config);
+		DrtConfigs.adjustMultiModeDrtConfig(multiModeDrtCfg, config.scoring(), config.routing());
 
 		Set<String> modes = new HashSet<>();
 
 		ScoringConfigGroup.ModeParams ptParams = config.scoring().getModes().get(TransportMode.pt);
 		IntermodalTripFareCompensatorsConfigGroup compensatorsConfig = ConfigUtils.addOrGetModule(config, IntermodalTripFareCompensatorsConfigGroup.class);
 
-		for (DrtConfigGroup drtCfg : multiMideDrtCfg.getModalElements()) {
+		for (DrtConfigGroup drtCfg : multiModeDrtCfg.getModalElements()) {
 			modes.add(drtCfg.getMode());
 
 			//copy all scoring params from pt
