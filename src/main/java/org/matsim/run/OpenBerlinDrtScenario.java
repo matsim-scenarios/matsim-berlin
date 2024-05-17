@@ -83,10 +83,6 @@ public class OpenBerlinDrtScenario extends OpenBerlinScenario{
 		description = "Path to drt (only) config. Should contain only additional stuff to base config. Otherwise overrides.")
 	private String drtConfig;
 
-	public OpenBerlinDrtScenario(){
-		super();
-	}
-
 	public static void main(String[] args) {
 		MATSimApplication.run(OpenBerlinDrtScenario.class, args);
 	}
@@ -207,8 +203,8 @@ public class OpenBerlinDrtScenario extends OpenBerlinScenario{
 	}
 
 	/**
-	 * this code is copied from matsim-berlin v5.x {@code RunDrtOpenBerlinScenario.prepareScenario()} and sub-methods.
-	 * @param scenario
+	 * This code is copied from matsim-berlin v5.x {@code RunDrtOpenBerlinScenario.prepareScenario()} and sub-methods.
+	 * @param scenario network and transit schedule are mutated as side effects.
 	 */
 	private static void prepareNetworkAndTransitScheduleForDrt(Scenario scenario) {
 		BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(scenario.getConfig(), BerlinExperimentalConfigGroup.class);
@@ -218,7 +214,7 @@ public class OpenBerlinDrtScenario extends OpenBerlinScenario{
 			String drtServiceAreaShapeFile = drtCfg.drtServiceAreaShapeFile;
 			if (drtServiceAreaShapeFile != null && !drtServiceAreaShapeFile.equals("") && !drtServiceAreaShapeFile.equals("null")) {
 
-				if(dvrpConfigGroup.networkModes.contains(drtCfg.getMode())){
+				if (dvrpConfigGroup.networkModes.contains(drtCfg.getMode())){
 					// Michal says restricting drt to a drt network roughly the size of the service area helps to speed up.
 					// This is even more true since drt started to route on a freespeed TT matrix (Nov '20).
 					// A buffer of 10km to the service area Berlin includes the A10 on some useful stretches outside Berlin.
@@ -236,7 +232,7 @@ public class OpenBerlinDrtScenario extends OpenBerlinScenario{
 					// Hermannstr., so allow buffer around the shape.
 					// This does not mean that a drt vehicle can pick the passenger up outside the service area,
 					// rather the passenger has to walk the last few meters from the drt drop off to the station.
-					200.0); //
+					200.0);
 			}
 		}
 	}
