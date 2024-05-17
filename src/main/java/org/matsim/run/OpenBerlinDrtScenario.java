@@ -138,6 +138,7 @@ public class OpenBerlinDrtScenario extends OpenBerlinScenario{
 			//assume that the drt is fully integrated in pt, i.e. fare integration
 			modeParams.setMonetaryDistanceRate(ptParams.getMonetaryDistanceRate());
 			modeParams.setDailyMonetaryConstant(ptParams.getDailyMonetaryConstant());
+			config.scoring().addModeParams(modeParams);
 		}
 
 		//assume that (all) the drt is fully integrated in pt, i.e. fare integration
@@ -227,7 +228,6 @@ public class OpenBerlinDrtScenario extends OpenBerlinScenario{
 					}
 				}
 
-				//TODO: check if the new transitSchedule has the 'stopFilter' attribute
 				tagTransitStopsInServiceArea(scenario.getTransitSchedule(),
 					"drtStopFilter", "station_S/U/RE/RB_drtServiceArea",
 					drtServiceAreaShapeFile,
