@@ -118,13 +118,13 @@ public class OpenBerlinDrtScenario extends OpenBerlinScenario{
 		MultiModeDrtConfigGroup multiModeDrtCfg = MultiModeDrtConfigGroup.get(config);
 		DrtConfigs.adjustMultiModeDrtConfig(multiModeDrtCfg, config.scoring(), config.routing());
 
-		Set<String> modes = new HashSet<>();
+		Set<String> drtModes = new HashSet<>();
 
 		ScoringConfigGroup.ModeParams ptParams = config.scoring().getModes().get(TransportMode.pt);
 		IntermodalTripFareCompensatorsConfigGroup compensatorsConfig = ConfigUtils.addOrGetModule(config, IntermodalTripFareCompensatorsConfigGroup.class);
 
 		for (DrtConfigGroup drtCfg : multiModeDrtCfg.getModalElements()) {
-			modes.add(drtCfg.getMode());
+			drtModes.add(drtCfg.getMode());
 
 			//copy all scoring params from pt
 			ScoringConfigGroup.ModeParams modeParams = new ScoringConfigGroup.ModeParams(drtCfg.getMode());
@@ -145,14 +145,14 @@ public class OpenBerlinDrtScenario extends OpenBerlinScenario{
 		drtCompensationCfg.setCompensationMoneyPerDay(ptParams.getDailyMonetaryConstant());
 		drtCompensationCfg.setNonPtModes(ImmutableSet
 			.<String>builder()
-			.addAll(modes)
+			.addAll(drtModes)
 			.build());
 		compensatorsConfig.addParameterSet(drtCompensationCfg);
 
 		//include drt in mode-choice and add mode params.
 		//by using a Set, it should be assured that they aren't included twice.
-		modes.addAll(Arrays.asList(config.subtourModeChoice().getModes()));
-		config.subtourModeChoice().setModes(modes.toArray(String[]::new));
+		drtModes.addAll(Arrays.asList(config.subtourModeChoice().getModes()));
+		config.subtourModeChoice().setModes(drtModes.toArray(String[]::new));
 
 		//Here (or when extending this class), you can configure the dvrp and the drt config groups.
 		//Of course you can configure on the xml (config) level, alternatively.
