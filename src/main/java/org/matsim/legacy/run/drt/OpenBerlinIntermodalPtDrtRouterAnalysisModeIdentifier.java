@@ -52,7 +52,7 @@ public final class OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier impleme
 		drtModes = Arrays.asList(TransportMode.drt, "drt2", "drt_teleportation");
 
 		modeHierarchy.add( TransportMode.walk ) ;
-		modeHierarchy.add( "bicycle" ); // TransportMode.bike is not registered as main mode, only "bicycle" ;
+		modeHierarchy.add( TransportMode.bike ); // TransportMode.bike is not registered as main mode, only "bicycle" ;
 		modeHierarchy.add( TransportMode.ride ) ;
 		modeHierarchy.add( TransportMode.car ) ;
 		modeHierarchy.add( "car2" ) ;
@@ -61,6 +61,7 @@ public final class OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier impleme
 		}
 		modeHierarchy.add( TransportMode.pt ) ;
 		modeHierarchy.add( "freight" );
+		modeHierarchy.add( "truck" );
 
 		// NOTE: This hierarchical stuff is not so great: is park-n-ride a car trip or a pt trip?  Could weigh it by distance, or by time spent
 		// in respective mode.  Or have combined modes as separate modes.  In any case, can't do it at the leg level, since it does not

@@ -145,6 +145,14 @@
 		</dependency>
 
 		<dependency>
+			<!-- for drt dashboard-->
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>drt-extensions</artifactId>
+			<version>${matsim.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>roadpricing</artifactId>
 			<version>${matsim.version}</version>
