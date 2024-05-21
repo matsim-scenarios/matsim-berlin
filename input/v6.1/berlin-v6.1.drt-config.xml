@@ -46,11 +46,11 @@
 				<!-- Basefare per Trip (fare = positive value) -->
 				<param name="basefare" value="0.0"/>
 				<!-- Minimum fare per trip (paid instead of the sum of base, time and distance fare if that sum would be lower than the minimum fare, fee = positive value). -->
-				<param name="minFarePerTrip" value="2.0"/>
+				<param name="minFarePerTrip" value="0.0"/>
 				<!-- Daily subscription fee (fee = positive value) -->
 				<param name="dailySubscriptionFee" value="0.0"/>
 				<!-- drt fare per meter (fee = positive value) -->
-				<param name="distanceFare_m" value="0.00035"/>
+				<param name="distanceFare_m" value="0.0"/>
 				<!-- drt fare per hour (fee = positive value) -->
 				<param name="timeFare_h" value="0.0"/>
 			</parameterset>
