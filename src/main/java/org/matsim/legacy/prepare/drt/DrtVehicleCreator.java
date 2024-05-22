@@ -80,44 +80,45 @@ public class DrtVehicleCreator {
 
 	public static void main(String[] args) {
 
-		String networkFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz";
-		String populationFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.plans.xml.gz";
-		String facilitiesFile = "";
-		String drtServiceAreaShapeFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-shp/berlin.shp";
-	    CoordinateTransformation ct = TransformationFactory.getCoordinateTransformation("EPSG:31468", "EPSG:31468");
+		String networkFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.1/input/berlin-v6.1-network-with-pt.xml.gz";
+//		String populationFile = "";
+//		String facilitiesFile = "";
+		String drtServiceAreaShapeFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.1/input/shp/Berlin_25832.shp";
+		String scenarioCrs = "EPSG:25832";
+		String shapeCrs = "EPSG:25832";
 
-//		String vehiclesFilePrefix = "berlin-drt-v5.5.spandau_b-drt-by-actLocations-sqrt-";
-		String vehiclesFilePrefix = "berlin-drt-v5.5.drt-by-rndLocations-";
+//		String vehiclesFilePrefix = "berlin-v6.1.spandau_b-drt-by-actLocations-sqrt-";
+		String vehiclesFilePrefix = "berlin-v6.1.drt-by-rndLocations-";
 
 		Set<Integer> numbersOfVehicles = new HashSet<>();
-		numbersOfVehicles.add(20);
-		numbersOfVehicles.add(30);
-		numbersOfVehicles.add(50);
-		numbersOfVehicles.add(80);
+//		numbersOfVehicles.add(20);
+//		numbersOfVehicles.add(30);
+//		numbersOfVehicles.add(50);
+//		numbersOfVehicles.add(80);
 		numbersOfVehicles.add(100);
-		numbersOfVehicles.add(120);
-		numbersOfVehicles.add(150);
-		numbersOfVehicles.add(200);
-		numbersOfVehicles.add(250);
-		numbersOfVehicles.add(300);
-		numbersOfVehicles.add(400);
-		numbersOfVehicles.add(500);
-		numbersOfVehicles.add(600);
-		numbersOfVehicles.add(700);
-		numbersOfVehicles.add(800);
-		numbersOfVehicles.add(900);
-		numbersOfVehicles.add(1000);
-		numbersOfVehicles.add(1200);
-		numbersOfVehicles.add(1500);
-		numbersOfVehicles.add(2000);
-		numbersOfVehicles.add(2500);
-		numbersOfVehicles.add(3000);
-		numbersOfVehicles.add(4000);
-		numbersOfVehicles.add(5000);
-		numbersOfVehicles.add(10000);
+//		numbersOfVehicles.add(120);
+//		numbersOfVehicles.add(150);
+//		numbersOfVehicles.add(200);
+//		numbersOfVehicles.add(250);
+//		numbersOfVehicles.add(300);
+//		numbersOfVehicles.add(400);
+//		numbersOfVehicles.add(500);
+//		numbersOfVehicles.add(600);
+//		numbersOfVehicles.add(700);
+//		numbersOfVehicles.add(800);
+//		numbersOfVehicles.add(900);
+//		numbersOfVehicles.add(1000);
+//		numbersOfVehicles.add(1200);
+//		numbersOfVehicles.add(1500);
+//		numbersOfVehicles.add(2000);
+//		numbersOfVehicles.add(2500);
+//		numbersOfVehicles.add(3000);
+//		numbersOfVehicles.add(4000);
+//		numbersOfVehicles.add(5000);
+//		numbersOfVehicles.add(10000);
 		int seats = 4;
 
-		DrtVehicleCreator tvc = new DrtVehicleCreator(networkFile, drtServiceAreaShapeFile, ct);
+		DrtVehicleCreator tvc = new DrtVehicleCreator(networkFile, drtServiceAreaShapeFile, shapeCrs, scenarioCrs);
 //		tvc.setLinkWeightsByActivities(populationFile, facilitiesFile);
 //		tvc.setWeightsToSquareRoot();
 		for (int numberOfVehicles: numbersOfVehicles) {
@@ -126,10 +127,11 @@ public class DrtVehicleCreator {
 		}
 }
 
-	public DrtVehicleCreator(String networkfile, String drtServiceAreaShapeFile, CoordinateTransformation ct) {
-		this.ct = ct;
+	public DrtVehicleCreator(String networkfile, String drtServiceAreaShapeFile, String shapeCrs, String scenarioCrs) {
+		this.ct = TransformationFactory.getCoordinateTransformation(shapeCrs, scenarioCrs);
 
 		Config config = ConfigUtils.createConfig();
+		config.global().setCoordinateSystem(scenarioCrs);
 		config.network().setInputFile(networkfile);
 		this.scenario = ScenarioUtils.loadScenario(config);
 

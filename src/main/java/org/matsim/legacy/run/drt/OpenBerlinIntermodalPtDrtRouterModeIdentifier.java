@@ -48,7 +48,7 @@ public final class OpenBerlinIntermodalPtDrtRouterModeIdentifier implements Anal
 		drtModes = Arrays.asList(TransportMode.drt, "drt2", "drt_teleportation");
 
 		modeHierarchy.add( TransportMode.walk ) ;
-		modeHierarchy.add( "bicycle" ); // TransportMode.bike is not registered as main mode, only "bicycle" ;
+		modeHierarchy.add( TransportMode.bike );
 		modeHierarchy.add( TransportMode.ride ) ;
 		modeHierarchy.add( TransportMode.car ) ;
 		modeHierarchy.add( "car2" ) ;
