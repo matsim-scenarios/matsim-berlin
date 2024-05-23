@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.geotools.api.referencing.operation.TransformException;
 import org.geotools.referencing.operation.transform.IdentityTransform;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
@@ -26,7 +27,6 @@ import org.matsim.counts.Counts;
 import org.matsim.counts.CountsWriter;
 import org.matsim.counts.Measurable;
 import org.matsim.counts.MeasurementLocation;
-import org.opengis.referencing.operation.TransformException;
 import picocli.CommandLine;
 
 import java.io.IOException;

@@ -25,7 +25,7 @@ import org.matsim.prepare.population.InitLocationChoice;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
-import org.opengis.feature.simple.SimpleFeature;
+import org.geotools.api.feature.simple.SimpleFeature;
 import tech.tablesaw.api.Row;
 import tech.tablesaw.api.Table;
 

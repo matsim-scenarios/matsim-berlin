@@ -6,10 +6,10 @@
 		<artifactId>matsim-all</artifactId>
 
 		<!-- PR-labelled release -->
-		<version>2025.0-PR3257</version>
+<!--		<version>2025.0-PR3268</version>-->
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
-<!--		<version>2025.0-SNAPSHOT</version>-->
+		<version>2025.0-SNAPSHOT</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -128,7 +128,7 @@
 		<dependency>
 			<groupId>com.github.matsim-org</groupId>
 			<artifactId>gtfs2matsim</artifactId>
-			<version>master-33809c4f0f-1</version>
+			<version>fc8b13954d</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.matsim</groupId>

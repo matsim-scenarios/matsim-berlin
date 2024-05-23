@@ -22,7 +22,7 @@ import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.scenario.ProjectionUtils;
 import org.matsim.run.OpenBerlinScenario;
-import org.opengis.feature.simple.SimpleFeature;
+import org.geotools.api.feature.simple.SimpleFeature;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
