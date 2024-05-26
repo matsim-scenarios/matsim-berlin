@@ -165,7 +165,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 			// All car leads to much more congestion even if scaled up compared to a normal run
 			// therefore scaling is increased a bit more
-			double countScale = allCar ? CAR_FACTOR * 1.2 : 1;
+			double countScale = allCar ? CAR_FACTOR : 1;
 
 			config.qsim().setFlowCapFactor(sampleSize * countScale);
 			config.qsim().setStorageCapFactor(sampleSize * countScale);
@@ -238,7 +238,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service", "goodsTraffic")) {
 				config.replanning().addStrategySettings(new ReplanningConfigGroup.StrategySettings()
 					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
-					.setWeight(weight)
+					.setWeight(weight / 8)
 					.setSubpopulation(subpopulation)
 				);
 			}
@@ -246,8 +246,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			config.controller().setRunId("cadyts");
 			config.controller().setOutputDirectory("./output/cadyts-" + scaleFactor);
 
-			config.scoring().setFractionOfIterationsToStartScoreMSA(0.75);
-			config.replanning().setFractionOfIterationsToDisableInnovation(0.75);
 			// Need to store more plans because of plan types
 			config.replanning().setMaxAgentPlanMemorySize(8);
 
@@ -397,6 +395,14 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 					return sumScoringFunction;
 				}
 			});
+
+			controler.addOverridingModule(new AbstractModule() {
+				@Override
+				public void install() {
+					binder().bind(new TypeLiteral<StrategyChooser<Plan, Person>>() {}).toInstance(new ForceInnovationStrategyChooser<>((int) Math.ceil(1.0 / weight), ForceInnovationStrategyChooser.Permute.yes));
+				}
+			});
+
 		} else if (mode == CalibrationMode.routeChoice) {
 
 			controler.addOverridingModule(new AbstractModule() {
