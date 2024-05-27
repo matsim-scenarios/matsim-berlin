@@ -140,19 +140,28 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 			}
 
 			Id<Link> manuallyMatched = counts.isManuallyMatched(String.valueOf(next.getKey()));
-			if (manuallyMatched != null && links.containsKey(manuallyMatched)) {
-				station.linkId = manuallyMatched;
-				index.remove(links.get(manuallyMatched));
-			}
+			if (manuallyMatched != null) {
 
-			Link link = index.query(station);
+				if (links.containsKey(manuallyMatched)) {
+					station.linkId = manuallyMatched;
+					index.remove(links.get(manuallyMatched));
+				} else {
+					log.warn("Manually matched station link {}={} not found in network", next.getKey(), manuallyMatched);
+					it.remove();
+				}
 
-			if (link == null) {
-				it.remove();
-				unmatched.add(station);
 			} else {
-				station.linkId = link.getId();
-				index.remove(link);
+
+				Link link = index.query(station);
+
+				if (link == null) {
+					it.remove();
+					unmatched.add(station);
+				} else {
+					station.linkId = link.getId();
+					index.remove(link);
+				}
+
 			}
 		}
 
