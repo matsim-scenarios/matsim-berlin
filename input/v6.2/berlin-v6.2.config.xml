@@ -116,7 +116,7 @@
 			<parameterset type="modeParams">
 				<param name="constant" value="-0.6269580844054548" />
 				<!-- result of the calibration, lower than full vehicle ownership cost which gave too unattractive car mode in calibration -->
-				<param name="dailyMonetaryConstant" value="-3.0" />
+				<param name="dailyMonetaryConstant" value="-4.0" />
 				<param name="dailyUtilityConstant" value="0" />
 				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
