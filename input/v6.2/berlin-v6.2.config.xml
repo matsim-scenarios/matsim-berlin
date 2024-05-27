@@ -50,7 +50,7 @@
 		<parameterset type="teleportedModeParameters">
 			<param name="beelineDistanceFactor" value="1.3"/>
 			<param name="mode" value="walk"/>
-			<param name="teleportedModeSpeed" value="1.0555556"/>
+			<param name="teleportedModeSpeed" value="1.23"/>
 		</parameterset>
 	</module>
 	<module name="qsim">
