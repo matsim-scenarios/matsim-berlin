@@ -49,11 +49,10 @@ MQ_ID;linkid;Using;Kommentar;Check
 20060;;;same as 20058;
 20064;;;same as 20062;
 20070;;;same as 20069;
-20071;4500170;x;Wexstraße;
-20073;4536796;x;Wexstraße – Einfahrt;
+20073;4536796;;Wexstraße – Einfahrt;
 20074;;;same as 20071;
 20076;98319;;unclear;
-20082;199287251;x;Einfahrt von A103;
+20082;199287251;;Einfahrt von A103;
 20083;;;same as 20078;
 20087;;;same as 20085;
 20092;;;same as 20090;
@@ -61,7 +60,6 @@ MQ_ID;linkid;Using;Kommentar;Check
 20108;;;same as 20105;
 20109;;;same as 20105;
 20111;144032;;unclear;
-20115;138554956;x;Ausfahrt von A103;
 20116;;;unclear, same as 20111;
 20122;;;same as 20121;
 20123;;;same as 20121;
@@ -72,7 +70,6 @@ MQ_ID;linkid;Using;Kommentar;Check
 20141;;;same as 20139;
 20142;;;unclear, should be same as 20139, but loses 6000 cars;
 20147;;;same as 20145;
-20148;4526509;x;Buschkrugallee – Einfahrt;
 20149;51291;;;
 20150;;;same as 20149;
 20153;;;same as 20152;
@@ -221,3 +218,25 @@ MQ_ID;linkid;Using;Kommentar;Check
 21906;98695;;same as 21904;
 21907;37755;;same as 21904;
 21913;110354;;same as 21908;
+20118;4389158;X;Fixed motorway link, wrong type
+20082;199287259;X;Fixed motorway link, wrong type
+21744;262936294;X;Fixed motorway link, wrong type
+21587;230013623;X;Fixed motorway link, wrong type
+20080;138611863;X;Fixed motorway link, wrong type
+10041;1107424997#0;X
+20014;4388102#0;X
+20146;5095581#0;X
+20444;22567370#0;;could not not identify the highway link/entry
+20071;4397801;X; Fixed type (secondary to motorway_link)
+21734;149524168;X; Fixed type (unclassified to motorway_link)
+20115;138554957;X;Fixed motorway link, wrong type
+20148;4493101;X;Fixed motorway link, wrong type
+20073;4397803;X;Fixed motorway link, wrong type
+21735;149524169;X;Fixed motorway link, wrong type
+10001;4354349;X;Fixed motorway link, wrong type
+10155;541763974;X;Wrong link
+20120;4397803;X;
+10451;-;;Ignored unplausible measurement
+10449;-;;Ignored unplausible measurement
+10281;-;;Ignored unplausible measurement
+10015;-;;Ignored unplausible measurement
