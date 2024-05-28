@@ -247,7 +247,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			config.controller().setOutputDirectory("./output/cadyts-" + scaleFactor);
 
 			// Need to store more plans because of plan types
-			config.replanning().setMaxAgentPlanMemorySize(8);
+			config.replanning().setMaxAgentPlanMemorySize(7);
 
 			config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.ignore);
 
@@ -382,14 +382,14 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 					Config config = controler.getConfig();
 
-					final ScoringParameters params = parameters.getScoringParameters(person);
-
-					sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(params, controler.getScenario().getNetwork()));
-					sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(params));
-					sumScoringFunction.addScoringFunction(new CharyparNagelAgentStuckScoring(params));
+					// Only use cadyts, not the usual scoring
+//					final ScoringParameters params = parameters.getScoringParameters(person);
+//					sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(params, controler.getScenario().getNetwork()));
+//					sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(params));
+//					sumScoringFunction.addScoringFunction(new CharyparNagelAgentStuckScoring(params));
 
 					final CadytsScoring<Link> scoringFunction = new CadytsScoring<>(person.getSelectedPlan(), config, cadytsContext);
-					scoringFunction.setWeightOfCadytsCorrection(30 * config.scoring().getBrainExpBeta());
+					scoringFunction.setWeightOfCadytsCorrection(config.scoring().getBrainExpBeta());
 					sumScoringFunction.addScoringFunction(scoringFunction);
 
 					return sumScoringFunction;
@@ -444,6 +444,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	 */
 	public enum CalibrationMode {
 		eval,
+		@Deprecated
 		locationChoice,
 		cadyts,
 		routeChoice
