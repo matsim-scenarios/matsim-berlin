@@ -36,13 +36,14 @@ if __name__ == "__main__":
 
     df["seq"] = seq
 
-    df = df.drop(columns=["t_weight", "valid"])
-
-    df_p = df.merge(persons, left_on="p_id", right_index=True)
-    df["p_age"] = df_p["age"]
+    df = df.drop(columns=["valid"])
+    # Norm weight to 3 as well
+    df.t_weight = df.t_weight / 3
 
     df_hh = df.merge(hh, left_on="hh_id", right_index=True)
     df["hh_cars"] = df_hh["n_cars"]
 
     df = df.sort_values(["p_id", "seq", "n"])
     df.to_csv("trips-scaled.csv", index=False)
+
+    persons.to_csv("persons-unscaled.csv", index=False)

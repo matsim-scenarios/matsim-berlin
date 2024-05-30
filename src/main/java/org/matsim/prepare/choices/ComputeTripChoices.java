@@ -76,10 +76,9 @@ public class ComputeTripChoices implements MATSimAppCommand {
 		}
 
 		if (!Files.exists(input)) {
-			log.error("Input file does not exist: " + input);
+			log.error("Input file does not exist: {}", input);
 			return 2;
 		}
-
 
 		Config config = this.scenario.getConfig();
 		config.controller().setOutputDirectory("choice-output");

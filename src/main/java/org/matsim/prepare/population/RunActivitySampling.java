@@ -35,12 +35,12 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 
 	private static final Logger log = LogManager.getLogger(RunActivitySampling.class);
 	private final CsvOptions csv = new CsvOptions(CSVFormat.Predefined.Default);
-	private final Map<Key, IntList> groups = new HashMap<>();
-	private final Int2ObjectMap<CSVRecord> persons = new Int2ObjectOpenHashMap<>();
+
 	/**
 	 * Maps person index to list of activities.
 	 */
-	private final Int2ObjectMap<List<CSVRecord>> activities = new Int2ObjectOpenHashMap<>();
+	private final Map<String, List<CSVRecord>> activities = new HashMap<>();
+
 	@CommandLine.Option(names = "--input", description = "Path to input population", required = true)
 	private Path input;
 	@CommandLine.Option(names = "--output", description = "Output path for population", required = true)
@@ -54,6 +54,7 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 	private ThreadLocal<Context> ctxs;
 
 	private PopulationFactory factory;
+	private PersonMatcher matcher;
 
 	public static void main(String[] args) {
 		new RunActivitySampling().execute(args);
@@ -64,9 +65,7 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 
 		Population population = PopulationUtils.readPopulation(input.toString());
 
-		try (CSVParser parser = csv.createParser(personsPath)) {
-			buildSubgroups(parser);
-		}
+		matcher = new PersonMatcher("idx", personsPath);
 
 		try (CSVParser parser = csv.createParser(activityPath)) {
 			readActivities(parser);
@@ -94,41 +93,17 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 		return 0;
 	}
 
-	/**
-	 * Create subpopulations for sampling.
-	 */
-	private void buildSubgroups(CSVParser csv) {
-
-		int i = 0;
-
-		for (CSVRecord r : csv) {
-
-			int idx = Integer.parseInt(r.get("idx"));
-			int regionType = Integer.parseInt(r.get("region_type"));
-			String gender = r.get("gender");
-			String employment = r.get("employment");
-			int age = Integer.parseInt(r.get("age"));
-
-			Stream<Key> keys = createKey(gender, age, regionType, employment);
-			keys.forEach(key -> groups.computeIfAbsent(key, (k) -> new IntArrayList()).add(idx));
-			persons.put(idx, r);
-			i++;
-		}
-
-		log.info("Read {} persons from csv.", i);
-	}
-
 	private void readActivities(CSVParser csv) {
 
-		int currentId = -1;
+		String currentId = null;
 		List<CSVRecord> current = null;
 
 		int i = 0;
 		for (CSVRecord r : csv) {
 
-			int pId = Integer.parseInt(r.get("p_id"));
+			String pId = r.get("p_id");
 
-			if (pId != currentId) {
+			if (!Objects.equals(pId, currentId)) {
 				if (current != null)
 					activities.put(currentId, current);
 
@@ -147,69 +122,15 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 		log.info("Read {} activities for {} persons", i, activities.size());
 	}
 
-	private Stream<Key> createKey(String gender, int age, int regionType, String employment) {
-		if (age < 6) {
-			return IntStream.rangeClosed(0, 5).mapToObj(i -> new Key(null, i, regionType, null));
-		}
-		if (age <= 10) {
-			return IntStream.rangeClosed(6, 10).mapToObj(i -> new Key(null, i, regionType, null));
-		}
-		if (age < 18) {
-			return IntStream.rangeClosed(11, 18).mapToObj(i -> new Key(gender, i, regionType, null));
-		}
 
-		Boolean isEmployed = age > 65 ? null : !employment.equals("unemployed");
-		int min = Math.max(18, age - 6);
-		int max = Math.min(65, age + 6);
-
-		// larger groups for older people
-		if (age > 65) {
-			min = Math.max(66, age - 10);
-			max = Math.min(99, age + 10);
-		}
-
-		return IntStream.rangeClosed(min, max).mapToObj(i -> new Key(gender, i, regionType, isEmployed));
-	}
-
-	private Key createKey(Person person) {
-
-		Integer age = PersonUtils.getAge(person);
-		String gender = PersonUtils.getSex(person);
-		if (age <= 10)
-			gender = null;
-
-		Boolean employed = PersonUtils.isEmployed(person);
-		if (age < 18 || age > 65)
-			employed = null;
-
-		int regionType = (int) person.getAttributes().getAttribute(Attributes.RegioStaR7);
-
-		// Region types have been reduced to 1 and 3
-		if (regionType != 1)
-			regionType = 3;
-
-		return new Key(gender, age, regionType, employed);
-	}
 
 	@Override
 	public void run(Person person) {
 
 		SplittableRandom rnd = ctxs.get().rnd;
 
-		Key key = createKey(person);
-
-		IntList subgroup = groups.get(key);
-		if (subgroup == null) {
-			log.error("No subgroup found for key {}", key);
-			throw new IllegalStateException("Invalid entry");
-		}
-
-		if (subgroup.size() < 30) {
-			log.warn("Group {} has low sample size: {}", key, subgroup.size());
-		}
-
-		int idx = subgroup.getInt(rnd.nextInt(subgroup.size()));
-		CSVRecord row = persons.get(idx);
+		String  idx = matcher.matchPerson(person, rnd);
+		CSVRecord row = matcher.getPerson(idx);
 
 		PersonUtils.setCarAvail(person, row.get("car_avail").equals("True") ? "always" : "never");
 		PersonUtils.setLicence(person, row.get("driving_license").toLowerCase());
@@ -375,12 +296,6 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 		}
 
 		return plan;
-	}
-
-	/**
-	 * Key used for sampling activities.
-	 */
-	private record Key(String gender, int age, int regionType, Boolean employed) {
 	}
 
 	private record Context(SplittableRandom rnd) {

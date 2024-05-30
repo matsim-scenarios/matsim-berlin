@@ -6,22 +6,21 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import me.tongfei.progressbar.ProgressBar;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.locationtech.jts.geom.Geometry;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.population.Activity;
-import org.matsim.api.core.v01.population.Person;
-import org.matsim.api.core.v01.population.Plan;
-import org.matsim.api.core.v01.population.PopulationFactory;
+import org.matsim.api.core.v01.population.*;
 import org.matsim.application.options.ShpOptions;
 import org.matsim.application.prepare.population.SplitActivityTypesDuration;
 import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.prepare.population.InitLocationChoice;
+import org.matsim.prepare.population.PersonMatcher;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
@@ -115,16 +114,38 @@ public class PlanBuilder {
 	/**
 	 * Create persons with plans from a table.
 	 */
-	public List<Person> createPlans(Path input) {
+	public List<Person> createPlans(Path trips) {
+		return handleTrips(trips, null, this::createPerson);
+	}
 
-		Table table = Table.read().csv(input.toFile());
+	/**
+	 * Reads reference trips from input and merges it into existing population.
+	 * @see #createPlans(Path)
+	 */
+	public List<Person> mergePlans(Population population, Path trips, Path persons) {
+
+		// TODO
+
+
+		return null;
+	}
+
+
+	/**
+	 * Helper function to iterate through trips data and process it.
+	 */
+	private List<Person> handleTrips(Path trips, Path persons, EntryHandler handler) {
+
+		Table table = Table.read().csv(trips.toFile());
 
 		String currentPerson = null;
 		int currentSeq = -1;
 
+		PersonMatcher matcher = new PersonMatcher("p_id", persons);
+
 		List<Person> result = new ArrayList<>();
 
-		List<Row> trips = new ArrayList<>();
+		List<Row> tripRows = new ArrayList<>();
 
 		try (ProgressBar pb = new ProgressBar("Reading trips", table.rowCount())) {
 
@@ -136,23 +157,24 @@ public class PlanBuilder {
 				int seq = row.getInt("seq");
 
 				if (!pId.equals(currentPerson) || seq != currentSeq) {
-					if (!trips.isEmpty()) {
+					if (!tripRows.isEmpty()) {
 
 						// Filter person with too many trips
-						if (maxTripNumber <= 0 || trips.size() <= maxTripNumber) {
-							Person person = createPerson(pId, seq, trips);
+						if (maxTripNumber <= 0 || tripRows.size() <= maxTripNumber) {
+							Person person = handler.process(currentPerson, currentSeq,
+								matcher.getPerson(pId), tripRows);
 							if (person != null)
 								result.add(person);
 						}
 
-						trips.clear();
+						tripRows.clear();
 					}
 
 					currentPerson = pId;
 					currentSeq = seq;
 				}
 
-				trips.add(row);
+				tripRows.add(row);
 				pb.step();
 			}
 		}
@@ -163,7 +185,7 @@ public class PlanBuilder {
 	/**
 	 * Create person from row data.
 	 */
-	private Person createPerson(String id, int seq, List<Row> trips) {
+	private Person createPerson(String id, int seq, CSVRecord p, List<Row> trips) {
 
 		Person person = f.createPerson(Id.createPersonId(id + "_" + seq));
 
@@ -322,4 +344,12 @@ public class PlanBuilder {
 
 	private record Location(String name, String zone) {
 	}
+
+	@FunctionalInterface
+	private interface EntryHandler {
+
+		Person process(String pId, int seq, CSVRecord person, List<Row> trips);
+
+	}
+
 }
