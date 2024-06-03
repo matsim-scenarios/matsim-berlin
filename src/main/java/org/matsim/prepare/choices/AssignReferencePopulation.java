@@ -38,6 +38,10 @@ public class AssignReferencePopulation implements MATSimAppCommand {
 	@CommandLine.Mixin
 	private ShpOptions shp;
 
+	public static void main(String[] args) {
+		new AssignReferencePopulation().execute(args);
+	}
+
 	@Override
 	public Integer call() throws Exception {
 

@@ -19,6 +19,7 @@ import org.matsim.application.prepare.population.SplitActivityTypesDuration;
 import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
+import org.matsim.prepare.population.Attributes;
 import org.matsim.prepare.population.InitLocationChoice;
 import org.matsim.prepare.population.PersonMatcher;
 import org.matsim.vehicles.Vehicle;
@@ -48,6 +49,8 @@ public class PlanBuilder {
 	 */
 	private final Long2ObjectMap<Set<Coord>> zones = new Long2ObjectOpenHashMap<>();
 
+	private final ShpOptions.Index zoneIndex;
+
 	/**
 	 * Maps location key to zone id.
 	 */
@@ -71,12 +74,12 @@ public class PlanBuilder {
 				(long) ft.getAttribute("id"));
 		}
 
-		ShpOptions.Index index = zones.createIndex("id");
+		zoneIndex = zones.createIndex("id");
 
 		for (SimpleFeature ft : ProgressBar.wrap(facilities.readFeatures(), "Reading facilities")) {
 			Geometry geom = (Geometry) ft.getDefaultGeometry();
 			Coord coord = new Coord(geom.getCentroid().getX(), geom.getCentroid().getY());
-			Long result = index.query(coord);
+			Long result = zoneIndex.query(coord);
 			if (result != null) {
 				this.zones.computeIfAbsent(result, k -> new HashSet<>()).add(coord);
 			}
@@ -124,12 +127,46 @@ public class PlanBuilder {
 	 */
 	public List<Person> mergePlans(Population population, Path trips, Path persons) {
 
-		// TODO
+		// TODO: index home locations of the population
+		// TODO: prob to reduce number of reference agents ?
+
+		// Index home locations of the population
+		Long2ObjectMap<Set<Person>> personsByHome = new Long2ObjectOpenHashMap<>();
+		for (Person person : population.getPersons().values()) {
+
+			double homeX = (double) person.getAttributes().getAttribute(Attributes.HOME_X);
+			double homeY = (double) person.getAttributes().getAttribute(Attributes.HOME_Y);
+
+			Long home = zoneIndex.query(new Coord(homeX, homeY));
+
+			if (home != null) {
+				personsByHome.computeIfAbsent(home, k -> new HashSet<>()).add(person);
+			}
+		}
 
 
-		return null;
+		return handleTrips(trips, persons, (pId, seq, person, t) -> {
+
+			// Duplicated persons are ignored for this approach
+			if (seq > 0)
+				return null;
+
+			Location loc = getHomeLocation(t);
+			long home = features.getOrDefault(loc, -1);
+
+			if (home == -1 || !personsByHome.containsKey(home))
+				return null;
+
+			return mergePerson(personsByHome.get(home), person, t);
+		});
 	}
 
+	/**
+	 * Guess home location from trips data.
+	 */
+	private Location getHomeLocation(List<Row> trips) {
+		return new Location(trips.get(0).getString("from_location"), trips.get(0).getString("from_zone"));
+	}
 
 	/**
 	 * Helper function to iterate through trips data and process it.
@@ -244,6 +281,16 @@ public class PlanBuilder {
 		splitDuration.run(person);
 
 		return person;
+	}
+
+	/**
+	 * Assign the trips to an existing person.
+	 */
+	private Person mergePerson(Set<Person> persons, CSVRecord person, List<Row> trips) {
+
+		// TODO
+
+		return null;
 	}
 
 	/**
