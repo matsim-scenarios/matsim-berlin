@@ -44,7 +44,7 @@ import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.SumScoringFunction;
 import org.matsim.core.scoring.functions.*;
 import org.matsim.core.utils.geometry.CoordUtils;
-import org.matsim.prepare.choices.AssignReferencePopulation;
+import org.matsim.prepare.population.AssignReferencePopulation;
 import org.matsim.prepare.choices.ComputePlanChoices;
 import org.matsim.prepare.choices.ComputeTripChoices;
 import org.matsim.prepare.counts.CreateCountsFromGeoPortalBerlin;

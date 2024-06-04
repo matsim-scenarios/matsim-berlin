@@ -34,7 +34,9 @@ import java.util.*;
 
 /**
  * Utility class to build plans from data.
+ * @deprecated use new plan builder in org.matsim.prepare.population
  */
+@Deprecated
 public class PlanBuilder {
 
 	private static final Logger log = LogManager.getLogger(PlanBuilder.class);

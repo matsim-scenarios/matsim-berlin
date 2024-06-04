@@ -1,9 +1,5 @@
 package org.matsim.prepare.population;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -24,8 +20,6 @@ import picocli.CommandLine;
 
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 @CommandLine.Command(
 	name = "activity-sampling",
@@ -55,6 +49,23 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 
 	private PopulationFactory factory;
 	private PersonMatcher matcher;
+
+	/**
+	 * Default constructor. Can only be used with command line.
+	 */
+	public RunActivitySampling() {
+	}
+
+	/**
+	 * Constructor that allows to use the run method directly and not as command.
+	 */
+	RunActivitySampling(PersonMatcher matcher, Map<String, List<CSVRecord>> activities, PopulationFactory factory, long seed) {
+		this.matcher = matcher;
+		this.activities.putAll(activities);
+		this.factory = factory;
+		this.seed = seed;
+		this.ctxs = ThreadLocal.withInitial(() -> new Context(new SplittableRandom(seed)));
+	}
 
 	public static void main(String[] args) {
 		new RunActivitySampling().execute(args);
@@ -123,27 +134,15 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 	}
 
 
-
 	@Override
 	public void run(Person person) {
 
 		SplittableRandom rnd = ctxs.get().rnd;
 
-		String  idx = matcher.matchPerson(person, rnd);
+		String idx = matcher.matchPerson(person, rnd);
 		CSVRecord row = matcher.getPerson(idx);
 
-		PersonUtils.setCarAvail(person, row.get("car_avail").equals("True") ? "always" : "never");
-		PersonUtils.setLicence(person, row.get("driving_license").toLowerCase());
-		PersonUtils.setIncome(person, Math.max(499, Double.parseDouble(row.get("income"))));
-
-		person.getAttributes().putAttribute(Attributes.BIKE_AVAIL, row.get("bike_avail").equals("True") ? "always" : "never");
-		person.getAttributes().putAttribute(Attributes.PT_ABO_AVAIL, row.get("pt_abo_avail").equals("True") ? "always" : "never");
-
-		person.getAttributes().putAttribute(Attributes.EMPLOYMENT, row.get("employment"));
-		person.getAttributes().putAttribute(Attributes.RESTRICTED_MOBILITY, row.get("restricted_mobility").equals("True"));
-		person.getAttributes().putAttribute(Attributes.ECONOMIC_STATUS, row.get("economic_status"));
-		person.getAttributes().putAttribute(Attributes.HOUSEHOLD_SIZE, Integer.parseInt(row.get("n_persons")));
-
+		copyAttributes(row, person);
 
 		String mobile = row.get("mobile_on_day");
 
@@ -174,6 +173,20 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 		}
 	}
 
+	public void copyAttributes(CSVRecord row, Person person) {
+		PersonUtils.setCarAvail(person, row.get("car_avail").equals("True") ? "always" : "never");
+		PersonUtils.setLicence(person, row.get("driving_license").toLowerCase());
+		PersonUtils.setIncome(person, Math.max(499, Double.parseDouble(row.get("income"))));
+
+		person.getAttributes().putAttribute(Attributes.BIKE_AVAIL, row.get("bike_avail").equals("True") ? "always" : "never");
+		person.getAttributes().putAttribute(Attributes.PT_ABO_AVAIL, row.get("pt_abo_avail").equals("True") ? "always" : "never");
+
+		person.getAttributes().putAttribute(Attributes.EMPLOYMENT, row.get("employment"));
+		person.getAttributes().putAttribute(Attributes.RESTRICTED_MOBILITY, row.get("restricted_mobility").equals("True"));
+		person.getAttributes().putAttribute(Attributes.ECONOMIC_STATUS, row.get("economic_status"));
+		person.getAttributes().putAttribute(Attributes.HOUSEHOLD_SIZE, Integer.parseInt(row.get("n_persons")));
+	}
+
 	/**
 	 * Randomize the duration slightly, depending on total duration.
 	 */
@@ -188,6 +201,13 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 			return minutes * 60 + rnd.nextInt(600) - 300;
 
 		return minutes * 60 + rnd.nextInt(1200) - 600;
+	}
+
+	/**
+	 * Create plan for a person using given id.
+	 */
+	public Plan createPlan(Coord homeCoord, String personId) {
+		return createPlan(homeCoord, activities.get(personId), ctxs.get().rnd);
 	}
 
 	private Plan createPlan(Coord homeCoord, List<CSVRecord> activities, SplittableRandom rnd) {

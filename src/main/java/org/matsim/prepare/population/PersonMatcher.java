@@ -5,6 +5,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.application.options.CsvOptions;
 import org.matsim.core.population.PersonUtils;
@@ -13,13 +14,14 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
  * This class is used to read and match persons from the reference data in csv format.
  */
-public class PersonMatcher {
+public class PersonMatcher implements Iterable<Map.Entry<String, CSVRecord>> {
 
 	private static final Logger log = LogManager.getLogger(PersonMatcher.class);
 
@@ -58,6 +60,29 @@ public class PersonMatcher {
 		}
 
 		return subgroup.get(rnd.nextInt(subgroup.size()));
+	}
+
+	/**
+	 * Matches a person csv entry to one person in a list.
+	 * @return null if no match was found
+	 */
+	public Person matchEntry(CSVRecord p, List<Person> refPersons, SplittableRandom rnd) {
+
+		int regionType = Integer.parseInt(p.get("region_type"));
+		String gender = p.get("gender");
+		String employment = p.get("employment");
+		int age = Integer.parseInt(p.get("age"));
+
+		Set<Key> keys = createKey(gender, age, regionType, employment).collect(Collectors.toSet());
+
+		List<Person> matched = refPersons.stream()
+			.filter(person -> keys.contains(createKey(person)))
+			.toList();
+
+		if (matched.isEmpty())
+			return null;
+
+		return matched.get(rnd.nextInt(matched.size()));
 	}
 
 	/**
@@ -133,6 +158,12 @@ public class PersonMatcher {
 			regionType = 3;
 
 		return new Key(gender, age, regionType, employed);
+	}
+
+	@NotNull
+	@Override
+	public Iterator<Map.Entry<String, CSVRecord>> iterator() {
+		return persons.entrySet().iterator();
 	}
 
 	/**

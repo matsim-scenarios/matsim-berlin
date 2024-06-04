@@ -36,6 +36,8 @@ public final class Attributes {
 	public static final String RESTRICTED_MOBILITY = "restricted_mobility";
 	public static final String ECONOMIC_STATUS = "economic_status";
 	public static final String HOUSEHOLD_SIZE = "household_size";
+	public static final String REF_WEIGHT = "ref_weight";
+	public static final String REF_MODES = "ref_modes";
 	public static final String ATTRACTION_WORK = "attraction_work";
 	public static final String ATTRACTION_OTHER = "attraction_other";
 
