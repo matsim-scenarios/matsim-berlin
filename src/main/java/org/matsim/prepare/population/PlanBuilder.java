@@ -1,6 +1,7 @@
 package org.matsim.prepare.population;
 
-import it.unimi.dsi.fastutil.Pair;
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
+import it.unimi.dsi.fastutil.doubles.DoubleList;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
@@ -14,7 +15,10 @@ import org.geotools.api.feature.simple.SimpleFeature;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.population.*;
+import org.matsim.api.core.v01.population.Activity;
+import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Plan;
+import org.matsim.api.core.v01.population.Population;
 import org.matsim.application.options.CsvOptions;
 import org.matsim.application.options.ShpOptions;
 import org.matsim.core.router.TripStructureUtils;
@@ -22,12 +26,10 @@ import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.facilities.ActivityFacility;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
-import tech.tablesaw.api.Row;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Utility class to build plans from activity data.
@@ -84,6 +86,24 @@ public class PlanBuilder {
 		}
 	}
 
+	/**
+	 * Add necesarry vehicles to the scenario.
+	 */
+	public static void addVehiclesToScenario(Scenario scenario) {
+		Id<Vehicle> car = Id.createVehicleId("car");
+		Vehicle vehicle = scenario.getVehicles().getFactory().createVehicle(
+			car, scenario.getVehicles().getVehicleTypes().get(Id.create("car", VehicleType.class))
+		);
+		scenario.getVehicles().addVehicle(vehicle);
+
+		Id<Vehicle> ride = Id.createVehicleId("ride");
+		vehicle = scenario.getVehicles().getFactory().createVehicle(
+			ride, scenario.getVehicles().getVehicleTypes().get(Id.create("ride", VehicleType.class))
+		);
+		scenario.getVehicles().addVehicle(vehicle);
+
+	}
+
 	private void readActivities(CSVParser csv, String idColumn) {
 
 		String currentId = null;
@@ -121,24 +141,6 @@ public class PlanBuilder {
 	}
 
 	/**
-	 * Add necesarry vehicles to the scenario.
-	 */
-	public static void addVehiclesToScenario(Scenario scenario) {
-		Id<Vehicle> car = Id.createVehicleId("car");
-		Vehicle vehicle = scenario.getVehicles().getFactory().createVehicle(
-			car, scenario.getVehicles().getVehicleTypes().get(Id.create("car", VehicleType.class))
-		);
-		scenario.getVehicles().addVehicle(vehicle);
-
-		Id<Vehicle> ride = Id.createVehicleId("ride");
-		vehicle = scenario.getVehicles().getFactory().createVehicle(
-			ride, scenario.getVehicles().getVehicleTypes().get(Id.create("ride", VehicleType.class))
-		);
-		scenario.getVehicles().addVehicle(vehicle);
-
-	}
-
-	/**
 	 * Create a map for each zone to set of persons living there.
 	 */
 	public Long2ObjectMap<List<Person>> createHomeIndex(Population population) {
@@ -161,6 +163,7 @@ public class PlanBuilder {
 
 	/**
 	 * Find the home zone for a person.
+	 *
 	 * @return -1 if not known
 	 */
 	public long findHomeZone(String personId) {
@@ -177,9 +180,10 @@ public class PlanBuilder {
 
 	/**
 	 * Assigns location from reference data to a person.
+	 *
 	 * @return whether the assignment was successful
 	 */
-	public boolean assignLocationsFromZones(String personId, Plan plan) {
+	public boolean assignLocationsFromZones(String personId, Plan plan, Coord homeCoord) {
 
 		List<CSVRecord> activities = this.activities.get(personId);
 		List<Activity> existing = TripStructureUtils.getActivities(plan, TripStructureUtils.StageActivityHandling.ExcludeStageActivities);
@@ -189,8 +193,12 @@ public class PlanBuilder {
 		if (activities.size() != existing.size())
 			return false;
 
-		// The location happen at the same place (if in same zone)
-		Map<TypeLocation, ActivityFacility> fixedLocations = new HashMap<>();
+		ActLocation home = new ActLocation(null, homeCoord);
+
+		List<List<ActLocation>> possibleLocations = new ArrayList<>();
+
+		// Distances between activities in meter
+		DoubleList dists = new DoubleArrayList();
 
 		for (int i = 0; i < activities.size(); i++) {
 
@@ -199,12 +207,12 @@ public class PlanBuilder {
 
 			String type = activity.getType();
 
-			TypeLocation tLoc = new TypeLocation(type, ref.get("location"), ref.get("zone"));
-			if (fixedLocations.containsKey(tLoc)) {
-				activity.setFacilityId(fixedLocations.get(tLoc).getId());
+			dists.add(InitLocationChoice.beelineDist(Double.parseDouble(ref.get("leg_dist"))));
+
+			if (type.equals("home")) {
+				possibleLocations.add(List.of(home));
 				continue;
 			}
-
 
 			Location loc = new Location(ref.get("location"), ref.get("zone"));
 			long id = features.getOrDefault(loc, -1);
@@ -214,117 +222,71 @@ public class PlanBuilder {
 
 			Set<ActivityFacility> facilities = zones.get(id);
 
-			// TODO: think of matching and selection here
+			List<ActivityFacility> subSet = facilities.stream().filter(f -> f.getActivityOptions().containsKey(type)).toList();
 
-
-
-			if (type.equals("work") || type.startsWith("edu")) {
-				// TODO: store the location
+			if (subSet.isEmpty()) {
+				// If there is no location with the correct type, choose from all possible coordinates
+				possibleLocations.add(
+					facilities.stream().map(f -> new ActLocation(null, f.getCoord())).toList()
+				);
+			} else {
+				possibleLocations.add(
+					subSet.stream().map(f -> new ActLocation(f, f.getCoord())).toList()
+				);
 			}
 		}
+
+		List<ActLocation> chosen = sampleLocation(possibleLocations, dists);
+
+		for (int i = 0; i < chosen.size(); i++) {
+			ActLocation loc = chosen.get(i);
+			Activity activity = existing.get(i);
+
+			activity.setLinkId(null);
+			if (loc.facility() != null) {
+				activity.setFacilityId(loc.facility().getId());
+			} else {
+				activity.setCoord(loc.coord());
+			}
+		}
+
 
 		return true;
 	}
 
 	/**
-	 * Sample pair of from and to facility. Tries to find relation with similar distance to the input.
+	 * Chooses from a list of possible locations such that difference to the references distances is minimized.
 	 */
-	private Pair<Coord, Coord> sampleOD(Row row) {
+	private List<ActLocation> sampleLocation(List<List<ActLocation>> locations, DoubleList dists) {
 
-		Set<Coord> from = matchLocation(row.getString("from_location"), row.getString("from_zone"));
-		Set<Coord> to = matchLocation(row.getString("to_location"), row.getString("to_zone"));
-		if (from == null || from.isEmpty() || to == null || to.isEmpty())
-			return null;
+		double err = Double.POSITIVE_INFINITY;
+		List<ActLocation> best = null;
 
-		double targetDist = InitLocationChoice.beelineDist(row.getDouble("gis_length") * 1000);
-
-		double dist = Double.POSITIVE_INFINITY;
-		Coord f = null;
-		Coord t = null;
-		int i = 0;
-		do {
-
-			Coord newF = from.stream().skip(rnd.nextInt(from.size())).findFirst().orElseThrow();
-			Coord newT = to.stream().skip(rnd.nextInt(to.size())).findFirst().orElseThrow();
-
-			double newDist = CoordUtils.calcEuclideanDistance(newF, newT);
-			if (Math.abs(newDist - targetDist) < Math.abs(dist - targetDist)) {
-				dist = newDist;
-				f = newF;
-				t = newT;
+		for (int k = 0; k < 100; k++) {
+			List<ActLocation> current = new ArrayList<>();
+			for (List<ActLocation> locs : locations) {
+				current.add(locs.get(rnd.nextInt(locs.size())));
 			}
 
-			i++;
-		} while (i < 8);
-
-
-		return Pair.of(f, t);
-	}
-
-	/**
-	 * Sample destination from a row and existing location.
-	 */
-	private Coord sampleDest(Row row, Coord coord) {
-
-		Set<Coord> to = matchLocation(row.getString("to_location"), row.getString("to_zone"));
-		if (to == null || to.isEmpty())
-			return null;
-
-		double targetDist = InitLocationChoice.beelineDist(row.getDouble("gis_length") * 1000);
-		double dist = Double.POSITIVE_INFINITY;
-		Coord f = null;
-
-		int i = 0;
-		do {
-
-			Coord newT = to.stream().skip(rnd.nextInt(to.size())).findFirst().orElseThrow();
-
-			double newDist = CoordUtils.calcEuclideanDistance(coord, newT);
-
-			if (Math.abs(newDist - targetDist) < Math.abs(dist - targetDist)) {
-				dist = newDist;
-				f = newT;
+			double currentErr = 0;
+			for (int i = 1; i < current.size(); i++) {
+				double dist = CoordUtils.calcEuclideanDistance(current.get(i - 1).coord(), current.get(i).coord());
+				currentErr += Math.abs(dist - dists.getDouble(i));
 			}
 
-			i++;
-		} while (i < 8);
-
-
-		return f;
-	}
-
-
-	/**
-	 * Select a random facility for a person.
-	 */
-	private Set<Coord> matchLocation(String location, String zone) {
-
-		Location loc = new Location(location, zone);
-		long id = features.getOrDefault(loc, -1);
-
-		if (id == -1) {
-			if (warnings.add(loc))
-				log.error("No zone found for location {} and zone {}", location, zone);
-
-			return null;
+			if (currentErr < err || best == null) {
+				err = currentErr;
+				best = current;
+			}
 		}
 
-		Set<ActivityFacility> facilities = zones.get(id);
-
-		if (facilities == null) {
-			if (warnings.add(loc))
-				log.error("No facilities found in zone {}", loc);
-
-			return null;
-		}
-
-		return facilities.stream().map(ActivityFacility::getCoord).collect(Collectors.toSet());
+		return best;
 	}
 
 	private record Location(String name, String zone) {
 	}
 
-	private record TypeLocation(String type, String name, String zone) {
+	private record ActLocation(ActivityFacility facility, Coord coord) {
 	}
 
 }

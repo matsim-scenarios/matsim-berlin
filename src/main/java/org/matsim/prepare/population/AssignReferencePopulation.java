@@ -5,6 +5,8 @@ import me.tongfei.progressbar.ProgressBar;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.matsim.api.core.v01.Coord;
+import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
@@ -19,6 +21,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.SplittableRandom;
+import java.util.stream.Collectors;
 
 @CommandLine.Command(
 	name = "assign-reference-population",
@@ -88,6 +91,7 @@ public class AssignReferencePopulation implements MATSimAppCommand {
 
 		RunActivitySampling sampling = new RunActivitySampling(persons, planBuilder.getActivities(), population.getFactory(), 1);
 
+		int i = 0;
 		for (Map.Entry<String, CSVRecord> e : ProgressBar.wrap(persons, "Assigning reference population")) {
 
 			CSVRecord p = e.getValue();
@@ -115,9 +119,10 @@ public class AssignReferencePopulation implements MATSimAppCommand {
 				continue;
 
 			// Create the base daily plan (without locations)
-			Plan plan = sampling.createPlan(Attributes.getHomeCoord(person), e.getKey());
+			Coord homeCoord = Attributes.getHomeCoord(person);
+			Plan plan = sampling.createPlan(homeCoord, e.getKey());
 
-			boolean success = planBuilder.assignLocationsFromZones(e.getKey(), plan);
+			boolean success = planBuilder.assignLocationsFromZones(e.getKey(), plan, homeCoord);
 
 			if (success) {
 				sampling.copyAttributes(p, person);
@@ -126,10 +131,16 @@ public class AssignReferencePopulation implements MATSimAppCommand {
 				person.addPlan(plan);
 				person.setSelectedPlan(plan);
 
+				String refModes = TripStructureUtils.getLegs(plan).stream().map(Leg::getMode).collect(Collectors.joining("-"));
+				person.getAttributes().putAttribute(Attributes.REF_MODES, refModes);
+
 				// remove person that have been used as reference
 				refPersons.remove(person);
+				i++;
 			}
 		}
+
+		log.info("Assigned {}/{} reference persons", i, population.getPersons().size());
 
 		PopulationUtils.writePopulation(population, output.toString());
 
