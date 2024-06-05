@@ -238,6 +238,10 @@ public class PlanBuilder {
 
 		List<ActLocation> chosen = sampleLocation(possibleLocations, dists);
 
+		// No valid locations or matching error was too large
+		if (chosen == null)
+			return false;
+
 		for (int i = 0; i < chosen.size(); i++) {
 			ActLocation loc = chosen.get(i);
 			Activity activity = existing.get(i);
@@ -279,6 +283,13 @@ public class PlanBuilder {
 				best = current;
 			}
 		}
+
+		double total = dists.doubleStream().sum() / (locations.size() - 1);
+		double perActErr = err / (locations.size() - 1);
+
+		// Allow deviation of 500m or 5%
+		if (perActErr > Math.max(500, total * 0.05))
+			return null;
 
 		return best;
 	}
