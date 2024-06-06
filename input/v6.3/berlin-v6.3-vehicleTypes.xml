@@ -2,6 +2,56 @@
 
 <vehicleDefinitions xmlns="http://www.matsim.org/files/dtd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.matsim.org/files/dtd http://www.matsim.org/files/dtd/vehicleDefinitions_v2.0.xsd">
 
+	<!-- Mode types -->
+
+	<vehicleType id="car">
+		<attributes>
+			<attribute name="accessTimeInSecondsPerPerson" class="java.lang.Double">1</attribute>
+			<attribute name="doorOperationMode" class="org.matsim.vehicles.VehicleType$DoorOperationMode">serial</attribute>
+			<attribute name="egressTimeInSecondsPerPerson" class="java.lang.Double">1</attribute>
+		</attributes>
+		<length meter="7.5"/>
+		<width meter="1.0"/>
+		<passengerCarEquivalents pce="1.0"/>
+	</vehicleType>
+
+	<vehicleType id="ride">
+		<attributes>
+			<attribute name="accessTimeInSecondsPerPerson" class="java.lang.Double">1</attribute>
+			<attribute name="doorOperationMode" class="org.matsim.vehicles.VehicleType$DoorOperationMode">serial</attribute>
+			<attribute name="egressTimeInSecondsPerPerson" class="java.lang.Double">1</attribute>
+		</attributes>
+		<length meter="7.5"/>
+		<width meter="1.0"/>
+		<passengerCarEquivalents pce="1.0"/>
+	</vehicleType>
+
+	<vehicleType id="freight">
+		<attributes>
+			<attribute name="accessTimeInSecondsPerPerson" class="java.lang.Double">1</attribute>
+			<attribute name="doorOperationMode" class="org.matsim.vehicles.VehicleType$DoorOperationMode">serial</attribute>
+			<attribute name="egressTimeInSecondsPerPerson" class="java.lang.Double">1</attribute>
+		</attributes>
+		<length meter="15.0"/>
+		<width meter="1.0"/>
+		<passengerCarEquivalents pce="3.5"/>
+		<networkMode networkMode="truck"/>
+	</vehicleType>
+
+	<vehicleType id="truck">
+		<attributes>
+			<attribute name="accessTimeInSecondsPerPerson" class="java.lang.Double">1</attribute>
+			<attribute name="doorOperationMode" class="org.matsim.vehicles.VehicleType$DoorOperationMode">serial</attribute>
+			<attribute name="egressTimeInSecondsPerPerson" class="java.lang.Double">1</attribute>
+		</attributes>
+		<length meter="15.0"/>
+		<width meter="1.0"/>
+		<passengerCarEquivalents pce="3.5"/>
+		<networkMode networkMode="truck"/>
+	</vehicleType>
+
+	<!-- Specific types for commercial traffic -->
+
 	<vehicleType id="golf1.4">
 
 		<description>Golf 1.4 Trendline</description>
@@ -135,7 +185,7 @@
 
 		<description>Heavy Vehicle 40t</description>
 		<capacity seats="1" standingRoomInPersons="0" other="33.0"/>
-		<length meter="7.5"/>
+		<length meter="15"/>
 		<width meter="1.0"/>
 		<maximumVelocity meterPerSecond="22.22"/>
 		<engineInformation>
