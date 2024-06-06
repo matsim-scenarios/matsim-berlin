@@ -25,7 +25,7 @@ import java.util.*;
 	name = "activity-sampling",
 	description = "Create activities by sampling from survey data"
 )
-public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
+public final class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 
 	private static final Logger log = LogManager.getLogger(RunActivitySampling.class);
 	private final CsvOptions csv = new CsvOptions(CSVFormat.Predefined.Default);
@@ -173,6 +173,9 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 		}
 	}
 
+	/**
+	 * Copy attributes from csv record to person.
+	 */
 	public void copyAttributes(CSVRecord row, Person person) {
 		PersonUtils.setCarAvail(person, row.get("car_avail").equals("True") ? "always" : "never");
 		PersonUtils.setLicence(person, row.get("driving_license").toLowerCase());
