@@ -227,7 +227,7 @@ MQ_ID;linkid;Using;Kommentar;Check
 20014;4388102#0;X
 20146;5095581#0;X
 20444;22567370#0;;could not not identify the highway link/entry
-20071;4397801;X; Fixed type (secondary to motorway_link)
+20071;4397801;; Fixed type (secondary to motorway_link)
 21734;149524168;X; Fixed type (unclassified to motorway_link)
 20115;138554957;X;Fixed motorway link, wrong type
 20148;4493101;X;Fixed motorway link, wrong type
@@ -240,3 +240,7 @@ MQ_ID;linkid;Using;Kommentar;Check
 10449;-;;Ignored unplausible measurement
 10281;-;;Ignored unplausible measurement
 10015;-;;Ignored unplausible measurement
+20151;-;;Ignored unplausible measurement
+10286;-;;Ignored unplausible measurement
+10289;-;;Ignored unplausible measurement
+20114;-;;Ignored unplausible measurement
