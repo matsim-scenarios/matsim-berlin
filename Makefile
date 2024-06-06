@@ -196,7 +196,7 @@ $p/commercialFacilities.xml.gz:
 	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
 	 --shapeFileLanduseTypeColumn "fclass"\
 	 --shapeCRS "EPSG:4326"\
-	 --pathToInvestigationAreaData $p/commercialTrafficAreaData.csv
+	 --pathToInvestigationAreaData input/commercialTrafficAreaData.csv
 
 $p/berlin-small-scale-commercialTraffic-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz $p/commercialFacilities.xml.gz
 	$(sc) prepare generate-small-scale-commercial-traffic\
