@@ -130,8 +130,8 @@
 				<param name="dailyMonetaryConstant" value="0.0" />
 				<param name="dailyUtilityConstant" value="0.0" />
 				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-				<!-- alpha=1, gamma=0 -->
-				<!-- (alpha+gamma)*beta_performing+(alpha+1)*car_marginalUtilityOfDistance_util_m -->
+				<!-- alpha=1 -->
+				<!-- (alpha)*beta_performing+(alpha+1)*car_marginalUtilityOfDistance_util_m -->
 				<param name="marginalUtilityOfTraveling_util_hr" value="-6.88" />
 				<!-- alpha*car_monetaryDistanceRate -->
 				<param name="monetaryDistanceRate" value="-1.49E-4" />
