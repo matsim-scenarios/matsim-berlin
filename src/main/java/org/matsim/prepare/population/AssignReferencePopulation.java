@@ -92,6 +92,7 @@ public class AssignReferencePopulation implements MATSimAppCommand {
 		RunActivitySampling sampling = new RunActivitySampling(persons, planBuilder.getActivities(), population.getFactory(), 1);
 
 		int i = 0;
+		outer:
 		for (Map.Entry<String, CSVRecord> e : ProgressBar.wrap(persons, "Assigning reference population")) {
 
 			CSVRecord p = e.getValue();
@@ -112,31 +113,37 @@ public class AssignReferencePopulation implements MATSimAppCommand {
 			if (refPersons == null)
 				continue;
 
-			Person person = persons.matchEntry(e.getValue(), refPersons, rnd);
 
-			// No persons matched
-			if (person == null)
-				continue;
+			// try matching several persons in case it fails
+			for (int j = 0; j < 10; j++) {
 
-			// Create the base daily plan (without locations)
-			Coord homeCoord = Attributes.getHomeCoord(person);
-			Plan plan = sampling.createPlan(homeCoord, e.getKey());
+				Person person = persons.matchEntry(e.getValue(), refPersons, rnd);
 
-			boolean success = planBuilder.assignLocationsFromZones(e.getKey(), plan, homeCoord);
+				// No persons matched
+				if (person == null)
+					continue outer;
 
-			if (success) {
-				sampling.copyAttributes(p, person);
-				person.getAttributes().putAttribute(Attributes.REF_WEIGHT, p.get("p_weight"));
-				person.removePlan(person.getSelectedPlan());
-				person.addPlan(plan);
-				person.setSelectedPlan(plan);
+				// Create the base daily plan (without locations)
+				Coord homeCoord = Attributes.getHomeCoord(person);
+				Plan plan = sampling.createPlan(homeCoord, e.getKey());
 
-				String refModes = TripStructureUtils.getLegs(plan).stream().map(Leg::getMode).collect(Collectors.joining("-"));
-				person.getAttributes().putAttribute(Attributes.REF_MODES, refModes);
+				boolean success = planBuilder.assignLocationsFromZones(e.getKey(), plan, homeCoord);
 
-				// remove person that have been used as reference
-				refPersons.remove(person);
-				i++;
+				if (success) {
+					sampling.copyAttributes(p, person);
+					person.getAttributes().putAttribute(Attributes.REF_WEIGHT, p.get("p_weight"));
+					person.removePlan(person.getSelectedPlan());
+					person.addPlan(plan);
+					person.setSelectedPlan(plan);
+
+					String refModes = TripStructureUtils.getLegs(plan).stream().map(Leg::getMode).collect(Collectors.joining("-"));
+					person.getAttributes().putAttribute(Attributes.REF_MODES, refModes);
+
+					// remove person that have been used as reference
+					refPersons.remove(person);
+					i++;
+					break;
+				}
 			}
 		}
 

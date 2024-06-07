@@ -195,6 +195,12 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 		Coord homeCoord = Attributes.getHomeCoord(person);
 
+		// Reference persons are not assigned locations
+		if (person.getAttributes().getAttribute(Attributes.REF_MODES) != null) {
+			pb.step();
+			return;
+		}
+
 		// Activities that only occur on one place per person
 		Map<String, ActivityFacility> fixedLocations = new HashMap<>();
 

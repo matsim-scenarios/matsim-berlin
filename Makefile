@@ -155,8 +155,16 @@ $p/berlin-static-$V-25pct.plans.xml.gz: $p/berlin-only-$V-25pct.plans.xml.gz $p/
 	$(sc) prepare lookup-regiostar --input $@ --output $@ --xls $(germany)/RegioStaR-Referenzdateien.xlsx
 
 
-$p/berlin-activities-$V-25pct.plans.xml.gz: $p/berlin-static-$V-25pct.plans.xml.gz
+$p/berlin-activities-$V-25pct.plans.xml.gz: $p/berlin-static-$V-25pct.plans.xml.gz $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
 	$(sc) prepare activity-sampling --seed 1 --input $< --output $@ --persons src/main/python/table-persons.csv --activities src/main/python/table-activities.csv
+
+	$(sc) prepare assign-reference-population --population $@ --output $@\
+	 --persons src/main/python/table-persons.csv\
+  	 --activities src/main/python/table-activities.csv\
+  	 --shp $(germany)/../matsim-berlin/data/SrV/zones/zones.shp\
+  	 --shp-crs $(CRS)\
+	 --facilities $(word 2,$^)\
+	 --network $(word 3,$^)\
 
 $p/berlin-initial-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans.xml.gz $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
 	$(sc) prepare init-location-choice\

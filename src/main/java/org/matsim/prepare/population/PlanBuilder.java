@@ -287,8 +287,8 @@ public class PlanBuilder {
 		double total = dists.doubleStream().sum() / (locations.size() - 1);
 		double perActErr = err / (locations.size() - 1);
 
-		// Allow deviation of 500m or 5%
-		if (perActErr > Math.max(500, total * 0.05))
+		// threshold for deviation
+		if (perActErr > Math.max(300, total * 0.03))
 			return null;
 
 		return best;
