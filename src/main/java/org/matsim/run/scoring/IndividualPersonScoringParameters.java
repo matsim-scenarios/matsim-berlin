@@ -64,7 +64,7 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 	/**
 	 * Thread-local random number generator.
 	 */
-	private final ThreadLocal<Context> rnd = ThreadLocal.withInitial(Context::new);
+	private final ThreadLocal<Context> rnd;
 	private final Scenario scenario;
 	private final ScoringConfigGroup basicScoring;
 	private final TransitConfigGroup transitConfig;
@@ -83,6 +83,7 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 		this.globalAvgIncome = computeAvgIncome(scenario.getPopulation());
 		this.categories = Category.fromConfigParams(this.scoring.getScoringParameters());
 		this.cache = new IdMap<>(Person.class, scenario.getPopulation().getPersons().size());
+		this.rnd = ThreadLocal.withInitial(() -> new Context(scenario.getConfig().global().getRandomSeed()));
 	}
 
 	static DistanceGroup[] calcDistanceGroups(List<Integer> dists, DoubleList distUtils) {
@@ -278,10 +279,10 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 
 	private record Context(ContinuousDistribution.Sampler normal, ContinuousDistribution.Sampler tn) {
 
-		Context() {
-			this(NormalDistribution.of(0, 1).createSampler(RandomSource.KISS.create(123L)),
+		Context(long seed) {
+			this(NormalDistribution.of(0, 1).createSampler(RandomSource.KISS.create(seed)),
 				TruncatedNormalDistribution.of(0, 1, 0, Double.POSITIVE_INFINITY)
-					.createSampler(RandomSource.KISS.create(123L))
+					.createSampler(RandomSource.KISS.create(seed))
 			);
 		}
 	}
