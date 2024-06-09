@@ -257,6 +257,15 @@ eval-opt: $p/berlin-initial-$V-25pct.experienced_plans.xml.gz
 	$(sc) run --mode "routeChoice" --iterations 20 --all-car --output "output/eval-$(ERROR_METRIC)" --25pct --population "berlin-$V-25pct.plans_$(ERROR_METRIC).xml.gz"\
 	 --config $p/berlin-$V.config.xml
 
+$p/berlin-$V-25pct.plans_cadyts.xml.gz:
+	$(sc) prepare extract-plans-idx\
+	 --input output/cadyts/cadyts.output_plans.xml.gz\
+	 --output $p/berlin-$V-25pct.plans_selection_cadyts.csv
+
+	$(sc) prepare select-plans-idx\
+	 --input $p/berlin-cadyts-input-$V-25pct.plans.xml.gz\
+	 --csv $p/berlin-$V-25pct.plans_selection_cadyts.csv\
+	 --output $@
 
 # These depend on the output of optimization runs
 $p/berlin-$V-25pct.plans-initial.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz

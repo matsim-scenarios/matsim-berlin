@@ -44,6 +44,7 @@ import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.SumScoringFunction;
 import org.matsim.core.scoring.functions.*;
 import org.matsim.core.utils.geometry.CoordUtils;
+import org.matsim.prepare.opt.ExtractPlanIndexFromType;
 import org.matsim.prepare.population.AssignReferencePopulation;
 import org.matsim.prepare.choices.ComputePlanChoices;
 import org.matsim.prepare.choices.ComputeTripChoices;
@@ -86,7 +87,7 @@ import java.util.stream.Collectors;
 	CreateCountsFromGeoPortalBerlin.class, CreateCountsFromVMZOld.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class,
 	MergePlans.class, SplitActivityTypesDuration.class, CleanPopulation.class, CleanAttributes.class,
 	GenerateSmallScaleCommercialTrafficDemand.class, CreateDataDistributionOfStructureData.class,
-	RunCountOptimization.class, SelectPlansFromIndex.class, AssignReferencePopulation.class,
+	RunCountOptimization.class, SelectPlansFromIndex.class, ExtractPlanIndexFromType.class, AssignReferencePopulation.class,
 	ExtractRelevantFreightTrips.class, CheckCarAvailability.class, FixSubtourModes.class, ComputeTripChoices.class, ComputePlanChoices.class,
 	ApplyNetworkParams.class, SetCarAvailabilityByAge.class
 })
@@ -390,7 +391,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 //					sumScoringFunction.addScoringFunction(new CharyparNagelAgentStuckScoring(params));
 
 					final CadytsScoring<Link> scoringFunction = new CadytsScoring<>(person.getSelectedPlan(), config, cadytsContext);
-					scoringFunction.setWeightOfCadytsCorrection(config.scoring().getBrainExpBeta());
+					scoringFunction.setWeightOfCadytsCorrection(30 * config.scoring().getBrainExpBeta());
 					sumScoringFunction.addScoringFunction(scoringFunction);
 
 					return sumScoringFunction;

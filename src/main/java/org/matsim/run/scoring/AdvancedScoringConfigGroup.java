@@ -16,9 +16,12 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 
 	private final List<ScoringParameters> scoringParameters = new ArrayList<>();
 
+	/**
+	 * Different options for income dependent scoring.
+	 */
 	public enum IncomeDependentScoring {
 		none,
-		avg_by_personal_income,
+		avg_by_personal_income
 	}
 
 	@Parameter
@@ -32,7 +35,6 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 
 	// TODO: maybe option to re-assign variations or use them from attributes
 	// TODO: could load the random variations from a file, helper function to only generate the variations
-	// TODO: reference population?, for which the loglikelihood could be calculated
 
 	public AdvancedScoringConfigGroup() {
 		super(GROUP_NAME);

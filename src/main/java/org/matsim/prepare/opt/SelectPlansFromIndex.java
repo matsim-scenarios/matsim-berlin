@@ -77,7 +77,7 @@ public class SelectPlansFromIndex implements MATSimAppCommand {
 		List<? extends Plan> plans = person.getPlans();
 		Set<Plan> removePlans = new HashSet<>();
 
-		// make sure that one plan is always selected, even if there are less plans than index
+		// make sure that one plan is always selected, even if there are fewer plans than index
 		int idx = planIndex % plans.size();
 
 		for (int i = 0; i < plans.size(); i++) {
