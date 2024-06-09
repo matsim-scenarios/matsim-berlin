@@ -16,13 +16,18 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 
 	private final List<ScoringParameters> scoringParameters = new ArrayList<>();
 
+	public enum IncomeDependentScoring {
+		none,
+		avg_by_personal_income,
+	}
+
 	@Parameter
 	@Comment("The distance groups if marginal utility of distance is adjusted. In meters.")
 	public List<Integer> distGroups;
 
 	@Parameter
 	@Comment("Enable income dependent marginal utility of money.")
-	public boolean incomeDependent = true;
+	public IncomeDependentScoring incomeDependent = IncomeDependentScoring.avg_by_personal_income;
 
 
 	// TODO: maybe option to re-assign variations or use them from attributes

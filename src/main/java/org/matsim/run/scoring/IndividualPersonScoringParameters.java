@@ -135,7 +135,7 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 	}
 
 	private double computeAvgIncome(Population population) {
-		if (!scoring.incomeDependent)
+		if (scoring.incomeDependent == AdvancedScoringConfigGroup.IncomeDependentScoring.none)
 			return Double.NaN;
 
 		log.info("reading income attribute using " + PersonUtils.class + " of all agents and compute global average.\n" +
