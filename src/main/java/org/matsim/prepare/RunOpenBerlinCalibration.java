@@ -186,8 +186,12 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		log.info("Running with flow and storage capacity: {} / {}", config.qsim().getFlowCapFactor(), config.qsim().getStorageCapFactor());
 
-		if (allCar)
+		if (allCar) {
 			config.transit().setUseTransit(false);
+
+			// Disable dashboards, for all car runs, these take too many resources
+			sw.defaultDashboards = SimWrapperConfigGroup.Mode.disabled;
+		}
 
 		// Required for all calibration strategies
 		for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service", "goodsTraffic")) {
