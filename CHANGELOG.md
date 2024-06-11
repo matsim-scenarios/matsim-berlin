@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. 
 
+### 6.1.1 (2024-06-11)
+
+- Fix ASCs in tbe 6.1 config
+  - The calibrated ASCs have not been correctly copied to the 6.1 config, this is now fixed.
+- All input files remain the same
+  -  The existing output remains the same as well, because this run was using the correct ASC values
 
 ### 6.1 (2024-04-17)
 
