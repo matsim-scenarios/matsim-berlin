@@ -16,6 +16,8 @@ def person_filter(df):
     preparation.fill(df, "economic_status", EconomicStatus.UNKNOWN)
     preparation.fill(df, "income", -1)
 
+    df["income"] = preparation.cut(df.income, [0, 500, 900, 1500, 2000, 2600, 3000, 3600, 4600, 5600, np.inf])
+
     return df
 
 
