@@ -13,16 +13,7 @@ import java.util.*;
 public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 
 	private static final String GROUP_NAME = "advancedScoring";
-
 	private final List<ScoringParameters> scoringParameters = new ArrayList<>();
-
-	/**
-	 * Different options for income dependent scoring.
-	 */
-	public enum IncomeDependentScoring {
-		none,
-		avg_by_personal_income
-	}
 
 	@Parameter
 	@Comment("The distance groups if marginal utility of distance is adjusted. In meters.")
@@ -30,22 +21,25 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 
 	@Parameter
 	@Comment("Enable income dependent marginal utility of money.")
-	public IncomeDependentScoring incomeDependent = IncomeDependentScoring.avg_by_personal_income;
+	public IncomeDependentScoring incomeDependent = IncomeDependentScoring.avgByPersonalIncome;
 
-
-	// TODO: maybe option to re-assign variations or use them from attributes
-	// TODO: could load the random variations from a file, helper function to only generate the variations
+	@Parameter
+	@Comment("Define how to load existing preferences.")
+	public LoadPreferences loadPreferences = LoadPreferences.none;
 
 	public AdvancedScoringConfigGroup() {
 		super(GROUP_NAME);
 	}
 
 	/**
-	 *  Return the defined scoring parameters.
+	 * Return the defined scoring parameters.
 	 */
 	public List<ScoringParameters> getScoringParameters() {
 		return Collections.unmodifiableList(scoringParameters);
 	}
+
+	// TODO: maybe option to re-assign variations or use them from attributes
+	// TODO: could load the random variations from a file, helper function to only generate the variations
 
 	@Override
 	public ConfigGroup createParameterSet(String type) {
@@ -64,6 +58,30 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 		} else {
 			throw new IllegalArgumentException("Unsupported parameter set class: " + set);
 		}
+	}
+
+	/**
+	 * Different options for income dependent scoring.
+	 */
+	public enum IncomeDependentScoring {
+		none,
+		avgByPersonalIncome
+	}
+
+	/**
+	 * Define how existing preferences are loaded.
+	 */
+	public enum LoadPreferences {
+		none,
+		requireAttribute,
+		skipRefPersons
+	}
+
+	/**
+	 * Variate values with random draw from specific distribution.
+	 */
+	public enum VariationType {
+		fixed, normal, truncatedNormal
 	}
 
 	/**
@@ -174,12 +192,5 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 		public ModeParams() {
 			super(GROUP_NAME);
 		}
-	}
-
-	/**
-	 * Variate values with random draw from specific distribution.
-	 */
-	public enum VariationType {
-		fixed, normal, truncatedNormal
 	}
 }
