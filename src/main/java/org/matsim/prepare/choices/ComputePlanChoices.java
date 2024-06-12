@@ -29,6 +29,7 @@ import org.matsim.modechoice.constraints.RelaxedMassConservationConstraint;
 import org.matsim.modechoice.estimators.DefaultLegScoreEstimator;
 import org.matsim.modechoice.estimators.FixedCostsEstimator;
 import org.matsim.modechoice.search.TopKChoicesGenerator;
+import org.matsim.prepare.population.Attributes;
 import picocli.CommandLine;
 
 import javax.annotation.Nullable;
@@ -52,12 +53,6 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	private final Queue<List<Object>> rows = new ConcurrentLinkedQueue<>();
 	@CommandLine.Mixin
 	private ScenarioOptions scenario;
-	@CommandLine.Mixin
-	private ShpOptions shp;
-	@CommandLine.Option(names = "--trips", description = "Input trips from survey data, in matsim-python-tools format.", required = true)
-	private Path input;
-	@CommandLine.Option(names = "--facilities", description = "Shp file with facilities", required = true)
-	private Path facilities;
 	@CommandLine.Option(names = "--top-k", description = "Use top k estimates", defaultValue = "9")
 	private int topK;
 	@CommandLine.Option(names = "--modes", description = "Modes to include in estimation", split = ",")
@@ -81,16 +76,6 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 
 	@Override
 	public Integer call() throws Exception {
-
-		if (!shp.isDefined()) {
-			log.error("No shapefile defined. Please specify a shapefile for the zones using the --shp option.");
-			return 2;
-		}
-
-		if (!Files.exists(input)) {
-			log.error("Input file does not exist: " + input);
-			return 2;
-		}
 
 		Config config = this.scenario.getConfig();
 		config.controller().setOutputDirectory("choice-output");
@@ -136,14 +121,7 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 
 		Injector injector = controler.getInjector();
 
-		PlanBuilder.addVehiclesToScenario(injector.getInstance(Scenario.class));
-
-
-		Population population = PopulationUtils.createPopulation(config);
-
-		PlanBuilder builder = new PlanBuilder(shp, new ShpOptions(facilities, null, null), population.getFactory());
-
-		builder.createPlans(input).forEach(population::addPerson);
+		Population population = controler.getScenario().getPopulation();
 
 		thread = ThreadLocal.withInitial(() ->
 			new Ctx(
@@ -199,6 +177,13 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 
 	@Override
 	public void run(Person person) {
+
+		if (person.getAttributes().getAttribute(Attributes.REF_MODES) == null) {
+			pb.step();
+			return;
+		}
+
+		// TODO: selected plan might not be the ref plan
 
 		Plan plan = person.getSelectedPlan();
 		PlanModel model = PlanModel.newInstance(plan);

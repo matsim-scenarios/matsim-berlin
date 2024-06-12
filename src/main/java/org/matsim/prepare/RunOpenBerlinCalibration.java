@@ -164,9 +164,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		if (sample.isSet()) {
 			double sampleSize = sample.getSample();
-
-			// All car leads to much more congestion even if scaled up compared to a normal run
-			// therefore scaling is increased a bit more
 			double countScale = allCar ? CAR_FACTOR : 1;
 
 			config.qsim().setFlowCapFactor(sampleSize * countScale);
@@ -248,6 +245,17 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 					.setSubpopulation(subpopulation)
 				);
 			}
+
+			// Agents should generally use the faster routes, this is without any mode choice
+			config.scoring().getModes().values().forEach(m -> {
+				// Only time goes into the score
+				m.setMarginalUtilityOfTraveling(-config.scoring().getPerforming_utils_hr());
+				m.setConstant(0);
+				m.setMarginalUtilityOfDistance(0);
+				m.setDailyMonetaryConstant(0);
+				m.setDailyUtilityConstant(0);
+				m.setMonetaryDistanceRate(0);
+			});
 
 			config.controller().setRunId("cadyts");
 			config.controller().setOutputDirectory("./output/cadyts-" + scaleFactor);
@@ -388,11 +396,9 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 					Config config = controler.getConfig();
 
-					// Only use cadyts, not the usual scoring
-//					final ScoringParameters params = parameters.getScoringParameters(person);
-//					sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(params, controler.getScenario().getNetwork()));
-//					sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(params));
-//					sumScoringFunction.addScoringFunction(new CharyparNagelAgentStuckScoring(params));
+					// Not using the usual scoring, just cadyts + travel time
+					final ScoringParameters params = parameters.getScoringParameters(person);
+					sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(params, controler.getScenario().getNetwork()));
 
 					final CadytsScoring<Link> scoringFunction = new CadytsScoring<>(person.getSelectedPlan(), config, cadytsContext);
 					scoringFunction.setWeightOfCadytsCorrection(30 * config.scoring().getBrainExpBeta());
