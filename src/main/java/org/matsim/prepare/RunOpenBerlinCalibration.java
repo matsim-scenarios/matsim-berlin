@@ -397,8 +397,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 					Config config = controler.getConfig();
 
 					// Not using the usual scoring, just cadyts + travel time
-					final ScoringParameters params = parameters.getScoringParameters(person);
-					sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(params, controler.getScenario().getNetwork()));
+					// final ScoringParameters params = parameters.getScoringParameters(person);
+					// sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(params, controler.getScenario().getNetwork()));
 
 					final CadytsScoring<Link> scoringFunction = new CadytsScoring<>(person.getSelectedPlan(), config, cadytsContext);
 					scoringFunction.setWeightOfCadytsCorrection(30 * config.scoring().getBrainExpBeta());
