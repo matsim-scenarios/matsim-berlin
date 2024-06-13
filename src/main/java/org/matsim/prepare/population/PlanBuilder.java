@@ -40,11 +40,6 @@ public class PlanBuilder {
 	private static final CsvOptions csv = new CsvOptions(CSVFormat.Predefined.Default);
 
 	/**
-	 * Stores of warning for a zone was generated.
-	 */
-	private final Set<Location> warnings = new HashSet<>();
-
-	/**
 	 * Maps zone ids to contained facilities.
 	 */
 	private final Long2ObjectMap<Set<ActivityFacility>> zones = new Long2ObjectOpenHashMap<>();
@@ -60,10 +55,6 @@ public class PlanBuilder {
 
 	private final SplittableRandom rnd = new SplittableRandom();
 
-	/**
-	 * Drop plans with more than this number of trips.
-	 */
-	private int maxTripNumber = 0;
 
 	public PlanBuilder(ShpOptions zones, FacilityIndex facilities, Path activityPath) throws IOException {
 		// Collect all zones
@@ -84,24 +75,6 @@ public class PlanBuilder {
 		try (CSVParser parser = csv.createParser(activityPath)) {
 			readActivities(parser, "p_id");
 		}
-	}
-
-	/**
-	 * Add necesarry vehicles to the scenario.
-	 */
-	public static void addVehiclesToScenario(Scenario scenario) {
-		Id<Vehicle> car = Id.createVehicleId("car");
-		Vehicle vehicle = scenario.getVehicles().getFactory().createVehicle(
-			car, scenario.getVehicles().getVehicleTypes().get(Id.create("car", VehicleType.class))
-		);
-		scenario.getVehicles().addVehicle(vehicle);
-
-		Id<Vehicle> ride = Id.createVehicleId("ride");
-		vehicle = scenario.getVehicles().getFactory().createVehicle(
-			ride, scenario.getVehicles().getVehicleTypes().get(Id.create("ride", VehicleType.class))
-		);
-		scenario.getVehicles().addVehicle(vehicle);
-
 	}
 
 	private void readActivities(CSVParser csv, String idColumn) {

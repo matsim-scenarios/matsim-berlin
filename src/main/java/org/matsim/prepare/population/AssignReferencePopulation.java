@@ -11,6 +11,7 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.application.MATSimAppCommand;
+import org.matsim.application.analysis.population.TripAnalysis;
 import org.matsim.application.options.ShpOptions;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.router.TripStructureUtils;
@@ -131,13 +132,14 @@ public class AssignReferencePopulation implements MATSimAppCommand {
 
 				if (success) {
 					sampling.copyAttributes(p, person);
-					person.getAttributes().putAttribute(Attributes.REF_WEIGHT, p.get("p_weight"));
+					person.getAttributes().putAttribute(TripAnalysis.ATTR_REF_WEIGHT, p.get("p_weight"));
 					person.removePlan(person.getSelectedPlan());
 					person.addPlan(plan);
 					person.setSelectedPlan(plan);
 
 					String refModes = TripStructureUtils.getLegs(plan).stream().map(Leg::getMode).collect(Collectors.joining("-"));
-					person.getAttributes().putAttribute(Attributes.REF_MODES, refModes);
+					person.getAttributes().putAttribute(TripAnalysis.ATTR_REF_MODES, refModes);
+					person.getAttributes().putAttribute(TripAnalysis.ATTR_REF_ID, e.getKey());
 
 					// remove person that have been used as reference
 					refPersons.remove(person);
