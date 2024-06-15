@@ -38,9 +38,6 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 		return Collections.unmodifiableList(scoringParameters);
 	}
 
-	// TODO: maybe option to re-assign variations or use them from attributes
-	// TODO: could load the random variations from a file, helper function to only generate the variations
-
 	@Override
 	public ConfigGroup createParameterSet(String type) {
 		if (type.equals(ScoringParameters.GROUP_NAME)) {
@@ -74,6 +71,7 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 	public enum LoadPreferences {
 		none,
 		requireAttribute,
+		skipMissing,
 		skipRefPersons
 	}
 

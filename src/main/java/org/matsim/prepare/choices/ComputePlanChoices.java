@@ -6,20 +6,18 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.application.MATSimAppCommand;
+import org.matsim.application.analysis.population.TripAnalysis;
 import org.matsim.application.options.ScenarioOptions;
-import org.matsim.application.options.ShpOptions;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlansConfigGroup;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
-import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.algorithms.ParallelPersonAlgorithmUtils;
 import org.matsim.core.population.algorithms.PersonAlgorithm;
 import org.matsim.core.router.*;
@@ -30,6 +28,7 @@ import org.matsim.modechoice.estimators.DefaultLegScoreEstimator;
 import org.matsim.modechoice.estimators.FixedCostsEstimator;
 import org.matsim.modechoice.search.TopKChoicesGenerator;
 import org.matsim.prepare.population.Attributes;
+import org.matsim.simwrapper.SimWrapperConfigGroup;
 import picocli.CommandLine;
 
 import javax.annotation.Nullable;
@@ -82,8 +81,11 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 		config.controller().setLastIteration(0);
 		config.controller().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
 
+		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
+		sw.defaultDashboards = SimWrapperConfigGroup.Mode.disabled;
+
 		if (timeUtil) {
-			// All utilities expect travel time become zero
+			// All utilities except travel time become zero
 			config.scoring().setMarginalUtlOfWaitingPt_utils_hr(0);
 			config.scoring().setUtilityOfLineSwitch(0);
 
@@ -144,6 +146,8 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 
 		pb.close();
 
+		log.info("Writing {} choices to {}", rows.size(), output);
+
 		try (CSVPrinter csv = new CSVPrinter(Files.newBufferedWriter(output), CSVFormat.DEFAULT)) {
 
 			// header
@@ -183,16 +187,32 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 			return;
 		}
 
-		// TODO: selected plan might not be the ref plan
-
 		Plan plan = person.getSelectedPlan();
 		PlanModel model = PlanModel.newInstance(plan);
+
+		String refModes = (String) person.getAttributes().getAttribute(TripAnalysis.ATTR_REF_MODES);
+		String[] split = refModes.strip().split("-");
+		String[] currentModes = model.getCurrentModesMutable();
+
+		if (refModes.isBlank()) {
+			pb.step();
+			return;
+		}
+
+		if (split.length != currentModes.length) {
+			log.warn("Number of trips ref/current do not match: {} / {}", Arrays.toString(split), Arrays.toString(currentModes));
+			pb.step();
+			return;
+		}
+
+		// Put reference modes into the current modes
+		System.arraycopy(split, 0, currentModes, 0, split.length);
 
 		Ctx ctx = thread.get();
 
 		List<Object> row = new ArrayList<>();
 
-		row.add(person.getId());
+		row.add(person.getAttributes().getAttribute(TripAnalysis.ATTR_REF_ID));
 		// choice, always the first one
 		row.add(1);
 

@@ -162,6 +162,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
 
+		config.replanningAnnealer().setActivateAnnealingModule(false);
+
 		if (sample.isSet()) {
 			double sampleSize = sample.getSample();
 			double countScale = allCar ? CAR_FACTOR : 1;

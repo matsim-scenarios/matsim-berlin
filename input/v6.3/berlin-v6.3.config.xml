@@ -8,7 +8,7 @@
 	<module name="controller">
 		<param name="lastIteration" value="500"/>
 		<param name="overwriteFiles" value="failIfDirectoryExists"/>
-		<param name="runId" value="berlin-v6.2"/>
+		<param name="runId" value="berlin-v6.3"/>
 		<param name="outputDirectory" value="./output/berlin-v6.3-10pct"/>
 		<param name="writeEventsInterval" value="100"/>
 		<param name="writePlansInterval" value="100"/>
@@ -186,22 +186,29 @@
 		</parameterset>
 	</module>
 
+	<!--
+	<module name="advancedScoring">
+	</module>
+	-->
+
 	<module name="counts">
 		<param name="inputCountsFile" value="./berlin-v6.3-counts-vmz.xml.gz"/>
 		<param name="countsScaleFactor" value="0.1"/>
 	</module>
 
 	<module name="ReplanningAnnealer">
-		<param name="activateAnnealingModule" value="false"/>
-		<!--	<parameterset type="AnnealingVariable" >
+		<param name="activateAnnealingModule" value="true" />
+		<parameterset type="AnnealingVariable" >
 			<param name="annealParameter" value="globalInnovationRate" />
 			<param name="annealType" value="sigmoid" />
 			<param name="subpopulation" value="person" />
+			<!-- this parameter enters the exponential and sigmoid formulas. May be an iteration or a share, i.e. 0.5 for halfLife at 50% of iterations. Exponential: startValue / exp(it/halfLife) -->
 			<param name="halfLife" value="0.5" />
+			<!-- sigmoid: 1/(1+e^(shapeFactor*(it - halfLife))); geometric: startValue * shapeFactor^it; msa: startValue / it^shapeFactor -->
 			<param name="shapeFactor" value="0.01" />
-			<param name="startValue" value="0.6" />
+			<param name="startValue" value="0.45" />
 			<param name="endValue" value="0.01" />
-		</parameterset> -->
+		</parameterset>
 	</module>
 
 	<module name="replanning">
