@@ -193,7 +193,7 @@ public final class RunActivitySampling implements MATSimAppCommand, PersonAlgori
 	/**
 	 * Randomize the duration slightly, depending on total duration.
 	 */
-	private int randomizeDuration(int minutes, SplittableRandom rnd) {
+	private static int randomizeDuration(int minutes, SplittableRandom rnd) {
 		if (minutes <= 10)
 			return minutes * 60;
 

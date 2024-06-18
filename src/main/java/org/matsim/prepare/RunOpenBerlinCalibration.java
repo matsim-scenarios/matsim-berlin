@@ -358,7 +358,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		}
 	}
 
-	private Coord getCoord(Scenario scenario, Activity act) {
+	private static Coord getCoord(Scenario scenario, Activity act) {
 
 		if (act.getCoord() != null)
 			return act.getCoord();

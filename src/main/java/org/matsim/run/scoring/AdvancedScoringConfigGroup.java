@@ -13,19 +13,18 @@ import java.util.*;
 public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 
 	private static final String GROUP_NAME = "advancedScoring";
-	private final List<ScoringParameters> scoringParameters = new ArrayList<>();
 
 	@Parameter
 	@Comment("The distance groups if marginal utility of distance is adjusted. In meters.")
 	public List<Integer> distGroups;
-
 	@Parameter
 	@Comment("Enable income dependent marginal utility of money.")
 	public IncomeDependentScoring incomeDependent = IncomeDependentScoring.avgByPersonalIncome;
-
 	@Parameter
 	@Comment("Define how to load existing preferences.")
 	public LoadPreferences loadPreferences = LoadPreferences.none;
+
+	private final List<ScoringParameters> scoringParameters = new ArrayList<>();
 
 	public AdvancedScoringConfigGroup() {
 		super(GROUP_NAME);

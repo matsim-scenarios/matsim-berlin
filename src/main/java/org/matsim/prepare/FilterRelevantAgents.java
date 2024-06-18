@@ -175,7 +175,7 @@ public class FilterRelevantAgents implements MATSimAppCommand, PersonAlgorithm {
 		return coord;
 	}
 
-	private LeastCostPathCalculator createRouter(Network network) {
+	private static LeastCostPathCalculator createRouter(Network network) {
 
 		FreeSpeedTravelTime travelTime = new FreeSpeedTravelTime();
 		LeastCostPathCalculatorFactory factory = new SpeedyALTFactory();

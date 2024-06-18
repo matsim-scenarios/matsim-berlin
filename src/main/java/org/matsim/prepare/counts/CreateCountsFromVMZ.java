@@ -175,7 +175,7 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 			wb = new XSSFWorkbook(excel);
 		} catch (IOException e) {
 			log.error("Error reading excel file", e);
-			throw new RuntimeException("Error reading excel file");
+			throw new RuntimeException("Error reading excel file", e);
 		}
 
 		extractStations(wb.getSheet("Stammdaten"));
@@ -203,7 +203,7 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 			//create hour volumes from 'Tagesganglinie'
 			double[] carShareAtHour = station.carShareAtHour;
 			for (int i = 0; i < 24; i++) {
-				carVolumes.setAtHour(i, ( (station.totalVolume - station.freightVolume) * carShareAtHour[i]));
+				carVolumes.setAtHour(i, (station.totalVolume - station.freightVolume) * carShareAtHour[i]);
 			}
 			if (station.hasFreightShare) {
 
@@ -211,7 +211,7 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 
 				double[] freightShareAtHour = station.freightShareAtHour;
 				for (int i = 0; i < 24; i++) {
-					truckVolumes.setAtHour(i, (station.freightVolume * freightShareAtHour[i]));
+					truckVolumes.setAtHour(i, station.freightVolume * freightShareAtHour[i]);
 				}
 			}
 
@@ -329,7 +329,7 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 		}
 	}
 
-	private String replaceUmlaute(String str) {
+	private static String replaceUmlaute(String str) {
 		str = str.replace("ü", "ue")
 				.replace("ö", "oe")
 				.replace("ä", "ae")

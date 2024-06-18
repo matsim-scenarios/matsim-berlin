@@ -251,5 +251,99 @@
 			<property name="message" value="Trailing whitespace"/>
 		</module>
 
+
+		<!-- Extension modules from sevntu.checkstyle -->
+
+		<!-- Coding -->
+		<module name="com.github.sevntu.checkstyle.checks.coding.CustomDeclarationOrderCheck">
+			<property name="customDeclarationOrder"
+					  value="Field(public static) ### Field(private static) ### Field(public) ### Field(protected) ### Field(private) ### CTOR(.*) ### Method(public static .*) ### Method(.*) ### InnerEnum(.*) ### InnerInterface(.*) ### InnerClass(.*)" />
+			<property name="caseSensitive" value="true"/>
+			<property name="fieldPrefix" value=""/>
+		</module>
+		<module name="com.github.sevntu.checkstyle.checks.coding.ForbidReturnInFinallyBlockCheck"/>
+		<module name="com.github.sevntu.checkstyle.checks.coding.MultipleStringLiteralsExtendedCheck">
+			<property name="allowedDuplicates" value="7"/>
+			<property name="ignoreOccurrenceContext" value="ANNOTATION"/>
+			<property name="ignoreStringsRegexp" value="^&quot;&quot;$"/>
+			<property name="highlightAllDuplicates" value="false"/>
+		</module>
+		<module name="com.github.sevntu.checkstyle.checks.coding.ReturnBooleanFromTernaryCheck"/>
+		<module name="com.github.sevntu.checkstyle.checks.coding.ForbidCertainImportsCheck"/>
+		<module name="com.github.sevntu.checkstyle.checks.coding.AvoidDefaultSerializableInInnerClassesCheck">
+			<property name="allowPartialImplementation" value="false"/>
+		</module>
+		<module name="com.github.sevntu.checkstyle.checks.coding.OverridableMethodInConstructorCheck">
+			<property name="checkCloneMethod" value="false"/>
+			<property name="checkReadObjectMethod" value="false"/>
+			<property name="matchMethodsByArgCount" value="false"/>
+		</module>
+		<module name="com.github.sevntu.checkstyle.checks.coding.AvoidHidingCauseExceptionCheck"/>
+		<module name="com.github.sevntu.checkstyle.checks.coding.ReturnCountExtendedCheck">
+			<property name="maxReturnCount" value="4"/>
+			<property name="ignoreMethodLinesCount" value="20"/>
+			<property name="minIgnoreReturnDepth" value="4"/>
+			<property name="ignoreEmptyReturns" value="true"/>
+			<property name="topLinesToIgnoreCount" value="10"/>
+			<property name="ignoreMethodsNames" value="equals"/>
+		</module>
+		<module name="com.github.sevntu.checkstyle.checks.coding.SimpleAccessorNameNotationCheck"/>
+		<module name="com.github.sevntu.checkstyle.checks.coding.UnnecessaryParenthesesExtendedCheck">
+			<property name="ignoreCalculationOfBooleanVariables" value="false"/>
+			<property name="ignoreCalculationOfBooleanVariablesWithReturn" value="false"/>
+			<property name="ignoreCalculationOfBooleanVariablesWithAssert" value="false"/>
+		</module>
+		<module name="com.github.sevntu.checkstyle.checks.coding.FinalizeImplementationCheck"/>
+		<module name="com.github.sevntu.checkstyle.checks.coding.ForbidThrowAnonymousExceptionsCheck">
+			<property name="exceptionClassNameRegex" value="^.*Exception"/>
+		</module>
+		<module name="com.github.sevntu.checkstyle.checks.coding.MapIterationInForEachLoopCheck">
+			<property name="proposeValuesUsage" value="true"/>
+			<property name="proposeKeySetUsage" value="false"/>
+			<property name="proposeEntrySetUsage" value="false"/>
+		</module>
+		<module name="com.github.sevntu.checkstyle.checks.coding.TernaryPerExpressionCountCheck">
+			<property name="maxTernaryPerExpressionCount" value="1"/>
+			<property name="ignoreTernaryOperatorsInBraces" value="true"/>
+			<property name="ignoreIsolatedTernaryOnLine" value="true"/>
+		</module>
+		<module name="com.github.sevntu.checkstyle.checks.coding.RedundantReturnCheck">
+			<property name="allowReturnInEmptyMethodsAndConstructors" value="false"/>
+		</module>
+		<module name="com.github.sevntu.checkstyle.checks.coding.DiamondOperatorForVariableDefinitionCheck"/>
+		<module name="com.github.sevntu.checkstyle.checks.coding.PreferMethodReferenceCheck"/>
+		<module name="com.github.sevntu.checkstyle.checks.coding.EmptyPublicCtorInClassCheck"/>
+		<module name="com.github.sevntu.checkstyle.checks.coding.UselessSuperCtorCallCheck"/>
+		<module name="com.github.sevntu.checkstyle.checks.coding.UselessSingleCatchCheck"/>
+
+		<!-- Design -->
+		<module name="com.github.sevntu.checkstyle.checks.design.ForbidWildcardAsReturnTypeCheck">
+			<property name="checkPublicMethods" value="true"/>
+			<property name="checkPackageMethods" value="true"/>
+			<property name="checkProtectedMethods" value="true"/>
+			<property name="checkPrivateMethods" value="false"/>
+			<property name="checkOverrideMethods" value="false"/>
+			<property name="checkDeprecatedMethods" value="false"/>
+			<property name="allowReturnWildcardWithSuper" value="false"/>
+			<property name="allowReturnWildcardWithExtends" value="false"/>
+			<property name="returnTypeClassNamesIgnoreRegex" value="^(Comparator|Comparable)$"/>
+		</module>
+		<module name="com.github.sevntu.checkstyle.checks.design.NoMainMethodInAbstractClassCheck"/>
+		<module name="com.github.sevntu.checkstyle.checks.design.PublicReferenceToPrivateTypeCheck"/>
+		<module name="com.github.sevntu.checkstyle.checks.design.StaticMethodCandidateCheck">
+			<property name="skippedMethods"
+					  value="readObject, writeObject, readObjectNoData, readResolve, writeReplace"/>
+		</module>
+		<module name="com.github.sevntu.checkstyle.checks.design.ConstructorWithoutParamsCheck">
+			<property name="classNameFormat" value=".*Exception$"/>
+			<property name="ignoredClassNameFormat" value="UnsupportedOperationException"/>
+		</module>
+		<module name="com.github.sevntu.checkstyle.checks.design.InnerClassCheck"/>
+		<module name="com.github.sevntu.checkstyle.checks.design.HideUtilityClassConstructorCheck"/>
+		<module name="com.github.sevntu.checkstyle.checks.design.NestedSwitchCheck"/>
+		<module name="com.github.sevntu.checkstyle.checks.design.AvoidConditionInversionCheck"/>
+		<module name="com.github.sevntu.checkstyle.checks.design.CauseParameterInExceptionCheck"/>
+		<module name="com.github.sevntu.checkstyle.checks.design.CheckstyleTestMakeupCheck"/>
+
 	</module>
 </module>

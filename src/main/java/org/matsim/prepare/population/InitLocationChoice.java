@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import me.tongfei.progressbar.ProgressBar;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.geotools.api.feature.simple.SimpleFeature;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.index.strtree.STRtree;
 import org.matsim.api.core.v01.Coord;
@@ -28,7 +29,6 @@ import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.facilities.ActivityFacility;
 import org.matsim.prepare.RunOpenBerlinCalibration;
 import org.matsim.prepare.facilities.AttributedActivityFacility;
-import org.geotools.api.feature.simple.SimpleFeature;
 import picocli.CommandLine;
 
 import java.math.BigInteger;
@@ -103,6 +103,17 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		new InitLocationChoice().execute(args);
 	}
 
+	/**
+	 * Approximate beeline dist from known traveled distance. Distance will be reduced by a fixed detour factor.
+	 *
+	 * @param travelDist distance in km
+	 * @return beeline distance in meters
+	 */
+	public static double beelineDist(double travelDist) {
+		double detourFactor = travelDist <= 3 ? DETOUR_FACTOR_SHORT : DETOUR_FACTOR;
+		return travelDist * 1000 / detourFactor;
+	}
+
 	private static Coord rndCoord(SplittableRandom rnd, double dist, Coord origin) {
 		var angle = rnd.nextDouble() * Math.PI * 2;
 
@@ -110,16 +121,6 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		var y = Math.sin(angle) * dist;
 
 		return new Coord(RunOpenBerlinCalibration.roundNumber(origin.getX() + x), RunOpenBerlinCalibration.roundNumber(origin.getY() + y));
-	}
-
-	/**
-	 * Approximate beeline dist from known traveled distance. Distance will be reduced by a fixed detour factor.
-	 * @param travelDist distance in km
-	 * @return beeline distance in meters
-	 */
-	public static double beelineDist(double travelDist) {
-		double detourFactor = travelDist <= 3 ? DETOUR_FACTOR_SHORT : DETOUR_FACTOR;
-		return travelDist * 1000 / detourFactor;
 	}
 
 	@Override
@@ -216,11 +217,12 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 			for (Activity act : acts) {
 
-				String type = act.getType();
-
 				total.incrementAndGet();
 
 				if (Attributes.isLinkUnassigned(act.getLinkId())) {
+
+					String type = act.getType();
+
 					act.setLinkId(null);
 					ActivityFacility location = null;
 
