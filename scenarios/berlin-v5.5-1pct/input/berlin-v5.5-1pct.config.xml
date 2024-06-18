@@ -22,7 +22,7 @@
 	</module>
 	<module name="plans" >
 		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-1pct/input/berlin-v5.5-1pct.plans.xml.gz" />
-		<param name="removingUnnecessaryPlanAttributes" value="true" />
+		<param name="removingUnnecessaryPlanAttributes" value="false" />
 	</module>
 	<module name="vehicles" >
 		<param name="vehiclesFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5-mode-vehicle-types.xml" />
@@ -145,7 +145,7 @@
 			</parameterset>
 		</parameterset>
 	</module>
-	
+
 	<module name="transitRouter">
 		<!-- Factor with which direct walk generalized cost is multiplied before it is compared to the pt generalized cost.  Set to a very high value to reduce direct walk results. -->
 		<param name="directWalkFactor" value="1.0" />
