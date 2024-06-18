@@ -12,7 +12,7 @@
 			<!-- If true, the startLink is changed to last link in the current schedule, so the taxi starts the next day at the link where it stopped operating the day before. False by default. -->
 			<param name="changeStartLinkToLastLinkInSchedule" value="true" />
 			<!-- allows to configure a service area per drt mode.Used with serviceArea Operational Scheme -->
-			<param name="drtServiceAreaShapeFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.2/input/shp/Berlin_25832.shp" />
+			<param name="drtServiceAreaShapeFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.1/input/shp/Berlin_25832.shp" />
 			<!-- Idle vehicles return to the nearest of all start links. See: DvrpVehicle.getStartLink() -->
 			<param name="idleVehiclesReturnToDepots" value="false" />
 			<!-- Defines the slope of the maxTravelTime estimation function (optimisation constraint), i.e. maxTravelTimeAlpha * estimated_drt_travel_time + maxTravelTimeBeta. Alpha should not be smaller than 1. -->

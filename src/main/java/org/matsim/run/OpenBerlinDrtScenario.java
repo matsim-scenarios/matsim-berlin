@@ -71,22 +71,76 @@ import java.util.Set;
 /**
  * Extend the {@link OpenBerlinScenario} by DRT functionality. <br>
  * By default, a config is loaded where a drt mode is operated in all of Berlin with 10,000 vehicles. <br>
- * Alternatively, you can provide another drt-only config using the {@code --drt-config} comand line option. <br>
+ * Alternatively, you can provide another drt-only config using the {@code --drt-config} command line option. <br>
  * This run script then configures drt to be perceived just like pt and to be fully tariff-integrated into pt. <br>
  */
-public class OpenBerlinDrtScenario extends OpenBerlinScenario{
+public class OpenBerlinDrtScenario extends OpenBerlinScenario {
 
 	//TODO: write tests
 
 	private static final Logger log = LogManager.getLogger(OpenBerlinDrtScenario.class);
 
 	@CommandLine.Option(names = "--drt-config",
-		defaultValue = "input/v6.1/berlin-v6.1.drt-config.xml",
+		defaultValue = "input/v" + OpenBerlinScenario.VERSION + "/berlin-v" + OpenBerlinScenario.VERSION +".drt-config.xml",
 		description = "Path to drt (only) config. Should contain only additional stuff to base config. Otherwise overrides.")
 	private String drtConfig;
 
 	public static void main(String[] args) {
 		MATSimApplication.run(OpenBerlinDrtScenario.class, args);
+	}
+
+	/**
+	 * This code is copied from matsim-berlin v5.x {@code RunDrtOpenBerlinScenario.prepareScenario()} and sub-methods.
+	 *
+	 * @param scenario network and transit schedule are mutated as side effects.
+	 */
+	private static void prepareNetworkAndTransitScheduleForDrt(Scenario scenario) {
+		BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(scenario.getConfig(), BerlinExperimentalConfigGroup.class);
+		DvrpConfigGroup dvrpConfigGroup = DvrpConfigGroup.get(scenario.getConfig());
+
+		for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(scenario.getConfig()).getModalElements()) {
+			String drtServiceAreaShapeFile = drtCfg.drtServiceAreaShapeFile;
+			if (drtServiceAreaShapeFile != null && !drtServiceAreaShapeFile.equals("") && !drtServiceAreaShapeFile.equals("null")) {
+
+				if (dvrpConfigGroup.networkModes.contains(drtCfg.getMode())) {
+					// Michal says restricting drt to a drt network roughly the size of the service area helps to speed up.
+					// This is even more true since drt started to route on a freespeed TT matrix (Nov '20).
+					// A buffer of 10km to the service area Berlin includes the A10 on some useful stretches outside Berlin.
+					if (berlinCfg.getTagDrtLinksBufferAroundServiceAreaShp() >= 0.0) {
+						//TODO: inline/move method ?
+						RunDrtOpenBerlinScenario.addDRTmode(scenario, drtCfg.getMode(), drtServiceAreaShapeFile, berlinCfg.getTagDrtLinksBufferAroundServiceAreaShp());
+					}
+				}
+
+				tagTransitStopsInServiceArea(scenario.getTransitSchedule(),
+					"drtStopFilter", "station_S/U/RE/RB_drtServiceArea",
+					drtServiceAreaShapeFile,
+					"stopFilter", "station_S/U/RE/RB",
+					// some S+U stations are located slightly outside the shp File, e.g. U7 Neukoelln, U8
+					// Hermannstr., so allow buffer around the shape.
+					// This does not mean that a drt vehicle can pick the passenger up outside the service area,
+					// rather the passenger has to walk the last few meters from the drt drop off to the station.
+					200.0);
+			}
+		}
+	}
+
+	private static void tagTransitStopsInServiceArea(TransitSchedule transitSchedule,
+													 String newAttributeName, String newAttributeValue,
+													 String drtServiceAreaShapeFile,
+													 String oldFilterAttribute, String oldFilterValue,
+													 double bufferAroundServiceArea) {
+		log.info("Tagging pt stops marked for intermodal access/egress in the service area.");
+		BerlinShpUtils shpUtils = new BerlinShpUtils(drtServiceAreaShapeFile);
+		for (TransitStopFacility stop : transitSchedule.getFacilities().values()) {
+			if (stop.getAttributes().getAttribute(oldFilterAttribute) != null) {
+				if (stop.getAttributes().getAttribute(oldFilterAttribute).equals(oldFilterValue)) {
+					if (shpUtils.isCoordInDrtServiceAreaWithBuffer(stop.getCoord(), bufferAroundServiceArea)) {
+						stop.getAttributes().putAttribute(newAttributeName, newAttributeValue);
+					}
+				}
+			}
+		}
 	}
 
 	@Override
@@ -203,59 +257,6 @@ public class OpenBerlinDrtScenario extends OpenBerlinScenario{
 		// yyyy there is fareSModule (with S) in config. ?!?!  kai, jul'19
 		controler.addOverridingModule(new IntermodalTripFareCompensatorsModule());
 		controler.addOverridingModule(new PtIntermodalRoutingModesModule());
-	}
-
-	/**
-	 * This code is copied from matsim-berlin v5.x {@code RunDrtOpenBerlinScenario.prepareScenario()} and sub-methods.
-	 * @param scenario network and transit schedule are mutated as side effects.
-	 */
-	private static void prepareNetworkAndTransitScheduleForDrt(Scenario scenario) {
-		BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(scenario.getConfig(), BerlinExperimentalConfigGroup.class);
-		DvrpConfigGroup dvrpConfigGroup = DvrpConfigGroup.get(scenario.getConfig());
-
-		for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(scenario.getConfig()).getModalElements()) {
-			String drtServiceAreaShapeFile = drtCfg.drtServiceAreaShapeFile;
-			if (drtServiceAreaShapeFile != null && !drtServiceAreaShapeFile.equals("") && !drtServiceAreaShapeFile.equals("null")) {
-
-				if (dvrpConfigGroup.networkModes.contains(drtCfg.getMode())){
-					// Michal says restricting drt to a drt network roughly the size of the service area helps to speed up.
-					// This is even more true since drt started to route on a freespeed TT matrix (Nov '20).
-					// A buffer of 10km to the service area Berlin includes the A10 on some useful stretches outside Berlin.
-					if (berlinCfg.getTagDrtLinksBufferAroundServiceAreaShp() >= 0.0) {
-						//TODO: inline/move method ?
-						RunDrtOpenBerlinScenario.addDRTmode(scenario, drtCfg.getMode(), drtServiceAreaShapeFile, berlinCfg.getTagDrtLinksBufferAroundServiceAreaShp());
-					}
-				}
-
-				tagTransitStopsInServiceArea(scenario.getTransitSchedule(),
-					"drtStopFilter", "station_S/U/RE/RB_drtServiceArea",
-					drtServiceAreaShapeFile,
-					"stopFilter", "station_S/U/RE/RB",
-					// some S+U stations are located slightly outside the shp File, e.g. U7 Neukoelln, U8
-					// Hermannstr., so allow buffer around the shape.
-					// This does not mean that a drt vehicle can pick the passenger up outside the service area,
-					// rather the passenger has to walk the last few meters from the drt drop off to the station.
-					200.0);
-			}
-		}
-	}
-
-	private static void tagTransitStopsInServiceArea(TransitSchedule transitSchedule,
-													 String newAttributeName, String newAttributeValue,
-													 String drtServiceAreaShapeFile,
-													 String oldFilterAttribute, String oldFilterValue,
-													 double bufferAroundServiceArea) {
-		log.info("Tagging pt stops marked for intermodal access/egress in the service area.");
-		BerlinShpUtils shpUtils = new BerlinShpUtils(drtServiceAreaShapeFile);
-		for (TransitStopFacility stop : transitSchedule.getFacilities().values()) {
-			if (stop.getAttributes().getAttribute(oldFilterAttribute) != null) {
-				if (stop.getAttributes().getAttribute(oldFilterAttribute).equals(oldFilterValue)) {
-					if (shpUtils.isCoordInDrtServiceAreaWithBuffer(stop.getCoord(), bufferAroundServiceArea)) {
-						stop.getAttributes().putAttribute(newAttributeName, newAttributeValue);
-					}
-				}
-			}
-		}
 	}
 
 
