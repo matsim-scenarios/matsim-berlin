@@ -50,6 +50,7 @@ import org.matsim.prepare.counts.CreateCountsFromGeoPortalBerlin;
 import org.matsim.prepare.counts.CreateCountsFromVMZ;
 import org.matsim.prepare.counts.CreateCountsFromVMZOld;
 import org.matsim.prepare.download.DownloadCommuterStatistic;
+import org.matsim.prepare.drt.CreateDrtVehicles;
 import org.matsim.prepare.facilities.CreateMATSimFacilities;
 import org.matsim.prepare.facilities.ExtractFacilityGeoPkg;
 import org.matsim.prepare.opt.RunCountOptimization;
@@ -87,7 +88,7 @@ import java.util.stream.Collectors;
 	GenerateSmallScaleCommercialTrafficDemand.class, CreateDataDistributionOfStructureData.class,
 	RunCountOptimization.class, SelectPlansFromIndex.class,
 	ExtractRelevantFreightTrips.class, CheckCarAvailability.class, FixSubtourModes.class, ComputeTripChoices.class, ComputePlanChoices.class,
-	ApplyNetworkParams.class, SetCarAvailabilityByAge.class
+	ApplyNetworkParams.class, SetCarAvailabilityByAge.class, CreateDrtVehicles.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
 
