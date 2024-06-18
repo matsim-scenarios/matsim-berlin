@@ -19,7 +19,6 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.application.MATSimApplication;
 import org.matsim.core.config.Config;
-import org.matsim.core.config.groups.ScoringConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.events.AfterMobsimEvent;
@@ -29,7 +28,6 @@ import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.core.utils.misc.Time;
 import org.matsim.pt.PtConstants;
-import org.matsim.vehicles.Vehicle;
 import picocli.CommandLine;
 
 import java.util.HashMap;
@@ -43,6 +41,9 @@ import java.util.List;
 
 
 public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
+	/**
+	 * Run the {@link OpenBerlinScenario} with monetary incentive policies.
+	 */
 
 	@CommandLine.Option(names = "--distanceBasedReward",
 		defaultValue = "0.0",
@@ -82,7 +83,7 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 
 		// teleported beeline is the same for bike and walk
 		if (distanceBasedReward > 0.0) {
-			System.out.println("distanceBasedReward = " + distanceBasedReward);
+
 			DistanceBasedMoneyReward distanceBasedMoneyReward = new DistanceBasedMoneyReward(
 				controler.getScenario().getConfig().routing().getBeelineDistanceFactors().get(TransportMode.walk),
 				controler.getScenario().getNetwork(), distanceBasedReward);
@@ -140,7 +141,7 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 
 		private Map<Id<Person>, Coord> agentDepartureLocations = new HashMap<>();
 
-		public DistanceBasedMoneyReward(double modeSpecificBeelineDistanceFactor, Network network, double klimaTaler) {
+		DistanceBasedMoneyReward(double modeSpecificBeelineDistanceFactor, Network network, double klimaTaler) {
 			this.beelineDistanceFactor = modeSpecificBeelineDistanceFactor;
 			this.network = network;
 			this.klimaTaler = klimaTaler;
@@ -229,7 +230,6 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 			}
 		}
 
-
 		@Override
 		public void handleEvent(ActivityStartEvent event) {
 			if (event.getActType().equals(PtConstants.TRANSIT_ACTIVITY_TYPE)) {
@@ -266,7 +266,7 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 		private final Map<Id<Person>, Double> currentIterationMobilityBudget = new HashMap<>();
 		private final List<Id<Person>> personWhoAreStuck= new ArrayList<>();
 
-		public MobilityBudgetEventHandler(Map<Id<Person>, Double> personsEligibleForMobilityBudget2MoneyValue) {
+		MobilityBudgetEventHandler(Map<Id<Person>, Double> personsEligibleForMobilityBudget2MoneyValue) {
 			this.person2MobilityBudget = personsEligibleForMobilityBudget2MoneyValue;
 		}
 
@@ -315,7 +315,7 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 		for (Person person : scenario.getPopulation().getPersons().values()) {
 			String subpopulation = (String) person.getAttributes().getAttribute("subpopulation");
 
-			if(subpopulation.contains("person")) {
+			if (subpopulation.contains("person")) {
 				Plan plan = person.getSelectedPlan();
 				//TripStructureUtil get Legs
 				List<String> transportModeList = new ArrayList<>();
