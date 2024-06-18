@@ -71,7 +71,7 @@ import java.util.Set;
 /**
  * Extend the {@link OpenBerlinScenario} by DRT functionality. <br>
  * By default, a config is loaded where a drt mode is operated in all of Berlin with 10,000 vehicles. <br>
- * Alternatively, you can provide another drt-only config using the {@code --drt-config} comand line option. <br>
+ * Alternatively, you can provide another drt-only config using the {@code --drt-config} command line option. <br>
  * This run script then configures drt to be perceived just like pt and to be fully tariff-integrated into pt. <br>
  */
 public class OpenBerlinDrtScenario extends OpenBerlinScenario{
