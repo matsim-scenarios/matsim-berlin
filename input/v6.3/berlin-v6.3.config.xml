@@ -106,7 +106,7 @@
 	</module>
 
 	<module name="scoring">
-		<param name="fractionOfIterationsToStartScoreMSA" value="0.8"/>
+		<param name="fractionOfIterationsToStartScoreMSA" value="0.9"/>
 		<parameterset type="scoringParameters">
 			<param name="marginalUtilityOfMoney" value="1.0"/>
 			<!-- car prices 2012->2022: inflation (110.2-91.7)/91.7 = 0.2017448
@@ -212,7 +212,7 @@
 	</module>
 
 	<module name="replanning">
-		<param name="fractionOfIterationsToDisableInnovation" value="0.8"/>
+		<param name="fractionOfIterationsToDisableInnovation" value="0.9"/>
 		<!-- Strategies are added in code -->
 	</module>
 
