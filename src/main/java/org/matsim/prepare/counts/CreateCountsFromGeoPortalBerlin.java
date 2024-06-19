@@ -250,7 +250,7 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 
 		for (String type : CreateCountsFromGeoPortalBerlin.ROAD_TYPES) {
 			Predicate<Link> p = link -> {
-				var attr = NetworkUtils.getHighwayType(link);
+				String attr = NetworkUtils.getHighwayType(link);
 				return attr.toLowerCase().contains(type);
 			};
 

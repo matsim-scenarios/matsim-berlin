@@ -251,6 +251,13 @@
 			<property name="message" value="Trailing whitespace"/>
 		</module>
 
+		<!-- This forbids the var keyword, except for constructor, factory methods and in for loops -->
+		<module name="MatchXpath">
+			<property name="query"
+					  value="//VARIABLE_DEF[./TYPE/IDENT[@text='var'] and not((./parent::FOR_INIT) or (./parent::FOR_EACH_CLAUSE) or (./ASSIGN/EXPR/LITERAL_NEW) or (./ASSIGN/EXPR/METHOD_CALL/DOT/IDENT[@text='of' or @text='now' or @text='create' or @text='valueOf' or starts-with(@text, 'new')]) )]" />
+			<message key="matchxpath.match"
+					 value="The 'var' keyword for local type inference is not allowed, except when using constructors or factory methods" />
+		</module>
 
 		<!-- Extension modules from sevntu.checkstyle -->
 
@@ -344,6 +351,15 @@
 		<module name="com.github.sevntu.checkstyle.checks.design.AvoidConditionInversionCheck"/>
 		<module name="com.github.sevntu.checkstyle.checks.design.CauseParameterInExceptionCheck"/>
 		<module name="com.github.sevntu.checkstyle.checks.design.CheckstyleTestMakeupCheck"/>
+
+		<module name="ForbidCertainMethodCheck">
+			<property name="methodName" value="assert(True|False)"/>
+			<property name="argumentCount" value="1"/>
+		</module>
+		<module name="ForbidCertainMethodCheck">
+			<property name="methodName" value="assertEquals"/>
+			<property name="argumentCount" value="2"/>
+		</module>
 
 	</module>
 </module>

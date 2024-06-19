@@ -115,10 +115,10 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 	}
 
 	private static Coord rndCoord(SplittableRandom rnd, double dist, Coord origin) {
-		var angle = rnd.nextDouble() * Math.PI * 2;
+		double angle = rnd.nextDouble() * Math.PI * 2;
 
-		var x = Math.cos(angle) * dist;
-		var y = Math.sin(angle) * dist;
+		double x = Math.cos(angle) * dist;
+		double y = Math.sin(angle) * dist;
 
 		return new Coord(RunOpenBerlinCalibration.roundNumber(origin.getX() + x), RunOpenBerlinCalibration.roundNumber(origin.getY() + y));
 	}
