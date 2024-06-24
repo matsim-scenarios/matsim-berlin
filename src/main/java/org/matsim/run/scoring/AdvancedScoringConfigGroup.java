@@ -1,5 +1,6 @@
 package org.matsim.run.scoring;
 
+import org.matsim.application.analysis.population.Category;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ReflectiveConfigGroup;
 import org.matsim.utils.objectattributes.attributable.Attributes;
