@@ -302,6 +302,15 @@ $p/berlin-$V-10pct.plans.xml.gz:
 		--sample-size 0.1\
 		--samples 0.03 0.01 0.001\
 
+
+$p/berlin-$V.drt-by-rndLocations-10000vehicles-4seats.xml.gz: $p/berlin-$V-network.xml.gz
+	$(sc) prepare create-drt-vehicles\
+	 --network $<\
+	 --shp "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-$V/input/shp/Berlin_25832.shp"\
+	 --output $p/berlin-$V.\
+	 --vehicles 10000\
+	 --seats 4
+
 prepare-calibration: $p/berlin-cadyts-input-$V-25pct.plans.xml.gz $p/berlin-$V-network-with-pt.xml.gz $p/berlin-$V-counts-vmz.xml.gz
 	echo "Done"
 

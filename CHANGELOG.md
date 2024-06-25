@@ -19,6 +19,9 @@ All notable changes to this project will be documented in this file.
 - Recalibration of mode constants (ASCs)
 - Updated commercial traffic, especially the trip duration should be more realistic
 - Added a run class for DRT scenarios
+- Please note that the 6.3 version is released nearly at the same time
+  - Because of that 6.2 was not calibrated to the same accuracy
+  - Rather use the newest version, which also includes all features of 6.2
 
 ### 6.1 (2024-04-17)
 
