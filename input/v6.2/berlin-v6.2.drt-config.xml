@@ -54,6 +54,11 @@
 				<!-- drt fare per hour (fee = positive value) -->
 				<param name="timeFare_h" value="0.0"/>
 			</parameterset>
+			<parameterset type="zonalSystem">
+				<parameterset type="SquareGridZoneSystem">
+					<param name="cellSize" value="1000"/>
+				</parameterset>
+			</parameterset>
 		</parameterset>
 	</module>
 
@@ -66,6 +71,12 @@
 		<param name="travelTimeEstimationAlpha" value="0.05"/>
 		<!-- Used for ONLINE estimation of travel times for VrpOptimizer by combining WithinDayTravelTime and DvrpOfflineTravelTimeEstimator. The beta coefficient is provided in seconds and should be either 0 (no online estimation) or positive (mixed online-offline estimation). For 'beta = 0', only the offline estimate is used: 'onlineTT(t) = offlineTT(t)', where 'offlineTT(t)' in the offline estimate for TT at time 't', For 'beta > 0', estimating future TTs at time 't', uses the currently observed TT to correct the offline estimates is made: where 'currentTT' is the currently observed TT, and 'correction = min(1, max(0, 1 - (time - currentTime) / beta))' The rule is that correction decreases linearly from 1 (when 'time = currentTime') to 0 (when 'time = currentTime + beta' For 'time > currentTime + beta' correction is 0, whereas if 'time < currentTime' it is 1. If beta is sufficiently large, 'beta >> 0', only the currently observed TT is used. -->
 		<param name="travelTimeEstimationBeta" value="0.0"/>
+		<parameterset type="travelTimeMatrix">
+			<parameterset type="SquareGridZoneSystem">
+				<param name="cellSize" value="1000"/>
+			</parameterset>
+			<param name="maxNeighborDistance" value="10000"/>
+		</parameterset>
 	</module>
 
 	<module name="swissRailRaptor" >
