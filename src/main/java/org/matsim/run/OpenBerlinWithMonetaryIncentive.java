@@ -261,7 +261,6 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 
 	private static class MobilityBudgetEventHandler implements PersonDepartureEventHandler, AfterMobsimListener, PersonStuckEventHandler {
 
-
 		private final Map<Id<Person>, Double> person2MobilityBudget;
 		private final Map<Id<Person>, Double> currentIterationMobilityBudget = new HashMap<>();
 		private final List<Id<Person>> personWhoAreStuck= new ArrayList<>();
@@ -296,7 +295,7 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 			}
 
 			for (Id<Person> personId: personWhoAreStuck) {
-				event.getServices().getEvents().processEvent(new PersonMoneyEvent(Time.MIDNIGHT, personId, -10000, "punishmentForBeingStuck", null, null));
+				event.getServices().getEvents().processEvent(new PersonMoneyEvent(Time.MIDNIGHT, personId, -1000, "punishmentForBeingStuck", null, null));
 			}
 		}
 
@@ -306,7 +305,6 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 		@Override
 		public void handleEvent(PersonStuckEvent personStuckEvent) {
 			personWhoAreStuck.add(personStuckEvent.getPersonId());
-
 		}
 	}
 
