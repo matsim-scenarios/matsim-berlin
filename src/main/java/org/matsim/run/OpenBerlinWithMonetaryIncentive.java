@@ -39,11 +39,11 @@ import org.matsim.api.core.v01.events.handler.PersonStuckEventHandler;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * Run the {@link OpenBerlinScenario} with monetary incentive policies.
+ */
 public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
-	/**
-	 * Run the {@link OpenBerlinScenario} with monetary incentive policies.
-	 */
+
 
 	@CommandLine.Option(names = "--distanceBasedReward",
 		defaultValue = "0.0",
@@ -224,7 +224,7 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 
 			for (Map.Entry<Id<Person>, Double> idDoubleEntry : distanceTravelledPt.entrySet()) {
 				Id<Person> person = idDoubleEntry.getKey();
-				double emissionsSaved = idDoubleEntry.getValue()  * 0.076;
+				double emissionsSaved = idDoubleEntry.getValue() * 0.076;
 				double klimaTaler = emissionsSaved / 5000 * this.klimaTaler;
 				afterMobsimEvent.getServices().getEvents().processEvent(new PersonMoneyEvent(Time.MIDNIGHT, person, klimaTaler, "klimaTalerForPt", null, null));
 			}
