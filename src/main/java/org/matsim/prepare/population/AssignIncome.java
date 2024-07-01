@@ -10,7 +10,9 @@ import java.util.SplittableRandom;
 
 /**
  * Draw income from german wide distribution.
+ * @deprecated income is already assigned during generation
  */
+@Deprecated
 public class AssignIncome implements PersonAlgorithm {
 
 	private final SplittableRandom rnd = new SplittableRandom(1234);

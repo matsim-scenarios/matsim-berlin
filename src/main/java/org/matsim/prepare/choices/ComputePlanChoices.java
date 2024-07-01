@@ -121,7 +121,7 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 		Controler controler = this.scenario.createControler();
 
 		controler.addOverridingModule(InformedModeChoiceModule.newBuilder()
-			.withFixedCosts(FixedCostsEstimator.DailyConstant.class, "car")
+			.withFixedCosts(FixedCostsEstimator.DailyConstant.class, "car", "pt")
 			.withLegEstimator(DefaultLegScoreEstimator.class, ModeOptions.ConsiderIfCarAvailable.class, "car")
 			.withLegEstimator(DefaultLegScoreEstimator.class, ModeOptions.AlwaysAvailable.class, "bike", "walk", "pt", "ride")
 			.withConstraint(RelaxedMassConservationConstraint.class)

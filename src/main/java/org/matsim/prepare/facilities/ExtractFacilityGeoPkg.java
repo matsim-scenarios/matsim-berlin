@@ -1,8 +1,9 @@
-package org.matsim.prepare;
+package org.matsim.prepare.facilities;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Iterables;
 import com.slimjars.dist.gnu.trove.iterator.TLongObjectIterator;
 import de.topobyte.osm4j.core.dataset.InMemoryMapDataSet;
 import de.topobyte.osm4j.core.dataset.MapDataSetLoader;
@@ -10,32 +11,40 @@ import de.topobyte.osm4j.core.model.iface.*;
 import de.topobyte.osm4j.core.resolve.EntityNotFoundException;
 import de.topobyte.osm4j.geometry.GeometryBuilder;
 import de.topobyte.osm4j.pbf.seq.PbfIterator;
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import me.tongfei.progressbar.ProgressBar;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.geotools.data.FileDataStoreFactorySpi;
+import org.geotools.api.data.DataStore;
+import org.geotools.api.data.DataStoreFinder;
+import org.geotools.api.data.SimpleFeatureStore;
+import org.geotools.api.data.Transaction;
+import org.geotools.api.feature.simple.SimpleFeature;
+import org.geotools.api.referencing.crs.CRSAuthorityFactory;
+import org.geotools.api.referencing.operation.MathTransform;
+import org.geotools.api.referencing.operation.TransformException;
+import org.geotools.data.DefaultTransaction;
 import org.geotools.data.collection.ListFeatureCollection;
-import org.geotools.data.shapefile.ShapefileDataStore;
-import org.geotools.data.shapefile.ShapefileDataStoreFactory;
-import org.geotools.data.simple.SimpleFeatureStore;
-import org.geotools.feature.simple.SimpleFeatureBuilder;
-import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.geometry.jts.JTS;
+import org.geotools.geopkg.GeoPkgDataStoreFactory;
+import org.geotools.jdbc.JDBCDataStoreFactory;
 import org.geotools.referencing.CRS;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.index.strtree.STRtree;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.options.CrsOptions;
+import org.matsim.core.utils.io.IOUtils;
 import org.matsim.run.OpenBerlinScenario;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.referencing.crs.CRSAuthorityFactory;
-import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.TransformException;
+import org.matsim.utils.gis.shp2matsim.ShpGeometryUtils;
 import picocli.CommandLine;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -44,9 +53,9 @@ import java.util.*;
 	name = "facility-shp",
 	description = "Generate facility shape file from OSM data."
 )
-public class ExtractFacilityShp implements MATSimAppCommand {
+public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 
-	private static final Logger log = LogManager.getLogger(ExtractFacilityShp.class);
+	private static final Logger log = LogManager.getLogger(ExtractFacilityGeoPkg.class);
 	private static final double POI_BUFFER = 6;
 
 	/**
@@ -59,10 +68,16 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 	 * Usually large areas such as parks, campus, etc.
 	 */
 	private static final double MAX_ASSIGN = 50_000;
+
+	/**
+	 * Percentage of minimum required intersection.
+	 */
+	private static final double INTERSECT_THRESHOLD = 0.2;
+
 	private final GeometryBuilder geometryBuilder = new GeometryBuilder();
 	@CommandLine.Option(names = "--input", description = "Path to input .pbf file", required = true)
 	private Path pbf;
-	@CommandLine.Option(names = "--output", description = "Path to output shape file", required = true)
+	@CommandLine.Option(names = "--output", description = "Path to output .gpkg file", required = true)
 	private Path output;
 	@CommandLine.Option(names = "--activity-mapping", description = "Path to activity napping json", required = true)
 	private Path mappingPath;
@@ -77,15 +92,15 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 	 */
 	private Object2IntMap<String> types;
 	private ActivityMapping config;
-	private List<Feature> pois;
-	private List<Feature> landuse;
-	private List<Feature> entities;
+	private Long2ObjectMap<Feature> pois;
+	private Long2ObjectMap<Feature> landuse;
+	private Long2ObjectMap<Feature> entities;
 	private MathTransform transform;
 	private InMemoryMapDataSet data;
 	private int ignored;
 
 	public static void main(String[] args) {
-		new ExtractFacilityShp().execute(args);
+		new ExtractFacilityGeoPkg().execute(args);
 	}
 
 	@Override
@@ -118,11 +133,15 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 			return 2;
 		}
 
+		if (Files.exists(output)) {
+			log.info("Deleting already existing file: {}", output);
+			Files.delete(output);
+		}
 
 		// Collect all geometries first
-		pois = new ArrayList<>();
-		entities = new ArrayList<>();
-		landuse = new ArrayList<>();
+		pois = new Long2ObjectLinkedOpenHashMap<>();
+		entities = new Long2ObjectLinkedOpenHashMap<>();
+		landuse = new Long2ObjectLinkedOpenHashMap<>();
 
 		data = MapDataSetLoader.read(reader, true, true, true);
 
@@ -154,55 +173,46 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 		if (ignored > 0)
 			log.warn("Ignored {} invalid geometries", ignored);
 
+		FacilityFeatureExtractor ft = new FacilityFeatureExtractor(crs.getTargetCRS(), types, entities, pois, landuse);
 
-		STRtree index = new STRtree();
-		for (Feature entity : entities) {
-			index.insert(entity.geometry.getBoundary().getEnvelopeInternal(), entity);
-		}
-		index.build();
-
-		processIntersection(landuse, index);
+		processIntersection(landuse.values(), ft.entities, INTERSECT_THRESHOLD);
 
 		log.info("Remaining landuse shapes after assignment: {} ", landuse.size());
 
-		processIntersection(pois, index);
+		processIntersection(pois.values(), ft.entities, 0);
 
 		log.info("Remaining POI after assignment: {}", pois.size());
 
-		FileDataStoreFactorySpi factory = new ShapefileDataStoreFactory();
+		DataStore ds = DataStoreFinder.getDataStore(Map.of(
+			GeoPkgDataStoreFactory.DBTYPE.key, "geopkg",
+			GeoPkgDataStoreFactory.DATABASE.key, output.toFile().toString(),
+			JDBCDataStoreFactory.BATCH_INSERT_SIZE.key, 100,
+			GeoPkgDataStoreFactory.READ_ONLY.key, false
+		));
 
-		ShapefileDataStore ds = (ShapefileDataStore) factory.createNewDataStore(Map.of("url", output.toFile().toURI().toURL()));
+		ds.createSchema(ft.featureType);
 
-		SimpleFeatureTypeBuilder typeBuilder = new SimpleFeatureTypeBuilder();
-		typeBuilder.setName("schema");
-		typeBuilder.setCRS(CRS.decode(crs.getTargetCRS()));
-		typeBuilder.add("the_geom", MultiPolygon.class);
-		for (String t : types.keySet()) {
-			typeBuilder.add(t, Boolean.class);
-		}
+		SimpleFeatureStore source = (SimpleFeatureStore) ds.getFeatureSource(ft.featureType.getTypeName());
+		ListFeatureCollection collection = new ListFeatureCollection(ft.featureType);
 
-		SimpleFeatureType featureType = typeBuilder.buildFeatureType();
-		ds.createSchema(featureType);
+		addFeatures(entities, ft, collection);
+		addFeatures(landuse, ft, collection);
+		addFeatures(pois, ft, collection);
 
-		SimpleFeatureStore source = (SimpleFeatureStore) ds.getFeatureSource();
-		SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(featureType);
-		ListFeatureCollection collection = new ListFeatureCollection(featureType);
-
-//		Transaction transaction = new DefaultTransaction("create");
-//		source.setTransaction(transaction);
-
-		addFeatures(entities, featureBuilder, collection);
-		addFeatures(landuse, featureBuilder, collection);
-		addFeatures(pois, featureBuilder, collection);
+		Transaction transaction = new DefaultTransaction("create");
+		source.setTransaction(transaction);
 
 		source.addFeatures(collection);
-//		transaction.commit();
+		transaction.commit();
 
 		log.info("Wrote {} features", collection.size());
 
-//		transaction.close();
+		transaction.close();
 
 		ds.dispose();
+
+		writeMapping(output.toString().replace(".gpkg", "_mapping.csv.gz"),
+			entities.values(), landuse.values(), pois.values());
 
 		return 0;
 	}
@@ -210,7 +220,7 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 	/**
 	 * Tags buildings within that intersections with geometries from list. Used geometries are removed from the list.
 	 */
-	private void processIntersection(List<Feature> list, STRtree index) {
+	private void processIntersection(Collection<Feature> list, STRtree index, double threshold) {
 
 		Iterator<Feature> it = ProgressBar.wrap(list.iterator(), "Assigning features");
 
@@ -219,33 +229,77 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 
 			List<Feature> query = index.query(ft.geometry.getBoundary().getEnvelopeInternal());
 
-			boolean used = false;
 			for (Feature other : query) {
 				// Assign other features to the buildings
+				double otherArea = other.geometry.getArea();
 				try {
-					if (ft.geometry.intersects(other.geometry) && other.geometry.getArea() < MAX_ASSIGN) {
-						other.assign(ft);
-						used = true;
+					if (ft.geometry.intersects(other.geometry) && otherArea < MAX_ASSIGN) {
+
+						double intersectArea = ft.geometry.intersection(other.geometry).getArea();
+						if (intersectArea / otherArea > threshold) {
+							other.assign(ft);
+						}
 					}
 				} catch (TopologyException e) {
 					// some geometries are not well defined
-					if (ft.geometry.getBoundary().intersects(other.geometry.getBoundary()) && other.geometry.getArea() < MAX_ASSIGN) {
-						other.assign(ft);
-						used = true;
+					if (ft.geometry.getBoundary().intersects(other.geometry.getBoundary()) && otherArea < MAX_ASSIGN) {
+
+						double intersectArea = ft.geometry.getBoundary().intersection(other.geometry.getBoundary()).getArea();
+						if (intersectArea / otherArea > threshold) {
+							other.assign(ft);
+						}
 					}
 				}
 			}
 
-			if (used)
+			if (ft.isAssigned())
 				it.remove();
 		}
 	}
 
-	private void addFeatures(List<Feature> fts, SimpleFeatureBuilder featureBuilder, ListFeatureCollection collection) {
-		for (Feature ft : ProgressBar.wrap(fts, "Creating features")) {
-			// Relations are ignored at this point
-			if (!ft.bits.isEmpty())
-				collection.add(ft.createFeature(featureBuilder));
+	private void addFeatures(Long2ObjectMap<Feature> fts, FacilityFeatureExtractor exc,
+							 ListFeatureCollection collection) {
+
+
+		try (ProgressBar pb = new ProgressBar("Creating features", fts.size())) {
+
+			List<SimpleFeature> features = fts.values().parallelStream()
+				.filter(ft -> !ft.bits.isEmpty())
+				.map(f -> {
+					pb.step();
+					return exc.createFeature(f);
+				})
+				.toList();
+
+			// toList retains the original order
+			collection.addAll(features);
+		}
+	}
+
+	/**
+	 * Writes how osm ids are mapped to other ids.
+	 */
+	@SafeVarargs
+	private void writeMapping(String path, Iterable<Feature>... features) {
+
+		try (CSVPrinter csv = new CSVPrinter(IOUtils.getBufferedWriter(path), CSVFormat.DEFAULT)) {
+
+			csv.printRecord("osm_id", "parent_id");
+			for (Feature feature : Iterables.concat(features)) {
+
+				if (feature.bits.isEmpty())
+					continue;
+
+				csv.printRecord(feature.entity.getId(), feature.entity.getId());
+				if (feature.members != null) {
+					for (Feature member : feature.members) {
+						csv.printRecord(member.entity.getId(), feature.entity.getId());
+					}
+				}
+			}
+
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
 		}
 	}
 
@@ -288,7 +342,9 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 				return;
 			}
 
-			pois.add(new Feature(entity, types.size(), geometry));
+			Feature ft = new Feature(entity, types, geometry);
+			parse(ft, entity);
+			pois.put(entity.getId(), ft);
 		} else {
 			boolean landuse = false;
 			for (int i = 0; i < n; i++) {
@@ -316,19 +372,43 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 				return;
 			}
 
-			Feature ft = new Feature(entity, types.size(), geometry);
+			Feature ft = new Feature(entity, types, geometry);
+			parse(ft, entity);
 			if (landuse) {
-				this.landuse.add(ft);
+				this.landuse.put(ft.entity.getId(), ft);
 			} else {
-
 				// some non landuse shapes might be too large
 				if (ft.geometry.getArea() < MAX_AREA)
-					entities.add(ft);
+					entities.put(ft.entity.getId(), ft);
 			}
-
 		}
 	}
 
+	/**
+	 * Parse tags into features. Can also be from different entity.
+	 */
+	private void parse(Feature ft, OsmEntity entity) {
+		for (int i = 0; i < entity.getNumberOfTags(); i++) {
+
+			OsmTag tag = entity.getTag(i);
+
+			if (tag.getKey().equals("building:levels")) {
+				ft.setLevels(tag.getValue());
+			}
+
+			ExtractFacilityGeoPkg.MappingConfig conf = config.getTag(tag.getKey());
+			if (conf == null)
+				continue;
+
+			if (conf.values.containsKey("*")) {
+				ft.set(conf.values.get("*"));
+			}
+
+			if (conf.values.containsKey(tag.getValue())) {
+				ft.set(conf.values.get(tag.getValue()));
+			}
+		}
+	}
 
 	private MultiPolygon createPolygon(OsmEntity entity) {
 		Geometry geom = null;
@@ -393,67 +473,4 @@ public class ExtractFacilityShp implements MATSimAppCommand {
 
 	}
 
-	/**
-	 * Features for one facility, stored as bit set.
-	 */
-	private final class Feature {
-		private final OsmEntity entity;
-
-		private final BitSet bits;
-
-		private final MultiPolygon geometry;
-
-		Feature(OsmEntity entity, int n, MultiPolygon geometry) {
-			this.entity = entity;
-			this.bits = new BitSet(n);
-			this.bits.clear();
-			this.geometry = geometry;
-
-			parse(entity);
-		}
-
-		/**
-		 * Parse tags into features. Can also be from different entity.
-		 */
-		private void parse(OsmEntity entity) {
-			for (int i = 0; i < entity.getNumberOfTags(); i++) {
-
-				OsmTag tag = entity.getTag(i);
-
-				MappingConfig conf = config.getTag(tag.getKey());
-				if (conf == null)
-					continue;
-
-				if (conf.values.containsKey("*")) {
-					set(conf.values.get("*"));
-				}
-
-				if (conf.values.containsKey(tag.getValue())) {
-					set(conf.values.get(tag.getValue()));
-				}
-			}
-		}
-
-		private void set(Set<String> acts) {
-			for (String act : acts) {
-				bits.set(types.getInt(act), true);
-			}
-		}
-
-		void assign(Feature other) {
-			for (int i = 0; i < types.size(); i++) {
-				if (other.bits.get(i))
-					this.bits.set(i);
-			}
-		}
-
-		public SimpleFeature createFeature(SimpleFeatureBuilder builder) {
-
-			builder.add(geometry);
-			for (int i = 0; i < types.size(); i++) {
-				builder.add(bits.get(i));
-			}
-			return builder.buildFeature(null);
-		}
-	}
 }

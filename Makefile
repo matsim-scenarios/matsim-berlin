@@ -1,7 +1,7 @@
 
 
 JAR := matsim-berlin-*.jar
-V := v6.1
+V := v6.2
 CRS := EPSG:25832
 
 p := input/$V
@@ -10,7 +10,6 @@ berlin := ../public-svn/matsim/scenarios/countries/de/berlin/berlin-$V
 
 MEMORY ?= 20G
 REGIONS := brandenburg
-SHP_FILES=$(patsubst %, input/shp/%-latest-free.shp.zip, $(REGIONS))
 
 osmosis := osmosis/bin/osmosis
 
@@ -22,24 +21,18 @@ sc := java -Xmx$(MEMORY) -XX:+UseParallelGC -cp $(JAR) org.matsim.prepare.RunOpe
 $(JAR):
 	mvn package
 
-${SHP_FILES}:
-	mkdir -p input/shp
-	curl https://download.geofabrik.de/europe/germany/$(@:input/shp/%=%) -o $@
-
 input/brandenburg.osm.pbf:
 	curl https://download.geofabrik.de/europe/germany/brandenburg-230101.osm.pbf -o $@
 
+input/facilities.osm.pbf:
+	# Same OSM version as reference visitations
+	curl https://download.geofabrik.de/europe/germany/brandenburg-210101.osm.pbf -o $@
 
 $(germany)/RegioStaR-Referenzdateien.xlsx:
 	curl https://mcloud.de/downloads/mcloud/536149D1-2902-4975-9F7D-253191C0AD07/RegioStaR-Referenzdateien.xlsx -o $@
 
-input/landuse.shp: ${SHP_FILES}
-	mkdir -p input/landuse
-	$(sc) prepare create-landuse-shp $^\
-	 --target-crs ${CRS}\
-	 --output $@
 
-input/facilities.shp: input/brandenburg.osm.pbf
+input/facilities.gpkg: input/brandenburg.osm.pbf
 	$(sc) prepare facility-shp\
 	 --activity-mapping input/activity_mapping.json\
 	 --input $<\
@@ -61,7 +54,7 @@ $(berlin)/input/shp/Planungsraum_EPSG_25833.shp:
 input/network.osm: input/brandenburg.osm.pbf
 
 	$(osmosis) --rb file=$<\
-	 --tf accept-ways highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction,residential,living_street\
+	 --tf accept-ways highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction,residential,living_street,unclassified\
 	 --bounding-polygon file="$p/area/area.poly"\
 	 --used-node --wb input/network-detailed.osm.pbf
 
@@ -85,88 +78,74 @@ input/sumo.net.xml: input/network.osm
 	 --tls.guess-signals true --tls.discard-simple --tls.join --tls.default-type actuated\
 	 --junctions.join --junctions.corner-detail 5\
 	 --roundabouts.guess --remove-edges.isolated\
-	 --no-internal-links --keep-edges.by-vclass passenger\
-	 --remove-edges.by-vclass hov,tram,rail,rail_urban,rail_fast,pedestrian,bicycle\
+	 --no-internal-links --keep-edges.by-vclass passenger,truck,bicycle\
+	 --remove-edges.by-vclass hov,tram,rail,rail_urban,rail_fast,pedestrian\
 	 --output.original-names --output.street-names\
+	 --osm.lane-access true	--osm.bike-access true\
+	 --osm.all-attributes\
+	 --osm.extra-attributes tunnel,highway,traffic_sign,bus:lanes,bus:lanes:forward,bus:lanes:backward,cycleway,cycleway:right,cycleway:left\
 	 --proj "+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"\
 	 --osm-files $< -o=$@
 
 
-$p/berlin-v6.1-network.xml.gz:
-	# Use 5.x network
+$p/berlin-$V-network.xml.gz: input/sumo.net.xml
+	$(sc) prepare network-from-sumo $< --target-crs $(CRS) --lane-restrictions REDUCE_CAR_LANES --output $@
+
+	$(sc) prepare clean-network $@  --output $@ --modes car,ride,truck --remove-turn-restrictions
+
 	$(sc) prepare reproject-network\
-	 --input $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz\
-	 --transit-schedule $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-transit-schedule.xml.gz\
-	 --output $@\
- 	 --output-transit $p/berlin-v6.1-transitSchedule.xml.gz\
-	 --input-crs EPSG:31468\
-	 --mode freight=truck\
-	 --target-crs $(CRS)
+	 --input $@	--output $@\
+	 --input-crs $(CRS) --target-crs $(CRS)\
+	 --mode truck=freight\
 
- 	# Apply v5 fixes
-	$(sc) prepare fix-network-v5 --input $@ --output $@
+	$(sc) prepare apply-network-params freespeed capacity\
+ 	  --network $@ --output $@\
+	  --input-features $p/berlin-$V-network-ft.csv.gz\
+	  --model org.matsim.prepare.network.BerlinNetworkParams
+
+	$(sc) prepare apply-network-params capacity\
+ 	  --network $@ --output $@\
+	  --input-features $p/berlin-$V-network-ft.csv.gz\
+	  --road-types residential,living_street\
+	  --capacity-bounds 0.3\
+	  --model org.matsim.application.prepare.network.params.hbs.HBSNetworkParams\
+	  --decrease-only
 
 
-$p/berlin-v6.1-network-with-pt.xml.gz: $p/berlin-v6.1-network.xml.gz
-	# Copy 5.x network stuff
-	cp $< $@
-
-	cp $(berlin)/../berlin-v5.5-10pct/input/berlin-v5.5-transit-vehicles.xml.gz $p/berlin-v6.1-transitVehicles.xml.gz
-
-$p/berlin-v6.1-counts-vmz.xml.gz:
-	$(sc) prepare counts-from-vmz-old\
-	 --csv ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/CountsId_to_linkId_v2.csv\
-	 --excel ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx\
- 	 --output $@
-
-# TODO: Not part of 6.0 release, but planned for future versions
-$p/berlin-v6.2-network.xml.gz: input/sumo.net.xml
-	$(sc) prepare network-from-sumo $< --target-crs $(CRS) --output $@
-
-	$(sc) prepare clean-network $@ --output $@ --modes car
-
-	$(sc) prepare sample-network --network $@
-
-	# To update features and params, running python code is necessary
-	$(sc) prepare network-params --network $@ --input-features input/sumo.net-edges.csv.gz --output $@
-
-	$(sc) prepare network-freespeed --network $@ --params input/network-params.json --output $@
-
-$p/berlin-v6.2-network-with-pt.xml.gz: $p/berlin-v6.2-network.xml.gz
+$p/berlin-$V-network-with-pt.xml.gz: $p/berlin-$V-network.xml.gz
 	$(sc) prepare transit-from-gtfs --network $< --output=$p\
 	 --name berlin-$V --date "2023-06-07" --target-crs $(CRS) \
 	 $(germany)/gtfs/complete-pt-2023-06-06.zip\
 	 --shp $p/pt-area/pt-area.shp
 
-$p/berlin-v6.2-counts-vmz.xml.gz: $p/berlin-v6.1-network.xml.gz
+$p/berlin-$V-counts-vmz.xml.gz: $p/berlin-$V-network.xml.gz
 	$(sc) prepare counts-from-vmz\
 	 --excel ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx\
 	 --network $<\
-	 --network-geometries $p/berlin-v6.2-network-linkGeometries.csv\
-	 --output $p/\
-	 --version berlin-$(V)\
+	 --network-geometries $p/berlin-$V-network-linkGeometries.csv\
+	 --output $@\
 	 --input-crs EPSG:31468\
 	 --target-crs $(CRS)\
-	 --ignored-counts input/ignored_counts.csv
+	 --counts-mapping input/counts_mapping.csv
 
-$p/berlin-$V-facilities.xml.gz: $p/berlin-$V-network.xml.gz input/facilities.shp
+$p/berlin-$V-facilities.xml.gz: $p/berlin-$V-network.xml.gz input/facilities.gpkg
 	$(sc) prepare facilities --network $< --shp $(word 2,$^)\
 	 --output $@
 
-$p/berlin-only-$V-25pct.plans.xml.gz: input/PLR_2013_2020.csv $(berlin)/input/shp/Planungsraum_EPSG_25833.shp input/landuse.shp
+$p/berlin-only-$V-25pct.plans.xml.gz: input/PLR_2013_2020.csv $(berlin)/input/shp/Planungsraum_EPSG_25833.shp input/facilities.gpkg
 	$(sc) prepare berlin-population\
 		--input $<\
 		--shp $(word 2,$^) --shp-crs EPSG:25833\
-		--landuse $(word 3,$^) --landuse-filter residential\
+		--facilities $(word 3,$^) --facilities-attr resident\
 		--output $@
 
 
-$p/brandenburg-only-$V-25pct.plans.xml.gz: input/landuse.shp
+$p/brandenburg-only-$V-25pct.plans.xml.gz: input/facilities.gpkg
 	$(sc) prepare brandenburg-population\
 	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp\
 	 --population $(germany)/regionalstatistik/population.csv\
 	 --employees $(germany)/regionalstatistik/employed.json\
- 	 --landuse $< --landuse-filter residential\
+ 	 --facilities $< --facilities-attr resident\
  	 --output $@
 
 $p/berlin-static-$V-25pct.plans.xml.gz: $p/berlin-only-$V-25pct.plans.xml.gz $p/brandenburg-only-$V-25pct.plans.xml.gz
@@ -203,20 +182,35 @@ $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
 	 --cut-on-boundary\
 	 --output $@
 
-$p/berlin-small-scale-commercialTraffic-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz
+$p/commercialFacilities.xml.gz:
+	$(sc) prepare create-data-distribution-of-structure-data\
+	 --outputFacilityFile $@\
+	 --outputDataDistributionFile $p/dataDistributionPerZone.csv\
+	 --landuseConfiguration useOSMBuildingsAndLanduse\
+ 	 --regionsShapeFileName $(berlin)/input/shp/region_4326.shp\
+	 --regionsShapeRegionColumn "GEN"\
+	 --zoneShapeFileName $(berlin)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp\
+	 --zoneShapeFileNameColumn "id"\
+	 --buildingsShapeFileName $(berlin)/input/shp/buildings_BerlinBrandenburg_4326.shp\
+	 --shapeFileBuildingTypeColumn "type"\
+	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
+	 --shapeFileLanduseTypeColumn "fclass"\
+	 --shapeCRS "EPSG:4326"\
+	 --pathToInvestigationAreaData $p/commercialTraffic/investigationAreaData.csv
+
+$p/berlin-small-scale-commercialTraffic-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz $p/commercialFacilities.xml.gz
 	$(sc) prepare generate-small-scale-commercial-traffic\
 	  input/$V/berlin-$V.config.xml\
+	 --pathToDataDistributionToZones $p/dataDistributionPerZone.csv\
+	 --pathToCommercialFacilities $(notdir $(word 2,$^))\
 	 --sample 0.25\
-	 --jspritIterations 1\
+	 --jspritIterations 10\
 	 --creationOption createNewCarrierFile\
-	 --landuseConfiguration useOSMBuildingsAndLanduse\
 	 --network $(notdir $<)\
 	 --smallScaleCommercialTrafficType completeSmallScaleCommercialTraffic\
 	 --zoneShapeFileName $(berlin)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp\
-	 --buildingsShapeFileName $(berlin)/input/shp/buildings_BerlinBrandenburg_4326.shp\
-	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
+	 --zoneShapeFileNameColumn "id"\
 	 --shapeCRS "EPSG:4326"\
-	 --resistanceFactor "0.005"\
 	 --numberOfPlanVariantsPerAgent 5\
 	 --nameOutputPopulation $(notdir $@)\
 	 --pathOutput output/commercialPersonTraffic
@@ -290,6 +284,15 @@ $p/berlin-$V-10pct.plans.xml.gz:
 	$(sc) prepare downsample-population $@\
 		--sample-size 0.1\
 		--samples 0.03 0.01 0.001\
+
+
+$p/berlin-$V.drt-by-rndLocations-10000vehicles-4seats.xml.gz: $p/berlin-$V-network.xml.gz
+	$(sc) prepare create-drt-vehicles\
+	 --network $<\
+	 --shp "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-$V/input/shp/Berlin_25832.shp"\
+	 --output $p/berlin-$V.\
+	 --vehicles 10000\
+	 --seats 4
 
 prepare-calibration: $p/berlin-cadyts-input-$V-25pct.plans.xml.gz $p/berlin-$V-network-with-pt.xml.gz $p/berlin-$V-counts-vmz.xml.gz
 	echo "Done"

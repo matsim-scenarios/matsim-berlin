@@ -19,7 +19,7 @@ echo ""
 
 source env/bin/activate
 
-module add java/17
+module add java/21
 java -version
 
 $command

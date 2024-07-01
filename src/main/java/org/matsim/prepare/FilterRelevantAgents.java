@@ -124,11 +124,19 @@ public class FilterRelevantAgents implements MATSimAppCommand, PersonAlgorithm {
 
 			// Check activities frist, which is faster
 			for (Activity act : activities) {
-				Point p = MGC.coord2Point(ct.transform(getCoordinate(act)));
-				if (geometry.contains(p)) {
-					keep = true;
-					break outer;
+
+				try {
+					Coord c = ct.transform(getCoordinate(act));
+					Point p = MGC.coord2Point(c);
+					if (geometry.contains(p)) {
+						keep = true;
+						break outer;
+					}
+				} catch (IllegalArgumentException e) {
+					// Possibly outside the CRS
+					log.warn("Could not transform coordinate for activity {}: {}", act.getType(), getCoordinate(act));
 				}
+
 			}
 
 			// If not sure yet, also do the routing
