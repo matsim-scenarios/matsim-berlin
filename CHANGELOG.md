@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Updated population, which now include reference modes for certain persons
  - The reference modes represent modes that a person has actually used in reality
  - Allows to evaluate the quality of the model in terms of mode choice
+- ReplanningAnnealer module is now activated by default
 
 ### 6.2 (2024-06)
 - Updated network and gtfs schedule
