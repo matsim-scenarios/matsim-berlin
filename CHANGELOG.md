@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ### 6.3 (2024-07)
 - Include additional trip analysis and updated dashboard
   - Mode share is now analyzed by age, income, employment, economic_status
-- Updated population, which include reference modes for certain persons
+- Updated population, which now include reference modes for certain persons
  - The reference modes represent modes that a person has actually used in reality
  - Allows to evaluate the quality of the model in terms of mode choice
 
