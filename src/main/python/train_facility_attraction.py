@@ -25,7 +25,7 @@ if __name__ == "__main__":
     visits = pd.read_csv(args.visitations)
     mapping = pd.read_csv(args.mapping)
 
-    visits = pd.merge(visits, mapping, left_on="location", right_on="osm_id", how="inner")
+    visits = pd.merge(visits, mapping, left_on="location", right_on="osm_id", how="inner", validate="m:1")
 
     # Aggregates all parent ids
     visits = visits.groupby(["parent_id", "purpose"]).agg(n=("n", "sum")).reset_index().rename(
@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
         tf = visits[visits.purpose == purpose]
 
-        df = pd.merge(shp, tf, left_on="osm_id", right_on="location", how="inner")
+        df = pd.merge(shp, tf, left_on="osm_id", right_on="location", how="inner", validate="1:1")
         df["target"] = df.n / df.area
 
         # Drop outliers
