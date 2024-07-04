@@ -1,5 +1,10 @@
-package org.matsim.prepare;
+package org.matsim.prepare.facilities;
 
+import com.google.common.math.Quantiles;
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.locationtech.jts.geom.Envelope;
@@ -17,12 +22,12 @@ import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.facilities.*;
-import org.opengis.feature.simple.SimpleFeature;
+import org.matsim.prepare.population.Attributes;
+import org.geotools.api.feature.simple.SimpleFeature;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -53,6 +58,22 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		new CreateMATSimFacilities().execute(args);
 	}
 
+	/**
+	 * Generate a new unique id within population.
+	 */
+	public static Id<ActivityFacility> generateId(ActivityFacilities facilities, SplittableRandom rnd) {
+
+		Id<ActivityFacility> id;
+		byte[] bytes = new byte[3];
+		do {
+			rnd.nextBytes(bytes);
+			id = Id.create( "f" + HexFormat.of().formatHex(bytes), ActivityFacility.class);
+
+		} while (facilities.getFacilities().containsKey(id));
+
+		return id;
+	}
+
 	@Override
 	public Integer call() throws Exception {
 
@@ -68,19 +89,30 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 
 		List<SimpleFeature> fts = shp.readFeatures();
 
-		Map<Id<Link>, Holder> data = new ConcurrentHashMap<>();
+		List<Holder> data = fts.parallelStream()
+			.map(ft -> processFeature(ft, carOnlyNetwork))
+			.filter(Objects::nonNull)
+			.toList();
 
-		fts.parallelStream().forEach(ft -> processFeature(ft, carOnlyNetwork, data));
+		// Compute statistics on the attraction values
+		DescriptiveStatistics work = new DescriptiveStatistics();
+		DescriptiveStatistics other = new DescriptiveStatistics();
+
+		for (Holder d : data) {
+			work.addValue(d.attractionWork);
+			other.addValue(d.attractionOther);
+		}
+
+		// Upper bounds for attraction
+		double workUpper = work.getPercentile(95);
+		double otherUpper = other.getPercentile(95);
 
 		ActivityFacilities facilities = FacilitiesUtils.createActivityFacilities();
 
+		SplittableRandom rnd = new SplittableRandom();
 		ActivityFacilitiesFactory f = facilities.getFactory();
 
-		for (Map.Entry<Id<Link>, Holder> e : data.entrySet()) {
-
-			Holder h = e.getValue();
-
-			Id<ActivityFacility> id = Id.create(String.join("_", h.ids), ActivityFacility.class);
+		for (Holder h : data) {
 
 			// Create mean coordinate
 			OptionalDouble x = h.coords.stream().mapToDouble(Coord::getX).average();
@@ -91,10 +123,21 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 				continue;
 			}
 
+			Id<ActivityFacility> id = generateId(facilities, rnd);
+
 			ActivityFacility facility = f.createActivityFacility(id, CoordUtils.round(new Coord(x.getAsDouble(), y.getAsDouble())));
 			for (String act : h.activities) {
 				facility.addActivityOption(f.createActivityOption(act));
 			}
+
+			// Filter outliers from the attraction and normalize the attraction
+			// This warrant for further investigate as the best way to normalize the attraction is not yet known
+			facility.getAttributes().putAttribute(Attributes.ATTRACTION_WORK,
+				Math.min(Math.max(h.attractionWork / 5, 1), workUpper)
+			);
+			facility.getAttributes().putAttribute(Attributes.ATTRACTION_OTHER,
+				Math.min(Math.max(h.attractionOther / 5, 1), otherUpper)
+			);
 
 			facilities.addActivityFacility(facility);
 		}
@@ -110,10 +153,11 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 	/**
 	 * Sample points and choose link with the nearest points. Aggregate everything so there is at most one facility per link.
 	 */
-	private void processFeature(SimpleFeature ft, Network network, Map<Id<Link>, Holder> data) {
+	private Holder processFeature(SimpleFeature ft, Network network) {
 
-		// Actual id is the last part
-		String[] id = ft.getID().split("\\.");
+		Set<String> activities = activities(ft);
+		if (activities.isEmpty())
+			return null;
 
 		// Pairs of coords and corresponding links
 		List<Coord> coords = samplePoints((MultiPolygon) ft.getDefaultGeometry(), 23);
@@ -125,7 +169,16 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 
 		// Everything could be filtered and map empty
 		if (map.isEmpty())
-			return;
+			return null;
+
+		Object2DoubleMap<String> features = new Object2DoubleOpenHashMap<>();
+		for (int i = 0; i < ft.getAttributeCount(); i++) {
+			if (ft.getAttribute(i) instanceof Number number) {
+				features.put(ft.getFeatureType().getDescriptor(i).getLocalName(), number.doubleValue());
+			}
+		}
+
+		double area = (double) ft.getAttribute("area");
 
 		List<Map.Entry<Id<Link>, Long>> counts = map.entrySet().stream().sorted(Map.Entry.comparingByValue())
 				.toList();
@@ -133,10 +186,10 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		// The "main" link of the facility
 		Id<Link> link = counts.get(counts.size() - 1).getKey();
 
-		Holder holder = data.computeIfAbsent(link, k -> new Holder(ConcurrentHashMap.newKeySet(), ConcurrentHashMap.newKeySet(), Collections.synchronizedList(new ArrayList<>())));
-
-		holder.ids.add(id[id.length - 1]);
-		holder.activities.addAll(activities(ft));
+		Holder holder = new Holder(link, activities, new ArrayList<>(),
+			area * FacilityAttractionModelWork.INSTANCE.predict(features, null),
+			area * FacilityAttractionModelOther.INSTANCE.predict(features, null)
+		);
 
 		// Search for the original drawn coordinate of the associated link
 		for (int i = 0; i < links.size(); i++) {
@@ -145,6 +198,8 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 				break;
 			}
 		}
+
+		return holder;
 	}
 
 	/**
@@ -185,43 +240,52 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 	private Set<String> activities(SimpleFeature ft) {
 		Set<String> act = new HashSet<>();
 
-		if (Boolean.TRUE == ft.getAttribute("work")) {
+		if (hasAttribute(ft, "work")) {
 			act.add("work");
 			act.add("work_business");
 		}
-		if (Boolean.TRUE == ft.getAttribute("shop")) {
+		if (hasAttribute(ft, "shop")) {
 			act.add("shop_other");
 		}
-		if (Boolean.TRUE == ft.getAttribute("shop_daily")) {
+		if (hasAttribute(ft, "shop_daily")) {
 			act.add("shop_other");
 			act.add("shop_daily");
 		}
-		if (Boolean.TRUE == ft.getAttribute("leisure"))
+		if (hasAttribute(ft, "leisure"))
 			act.add("leisure");
-		if (Boolean.TRUE == ft.getAttribute("dining"))
+		if (hasAttribute(ft, "dining"))
 			act.add("dining");
-		if (Boolean.TRUE == ft.getAttribute("edu_higher"))
+		if (hasAttribute(ft, "edu_higher"))
 			act.add("edu_higher");
-		if (Boolean.TRUE == ft.getAttribute("edu_prim")) {
+		if (hasAttribute(ft, "edu_prim")) {
 			act.add("edu_primary");
 			act.add("edu_secondary");
 		}
-		if (Boolean.TRUE == ft.getAttribute("edu_kiga"))
+		if (hasAttribute(ft, "edu_kiga"))
 			act.add("edu_kiga");
-		if (Boolean.TRUE == ft.getAttribute("edu_other"))
+		if (hasAttribute(ft, "edu_other"))
 			act.add("edu_other");
-		if (Boolean.TRUE == ft.getAttribute("p_business") || Boolean.TRUE == ft.getAttribute("medical") || Boolean.TRUE == ft.getAttribute("religious")) {
+		if (hasAttribute(ft, "p_business") || hasAttribute(ft, "medical") || hasAttribute(ft, "religious")) {
 			act.add("personal_business");
-			act.add("work_business");
 		}
+		if (hasAttribute(ft, "p_business"))
+			act.add("work_business");
 
 		return act;
+	}
+
+	private static boolean hasAttribute(SimpleFeature ft, String name) {
+		return ft.getAttribute(name) != null &&
+			(Boolean.TRUE.equals(ft.getAttribute(name)) ||
+				(ft.getAttribute(name) instanceof Number number && number.intValue() > 0)
+			);
 	}
 
 	/**
 	 * Temporary data holder for facilities.
 	 */
-	private record Holder(Set<String> ids, Set<String> activities, List<Coord> coords) {
+	private record Holder(Id<Link> linkId, Set<String> activities, List<Coord> coords,
+						  double attractionWork, double attractionOther) {
 
 	}
 

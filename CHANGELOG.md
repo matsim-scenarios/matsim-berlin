@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. 
 
+### 6.2 (2024-06)
+- Updated network and gtfs schedule
+    - Network is now based on late 2022 osm data
+    - PT schedule is based in mid 2023, earlier data of this feed was not available
+    - The network conversion now uses a SUMO converter, a microscopic representation of the network will be available as well
+    - Free speed of the network has been calibrated as described in the paper "Road network free flow speed estimation using microscopic simulation and point-to-point travel times"
+- Walking speed increased to match reference data
+- Recalibration of mode constants (ASCs)
+- Updated commercial traffic, especially the trip duration should be more realistic
+- Added a run class for DRT scenarios
+- Please note that the 6.3 version is released nearly at the same time
+    - Because of that 6.2 was not calibrated to the same accuracy
+    - Rather use the newest version, which also includes all features of 6.2
+
 ### 6.1.1 (2024-06-11)
 
 - Fix ASCs in tbe 6.1 config

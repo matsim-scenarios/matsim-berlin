@@ -4,6 +4,9 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.geotools.api.referencing.FactoryException;
+import org.geotools.api.referencing.operation.MathTransform;
+import org.geotools.api.referencing.operation.TransformException;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.geotools.referencing.CRS;
@@ -16,7 +19,7 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.application.CommandSpec;
 import org.matsim.application.MATSimAppCommand;
-import org.matsim.application.options.CountsOption;
+import org.matsim.application.options.CountsOptions;
 import org.matsim.application.options.InputOptions;
 import org.matsim.application.options.OutputOptions;
 import org.matsim.application.options.ShpOptions;
@@ -26,10 +29,7 @@ import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.filter.NetworkFilterManager;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.run.OpenBerlinScenario;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.TransformException;
+import org.geotools.api.feature.simple.SimpleFeature;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -69,7 +69,7 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 	@CommandLine.Option(names = "--network-geometries", description = "path to *linkGeometries.csv")
 	private Path networkGeometries;
 	@CommandLine.Mixin
-	private CountsOption counts = new CountsOption();
+	private CountsOptions counts = new CountsOptions();
 	@CommandLine.Mixin
 	private ShpOptions shp = new ShpOptions();
 

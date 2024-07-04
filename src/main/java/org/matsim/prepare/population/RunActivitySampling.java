@@ -213,6 +213,7 @@ public class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 
 		PersonUtils.setCarAvail(person, row.get("car_avail").equals("True") ? "always" : "never");
 		PersonUtils.setLicence(person, row.get("driving_license").toLowerCase());
+		PersonUtils.setIncome(person, Math.max(499, Double.parseDouble(row.get("income"))));
 
 		person.getAttributes().putAttribute(Attributes.BIKE_AVAIL, row.get("bike_avail").equals("True") ? "always" : "never");
 		person.getAttributes().putAttribute(Attributes.PT_ABO_AVAIL, row.get("pt_abo_avail").equals("True") ? "always" : "never");

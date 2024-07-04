@@ -16,6 +16,7 @@ import org.matsim.application.prepare.CreateLandUseShp;
 import org.matsim.application.prepare.freight.tripExtraction.ExtractRelevantFreightTrips;
 import org.matsim.application.prepare.network.CleanNetwork;
 import org.matsim.application.prepare.network.CreateNetworkFromSumo;
+import org.matsim.application.prepare.network.params.ApplyNetworkParams;
 import org.matsim.application.prepare.population.*;
 import org.matsim.application.prepare.pt.CreateTransitScheduleFromGtfs;
 import org.matsim.contrib.cadyts.car.CadytsCarModule;
@@ -49,19 +50,20 @@ import org.matsim.prepare.counts.CreateCountsFromGeoPortalBerlin;
 import org.matsim.prepare.counts.CreateCountsFromVMZ;
 import org.matsim.prepare.counts.CreateCountsFromVMZOld;
 import org.matsim.prepare.download.DownloadCommuterStatistic;
-import org.matsim.prepare.network.FixNetworkV5;
-import org.matsim.prepare.network.FreeSpeedOptimizer;
-import org.matsim.prepare.network.PrepareNetworkParams;
-import org.matsim.prepare.network.SampleNetwork;
+import org.matsim.prepare.drt.CreateDrtVehicles;
+import org.matsim.prepare.facilities.CreateMATSimFacilities;
+import org.matsim.prepare.facilities.ExtractFacilityGeoPkg;
 import org.matsim.prepare.opt.RunCountOptimization;
 import org.matsim.prepare.opt.SelectPlansFromIndex;
 import org.matsim.prepare.population.*;
 import org.matsim.run.Activities;
 import org.matsim.run.OpenBerlinScenario;
+import org.matsim.run.scoring.AdvancedScoringConfigGroup;
 import org.matsim.run.scoring.AdvancedScoringModule;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
 import org.matsim.smallScaleCommercialTrafficGeneration.GenerateSmallScaleCommercialTrafficDemand;
+import org.matsim.smallScaleCommercialTrafficGeneration.prepare.CreateDataDistributionOfStructureData;
 import picocli.CommandLine;
 
 import java.math.BigDecimal;
@@ -78,14 +80,15 @@ import java.util.stream.Collectors;
 @CommandLine.Command(header = ":: Open Berlin Calibration ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true)
 @MATSimApplication.Prepare({
 	CreateLandUseShp.class, CreateBerlinPopulation.class, CreateBrandenburgPopulation.class, MergePopulations.class,
-	LookupRegioStaR.class, ExtractFacilityShp.class, DownSamplePopulation.class, DownloadCommuterStatistic.class,
+	LookupRegioStaR.class, ExtractFacilityGeoPkg.class, DownSamplePopulation.class, DownloadCommuterStatistic.class,
 	RunActitopp.class, CreateNetworkFromSumo.class, CreateTransitScheduleFromGtfs.class,
-	CleanNetwork.class, SampleNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class,
+	CleanNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, FilterRelevantAgents.class,
 	CreateCountsFromGeoPortalBerlin.class, CreateCountsFromVMZOld.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class,
 	MergePlans.class, SplitActivityTypesDuration.class, CleanPopulation.class, CleanAttributes.class,
-	GenerateSmallScaleCommercialTrafficDemand.class, RunCountOptimization.class, SelectPlansFromIndex.class, FixNetworkV5.class,
+	GenerateSmallScaleCommercialTrafficDemand.class, CreateDataDistributionOfStructureData.class,
+	RunCountOptimization.class, SelectPlansFromIndex.class,
 	ExtractRelevantFreightTrips.class, CheckCarAvailability.class, FixSubtourModes.class, ComputeTripChoices.class, ComputePlanChoices.class,
-	PrepareNetworkParams.class, FreeSpeedOptimizer.class, SetCarAvailabilityByAge.class
+	ApplyNetworkParams.class, SetCarAvailabilityByAge.class, CreateDrtVehicles.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
 
@@ -117,7 +120,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	private Integer planIndex;
 
 	public RunOpenBerlinCalibration() {
-		super("input/v6.1/berlin-v6.1.config.xml");
+		super("input/v6.2/berlin-v6.2.config.xml");
 	}
 
 	/**
@@ -161,6 +164,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		if (sample.isSet()) {
 			double sampleSize = sample.getSample();
 
+			// All car leads to much more congestion even if scaled up compared to a normal run
+			// therefore scaling is increased a bit more
 			double countScale = allCar ? CAR_FACTOR : 1;
 
 			config.qsim().setFlowCapFactor(sampleSize * countScale);
@@ -234,7 +239,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service", "goodsTraffic")) {
 				config.replanning().addStrategySettings(new ReplanningConfigGroup.StrategySettings()
 					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
-					.setWeight(weight)
+					.setWeight(weight / 8)
 					.setSubpopulation(subpopulation)
 				);
 			}
@@ -242,20 +247,19 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			config.controller().setRunId("cadyts");
 			config.controller().setOutputDirectory("./output/cadyts-" + scaleFactor);
 
-			config.scoring().setFractionOfIterationsToStartScoreMSA(0.75);
-			config.replanning().setFractionOfIterationsToDisableInnovation(0.75);
 			// Need to store more plans because of plan types
-			config.replanning().setMaxAgentPlanMemorySize(8);
+			config.replanning().setMaxAgentPlanMemorySize(7);
 
 			config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.ignore);
 
 		} else if (mode == CalibrationMode.routeChoice) {
 
 			// Re-route for all populations
+			// Weight is decreased, force innovation is used
 			for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service", "goodsTraffic")) {
 				config.replanning().addStrategySettings(new ReplanningConfigGroup.StrategySettings()
 					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
-					.setWeight(weight)
+					.setWeight(weight / 8)
 					.setSubpopulation(subpopulation)
 				);
 			}
@@ -379,17 +383,33 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 					Config config = controler.getConfig();
 
-					final ScoringParameters params = parameters.getScoringParameters(person);
-
-					sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(params, controler.getScenario().getNetwork()));
-					sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(params));
-					sumScoringFunction.addScoringFunction(new CharyparNagelAgentStuckScoring(params));
+					// Only use cadyts, not the usual scoring
+//					final ScoringParameters params = parameters.getScoringParameters(person);
+//					sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(params, controler.getScenario().getNetwork()));
+//					sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(params));
+//					sumScoringFunction.addScoringFunction(new CharyparNagelAgentStuckScoring(params));
 
 					final CadytsScoring<Link> scoringFunction = new CadytsScoring<>(person.getSelectedPlan(), config, cadytsContext);
-					scoringFunction.setWeightOfCadytsCorrection(30 * config.scoring().getBrainExpBeta());
+					scoringFunction.setWeightOfCadytsCorrection(config.scoring().getBrainExpBeta());
 					sumScoringFunction.addScoringFunction(scoringFunction);
 
 					return sumScoringFunction;
+				}
+			});
+
+			controler.addOverridingModule(new AbstractModule() {
+				@Override
+				public void install() {
+					binder().bind(new TypeLiteral<StrategyChooser<Plan, Person>>() {}).toInstance(new ForceInnovationStrategyChooser<>((int) Math.ceil(1.0 / weight), ForceInnovationStrategyChooser.Permute.yes));
+				}
+			});
+
+		} else if (mode == CalibrationMode.routeChoice) {
+
+			controler.addOverridingModule(new AbstractModule() {
+				@Override
+				public void install() {
+					binder().bind(new TypeLiteral<StrategyChooser<Plan, Person>>() {}).toInstance(new ForceInnovationStrategyChooser<>((int) Math.ceil(1.0 / weight), ForceInnovationStrategyChooser.Permute.yes));
 				}
 			});
 		}
@@ -402,8 +422,11 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		});
 
 		controler.addOverridingModule(new OpenBerlinScenario.TravelTimeBinding());
-		controler.addOverridingModule(new AdvancedScoringModule());
 		controler.addOverridingModule(new SimWrapperModule());
+
+		if (ConfigUtils.hasModule(controler.getConfig(), AdvancedScoringConfigGroup.class)) {
+			controler.addOverridingModule(new AdvancedScoringModule());
+		}
 	}
 
 	@Override
@@ -422,6 +445,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	 */
 	public enum CalibrationMode {
 		eval,
+		@Deprecated
 		locationChoice,
 		cadyts,
 		routeChoice

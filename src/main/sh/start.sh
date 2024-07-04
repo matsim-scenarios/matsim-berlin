@@ -16,4 +16,4 @@ export RUN_NAME="$name"
 echo "Starting run $name"
 echo "$*"
 
-sbatch --export=ALL --job-name matsim-"$name" job.sh
+sbatch --parsable --export=ALL --job-name matsim-"$name" job.sh

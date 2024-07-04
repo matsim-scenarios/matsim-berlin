@@ -7,13 +7,15 @@ import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.geotools.api.referencing.operation.TransformException;
 import org.geotools.referencing.operation.transform.IdentityTransform;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.application.MATSimAppCommand;
-import org.matsim.application.options.CountsOption;
+import org.matsim.application.options.CountsOptions;
 import org.matsim.application.options.CrsOptions;
 import org.matsim.application.prepare.counts.NetworkIndex;
 import org.matsim.core.config.groups.NetworkConfigGroup;
@@ -21,10 +23,10 @@ import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.filter.NetworkFilterManager;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.core.utils.geometry.geotools.MGC;
-import org.matsim.counts.Count;
 import org.matsim.counts.Counts;
 import org.matsim.counts.CountsWriter;
-import org.opengis.referencing.operation.TransformException;
+import org.matsim.counts.Measurable;
+import org.matsim.counts.MeasurementLocation;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -50,9 +52,6 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 	@CommandLine.Option(names = "--network-geometries", description = "path to *linkGeometries.csv")
 	private Path networkGeometries;
 
-	@CommandLine.Option(names = "--version", description = "scenario version")
-	private String version = "";
-
 	@CommandLine.Option(names = "--output", description = "Base path for the output")
 	private String output;
 
@@ -60,7 +59,7 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 	private final CrsOptions crs = new CrsOptions();
 
 	@CommandLine.Mixin
-	private final CountsOption counts = new CountsOption();
+	private final CountsOptions counts = new CountsOptions();
 
 	private final Map<Integer, BerlinCount> stations = new HashMap<>();
 	private final List<BerlinCount> unmatched = new ArrayList<>();
@@ -141,19 +140,28 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 			}
 
 			Id<Link> manuallyMatched = counts.isManuallyMatched(String.valueOf(next.getKey()));
-			if (manuallyMatched != null && links.containsKey(manuallyMatched)) {
-				station.linkId = manuallyMatched;
-				index.remove(links.get(manuallyMatched));
-			}
+			if (manuallyMatched != null) {
 
-			Link link = index.query(station);
+				if (links.containsKey(manuallyMatched)) {
+					station.linkId = manuallyMatched;
+					index.remove(links.get(manuallyMatched));
+				} else {
+					log.warn("Manually matched station link {}={} not found in network", next.getKey(), manuallyMatched);
+					it.remove();
+				}
 
-			if (link == null) {
-				it.remove();
-				unmatched.add(station);
 			} else {
-				station.linkId = link.getId();
-				index.remove(link);
+
+				Link link = index.query(station);
+
+				if (link == null) {
+					it.remove();
+					unmatched.add(station);
+				} else {
+					station.linkId = link.getId();
+					index.remove(link);
+				}
+
 			}
 		}
 
@@ -179,40 +187,39 @@ public class CreateCountsFromVMZ implements MATSimAppCommand {
 
 	private void createCountsFile(String outputFile) {
 		log.info("Create count files.");
-		Counts<Link> countsPkw = new Counts<>();
-		countsPkw.setYear(2018);
-		countsPkw.setDescription("data from the berliner senate to matsim counts");
-		Counts<Link> countsLkw = new Counts<>();
-		countsLkw.setYear(2018);
-		countsLkw.setDescription("data from the berliner senate to matsim counts");
+		Counts<Link> counts = new Counts<>();
+		counts.setYear(2018);
+		counts.setDescription("data from the berliner senate to matsim counts");
 
 		int counter = 0;
 
 		for (BerlinCount station : stations.values()) {
 
-			Count<Link> car = countsPkw.createAndAddCount(station.linkId, station.id + "_" + station.position + "_" + station.orientation);
+			MeasurementLocation<Link> location = counts.createAndAddMeasureLocation(station.linkId,
+				station.id + "_" + station.position + "_" + station.orientation);
+
+			Measurable carVolumes = location.createVolume(TransportMode.car);
+
 			//create hour volumes from 'Tagesganglinie'
 			double[] carShareAtHour = station.carShareAtHour;
-			for (int i = 1; i < 25; i++) {
-				car.createVolume(i, ( (station.totalVolume - station.freightVolume) * carShareAtHour[i - 1]));
+			for (int i = 0; i < 24; i++) {
+				carVolumes.setAtHour(i, ( (station.totalVolume - station.freightVolume) * carShareAtHour[i]));
 			}
 			if (station.hasFreightShare) {
-				Count<Link> freight = countsLkw.createAndAddCount(station.linkId, station.id + "_" + station.position + "_" + station.orientation);
+
+				Measurable truckVolumes = location.createVolume(TransportMode.truck);
+
 				double[] freightShareAtHour = station.freightShareAtHour;
-				for (int i = 1; i < 25; i++) {
-					freight.createVolume(i, (station.freightVolume * freightShareAtHour[i - 1]));
+				for (int i = 0; i < 24; i++) {
+					truckVolumes.setAtHour(i, (station.freightVolume * freightShareAtHour[i]));
 				}
 			}
 
 			counter++;
 		}
 
-		if (!version.isBlank())
-			version += "-";
-
 		log.info("Write down {} count stations to file", counter);
-		new CountsWriter(countsPkw).write(outputFile + version + "counts-car-vmz.xml.gz");
-		new CountsWriter(countsLkw).write(outputFile + version + "counts-freight-vmz.xml.gz");
+		new CountsWriter(counts).write(outputFile);
 
 		log.info("Write down {} unmatched count stations to file", unmatched.size());
 		try (CSVPrinter printer = CSVFormat.Builder.create().setHeader("id", "position", "x", "y").build()

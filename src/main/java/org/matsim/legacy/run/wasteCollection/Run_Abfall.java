@@ -17,7 +17,7 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.gis.ShapeFileReader;
 import org.matsim.freight.carriers.*;
-import org.opengis.feature.simple.SimpleFeature;
+import org.geotools.api.feature.simple.SimpleFeature;
 
 /**
  * @author Ricardo Ewert MA: Modellierung und Simulation der staedtischen
