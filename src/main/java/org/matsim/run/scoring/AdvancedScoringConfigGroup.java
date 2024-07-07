@@ -99,24 +99,6 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 			super(GROUP_NAME, true);
 		}
 
-		/**
-		 * Checks if the given attributes match the config. If true these parameters are applicable to tbe object.
-		 */
-		public boolean matchObject(Attributes attr, Map<String, Category> categories) {
-
-			for (Map.Entry<String, String> e : this.getParams().entrySet()) {
-				// might be null if not defined
-				Object objValue = attr.getAttribute(e.getKey());
-				String category = categories.get(e.getKey()).categorize(objValue);
-
-				// compare as string
-				if (!Objects.toString(category).equals(e.getValue()))
-					return false;
-			}
-
-			return true;
-		}
-
 		public Map<String, ModeParams> getModeParams() {
 			return modeParams;
 		}

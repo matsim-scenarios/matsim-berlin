@@ -18,6 +18,7 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlansConfigGroup;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
+import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.algorithms.ParallelPersonAlgorithmUtils;
 import org.matsim.core.population.algorithms.PersonAlgorithm;
 import org.matsim.core.router.*;
@@ -60,14 +61,15 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	private boolean timeUtil;
 	@CommandLine.Option(names = "--calc-scores", description = "Perform pseudo scoring for each plan", defaultValue = "false")
 	private boolean calcScores;
-	@CommandLine.Option(names = "--plan-candidates", description = "Method to generate plan candidates", defaultValue = "bestK")
+	@CommandLine.Option(names = "--plan-candidates", description = "Method to generate plan candidates", defaultValue = "diverse")
 	private PlanCandidates planCandidates = PlanCandidates.bestK;
-
-	@CommandLine.Option(names = "--output", description = "Path to output csv.", required = true)
+	@CommandLine.Option(names = "--output", description = "Path to output csv.", defaultValue = "plan-choices.csv")
 	private Path output;
+
 	private ThreadLocal<Ctx> thread;
 	private ProgressBar pb;
-	private MainModeIdentifier mmi = new DefaultAnalysisMainModeIdentifier();
+	private double globalAvgIncome;
+	private final MainModeIdentifier mmi = new DefaultAnalysisMainModeIdentifier();
 
 	public static void main(String[] args) {
 		new ComputePlanChoices().execute(args);
@@ -75,6 +77,11 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 
 	@Override
 	public Integer call() throws Exception {
+
+		if (!output.getFileName().toString().contains(".csv")) {
+			log.error("Output file must be a csv file");
+			return 2;
+		}
 
 		Config config = this.scenario.getConfig();
 		config.controller().setOutputDirectory("choice-output");
@@ -140,19 +147,32 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 			)
 		);
 
+		globalAvgIncome = population.getPersons().values().stream()
+			.map(PersonUtils::getIncome)
+			.filter(Objects::nonNull)
+			.mapToDouble(d -> d)
+			.filter(dd -> dd > 0)
+			.average()
+			.orElse(Double.NaN);
+
 		pb = new ProgressBar("Computing plan choices", population.getPersons().size());
 
 		ParallelPersonAlgorithmUtils.run(population, Runtime.getRuntime().availableProcessors(), this);
 
 		pb.close();
 
-		log.info("Writing {} choices to {}", rows.size(), output);
+		String out = output.toString().replace(".csv", "-%s_%d.csv".formatted(planCandidates, topK));
 
-		try (CSVPrinter csv = new CSVPrinter(Files.newBufferedWriter(output), CSVFormat.DEFAULT)) {
+		log.info("Writing {} choices to {}", rows.size(), out);
+
+		try (CSVPrinter csv = new CSVPrinter(Files.newBufferedWriter(Path.of(out)), CSVFormat.DEFAULT.builder().setCommentMarker('#').build())) {
 
 			// header
 			List<Object> header = new ArrayList<>();
 			header.add("person");
+			header.add("weight");
+			header.add("income");
+			header.add("util_money");
 			header.add("choice");
 
 			for (int i = 1; i <= topK; i++) {
@@ -167,6 +187,8 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 				header.add(String.format("plan_%d_act_util", i));
 				header.add(String.format("plan_%d_valid", i));
 			}
+
+			csv.printComment("Average global income: " + globalAvgIncome);
 
 			csv.printRecord(header);
 
@@ -213,6 +235,10 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 		List<Object> row = new ArrayList<>();
 
 		row.add(person.getAttributes().getAttribute(TripAnalysis.ATTR_REF_ID));
+		row.add(person.getAttributes().getAttribute(TripAnalysis.ATTR_REF_WEIGHT));
+		row.add(PersonUtils.getIncome(person));
+		row.add(globalAvgIncome / PersonUtils.getIncome(person));
+
 		// choice, always the first one
 		row.add(1);
 
