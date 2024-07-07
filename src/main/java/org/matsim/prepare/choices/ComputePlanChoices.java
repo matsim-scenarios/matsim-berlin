@@ -37,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.regex.Pattern;
 
 
 @CommandLine.Command(
@@ -57,6 +58,10 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	private int topK;
 	@CommandLine.Option(names = "--modes", description = "Modes to include in estimation", split = ",")
 	private Set<String> modes;
+
+	@CommandLine.Option(names = "--id-filter", description = "Filter for person ids")
+	private Pattern idFilter;
+
 	@CommandLine.Option(names = "--time-util-only", description = "Reset scoring for estimation and only use time utility", defaultValue = "false")
 	private boolean timeUtil;
 	@CommandLine.Option(names = "--calc-scores", description = "Perform pseudo scoring for each plan", defaultValue = "false")
@@ -110,6 +115,10 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 		if (planCandidates == PlanCandidates.carAlternative) {
 			log.info("Setting top k to 2 for car alternative");
 			topK = 2;
+		}
+
+		if (idFilter != null) {
+			log.info("Using person id filter: {}", idFilter);
 		}
 
 		Controler controler = this.scenario.createControler();
@@ -205,6 +214,11 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	public void run(Person person) {
 
 		if (person.getAttributes().getAttribute(Attributes.REF_MODES) == null) {
+			pb.step();
+			return;
+		}
+
+		if (idFilter != null && !idFilter.matcher(person.getId().toString()).matches()) {
 			pb.step();
 			return;
 		}
