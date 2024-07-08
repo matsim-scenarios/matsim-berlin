@@ -95,7 +95,7 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 			addMobilityBudgetHandler(controler, mobilityBudgetEventHandler);
 		}
 
-		if (simpleMobilityBudget > 0.0) {
+		if (simpleMobilityBudget != 0.0) {
 			double oldDailyMonetaryConstant = controler.getScenario().getConfig().scoring().getModes().get(TransportMode.car).getDailyMonetaryConstant();
 			controler.getScenario().getConfig().scoring().getModes().get(TransportMode.car).setDailyMonetaryConstant(oldDailyMonetaryConstant + simpleMobilityBudget);
 		}
