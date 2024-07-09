@@ -317,5 +317,8 @@ prepare-calibration: $p/berlin-cadyts-input-$V-25pct.plans.xml.gz $p/berlin-$V-n
 prepare-initial: $p/berlin-$V-25pct.plans-initial.xml.gz $p/berlin-$V-network-with-pt.xml.gz
 	echo "Done"
 
+prepare-drt: $p/berlin-$V.drt-by-rndLocations-10000vehicles-4seats.xml.gz
+	echo "Done"
+
 prepare: $p/berlin-$V-10pct.plans.xml.gz
 	echo "Done"

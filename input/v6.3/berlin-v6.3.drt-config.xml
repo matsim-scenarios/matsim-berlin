@@ -12,7 +12,7 @@
 			<!-- If true, the startLink is changed to last link in the current schedule, so the taxi starts the next day at the link where it stopped operating the day before. False by default. -->
 			<param name="changeStartLinkToLastLinkInSchedule" value="true" />
 			<!-- allows to configure a service area per drt mode.Used with serviceArea Operational Scheme -->
-			<param name="drtServiceAreaShapeFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.1/input/shp/Berlin_25832.shp" />
+			<param name="drtServiceAreaShapeFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.3/input/shp/Berlin_25832.shp" />
 			<!-- Idle vehicles return to the nearest of all start links. See: DvrpVehicle.getStartLink() -->
 			<param name="idleVehiclesReturnToDepots" value="false" />
 			<!-- Defines the slope of the maxTravelTime estimation function (optimisation constraint), i.e. maxTravelTimeAlpha * estimated_drt_travel_time + maxTravelTimeBeta. Alpha should not be smaller than 1. -->
@@ -39,7 +39,7 @@
 			<param name="useModeFilteredSubnetwork" value="true"/>
 			<!-- An XML file specifying the vehicle fleet. The file format according to dvrp_vehicles_v1.dtd -->
 			<param name="vehiclesFile"
-				   value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.1/input/berlin-v6.1.drt-by-rndLocations-10000vehicles-4seats.xml.gz"/>
+				   value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.3/input/berlin-v6.3.drt-by-rndLocations-10000vehicles-4seats.xml.gz"/>
 			<!-- Writes out detailed DRT customer stats in each iteration. True by default. -->
 			<param name="writeDetailedCustomerStats" value="true"/>
 			<parameterset type="drtfare">
@@ -54,6 +54,11 @@
 				<!-- drt fare per hour (fee = positive value) -->
 				<param name="timeFare_h" value="0.0"/>
 			</parameterset>
+			<parameterset type="zonalSystem">
+				<parameterset type="SquareGridZoneSystem">
+					<param name="cellSize" value="1000"/>
+				</parameterset>
+			</parameterset>
 		</parameterset>
 	</module>
 
@@ -66,6 +71,12 @@
 		<param name="travelTimeEstimationAlpha" value="0.05"/>
 		<!-- Used for ONLINE estimation of travel times for VrpOptimizer by combining WithinDayTravelTime and DvrpOfflineTravelTimeEstimator. The beta coefficient is provided in seconds and should be either 0 (no online estimation) or positive (mixed online-offline estimation). For 'beta = 0', only the offline estimate is used: 'onlineTT(t) = offlineTT(t)', where 'offlineTT(t)' in the offline estimate for TT at time 't', For 'beta > 0', estimating future TTs at time 't', uses the currently observed TT to correct the offline estimates is made: where 'currentTT' is the currently observed TT, and 'correction = min(1, max(0, 1 - (time - currentTime) / beta))' The rule is that correction decreases linearly from 1 (when 'time = currentTime') to 0 (when 'time = currentTime + beta' For 'time > currentTime + beta' correction is 0, whereas if 'time < currentTime' it is 1. If beta is sufficiently large, 'beta >> 0', only the currently observed TT is used. -->
 		<param name="travelTimeEstimationBeta" value="0.0"/>
+		<parameterset type="travelTimeMatrix">
+			<parameterset type="SquareGridZoneSystem">
+				<param name="cellSize" value="1000"/>
+			</parameterset>
+			<param name="maxNeighborDistance" value="10000"/>
+		</parameterset>
 	</module>
 
 	<module name="swissRailRaptor" >

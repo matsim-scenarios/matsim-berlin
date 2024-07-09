@@ -158,7 +158,7 @@ public class PlanBuilder {
 		List<Activity> existing = TripStructureUtils.getActivities(plan, TripStructureUtils.StageActivityHandling.ExcludeStageActivities);
 
 		// If activities don't match, this entry is skipped
-		// this can happen if and end home activity has been added at the end
+		// this can happen if an end home activity has been added at the end
 		if (activities.size() != existing.size())
 			return false;
 
