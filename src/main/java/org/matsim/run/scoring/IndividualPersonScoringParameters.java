@@ -224,7 +224,7 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 							deltaParams.computeIfAbsent(mode.getKey(), k -> new DistanceGroupModeUtilityParameters.DeltaBuilder());
 
 						b.addUtilsDistance(mode.getValue());
-						addDeltaParams(this.rnd.get(), b, mode.getValue(), person);
+						addDeltaParams(this.rnd.get(), b, mode.getValue());
 					}
 				}
 			}
@@ -312,7 +312,7 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 	/**
 	 * Compute or retrieve delta params for person.
 	 */
-	private void addDeltaParams(Context ctx, DistanceGroupModeUtilityParameters.DeltaBuilder delta, AdvancedScoringConfigGroup.ModeParams params, Person person) {
+	private void addDeltaParams(Context ctx, DistanceGroupModeUtilityParameters.DeltaBuilder delta, AdvancedScoringConfigGroup.ModeParams params) {
 
 		ContinuousDistribution.Sampler normal = ctx.normal.createSampler(ctx.rnd());
 		ContinuousDistribution.Sampler tn = ctx.tn.createSampler(ctx.rnd());
