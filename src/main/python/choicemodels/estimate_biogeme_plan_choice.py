@@ -5,75 +5,10 @@ import argparse
 import biogeme.biogeme as bio
 import biogeme.database as db
 import biogeme.models as models
-import numpy as np
 import pandas as pd
 from biogeme.expressions import Beta, bioDraws, log, MonteCarlo
-from collections import defaultdict
-from scipy.stats import truncnorm
 
-TN = truncnorm(0, np.inf)
-
-
-def tn_generator(sample_size: int, number_of_draws: int) -> np.ndarray:
-    """
-    User-defined random number generator to the database.
-    See the numpy.random documentation to obtain a list of other distributions.
-    """
-    return TN.rvs((sample_size, number_of_draws))
-
-
-def calc_costs(df, k, modes):
-
-    # Cost parameter from current berlin model
-    daily_costs = defaultdict(lambda: 0.0, car=-14.30, pt=-3)
-    km_costs = defaultdict(lambda: 0.0, car=-0.149, ride=-0.149)
-    util_performing = -6.88
-
-    # Normalize activity utilities to be near zero
-    # columns = [f"plan_{i}_act_util" for i in range(1, k + 1)]
-    # for t in df.itertuples():
-    #     utils = df.loc[t.Index, columns]
-    #     df.loc[t.Index, columns] -= utils.max()
-
-    # Marginal utility of money as factor
-    util_money = df.util_money
-
-    for i in range(1, k + 1):
-
-        # Price is only monetary costs
-        df[f"plan_{i}_price"] = 0
-
-        # Costs will also include time costs
-        df[f"plan_{i}_utils"] = 0
-
-        df[f"plan_{i}_tt_hours"] = 0
-
-        for mode in modes:
-
-            fixed_costs = (df[f"plan_{i}_{mode}_usage"] > 0) * daily_costs[mode]
-            distance_costs = df[f"plan_{i}_{mode}_km"] * km_costs[mode]
-
-            df[f"plan_{i}_{mode}_fixed_cost"] = fixed_costs
-            df[f"plan_{i}_price"] += fixed_costs + distance_costs
-
-            df[f"plan_{i}_{mode}_used"] = (df[f"plan_{i}_{mode}_usage"] > 0) * 1
-            df[f"plan_{i}_tt_hours"] += df[f"plan_{i}_{mode}_hours"]
-
-            # Add configured time costs
-            df[f"plan_{i}_utils"] += (fixed_costs + distance_costs) * util_money
-
-            # Add time costs the overall costs
-            df[f"plan_{i}_utils"] += util_performing * df[f"plan_{i}_{mode}_hours"]
-
-            # Add additional ride time utils for the driver
-            if mode == "ride":
-                df[f"plan_{i}_utils"] += util_performing * df[f"plan_{i}_{mode}_hours"]
-
-        # Defragment df
-        df = df.copy()
-
-    return df
-
+from prepare import calc_plan_variables, tn_generator
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate choice model for daily trip usage")
@@ -99,7 +34,7 @@ if __name__ == "__main__":
     modes = list(df.columns.str.extract(r"_([a-zA-z]+)_usage", expand=False).dropna().unique())
     print("Modes: ", modes)
 
-    df = calc_costs(df, k, modes)
+    df = calc_plan_variables(df, k, modes)
 
     database = db.Database("data/plan-choices", df)
     v = database.variables

@@ -53,22 +53,34 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	 */
 	private final Queue<List<Object>> rows = new ConcurrentLinkedQueue<>();
 	private final MainModeIdentifier mmi = new DefaultAnalysisMainModeIdentifier();
+
 	@CommandLine.Mixin
 	private ScenarioOptions scenario;
+
 	@CommandLine.Option(names = "--top-k", description = "Use top k estimates", defaultValue = "9")
 	private int topK;
+
 	@CommandLine.Option(names = "--modes", description = "Modes to include in estimation", split = ",")
 	private Set<String> modes;
+
 	@CommandLine.Option(names = "--id-filter", description = "Filter for person ids")
 	private Pattern idFilter;
+
 	@CommandLine.Option(names = "--time-util-only", description = "Reset scoring for estimation and only use time utility", defaultValue = "false")
 	private boolean timeUtil;
+
 	@CommandLine.Option(names = "--calc-scores", description = "Perform pseudo scoring for each plan", defaultValue = "false")
 	private boolean calcScores;
-	@CommandLine.Option(names = "--plan-candidates", description = "Method to generate plan candidates", defaultValue = "diverse")
+
+	@CommandLine.Option(names = "--plan-candidates", description = "Method to generate plan candidates", defaultValue = "bestK")
 	private PlanCandidates planCandidates = PlanCandidates.bestK;
+
+	@CommandLine.Option(names = "--max-plan-length", description = "Maximum plan length", defaultValue = "7")
+	private int maxPlanLength = 7;
+
 	@CommandLine.Option(names = "--output", description = "Path to output csv.", defaultValue = "plan-choices.csv")
 	private Path output;
+
 	private ThreadLocal<Ctx> thread;
 	private ProgressBar pb;
 	private double globalAvgIncome;
@@ -169,6 +181,10 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 
 		String out = output.toString().replace(".csv", "-%s_%d.csv".formatted(planCandidates, topK));
 
+		if (timeUtil && planCandidates == PlanCandidates.bestK) {
+			out = out.replace(".csv", "-tt-only.csv");
+		}
+
 		log.info("Writing {} choices to {}", rows.size(), out);
 
 		try (CSVPrinter csv = new CSVPrinter(Files.newBufferedWriter(Path.of(out)), CSVFormat.DEFAULT.builder().setCommentMarker('#').build())) {
@@ -222,6 +238,11 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 
 		Plan plan = person.getSelectedPlan();
 		PlanModel model = PlanModel.newInstance(plan);
+
+		if (model.trips() > maxPlanLength) {
+			pb.step();
+			return;
+		}
 
 		String refModes = (String) person.getAttributes().getAttribute(TripAnalysis.ATTR_REF_MODES);
 		String[] split = refModes.strip().split("-");
