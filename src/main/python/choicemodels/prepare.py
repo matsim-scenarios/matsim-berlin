@@ -13,7 +13,7 @@ km_costs = defaultdict(lambda: 0.0, car=-0.149, ride=-0.149)
 
 TN = truncnorm(0, np.inf)
 
-PlanChoice = namedtuple("PlanChoice", ["df", "modes", "varying", "k"])
+PlanChoice = namedtuple("PlanChoice", ["df", "modes", "varying", "k", "global_income"])
 
 
 def read_plan_choices(input_file: str, sample: float = 1, seed: int = 42) -> PlanChoice:
@@ -42,11 +42,15 @@ def read_plan_choices(input_file: str, sample: float = 1, seed: int = 42) -> Pla
     df_wide['custom_id'] = np.arange(len(df_wide))  # Add unique identifier
     df_wide['choice'] = df_wide['choice'].map({1: "plan_1"})
 
-    df_wide = calc_plan_variables(df_wide, k, modes)
+    df_wide = calc_plan_variables(df_wide, k, modes, True)
 
     varying = list(df_wide.columns.str.extract(r"plan_1_([a-zA-z_]+)", expand=False).dropna().unique())
 
-    return PlanChoice(df_wide, modes, varying, k)
+    with open(input_file) as f:
+        _, _, income = f.readline().rpartition(":")
+        global_income = float(income.strip())
+
+    return PlanChoice(df_wide, modes, varying, k, global_income)
 
 
 def tn_generator(sample_size: int, number_of_draws: int) -> np.ndarray:
