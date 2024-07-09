@@ -2,7 +2,6 @@ package org.matsim.run.scoring;
 
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ReflectiveConfigGroup;
-import org.matsim.utils.objectattributes.attributable.Attributes;
 
 import java.util.*;
 
@@ -14,27 +13,24 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 
 	private static final String GROUP_NAME = "advancedScoring";
 
-	private final List<ScoringParameters> scoringParameters = new ArrayList<>();
-
 	@Parameter
 	@Comment("The distance groups if marginal utility of distance is adjusted. In meters.")
 	public List<Integer> distGroups;
-
 	@Parameter
 	@Comment("Enable income dependent marginal utility of money.")
-	public boolean incomeDependent = true;
+	public IncomeDependentScoring incomeDependent = IncomeDependentScoring.avgByPersonalIncome;
+	@Parameter
+	@Comment("Define how to load existing preferences.")
+	public LoadPreferences loadPreferences = LoadPreferences.none;
 
-
-	// TODO: maybe option to re-assign variations or use them from attributes
-	// TODO: could load the random variations from a file, helper function to only generate the variations
-	// TODO: reference population?, for which the loglikelihood could be calculated
+	private final List<ScoringParameters> scoringParameters = new ArrayList<>();
 
 	public AdvancedScoringConfigGroup() {
 		super(GROUP_NAME);
 	}
 
 	/**
-	 *  Return the defined scoring parameters.
+	 * Return the defined scoring parameters.
 	 */
 	public List<ScoringParameters> getScoringParameters() {
 		return Collections.unmodifiableList(scoringParameters);
@@ -60,6 +56,31 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 	}
 
 	/**
+	 * Different options for income dependent scoring.
+	 */
+	public enum IncomeDependentScoring {
+		none,
+		avgByPersonalIncome
+	}
+
+	/**
+	 * Define how existing preferences are loaded.
+	 */
+	public enum LoadPreferences {
+		none,
+		requireAttribute,
+		skipMissing,
+		skipRefPersons
+	}
+
+	/**
+	 * Variate values with random draw from specific distribution.
+	 */
+	public enum VariationType {
+		fixed, normal, truncatedNormal
+	}
+
+	/**
 	 * Scoring parameters for a specific group of agents.
 	 * This group allows arbitrary attributes to be defined, which are matched against person attributes.
 	 */
@@ -74,24 +95,6 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 
 		public ScoringParameters() {
 			super(GROUP_NAME, true);
-		}
-
-		/**
-		 * Checks if the given attributes match the config. If true these parameters are applicable to tbe object.
-		 */
-		public boolean matchObject(Attributes attr, Map<String, Category> categories) {
-
-			for (Map.Entry<String, String> e : this.getParams().entrySet()) {
-				// might be null if not defined
-				Object objValue = attr.getAttribute(e.getKey());
-				String category = categories.get(e.getKey()).categorize(objValue);
-
-				// compare as string
-				if (!Objects.toString(category).equals(e.getValue()))
-					return false;
-			}
-
-			return true;
 		}
 
 		public Map<String, ModeParams> getModeParams() {
@@ -167,12 +170,5 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 		public ModeParams() {
 			super(GROUP_NAME);
 		}
-	}
-
-	/**
-	 * Variate values with random draw from specific distribution.
-	 */
-	public enum VariationType {
-		fixed, normal, truncatedNormal
 	}
 }

@@ -81,7 +81,7 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 		try {
 			return CRS.findMathTransform(CRS.decode(inputCRS, true), CRS.decode(targetCRS, true));
 		} catch (FactoryException e) {
-			throw new RuntimeException("Please check the coordinate systems!");
+			throw new RuntimeException("Please check the coordinate systems!", e);
 		}
 	}
 
@@ -250,7 +250,7 @@ public class CreateCountsFromGeoPortalBerlin implements MATSimAppCommand {
 
 		for (String type : CreateCountsFromGeoPortalBerlin.ROAD_TYPES) {
 			Predicate<Link> p = link -> {
-				var attr = NetworkUtils.getHighwayType(link);
+				String attr = NetworkUtils.getHighwayType(link);
 				return attr.toLowerCase().contains(type);
 			};
 

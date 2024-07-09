@@ -81,7 +81,7 @@ public class OpenBerlinDrtScenario extends OpenBerlinScenario {
 	private static final Logger log = LogManager.getLogger(OpenBerlinDrtScenario.class);
 
 	@CommandLine.Option(names = "--drt-config",
-		defaultValue = "input/v" + OpenBerlinScenario.VERSION + "/berlin-v" + OpenBerlinScenario.VERSION + ".drt-config.xml",
+		defaultValue = "input/v" + OpenBerlinScenario.VERSION + "/berlin-v" + OpenBerlinScenario.VERSION +".drt-config.xml",
 		description = "Path to drt (only) config. Should contain only additional stuff to base config. Otherwise overrides.")
 	private String drtConfig;
 

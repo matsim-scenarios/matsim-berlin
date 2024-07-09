@@ -1,7 +1,7 @@
 
 
 JAR := matsim-berlin-*.jar
-V := v6.2
+V := v6.3
 CRS := EPSG:25832
 
 p := input/$V
@@ -155,8 +155,16 @@ $p/berlin-static-$V-25pct.plans.xml.gz: $p/berlin-only-$V-25pct.plans.xml.gz $p/
 	$(sc) prepare lookup-regiostar --input $@ --output $@ --xls $(germany)/RegioStaR-Referenzdateien.xlsx
 
 
-$p/berlin-activities-$V-25pct.plans.xml.gz: $p/berlin-static-$V-25pct.plans.xml.gz
+$p/berlin-activities-$V-25pct.plans.xml.gz: $p/berlin-static-$V-25pct.plans.xml.gz $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
 	$(sc) prepare activity-sampling --seed 1 --input $< --output $@ --persons src/main/python/table-persons.csv --activities src/main/python/table-activities.csv
+
+	$(sc) prepare assign-reference-population --population $@ --output $@\
+	 --persons src/main/python/table-persons.csv\
+  	 --activities src/main/python/table-activities.csv\
+  	 --shp $(germany)/../matsim-berlin/data/SrV/zones/zones.shp\
+  	 --shp-crs $(CRS)\
+	 --facilities $(word 2,$^)\
+	 --network $(word 3,$^)\
 
 $p/berlin-initial-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans.xml.gz $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
 	$(sc) prepare init-location-choice\
@@ -196,7 +204,7 @@ $p/commercialFacilities.xml.gz:
 	 --landuseShapeFileName $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp\
 	 --shapeFileLanduseTypeColumn "fclass"\
 	 --shapeCRS "EPSG:4326"\
-	 --pathToInvestigationAreaData $p/commercialTraffic/investigationAreaData.csv
+	 --pathToInvestigationAreaData input/commercialTrafficAreaData.csv
 
 $p/berlin-small-scale-commercialTraffic-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz $p/commercialFacilities.xml.gz
 	$(sc) prepare generate-small-scale-commercial-traffic\
@@ -249,6 +257,15 @@ eval-opt: $p/berlin-initial-$V-25pct.experienced_plans.xml.gz
 	$(sc) run --mode "routeChoice" --iterations 20 --all-car --output "output/eval-$(ERROR_METRIC)" --25pct --population "berlin-$V-25pct.plans_$(ERROR_METRIC).xml.gz"\
 	 --config $p/berlin-$V.config.xml
 
+$p/berlin-$V-25pct.plans_cadyts.xml.gz:
+	$(sc) prepare extract-plans-idx\
+	 --input output/cadyts/cadyts.output_plans.xml.gz\
+	 --output $p/berlin-$V-25pct.plans_selection_cadyts.csv
+
+	$(sc) prepare select-plans-idx\
+	 --input $p/berlin-cadyts-input-$V-25pct.plans.xml.gz\
+	 --csv $p/berlin-$V-25pct.plans_selection_cadyts.csv\
+	 --output $@
 
 # These depend on the output of optimization runs
 $p/berlin-$V-25pct.plans-initial.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
@@ -298,6 +315,9 @@ prepare-calibration: $p/berlin-cadyts-input-$V-25pct.plans.xml.gz $p/berlin-$V-n
 	echo "Done"
 
 prepare-initial: $p/berlin-$V-25pct.plans-initial.xml.gz $p/berlin-$V-network-with-pt.xml.gz
+	echo "Done"
+
+prepare-drt: $p/berlin-$V.drt-by-rndLocations-10000vehicles-4seats.xml.gz
 	echo "Done"
 
 prepare: $p/berlin-$V-10pct.plans.xml.gz

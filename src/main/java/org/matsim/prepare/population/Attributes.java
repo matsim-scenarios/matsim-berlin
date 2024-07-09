@@ -4,6 +4,7 @@ import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.application.analysis.population.TripAnalysis;
 
 import java.util.Objects;
 
@@ -36,6 +37,7 @@ public final class Attributes {
 	public static final String RESTRICTED_MOBILITY = "restricted_mobility";
 	public static final String ECONOMIC_STATUS = "economic_status";
 	public static final String HOUSEHOLD_SIZE = "household_size";
+	public static final String REF_MODES = TripAnalysis.ATTR_REF_MODES;
 	public static final String ATTRACTION_WORK = "attraction_work";
 	public static final String ATTRACTION_OTHER = "attraction_other";
 

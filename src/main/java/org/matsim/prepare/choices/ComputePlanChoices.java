@@ -6,20 +6,19 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.application.MATSimAppCommand;
+import org.matsim.application.analysis.population.TripAnalysis;
 import org.matsim.application.options.ScenarioOptions;
-import org.matsim.application.options.ShpOptions;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlansConfigGroup;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
-import org.matsim.core.population.PopulationUtils;
+import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.algorithms.ParallelPersonAlgorithmUtils;
 import org.matsim.core.population.algorithms.PersonAlgorithm;
 import org.matsim.core.router.*;
@@ -29,6 +28,8 @@ import org.matsim.modechoice.constraints.RelaxedMassConservationConstraint;
 import org.matsim.modechoice.estimators.DefaultLegScoreEstimator;
 import org.matsim.modechoice.estimators.FixedCostsEstimator;
 import org.matsim.modechoice.search.TopKChoicesGenerator;
+import org.matsim.prepare.population.Attributes;
+import org.matsim.simwrapper.SimWrapperConfigGroup;
 import picocli.CommandLine;
 
 import javax.annotation.Nullable;
@@ -36,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.regex.Pattern;
 
 
 @CommandLine.Command(
@@ -50,30 +52,26 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	 * Rows for the result table.
 	 */
 	private final Queue<List<Object>> rows = new ConcurrentLinkedQueue<>();
+	private final MainModeIdentifier mmi = new DefaultAnalysisMainModeIdentifier();
 	@CommandLine.Mixin
 	private ScenarioOptions scenario;
-	@CommandLine.Mixin
-	private ShpOptions shp;
-	@CommandLine.Option(names = "--trips", description = "Input trips from survey data, in matsim-python-tools format.", required = true)
-	private Path input;
-	@CommandLine.Option(names = "--facilities", description = "Shp file with facilities", required = true)
-	private Path facilities;
 	@CommandLine.Option(names = "--top-k", description = "Use top k estimates", defaultValue = "9")
 	private int topK;
 	@CommandLine.Option(names = "--modes", description = "Modes to include in estimation", split = ",")
 	private Set<String> modes;
+	@CommandLine.Option(names = "--id-filter", description = "Filter for person ids")
+	private Pattern idFilter;
 	@CommandLine.Option(names = "--time-util-only", description = "Reset scoring for estimation and only use time utility", defaultValue = "false")
 	private boolean timeUtil;
 	@CommandLine.Option(names = "--calc-scores", description = "Perform pseudo scoring for each plan", defaultValue = "false")
 	private boolean calcScores;
-	@CommandLine.Option(names = "--plan-candidates", description = "Method to generate plan candidates", defaultValue = "bestK")
+	@CommandLine.Option(names = "--plan-candidates", description = "Method to generate plan candidates", defaultValue = "diverse")
 	private PlanCandidates planCandidates = PlanCandidates.bestK;
-
-	@CommandLine.Option(names = "--output", description = "Path to output csv.", required = true)
+	@CommandLine.Option(names = "--output", description = "Path to output csv.", defaultValue = "plan-choices.csv")
 	private Path output;
 	private ThreadLocal<Ctx> thread;
 	private ProgressBar pb;
-	private MainModeIdentifier mmi = new DefaultAnalysisMainModeIdentifier();
+	private double globalAvgIncome;
 
 	public static void main(String[] args) {
 		new ComputePlanChoices().execute(args);
@@ -82,13 +80,8 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	@Override
 	public Integer call() throws Exception {
 
-		if (!shp.isDefined()) {
-			log.error("No shapefile defined. Please specify a shapefile for the zones using the --shp option.");
-			return 2;
-		}
-
-		if (!Files.exists(input)) {
-			log.error("Input file does not exist: " + input);
+		if (!output.getFileName().toString().contains(".csv")) {
+			log.error("Output file must be a csv file");
 			return 2;
 		}
 
@@ -97,8 +90,11 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 		config.controller().setLastIteration(0);
 		config.controller().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
 
+		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
+		sw.defaultDashboards = SimWrapperConfigGroup.Mode.disabled;
+
 		if (timeUtil) {
-			// All utilities expect travel time become zero
+			// All utilities except travel time become zero
 			config.scoring().setMarginalUtlOfWaitingPt_utils_hr(0);
 			config.scoring().setUtilityOfLineSwitch(0);
 
@@ -116,6 +112,10 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 		if (planCandidates == PlanCandidates.carAlternative) {
 			log.info("Setting top k to 2 for car alternative");
 			topK = 2;
+		}
+
+		if (idFilter != null) {
+			log.info("Using person id filter: {}", idFilter);
 		}
 
 		Controler controler = this.scenario.createControler();
@@ -136,14 +136,7 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 
 		Injector injector = controler.getInjector();
 
-		PlanBuilder.addVehiclesToScenario(injector.getInstance(Scenario.class));
-
-
-		Population population = PopulationUtils.createPopulation(config);
-
-		PlanBuilder builder = new PlanBuilder(shp, new ShpOptions(facilities, null, null), population.getFactory());
-
-		builder.createPlans(input).forEach(population::addPerson);
+		Population population = controler.getScenario().getPopulation();
 
 		thread = ThreadLocal.withInitial(() ->
 			new Ctx(
@@ -160,17 +153,32 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 			)
 		);
 
+		globalAvgIncome = population.getPersons().values().stream()
+			.map(PersonUtils::getIncome)
+			.filter(Objects::nonNull)
+			.mapToDouble(d -> d)
+			.filter(dd -> dd > 0)
+			.average()
+			.orElse(Double.NaN);
+
 		pb = new ProgressBar("Computing plan choices", population.getPersons().size());
 
 		ParallelPersonAlgorithmUtils.run(population, Runtime.getRuntime().availableProcessors(), this);
 
 		pb.close();
 
-		try (CSVPrinter csv = new CSVPrinter(Files.newBufferedWriter(output), CSVFormat.DEFAULT)) {
+		String out = output.toString().replace(".csv", "-%s_%d.csv".formatted(planCandidates, topK));
+
+		log.info("Writing {} choices to {}", rows.size(), out);
+
+		try (CSVPrinter csv = new CSVPrinter(Files.newBufferedWriter(Path.of(out)), CSVFormat.DEFAULT.builder().setCommentMarker('#').build())) {
 
 			// header
 			List<Object> header = new ArrayList<>();
 			header.add("person");
+			header.add("weight");
+			header.add("income");
+			header.add("util_money");
 			header.add("choice");
 
 			for (int i = 1; i <= topK; i++) {
@@ -186,6 +194,8 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 				header.add(String.format("plan_%d_valid", i));
 			}
 
+			csv.printComment("Average global income: " + globalAvgIncome);
+
 			csv.printRecord(header);
 
 			for (List<Object> row : rows) {
@@ -200,14 +210,48 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	@Override
 	public void run(Person person) {
 
+		if (person.getAttributes().getAttribute(Attributes.REF_MODES) == null) {
+			pb.step();
+			return;
+		}
+
+		if (idFilter != null && !idFilter.matcher(person.getId().toString()).matches()) {
+			pb.step();
+			return;
+		}
+
 		Plan plan = person.getSelectedPlan();
 		PlanModel model = PlanModel.newInstance(plan);
+
+		String refModes = (String) person.getAttributes().getAttribute(TripAnalysis.ATTR_REF_MODES);
+		String[] split = refModes.strip().split("-");
+		String[] currentModes = model.getCurrentModesMutable();
+
+		if (refModes.isBlank()) {
+			pb.step();
+			return;
+		}
+
+		if (split.length != currentModes.length) {
+			if (log.isWarnEnabled())
+				log.warn("Number of trips ref/current do not match: {} / {}", Arrays.toString(split), Arrays.toString(currentModes));
+
+			pb.step();
+			return;
+		}
+
+		// Put reference modes into the current modes
+		System.arraycopy(split, 0, currentModes, 0, split.length);
 
 		Ctx ctx = thread.get();
 
 		List<Object> row = new ArrayList<>();
 
-		row.add(person.getId());
+		row.add(person.getAttributes().getAttribute(TripAnalysis.ATTR_REF_ID));
+		row.add(person.getAttributes().getAttribute(TripAnalysis.ATTR_REF_WEIGHT));
+		row.add(PersonUtils.getIncome(person));
+		row.add(globalAvgIncome / PersonUtils.getIncome(person));
+
 		// choice, always the first one
 		row.add(1);
 

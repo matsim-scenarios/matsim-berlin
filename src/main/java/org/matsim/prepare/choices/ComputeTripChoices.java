@@ -15,7 +15,6 @@ import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.options.ScenarioOptions;
-import org.matsim.application.options.ShpOptions;
 import org.matsim.core.config.Config;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
@@ -25,12 +24,14 @@ import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.facilities.FacilitiesUtils;
 import org.matsim.facilities.Facility;
+import org.matsim.prepare.population.Attributes;
 import org.matsim.utils.objectattributes.attributable.AttributesImpl;
 import picocli.CommandLine;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.SplittableRandom;
 import java.util.concurrent.CompletableFuture;
@@ -49,13 +50,6 @@ public class ComputeTripChoices implements MATSimAppCommand {
 
 	@CommandLine.Mixin
 	private ScenarioOptions scenario;
-	@CommandLine.Mixin
-	private ShpOptions shp;
-	@CommandLine.Option(names = "--trips", description = "Input trips from survey data, in matsim-python-tools format.", required = true)
-	private Path input;
-
-	@CommandLine.Option(names = "--facilities", description = "Shp file with facilities", required = true)
-	private Path facilities;
 
 	@CommandLine.Option(names = "--modes", description = "Modes to include in choice set", split = ",", required = true)
 	private List<String> modes;
@@ -69,17 +63,6 @@ public class ComputeTripChoices implements MATSimAppCommand {
 
 	@Override
 	public Integer call() throws Exception {
-
-		if (!shp.isDefined()) {
-			log.error("No shapefile defined. Please specify a shapefile for the zones using the --shp option.");
-			return 2;
-		}
-
-		if (!Files.exists(input)) {
-			log.error("Input file does not exist: " + input);
-			return 2;
-		}
-
 
 		Config config = this.scenario.getConfig();
 		config.controller().setOutputDirectory("choice-output");
@@ -95,23 +78,23 @@ public class ComputeTripChoices implements MATSimAppCommand {
 
 		Scenario scenario = injector.getInstance(Scenario.class);
 
-		PlanBuilder builder = new PlanBuilder(shp, new ShpOptions(facilities, null, null),
-			scenario.getPopulation().getFactory());
-
-		PlanBuilder.addVehiclesToScenario(scenario);
-
 		ThreadLocal<TripRouter> ctx = ThreadLocal.withInitial(() -> injector.getInstance(TripRouter.class));
 		ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 		List<CompletableFuture<List<Object>>> futures = new ArrayList<>();
 
-		List<Person> persons = builder.createPlans(input);
+		Collection<? extends Person> persons = scenario.getPopulation().getPersons().values();
+
 		// Progress bar will be inaccurate
 		ProgressBar pb = new ProgressBar("Computing choices", persons.size() * 3L);
 
 		SplittableRandom rnd = new SplittableRandom();
 
 		for (Person person : persons) {
+
+			if (person.getAttributes().getAttribute(Attributes.REF_MODES) == null) {
+				continue;
+			}
 
 			Plan plan = person.getSelectedPlan();
 

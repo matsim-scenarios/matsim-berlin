@@ -191,7 +191,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			Pattern pattern = Pattern.compile(direction, Pattern.CASE_INSENSITIVE);
 			return pattern.matcher(linkDir).find();
 		});
-		index.addLinkFilter(((link, station) -> !link.link().getId().toString().startsWith("pt_")));
+		index.addLinkFilter((link, station) -> !link.link().getId().toString().startsWith("pt_"));
 
 		if (roadNames) {
 			index.addLinkFilter((link, station) -> {
@@ -249,7 +249,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		try (XSSFWorkbook wb = new XSSFWorkbook(path.toString())) {
 			sheet = wb.getSheetAt(0);
 		} catch (IOException e) {
-			throw new RuntimeException(e.getMessage());
+			throw new RuntimeException(e);
 		}
 
 		for (Row row : sheet) {
@@ -291,7 +291,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 				records.addAll(month);
 			} catch (IOException e) {
 				logger.warn("Error processing file {}: ", path.toString());
-				throw new RuntimeException(e.getMessage());
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -385,11 +385,11 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			}
 			logger.info("Skipped {} stations, because data was incomplete!", counter);
 		} catch (IOException e) {
-			throw new RuntimeException(e.getMessage());
+			throw new RuntimeException(e);
 		}
 	}
 
-	private static class ColumnNames {
+	private static final class ColumnNames {
 		static String id = "id";
 		static String date = "date";
 		static String hour = "hour";

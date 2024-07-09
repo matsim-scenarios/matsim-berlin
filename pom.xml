@@ -6,7 +6,7 @@
 		<artifactId>matsim-all</artifactId>
 
 		<!-- PR-labelled release -->
-		<version>2025.0-PR3292</version>
+		<version>2025.0-PR3350</version>
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
 <!--		<version>2025.0-SNAPSHOT</version>-->
@@ -15,7 +15,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.matsim-scenarios</groupId>
 	<artifactId>matsim-berlin</artifactId>
-	<version>6.2</version>
+	<version>6.3-SNAPSHOT</version>
 
 	<name>MATSim Open Berlin scenario</name>
 	<description>MATSim Open Berlin scenario</description>
@@ -245,7 +245,7 @@
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
-			<version>5.2.5</version>
+			<version>5.3.0</version>
 		</dependency>
 
 		<dependency>
@@ -261,7 +261,7 @@
 		<dependency>
 			<groupId>me.tongfei</groupId>
 			<artifactId>progressbar</artifactId>
-			<version>0.10.0</version>
+			<version>0.10.1</version>
 		</dependency>
 
 		<!-- for weighted random draw: https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
@@ -418,12 +418,17 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
-				<version>3.2.0</version>
+				<version>3.4.0</version>
 				<dependencies>
 					<dependency>
 						<groupId>com.puppycrawl.tools</groupId>
 						<artifactId>checkstyle</artifactId>
-						<version>10.6.0</version>
+						<version>10.17.0</version>
+					</dependency>
+					<dependency>
+						<groupId>com.github.sevntu-checkstyle</groupId>
+						<artifactId>sevntu-checks</artifactId>
+						<version>1.44.1</version>
 					</dependency>
 				</dependencies>
 				<configuration>

@@ -44,6 +44,8 @@ import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.SumScoringFunction;
 import org.matsim.core.scoring.functions.*;
 import org.matsim.core.utils.geometry.CoordUtils;
+import org.matsim.prepare.opt.ExtractPlanIndexFromType;
+import org.matsim.prepare.population.AssignReferencePopulation;
 import org.matsim.prepare.choices.ComputePlanChoices;
 import org.matsim.prepare.choices.ComputeTripChoices;
 import org.matsim.prepare.counts.CreateCountsFromGeoPortalBerlin;
@@ -86,7 +88,7 @@ import java.util.stream.Collectors;
 	CreateCountsFromGeoPortalBerlin.class, CreateCountsFromVMZOld.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class,
 	MergePlans.class, SplitActivityTypesDuration.class, CleanPopulation.class, CleanAttributes.class,
 	GenerateSmallScaleCommercialTrafficDemand.class, CreateDataDistributionOfStructureData.class,
-	RunCountOptimization.class, SelectPlansFromIndex.class,
+	RunCountOptimization.class, SelectPlansFromIndex.class, ExtractPlanIndexFromType.class, AssignReferencePopulation.class,
 	ExtractRelevantFreightTrips.class, CheckCarAvailability.class, FixSubtourModes.class, ComputeTripChoices.class, ComputePlanChoices.class,
 	ApplyNetworkParams.class, SetCarAvailabilityByAge.class, CreateDrtVehicles.class
 })
@@ -161,11 +163,10 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
 
+		config.replanningAnnealer().setActivateAnnealingModule(false);
+
 		if (sample.isSet()) {
 			double sampleSize = sample.getSample();
-
-			// All car leads to much more congestion even if scaled up compared to a normal run
-			// therefore scaling is increased a bit more
 			double countScale = allCar ? CAR_FACTOR : 1;
 
 			config.qsim().setFlowCapFactor(sampleSize * countScale);
@@ -185,8 +186,12 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		log.info("Running with flow and storage capacity: {} / {}", config.qsim().getFlowCapFactor(), config.qsim().getStorageCapFactor());
 
-		if (allCar)
+		if (allCar) {
 			config.transit().setUseTransit(false);
+
+			// Disable dashboards, for all car runs, these take too many resources
+			sw.defaultDashboards = SimWrapperConfigGroup.Mode.disabled;
+		}
 
 		// Required for all calibration strategies
 		for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service", "goodsTraffic")) {
@@ -243,6 +248,17 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 					.setSubpopulation(subpopulation)
 				);
 			}
+
+			// Agents should generally use the faster routes, this is without any mode choice
+			config.scoring().getModes().values().forEach(m -> {
+				// Only time goes into the score
+				m.setMarginalUtilityOfTraveling(-config.scoring().getPerforming_utils_hr());
+				m.setConstant(0);
+				m.setMarginalUtilityOfDistance(0);
+				m.setDailyMonetaryConstant(0);
+				m.setDailyUtilityConstant(0);
+				m.setMonetaryDistanceRate(0);
+			});
 
 			config.controller().setRunId("cadyts");
 			config.controller().setOutputDirectory("./output/cadyts-" + scaleFactor);
@@ -343,7 +359,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		}
 	}
 
-	private Coord getCoord(Scenario scenario, Activity act) {
+	private static Coord getCoord(Scenario scenario, Activity act) {
 
 		if (act.getCoord() != null)
 			return act.getCoord();
@@ -383,14 +399,12 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 					Config config = controler.getConfig();
 
-					// Only use cadyts, not the usual scoring
-//					final ScoringParameters params = parameters.getScoringParameters(person);
-//					sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(params, controler.getScenario().getNetwork()));
-//					sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(params));
-//					sumScoringFunction.addScoringFunction(new CharyparNagelAgentStuckScoring(params));
+					// Not using the usual scoring, just cadyts + travel time
+					// final ScoringParameters params = parameters.getScoringParameters(person);
+					// sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(params, controler.getScenario().getNetwork()));
 
 					final CadytsScoring<Link> scoringFunction = new CadytsScoring<>(person.getSelectedPlan(), config, cadytsContext);
-					scoringFunction.setWeightOfCadytsCorrection(config.scoring().getBrainExpBeta());
+					scoringFunction.setWeightOfCadytsCorrection(30 * config.scoring().getBrainExpBeta());
 					sumScoringFunction.addScoringFunction(scoringFunction);
 
 					return sumScoringFunction;
