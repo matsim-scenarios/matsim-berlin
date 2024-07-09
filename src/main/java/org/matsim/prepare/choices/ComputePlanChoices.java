@@ -52,16 +52,15 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	 * Rows for the result table.
 	 */
 	private final Queue<List<Object>> rows = new ConcurrentLinkedQueue<>();
+	private final MainModeIdentifier mmi = new DefaultAnalysisMainModeIdentifier();
 	@CommandLine.Mixin
 	private ScenarioOptions scenario;
 	@CommandLine.Option(names = "--top-k", description = "Use top k estimates", defaultValue = "9")
 	private int topK;
 	@CommandLine.Option(names = "--modes", description = "Modes to include in estimation", split = ",")
 	private Set<String> modes;
-
 	@CommandLine.Option(names = "--id-filter", description = "Filter for person ids")
 	private Pattern idFilter;
-
 	@CommandLine.Option(names = "--time-util-only", description = "Reset scoring for estimation and only use time utility", defaultValue = "false")
 	private boolean timeUtil;
 	@CommandLine.Option(names = "--calc-scores", description = "Perform pseudo scoring for each plan", defaultValue = "false")
@@ -70,11 +69,9 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	private PlanCandidates planCandidates = PlanCandidates.bestK;
 	@CommandLine.Option(names = "--output", description = "Path to output csv.", defaultValue = "plan-choices.csv")
 	private Path output;
-
 	private ThreadLocal<Ctx> thread;
 	private ProgressBar pb;
 	private double globalAvgIncome;
-	private final MainModeIdentifier mmi = new DefaultAnalysisMainModeIdentifier();
 
 	public static void main(String[] args) {
 		new ComputePlanChoices().execute(args);
@@ -236,7 +233,9 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 		}
 
 		if (split.length != currentModes.length) {
-			log.warn("Number of trips ref/current do not match: {} / {}", Arrays.toString(split), Arrays.toString(currentModes));
+			if (log.isWarnEnabled())
+				log.warn("Number of trips ref/current do not match: {} / {}", Arrays.toString(split), Arrays.toString(currentModes));
+
 			pb.step();
 			return;
 		}

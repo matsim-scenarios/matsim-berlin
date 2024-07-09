@@ -137,9 +137,9 @@ public class PlanBuilder {
 	 */
 	public long findHomeZone(String personId) {
 
-		List<CSVRecord> activities = this.activities.get(personId);
+		List<CSVRecord> acts = activities.get(personId);
 
-		Optional<CSVRecord> home = activities.stream().filter(r -> r.get("type").equals("home")).findFirst();
+		Optional<CSVRecord> home = acts.stream().filter(r -> r.get("type").equals("home")).findFirst();
 		if (home.isEmpty())
 			return -1;
 
@@ -154,12 +154,12 @@ public class PlanBuilder {
 	 */
 	public boolean assignLocationsFromZones(String personId, Plan plan, Coord homeCoord) {
 
-		List<CSVRecord> activities = this.activities.get(personId);
+		List<CSVRecord> acts = activities.get(personId);
 		List<Activity> existing = TripStructureUtils.getActivities(plan, TripStructureUtils.StageActivityHandling.ExcludeStageActivities);
 
 		// If activities don't match, this entry is skipped
 		// this can happen if an end home activity has been added at the end
-		if (activities.size() != existing.size())
+		if (acts.size() != existing.size())
 			return false;
 
 		ActLocation home = new ActLocation(null, homeCoord);
@@ -169,9 +169,9 @@ public class PlanBuilder {
 		// Distances between activities in meter
 		DoubleList dists = new DoubleArrayList();
 
-		for (int i = 0; i < activities.size(); i++) {
+		for (int i = 0; i < acts.size(); i++) {
 
-			CSVRecord ref = activities.get(i);
+			CSVRecord ref = acts.get(i);
 			Activity activity = existing.get(i);
 
 			String type = activity.getType();
