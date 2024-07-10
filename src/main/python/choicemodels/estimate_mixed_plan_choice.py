@@ -29,7 +29,7 @@ if __name__ == "__main__":
     MixedLogit.check_if_gpu_available()
 
     # ASC is present as mode_usage
-    varnames = [f"{mode}_usage" for mode in ds.modes if mode != "walk" and mode != "car"] + ["car_used"]
+    varnames = [f"{mode}_usage" for mode in ds.modes if mode != "walk" and mode != "car"] + ["car_used"] + ["tt_hours"]
     # varnames += ["pt_ride_hours", "car_ride_hours", "bike_ride_hours"]
     # varnames = ["car_used", "car_usage"]
 
@@ -43,8 +43,8 @@ if __name__ == "__main__":
                   alts=df['alt'], ids=df['custom_id'], avail=df['valid'], random_state=args.seed,
                   addit=addit,
                   # randvars={"car_used": "tn"},
-                  randvars={"car_used": "tn", "bike_usage": "n", "pt_usage": "n", "ride_usage": "n"},
-                  fixedvars={"car_used": None},
+                  randvars={"car_used": "tn", "tt_hours": "tn", "bike_usage": "n", "pt_usage": "n", "ride_usage": "n"},
+                  fixedvars={"car_used": None, "tt_hours": None},
                   n_draws=args.n_draws, batch_size=args.batch_size, halton=True, skip_std_errs=True,
                   optim_method='L-BFGS-B')
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
 import argparse
 
 import biogeme.biogeme as bio
@@ -17,6 +18,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate choice model for daily trip usage")
     parser.add_argument("--input", help="Path to the input file", type=str,
                         default="../../../../plan-choices-bestK_9-tt-only.csv")
+    parser.add_argument("--mxl-modes", help="Modes to use mixed logit for", nargs="+", type=set, default=["pt", "bike", "ride"])
+    parser.add_argument("--est-performing", help="Estimate the beta for performing", action="store_true")
 
     args = parser.parse_args()
 
@@ -46,14 +49,14 @@ if __name__ == "__main__":
     # Factor on marginal utility of money
     F_UTIl_MONEY = Beta('UTIL_MONEY', 1, 0, 1.5, ESTIMATE)
 
-    BETA_PERFORMING = Beta('BETA_PERFORMING', 6, 0, 10, ESTIMATE)
+    BETA_PERFORMING = Beta('BETA_PERFORMING', 6.88, 0, 10, ESTIMATE if args.est_performing else FIXED)
 
     for mode in ds.modes:
         # Base asc
         asc = Beta(f"ASC_{mode}", 0, None, None, FIXED if mode in ("walk", "car") else ESTIMATE)
 
         # Pt does not have its own random parameter
-        if True or mode == "walk" or mode == "pt":
+        if mode not in args.mxl_modes:
             ASC[mode] = asc
         else:
             # The random parameter
@@ -91,13 +94,8 @@ if __name__ == "__main__":
 
     biogeme = bio.BIOGEME(database, logprob)
 
-    biogeme.modelName = "plan_choice"
+    biogeme.modelName = os.path.basename(args.input).replace(".csv", "")
     biogeme.weight = v["weight"]
-    biogeme.generate_pickle = False
-    biogeme.save_iterations = False
-    biogeme.number_of_draws = 10000
-    biogeme.second_derivatives = 0.1
-    biogeme.seed_param = 42
 
     biogeme.calculateNullLoglikelihood(AV)
 

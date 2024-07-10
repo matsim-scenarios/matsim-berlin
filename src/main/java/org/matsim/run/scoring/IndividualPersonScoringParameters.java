@@ -205,7 +205,8 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 			// Income dependent scoring might be disabled
 			if (!Double.isNaN(globalAvgIncome) && personalIncome != null) {
 				if (personalIncome != 0) {
-					builder.setMarginalUtilityOfMoney(scoringParameters.getMarginalUtilityOfMoney() * globalAvgIncome / personalIncome);
+					builder.setMarginalUtilityOfMoney(scoringParameters.getMarginalUtilityOfMoney() *
+						Math.pow(globalAvgIncome / personalIncome, this.scoring.incomeExponent));
 				} else {
 					log.warn("You have set income to {} for person {}. This is invalid and gets ignored.Instead, the marginalUtilityOfMoney is derived from the subpopulation's scoring parameters.", personalIncome, person);
 				}

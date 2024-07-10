@@ -16,9 +16,15 @@ public final class AdvancedScoringConfigGroup extends ReflectiveConfigGroup {
 	@Parameter
 	@Comment("The distance groups if marginal utility of distance is adjusted. In meters.")
 	public List<Integer> distGroups;
+
 	@Parameter
 	@Comment("Enable income dependent marginal utility of money.")
 	public IncomeDependentScoring incomeDependent = IncomeDependentScoring.avgByPersonalIncome;
+
+	@Parameter
+	@Comment("Exponent for (global_income / personal_income) ** x.")
+	public double incomeExponent = 1;
+
 	@Parameter
 	@Comment("Define how to load existing preferences.")
 	public LoadPreferences loadPreferences = LoadPreferences.none;

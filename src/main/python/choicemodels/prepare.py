@@ -42,7 +42,7 @@ def read_plan_choices(input_file: str, sample: float = 1, seed: int = 42) -> Pla
     df_wide['custom_id'] = np.arange(len(df_wide))  # Add unique identifier
     df_wide['choice'] = df_wide['choice'].map({1: "plan_1"})
 
-    df_wide = calc_plan_variables(df_wide, k, modes, True)
+    df_wide = calc_plan_variables(df_wide, k, modes, False, True)
 
     varying = list(df_wide.columns.str.extract(r"plan_1_([a-zA-z_]+)", expand=False).dropna().unique())
 
@@ -61,7 +61,7 @@ def tn_generator(sample_size: int, number_of_draws: int) -> np.ndarray:
     return TN.rvs((sample_size, number_of_draws))
 
 
-def calc_plan_variables(df, k, modes, use_util_money=False):
+def calc_plan_variables(df, k, modes, use_util_money=False, add_util_performing=True):
     """ Calculate utility and costs variables for all alternatives in the dataframe"""
 
     util_performing = -6.88
@@ -94,17 +94,18 @@ def calc_plan_variables(df, k, modes, use_util_money=False):
             df[f"plan_{i}_price"] += fixed_costs + distance_costs
 
             df[f"plan_{i}_{mode}_used"] = (df[f"plan_{i}_{mode}_usage"] > 0) * 1
-            df[f"plan_{i}_tt_hours"] += df[f"plan_{i}_{mode}_hours"]
+            df[f"plan_{i}_tt_hours"] -= df[f"plan_{i}_{mode}_hours"]
 
             # Add configured time costs
             df[f"plan_{i}_utils"] += (fixed_costs + distance_costs) * util_money
 
-            # Add time costs the overall costs
-            df[f"plan_{i}_utils"] += util_performing * df[f"plan_{i}_{mode}_hours"]
-
-            # Add additional ride time utils for the driver
-            if mode == "ride":
+            if add_util_performing:
+                # Add time costs the overall costs
                 df[f"plan_{i}_utils"] += util_performing * df[f"plan_{i}_{mode}_hours"]
+
+                # Add additional ride time utils for the driver
+                if mode == "ride":
+                    df[f"plan_{i}_utils"] += util_performing * df[f"plan_{i}_{mode}_hours"]
 
         # Defragment df
         df = df.copy()
