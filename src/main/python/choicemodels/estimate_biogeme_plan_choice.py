@@ -20,6 +20,8 @@ if __name__ == "__main__":
                         default="../../../../plan-choices-bestK_9-tt-only.csv")
     parser.add_argument("--mxl-modes", help="Modes to use mixed logit for", nargs="+", type=set, default=["pt", "bike", "ride"])
     parser.add_argument("--est-performing", help="Estimate the beta for performing", action="store_true")
+    parser.add_argument("--est-exp-income", help="Estimate exponent for income", action="store_true")
+    parser.add_argument("--est-util-money", help="Estimate utility of money", action="store_true")
 
     args = parser.parse_args()
 
@@ -47,7 +49,9 @@ if __name__ == "__main__":
     SD = {}
 
     # Factor on marginal utility of money
-    F_UTIl_MONEY = Beta('UTIL_MONEY', 1, 0, 1.5, ESTIMATE)
+    EXP_INCOME = Beta('EXP_INCOME', 1, 0, 1.5, ESTIMATE if args.est_exp_income else FIXED)
+
+    UTIL_MONEY = Beta('UTIL_MONEY', 1, 0, 2, ESTIMATE if args.est_util_money else FIXED)
 
     BETA_PERFORMING = Beta('BETA_PERFORMING', 6.88, 0, 10, ESTIMATE if args.est_performing else FIXED)
 
@@ -72,7 +76,7 @@ if __name__ == "__main__":
     AV = {}
 
     for i in range(1, ds.k + 1):
-        u = v[f"plan_{i}_price"] * (ds.global_income / v["income"]) ** F_UTIl_MONEY
+        u = v[f"plan_{i}_price"] * UTIL_MONEY * (ds.global_income / v["income"]) ** EXP_INCOME
         u -= v[f"plan_{i}_pt_n_switches"]
 
         for mode in ds.modes:
