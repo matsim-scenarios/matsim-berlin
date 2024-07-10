@@ -83,7 +83,6 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 
 		// teleported beeline is the same for bike and walk
 		if (distanceBasedReward > 0.0) {
-
 			DistanceBasedMoneyReward distanceBasedMoneyReward = new DistanceBasedMoneyReward(
 				controler.getScenario().getConfig().routing().getBeelineDistanceFactors().get(TransportMode.walk),
 				controler.getScenario().getNetwork(), distanceBasedReward);
@@ -98,8 +97,8 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 		if (simpleMobilityBudget != 0.0) {
 			double oldDailyMonetaryConstant = controler.getScenario().getConfig().scoring().getModes().get(TransportMode.car).getDailyMonetaryConstant();
 			controler.getScenario().getConfig().scoring().getModes().get(TransportMode.car).setDailyMonetaryConstant(oldDailyMonetaryConstant + simpleMobilityBudget);
+			controler.getScenario().getConfig().scoring().getModes().get(TransportMode.ride).setDailyMonetaryConstant(simpleMobilityBudget);
 		}
-
 	}
 
 	private static void addKlimaTaler(Controler controler, DistanceBasedMoneyReward klimaTaler) {
@@ -123,7 +122,6 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 			}
 		});
 	}
-
 
 	private static class DistanceBasedMoneyReward implements PersonDepartureEventHandler,
 		PersonArrivalEventHandler,
@@ -247,7 +245,6 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 					}
 					if (!distanceTravelledPt.containsKey(event.getPersonId())) {
 						distanceTravelledPt.put(personId, distance);
-
 					}
 					personDepartureCoordMap.remove(personId);
 					personArrivalCoordMap.remove(personId);
@@ -255,9 +252,6 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 			}
 		}
 	}
-
-
-
 
 	private static class MobilityBudgetEventHandler implements PersonDepartureEventHandler, AfterMobsimListener, PersonStuckEventHandler {
 
@@ -279,7 +273,7 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 		@Override
 		public void handleEvent(PersonDepartureEvent personDepartureEvent) {
 			Id<Person> personId = personDepartureEvent.getPersonId();
-			if (this.currentIterationMobilityBudget.containsKey(personId) && personDepartureEvent.getLegMode().equals(TransportMode.car)) {
+			if (this.currentIterationMobilityBudget.containsKey(personId) && (personDepartureEvent.getLegMode().equals(TransportMode.car)) || personDepartureEvent.getLegMode().equals(TransportMode.ride) ) {
 				this.currentIterationMobilityBudget.replace(personId, 0.0);
 			}
 		}
