@@ -19,9 +19,9 @@ scoring:
           dailyMonetaryConstant: -14.30
           dailyUtilityConstant: 0.703939
         - mode: pt
-          constant: 2.6722094
+          constant: 2.140152
         - mode: bike
-          constant: -1.6848998
+          constant: -0.952881
         - mode: ride
           constant: -7.700001
 advancedScoring:
