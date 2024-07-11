@@ -33,6 +33,8 @@ public class RandomPlanGenerator implements CandidateGenerator {
 		PlanCandidate existing = gen.generatePredefined(planModel, chosen).get(0);
 
 		// This changes the internal state to randomize the estimates
+		// TODO random selection is biased because of mass conservation
+		// due to that, this class should not be used
 		for (Map.Entry<String, List<ModeEstimate>> entry : planModel.getEstimates().entrySet()) {
 			for (ModeEstimate est : entry.getValue()) {
 				double[] utils = est.getEstimates();

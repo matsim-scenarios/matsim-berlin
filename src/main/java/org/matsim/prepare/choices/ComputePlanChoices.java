@@ -181,7 +181,7 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 
 		String out = output.toString().replace(".csv", "-%s_%d.csv".formatted(planCandidates, topK));
 
-		if (timeUtil && planCandidates == PlanCandidates.bestK) {
+		if (timeUtil && (planCandidates == PlanCandidates.bestK || planCandidates == PlanCandidates.diverse)) {
 			out = out.replace(".csv", "-tt-only.csv");
 		}
 

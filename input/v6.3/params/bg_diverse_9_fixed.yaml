@@ -1,0 +1,42 @@
+#  Results for model plan-choices-diverse_9_fixed_ascs
+#  Nbr of parameters:		4
+#  Sample size:			8259
+#  Excluded data:			0
+#  Null log likelihood:		-16584.31
+#  Final log likelihood:		-18747.14
+#  Likelihood ratio test (null):		-4325.659
+#  Rho square (null):			-0.13
+#  Rho bar square (null):			-0.131
+#  Akaike Information Criterion:	37502.28
+#  Bayesian Information Criterion:	37530.35
+scoring:
+  scoringParameters:
+    - modeParams:
+        - mode: walk
+          constant: 0
+        - mode: car
+          constant: -0.5341414592094356
+          dailyMonetaryConstant: -14.30
+          dailyUtilityConstant: 6.078136
+        - mode: pt
+          constant: 0.3971116
+        - mode: bike
+          constant: -1.3538876325
+        - mode: ride
+          constant: -1.23976957093642
+advancedScoring:
+  scoringParameters:
+    - subpopulation: person
+      modeParams:
+        - mode: car
+          deltaDailyConstant: 13.368402
+          varDailyConstant: truncatedNormal
+        - mode: bike
+          deltaConstant: 2.040308
+          varConstant: normal
+        - mode: pt
+          deltaConstant: 3.609201
+          varConstant: normal
+        - mode: ride
+          deltaConstant: 0.968879
+          varConstant: normal
