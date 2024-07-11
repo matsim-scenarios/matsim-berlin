@@ -64,11 +64,11 @@ if __name__ == "__main__":
             ASC[mode] = asc
         else:
             # The random parameter
-            SD[mode] = Beta(f"ASC_{mode}_s", 1, None, None, 0)
+            SD[mode] = Beta(f"ASC_{mode}_s", 1, None, None, ESTIMATE)
             ASC[mode] = asc + SD[mode] * bioDraws(f"{mode}_RND", "NORMAL_ANTI")
 
-    B_UTIL = Beta('B_CAR_UTIL', 10, 0, 20, 0)
-    B_UTIL_S = Beta('B_CAR_UTIL_SD', 1, 0, 10, 0)
+    B_UTIL = Beta('B_CAR_UTIL', 10, 0, 15, ESTIMATE)
+    B_UTIL_S = Beta('B_CAR_UTIL_SD', 1, 0, 15, ESTIMATE)
 
     B_CAR_RND = B_UTIL + B_UTIL_S * bioDraws('B_CAR_UTIL_RND', 'TN')
 
