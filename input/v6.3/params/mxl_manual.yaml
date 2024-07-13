@@ -1,0 +1,37 @@
+#  This is a baseline defined manually, close to the standard model
+
+# daily car utility is the same as in the base model, fixed and variable portion is split 50/50
+# mean of tn is ~ 0.8, -> 4.15 / 0.8 -> 5.18
+# Other modes are assigned a standard normal distribution
+
+scoring:
+  scoringParameters:
+    - modeParams:
+        - mode: walk
+          constant: 0
+        - mode: car
+          constant: 0
+          dailyMonetaryConstant: -14.30
+          dailyUtilityConstant: 4.15
+        - mode: pt
+          constant: 0.3971116
+        - mode: bike
+          constant: -1.3538876325
+        - mode: ride
+          constant: -1.23976957093642
+advancedScoring:
+  scoringParameters:
+    - subpopulation: person
+      modeParams:
+        - mode: car
+          deltaDailyConstant: 5.18
+          varDailyConstant: truncatedNormal
+        - mode: bike
+          deltaConstant: 1
+          varConstant: normal
+        - mode: pt
+          deltaConstant: 1
+          varConstant: normal
+        - mode: ride
+          deltaConstant: 1
+          varConstant: normal

@@ -1,0 +1,50 @@
+#  + python -u estimate_biogeme_plan_choice.py --input plan-choices-diverse_9-tt-only.csv --no-income --ascs car 0 --ascs ride 0 --ascs pt 0 --ascs bike 0 --car-util 5.485672
+#  Modes:  ['walk', 'pt', 'car', 'bike', 'ride']
+#  Number of plans:  8259
+#  Number of choices for plan:  9
+#  Modes: ['walk', 'pt', 'car', 'bike', 'ride']
+#  Number of choices: 8259
+#  Using fixed ascs {'car': 0.0, 'ride': 0.0, 'pt': 0.0, 'bike': 0.0}
+#    Using fixed utility for car 5.485672
+#    Results for model plan-choices-diverse_9-tt-only_fixed_ascs_no_income
+#  Nbr of parameters:		4
+#  Sample size:			8259
+#  Excluded data:			0
+#  Null log likelihood:		-16870.42
+#  Final log likelihood:		-19458.35
+#  Likelihood ratio test (null):		-5175.862
+#  Rho square (null):			-0.153
+#  Rho bar square (null):			-0.154
+#  Akaike Information Criterion:	38924.7
+#  Bayesian Information Criterion:	38952.78
+scoring:
+  scoringParameters:
+    - modeParams:
+        - mode: walk
+          constant: 0
+        - mode: car
+          constant: -0.5341414592094356
+          dailyMonetaryConstant: -14.30
+          dailyUtilityConstant: 5.485672
+        - mode: pt
+          constant: 0.3971116
+        - mode: bike
+          constant: -1.3538876325
+        - mode: ride
+          constant: -1.23976957093642
+advancedScoring:
+  scoringParameters:
+    - subpopulation: person
+      modeParams:
+        - mode: car
+          deltaDailyConstant: 7.213378
+          varDailyConstant: truncatedNormal
+        - mode: bike
+          deltaConstant: 1.213346
+          varConstant: normal
+        - mode: pt
+          deltaConstant: 4.036673
+          varConstant: normal
+        - mode: ride
+          deltaConstant: 0.490086
+          varConstant: normal

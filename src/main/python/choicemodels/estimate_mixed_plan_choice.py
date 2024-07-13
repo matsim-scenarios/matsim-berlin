@@ -33,6 +33,7 @@ if __name__ == "__main__":
     parser.add_argument("--sample", help="Use sample of choice data", type=float, default=1)
     parser.add_argument("--seed", help="Random seed", type=int, default=0)
     parser.add_argument("--mnl", help="Use MNL instead of mixed logit", action="store_true")
+    parser.add_argument("--ascs", help="Predefined ASCs", nargs="+", action='append', default=[])
 
     args = parser.parse_args()
 
@@ -41,6 +42,10 @@ if __name__ == "__main__":
     df = wide_to_long(ds.df, id_col='custom_id', alt_name='alt', sep='_',
                       alt_list=[f"plan_{i}" for i in range(1, ds.k + 1)], empty_val=0,
                       varying=ds.varying, alt_is_prefix=True)
+
+    fixedvars = {x + "_usage": float(y) for x, y in args.ascs}
+    if fixedvars:
+        print("Using fixed ascs", fixedvars)
 
     analyse_mode_share(df, ds.modes)
 
@@ -55,6 +60,9 @@ if __name__ == "__main__":
     # utils contains the price and opportunist costs
     addit = df["utils"] - df["pt_n_switches"]
 
+    # Fix car usage to its initial mnl value, otherwise there are convergence problems
+    fixedvars["car_used"] = None
+
     if not args.mnl:
         model = MixedLogit()
         model.fit(X=df[varnames], y=df['choice'], weights=df['weight'], varnames=varnames,
@@ -62,7 +70,7 @@ if __name__ == "__main__":
                   addit=addit,
                   # randvars={"car_used": "tn"},
                   randvars={"car_used": "tn", "bike_usage": "n", "pt_usage": "n", "ride_usage": "n"},
-                  fixedvars={"car_used": None},
+                  fixedvars=fixedvars,
                   n_draws=args.n_draws, batch_size=args.batch_size, halton=True, skip_std_errs=True,
                   optim_method='L-BFGS-B')
 

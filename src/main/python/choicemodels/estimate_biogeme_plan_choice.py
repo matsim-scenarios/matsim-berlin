@@ -26,6 +26,7 @@ if __name__ == "__main__":
     parser.add_argument("--ascs", help="Predefined ASCs", nargs="+", action='append', default=[])
     parser.add_argument("--car-util", help="Fixed utility for car", type=float, default=None)
     parser.add_argument("--no-mxl", help="Disable mixed logit", action="store_true")
+    parser.add_argument("--no-income", help="Don't consider the income", action="store_true")
 
     args = parser.parse_args()
 
@@ -94,7 +95,7 @@ if __name__ == "__main__":
 
     for i in range(1, ds.k + 1):
         # Price is already negative
-        u = v[f"plan_{i}_price"] * UTIL_MONEY * (ds.global_income / v["income"]) ** EXP_INCOME
+        u = v[f"plan_{i}_price"] * UTIL_MONEY * (1 if args.no_income else (ds.global_income / v["income"]) ** EXP_INCOME)
         u -= v[f"plan_{i}_pt_n_switches"]
 
         for mode in ds.modes:
@@ -124,6 +125,8 @@ if __name__ == "__main__":
         modelName += "_util_money"
     if args.ascs:
         modelName += "_fixed_ascs"
+    if args.no_income:
+        modelName += "_no_income"
 
     biogeme.modelName = modelName
     biogeme.weight = v["weight"]
