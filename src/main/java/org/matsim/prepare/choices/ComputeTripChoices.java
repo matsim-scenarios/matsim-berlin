@@ -14,17 +14,24 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.application.MATSimAppCommand;
+import org.matsim.application.analysis.population.TripAnalysis;
 import org.matsim.application.options.ScenarioOptions;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.groups.PlansConfigGroup;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.network.NetworkUtils;
+import org.matsim.core.population.PersonUtils;
 import org.matsim.core.router.TripRouter;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
+import org.matsim.core.utils.timing.TimeInterpretation;
+import org.matsim.core.utils.timing.TimeTracker;
 import org.matsim.facilities.FacilitiesUtils;
 import org.matsim.facilities.Facility;
 import org.matsim.prepare.population.Attributes;
+import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.utils.objectattributes.attributable.AttributesImpl;
 import picocli.CommandLine;
 
@@ -33,7 +40,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.SplittableRandom;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -54,8 +61,13 @@ public class ComputeTripChoices implements MATSimAppCommand {
 	@CommandLine.Option(names = "--modes", description = "Modes to include in choice set", split = ",", required = true)
 	private List<String> modes;
 
-	@CommandLine.Option(names = "--output", description = "Input trips from survey data, in matsim-python-tools format.", required = true)
+	@CommandLine.Option(names = "--output", description = "Path to output csv..", defaultValue = "trip-choices.csv")
 	private Path output;
+
+	@CommandLine.Option(names = "--max-plan-length", description = "Maximum plan length", defaultValue = "7")
+	private int maxPlanLength;
+
+	private double globalAvgIncome;
 
 	public static void main(String[] args) {
 		new ComputeTripChoices().execute(args);
@@ -68,6 +80,9 @@ public class ComputeTripChoices implements MATSimAppCommand {
 		config.controller().setOutputDirectory("choice-output");
 		config.controller().setLastIteration(0);
 		config.controller().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
+
+		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
+		sw.defaultDashboards = SimWrapperConfigGroup.Mode.disabled;
 
 		Controler controler = this.scenario.createControler();
 
@@ -85,10 +100,16 @@ public class ComputeTripChoices implements MATSimAppCommand {
 
 		Collection<? extends Person> persons = scenario.getPopulation().getPersons().values();
 
+		globalAvgIncome = persons.stream()
+			.map(PersonUtils::getIncome)
+			.filter(Objects::nonNull)
+			.mapToDouble(d -> d)
+			.filter(dd -> dd > 0)
+			.average()
+			.orElse(Double.NaN);
+
 		// Progress bar will be inaccurate
 		ProgressBar pb = new ProgressBar("Computing choices", persons.size() * 3L);
-
-		SplittableRandom rnd = new SplittableRandom();
 
 		for (Person person : persons) {
 
@@ -98,21 +119,33 @@ public class ComputeTripChoices implements MATSimAppCommand {
 
 			Plan plan = person.getSelectedPlan();
 
-			for (TripStructureUtils.Trip trip : TripStructureUtils.getTrips(plan)) {
+			int seq = 0;
+			TimeTracker tt = new TimeTracker(TimeInterpretation.create(PlansConfigGroup.ActivityDurationInterpretation.tryEndTimeThenDuration, PlansConfigGroup.TripDurationHandling.ignoreDelays));
 
-				// Randomize departure times
-				double departure = trip.getOriginActivity().getEndTime().seconds() + rnd.nextInt(-600, 600);
+			List<TripStructureUtils.Trip> trips = TripStructureUtils.getTrips(plan);
+
+			if (trips.size() > maxPlanLength) {
+				continue;
+			}
+
+			for (TripStructureUtils.Trip trip : trips) {
+
+				tt.addActivity(trip.getOriginActivity());
+
+				double departure = tt.getTime().orElseThrow(() -> new IllegalStateException("No departure time for trip"));
+				int n = seq++;
 
 				futures.add(CompletableFuture.supplyAsync(() -> {
 					TripRouter r = ctx.get();
 
-					List<Object> entries = computeAlternatives(r, scenario.getNetwork(), person, trip, departure);
+					List<Object> entries = computeAlternatives(r, scenario.getNetwork(), person, trip, departure, n);
 					pb.step();
 
 					return entries;
 
 				}, executor));
 
+				tt.addElements(trip.getLegsOnly());
 			}
 		}
 
@@ -126,17 +159,19 @@ public class ComputeTripChoices implements MATSimAppCommand {
 		executor.shutdown();
 		pb.close();
 
-		try (CSVPrinter csv = new CSVPrinter(Files.newBufferedWriter(output), CSVFormat.DEFAULT)) {
+		log.info("Writing {} trip choices to {}", futures.size(), output);
 
-			List<String> header = new ArrayList<>(List.of("p_id", "seq", "trip_n", "choice", "beelineDist"));
+		try (CSVPrinter csv = new CSVPrinter(Files.newBufferedWriter(output), CSVFormat.DEFAULT.builder().setCommentMarker('#').build())) {
 
+			List<String> header = new ArrayList<>(List.of("person", "weight", "income", "util_money", "trip_n", "choice", "beelineDist"));
 			for (String mode : modes) {
 				header.add(mode + "_km");
 				header.add(mode + "_hours");
-				header.add(mode + "_walk_km");
+				header.add(mode + "_walking_km");
 				header.add(mode + "_valid");
 			}
 
+			csv.printComment("Average global income: " + globalAvgIncome);
 			csv.printRecord(header);
 
 			for (CompletableFuture<List<Object>> f : futures) {
@@ -154,17 +189,25 @@ public class ComputeTripChoices implements MATSimAppCommand {
 	/**
 	 * Compute all alternatives for a given trip.
 	 */
-	private List<Object> computeAlternatives(TripRouter router, Network network, Person person, TripStructureUtils.Trip trip, double departure) {
+	private List<Object> computeAlternatives(TripRouter router, Network network, Person person, TripStructureUtils.Trip trip, double departure, int seq) {
 
 		double beelineDist = CoordUtils.calcEuclideanDistance(trip.getOriginActivity().getCoord(), trip.getDestinationActivity().getCoord());
 
 		Facility origin = FacilitiesUtils.wrapLinkAndCoord(NetworkUtils.getNearestLink(network, trip.getOriginActivity().getCoord()), trip.getOriginActivity().getCoord());
 		Facility destination = FacilitiesUtils.wrapLinkAndCoord(NetworkUtils.getNearestLink(network, trip.getDestinationActivity().getCoord()), trip.getDestinationActivity().getCoord());
 
-		String choice = trip.getLegsOnly().get(0).getMode();
+		String[] choices = ((String) person.getAttributes().getAttribute(TripAnalysis.ATTR_REF_MODES)).split("-");
+		String choice = choices[seq];
 
-		List<Object> row = new ArrayList<>(List.of(person.getId(), person.getAttributes().getAttribute("seq"),
-			trip.getTripAttributes().getAttribute("n"), modes.indexOf(choice) + 1, beelineDist / 1000));
+		List<Object> row = new ArrayList<>(List.of(
+			person.getAttributes().getAttribute(TripAnalysis.ATTR_REF_ID),
+			person.getAttributes().getAttribute(TripAnalysis.ATTR_REF_WEIGHT),
+			PersonUtils.getIncome(person),
+			globalAvgIncome / PersonUtils.getIncome(person),
+			seq,
+			modes.indexOf(choice) + 1,
+			beelineDist / 1000)
+		);
 
 		for (String mode : modes) {
 
@@ -193,6 +236,10 @@ public class ComputeTripChoices implements MATSimAppCommand {
 			// Filter rows that have been chosen, but would not be valid
 			if (choice.equals(mode) && !valid) {
 				return null;
+			}
+
+			if (!PersonUtils.canUseCar(person) && mode.equals(TransportMode.car)) {
+				valid = false;
 			}
 
 			row.addAll(List.of(travelDistance / 1000, travelTime / 3600, walkDistance / 1000, valid));

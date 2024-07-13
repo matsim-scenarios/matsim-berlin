@@ -34,6 +34,7 @@ if __name__ == "__main__":
     parser.add_argument("--seed", help="Random seed", type=int, default=0)
     parser.add_argument("--mnl", help="Use MNL instead of mixed logit", action="store_true")
     parser.add_argument("--ascs", help="Predefined ASCs", nargs="+", action='append', default=[])
+    parser.add_argument("--sd", help="Predefined Standard variations per mode", nargs="+", action='append', default=[])
 
     args = parser.parse_args()
 
@@ -44,8 +45,6 @@ if __name__ == "__main__":
                       varying=ds.varying, alt_is_prefix=True)
 
     fixedvars = {x + "_usage": float(y) for x, y in args.ascs}
-    if fixedvars:
-        print("Using fixed ascs", fixedvars)
 
     analyse_mode_share(df, ds.modes)
 
@@ -60,8 +59,13 @@ if __name__ == "__main__":
     # utils contains the price and opportunist costs
     addit = df["utils"] - df["pt_n_switches"]
 
+    if args.sd:
+        fixedvars.update({"sd.%s_usage" % x: float(y) for x, y in args.sd})
+
     # Fix car usage to its initial mnl value, otherwise there are convergence problems
     fixedvars["car_used"] = None
+
+    print("Using fixed vars", fixedvars)
 
     if not args.mnl:
         model = MixedLogit()
@@ -76,7 +80,6 @@ if __name__ == "__main__":
 
     else:
         # varnames += ["car_usage"]
-
         model = MultinomialLogit()
         model.fit(X=df[varnames], y=df['choice'], weights=df['weight'], varnames=varnames,
                   alts=df['alt'], ids=df['custom_id'], avail=df['valid'], random_state=args.seed,

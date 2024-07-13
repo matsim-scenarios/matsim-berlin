@@ -1,63 +1,58 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import argparse
 from collections import defaultdict
 
-import argparse
 import biogeme.biogeme as bio
 import biogeme.database as db
 import biogeme.models as models
 from biogeme.expressions import Beta
 
-import numpy as np
-import pandas as pd
-from scipy.special import softmax
+from prepare import read_trip_choices
+
+ESTIMATE = 0
+FIXED = 1
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate the trip choice model")
-    parser.add_argument("--input", help="Path to the input file", type=str, default="../../../trip-choices.csv")
+    parser.add_argument("--input", help="Path to the input file", type=str, default="../../../../trip-choices.csv")
+    parser.add_argument("--est-performing", help="Estimate the beta for performing", action="store_true")
+    parser.add_argument("--no-income", help="Don't consider the income", action="store_true")
 
     args = parser.parse_args()
 
-    df = pd.read_csv(args.input)
+    ds = read_trip_choices(args.input)
 
-    df.drop(columns=["p_id"], inplace=True)
+    df = ds.df.drop(columns=["person"])
 
     # Convert all the columns to numeric
     df = df * 1
-
-    modes = list(df.columns.str.extract(r"([a-zA-z]+)_valid", expand=False).dropna().unique())
-    print("Modes: ", modes)
-    print("Number of choices: ", len(df))
 
     database = db.Database("data/choices", df)
     v = database.variables
 
     database.remove(v["choice"] == 0)
 
-    fixed_costs = defaultdict(lambda: 0.0)
     km_costs = defaultdict(lambda: 0.0, car=-0.149, ride=-0.149)
 
     ASC = {}
-    for mode in modes:
+    for mode in ds.modes:
         # Base asc
         ASC[mode] = Beta(f"ASC_{mode}", 0, None, None, 1 if mode == "walk" else 0)
 
     U = {}
     AV = {}
 
-    # B_TIME = Beta('B_TIME', 0, None, None, 0)
-    B_TIME = -6.88
+    B_TIME = Beta('B_TIME', 6.88, None, None, ESTIMATE if args.est_performing else FIXED)
+    UTIL_MONEY = 1
+    EXP_INCOME = 1
 
-    # TODO: use person id for mixed logit
+    for i, mode in enumerate(ds.modes, 1):
+        u = ASC[mode] - B_TIME * v[f"{mode}_hours"]
 
-    for i, mode in enumerate(modes, 1):
-
-        u = ASC[mode] + B_TIME * v[f"{mode}_hours"] + (fixed_costs[mode] + km_costs[mode] * v[f"{mode}_km"])
-
-        if mode != "walk":
-            slope = Beta(f"B_{mode}_DIST", 0, None, None, 0)
-            u += slope * v[f"{mode}_km"]
+        price = km_costs[mode] * v[f"{mode}_km"]
+        u += price * UTIL_MONEY * (1 if args.no_income else (ds.global_income / v["income"]) ** EXP_INCOME)
 
         U[i] = u
         AV[i] = v[f"{mode}_valid"]

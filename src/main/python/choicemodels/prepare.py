@@ -14,6 +14,15 @@ km_costs = defaultdict(lambda: 0.0, car=-0.149, ride=-0.149)
 TN = truncnorm(0, np.inf)
 
 PlanChoice = namedtuple("PlanChoice", ["df", "modes", "varying", "k", "global_income"])
+TripChoice = namedtuple("TripChoice", ["df", "modes", "varying", "global_income"])
+
+
+def read_global_income(input_file: str) -> float:
+    """ Read global income from input file """
+
+    with open(input_file) as f:
+        _, _, income = f.readline().rpartition(":")
+        return float(income.strip())
 
 
 def read_plan_choices(input_file: str, sample: float = 1, seed: int = 42) -> PlanChoice:
@@ -46,11 +55,7 @@ def read_plan_choices(input_file: str, sample: float = 1, seed: int = 42) -> Pla
 
     varying = list(df_wide.columns.str.extract(r"plan_1_([a-zA-z_]+)", expand=False).dropna().unique())
 
-    with open(input_file) as f:
-        _, _, income = f.readline().rpartition(":")
-        global_income = float(income.strip())
-
-    return PlanChoice(df_wide, modes, varying, k, global_income)
+    return PlanChoice(df_wide, modes, varying, k, read_global_income(input_file))
 
 
 def tn_generator(sample_size: int, number_of_draws: int) -> np.ndarray:
@@ -111,3 +116,19 @@ def calc_plan_variables(df, k, modes, use_util_money=False, add_util_performing=
         df = df.copy()
 
     return df
+
+
+def read_trip_choices(input_file: str) -> TripChoice:
+    """ Read trip choices from input file """
+
+    df = pd.read_csv(input_file, comment="#")
+
+    modes = list(df.columns.str.extract(r"([a-zA-z]+)_valid", expand=False).dropna().unique())
+    print("Modes: ", modes)
+    print("Number of choices: ", len(df))
+
+    varying = list(df.columns.str.extract(r"walk_([a-zA-z]+)", expand=False).dropna().unique())
+
+    print("Varying:", varying)
+
+    return TripChoice(df, modes, varying, read_global_income(input_file))

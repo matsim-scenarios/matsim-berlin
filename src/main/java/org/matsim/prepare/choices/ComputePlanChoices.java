@@ -76,7 +76,7 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	private PlanCandidates planCandidates = PlanCandidates.bestK;
 
 	@CommandLine.Option(names = "--max-plan-length", description = "Maximum plan length", defaultValue = "7")
-	private int maxPlanLength = 7;
+	private int maxPlanLength;
 
 	@CommandLine.Option(names = "--output", description = "Path to output csv.", defaultValue = "plan-choices.csv")
 	private Path output;

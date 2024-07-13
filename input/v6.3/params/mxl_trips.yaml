@@ -1,0 +1,38 @@
+# Log-Likelihood= -23594.613
+#AIC= 47203.226
+#BIC= 47260.275
+
+# Mode, variants are estimated
+# Car util was defined manually
+
+scoring:
+  scoringParameters:
+    - modeParams:
+        - mode: walk
+          constant: 0
+        - mode: car
+          constant: 0
+          dailyMonetaryConstant: -14.30
+          dailyUtilityConstant: 4.15
+        - mode: pt
+          constant: 0.3971116
+        - mode: bike
+          constant: -1.3538876325
+        - mode: ride
+          constant: -1.23976957093642
+advancedScoring:
+  scoringParameters:
+    - subpopulation: person
+      modeParams:
+        - mode: car
+          deltaDailyConstant: 5.18
+          varDailyConstant: truncatedNormal
+        - mode: bike
+          deltaConstant: -3.8846576
+          varConstant: normal
+        - mode: pt
+          deltaConstant: -3.3848708
+          varConstant: normal
+        - mode: ride
+          deltaConstant: -13.6093548
+          varConstant: normal
