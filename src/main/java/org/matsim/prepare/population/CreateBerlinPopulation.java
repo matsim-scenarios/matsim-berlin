@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.geotools.api.feature.simple.SimpleFeature;
 import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.MultiPolygon;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
@@ -85,7 +86,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 	/**
 	 * Samples a home coordinates from geometry and landuse.
 	 */
-	public static Coord sampleHomeCoordinate(MultiPolygon geometry, String crs, FacilityOptions facilities, SplittableRandom rnd) {
+	public static Coord sampleHomeCoordinate(Geometry geometry, String crs, FacilityOptions facilities, SplittableRandom rnd) {
 
 		Envelope bbox = geometry.getEnvelopeInternal();
 

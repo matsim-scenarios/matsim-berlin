@@ -45,8 +45,8 @@ public final class RunActivitySampling implements MATSimAppCommand, PersonAlgori
 	private Path activityPath;
 	@CommandLine.Option(names = "--seed", description = "Seed used to sample plans", defaultValue = "1")
 	private long seed;
-	private ThreadLocal<Context> ctxs;
 
+	private ThreadLocal<Context> ctxs;
 	private PopulationFactory factory;
 	private PersonMatcher matcher;
 

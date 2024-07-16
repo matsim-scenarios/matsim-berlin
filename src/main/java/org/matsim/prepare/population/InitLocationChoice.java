@@ -70,6 +70,9 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 	@CommandLine.Option(names = "--commuter", description = "Path to commuter.csv", required = true)
 	private Path commuterPath;
 
+	@CommandLine.Option(names = "--commute-prob", description = "Probability for commuting to a different zone", defaultValue = "1")
+	private double commuteProb;
+
 	@CommandLine.Option(names = "--facilities", description = "Path to facilities file", required = true)
 	private Path facilityPath;
 
@@ -312,8 +315,10 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 		ActivityFacility workPlace = null;
 
+		boolean commute = commuteProb >= 1 || rnd.nextDouble() < commuteProb;
+
 		// Only larger distances can be commuters to other zones
-		if (dist > 3000) {
+		if (dist > 3000 && commute) {
 			workPlace = commuter.selectTarget(rnd, ars, dist, MGC.coord2Point(refCoord), zone -> sampleZone(index, dist, refCoord, zone, rnd));
 		}
 

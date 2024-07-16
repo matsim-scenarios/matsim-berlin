@@ -2,6 +2,7 @@ package org.matsim.prepare.population;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.locationtech.jts.geom.Geometry;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.application.options.ShpOptions;
 import picocli.CommandLine;
@@ -45,11 +46,19 @@ public class FacilityOptions {
 		ShpOptions shp = ShpOptions.ofLayer(facilityPath.toString(), null);
 
 		index = shp.createIndex(queryCRS, attr, ft -> Boolean.TRUE.equals(ft.getAttribute(attr))
-			|| Objects.equals(ft.getAttribute(attr), 1));
+			|| Objects.equals(ft.getAttribute(attr), 1) || Objects.equals(ft.getAttribute(attr), "1"));
 
 		log.info("Read {} features for {} facilities", index.size(), attr);
 
 		return index;
+	}
+
+	/**
+	 * Get the union geometry of the shape file.
+	 */
+	public Geometry getGeometry() {
+		ShpOptions shp = ShpOptions.ofLayer(facilityPath.toString(), null);
+		return shp.getGeometry();
 	}
 
 	/**
