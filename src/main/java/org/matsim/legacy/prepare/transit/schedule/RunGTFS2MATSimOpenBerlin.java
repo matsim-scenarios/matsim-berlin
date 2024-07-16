@@ -91,20 +91,20 @@ public class RunGTFS2MATSimOpenBerlin {
 		// http://www.vbb.de/de/article/fahrplan/webservices/datensaetze/1186967.html
 
 		//input data, https paths don't work probably due to old GTFS library :(
-		String gtfsZipFile = "../public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/original-data/GTFS-VBB-20181214/GTFS-VBB-20181214.zip";
+		String gtfsZipFile = "/Users/gleich/Downloads/GTFS(1).zip";
 		CoordinateTransformation ct = TransformationFactory.getCoordinateTransformation(TransformationFactory.WGS84, TransformationFactory.DHDN_GK4);
 		// choose date not too far away (e.g. on 2019-12-12 S2 is almost completey missing for 2019-08-20 gtfs data set!),
 		// but not too close either (diversions and interruptions due to short term construction work included in GTFS)
 		// -> hopefully no construction sites in GTFS for that date
 		// -> Thursday is more "typical" than Friday
 		// check date for construction work in BVG Navi booklet: 18-20 Dec'2018 seemed best over the period from Dec'2018 to Sep'2019
-		LocalDate date = LocalDate.parse("2018-12-20");
+		LocalDate date = LocalDate.parse("2024-07-14");
 
 		//output files
 		String outputDirectory = "RunGTFS2MATSimOpenBerlin";
-		String networkFile = outputDirectory + "/berlin-v5.6-network.xml.gz";
-		String scheduleFile = outputDirectory + "/berlin-v5.6-transit-schedule.xml.gz";
-		String transitVehiclesFile = outputDirectory + "/berlin-v5.6-transit-vehicles.xml.gz";
+		String networkFile = outputDirectory + "/berlin-6.3-network-soccergame.xml.gz";
+		String scheduleFile = outputDirectory + "/berlin-v6.3-transit-schedule-soccergame.xml.gz";
+		String transitVehiclesFile = outputDirectory + "/berlin-v6.3-transit-vehicles-soccergame.xml.gz";
 
 		// ensure output directory exists
 	    File directory = new File(outputDirectory);
@@ -124,8 +124,8 @@ public class RunGTFS2MATSimOpenBerlin {
 		TransitSchedulePostProcessTools.copyEarlyDeparturesToFollowingNight(scenario.getTransitSchedule(), 6 * 3600, "copied");
 
 		//if necessary, parse in an existing network file here:
-		new MatsimNetworkReader(scenario.getNetwork()).readFile("../public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz");
-		Config config = ConfigUtils.loadConfig("../public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-10pct.config.xml");
+		new MatsimNetworkReader(scenario.getNetwork()).readFile("../public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.3/input/berlin-v6.3-network.xml.gz");
+		Config config = ConfigUtils.loadConfig("input/v6.3/berlin-v6.3.config.xml");
 
 		//remove existing pt network (nodes and links)
 		Network networkWoPt = getNetworkWOExistingPtLinksAndNodes(scenario.getNetwork(), "pt_", config.network());
@@ -307,6 +307,7 @@ public class RunGTFS2MATSimOpenBerlin {
 			// freespeed are set to make sure that no transit service is delayed
 			// and arrivals are as punctual (not too early) as possible
 			case 100:
+			case 2: // Fex has gtfs route type 2
 				lineVehicleType = reRbVehicleType;
 				stopFilter = "station_S/U/RE/RB";
 				break;
