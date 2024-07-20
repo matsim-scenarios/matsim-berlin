@@ -81,13 +81,13 @@ if __name__ == "__main__":
     if args.car_util:
         print("Using fixed utility for car", args.car_util)
 
-    B_UTIL = Beta('B_CAR_UTIL', 10 if not args.car_util else args.car_util,
-                  0, 15, FIXED if args.car_util else ESTIMATE)
+    B_UTIL = Beta('B_CAR_UTIL', 8 if not args.car_util else args.car_util,
+                  0, None, FIXED if args.car_util else ESTIMATE)
 
     if args.no_mxl:
         B_CAR = B_UTIL
     else:
-        B_UTIL_S = Beta('B_CAR_UTIL_SD', 1, 0, 15, ESTIMATE)
+        B_UTIL_S = Beta('B_CAR_UTIL_SD', 1, 0, None, ESTIMATE)
         B_CAR = B_UTIL + B_UTIL_S * bioDraws('B_CAR_UTIL_RND', 'TN')
 
     U = {}

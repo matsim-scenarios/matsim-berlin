@@ -248,7 +248,7 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 				DistanceGroup[] groups = distGroups.computeIfAbsent(delta.getPerDistGroup(), k -> calcDistanceGroups(scoring.distGroups, k));
 
 				// This may overwrite the preferences with the one stored
-				loadPreferences(mode.getKey(), delta, person, existing);
+				loadPreferences(mode.getKey(), delta, person, existing, params);
 
 				DistanceGroupModeUtilityParameters p = new DistanceGroupModeUtilityParameters(params, delta, groups);
 				builder.setModeParameters(mode.getKey(), p);
@@ -257,6 +257,7 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 				Object2DoubleMap<String> values = info.computeIfAbsent(person.getId(), k -> new Object2DoubleOpenHashMap<>());
 
 				// Write the overall constants, but only if they are different to the base values
+				// TODO: store delta and not params
 				if (delta.constant != 0) {
 					values.put(mode.getKey() + "_constant", p.constant);
 					existing.put(mode.getKey() + "_constant", p.constant);
@@ -285,7 +286,7 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 		});
 	}
 
-	private void loadPreferences(String mode, DistanceGroupModeUtilityParameters.DeltaBuilder delta, Person person, Object2DoubleMap<String> existing) {
+	private void loadPreferences(String mode, DistanceGroupModeUtilityParameters.DeltaBuilder delta, Person person, Object2DoubleMap<String> existing, ModeUtilityParameters params) {
 
 		boolean isRefPerson = person.getAttributes().getAttribute(TripAnalysis.ATTR_REF_ID) != null;
 
@@ -295,19 +296,20 @@ public class IndividualPersonScoringParameters implements ScoringParametersForPe
 		}
 
 		// Else, require that the attributes are present
-		if (!existing.containsKey(mode + "constant") && scoring.loadPreferences == AdvancedScoringConfigGroup.LoadPreferences.requireAttribute) {
+		if (!existing.containsKey(mode + "_constant") && scoring.loadPreferences == AdvancedScoringConfigGroup.LoadPreferences.requireAttribute) {
 			throw new IllegalArgumentException("Person " + person.getId() + " does not have attribute " + mode + "_constant");
 		}
 		if (!existing.containsKey(mode + "_dailyConstant") && scoring.loadPreferences == AdvancedScoringConfigGroup.LoadPreferences.requireAttribute) {
 			throw new IllegalArgumentException("Person " + person.getId() + " does not have attribute " + mode + "_dailyConstant");
 		}
 
+		// TODO: remove params, as only the delta is needed
 		// Use attributes if they are present
 		if (existing.containsKey(mode + "_constant"))
-			delta.constant = existing.getDouble(mode + "_constant");
+			delta.constant = existing.getDouble(mode + "_constant") - params.constant;
 
 		if (existing.containsKey(mode + "_dailyConstant"))
-			delta.dailyUtilityConstant = existing.getDouble(mode + "_dailyConstant");
+			delta.dailyUtilityConstant = existing.getDouble(mode + "_dailyConstant") - params.dailyUtilityConstant;
 	}
 
 	/**
