@@ -1,0 +1,49 @@
+#  + python -u estimate_biogeme_plan_choice.py --input plan-choices-diverse_9.csv --est-exp-income
+#  Modes:  ['walk', 'pt', 'car', 'bike', 'ride']
+#  Number of plans:  8259
+#  Number of choices for plan:  9
+#  Modes: ['walk', 'pt', 'car', 'bike', 'ride']
+#  Number of choices: 8259
+#    Results for model plan-choices-diverse_9_exp_income
+#  Nbr of parameters:              9
+#  Sample size:                    8259
+#  Excluded data:                  0
+#  Null log likelihood:            -16584.31
+#  Final log likelihood:           -15049.49
+#  Likelihood ratio test (null):           3069.637
+#  Rho square (null):                      0.0925
+#  Rho bar square (null):                  0.092
+#  Akaike Information Criterion:   30116.98
+#  Bayesian Information Criterion: 30180.15
+scoring:
+  scoringParameters:
+    - modeParams:
+        - mode: walk
+          constant: 0
+        - mode: car
+          constant: -0.5341414592094356
+          dailyMonetaryConstant: -14.30
+          dailyUtilityConstant: 0.000000
+        - mode: pt
+          constant: 0.302651
+        - mode: bike
+          constant: -1.809881
+        - mode: ride
+          constant: -1.864216
+advancedScoring:
+  incomeExponent: 0.059514
+  scoringParameters:
+    - subpopulation: person
+      modeParams:
+        - mode: car
+          deltaDailyConstant: 9.140648
+          varDailyConstant: truncatedNormal
+        - mode: bike
+          deltaConstant: 0.775691
+          varConstant: normal
+        - mode: pt
+          deltaConstant: 1.707919
+          varConstant: normal
+        - mode: ride
+          deltaConstant: 1.039231
+          varConstant: normal
