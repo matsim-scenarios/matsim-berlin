@@ -233,13 +233,13 @@ public class ComputeTripChoices implements MATSimAppCommand {
 				}
 			}
 
+			if (!PersonUtils.canUseCar(person) && mode.equals(TransportMode.car)) {
+				valid = false;
+			}
+
 			// Filter rows that have been chosen, but would not be valid
 			if (choice.equals(mode) && !valid) {
 				return null;
-			}
-
-			if (!PersonUtils.canUseCar(person) && mode.equals(TransportMode.car)) {
-				valid = false;
 			}
 
 			row.addAll(List.of(travelDistance / 1000, travelTime / 3600, walkDistance / 1000, valid));

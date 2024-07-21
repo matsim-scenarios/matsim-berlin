@@ -7,7 +7,7 @@ from collections import defaultdict
 import biogeme.biogeme as bio
 import biogeme.database as db
 import biogeme.models as models
-from biogeme.expressions import Beta
+from biogeme.expressions import Beta, bioDraws, PanelLikelihoodTrajectory, log, MonteCarlo
 
 from prepare import read_trip_choices
 
@@ -17,6 +17,8 @@ FIXED = 1
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate the trip choice model")
     parser.add_argument("--input", help="Path to the input file", type=str, default="../../../../trip-choices.csv")
+    parser.add_argument("--mxl-modes", help="Modes to use mixed logit for", nargs="+", type=set,
+                        default=["pt", "bike", "ride"])
     parser.add_argument("--est-performing", help="Estimate the beta for performing", action="store_true")
     parser.add_argument("--no-income", help="Don't consider the income", action="store_true")
 
@@ -24,22 +26,24 @@ if __name__ == "__main__":
 
     ds = read_trip_choices(args.input)
 
-    df = ds.df.drop(columns=["person"])
-
     # Convert all the columns to numeric
-    df = df * 1
+    df = ds.df * 1
 
     database = db.Database("data/choices", df)
     v = database.variables
 
-    database.remove(v["choice"] == 0)
+    database.panel("person")
 
     km_costs = defaultdict(lambda: 0.0, car=-0.149, ride=-0.149)
 
     ASC = {}
     for mode in ds.modes:
         # Base asc
-        ASC[mode] = Beta(f"ASC_{mode}", 0, None, None, 1 if mode == "walk" else 0)
+        ASC[mode] = Beta(f"ASC_{mode}", 0, None, None, FIXED if mode == "walk" else ESTIMATE)
+
+        if mode in args.mxl_modes:
+            sd = Beta(f"ASC_{mode}_s", 1, 0, None, ESTIMATE)
+            ASC[mode] += sd * bioDraws(f"{mode}_RND", "NORMAL_ANTI")
 
     U = {}
     AV = {}
@@ -57,7 +61,13 @@ if __name__ == "__main__":
         U[i] = u
         AV[i] = v[f"{mode}_valid"]
 
-    logprob = models.loglogit(U, AV, v["choice"])
+    if not args.mxl_modes:
+        logprob = models.loglogit(U, AV, v["choice"])
+
+    else:
+        obsprob = models.logit(U, AV, v["choice"])
+        condprobIndiv = PanelLikelihoodTrajectory(obsprob)
+        logprob = log(MonteCarlo(condprobIndiv))
 
     biogeme = bio.BIOGEME(database, logprob)
 
