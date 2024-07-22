@@ -1,7 +1,7 @@
 package org.matsim.policies.gartenfeld;
 
 import org.matsim.application.MATSimAppCommand;
-import org.matsim.application.prepare.population.MergePopulations;
+import org.matsim.application.prepare.population.*;
 import org.matsim.prepare.population.CreateFixedPopulation;
 import org.matsim.prepare.population.InitLocationChoice;
 import org.matsim.prepare.population.RemoveUnavailableRoutes;
@@ -41,7 +41,6 @@ public class CreateGartenfeldPopulation implements MATSimAppCommand {
 			"--output", output
 		);
 
-
 		new InitLocationChoice().execute(
 			"--input", output,
 			"--output", output,
@@ -52,6 +51,28 @@ public class CreateGartenfeldPopulation implements MATSimAppCommand {
 			"--commuter", SVN + "/regionalstatistik/commuter.csv",
 			"--commute-prob", "0.1",
 			"--sample", "0.1"
+		);
+
+		new SplitActivityTypesDuration().execute(
+			"--input", output,
+			"--output", output,
+			"--exclude", "commercial_start,commercial_end,freight_start,freight_end"
+		);
+
+		new SetCarAvailabilityByAge().execute(
+			"--input", output,
+			"--output", output
+		);
+
+		new CheckCarAvailability().execute(
+			"--input", output,
+			"--output", output
+		);
+
+		new FixSubtourModes().execute(
+			"--input", output,
+			"--output", output,
+			"--coord-dist", "100"
 		);
 
 		// Merge with calibrated plans into one
