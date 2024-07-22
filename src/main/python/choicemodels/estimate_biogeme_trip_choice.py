@@ -20,6 +20,8 @@ if __name__ == "__main__":
     parser.add_argument("--mxl-modes", help="Modes to use mixed logit for", nargs="+", type=set,
                         default=["pt", "bike", "ride"])
     parser.add_argument("--est-performing", help="Estimate the beta for performing", action="store_true")
+    parser.add_argument("--est-exp-income", help="Estimate exponent for income", action="store_true")
+    parser.add_argument("--est-util-money", help="Estimate utility of money", action="store_true")
     parser.add_argument("--no-income", help="Don't consider the income", action="store_true")
 
     args = parser.parse_args()
@@ -48,15 +50,18 @@ if __name__ == "__main__":
     U = {}
     AV = {}
 
-    B_TIME = Beta('B_TIME', 6.88, None, None, ESTIMATE if args.est_performing else FIXED)
-    UTIL_MONEY = 1
-    EXP_INCOME = 1
+    EXP_INCOME = Beta('EXP_INCOME', 1, 0, 1.5, ESTIMATE if args.est_exp_income else FIXED)
+    UTIL_MONEY = Beta('UTIL_MONEY', 1, 0, 2, ESTIMATE if args.est_util_money else FIXED)
+    BETA_PERFORMING = Beta('BETA_PERFORMING', 6.88, 1, 15, ESTIMATE if args.est_performing else FIXED)
 
     for i, mode in enumerate(ds.modes, 1):
-        u = ASC[mode] - B_TIME * v[f"{mode}_hours"]
+        u = ASC[mode] - BETA_PERFORMING * v[f"{mode}_hours"] * (2 if mode == "ride" else 1)
 
         price = km_costs[mode] * v[f"{mode}_km"]
         u += price * UTIL_MONEY * (1 if args.no_income else (ds.global_income / v["income"]) ** EXP_INCOME)
+
+        if mode == "pt":
+            u -= v[f"{mode}_switches"]
 
         U[i] = u
         AV[i] = v[f"{mode}_valid"]
@@ -71,7 +76,18 @@ if __name__ == "__main__":
 
     biogeme = bio.BIOGEME(database, logprob)
 
-    biogeme.modelName = "trip_choice"
+    modelName = "trip_choice"
+    if args.est_performing:
+        modelName += "_performing"
+    if args.est_exp_income:
+        modelName += "_exp_income"
+    if args.est_util_money:
+        modelName += "_util_money"
+
+    biogeme.modelName = modelName
+    biogeme.weight = v["weight"]
+
+    biogeme.calculateNullLoglikelihood(AV)
 
     results = biogeme.estimate()
     print(results.short_summary())
@@ -79,7 +95,7 @@ if __name__ == "__main__":
     pandas_results = results.getEstimatedParameters()
     print(pandas_results)
 
-    sim_results = biogeme.simulate(results.getBetaValues())
+    # sim_results = biogeme.simulate(results.getBetaValues())
 
     # print(sim_results)
     #
