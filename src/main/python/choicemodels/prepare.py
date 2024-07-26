@@ -83,8 +83,8 @@ def calc_plan_variables(df, k, modes, use_util_money=False, add_util_performing=
 
         # Price is only monetary costs
         df[f"plan_{i}_price"] = 0
-        df[f"plan_{i}_fixed_price"] = 0
-        df[f"plan_{i}_distance_price"] = 0
+        df[f"plan_{i}_car_price"] = 0
+        df[f"plan_{i}_non_car_price"] = 0
 
         # Costs will also include time costs
         df[f"plan_{i}_utils"] = 0
@@ -98,8 +98,13 @@ def calc_plan_variables(df, k, modes, use_util_money=False, add_util_performing=
 
             df[f"plan_{i}_{mode}_fixed_cost"] = fixed_costs
             df[f"plan_{i}_price"] += fixed_costs + distance_costs
-            df[f"plan_{i}_fixed_price"] += fixed_costs
-            df[f"plan_{i}_distance_price"] += distance_costs
+
+            if mode == "car":
+                df[f"plan_{i}_car_price"] += fixed_costs
+            else:
+                df[f"plan_{i}_non_car_price"] += fixed_costs
+
+            df[f"plan_{i}_non_car_price"] += distance_costs
 
             df[f"plan_{i}_{mode}_used"] = (df[f"plan_{i}_{mode}_usage"] > 0) * 1
             df[f"plan_{i}_tt_hours"] -= df[f"plan_{i}_{mode}_hours"]

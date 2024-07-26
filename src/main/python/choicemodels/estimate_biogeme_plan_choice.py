@@ -64,7 +64,7 @@ if __name__ == "__main__":
     UTIL_MONEY = Beta('UTIL_MONEY', 1, 0, 2, ESTIMATE if args.est_util_money else FIXED)
 
     BETA_PERFORMING = Beta('BETA_PERFORMING', args.performing, 1, 15, ESTIMATE if args.est_performing else FIXED)
-    BETA_PRICE_PERCEPTION = Beta('BETA_FIXED_PRICE_PERCEPTION', 1, 0, 1, ESTIMATE if args.est_price_perception else FIXED)
+    BETA_PRICE_PERCEPTION = Beta('BETA_CAR_PRICE_PERCEPTION', 1, 0, 1, ESTIMATE if args.est_price_perception else FIXED)
 
     is_est_car = "car" in args.mxl_modes
 
@@ -108,7 +108,7 @@ if __name__ == "__main__":
     for i in range(1, ds.k + 1):
         # Price is already negative
 
-        perceived_price = BETA_PRICE_PERCEPTION * v[f"plan_{i}_fixed_price"] + v[f"plan_{i}_distance_price"]
+        perceived_price = BETA_PRICE_PERCEPTION * v[f"plan_{i}_car_price"] + v[f"plan_{i}_non_car_price"]
 
         u = perceived_price * UTIL_MONEY * (1 if args.no_income else (ds.global_income / v["income"]) ** EXP_INCOME)
         u -= v[f"plan_{i}_pt_n_switches"]

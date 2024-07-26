@@ -22,24 +22,24 @@ scoring:
           constant: 0
         - mode: car
           constant: 0
-          dailyMonetaryConstant: -4.627
+          dailyMonetaryConstant: -5.1038273
         - mode: pt
-          constant: -0.724590
+          constant: 0.065940
         - mode: bike
-          constant: -1.590161
+          constant: -1.758609
         - mode: ride
-          constant: -2.150079
+          constant: -2.194756
 advancedScoring:
   incomeExponent: 0.549347
   scoringParameters:
     - subpopulation: person
       modeParams:
         - mode: bike
-          deltaConstant: 1.284915
+          deltaConstant: 1.401864
           varConstant: normal
         - mode: pt
-          deltaConstant: 2.177996
+          deltaConstant: 2.061751
           varConstant: normal
         - mode: ride
-          deltaConstant: 1.565783
+          deltaConstant: 1.534127
           varConstant: normal
