@@ -18,7 +18,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate choice model for daily trip usage")
     parser.add_argument("--input", help="Path to the input file", type=str,
                         default="../../../../plan-choices-diverse_9-tt-only.csv")
-    parser.add_argument("--mxl-modes", help="Modes to use mixed logit for", nargs="+", type=set,
+    parser.add_argument("--mxl-modes", help="Modes to use mixed logit for", nargs="+", type=str,
                         default=["pt", "bike", "ride"])
     parser.add_argument("--est-performing", help="Estimate the beta for performing", action="store_true")
     parser.add_argument("--performing", help="Beta for performing", type=float, default=6.88)
@@ -66,10 +66,12 @@ if __name__ == "__main__":
     BETA_PERFORMING = Beta('BETA_PERFORMING', args.performing, 1, 15, ESTIMATE if args.est_performing else FIXED)
     BETA_PRICE_PERCEPTION = Beta('BETA_FIXED_PRICE_PERCEPTION', 1, 0, 1, ESTIMATE if args.est_price_perception else FIXED)
 
+    is_est_car = "car" in args.mxl_modes
+
     for mode in ds.modes:
 
         val = fixed_ascs.get(mode, 0)
-        status = FIXED if mode in ("walk", "car") or mode in fixed_ascs else ESTIMATE
+        status = FIXED if mode in ("walk", "car" if not is_est_car else "_") or mode in fixed_ascs else ESTIMATE
 
         # Base asc
         asc = Beta(f"ASC_{mode}", val, None, None, status)
@@ -94,6 +96,12 @@ if __name__ == "__main__":
         B_UTIL_S = Beta('B_CAR_UTIL_SD', 1, 0, None, ESTIMATE)
         B_CAR = B_UTIL + B_UTIL_S * bioDraws('B_CAR_UTIL_RND', 'TN')
 
+    # Use asc instead of car utility
+    if is_est_car:
+        print("Estimating car asc, instead of daily utility")
+        B_CAR = 0
+
+    print("Using MXL modes", args.mxl_modes)
     U = {}
     AV = {}
 
