@@ -17,7 +17,7 @@ FIXED = 1
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate the trip choice model")
     parser.add_argument("--input", help="Path to the input file", type=str, default="../../../../trip-choices.csv")
-    parser.add_argument("--mxl-modes", help="Modes to use mixed logit for", nargs="+", type=set,
+    parser.add_argument("--mxl-modes", help="Modes to use mixed logit for", nargs="*", type=set,
                         default=["pt", "bike", "ride"])
     parser.add_argument("--est-performing", help="Estimate the beta for performing", action="store_true")
     parser.add_argument("--est-exp-income", help="Estimate exponent for income", action="store_true")
@@ -33,8 +33,6 @@ if __name__ == "__main__":
 
     database = db.Database("data/choices", df)
     v = database.variables
-
-    database.panel("person")
 
     km_costs = defaultdict(lambda: 0.0, car=-0.149, ride=-0.149)
 
@@ -70,6 +68,8 @@ if __name__ == "__main__":
         logprob = models.loglogit(U, AV, v["choice"])
 
     else:
+        database.panel("person")
+
         obsprob = models.logit(U, AV, v["choice"])
         condprobIndiv = PanelLikelihoodTrajectory(obsprob)
         logprob = log(MonteCarlo(condprobIndiv))

@@ -1,0 +1,45 @@
+#  + python -u estimate_biogeme_trip_choice.py --input trip-choices.csv --est-exp-income --est-performing
+#  Modes:  ['walk', 'pt', 'car', 'bike', 'ride']
+#  Number of choices:  27235
+#  Varying: ['km', 'hours', 'walking_km', 'switches', 'valid']
+#    Results for model trip_choice_performing_exp_income
+#  Nbr of parameters:		9
+#  Sample size:			8238
+#  Observations:			27235
+#  Excluded data:			0
+#  Null log likelihood:		-40155.25
+#  Final log likelihood:		-22571.32
+#  Likelihood ratio test (null):		35167.85
+#  Rho square (null):			0.438
+#  Rho bar square (null):			0.438
+#  Akaike Information Criterion:	45160.65
+#  Bayesian Information Criterion:	45223.8
+scoring:
+  scoringParameters:
+    - performing: 7.547802
+      modeParams:
+        - mode: walk
+          constant: 0
+        - mode: car
+          constant: 0
+          dailyMonetaryConstant: -4.627
+        - mode: pt
+          constant: -2.554736
+        - mode: bike
+          constant: -5.118475
+        - mode: ride
+          constant: -7.383783
+advancedScoring:
+  incomeExponent: 0.549347
+  scoringParameters:
+    - subpopulation: person
+      modeParams:
+        - mode: bike
+          deltaConstant: 6.133701
+          varConstant: normal
+        - mode: pt
+          deltaConstant: 5.319689
+          varConstant: normal
+        - mode: ride
+          deltaConstant: 5.281026
+          varConstant: normal

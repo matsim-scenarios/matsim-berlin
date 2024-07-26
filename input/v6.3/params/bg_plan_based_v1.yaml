@@ -1,0 +1,45 @@
+#  + python -u estimate_biogeme_plan_choice.py --input plan-choices-diverse_9.csv --performing 7.547802 --exp-income 0.549347 --est-price-perception
+#  Modes:  ['walk', 'pt', 'car', 'bike', 'ride']
+#  Number of plans:  8259
+#  Number of choices for plan:  9
+#  Number of choices: 8259
+#    Results for model plan-choices-diverse_9_price_perception
+#  Nbr of parameters:              9
+#  Sample size:                    8259
+#  Excluded data:                  0
+#  Null log likelihood:            -16584.31
+#  Final log likelihood:           -16314.08
+#  Likelihood ratio test (null):           540.452
+#  Rho square (null):                      0.0163
+#  Rho bar square (null):                  0.0158
+#  Akaike Information Criterion:   32646.16
+#  Bayesian Information Criterion: 32709.34
+scoring:
+  scoringParameters:
+    - performing: 7.547802
+      modeParams:
+        - mode: walk
+          constant: 0
+        - mode: car
+          constant: 0
+          dailyMonetaryConstant: -4.627
+        - mode: pt
+          constant: -0.724590
+        - mode: bike
+          constant: -1.590161
+        - mode: ride
+          constant: -2.150079
+advancedScoring:
+  incomeExponent: 0.549347
+  scoringParameters:
+    - subpopulation: person
+      modeParams:
+        - mode: bike
+          deltaConstant: 1.284915
+          varConstant: normal
+        - mode: pt
+          deltaConstant: 2.177996
+          varConstant: normal
+        - mode: ride
+          deltaConstant: 1.565783
+          varConstant: normal

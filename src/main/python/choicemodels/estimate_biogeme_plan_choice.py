@@ -21,7 +21,9 @@ if __name__ == "__main__":
     parser.add_argument("--mxl-modes", help="Modes to use mixed logit for", nargs="+", type=set,
                         default=["pt", "bike", "ride"])
     parser.add_argument("--est-performing", help="Estimate the beta for performing", action="store_true")
+    parser.add_argument("--performing", help="Beta for performing", type=float, default=6.88)
     parser.add_argument("--est-exp-income", help="Estimate exponent for income", action="store_true")
+    parser.add_argument("--exp-income", help="Exponent for income", type=float, default=1)
     parser.add_argument("--est-util-money", help="Estimate utility of money", action="store_true")
     parser.add_argument("--est-price-perception", help="Estimate price perception", action="store_true")
     parser.add_argument("--ascs", help="Predefined ASCs", nargs="+", action='append', default=[])
@@ -57,11 +59,11 @@ if __name__ == "__main__":
     SD = {}
 
     # Factor on marginal utility of money
-    EXP_INCOME = Beta('EXP_INCOME', 1, 0, 1.5, ESTIMATE if args.est_exp_income else FIXED)
+    EXP_INCOME = Beta('EXP_INCOME', args.exp_income, 0, 1.5, ESTIMATE if args.est_exp_income else FIXED)
 
     UTIL_MONEY = Beta('UTIL_MONEY', 1, 0, 2, ESTIMATE if args.est_util_money else FIXED)
 
-    BETA_PERFORMING = Beta('BETA_PERFORMING', 6.88, 1, 15, ESTIMATE if args.est_performing else FIXED)
+    BETA_PERFORMING = Beta('BETA_PERFORMING', args.performing, 1, 15, ESTIMATE if args.est_performing else FIXED)
     BETA_PRICE_PERCEPTION = Beta('BETA_FIXED_PRICE_PERCEPTION', 1, 0, 1, ESTIMATE if args.est_price_perception else FIXED)
 
     for mode in ds.modes:
