@@ -1,20 +1,19 @@
-#  + python -u estimate_biogeme_plan_choice.py --input plan-choices-diverse_9.csv --performing 7.547802 --exp-income 0.549347 --est-price-perception
+#  + python -u estimate_biogeme_trip_choice.py --input trip-choices.csv --est-exp-income --est-performing
 #  Modes:  ['walk', 'pt', 'car', 'bike', 'ride']
-#  Number of plans:  8259
-#  Number of choices for plan:  9
-#  Number of choices: 8259
-#    Using MXL modes ['pt', 'bike', 'ride']
-#    Results for model plan-choices-diverse_9_price_perception
+#  Number of choices:  27235
+#  Varying: ['km', 'hours', 'walking_km', 'switches', 'valid']
+#    Results for model trip_choice_performing_exp_income
 #  Nbr of parameters:		9
-#  Sample size:			8259
+#  Sample size:			8238
+#  Observations:			27235
 #  Excluded data:			0
-#  Null log likelihood:		-16584.31
-#  Final log likelihood:		-16922.1
-#  Likelihood ratio test (null):		-675.5779
-#  Rho square (null):			-0.0204
-#  Rho bar square (null):			-0.0209
-#  Akaike Information Criterion:	33862.19
-#  Bayesian Information Criterion:	33925.37
+#  Null log likelihood:		-40155.25
+#  Final log likelihood:		-22571.32
+#  Likelihood ratio test (null):		35167.85
+#  Rho square (null):			0.438
+#  Rho bar square (null):			0.438
+#  Akaike Information Criterion:	45160.65
+#  Bayesian Information Criterion:	45223.8
 scoring:
   scoringParameters:
     - performing: 7.547802
