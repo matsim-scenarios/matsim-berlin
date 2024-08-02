@@ -12,6 +12,7 @@ import org.matsim.core.config.groups.StrategyConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
+import org.matsim.core.scoring.functions.PersonScoringParametersFromPersonAttributes;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.prepare.RunOpenBerlinCalibration;
 import org.matsim.prepare.population.AssignIncome;
@@ -117,7 +118,7 @@ public class RunOpenBerlinScenario extends MATSimApplication {
 				addTravelTimeBinding(TransportMode.ride).to(networkTravelTime());
 				addTravelDisutilityFactoryBinding(TransportMode.ride).to(carTravelDisutilityFactoryKey());
 
-				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class).asEagerSingleton();
+				bind(ScoringParametersForPerson.class).to(PersonScoringParametersFromPersonAttributes.class).asEagerSingleton();
 
 			}
 		});
