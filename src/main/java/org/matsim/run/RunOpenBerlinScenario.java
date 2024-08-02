@@ -19,8 +19,6 @@ import org.matsim.prepare.population.AssignIncome;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
 import picocli.CommandLine;
-import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
-
 import java.util.List;
 
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = RunOpenBerlinScenario.VERSION, mixinStandardHelpOptions = true)
