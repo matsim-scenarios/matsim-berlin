@@ -24,7 +24,14 @@ public final class RunOpenBerlinScenario {
 		// This then does:
 		// * getCustomModules() (which is empty by default but can be overriden)
 		// * ConfigUtils.loadConfig(...) _without_ passing on the args
-		// * prepareConfig(...) (which is empty by default but is typically overridden, in this case in OpenBerlinScenario)
+		// * prepareConfig(...) (which is empty by default but is typically overridden, in this case in OpenBerlinScenario).  In our case, this sets the typical scoring params and the typical replanning strategies.
+		// * next one can override the config from some yaml file provided as a commandline option
+		// * next args is parsed and set
+		// * then some standard CL options are detected and set
+		// * then createScenario(config) is called (which can be overwritten but is not)
+		// * then prepareScenario(scenario) is called (which can be overwritten but is not)
+		// * then a standard controler is created from scenario
+		// * then prepareControler is called which can be overwritten
 
 	}
 
