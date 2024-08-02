@@ -15,7 +15,6 @@ import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import org.matsim.core.scoring.functions.PersonScoringParametersFromPersonAttributes;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.prepare.RunOpenBerlinCalibration;
-import org.matsim.prepare.population.AssignIncome;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
 import picocli.CommandLine;
