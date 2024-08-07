@@ -9,7 +9,6 @@ import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.population.*;
 import org.matsim.application.MATSimAppCommand;
-import org.matsim.application.options.CsvOptions;
 import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.algorithms.ParallelPersonAlgorithmUtils;
@@ -18,6 +17,8 @@ import org.matsim.core.router.TripStructureUtils;
 import org.matsim.prepare.RunOpenBerlinCalibration;
 import picocli.CommandLine;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -28,7 +29,6 @@ import java.util.*;
 public final class RunActivitySampling implements MATSimAppCommand, PersonAlgorithm {
 
 	private static final Logger log = LogManager.getLogger(RunActivitySampling.class);
-	private final CsvOptions csv = new CsvOptions(CSVFormat.Predefined.Default);
 
 	/**
 	 * Maps person index to list of activities.
@@ -45,8 +45,9 @@ public final class RunActivitySampling implements MATSimAppCommand, PersonAlgori
 	private Path activityPath;
 	@CommandLine.Option(names = "--seed", description = "Seed used to sample plans", defaultValue = "1")
 	private long seed;
-	private ThreadLocal<Context> ctxs;
 
+	// TODO: replace with local seed dependent on personId
+	private ThreadLocal<Context> ctxs;
 	private PopulationFactory factory;
 	private PersonMatcher matcher;
 
@@ -69,22 +70,6 @@ public final class RunActivitySampling implements MATSimAppCommand, PersonAlgori
 
 	public static void main(String[] args) {
 		new RunActivitySampling().execute(args);
-	}
-
-	/**
-	 * Randomize the duration slightly, depending on total duration.
-	 */
-	static int randomizeDuration(int minutes, SplittableRandom rnd) {
-		if (minutes <= 10)
-			return minutes * 60;
-
-		if (minutes <= 60)
-			return minutes * 60 + rnd.nextInt(300) - 150;
-
-		if (minutes <= 240)
-			return minutes * 60 + rnd.nextInt(600) - 300;
-
-		return minutes * 60 + rnd.nextInt(1200) - 600;
 	}
 
 	/**
@@ -112,7 +97,7 @@ public final class RunActivitySampling implements MATSimAppCommand, PersonAlgori
 			if (actType.equals("other") && (i == 0 || i == activities.size() - 1))
 				actType = "home";
 
-			int duration = Integer.parseInt(act.get("duration"));
+			int duration = (int) Double.parseDouble(act.get("duration"));
 
 			if (actType.equals("home")) {
 				a = factory.createActivityFromCoord("home", homeCoord);
@@ -198,6 +183,61 @@ public final class RunActivitySampling implements MATSimAppCommand, PersonAlgori
 		return plan;
 	}
 
+	/**
+	 * Read and group activities by person id.
+	 */
+	public static Map<String, List<CSVRecord>> readActivities(Path csv) throws IOException {
+
+		String currentId = null;
+		List<CSVRecord> current = null;
+		Map<String, List<CSVRecord>> activities = new LinkedHashMap<>();
+		int i = 0;
+
+
+		try (CSVParser parser = CSVParser.parse(csv, StandardCharsets.UTF_8,
+			CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).build())) {
+			for (CSVRecord r : parser) {
+
+				String pId = r.get("p_id");
+
+				if (!Objects.equals(pId, currentId)) {
+					if (current != null)
+						activities.put(currentId, current);
+
+					currentId = pId;
+					current = new ArrayList<>();
+				}
+
+				current.add(r);
+				i++;
+			}
+		}
+
+		if (current != null && !current.isEmpty()) {
+			activities.put(currentId, current);
+		}
+
+		log.info("Read {} activities for {} persons", i, activities.size());
+
+		return activities;
+	}
+
+	/**
+	 * Randomize the duration slightly, depending on total duration.
+	 */
+	static int randomizeDuration(int minutes, SplittableRandom rnd) {
+		if (minutes <= 10)
+			return minutes * 60;
+
+		if (minutes <= 60)
+			return minutes * 60 + rnd.nextInt(300) - 150;
+
+		if (minutes <= 240)
+			return minutes * 60 + rnd.nextInt(600) - 300;
+
+		return minutes * 60 + rnd.nextInt(1200) - 600;
+	}
+
 	@Override
 	public Integer call() throws Exception {
 
@@ -205,9 +245,7 @@ public final class RunActivitySampling implements MATSimAppCommand, PersonAlgori
 
 		matcher = new PersonMatcher("idx", personsPath);
 
-		try (CSVParser parser = csv.createParser(activityPath)) {
-			readActivities(parser);
-		}
+		activities.putAll(readActivities(activityPath));
 
 		ctxs = ThreadLocal.withInitial(() -> new Context(new SplittableRandom(seed)));
 		factory = population.getFactory();
@@ -229,35 +267,6 @@ public final class RunActivitySampling implements MATSimAppCommand, PersonAlgori
 		log.info("Processed {} persons, mobile persons: {}%", size, 100 * mobile);
 
 		return 0;
-	}
-
-	private void readActivities(CSVParser csv) {
-
-		String currentId = null;
-		List<CSVRecord> current = null;
-
-		int i = 0;
-		for (CSVRecord r : csv) {
-
-			String pId = r.get("p_id");
-
-			if (!Objects.equals(pId, currentId)) {
-				if (current != null)
-					activities.put(currentId, current);
-
-				currentId = pId;
-				current = new ArrayList<>();
-			}
-
-			current.add(r);
-			i++;
-		}
-
-		if (current != null && !current.isEmpty()) {
-			activities.put(currentId, current);
-		}
-
-		log.info("Read {} activities for {} persons", i, activities.size());
 	}
 
 	@Override
@@ -319,6 +328,7 @@ public final class RunActivitySampling implements MATSimAppCommand, PersonAlgori
 	/**
 	 * Create plan for a person using given id.
 	 */
+	@SuppressWarnings("OverloadMethodsDeclarationOrder")
 	public Plan createPlan(Coord homeCoord, String personId) {
 		return createPlan(homeCoord, activities.get(personId), ctxs.get().rnd, factory);
 	}

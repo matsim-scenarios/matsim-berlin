@@ -85,7 +85,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 	/**
 	 * Samples a home coordinates from geometry and landuse.
 	 */
-	public static Coord sampleHomeCoordinate(MultiPolygon geometry, String crs, FacilityOptions facilities, SplittableRandom rnd) {
+	public static Coord sampleHomeCoordinate(MultiPolygon geometry, String crs, FacilityOptions facilities, SplittableRandom rnd, int tries) {
 
 		Envelope bbox = geometry.getEnvelopeInternal();
 
@@ -99,7 +99,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 
 			i++;
 
-		} while (!geometry.contains(MGC.coord2Point(coord)) && i < 1500);
+		} while (!geometry.contains(MGC.coord2Point(coord)) && i < tries);
 
 		if (i == 1500)
 			log.warn("Invalid coordinate generated");
@@ -222,7 +222,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 				PersonUtils.setEmployed(person, false);
 			}
 
-			Coord coord = ct.transform(sampleHomeCoordinate(geom, "EPSG:25833", facilities, rnd));
+			Coord coord = ct.transform(sampleHomeCoordinate(geom, "EPSG:25833", facilities, rnd, 1500));
 
 			person.getAttributes().putAttribute(Attributes.HOME_X, coord.getX());
 			person.getAttributes().putAttribute(Attributes.HOME_Y, coord.getY());
