@@ -132,6 +132,14 @@ $p/berlin-$V-facilities.xml.gz: $p/berlin-$V-network.xml.gz input/facilities.gpk
 	$(sc) prepare facilities --network $< --shp $(word 2,$^)\
 	 --output $@
 
+$p/berlin-only-$V-100pct.plans.xml.gz: input/PLR_2013_2020.csv $(berlin)/input/shp/Planungsraum_EPSG_25833.shp input/facilities.gpkg
+	$(sc) prepare berlin-population\
+		--input $<\
+		--sample 1.0\
+		--shp $(word 2,$^) --shp-crs EPSG:25833\
+		--facilities $(word 3,$^) --facilities-attr resident\
+		--output $@
+
 $p/berlin-only-$V-25pct.plans.xml.gz: input/PLR_2013_2020.csv $(berlin)/input/shp/Planungsraum_EPSG_25833.shp input/facilities.gpkg
 	$(sc) prepare berlin-population\
 		--input $<\
