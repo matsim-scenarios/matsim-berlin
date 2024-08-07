@@ -14,7 +14,7 @@ initial = {
     "ride": -1.4
 }
 
-# Original modal split
+# modal split according to SrV 2018 (shared-svn/projects/matsim-berlin/data/SrV)
 target = {
     "walk": 0.296769,
     "bike": 0.177878,
