@@ -102,7 +102,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	 * Flexible activities, which need to be known for location choice and during generation.
 	 * A day can not end on a flexible activity.
 	 */
-	public static final Set<String> FLEXIBLE_ACTS = Set.of("shop_daily", "shop_other", "leisure", "dining");
+	public static final Set<String> FLEXIBLE_ACTS = Set.of("shop_daily", "shop_other", "shopping", "leisure", "dining");
 	private static final Logger log = LogManager.getLogger(RunOpenBerlinCalibration.class);
 	@CommandLine.Mixin
 	private final SampleOptions sample = new SampleOptions(25, 10, 3, 1);
