@@ -15,6 +15,8 @@ initial = {
 }
 
 # modal split according to SrV 2018 (shared-svn/projects/matsim-berlin/data/SrV)
+# Also see https://www.berlin.de/sen/uvk/presse/pressemitteilungen/2020/pressemitteilung.906382.php
+# The calibration only considers persons living in Berlin
 target = {
     "walk": 0.296769,
     "bike": 0.177878,

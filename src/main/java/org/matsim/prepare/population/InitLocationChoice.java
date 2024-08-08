@@ -29,6 +29,7 @@ import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.facilities.ActivityFacility;
 import org.matsim.prepare.RunOpenBerlinCalibration;
 import org.matsim.prepare.facilities.AttributedActivityFacility;
+import org.matsim.run.OpenBerlinScenario;
 import picocli.CommandLine;
 
 import java.math.BigInteger;
@@ -136,7 +137,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		network = NetworkUtils.createNetwork();
 		filter.filter(network, Set.of(TransportMode.car));
 
-		facilities = new FacilityIndex(facilityPath.toString());
+		facilities = new FacilityIndex(facilityPath.toString(), OpenBerlinScenario.CRS);
 
 		zones = new Long2ObjectOpenHashMap<>(shp.readFeatures().stream()
 			.collect(Collectors.toMap(ft -> Long.parseLong((String) ft.getAttribute("ARS")), ft -> ft)));

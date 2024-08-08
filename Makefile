@@ -130,6 +130,7 @@ $p/berlin-$V-counts-vmz.xml.gz: $p/berlin-$V-network.xml.gz
 
 $p/berlin-$V-facilities.xml.gz: $p/berlin-$V-network.xml.gz input/facilities.gpkg
 	$(sc) prepare facilities --network $< --shp $(word 2,$^)\
+	 --facility-mapping input/activity_mapping.json\
 	 --output $@
 
 $p/berlin-only-$V-100pct.plans.xml.gz: input/PLR_2013_2020.csv $(berlin)/input/shp/Planungsraum_EPSG_25833.shp input/facilities.gpkg

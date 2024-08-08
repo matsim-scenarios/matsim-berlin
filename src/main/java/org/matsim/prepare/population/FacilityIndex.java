@@ -10,7 +10,6 @@ import org.matsim.facilities.ActivityFacility;
 import org.matsim.facilities.FacilitiesUtils;
 import org.matsim.facilities.MatsimFacilitiesReader;
 import org.matsim.prepare.facilities.AttributedActivityFacility;
-import org.matsim.run.OpenBerlinScenario;
 
 import java.util.*;
 import java.util.function.Function;
@@ -20,7 +19,7 @@ import java.util.stream.Collectors;
 /**
  * Spatial index for facilities.
  */
-final class FacilityIndex {
+public final class FacilityIndex {
 
 	private static final Logger log = LogManager.getLogger(FacilityIndex.class);
 
@@ -29,12 +28,11 @@ final class FacilityIndex {
 	/**
 	 * Maps activity type to spatial index.
 	 */
-	final Map<String, STRtree> index = new HashMap<>();
+	public final Map<String, STRtree> index = new HashMap<>();
 
-	FacilityIndex(String facilityPath) {
+	public FacilityIndex(String facilityPath, String crs) {
 
-		new MatsimFacilitiesReader(OpenBerlinScenario.CRS, OpenBerlinScenario.CRS, all)
-			.readFile(facilityPath);
+		new MatsimFacilitiesReader(crs, crs, all).readFile(facilityPath);
 
 		Set<String> activities = all.getFacilities().values().stream()
 			.flatMap(a -> a.getActivityOptions().keySet().stream())
@@ -75,6 +73,16 @@ final class FacilityIndex {
 			idx = -idx - 1;
 		}
 		return idx;
+	}
+
+	/**
+	 * Samples from list of candidates until one option is not rejected.
+	 */
+	public static ActivityFacility sample(List<ActivityFacility> candidates, SplittableRandom rnd) {
+		if (candidates.isEmpty())
+			return null;
+
+		return candidates.get(rnd.nextInt(candidates.size()));
 	}
 
 	/**

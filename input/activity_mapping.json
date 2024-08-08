@@ -26,7 +26,13 @@
     "college": ["edu_higher", "work"],
     "sports_hall": ["leisure", "work"],
     "stadium": ["leisure", "work"],
-    "apartments": ["resident"]
+    "apartments": ["resident"],
+    "house": ["resident"],
+    "detached": ["resident"],
+    "semidetached_house": ["resident"],
+    "bungalow": ["resident"],
+    "terrace": ["resident"],
+    "residential": ["resident"]
   },
   "amenity": {
     "bar": ["leisure", "work", "delivery", "dining"],

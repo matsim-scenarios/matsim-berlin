@@ -15,6 +15,7 @@ import org.matsim.application.analysis.population.TripAnalysis;
 import org.matsim.application.options.ShpOptions;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.router.TripStructureUtils;
+import org.matsim.run.OpenBerlinScenario;
 import picocli.CommandLine;
 
 import java.nio.file.Files;
@@ -79,7 +80,7 @@ public class AssignReferencePopulation implements MATSimAppCommand {
 
 		SplittableRandom rnd = new SplittableRandom(0);
 		persons = new PersonMatcher("idx", personsPath);
-		facilities = new FacilityIndex(facilityPath.toString());
+		facilities = new FacilityIndex(facilityPath.toString(), OpenBerlinScenario.CRS);
 
 		PlanBuilder planBuilder = new PlanBuilder(shp, facilities, activityPath);
 

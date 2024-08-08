@@ -1,12 +1,14 @@
 package org.matsim.prepare.facilities;
 
-import com.google.common.math.Quantiles;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.geotools.api.feature.simple.SimpleFeature;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.TopologyException;
@@ -23,9 +25,10 @@ import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.facilities.*;
 import org.matsim.prepare.population.Attributes;
-import org.geotools.api.feature.simple.SimpleFeature;
 import picocli.CommandLine;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
@@ -51,8 +54,13 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 	@CommandLine.Option(names = "--output", required = true, description = "Path to output facility file")
 	private Path output;
 
+	@CommandLine.Option(names = "--facility-mapping", description = "Path to facility napping json", required = true)
+	private Path mappingPath;
+
 	@CommandLine.Mixin
 	private ShpOptions shp;
+
+	private MappingConfig config;
 
 	public static void main(String[] args) {
 		new CreateMATSimFacilities().execute(args);
@@ -81,6 +89,8 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 			log.error("Shp file with facilities is required.");
 			return 2;
 		}
+
+		config = new ObjectMapper().readerFor(MappingConfig.class).readValue(mappingPath.toFile());
 
 		Network completeNetwork = NetworkUtils.readNetwork(this.network.toString());
 		TransportModeNetworkFilter filter = new TransportModeNetworkFilter(completeNetwork);
@@ -133,10 +143,10 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 			// Filter outliers from the attraction and normalize the attraction
 			// This warrant for further investigate as the best way to normalize the attraction is not yet known
 			facility.getAttributes().putAttribute(Attributes.ATTRACTION_WORK,
-				Math.min(Math.max(h.attractionWork / 5, 1), workUpper)
+			 	round(Math.min(Math.max(h.attractionWork / 5, 1), workUpper))
 			);
 			facility.getAttributes().putAttribute(Attributes.ATTRACTION_OTHER,
-				Math.min(Math.max(h.attractionOther / 5, 1), otherUpper)
+				round(Math.min(Math.max(h.attractionOther / 5, 1), otherUpper))
 			);
 
 			facilities.addActivityFacility(facility);
@@ -150,8 +160,12 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		return 0;
 	}
 
+	private static double round(double f) {
+		return BigDecimal.valueOf(f).setScale(4, RoundingMode.HALF_UP).doubleValue();
+	}
+
 	/**
-	 * Sample points and choose link with the nearest points. Aggregate everything so there is at most one facility per link.
+	 * Sample points and choose link with the nearest points.
 	 */
 	private Holder processFeature(SimpleFeature ft, Network network) {
 
@@ -240,43 +254,18 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 	private Set<String> activities(SimpleFeature ft) {
 		Set<String> act = new HashSet<>();
 
-		if (hasAttribute(ft, "work")) {
-			act.add("work");
-			act.add("work_business");
+		for (Map.Entry<String, Set<String>> entries : config.values.entrySet()) {
+			if (hasAttribute(ft, entries.getKey())) {
+				act.addAll(entries.getValue());
+			}
 		}
-		if (hasAttribute(ft, "shop")) {
-			act.add("shop_other");
-		}
-		if (hasAttribute(ft, "shop_daily")) {
-			act.add("shop_other");
-			act.add("shop_daily");
-		}
-		if (hasAttribute(ft, "leisure"))
-			act.add("leisure");
-		if (hasAttribute(ft, "dining"))
-			act.add("dining");
-		if (hasAttribute(ft, "edu_higher"))
-			act.add("edu_higher");
-		if (hasAttribute(ft, "edu_prim")) {
-			act.add("edu_primary");
-			act.add("edu_secondary");
-		}
-		if (hasAttribute(ft, "edu_kiga"))
-			act.add("edu_kiga");
-		if (hasAttribute(ft, "edu_other"))
-			act.add("edu_other");
-		if (hasAttribute(ft, "p_business") || hasAttribute(ft, "medical") || hasAttribute(ft, "religious")) {
-			act.add("personal_business");
-		}
-		if (hasAttribute(ft, "p_business"))
-			act.add("work_business");
 
 		return act;
 	}
 
 	private static boolean hasAttribute(SimpleFeature ft, String name) {
 		return ft.getAttribute(name) != null &&
-			(Boolean.TRUE.equals(ft.getAttribute(name)) ||
+			(Boolean.TRUE.equals(ft.getAttribute(name)) || "1".equals(ft.getAttribute(name)) ||
 				(ft.getAttribute(name) instanceof Number number && number.intValue() > 0)
 			);
 	}
@@ -286,6 +275,24 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 	 */
 	private record Holder(Id<Link> linkId, Set<String> activities, List<Coord> coords,
 						  double attractionWork, double attractionOther) {
+	}
+
+	/**
+	 * Helper class to define data structure for mapping.
+	 */
+	public static final class MappingConfig {
+
+		private final Map<String, Set<String>> values = new HashMap<>();
+
+		@JsonAnyGetter
+		public Set<String> getActivities(String value) {
+			return values.get(value);
+		}
+
+		@JsonAnySetter
+		private void setActivities(String value, Set<String> activities) {
+			values.put(value, activities);
+		}
 
 	}
 

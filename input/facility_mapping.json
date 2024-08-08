@@ -1,0 +1,14 @@
+{
+  "work": ["work", "work_business"],
+  "shop": ["shop_other"],
+  "shop_daily": ["shop_other", "shop_daily"],
+  "leisure": ["leisure"],
+  "dining": ["dining"],
+  "edu_higher": ["edu_higher"],
+  "edu_prim": ["edu_primary", "edu_secondary"],
+  "edu_kiga": ["edu_kiga"],
+  "edu_other": ["edu_other"],
+  "p_business": ["personal_business", "work_business"],
+  "medical": ["personal_business"],
+  "religious": ["personal_business"]
+}
