@@ -8,10 +8,10 @@ from matsim.calibration import create_calibration, ASCCalibrator, utils
 modes = ["walk", "car", "pt", "bike", "ride"]
 fixed_mode = "walk"
 initial = {
-    "bike": -2.23,
-    "pt": -0.25,
-    "car": -0.62,
-    "ride": -1.37
+    "bike": -1.4,
+    "pt": 0.6,
+    "car": -1,
+    "ride": -1.4
 }
 
 # Original modal split

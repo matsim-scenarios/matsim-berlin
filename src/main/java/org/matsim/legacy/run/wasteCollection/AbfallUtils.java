@@ -41,7 +41,7 @@ import org.matsim.freight.carriers.jsprit.MatsimJspritFactory;
 import org.matsim.freight.carriers.jsprit.NetworkBasedTransportCosts;
 import org.matsim.freight.carriers.jsprit.NetworkRouter;
 import org.matsim.vehicles.VehicleType;
-import org.opengis.feature.simple.SimpleFeature;
+import org.geotools.api.feature.simple.SimpleFeature;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;

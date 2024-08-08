@@ -23,7 +23,6 @@ import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.core.utils.gis.ShapeFileReader;
 import org.matsim.prepare.RunOpenBerlinCalibration;
-import org.matsim.prepare.population.AssignIncome;
 import org.matsim.run.scoring.AdvancedScoringConfigGroup;
 import org.matsim.run.scoring.AdvancedScoringModule;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
@@ -38,10 +37,11 @@ import java.util.List;
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true)
 public class OpenBerlinScenario extends MATSimApplication {
 
+	public static final String VERSION = "6.3";
+	public static final String CRS = "EPSG:25832";
+
 	private static final Logger log = LogManager.getLogger(RunOpenBerlinCalibration.class);
 
-	public static final String VERSION = "6.1";
-	public static final String CRS = "EPSG:25832";
 	@CommandLine.Mixin
 	private final SampleOptions sample = new SampleOptions(10, 25, 3, 1);
 
@@ -137,7 +137,6 @@ public class OpenBerlinScenario extends MATSimApplication {
 			}
 
 		}
-
 	}
 
 	@Override

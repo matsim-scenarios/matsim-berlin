@@ -10,7 +10,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 import org.matsim.application.options.CsvOptions;
 import org.matsim.facilities.ActivityFacility;
-import org.opengis.feature.simple.SimpleFeature;
+import org.geotools.api.feature.simple.SimpleFeature;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;

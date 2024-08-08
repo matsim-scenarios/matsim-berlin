@@ -6,16 +6,16 @@
 		<artifactId>matsim-all</artifactId>
 
 		<!-- PR-labelled release -->
-<!--		<version>16.0-PR3129</version>-->
+		<version>2025.0-PR3350</version>
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
-		<version>16.0-PR3172</version>
+<!--		<version>2025.0-SNAPSHOT</version>-->
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.matsim-scenarios</groupId>
 	<artifactId>matsim-berlin</artifactId>
-	<version>6.1</version>
+	<version>6.3</version>
 
 	<name>MATSim Open Berlin scenario</name>
 	<description>MATSim Open Berlin scenario</description>
@@ -27,7 +27,7 @@
 
 		<main.class>org.matsim.run.RunOpenBerlinScenario</main.class>
 
-		<maven.compiler.release>17</maven.compiler.release>
+		<maven.compiler.release>21</maven.compiler.release>
 	</properties>
 
 	<dependencies>
@@ -128,7 +128,7 @@
 		<dependency>
 			<groupId>com.github.matsim-org</groupId>
 			<artifactId>gtfs2matsim</artifactId>
-			<version>master-33809c4f0f-1</version>
+			<version>fc8b13954d</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.matsim</groupId>
@@ -140,6 +140,14 @@
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>drt</artifactId>
+			<version>${matsim.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<!-- for drt dashboard-->
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>drt-extensions</artifactId>
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
 		</dependency>
@@ -164,7 +172,7 @@
 		<dependency>
 			<groupId>com.github.matsim-vsp</groupId>
 			<artifactId>pt-extensions</artifactId>
-			<version>c6253b0a53</version>
+			<version>b39f03f2f0</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.matsim</groupId>
@@ -231,13 +239,13 @@
 		<dependency>
 			<groupId>org.optaplanner</groupId>
 			<artifactId>optaplanner-core</artifactId>
-			<version>9.41.0.Final</version>
+			<version>9.44.0.Final</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
-			<version>5.2.5</version>
+			<version>5.3.0</version>
 		</dependency>
 
 		<dependency>
@@ -253,7 +261,7 @@
 		<dependency>
 			<groupId>me.tongfei</groupId>
 			<artifactId>progressbar</artifactId>
-			<version>0.10.0</version>
+			<version>0.10.1</version>
 		</dependency>
 
 		<!-- for weighted random draw: https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
@@ -327,7 +335,7 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.8</version>
+				<version>0.8.12</version>
 				<executions>
 					<execution>
 						<goals>
@@ -348,7 +356,7 @@
 			<plugin>
 				<groupId>io.github.git-commit-id</groupId>
 				<artifactId>git-commit-id-maven-plugin</artifactId>
-				<version>5.0.0</version>
+				<version>8.0.2</version>
 				<executions>
 					<execution>
 						<id>get-the-git-infos</id>
@@ -359,7 +367,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<failOnNoGitDirectory>false</failOnNoGitDirectory>
+					<failOnNoGitDirectory>true</failOnNoGitDirectory>
 				</configuration>
 			</plugin>
 
@@ -374,7 +382,7 @@
 							<goal>shade</goal>
 						</goals>
 						<configuration>
-							<outputFile>${project.basedir}/${project.build.finalName}-${git.commit.id.describe-short}.jar</outputFile>
+							<outputFile>${project.basedir}/${project.build.finalName}-${git.commit.id.describe}.jar</outputFile>
 							<transformers>
 								<!-- This bit sets the main class for the executable jar as you otherwise would with the assembly plugin -->
 								<transformer
@@ -384,7 +392,7 @@
 										<Specification-Vendor>org.matsim</Specification-Vendor>
 										<Implementation-Vendor>org.matsim</Implementation-Vendor>
 										<Implementation-Version>${project.version}</Implementation-Version>
-										<SCM-Revision>${git.commit.id.describe-short}</SCM-Revision>
+										<SCM-Revision>${git.commit.id.describe}</SCM-Revision>
 										<Multi-Release>true</Multi-Release>
 									</manifestEntries>
 								</transformer>
@@ -410,12 +418,17 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
-				<version>3.2.0</version>
+				<version>3.4.0</version>
 				<dependencies>
 					<dependency>
 						<groupId>com.puppycrawl.tools</groupId>
 						<artifactId>checkstyle</artifactId>
-						<version>10.6.0</version>
+						<version>10.17.0</version>
+					</dependency>
+					<dependency>
+						<groupId>com.github.sevntu-checkstyle</groupId>
+						<artifactId>sevntu-checks</artifactId>
+						<version>1.44.1</version>
 					</dependency>
 				</dependencies>
 				<configuration>
@@ -424,7 +437,7 @@
 					<failsOnError>true</failsOnError>
 					<failOnViolation>true</failOnViolation>
 					<linkXRef>false</linkXRef>
-					<excludes>**/legacy/**,**/prepare/network/**,**/prepare/counts/CreateCountsFromVMZOld.java</excludes>
+					<excludes>**/legacy/**,**/prepare/network/**,**/prepare/facilities/**,**/prepare/counts/CreateCountsFromVMZOld.java</excludes>
 				</configuration>
 				<executions>
 					<execution>

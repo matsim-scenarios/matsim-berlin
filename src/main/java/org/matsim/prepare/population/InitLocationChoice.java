@@ -2,8 +2,10 @@ package org.matsim.prepare.population;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import me.tongfei.progressbar.ProgressBar;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.geotools.api.feature.simple.SimpleFeature;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.index.strtree.STRtree;
 import org.matsim.api.core.v01.Coord;
@@ -26,15 +28,16 @@ import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.facilities.ActivityFacility;
 import org.matsim.prepare.RunOpenBerlinCalibration;
-import org.opengis.feature.simple.SimpleFeature;
+import org.matsim.prepare.facilities.AttributedActivityFacility;
 import picocli.CommandLine;
 
+import java.math.BigInteger;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import static org.matsim.prepare.CreateMATSimFacilities.IGNORED_LINK_TYPES;
+import static org.matsim.prepare.facilities.CreateMATSimFacilities.IGNORED_LINK_TYPES;
 
 @CommandLine.Command(
 	name = "init-location-choice",
@@ -44,12 +47,12 @@ import static org.matsim.prepare.CreateMATSimFacilities.IGNORED_LINK_TYPES;
 public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 	/**
-	 * Detour factor for car routes, which was determined based on sampled routes.
+	 * Detour factor for routes > 3000m. Factor is based on data, but adjusted to better match distance distribution.
 	 */
-	private static final double DETOUR_FACTOR = 1.46;
+	private static final double DETOUR_FACTOR = 1.25;
 
 	/**
-	 * Factor for short trips < 2000m.
+	 * Factor for short trips < 3000m. Factor was calculated based on data.
 	 */
 	private static final double DETOUR_FACTOR_SHORT = 1.3;
 
@@ -90,32 +93,34 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 	private Network network;
 
-	private ThreadLocal<Context> ctxs;
-
 	private AtomicLong total = new AtomicLong();
 
 	private AtomicLong warning = new AtomicLong();
+
+	private ProgressBar pb;
 
 	public static void main(String[] args) {
 		new InitLocationChoice().execute(args);
 	}
 
-	private static Coord rndCoord(SplittableRandom rnd, double dist, Coord origin) {
-		var angle = rnd.nextDouble() * Math.PI * 2;
-
-		var x = Math.cos(angle) * dist;
-		var y = Math.sin(angle) * dist;
-
-		return new Coord(RunOpenBerlinCalibration.roundNumber(origin.getX() + x), RunOpenBerlinCalibration.roundNumber(origin.getY() + y));
-	}
-
 	/**
 	 * Approximate beeline dist from known traveled distance. Distance will be reduced by a fixed detour factor.
-	 * Dist in meter.
+	 *
+	 * @param travelDist distance in km
+	 * @return beeline distance in meters
 	 */
 	public static double beelineDist(double travelDist) {
-		double detourFactor = travelDist <= 2000 ? DETOUR_FACTOR_SHORT : DETOUR_FACTOR;
+		double detourFactor = travelDist <= 3 ? DETOUR_FACTOR_SHORT : DETOUR_FACTOR;
 		return travelDist * 1000 / detourFactor;
+	}
+
+	private static Coord rndCoord(SplittableRandom rnd, double dist, Coord origin) {
+		double angle = rnd.nextDouble() * Math.PI * 2;
+
+		double x = Math.cos(angle) * dist;
+		double y = Math.sin(angle) * dist;
+
+		return new Coord(RunOpenBerlinCalibration.roundNumber(origin.getX() + x), RunOpenBerlinCalibration.roundNumber(origin.getY() + y));
 	}
 
 	@Override
@@ -144,15 +149,15 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 		for (int i = 0; i < k; i++) {
 
-			long seed = this.seed + i;
+			log.info("Generating plan {} with seed {}", i, seed);
 
-			log.info("Generating plan {} with seed {}", i , seed);
-
-			ctxs = ThreadLocal.withInitial(() -> new Context(seed));
 			commuter = new CommuterAssignment(zones, commuterPath, sample);
 
 			Population population = PopulationUtils.readPopulation(input.toString());
-			ParallelPersonAlgorithmUtils.run(population, 8, this);
+
+			pb = new ProgressBar("Performing location choice " + i, population.getPersons().size());
+
+			ParallelPersonAlgorithmUtils.run(population, Runtime.getRuntime().availableProcessors() - 1, this);
 
 			populations.add(population);
 
@@ -160,8 +165,8 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 			total.set(0);
 			warning.set(0);
+			seed += i;
 		}
-
 
 		Population population = populations.get(0);
 
@@ -191,23 +196,33 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 		Coord homeCoord = Attributes.getHomeCoord(person);
 
+		// Reference persons are not assigned locations
+		if (person.getAttributes().getAttribute(Attributes.REF_MODES) != null) {
+			pb.step();
+			return;
+		}
+
 		// Activities that only occur on one place per person
 		Map<String, ActivityFacility> fixedLocations = new HashMap<>();
-		Context ctx = ctxs.get();
 
+		int planNumber = 0;
 		for (Plan plan : person.getPlans()) {
 			List<Activity> acts = TripStructureUtils.getActivities(plan, TripStructureUtils.StageActivityHandling.ExcludeStageActivities);
 
 			// keep track of the current coordinate
 			Coord lastCoord = homeCoord;
 
-			for (Activity act : acts) {
+			// Person specific rng, increment plan number for each plan
+			SplittableRandom rnd = initRandomNumberGenerator(person, planNumber++);
 
-				String type = act.getType();
+			for (Activity act : acts) {
 
 				total.incrementAndGet();
 
 				if (Attributes.isLinkUnassigned(act.getLinkId())) {
+
+					String type = act.getType();
+
 					act.setLinkId(null);
 					ActivityFacility location = null;
 
@@ -223,27 +238,27 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 					if (location == null && type.equals("work")) {
 						// sample work commute
-						location = sampleCommute(ctx, dist, lastCoord, (long) person.getAttributes().getAttribute(Attributes.ARS));
+						location = sampleCommute(rnd, dist, lastCoord, (long) person.getAttributes().getAttribute(Attributes.ARS));
 					}
 
 					if (location == null && facilities.index.containsKey(type)) {
 						// Needed for lambda
 						final Coord refCoord = lastCoord;
 
-						List<ActivityFacility> query = facilities.index.get(type).query(MGC.coord2Point(lastCoord).buffer(dist * 1.2).getEnvelopeInternal());
+						List<AttributedActivityFacility> query = facilities.index.get(type).query(MGC.coord2Point(lastCoord).buffer(dist * 1.2).getEnvelopeInternal());
 
 						// Distance should be within the bounds
-						List<ActivityFacility> res = query.stream().filter(f -> checkDistanceBound(dist, refCoord, f.getCoord(), 1)).toList();
+						List<AttributedActivityFacility> res = query.stream().filter(f -> checkDistanceBound(dist, refCoord, f.getCoord(), 1)).toList();
 
 						if (!res.isEmpty()) {
-							location = query.get(ctx.rnd.nextInt(query.size()));
+							location = query.get(FacilityIndex.sampleByWeight(query, AttributedActivityFacility::getOtherAttraction, rnd));
 						}
 
 						// Try with larger bounds again
 						if (location == null) {
 							res = query.stream().filter(f -> checkDistanceBound(dist, refCoord, f.getCoord(), 1.2)).toList();
 							if (!res.isEmpty()) {
-								location = query.get(ctx.rnd.nextInt(query.size()));
+								location = query.get(FacilityIndex.sampleByWeight(query, AttributedActivityFacility::getOtherAttraction, rnd));
 							}
 						}
 					}
@@ -251,7 +266,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 					if (location == null) {
 						// sample only coordinate if nothing else is possible
 						// Activities without facility entry, or where no facility could be found
-						Coord c = sampleLink(ctx.rnd, dist, lastCoord);
+						Coord c = sampleLink(rnd, dist, lastCoord);
 						act.setCoord(c);
 						lastCoord = c;
 
@@ -276,12 +291,22 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 			}
 		}
+
+		pb.step();
+	}
+
+	/**
+	 * Initializes random number generator with person specific seed.
+	 */
+	private SplittableRandom initRandomNumberGenerator(Person person, long planNumber) {
+		BigInteger i = new BigInteger(person.getId().toString().getBytes());
+		return new SplittableRandom(i.longValue() + seed * 1000 + planNumber * 10);
 	}
 
 	/**
 	 * Sample work place by using commute and distance information.
 	 */
-	private ActivityFacility sampleCommute(Context ctx, double dist, Coord refCoord, long ars) {
+	private ActivityFacility sampleCommute(SplittableRandom rnd, double dist, Coord refCoord, long ars) {
 
 		STRtree index = facilities.index.get("work");
 
@@ -289,12 +314,12 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 		// Only larger distances can be commuters to other zones
 		if (dist > 3000) {
-			workPlace = commuter.selectTarget(ctx.rnd, ars, dist, MGC.coord2Point(refCoord), zone -> sampleZone(index, dist, refCoord, zone, ctx.rnd));
+			workPlace = commuter.selectTarget(rnd, ars, dist, MGC.coord2Point(refCoord), zone -> sampleZone(index, dist, refCoord, zone, rnd));
 		}
 
 		if (workPlace == null) {
 			// Try selecting within same zone
-			workPlace = sampleZone(index, dist, refCoord, (Geometry) zones.get(ars).getDefaultGeometry(), ctx.rnd);
+			workPlace = sampleZone(index, dist, refCoord, (Geometry) zones.get(ars).getDefaultGeometry(), rnd);
 		}
 
 		return workPlace;
@@ -321,21 +346,11 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 	 */
 	private ActivityFacility sampleZone(STRtree index, double dist, Coord refCoord, Geometry zone, SplittableRandom rnd) {
 
-		ActivityFacility location = null;
-
-		List<ActivityFacility> query = index.query(MGC.coord2Point(refCoord).buffer(dist * 1.2).getEnvelopeInternal());
+		List<AttributedActivityFacility> query = index.query(MGC.coord2Point(refCoord).buffer(dist * 1.2).getEnvelopeInternal());
 
 		query = query.stream().filter(f -> checkDistanceBound(dist, refCoord, f.getCoord(), 1)).collect(Collectors.toList());
 
-		while (!query.isEmpty()) {
-			ActivityFacility af = query.remove(rnd.nextInt(query.size()));
-			if (zone.contains(MGC.coord2Point(af.getCoord()))) {
-				location = af;
-				break;
-			}
-		}
-
-		return location;
+		return FacilityIndex.sampleByWeightWithRejection(query, f -> zone.contains(MGC.coord2Point(f.getCoord())), AttributedActivityFacility::getWorkAttraction, rnd);
 	}
 
 	/**
@@ -347,14 +362,6 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 		double dist = CoordUtils.calcEuclideanDistance(refCoord, other);
 		return dist >= lower && dist <= upper;
-	}
-
-	private static final class Context {
-		private final SplittableRandom rnd;
-
-		Context(long seed) {
-			rnd = new SplittableRandom(seed);
-		}
 	}
 
 }

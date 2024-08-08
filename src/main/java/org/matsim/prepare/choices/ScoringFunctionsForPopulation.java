@@ -243,7 +243,7 @@ final class ScoringFunctionsForPopulation implements BasicEventHandler {
 		Throwable throwable = this.exception.get();
 		if (throwable != null) {
 			if (throwable instanceof RuntimeException) {
-				throw ((RuntimeException) throwable);
+				throw (RuntimeException) throwable;
 			} else {
 				throw new RuntimeException(throwable);
 			}

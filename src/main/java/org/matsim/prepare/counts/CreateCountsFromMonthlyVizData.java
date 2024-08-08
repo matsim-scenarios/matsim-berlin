@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.geotools.api.referencing.operation.TransformException;
 import org.geotools.referencing.operation.transform.IdentityTransform;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
@@ -17,7 +18,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.application.MATSimAppCommand;
-import org.matsim.application.options.CountsOption;
+import org.matsim.application.options.CountsOptions;
 import org.matsim.application.options.CrsOptions;
 import org.matsim.application.options.CsvOptions;
 import org.matsim.application.prepare.counts.NetworkIndex;
@@ -27,7 +28,6 @@ import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.counts.Count;
 import org.matsim.counts.Counts;
 import org.matsim.counts.CountsWriter;
-import org.opengis.referencing.operation.TransformException;
 import picocli.CommandLine;
 import tech.tablesaw.api.DateColumn;
 import tech.tablesaw.api.DoubleColumn;
@@ -80,7 +80,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	private final CrsOptions crs = new CrsOptions();
 
 	@CommandLine.Mixin
-	CountsOption counts = new CountsOption();
+	private final CountsOptions counts = new CountsOptions();
 
 	private final Map<String, Station> stations = new HashMap<>();
 	private final Logger logger = LogManager.getLogger(CreateCountsFromMonthlyVizData.class);
@@ -159,7 +159,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		return factory.createLineString(coordinates);
 	}
 
-	private void matchWithNetwork(Path networkPath, Path geometries, Map<String, Station> stations, CountsOption countsOption) throws TransformException, IOException {
+	private void matchWithNetwork(Path networkPath, Path geometries, Map<String, Station> stations, CountsOptions countsOption) throws TransformException, IOException {
 
 		Network network = NetworkUtils.readNetwork(networkPath.toString());
 		CoordinateTransformation transformation = crs.getTransformation();
@@ -191,7 +191,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			Pattern pattern = Pattern.compile(direction, Pattern.CASE_INSENSITIVE);
 			return pattern.matcher(linkDir).find();
 		});
-		index.addLinkFilter(((link, station) -> !link.link().getId().toString().startsWith("pt_")));
+		index.addLinkFilter((link, station) -> !link.link().getId().toString().startsWith("pt_"));
 
 		if (roadNames) {
 			index.addLinkFilter((link, station) -> {
@@ -243,13 +243,13 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		logger.info("Could not match {} stations", counter);
 	}
 
-	private void extractStations(Path path, Map<String, Station> stations, CountsOption countsOption) {
+	private void extractStations(Path path, Map<String, Station> stations, CountsOptions countsOption) {
 
 		XSSFSheet sheet;
 		try (XSSFWorkbook wb = new XSSFWorkbook(path.toString())) {
 			sheet = wb.getSheetAt(0);
 		} catch (IOException e) {
-			throw new RuntimeException(e.getMessage());
+			throw new RuntimeException(e);
 		}
 
 		for (Row row : sheet) {
@@ -291,7 +291,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 				records.addAll(month);
 			} catch (IOException e) {
 				logger.warn("Error processing file {}: ", path.toString());
-				throw new RuntimeException(e.getMessage());
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -385,11 +385,11 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			}
 			logger.info("Skipped {} stations, because data was incomplete!", counter);
 		} catch (IOException e) {
-			throw new RuntimeException(e.getMessage());
+			throw new RuntimeException(e);
 		}
 	}
 
-	private static class ColumnNames {
+	private static final class ColumnNames {
 		static String id = "id";
 		static String date = "date";
 		static String hour = "hour";

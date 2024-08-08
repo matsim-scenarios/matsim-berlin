@@ -37,6 +37,26 @@ public class SelectPlansFromIndex implements MATSimAppCommand {
 		new SelectPlansFromIndex().execute(args);
 	}
 
+	/**
+	 * Select the plan with the given index and remove all other plans.
+	 * If the index is larger than the number of plans, the index is modulo the number of plans.
+	 */
+	public static void selectPlanWithIndex(Person person, int planIndex) {
+		List<? extends Plan> plans = person.getPlans();
+		Set<Plan> removePlans = new HashSet<>();
+
+		// make sure that one plan is always selected, even if there are fewer plans than index
+		int idx = planIndex % plans.size();
+
+		for (int i = 0; i < plans.size(); i++) {
+			if (i == idx) {
+				person.setSelectedPlan(plans.get(i));
+			} else
+				removePlans.add(plans.get(i));
+		}
+		removePlans.forEach(person::removePlan);
+	}
+
 	@Override
 	public Integer call() throws Exception {
 
@@ -67,26 +87,6 @@ public class SelectPlansFromIndex implements MATSimAppCommand {
 		PopulationUtils.writePopulation(population, output.toString());
 
 		return 0;
-	}
-
-	/**
-	 * Select the plan with the given index and remove all other plans.
-	 * If the index is larger than the number of plans, the index is modulo the number of plans.
-	 */
-	public static void selectPlanWithIndex(Person person, int planIndex) {
-		List<? extends Plan> plans = person.getPlans();
-		Set<Plan> removePlans = new HashSet<>();
-
-		// make sure that one plan is always selected, even if there are less plans than index
-		int idx = planIndex % plans.size();
-
-		for (int i = 0; i < plans.size(); i++) {
-			if (i == idx) {
-				person.setSelectedPlan(plans.get(i));
-			} else
-				removePlans.add(plans.get(i));
-		}
-		removePlans.forEach(person::removePlan);
 	}
 
 }

@@ -25,9 +25,9 @@ def tn_generator(sample_size: int, number_of_draws: int) -> np.ndarray:
 def calc_costs(df, k, modes):
 
     # Cost parameter from current berlin model
-    fixed_costs = defaultdict(lambda: 0.0, car=-15, pt=-3)
+    daily_costs = defaultdict(lambda: 0.0, car=-14.30, pt=-3)
     km_costs = defaultdict(lambda: 0.0, car=-0.149, ride=-0.149)
-    time_cost = -6.88
+    util_performing = -6.88
 
     # Normalize activity utilities to be near zero
     # columns = [f"plan_{i}_act_util" for i in range(1, k + 1)]
@@ -35,35 +35,39 @@ def calc_costs(df, k, modes):
     #     utils = df.loc[t.Index, columns]
     #     df.loc[t.Index, columns] -= utils.max()
 
+    # Marginal utility of money as factor
+    util_money = df.util_money
 
     for i in range(1, k + 1):
 
-        # Costs will also include time costs
-        df[f"plan_{i}_costs"] = 0
         # Price is only monetary costs
         df[f"plan_{i}_price"] = 0
+
+        # Costs will also include time costs
+        df[f"plan_{i}_utils"] = 0
 
         df[f"plan_{i}_tt_hours"] = 0
 
         for mode in modes:
 
-            df[f"plan_{i}_{mode}_fixed_cost"] = (df[f"plan_{i}_{mode}_usage"] > 0) * fixed_costs[mode]
-            df[f"plan_{i}_{mode}_used"] = (df[f"plan_{i}_{mode}_usage"] > 0) * 1
+            fixed_costs = (df[f"plan_{i}_{mode}_usage"] > 0) * daily_costs[mode]
+            distance_costs = df[f"plan_{i}_{mode}_km"] * km_costs[mode]
 
-            df[f"plan_{i}_price"] += df[f"plan_{i}_{mode}_fixed_cost"] + df[f"plan_{i}_{mode}_km"] * km_costs[mode]
+            df[f"plan_{i}_{mode}_fixed_cost"] = fixed_costs
+            df[f"plan_{i}_price"] += fixed_costs + distance_costs
+
+            df[f"plan_{i}_{mode}_used"] = (df[f"plan_{i}_{mode}_usage"] > 0) * 1
             df[f"plan_{i}_tt_hours"] += df[f"plan_{i}_{mode}_hours"]
 
             # Add configured time costs
-            df[f"plan_{i}_costs"] += df[f"plan_{i}_{mode}_km"] * km_costs[mode]
+            df[f"plan_{i}_utils"] += (fixed_costs + distance_costs) * util_money
+
             # Add time costs the overall costs
-            df[f"plan_{i}_costs"] += time_cost * df[f"plan_{i}_{mode}_hours"]
+            df[f"plan_{i}_utils"] += util_performing * df[f"plan_{i}_{mode}_hours"]
 
-            # Add additional ride time costs
+            # Add additional ride time utils for the driver
             if mode == "ride":
-                df[f"plan_{i}_costs"] += time_cost * df[f"plan_{i}_{mode}_hours"]
-
-            if mode == "pt":
-                df[f"plan_{i}_costs"] += (df[f"plan_{i}_pt_usage"] > 0) * fixed_costs[mode]
+                df[f"plan_{i}_utils"] += util_performing * df[f"plan_{i}_{mode}_hours"]
 
         # Defragment df
         df = df.copy()

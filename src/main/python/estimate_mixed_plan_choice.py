@@ -11,7 +11,7 @@ from estimate_plan_choice import calc_costs
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate the plan choice mixed logit model")
-    parser.add_argument("--input", help="Path to the input file", type=str, default="../../../plan-choices-random.csv")
+    parser.add_argument("--input", help="Path to the input file", type=str, default="../../../plan-choices.csv")
     parser.add_argument("--n-draws", help="Number of draws for the estimation", type=int, default=1500)
     parser.add_argument("--batch-size", help="Batch size for the estimation", type=int, default=None)
     parser.add_argument("--sample", help="Use sample of choice data", type=float, default=0.2)
@@ -20,14 +20,14 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    df_wide = pd.read_csv(args.input)
+    df_wide = pd.read_csv(args.input, comment="#")
 
     modes = list(df_wide.columns.str.extract(r"_([a-zA-z]+)_usage", expand=False).dropna().unique())
     print("Modes: ", modes)
 
     k = df_wide.columns.str.extract(r"plan_(\d+)", expand=False).dropna().to_numpy(int).max()
-    print("Number of choices: ", len(df_wide))
-    print("Number of plans per choice: ", k)
+    print("Number of plans: ", len(df_wide))
+    print("Number of choices for plan: ", k)
 
     # df_wide["p_id"] = df_wide["p_id"].str.replace(r"_\d+$", "", regex=True)
     # df_wide["person"] = df_wide["person"].astype('category').cat.codes
@@ -62,11 +62,12 @@ if __name__ == "__main__":
     # varnames = ["car_used", "car_usage"]
 
     # Additive costs
-    addit = df["costs"] + df["car_fixed_cost"] - df["pt_n_switches"]
+    # utils contains the price and opportunist costs
+    addit = df["utils"] - df["pt_n_switches"]
 
     if not args.mnl:
         model = MixedLogit()
-        model.fit(X=df[varnames], y=df['choice'], varnames=varnames,
+        model.fit(X=df[varnames], y=df['choice'], weights=df['weight'], varnames=varnames,
                   alts=df['alt'], ids=df['custom_id'], avail=df['valid'], random_state=args.seed,
                   addit=addit,
                   # randvars={"car_used": "tn"},
@@ -79,7 +80,7 @@ if __name__ == "__main__":
         #varnames += ["car_usage"]
 
         model = MultinomialLogit()
-        model.fit(X=df[varnames], y=df['choice'], varnames=varnames,
+        model.fit(X=df[varnames], y=df['choice'], weights=df['weight'], varnames=varnames,
                   alts=df['alt'], ids=df['custom_id'], avail=df['valid'], random_state=args.seed,
                   addit=addit)
 
