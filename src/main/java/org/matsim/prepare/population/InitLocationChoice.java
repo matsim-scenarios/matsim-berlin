@@ -115,7 +115,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		return travelDist * 1000 / detourFactor;
 	}
 
-	private static Coord rndCoord(SplittableRandom rnd, double dist, Coord origin) {
+	static Coord rndCoord(SplittableRandom rnd, double dist, Coord origin) {
 		double angle = rnd.nextDouble() * Math.PI * 2;
 
 		double x = Math.cos(angle) * dist;
