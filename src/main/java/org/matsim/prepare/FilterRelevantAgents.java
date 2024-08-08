@@ -14,6 +14,7 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.application.MATSimAppCommand;
+import org.matsim.application.options.CrsOptions;
 import org.matsim.application.options.ShpOptions;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
@@ -41,8 +42,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 @CommandLine.Command(
-		name = "filter-relevant-agents",
-		description = "Filter agents that have any activities or routes within the shp file."
+	name = "filter-relevant-agents",
+	description = "Filter agents that have any activities or routes within the shp file."
 )
 public class FilterRelevantAgents implements MATSimAppCommand, PersonAlgorithm {
 
@@ -63,6 +64,9 @@ public class FilterRelevantAgents implements MATSimAppCommand, PersonAlgorithm {
 	@CommandLine.Mixin
 	private ShpOptions shp;
 
+	@CommandLine.Mixin
+	private CrsOptions crs = new CrsOptions(OpenBerlinScenario.CRS);
+
 	private ActivityFacilities facilities;
 	private Network network;
 	private CoordinateTransformation ct;
@@ -73,6 +77,16 @@ public class FilterRelevantAgents implements MATSimAppCommand, PersonAlgorithm {
 
 	public static void main(String[] args) {
 		new FilterRelevantAgents().execute(args);
+	}
+
+	private static LeastCostPathCalculator createRouter(Network network) {
+
+		FreeSpeedTravelTime travelTime = new FreeSpeedTravelTime();
+		LeastCostPathCalculatorFactory factory = new SpeedyALTFactory();
+
+		OnlyTimeDependentTravelDisutility travelDisutility = new OnlyTimeDependentTravelDisutility(travelTime);
+
+		return factory.createPathCalculator(network, travelDisutility, travelTime);
 	}
 
 	@Override
@@ -89,11 +103,10 @@ public class FilterRelevantAgents implements MATSimAppCommand, PersonAlgorithm {
 		filter.filter(network, Set.of(TransportMode.car));
 
 		geometry = shp.getGeometry();
-		ct = shp.createTransformation(OpenBerlinScenario.CRS);
+		ct = shp.createTransformation(crs.getInputCRS());
 
 		facilities = FacilitiesUtils.createActivityFacilities();
-		new MatsimFacilitiesReader(OpenBerlinScenario.CRS, OpenBerlinScenario.CRS, facilities)
-				.readFile(facilityPath.toString());
+		new MatsimFacilitiesReader(crs.getInputCRS(), crs.getInputCRS(), facilities).readFile(facilityPath.toString());
 
 		ctxs = ThreadLocal.withInitial(() -> this.createRouter(network));
 		toRemove = ConcurrentHashMap.newKeySet();
@@ -173,15 +186,5 @@ public class FilterRelevantAgents implements MATSimAppCommand, PersonAlgorithm {
 		}
 
 		return coord;
-	}
-
-	private static LeastCostPathCalculator createRouter(Network network) {
-
-		FreeSpeedTravelTime travelTime = new FreeSpeedTravelTime();
-		LeastCostPathCalculatorFactory factory = new SpeedyALTFactory();
-
-		OnlyTimeDependentTravelDisutility travelDisutility = new OnlyTimeDependentTravelDisutility(travelTime);
-
-		return factory.createPathCalculator(network, travelDisutility, travelTime);
 	}
 }
