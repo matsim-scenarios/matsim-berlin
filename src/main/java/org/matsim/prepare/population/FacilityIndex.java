@@ -148,7 +148,6 @@ public final class FacilityIndex {
 			return null;
 
 		Map<String, List<AttributedActivityFacility>> map = candidates.stream()
-			.filter(f -> f.getLocation() != null)
 			.collect(Collectors.groupingBy(classifier));
 
 		List<Map.Entry<String, List<AttributedActivityFacility>>> grouped = map.entrySet().stream().toList();
