@@ -22,19 +22,27 @@ import java.util.stream.Collectors;
 public final class FacilityIndex {
 
 	private static final Logger log = LogManager.getLogger(FacilityIndex.class);
-
-	final ActivityFacilities all = FacilitiesUtils.createActivityFacilities();
-
 	/**
 	 * Maps activity type to spatial index.
 	 */
 	public final Map<String, STRtree> index = new HashMap<>();
+	final ActivityFacilities all = FacilitiesUtils.createActivityFacilities();
 
 	public FacilityIndex(String facilityPath, String crs) {
+		this(facilityPath, f -> true, crs);
+	}
+
+	/**
+	 * Creates spatial index for facilities.
+	 *
+	 * @param f predicate to filter or transform facilities
+	 */
+	public FacilityIndex(String facilityPath, Predicate<ActivityFacility> f, String crs) {
 
 		new MatsimFacilitiesReader(crs, crs, all).readFile(facilityPath);
 
 		Set<String> activities = all.getFacilities().values().stream()
+			.filter(f)
 			.flatMap(a -> a.getActivityOptions().keySet().stream())
 			.collect(Collectors.toSet());
 
@@ -125,6 +133,52 @@ public final class FacilityIndex {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Groups candidates first using classifier. Then does a weighted sample on the groups and selects a random facility.
+	 * The groups are typical zones which might have certain OD relations.
+	 */
+	public static ActivityFacility sampleWithGrouping(List<AttributedActivityFacility> candidates,
+											 Function<AttributedActivityFacility, String> classifier,
+											 Function<Map.Entry<String, List<AttributedActivityFacility>>, Double> groupWeight,
+											 SplittableRandom rnd) {
+
+		if (candidates.isEmpty())
+			return null;
+
+		Map<String, List<AttributedActivityFacility>> map = candidates.stream()
+			.filter(f -> f.getLocation() != null)
+			.collect(Collectors.groupingBy(classifier));
+
+		List<Map.Entry<String, List<AttributedActivityFacility>>> grouped = map.entrySet().stream().toList();
+
+		double totalWeight = 0.0;
+		double[] weights = new double[grouped.size()];
+
+		for (int i = 0; i < grouped.size(); ++i) {
+			double w = groupWeight.apply(grouped.get(i));
+			totalWeight += w;
+			weights[i] = totalWeight;
+		}
+
+		// No weights, sample uniformly
+		if (totalWeight == 0.0) {
+			List<AttributedActivityFacility> list = grouped.get(rnd.nextInt(grouped.size())).getValue();
+			return list.get(rnd.nextInt(list.size()));
+		}
+
+		double r = rnd.nextDouble(0.0, totalWeight);
+		int idx = Arrays.binarySearch(weights, r);
+		if (idx < 0) {
+			idx = -idx - 1;
+		}
+
+		// First sample a random group.
+		List<AttributedActivityFacility> list = grouped.get(idx).getValue();
+
+		// Sample random facility from the zone
+		return list.get(rnd.nextInt(list.size()));
 	}
 
 }

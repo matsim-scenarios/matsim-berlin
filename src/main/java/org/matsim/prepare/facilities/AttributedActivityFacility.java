@@ -23,10 +23,15 @@ public final class AttributedActivityFacility implements ActivityFacility {
 	private final double workAttraction;
 	private final double otherAttraction;
 
+	private final String location;
+	private final String zone;
+
 	public AttributedActivityFacility(ActivityFacility facility) {
 		this.facility = facility;
 		this.workAttraction = (double) facility.getAttributes().getAttribute(ATTRACTION_WORK);
 		this.otherAttraction = (double) facility.getAttributes().getAttribute(ATTRACTION_OTHER);
+		this.location = (String) facility.getAttributes().getAttribute("location");
+		this.zone = (String) facility.getAttributes().getAttribute("zone");
 	}
 
 	public double getWorkAttraction() {
@@ -75,5 +80,17 @@ public final class AttributedActivityFacility implements ActivityFacility {
 	@Override
 	public Attributes getAttributes() {
 		return facility.getAttributes();
+	}
+
+	public String getLocation() {
+		return location;
+	}
+
+	public String getZone() {
+		return zone;
+	}
+
+	public String toString() {
+		return facility.toString();
 	}
 }
