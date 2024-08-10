@@ -95,13 +95,13 @@ final class FacilityFeatureExtractor {
 		b.add(ft.getLevels());
 		b.add(ft.hasLanduse(null));
 
-		b.add(calcLanduse("residential", ft.geometry, 500));
-		b.add(calcLanduse("residential", ft.geometry, 1500));
-		b.add(calcLanduse("retail", ft.geometry, 500));
-		b.add(calcLanduse("retail", ft.geometry, 1500));
-		b.add(calcLanduse("commercial", ft.geometry, 500));
-		b.add(calcLanduse("commercial", ft.geometry, 1500));
-		b.add(calcLanduse("recreation_ground", ft.geometry, 1500));
+		b.add(calcLanduse("residential", ft, 500));
+		b.add(calcLanduse("residential", ft, 1500));
+		b.add(calcLanduse("retail", ft, 500));
+		b.add(calcLanduse("retail", ft, 1500));
+		b.add(calcLanduse("commercial", ft, 500));
+		b.add(calcLanduse("commercial", ft, 1500));
+		b.add(calcLanduse("recreation_ground", ft, 1500));
 
 		b.add(countPOIs("leisure", ft));
 		b.add(countPOIs("leisure", ft, 250));
@@ -120,15 +120,20 @@ final class FacilityFeatureExtractor {
 	 * Calculate the area of landuse within a given radius.
 	 */
 	@SuppressWarnings("unchecked")
-	private double calcLanduse(String type, MultiPolygon geometry, double radius) {
+	private double calcLanduse(String type, Feature ft, double radius) {
 
+		if (ft.isResidentialOnly()) {
+			return 0;
+		}
+
+		MultiPolygon geometry = ft.geometry;
 		Geometry bbox = geometry.getCentroid().buffer(radius);
 
 		double res = 0;
 		List<Feature> query = landuse.query(bbox.getEnvelopeInternal());
 		for (Feature q : query) {
 
-			if (q.hasLanduse(type) && !q.geomIssues) {
+			if (!q.geomIssues && q.hasLanduse(type)) {
 				try {
 					res += q.geometry.intersection(bbox).getArea();
 				} catch (TopologyException e) {
@@ -163,6 +168,10 @@ final class FacilityFeatureExtractor {
 	@SuppressWarnings("unchecked")
 	private int countPOIs(String type, Feature ft, double radius) {
 
+		if (ft.isResidentialOnly()) {
+			return 0;
+		}
+
 		// Base count
 		int count = countPOIs(type, ft);
 
@@ -171,7 +180,7 @@ final class FacilityFeatureExtractor {
 		Iterable<Feature> query = entities.query(bbox.getEnvelopeInternal());
 		for (Feature q : query) {
 			try {
-				if (q.geometry.distance(ft.geometry.getCentroid()) < radius && q != ft && !q.geomIssues) {
+				if (!q.geomIssues && q.geometry.distance(ft.geometry.getCentroid()) < radius && q != ft) {
 					count += countPOIs(type, q);
 				}
 			} catch (TopologyException e) {

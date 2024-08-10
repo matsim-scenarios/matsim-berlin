@@ -26,6 +26,7 @@
     "college": ["edu_higher", "work"],
     "sports_hall": ["leisure", "work"],
     "stadium": ["leisure", "work"],
+    "garage": ["parking"],
     "apartments": ["resident"],
     "house": ["resident"],
     "detached": ["resident"],
@@ -77,11 +78,12 @@
     "post_depot": ["p_business", "work"],
     "post_office": ["p_business", "work"],
     "prison": ["p_business", "work"],
-    "townhall": ["p_business", "work"]
+    "townhall": ["p_business", "work"],
+    "parking": ["parking"]
   },
   "landuse": {
     "commercial": ["shop", "work", "delivery"],
-    "industrial": ["shop", "work", "delivery", "depot"],
+    "industrial": ["work", "delivery", "depot"],
     "retail": ["shop", "work", "delivery"],
     "depot": ["depot"],
     "port": ["depot"],

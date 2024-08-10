@@ -15,6 +15,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.ObjectCollection;
 import me.tongfei.progressbar.ProgressBar;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -34,13 +35,13 @@ import org.geotools.geometry.jts.JTS;
 import org.geotools.geopkg.GeoPkgDataStoreFactory;
 import org.geotools.jdbc.JDBCDataStoreFactory;
 import org.geotools.referencing.CRS;
+import org.locationtech.jts.algorithm.ConvexHull;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.index.strtree.STRtree;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.options.CrsOptions;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.run.OpenBerlinScenario;
-import org.matsim.utils.gis.shp2matsim.ShpGeometryUtils;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -175,7 +176,12 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 
 		FacilityFeatureExtractor ft = new FacilityFeatureExtractor(crs.getTargetCRS(), types, entities, pois, landuse);
 
+		preprocessLanduse(landuse.values(), ft.entities, 0.2);
+
 		processIntersection(landuse.values(), ft.entities, INTERSECT_THRESHOLD);
+
+		// Low prio landuses are not needed anymore
+		landuse.values().removeIf(f -> f.lowPriority);
 
 		log.info("Remaining landuse shapes after assignment: {} ", landuse.size());
 
@@ -218,15 +224,52 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 	}
 
 	/**
-	 * Tags buildings within that intersections with geometries from list. Used geometries are removed from the list.
+	 * Often landuse shapes are redundant if the area already contains enough detailed shapes with more specific types. These shapes are marked here.
+	 */
+	private void preprocessLanduse(ObjectCollection<Feature> values, STRtree index, double threshold) {
+
+		for (Feature ft : ProgressBar.wrap(values, "Processing landuse entities")) {
+
+			List<Feature> query = index.query(ft.geometry.getBoundary().getEnvelopeInternal());
+			List<Geometry> intersections = new ArrayList<>();
+
+			for (Feature other : query) {
+
+				// Other landuse shapes or entities without types are not considered
+				if (other.isLanduse || !other.hasTypes())
+					continue;
+
+				// Use the hull to avoid topology exceptions
+				Geometry intersection = intersect(ft.geometry, other.geometry);
+
+				if (!intersection.isEmpty())
+					intersections.add(intersection);
+			}
+
+			if (intersections.isEmpty()) {
+				ft.setLowPriority();
+				continue;
+			}
+
+			Geometry geometry = intersections.get(0).getFactory().buildGeometry(intersections);
+
+			double coveredArea = geometry.union().getArea();
+			double ratio = coveredArea / ft.geometry.getArea();
+
+			if (ratio >= threshold) {
+				ft.setLowPriority();
+			}
+		}
+	}
+
+	/**
+	 * Tags buildings within intersections with geometries from list. Used geometries are removed from the list.
 	 */
 	private void processIntersection(Collection<Feature> list, STRtree index, double threshold) {
 
 		Iterator<Feature> it = ProgressBar.wrap(list.iterator(), "Assigning features");
 
-		// TODO: More landuse shapes could be filtered sometimes
-		// Idea: Check if landuse has enough overlap with other shapes first, throw away if that is the case
-		// Probably need dedicated stage for landuse shapes to see which needs to be kept
+		// TODO: some additional filtering could be done, knowing that certain types can not be assigned to buildings
 
 		while (it.hasNext()) {
 			Feature ft = it.next();
@@ -236,22 +279,14 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 			for (Feature other : query) {
 				// Assign other features to the buildings
 				double otherArea = other.geometry.getArea();
-				try {
-					if (ft.geometry.intersects(other.geometry) && otherArea < MAX_ASSIGN) {
 
-						double intersectArea = ft.geometry.intersection(other.geometry).getArea();
-						if (intersectArea / otherArea > threshold) {
-							other.assign(ft);
-						}
-					}
-				} catch (TopologyException e) {
-					// some geometries are not well defined
-					if (ft.geometry.getBoundary().intersects(other.geometry.getBoundary()) && otherArea < MAX_ASSIGN) {
+				if (otherArea < MAX_ASSIGN) {
+					Geometry intersect = intersect(ft.geometry, other.geometry);
+					if (intersect.getArea() / otherArea > threshold) {
 
-						double intersectArea = ft.geometry.getBoundary().intersection(other.geometry.getBoundary()).getArea();
-						if (intersectArea / otherArea > threshold) {
+						// Only assign if this is not a low prio entity, or the other has no types yet
+						if (!ft.lowPriority || !other.hasTypes())
 							other.assign(ft);
-						}
 					}
 				}
 			}
@@ -261,14 +296,22 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 		}
 	}
 
+	private Geometry intersect(Geometry a, Geometry b) {
+		try {
+			return a.intersection(b);
+		} catch (TopologyException e) {
+			// some geometries are not well-defined
+			return new ConvexHull(a).getConvexHull().intersection(new ConvexHull(b).getConvexHull());
+		}
+	}
+
 	private void addFeatures(Long2ObjectMap<Feature> fts, FacilityFeatureExtractor exc,
 							 ListFeatureCollection collection) {
-
 
 		try (ProgressBar pb = new ProgressBar("Creating features", fts.size())) {
 
 			List<SimpleFeature> features = fts.values().parallelStream()
-				.filter(ft -> !ft.bits.isEmpty())
+				.filter(Feature::hasTypes)
 				.map(f -> {
 					pb.step();
 					return exc.createFeature(f);
@@ -291,7 +334,7 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 			csv.printRecord("osm_id", "parent_id");
 			for (Feature feature : Iterables.concat(features)) {
 
-				if (feature.bits.isEmpty())
+				if (!feature.hasTypes())
 					continue;
 
 				csv.printRecord(feature.entity.getId(), feature.entity.getId());
@@ -312,6 +355,7 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 	 */
 	private void process(OsmEntity entity) {
 		boolean filtered = true;
+		boolean isBuilding = false;
 		int n = entity.getNumberOfTags();
 		for (int i = 0; i < n; i++) {
 			OsmTag tag = entity.getTag(i);
@@ -319,6 +363,7 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 			// Buildings are always kept
 			if (tag.getKey().equals("building")) {
 				filtered = false;
+				isBuilding = true;
 				break;
 			}
 
@@ -346,7 +391,7 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 				return;
 			}
 
-			Feature ft = new Feature(entity, types, geometry);
+			Feature ft = new Feature(entity, types, geometry, false, false);
 			parse(ft, entity);
 			pois.put(entity.getId(), ft);
 		} else {
@@ -376,7 +421,7 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 				return;
 			}
 
-			Feature ft = new Feature(entity, types, geometry);
+			Feature ft = new Feature(entity, types, geometry, isBuilding, landuse);
 			parse(ft, entity);
 			if (landuse) {
 				this.landuse.put(ft.entity.getId(), ft);

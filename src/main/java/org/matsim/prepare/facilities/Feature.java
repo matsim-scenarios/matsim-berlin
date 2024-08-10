@@ -17,12 +17,25 @@ final class Feature {
 
 	final OsmEntity entity;
 	final BitSet bits;
+	final boolean isBuilding;
+	final boolean isLanduse;
 	final MultiPolygon geometry;
+
+	/**
+	 * The activity types and their index.
+	 */
 	private final Object2IntMap<String> types;
+
 	/**
 	 * Stores all assigned osm members.
 	 */
 	List<Feature> members;
+
+	/**
+	 * These feature has low matching priority and will not be assigned to another feature.
+	 */
+	boolean lowPriority = false;
+
 	/**
 	 * Number of levels/floors in the building.
 	 */
@@ -38,12 +51,22 @@ final class Feature {
 	 */
 	public boolean geomIssues = false;
 
-	Feature(OsmEntity entity, Object2IntMap<String> types, MultiPolygon geometry) {
+	Feature(OsmEntity entity, Object2IntMap<String> types, MultiPolygon geometry,
+			boolean isBuilding, boolean isLanduse) {
 		this.entity = entity;
 		this.types = types;
 		this.bits = new BitSet(types.size());
+		this.isBuilding = isBuilding;
+		this.isLanduse = isLanduse;
 		this.bits.clear();
 		this.geometry = geometry;
+	}
+
+	/**
+	 * Check if the entity has any activity types.
+	 */
+	boolean hasTypes() {
+		return !bits.isEmpty();
 	}
 
 	void set(Set<String> acts) {
@@ -95,6 +118,10 @@ final class Feature {
 	 * Check if the entity has a specific landuse tag.
 	 */
 	boolean hasLanduse(String landuse) {
+
+		if (!isLanduse)
+			return false;
+
 		int n = entity.getNumberOfTags();
 		for (int i = 0; i < n; i++) {
 			OsmTag tag = entity.getTag(i);
@@ -105,4 +132,11 @@ final class Feature {
 		return false;
 	}
 
+	boolean isResidentialOnly() {
+		return bits.get(types.getInt("resident")) && bits.cardinality() == 1;
+	}
+
+	public void setLowPriority() {
+		this.lowPriority = true;
+	}
 }
