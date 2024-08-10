@@ -127,7 +127,7 @@ public class AssignReferencePopulation implements MATSimAppCommand {
 
 				// Create the base daily plan (without locations)
 				Coord homeCoord = Attributes.getHomeCoord(person);
-				Plan plan = sampling.createPlan(homeCoord, e.getKey());
+				Plan plan = sampling.createPlan(homeCoord, e.getKey(), rnd);
 
 				boolean success = planBuilder.assignLocationsFromZones(e.getKey(), plan, homeCoord);
 

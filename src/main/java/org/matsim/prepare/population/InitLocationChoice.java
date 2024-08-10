@@ -321,6 +321,10 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 		if (workPlace == null) {
 			// Try selecting within same zone
 			workPlace = sampleZone(index, dist, refCoord, (Geometry) zones.get(ars).getDefaultGeometry(), rnd);
+
+			// TODO: if the home location and the work is in Berlin,
+			// we may use the berlin OD file for distribution of work trips within berlin
+			// TODO need to add zone shp and csv
 		}
 
 		return workPlace;

@@ -18,6 +18,7 @@ import org.matsim.prepare.RunOpenBerlinCalibration;
 import picocli.CommandLine;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
@@ -46,8 +47,6 @@ public final class RunActivitySampling implements MATSimAppCommand, PersonAlgori
 	@CommandLine.Option(names = "--seed", description = "Seed used to sample plans", defaultValue = "1")
 	private long seed;
 
-	// TODO: replace with local seed dependent on personId
-	private ThreadLocal<Context> ctxs;
 	private PopulationFactory factory;
 	private PersonMatcher matcher;
 
@@ -65,7 +64,6 @@ public final class RunActivitySampling implements MATSimAppCommand, PersonAlgori
 		this.activities.putAll(activities);
 		this.factory = factory;
 		this.seed = seed;
-		this.ctxs = ThreadLocal.withInitial(() -> new Context(new SplittableRandom(seed)));
 	}
 
 	public static void main(String[] args) {
@@ -247,7 +245,6 @@ public final class RunActivitySampling implements MATSimAppCommand, PersonAlgori
 
 		activities.putAll(readActivities(activityPath));
 
-		ctxs = ThreadLocal.withInitial(() -> new Context(new SplittableRandom(seed)));
 		factory = population.getFactory();
 
 		ParallelPersonAlgorithmUtils.run(population, 8, this);
@@ -272,7 +269,7 @@ public final class RunActivitySampling implements MATSimAppCommand, PersonAlgori
 	@Override
 	public void run(Person person) {
 
-		SplittableRandom rnd = ctxs.get().rnd;
+		SplittableRandom rnd = initRandomNumberGenerator(person);
 
 		String idx = matcher.matchPerson(person, rnd);
 		CSVRecord row = matcher.getPerson(idx);
@@ -326,11 +323,19 @@ public final class RunActivitySampling implements MATSimAppCommand, PersonAlgori
 	}
 
 	/**
+	 * Initializes random number generator with person specific seed.
+	 */
+	private SplittableRandom initRandomNumberGenerator(Person person) {
+		BigInteger i = new BigInteger(person.getId().toString().getBytes());
+		return new SplittableRandom(i.longValue() + seed);
+	}
+
+	/**
 	 * Create plan for a person using given id.
 	 */
 	@SuppressWarnings("OverloadMethodsDeclarationOrder")
-	public Plan createPlan(Coord homeCoord, String personId) {
-		return createPlan(homeCoord, activities.get(personId), ctxs.get().rnd, factory);
+	public Plan createPlan(Coord homeCoord, String personId, SplittableRandom rnd) {
+		return createPlan(homeCoord, activities.get(personId), rnd, factory);
 	}
 
 	private record Context(SplittableRandom rnd) {

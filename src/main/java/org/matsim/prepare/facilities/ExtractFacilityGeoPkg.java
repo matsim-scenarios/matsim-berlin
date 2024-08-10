@@ -224,6 +224,10 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 
 		Iterator<Feature> it = ProgressBar.wrap(list.iterator(), "Assigning features");
 
+		// TODO: More landuse shapes could be filtered sometimes
+		// Idea: Check if landuse has enough overlap with other shapes first, throw away if that is the case
+		// Probably need dedicated stage for landuse shapes to see which needs to be kept
+
 		while (it.hasNext()) {
 			Feature ft = it.next();
 

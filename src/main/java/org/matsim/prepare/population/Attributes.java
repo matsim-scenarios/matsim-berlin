@@ -29,6 +29,11 @@ public final class Attributes {
 	 */
 	public static final String LOR = "lor";
 
+	/**
+	 * District of Berlin.
+	 */
+	public static final String DISTRICT = "district";
+
 	public static final String RegioStaR7 = "RegioStaR7";
 
 	public static final String BIKE_AVAIL = "bikeAvail";
