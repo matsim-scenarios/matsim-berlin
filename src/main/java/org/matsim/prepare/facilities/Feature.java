@@ -18,6 +18,7 @@ final class Feature {
 	final OsmEntity entity;
 	final BitSet bits;
 	final boolean isBuilding;
+	final boolean isUnspecific;
 	final boolean isLanduse;
 	final MultiPolygon geometry;
 
@@ -52,11 +53,12 @@ final class Feature {
 	public boolean geomIssues = false;
 
 	Feature(OsmEntity entity, Object2IntMap<String> types, MultiPolygon geometry,
-			boolean isBuilding, boolean isLanduse) {
+			boolean isBuilding, boolean isUnspecific, boolean isLanduse) {
 		this.entity = entity;
 		this.types = types;
 		this.bits = new BitSet(types.size());
 		this.isBuilding = isBuilding;
+		this.isUnspecific = isUnspecific;
 		this.isLanduse = isLanduse;
 		this.bits.clear();
 		this.geometry = geometry;

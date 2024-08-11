@@ -235,8 +235,8 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 
 			for (Feature other : query) {
 
-				// Other landuse shapes or entities without types are not considered
-				if (other.isLanduse || !other.hasTypes())
+				// Other landuse shapes are not considered
+				if (other.isLanduse)
 					continue;
 
 				// Use the hull to avoid topology exceptions
@@ -285,7 +285,7 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 					if (intersect.getArea() / otherArea > threshold) {
 
 						// Only assign if this is not a low prio entity, or the other has no types yet
-						if (!ft.lowPriority || !other.hasTypes())
+						if (!ft.lowPriority || !other.hasTypes() || other.isUnspecific)
 							other.assign(ft);
 					}
 				}
@@ -356,6 +356,8 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 	private void process(OsmEntity entity) {
 		boolean filtered = true;
 		boolean isBuilding = false;
+		boolean isUnspecific = false;
+
 		int n = entity.getNumberOfTags();
 		for (int i = 0; i < n; i++) {
 			OsmTag tag = entity.getTag(i);
@@ -364,6 +366,9 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 			if (tag.getKey().equals("building")) {
 				filtered = false;
 				isBuilding = true;
+				if (tag.getValue().equals("yes")) {
+					isUnspecific = true;
+				}
 				break;
 			}
 
@@ -391,7 +396,7 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 				return;
 			}
 
-			Feature ft = new Feature(entity, types, geometry, false, false);
+			Feature ft = new Feature(entity, types, geometry, false,  isUnspecific,false);
 			parse(ft, entity);
 			pois.put(entity.getId(), ft);
 		} else {
@@ -421,7 +426,7 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 				return;
 			}
 
-			Feature ft = new Feature(entity, types, geometry, isBuilding, landuse);
+			Feature ft = new Feature(entity, types, geometry, isBuilding, isUnspecific, landuse);
 			parse(ft, entity);
 			if (landuse) {
 				this.landuse.put(ft.entity.getId(), ft);
