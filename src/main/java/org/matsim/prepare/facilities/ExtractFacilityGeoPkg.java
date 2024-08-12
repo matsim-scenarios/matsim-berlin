@@ -331,16 +331,17 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 
 		try (CSVPrinter csv = new CSVPrinter(IOUtils.getBufferedWriter(path), CSVFormat.DEFAULT)) {
 
-			csv.printRecord("osm_id", "parent_id");
+			// osm ids are only unique within their type
+			csv.printRecord("osm_id", "type", "parent_id", "parent_type");
 			for (Feature feature : Iterables.concat(features)) {
 
 				if (!feature.hasTypes())
 					continue;
 
-				csv.printRecord(feature.entity.getId(), feature.entity.getId());
+				csv.printRecord(feature.entity.getId(), feature.osmType, feature.entity.getId(), feature.osmType);
 				if (feature.members != null) {
 					for (Feature member : feature.members) {
-						csv.printRecord(member.entity.getId(), feature.entity.getId());
+						csv.printRecord(member.entity.getId(), member.osmType, feature.entity.getId(), feature.osmType);
 					}
 				}
 			}

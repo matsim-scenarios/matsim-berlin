@@ -1,7 +1,9 @@
 package org.matsim.prepare.facilities;
 
 import de.topobyte.osm4j.core.model.iface.OsmEntity;
+import de.topobyte.osm4j.core.model.iface.OsmNode;
 import de.topobyte.osm4j.core.model.iface.OsmTag;
+import de.topobyte.osm4j.core.model.iface.OsmWay;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import org.locationtech.jts.geom.MultiPolygon;
 
@@ -16,6 +18,7 @@ import java.util.Set;
 final class Feature {
 
 	final OsmEntity entity;
+	final OsmType osmType;
 	final BitSet bits;
 	final boolean isBuilding;
 	final boolean isUnspecific;
@@ -54,7 +57,9 @@ final class Feature {
 
 	Feature(OsmEntity entity, Object2IntMap<String> types, MultiPolygon geometry,
 			boolean isBuilding, boolean isUnspecific, boolean isLanduse) {
+
 		this.entity = entity;
+		this.osmType = entity instanceof OsmWay ? OsmType.way : entity instanceof OsmNode ? OsmType.node : OsmType.relation;
 		this.types = types;
 		this.bits = new BitSet(types.size());
 		this.isBuilding = isBuilding;
@@ -140,5 +145,9 @@ final class Feature {
 
 	public void setLowPriority() {
 		this.lowPriority = true;
+	}
+
+	public enum OsmType {
+		way, node, relation
 	}
 }

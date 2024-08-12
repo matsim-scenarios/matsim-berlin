@@ -45,6 +45,7 @@ final class FacilityFeatureExtractor {
 		typeBuilder.setName("facilities");
 		typeBuilder.setCRS(CRS.decode(crs));
 		typeBuilder.add("osm_id", Long.class);
+		typeBuilder.add("osm_type", String.class);
 		typeBuilder.add("the_geom", MultiPolygon.class);
 		typeBuilder.add("area", Double.class);
 		typeBuilder.add("levels", Integer.class);
@@ -90,6 +91,7 @@ final class FacilityFeatureExtractor {
 		SimpleFeatureBuilder b = featureBuilder.get();
 
 		b.add(ft.entity.getId());
+		b.add(ft.osmType.toString());
 		b.add(ft.geometry);
 		b.add(BigDecimal.valueOf(ft.geometry.getArea()).setScale(2, RoundingMode.HALF_EVEN).doubleValue());
 		b.add(ft.getLevels());

@@ -38,6 +38,12 @@ input/facilities.gpkg: input/brandenburg.osm.pbf
 	 --input $<\
 	 --output $@
 
+# This facility file is using an older version that matches the reference visitations more closely
+input/ref_facilities.gpkg: input/facilities.osm.pbf
+	$(sc) prepare facility-shp\
+	 --activity-mapping input/activity_mapping.json\
+	 --input $<\
+	 --output $@
 
 input/PLR_2013_2020.csv:
 	curl https://instantatlas.statistik-berlin-brandenburg.de/instantatlas/interaktivekarten/kommunalatlas/Kommunalatlas.zip --insecure -o atlas.zip
