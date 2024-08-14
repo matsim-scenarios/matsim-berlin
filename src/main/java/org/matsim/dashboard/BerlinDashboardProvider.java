@@ -26,8 +26,17 @@ public class BerlinDashboardProvider implements DashboardProvider {
 			.withChoiceEvaluation(true)
 			.withGroupedRefData("mode_share_per_group_dist_ref.csv", "age", "income", "employment", "economic_status");
 
+		// TODO: The definition of this dashboard should probably be in a separate run class, but for now it is more convenient here
+
+		// Gartenfeld has a separate dashboard, without reference data
+		// This automatically filters by home location and configured shape file
+		TripDashboard gartenfeld = new TripDashboard();
+
 		return List.of(
 			trips,
+			Dashboard.customize(gartenfeld)
+				.context("gartenfeld")
+				.title("Gartenfeld"),
 			new TravelTimeComparisonDashboard(ApplicationUtils.resolve(config.getContext(), "berlin-v" + OpenBerlinScenario.VERSION + "-routes-ref.csv.gz")),
 			new TrafficCountsDashboard()
 				.withModes(TransportMode.car, Set.of(TransportMode.car))

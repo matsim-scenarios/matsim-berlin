@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "http://www.matsim.org/files/dtd/config_v2.dtd">
+<config>
+
+<!-- TODO: these config modules must be replaced in the run config -->
+	<!-- There is currently no run script that can use this partial config -->
+
+	<module name="simwrapper" >
+		<parameterset type="params" >
+			<param name="context" value="" />
+			<param name="mapCenter" value="13.39,52.51" />
+			<param name="mapZoomLevel" value="9.1" />
+			<param name="sampleSize" value="0.1" />
+			<param name="shp" value="./area/area.shp" />
+		</parameterset>
+		<parameterset type="params" >
+			<param name="context" value="" />
+			<param name="mapCenter" value="13.24,52.55" />
+			<param name="mapZoomLevel" value="14.2" />
+			<param name="sampleSize" value="0.1" />
+			<!-- TODO make sure this shp file is present relative to the config path -->
+			<param name="shp" value="./area/gartenfeld.gpkg" />
+		</parameterset>
+	</module>
+
+
+
+</config>
