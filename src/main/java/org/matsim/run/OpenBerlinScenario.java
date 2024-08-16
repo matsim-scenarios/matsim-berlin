@@ -6,6 +6,7 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.application.MATSimApplication;
 import org.matsim.application.options.SampleOptions;
+import org.matsim.contrib.vsp.scoring.RideScoringParamsFromCarParams;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.ReplanningConfigGroup;
@@ -59,6 +60,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 			config.plans().setInputFile(sample.adjustName(config.plans().getInputFile()));
 		}
 
+		// overwrite ride scoring params with values derived from car
+		RideScoringParamsFromCarParams.setRideScoringParamsBasedOnCarParams(config.scoring(), 1.0);
 		Activities.addScoringParams(config, true);
 
 		// Required for all calibration strategies
