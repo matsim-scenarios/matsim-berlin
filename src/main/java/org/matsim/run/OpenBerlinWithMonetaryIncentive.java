@@ -97,7 +97,7 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 		if (simpleMobilityBudget != 0.0) {
 			double oldDailyMonetaryConstant = controler.getScenario().getConfig().scoring().getModes().get(TransportMode.car).getDailyMonetaryConstant();
 			controler.getScenario().getConfig().scoring().getModes().get(TransportMode.car).setDailyMonetaryConstant(oldDailyMonetaryConstant + simpleMobilityBudget);
-			controler.getScenario().getConfig().scoring().getModes().get(TransportMode.ride).setDailyMonetaryConstant(simpleMobilityBudget);
+			//controler.getScenario().getConfig().scoring().getModes().get(TransportMode.ride).setDailyMonetaryConstant(simpleMobilityBudget);
 		}
 	}
 
@@ -107,7 +107,7 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 			public void install() {
 				addEventHandlerBinding().toInstance(klimaTaler);
 				addControlerListenerBinding().toInstance(klimaTaler);
-				new PersonMoneyEventsAnalysisModule();
+				install(new PersonMoneyEventsAnalysisModule());
 			}
 		});
 	}
@@ -118,7 +118,7 @@ public class OpenBerlinWithMonetaryIncentive extends OpenBerlinScenario{
 			public void install() {
 				addEventHandlerBinding().toInstance(mobilityBudgetEventHandler);
 				addControlerListenerBinding().toInstance(mobilityBudgetEventHandler);
-				new PersonMoneyEventsAnalysisModule();
+				install(new PersonMoneyEventsAnalysisModule());
 			}
 		});
 	}
