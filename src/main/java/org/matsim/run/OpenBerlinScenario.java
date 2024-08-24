@@ -2,6 +2,8 @@ package org.matsim.run;
 
 import com.google.inject.Key;
 import com.google.inject.name.Names;
+import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
+import org.matsim.analysis.pt.stop2stop.PtStop2StopAnalysisModule;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.application.MATSimApplication;
@@ -124,6 +126,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 				}
 			});
 		}
+		controler.addOverridingModule(new PtStop2StopAnalysisModule());
+		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
 	}
 
 	/**
