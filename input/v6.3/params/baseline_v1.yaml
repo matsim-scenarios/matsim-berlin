@@ -1,0 +1,11 @@
+scoring:
+  scoringParameters:
+    - performing: 7.547802
+      modeParams:
+        - mode: walk
+          constant: 0
+        - mode: car
+          constant: 0
+          dailyMonetaryConstant: -5.1038273
+advancedScoring:
+  incomeExponent: 0.549347

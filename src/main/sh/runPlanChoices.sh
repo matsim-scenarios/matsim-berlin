@@ -22,5 +22,7 @@ run_eval() {
 #run_eval "--plan-candidates random --top-k 3"
 #run_eval "--plan-candidates random --top-k 5"
 #run_eval "--plan-candidates random --top-k 9"
-run_eval "--plan-candidates diverse --top-k 9"
-run_eval "--plan-candidates diverse --top-k 9 --time-util-only"
+#run_eval "--plan-candidates diverse --top-k 9"
+#run_eval "--plan-candidates diverse --top-k 9 --time-util-only"
+
+run_eval "--plan-candidates subtour --top-k 70"

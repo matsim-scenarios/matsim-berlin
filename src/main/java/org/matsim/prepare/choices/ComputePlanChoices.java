@@ -20,6 +20,7 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.algorithms.ParallelPersonAlgorithmUtils;
+import org.matsim.core.population.algorithms.PermissibleModesCalculator;
 import org.matsim.core.population.algorithms.PersonAlgorithm;
 import org.matsim.core.router.*;
 import org.matsim.core.utils.timing.TimeInterpretation;
@@ -37,6 +38,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 
@@ -84,6 +86,10 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	private ThreadLocal<Ctx> thread;
 	private ProgressBar pb;
 	private double globalAvgIncome;
+	/**
+	 * Maximum numbers of plan options generated.
+	 */
+	private AtomicInteger maxK = new AtomicInteger(0);
 
 	public static void main(String[] args) {
 		new ComputePlanChoices().execute(args);
@@ -160,6 +166,9 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 					case diverse -> new DiversePlanGenerator(topK, injector.getInstance(TopKChoicesGenerator.class));
 					case random -> new RandomPlanGenerator(topK, injector.getInstance(TopKChoicesGenerator.class));
 					case carAlternative -> new ExclusiveCarPlanGenerator(injector.getInstance(TopKChoicesGenerator.class));
+					case subtour -> new SubtourPlanGenerator(topK, injector.getInstance(TopKChoicesGenerator.class),
+						injector.getInstance(PermissibleModesCalculator.class),
+						config);
 				},
 				calcScores ? new PseudoScorer(injector, population) : null
 			)
@@ -211,6 +220,7 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 			}
 
 			csv.printComment("Average global income: " + globalAvgIncome);
+			csv.printComment("Max number of plan options: " + maxK.get());
 
 			csv.printRecord(header);
 
@@ -299,6 +309,8 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 			i++;
 		}
 
+		maxK.accumulateAndGet(i, Math::max);
+
 		for (int j = i; j < topK; j++) {
 			row.addAll(convert(null, ctx.scorer));
 			// not available
@@ -384,7 +396,7 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 	 * Define how candidates are generated.
 	 */
 	public enum PlanCandidates {
-		bestK, diverse, random, carAlternative
+		bestK, diverse, random, carAlternative, subtour
 	}
 
 	private record ModeStats(int usage, double travelTime, double travelDistance, double rideTime, long numSwitches) {
