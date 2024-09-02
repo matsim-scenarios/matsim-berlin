@@ -2,10 +2,13 @@ package org.matsim.run;
 
 import com.google.inject.Key;
 import com.google.inject.name.Names;
+import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
+import org.matsim.analysis.pt.stop2stop.PtStop2StopAnalysisModule;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.application.MATSimApplication;
 import org.matsim.application.options.SampleOptions;
+import org.matsim.contrib.vsp.scoring.RideScoringParamsFromCarParams;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.ReplanningConfigGroup;
@@ -14,6 +17,8 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
+import org.matsim.core.scoring.functions.PersonScoringParametersFromPersonAttributes;
+import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.run.scoring.AdvancedScoringConfigGroup;
 import org.matsim.run.scoring.AdvancedScoringModule;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
@@ -59,6 +64,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 			config.plans().setInputFile(sample.adjustName(config.plans().getInputFile()));
 		}
 
+		// overwrite ride scoring params with values derived from car
+		RideScoringParamsFromCarParams.setRideScoringParamsBasedOnCarParams(config.scoring(), 1.0);
 		Activities.addScoringParams(config, true);
 
 		// Required for all calibration strategies
@@ -109,7 +116,18 @@ public class OpenBerlinScenario extends MATSimApplication {
 		// AdvancedScoring is specific to matsim-berlin!
 		if (ConfigUtils.hasModule(controler.getConfig(), AdvancedScoringConfigGroup.class)) {
 			controler.addOverridingModule(new AdvancedScoringModule());
+		} else {
+			// if the above config group is not present we still need income dependent scoring
+			// this implementation also allows for person specific asc
+			controler.addOverridingModule(new AbstractModule() {
+				@Override
+				public void install() {
+					bind(ScoringParametersForPerson.class).to(PersonScoringParametersFromPersonAttributes.class).asEagerSingleton();
+				}
+			});
 		}
+		controler.addOverridingModule(new PtStop2StopAnalysisModule());
+		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
 	}
 
 	/**
