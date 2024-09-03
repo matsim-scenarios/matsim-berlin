@@ -24,9 +24,11 @@ if __name__ == "__main__":
     parser.add_argument("--performing", help="Beta for performing", type=float, default=6.88)
     parser.add_argument("--est-exp-income", help="Estimate exponent for income", action="store_true")
     parser.add_argument("--exp-income", help="Exponent for income", type=float, default=1)
+    parser.add_argument("--util-money", help="Utility of money", type=float, default=1)
     parser.add_argument("--est-util-money", help="Estimate utility of money", action="store_true")
     parser.add_argument("--est-price-perception-car", help="Estimate price perception", action="store_true")
     parser.add_argument("--est-price-perception-pt", help="Estimate price perception", action="store_true")
+    parser.add_argument("--same-price-perception", help="Only estimate one fixed price perception factor", action="store_true")
     parser.add_argument("--ascs", help="Predefined ASCs", nargs="+", action='append', default=[])
     parser.add_argument("--car-util", help="Fixed utility for car", type=float, default=None)
     parser.add_argument("--no-mxl", help="Disable mixed logit", action="store_true")
@@ -62,11 +64,15 @@ if __name__ == "__main__":
     # Factor on marginal utility of money
     EXP_INCOME = Beta('EXP_INCOME', args.exp_income, 0, 1.5, ESTIMATE if args.est_exp_income else FIXED)
 
-    UTIL_MONEY = Beta('UTIL_MONEY', 1, 0, 2, ESTIMATE if args.est_util_money else FIXED)
+    UTIL_MONEY = Beta('UTIL_MONEY', args.util_money, 0, 2, ESTIMATE if args.est_util_money else FIXED)
 
     BETA_PERFORMING = Beta('BETA_PERFORMING', args.performing, 1, 15, ESTIMATE if args.est_performing else FIXED)
     BETA_CAR_PRICE_PERCEPTION = Beta('BETA_CAR_PRICE_PERCEPTION', 1, 0, 1, ESTIMATE if args.est_price_perception_car else FIXED)
-    BETA_PT_PRICE_PERCEPTION = Beta('BETA_PT_PRICE_PERCEPTION', 1, 0, 1, ESTIMATE if args.est_price_perception_pt else FIXED)
+
+    if args.same_price_perception:
+        BETA_PT_PRICE_PERCEPTION = BETA_CAR_PRICE_PERCEPTION
+    else:
+        BETA_PT_PRICE_PERCEPTION = Beta('BETA_PT_PRICE_PERCEPTION', 1, 0, 1, ESTIMATE if args.est_price_perception_pt else FIXED)
 
     is_est_car = "car" in args.mxl_modes
 
