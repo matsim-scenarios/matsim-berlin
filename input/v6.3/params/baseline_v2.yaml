@@ -1,0 +1,33 @@
+#Modes:  ['walk', 'pt', 'car', 'bike', 'ride']
+#Number of plans:  8259
+#Number of choices for plan:  70
+#Number of choices: 8259
+#  Using fixed utility for car 0.0
+#  Estimating car asc, instead of daily utility
+#  Using MXL modes ['car']
+#  Results for model plan-choices-subtour_70_exp_income_price_perception_car_price_perception_pt
+#Nbr of parameters:		7
+#Sample size:			8259
+#Excluded data:			0
+#Null log likelihood:		-24858.3
+#Final log likelihood:		-20794.22
+#Likelihood ratio test (null):		8128.154
+#Rho square (null):			0.163
+#Rho bar square (null):			0.163
+#Akaike Information Criterion:	41602.44
+#Bayesian Information Criterion:	41651.57
+
+scoring:
+  scoringParameters:
+    - performing: 7.547802
+      modeParams:
+        - mode: walk
+          constant: 0
+        - mode: car
+          constant: 0
+          dailyMonetaryConstant: -1.1224785
+        - mode: pt
+          constant: 0
+          dailyMonetaryConstant: -0.876558
+advancedScoring:
+  incomeExponent: 0.144114

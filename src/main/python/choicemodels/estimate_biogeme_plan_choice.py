@@ -25,7 +25,8 @@ if __name__ == "__main__":
     parser.add_argument("--est-exp-income", help="Estimate exponent for income", action="store_true")
     parser.add_argument("--exp-income", help="Exponent for income", type=float, default=1)
     parser.add_argument("--est-util-money", help="Estimate utility of money", action="store_true")
-    parser.add_argument("--est-price-perception", help="Estimate price perception", action="store_true")
+    parser.add_argument("--est-price-perception-car", help="Estimate price perception", action="store_true")
+    parser.add_argument("--est-price-perception-pt", help="Estimate price perception", action="store_true")
     parser.add_argument("--ascs", help="Predefined ASCs", nargs="+", action='append', default=[])
     parser.add_argument("--car-util", help="Fixed utility for car", type=float, default=None)
     parser.add_argument("--no-mxl", help="Disable mixed logit", action="store_true")
@@ -64,7 +65,8 @@ if __name__ == "__main__":
     UTIL_MONEY = Beta('UTIL_MONEY', 1, 0, 2, ESTIMATE if args.est_util_money else FIXED)
 
     BETA_PERFORMING = Beta('BETA_PERFORMING', args.performing, 1, 15, ESTIMATE if args.est_performing else FIXED)
-    BETA_PRICE_PERCEPTION = Beta('BETA_CAR_PRICE_PERCEPTION', 1, 0, 1, ESTIMATE if args.est_price_perception else FIXED)
+    BETA_CAR_PRICE_PERCEPTION = Beta('BETA_CAR_PRICE_PERCEPTION', 1, 0, 1, ESTIMATE if args.est_price_perception_car else FIXED)
+    BETA_PT_PRICE_PERCEPTION = Beta('BETA_PT_PRICE_PERCEPTION', 1, 0, 1, ESTIMATE if args.est_price_perception_pt else FIXED)
 
     is_est_car = "car" in args.mxl_modes
 
@@ -84,11 +86,11 @@ if __name__ == "__main__":
             SD[mode] = Beta(f"ASC_{mode}_s", 1, None, None, ESTIMATE)
             ASC[mode] = asc + SD[mode] * bioDraws(f"{mode}_RND", "NORMAL_ANTI")
 
-    if args.car_util:
+    if args.car_util is not None:
         print("Using fixed utility for car", args.car_util)
 
-    B_UTIL = Beta('B_CAR_UTIL', 8 if not args.car_util else args.car_util,
-                  0, None, FIXED if args.car_util else ESTIMATE)
+    B_UTIL = Beta('B_CAR_UTIL', 8 if args.car_util is None else args.car_util,
+                  0, None, ESTIMATE if args.car_util is None else FIXED)
 
     if args.no_mxl:
         B_CAR = B_UTIL
@@ -108,7 +110,9 @@ if __name__ == "__main__":
     for i in range(1, ds.k + 1):
         # Price is already negative
 
-        perceived_price = BETA_PRICE_PERCEPTION * v[f"plan_{i}_car_price"] + v[f"plan_{i}_non_car_price"]
+        perceived_price = (BETA_CAR_PRICE_PERCEPTION * v[f"plan_{i}_car_price"] +
+                           BETA_PT_PRICE_PERCEPTION * v[f"plan_{i}_pt_price"] +
+                           v[f"plan_{i}_other_price"])
 
         u = perceived_price * UTIL_MONEY * (1 if args.no_income else (ds.global_income / v["income"]) ** EXP_INCOME)
         u -= v[f"plan_{i}_pt_n_switches"]
@@ -141,8 +145,10 @@ if __name__ == "__main__":
         modelName += "_fixed_ascs"
     if args.no_income:
         modelName += "_no_income"
-    if args.est_price_perception:
-        modelName += "_price_perception"
+    if args.est_price_perception_car:
+        modelName += "_price_perception_car"
+    if args.est_price_perception_pt:
+        modelName += "_price_perception_pt"
 
     biogeme.modelName = modelName
     biogeme.weight = v["weight"]
