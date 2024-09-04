@@ -21,6 +21,9 @@ def home_work_relation(x):
 
 
 if __name__ == "__main__":
+
+    # Create an od matrix for home and work relations
+
     df = pd.read_csv("table-activities.csv")
     df = df[df.type.isin(["work", "home"])]
 

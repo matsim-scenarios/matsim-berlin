@@ -332,7 +332,7 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 		try (CSVPrinter csv = new CSVPrinter(IOUtils.getBufferedWriter(path), CSVFormat.DEFAULT)) {
 
 			// osm ids are only unique within their type
-			csv.printRecord("osm_id", "type", "parent_id", "parent_type");
+			csv.printRecord("osm_id", "type", "member_id", "member_type");
 			for (Feature feature : Iterables.concat(features)) {
 
 				if (!feature.hasTypes())

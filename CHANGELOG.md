@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ### 6.4 (WIP)
 - Improved facility locations
-  - OSM tags and filtering has been improved to reduce number of wrongly assigned facility types
+  - OSM tag filtering has been improved to reduce number of wrongly assigned facility types
 
 ### 6.3 (2024-07)
 - Include additional trip analysis and updated dashboard

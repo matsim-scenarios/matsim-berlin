@@ -25,21 +25,33 @@ if __name__ == "__main__":
     visits = pd.read_csv(args.visitations)
     mapping = pd.read_csv(args.mapping)
 
-    visits = pd.merge(visits, mapping, left_on="location", right_on="osm_id", how="inner", validate="m:1")
+    # Only keep way entities, which are the ones that can be visited in the ref data
+    mapping = mapping[mapping["type"] == "way"]
+
+    mapped_visits = pd.merge(mapping, visits, left_on="osm_id", right_on="location", how="inner", validate="1:m")
+    unmapped = mapping[~mapping.osm_id.isin(mapped_visits.osm_id)]
+
+    # Only keep non duplicated member ids
+    unmapped = unmapped[~unmapped.member_id.duplicated(keep='first')]
+
+    # Maps visits of members ids
+    mapped_members = pd.merge(unmapped, visits, left_on="member_id", right_on="location", how="inner", validate="1:m")
+    mapped_members = mapped_members.groupby(["osm_id", "purpose"]).agg(n=("n", "sum"))
+
+    mapped_visits = pd.concat([mapped_visits, mapped_members.reset_index()])
 
     # Aggregates all parent ids
-    visits = visits.groupby(["parent_id", "purpose"]).agg(n=("n", "sum")).reset_index().rename(
-        columns={"parent_id": "location"})
+    mapped_visits = mapped_visits.groupby(["osm_id", "purpose"]).agg(n=("n", "sum")).reset_index().rename(
+        columns={"osm_id": "location"})
 
-    visits.n = np.minimum(visits.n, visits.n.quantile(0.99))
-
-    visits[visits.purpose == "other"].to_csv("visitations_mapped.csv", index=False)
+    mapped_visits[mapped_visits.purpose == "other"].to_csv("visitations_mapped.csv", index=False)
 
     shp = gpd.read_file(args.facilities, layer="facilities", engine="pyogrio", read_geometry=False)
+    shp = shp[shp.osm_type == "way"]
 
     for purpose in ("other", "work"):
 
-        tf = visits[visits.purpose == purpose]
+        tf = mapped_visits[mapped_visits.purpose == purpose]
 
         df = pd.merge(shp, tf, left_on="osm_id", right_on="location", how="inner", validate="1:1")
         df["target"] = df.n / df.area
@@ -50,6 +62,6 @@ if __name__ == "__main__":
 
         ml = MLRegressor(fold=KFold(n_splits=3, shuffle=True, random_state=0), bounds=(0, upper))
 
-        ml.fit(df, "target", exclude=["purpose", "osm_id", "location", "n"])
+        ml.fit(df, "target", exclude=["purpose", "osm_id", "osm_type", "location", "n"])
 
         ml.write_java("../../../src/main/java", "org.matsim.prepare.facilities", "FacilityAttractionModel" + purpose.capitalize())
