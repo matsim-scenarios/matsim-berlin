@@ -1,7 +1,7 @@
 
 
 JAR := matsim-berlin-*.jar
-V := v6.3
+V := v6.4
 CRS := EPSG:25832
 
 p := input/$V
