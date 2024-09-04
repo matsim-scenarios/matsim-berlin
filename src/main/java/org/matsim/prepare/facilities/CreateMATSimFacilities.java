@@ -114,8 +114,17 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		}
 
 		// Upper bounds for attraction
-		double workUpper = work.getPercentile(95);
-		double otherUpper = other.getPercentile(95);
+		double workIQR = work.getPercentile(75) - work.getPercentile(25);
+		double otherIQR = other.getPercentile(75) - other.getPercentile(25);
+
+		double workUpper = work.getPercentile(75) + 1.5 * workIQR;
+		double otherUpper = other.getPercentile(75) + 1.5 * otherIQR;
+
+		double workLower = Math.max(work.getPercentile(1), work.getPercentile(25) - 1.5 * workIQR);
+		double otherLower = Math.max(other.getPercentile(1), other.getPercentile(25) - 1.5 * otherIQR);
+
+		log.info("Work IQR: {} Upper: {} Lower: {}", workIQR, workUpper, workLower);
+		log.info("Other IQR: {} Upper: {} Lower: {}", otherIQR, otherUpper, otherLower);
 
 		ActivityFacilities facilities = FacilitiesUtils.createActivityFacilities();
 
@@ -140,13 +149,12 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 				facility.addActivityOption(f.createActivityOption(act));
 			}
 
-			// Filter outliers from the attraction and normalize the attraction
-			// This warrant for further investigate as the best way to normalize the attraction is not yet known
+			// Filter outliers from the attraction
 			facility.getAttributes().putAttribute(Attributes.ATTRACTION_WORK,
-			 	round(Math.min(Math.max(h.attractionWork / 5, 1), workUpper))
+			 	round(Math.min(Math.max(h.attractionWork, workLower), workUpper))
 			);
 			facility.getAttributes().putAttribute(Attributes.ATTRACTION_OTHER,
-				round(Math.min(Math.max(h.attractionOther / 5, 1), otherUpper))
+				round(Math.min(Math.max(h.attractionOther, otherLower), otherUpper))
 			);
 
 			facilities.addActivityFacility(facility);
