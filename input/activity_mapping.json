@@ -1,7 +1,7 @@
 {
   "building": {
     "hotel": ["work"],
-    "commercial": ["shop", "work", "delivery"],
+    "commercial": ["work", "delivery"],
     "retail": ["shop", "work", "delivery"],
     "supermarket": ["shop", "shop_daily", "dining", "work", "delivery"],
     "industrial": ["work", "delivery"],
@@ -82,7 +82,7 @@
     "parking": ["parking"]
   },
   "landuse": {
-    "commercial": ["shop", "work", "delivery"],
+    "commercial": ["work", "delivery"],
     "industrial": ["work", "delivery", "depot"],
     "retail": ["shop", "work", "delivery"],
     "depot": ["depot"],
