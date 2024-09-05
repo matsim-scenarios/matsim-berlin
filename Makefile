@@ -190,7 +190,7 @@ $p/berlin-initial-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans.xml
 	 --network $(word 3,$^)\
 	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp\
 	 --commuter $(germany)/regionalstatistik/commuter.csv\
-	 --berlin-commuter src/main/python/berlin-work-commuter.csv
+	 --berlin-commuter input/berlin-work-commuter.csv
 
 	# For debugging and visualization
 	$(sc) prepare downsample-population $@\
