@@ -21,18 +21,21 @@ public final class Attributes {
 	 * Gemeinde code.
 	 */
 	public static final String GEM = "gem";
-	public static final String ARS = "ars";
-
 
 	/**
-	 * LOR for Berlin.
+	 * Amtliche Regionalschlüssel (ARS).
+	 */
+	public static final String ARS = "ars";
+
+	/**
+	 * Lebensweltlich orientierte Räume (LOR) for Berlin. / Zonal system of Berlin.
 	 */
 	public static final String LOR = "lor";
 
 	/**
-	 * District of Berlin.
+	 * Zonal code, in Berlin this is the district number.
 	 */
-	public static final String DISTRICT = "district";
+	public static final String ZONE = "zone";
 
 	public static final String RegioStaR7 = "RegioStaR7";
 

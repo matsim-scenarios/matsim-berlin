@@ -9,8 +9,7 @@ import org.matsim.utils.objectattributes.attributable.Attributes;
 
 import java.util.Map;
 
-import static org.matsim.prepare.population.Attributes.ATTRACTION_OTHER;
-import static org.matsim.prepare.population.Attributes.ATTRACTION_WORK;
+import static org.matsim.prepare.population.Attributes.*;
 
 /**
  * Wraps any {@link ActivityFacility} and adds cached attributes because the normal attributes are terrible slow.
@@ -31,7 +30,7 @@ public final class AttributedActivityFacility implements ActivityFacility {
 		this.workAttraction = (double) facility.getAttributes().getAttribute(ATTRACTION_WORK);
 		this.otherAttraction = (double) facility.getAttributes().getAttribute(ATTRACTION_OTHER);
 		this.location = (String) facility.getAttributes().getAttribute("location");
-		this.zone = (String) facility.getAttributes().getAttribute("zone");
+		this.zone = (String) facility.getAttributes().getAttribute(ZONE);
 	}
 
 	public double getWorkAttraction() {

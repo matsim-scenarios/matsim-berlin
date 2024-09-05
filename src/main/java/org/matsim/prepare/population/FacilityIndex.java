@@ -136,13 +136,74 @@ public final class FacilityIndex {
 	}
 
 	/**
+	 * Groups candidates first using classifier. Then does a weighted sample on the groups. THen samples a facility by weight from the chosen group.
+	 * The groups are typical zones which might have certain OD relations.
+	 */
+	public static ActivityFacility sampleByWeightWithGrouping(List<AttributedActivityFacility> candidates,
+															  Function<AttributedActivityFacility, String> classifier,
+															  Function<Map.Entry<String, List<AttributedActivityFacility>>, Double> groupWeight,
+															  Function<AttributedActivityFacility, Double> facilityWeight, SplittableRandom rnd) {
+
+		if (candidates.isEmpty())
+			return null;
+
+		// Entries which produce a null key are discarded
+		Map<String, List<AttributedActivityFacility>> map = candidates.stream()
+			.filter(af -> classifier.apply(af) != null)
+			.collect(Collectors.groupingBy(classifier));
+
+		List<Map.Entry<String, List<AttributedActivityFacility>>> grouped = map.entrySet().stream().toList();
+
+		double totalWeight = 0.0;
+		double[] weights = new double[grouped.size()];
+
+		for (int i = 0; i < grouped.size(); ++i) {
+			double w = groupWeight.apply(grouped.get(i));
+			totalWeight += w;
+			weights[i] = totalWeight;
+		}
+
+		// No weights, sample uniformly
+		if (totalWeight == 0.0) {
+			List<AttributedActivityFacility> list = grouped.get(rnd.nextInt(grouped.size())).getValue();
+			return list.get(rnd.nextInt(list.size()));
+		}
+
+		double r = rnd.nextDouble(0.0, totalWeight);
+		int idx = Arrays.binarySearch(weights, r);
+		if (idx < 0) {
+			idx = -idx - 1;
+		}
+
+		// First get the samples group
+		List<AttributedActivityFacility> list = grouped.get(idx).getValue();
+
+		double totalGroupWeight = 0;
+		double[] groupWeights = new double[list.size()];
+
+		for (int i = 0; i < list.size(); i++) {
+			double w = facilityWeight.apply(list.get(i));
+			totalGroupWeight += w;
+			groupWeights[i] = totalGroupWeight;
+		}
+
+		int idx2 = Arrays.binarySearch(groupWeights, rnd.nextDouble(0, totalGroupWeight));
+		if (idx2 < 0) {
+			idx2 = -idx2 - 1;
+		}
+
+		// Sample random facility from the zone
+		return list.get(idx2);
+	}
+
+	/**
 	 * Groups candidates first using classifier. Then does a weighted sample on the groups and selects a random facility.
 	 * The groups are typical zones which might have certain OD relations.
 	 */
 	public static ActivityFacility sampleWithGrouping(List<AttributedActivityFacility> candidates,
-											 Function<AttributedActivityFacility, String> classifier,
-											 Function<Map.Entry<String, List<AttributedActivityFacility>>, Double> groupWeight,
-											 SplittableRandom rnd) {
+													  Function<AttributedActivityFacility, String> classifier,
+													  Function<Map.Entry<String, List<AttributedActivityFacility>>, Double> groupWeight,
+													  SplittableRandom rnd) {
 
 		if (candidates.isEmpty())
 			return null;

@@ -1,16 +1,20 @@
 package org.matsim.prepare.population;
 
+import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
+import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.*;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.geotools.api.feature.simple.SimpleFeature;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 import org.matsim.application.options.CsvOptions;
 import org.matsim.facilities.ActivityFacility;
-import org.geotools.api.feature.simple.SimpleFeature;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -28,14 +32,19 @@ public class CommuterAssignment {
 	private final Map<Long, SimpleFeature> zones;
 
 	/**
-	 * Outgoing commuter from ars to ars.
+	 * Outgoing commuter from ars to ars. This is german wide with quite large zones.
 	 */
 	private final Long2ObjectMap<Long2DoubleMap> commuter;
+
+	/**
+	 * Maps home district to probabilities of commuting to other districts.
+	 */
+	private final Int2ObjectMap<Int2DoubleMap> berlinCommuter;
 
 	private final CsvOptions csv = new CsvOptions(CSVFormat.Predefined.Default);
 	private final double sample;
 
-	public CommuterAssignment(Long2ObjectMap<SimpleFeature> zones, Path commuterPath, double sample) {
+	public CommuterAssignment(Long2ObjectMap<SimpleFeature> zones, Path commuterPath, Path berlinCommuterPath, double sample) {
 		this.sample = sample;
 
 		// outgoing commuters
@@ -62,9 +71,32 @@ public class CommuterAssignment {
 			throw new UncheckedIOException(e);
 		}
 
+		this.berlinCommuter = new Int2ObjectOpenHashMap<>();
+
+		try (CSVParser parser = csv.createParser(berlinCommuterPath)) {
+
+			for (CSVRecord row : parser) {
+				int home = Integer.parseInt(row.get("home"));
+				int work = Integer.parseInt(row.get("work"));
+
+				berlinCommuter.computeIfAbsent(home, k -> new Int2DoubleOpenHashMap())
+					.put(work, Double.parseDouble(row.get("n")));
+			}
+
+			// Normalize probabilities
+			for (Int2ObjectMap.Entry<Int2DoubleMap> kv : berlinCommuter.int2ObjectEntrySet()) {
+				Int2DoubleMap m = kv.getValue();
+				double sum = m.values().doubleStream().sum();
+				m.replaceAll((k, v) -> v / sum);
+			}
+
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
+
 	}
 
-	/**
+		/**
 	 * Select and return a commute target.
 	 *
 	 * @param f   sampler producing target locations
@@ -124,6 +156,13 @@ public class CommuterAssignment {
 
 
 		return null;
+	}
+
+	/**
+	 * Returns the weight of commuting from homeZone to targetZone.
+	 */
+	public double getZoneWeight(String homeZone, String targetZone) {
+		return berlinCommuter.get(Integer.parseInt(homeZone)).get(Integer.parseInt(targetZone));
 	}
 
 	/**

@@ -25,6 +25,7 @@ import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.facilities.*;
 import org.matsim.prepare.population.Attributes;
+import org.matsim.run.OpenBerlinScenario;
 import picocli.CommandLine;
 
 import java.math.BigDecimal;
@@ -35,19 +36,17 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @CommandLine.Command(
-		name = "facilities",
-		description = "Creates MATSim facilities from shape-file and network"
+	name = "facilities",
+	description = "Creates MATSim facilities from shape-file and network"
 )
 public class CreateMATSimFacilities implements MATSimAppCommand {
-
-	private static final Logger log = LogManager.getLogger(CreateMATSimFacilities.class);
 
 	/**
 	 * Filter link types that don't have a facility associated.
 	 */
 	public static final Set<String> IGNORED_LINK_TYPES = Set.of("motorway", "trunk",
-			"motorway_link", "trunk_link", "secondary_link", "primary_link");
-
+		"motorway_link", "trunk_link", "secondary_link", "primary_link");
+	private static final Logger log = LogManager.getLogger(CreateMATSimFacilities.class);
 	@CommandLine.Option(names = "--network", required = true, description = "Path to car network")
 	private Path network;
 
@@ -56,6 +55,9 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 
 	@CommandLine.Option(names = "--facility-mapping", description = "Path to facility napping json", required = true)
 	private Path mappingPath;
+
+	@CommandLine.Option(names = "--zones-shp", description = "Path to shp file with zonal system", required = false)
+	private Path zonesPath;
 
 	@CommandLine.Mixin
 	private ShpOptions shp;
@@ -75,11 +77,22 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		byte[] bytes = new byte[3];
 		do {
 			rnd.nextBytes(bytes);
-			id = Id.create( "f" + HexFormat.of().formatHex(bytes), ActivityFacility.class);
+			id = Id.create("f" + HexFormat.of().formatHex(bytes), ActivityFacility.class);
 
 		} while (facilities.getFacilities().containsKey(id));
 
 		return id;
+	}
+
+	private static double round(double f) {
+		return BigDecimal.valueOf(f).setScale(4, RoundingMode.HALF_UP).doubleValue();
+	}
+
+	private static boolean hasAttribute(SimpleFeature ft, String name) {
+		return ft.getAttribute(name) != null &&
+			(Boolean.TRUE.equals(ft.getAttribute(name)) || "1".equals(ft.getAttribute(name)) ||
+				(ft.getAttribute(name) instanceof Number number && number.intValue() > 0)
+			);
 	}
 
 	@Override
@@ -91,6 +104,9 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		}
 
 		config = new ObjectMapper().readerFor(MappingConfig.class).readValue(mappingPath.toFile());
+
+		ShpOptions zoneShp = zonesPath != null ? new ShpOptions(zonesPath, "EPSG:25833", null) : null;
+		ShpOptions.Index zones = zoneShp != null ? zoneShp.createIndex(OpenBerlinScenario.CRS, "SCHLUESSEL") : null;
 
 		Network completeNetwork = NetworkUtils.readNetwork(this.network.toString());
 		TransportModeNetworkFilter filter = new TransportModeNetworkFilter(completeNetwork);
@@ -120,8 +136,8 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		double workUpper = work.getPercentile(75) + 1.5 * workIQR;
 		double otherUpper = other.getPercentile(75) + 1.5 * otherIQR;
 
-		double workLower = Math.max(work.getPercentile(1), work.getPercentile(25) - 1.5 * workIQR);
-		double otherLower = Math.max(other.getPercentile(1), other.getPercentile(25) - 1.5 * otherIQR);
+		double workLower = Math.max(Math.max(work.getPercentile(1), 0.1), work.getPercentile(25) - 1.5 * workIQR);
+		double otherLower = Math.max(Math.max(other.getPercentile(1), 0.1), other.getPercentile(25) - 1.5 * otherIQR);
 
 		log.info("Work IQR: {} Upper: {} Lower: {}", workIQR, workUpper, workLower);
 		log.info("Other IQR: {} Upper: {} Lower: {}", otherIQR, otherUpper, otherLower);
@@ -151,11 +167,19 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 
 			// Filter outliers from the attraction
 			facility.getAttributes().putAttribute(Attributes.ATTRACTION_WORK,
-			 	round(Math.min(Math.max(h.attractionWork, workLower), workUpper))
+				round(Math.min(Math.max(h.attractionWork, workLower), workUpper))
 			);
 			facility.getAttributes().putAttribute(Attributes.ATTRACTION_OTHER,
 				round(Math.min(Math.max(h.attractionOther, otherLower), otherUpper))
 			);
+
+			if (zones != null) {
+				String zone = zones.query(facility.getCoord());
+				if (zone != null) {
+					facility.getAttributes().putAttribute(Attributes.LOR, Integer.parseInt(zone));
+					facility.getAttributes().putAttribute(Attributes.ZONE, zone.substring(0, 2));
+				}
+			}
 
 			facilities.addActivityFacility(facility);
 		}
@@ -166,10 +190,6 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		writer.write(output.toString());
 
 		return 0;
-	}
-
-	private static double round(double f) {
-		return BigDecimal.valueOf(f).setScale(4, RoundingMode.HALF_UP).doubleValue();
 	}
 
 	/**
@@ -186,8 +206,8 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		List<Id<Link>> links = coords.stream().map(coord -> NetworkUtils.getNearestLinkExactly(network, coord).getId()).toList();
 
 		Map<Id<Link>, Long> map = links.stream()
-				.filter(l -> !IGNORED_LINK_TYPES.contains(NetworkUtils.getType(network.getLinks().get(l))))
-				.collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+			.filter(l -> !IGNORED_LINK_TYPES.contains(NetworkUtils.getType(network.getLinks().get(l))))
+			.collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
 		// Everything could be filtered and map empty
 		if (map.isEmpty())
@@ -203,7 +223,7 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		double area = (double) ft.getAttribute("area");
 
 		List<Map.Entry<Id<Link>, Long>> counts = map.entrySet().stream().sorted(Map.Entry.comparingByValue())
-				.toList();
+			.toList();
 
 		// The "main" link of the facility
 		Id<Link> link = counts.get(counts.size() - 1).getKey();
@@ -237,8 +257,8 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		for (int i = 0; i < max && result.size() < n; i++) {
 
 			Coord coord = CoordUtils.round(new Coord(
-					bbox.getMinX() + (bbox.getMaxX() - bbox.getMinX()) * rnd.nextDouble(),
-					bbox.getMinY() + (bbox.getMaxY() - bbox.getMinY()) * rnd.nextDouble()
+				bbox.getMinX() + (bbox.getMaxX() - bbox.getMinX()) * rnd.nextDouble(),
+				bbox.getMinY() + (bbox.getMaxY() - bbox.getMinY()) * rnd.nextDouble()
 			));
 
 			try {
@@ -269,13 +289,6 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		}
 
 		return act;
-	}
-
-	private static boolean hasAttribute(SimpleFeature ft, String name) {
-		return ft.getAttribute(name) != null &&
-			(Boolean.TRUE.equals(ft.getAttribute(name)) || "1".equals(ft.getAttribute(name)) ||
-				(ft.getAttribute(name) instanceof Number number && number.intValue() > 0)
-			);
 	}
 
 	/**

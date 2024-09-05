@@ -134,9 +134,10 @@ $p/berlin-$V-counts-vmz.xml.gz: $p/berlin-$V-network.xml.gz
 	 --target-crs $(CRS)\
 	 --counts-mapping input/counts_mapping.csv
 
-$p/berlin-$V-facilities.xml.gz: $p/berlin-$V-network.xml.gz input/facilities.gpkg
+$p/berlin-$V-facilities.xml.gz: $p/berlin-$V-network.xml.gz input/facilities.gpkg $(berlin)/input/shp/Planungsraum_EPSG_25833.shp
 	$(sc) prepare facilities --network $< --shp $(word 2,$^)\
 	 --facility-mapping input/facility_mapping.json\
+	 --zones-shp $(word 3,$^)\
 	 --output $@
 
 $p/berlin-only-$V-100pct.plans.xml.gz: input/PLR_2013_2020.csv $(berlin)/input/shp/Planungsraum_EPSG_25833.shp input/facilities.gpkg
@@ -189,6 +190,7 @@ $p/berlin-initial-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans.xml
 	 --network $(word 3,$^)\
 	 --shp $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp\
 	 --commuter $(germany)/regionalstatistik/commuter.csv\
+	 --berlin-commuter src/main/python/berlin-work-commuter.csv
 
 	# For debugging and visualization
 	$(sc) prepare downsample-population $@\
