@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 ### 6.4 (WIP)
 - Improved facility locations
   - OSM tag filtering has been improved to reduce number of wrongly assigned facility types
+- Update work location assignment within Berlin
+  - Work locations now use weighted sampling during location choice
+  - The weight is based on an attraction factor and zone specific probabilities determined from survey data
+- Update GTFS schedule
+  - TODO
 
 ### 6.3 (2024-07)
 - Include additional trip analysis and updated dashboard
