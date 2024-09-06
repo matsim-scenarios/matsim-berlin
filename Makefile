@@ -122,7 +122,8 @@ $p/berlin-$V-network-with-pt.xml.gz: $p/berlin-$V-network.xml.gz
 	$(sc) prepare transit-from-gtfs --network $< --output=$p\
 	 --name berlin-$V --date "2023-06-07" --target-crs $(CRS) \
 	 $(germany)/gtfs/complete-pt-2023-06-06.zip\
-	 --shp $p/pt-area/pt-area.shp
+	 --shp $p/pt-area/pt-area.shp\
+	 --validate=false
 
 $p/berlin-$V-counts-vmz.xml.gz: $p/berlin-$V-network.xml.gz
 	$(sc) prepare counts-from-vmz\
