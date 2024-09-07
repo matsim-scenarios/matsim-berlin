@@ -42,10 +42,8 @@ import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.SumScoringFunction;
-import org.matsim.core.scoring.functions.*;
+import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.geometry.CoordUtils;
-import org.matsim.prepare.opt.ExtractPlanIndexFromType;
-import org.matsim.prepare.population.AssignReferencePopulation;
 import org.matsim.prepare.choices.ComputePlanChoices;
 import org.matsim.prepare.choices.ComputeTripChoices;
 import org.matsim.prepare.counts.CreateCountsFromGeoPortalBerlin;
@@ -55,6 +53,7 @@ import org.matsim.prepare.download.DownloadCommuterStatistic;
 import org.matsim.prepare.drt.CreateDrtVehicles;
 import org.matsim.prepare.facilities.CreateMATSimFacilities;
 import org.matsim.prepare.facilities.ExtractFacilityGeoPkg;
+import org.matsim.prepare.opt.ExtractPlanIndexFromType;
 import org.matsim.prepare.opt.RunCountOptimization;
 import org.matsim.prepare.opt.SelectPlansFromIndex;
 import org.matsim.prepare.population.*;
@@ -122,7 +121,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	private Integer planIndex;
 
 	public RunOpenBerlinCalibration() {
-		super("input/v6.2/berlin-v6.2.config.xml");
+		super("input/v6.4/berlin-v6.4.config.xml");
 	}
 
 	/**
@@ -141,6 +140,19 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 	public static void main(String[] args) {
 		MATSimApplication.run(RunOpenBerlinCalibration.class, args);
+	}
+
+	private static Coord getCoord(Scenario scenario, Activity act) {
+
+		if (act.getCoord() != null)
+			return act.getCoord();
+
+		if (act.getFacilityId() != null)
+			return Objects.requireNonNull(
+				scenario.getActivityFacilities().getFacilities().get(act.getFacilityId()),
+				() -> "Facility %s not found".formatted(act.getFacilityId())).getCoord();
+
+		return scenario.getNetwork().getLinks().get(act.getLinkId()).getCoord();
 	}
 
 	@Override
@@ -359,17 +371,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		}
 	}
 
-	private static Coord getCoord(Scenario scenario, Activity act) {
-
-		if (act.getCoord() != null)
-			return act.getCoord();
-
-		if (act.getFacilityId() != null)
-			return scenario.getActivityFacilities().getFacilities().get(act.getFacilityId()).getCoord();
-
-		return scenario.getNetwork().getLinks().get(act.getLinkId()).getCoord();
-	}
-
 	@Override
 	protected void prepareControler(Controler controler) {
 
@@ -414,7 +415,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			controler.addOverridingModule(new AbstractModule() {
 				@Override
 				public void install() {
-					binder().bind(new TypeLiteral<StrategyChooser<Plan, Person>>() {}).toInstance(new ForceInnovationStrategyChooser<>((int) Math.ceil(1.0 / weight), ForceInnovationStrategyChooser.Permute.yes));
+					binder().bind(new TypeLiteral<StrategyChooser<Plan, Person>>() {
+					}).toInstance(new ForceInnovationStrategyChooser<>((int) Math.ceil(1.0 / weight), ForceInnovationStrategyChooser.Permute.yes));
 				}
 			});
 
@@ -423,7 +425,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			controler.addOverridingModule(new AbstractModule() {
 				@Override
 				public void install() {
-					binder().bind(new TypeLiteral<StrategyChooser<Plan, Person>>() {}).toInstance(new ForceInnovationStrategyChooser<>((int) Math.ceil(1.0 / weight), ForceInnovationStrategyChooser.Permute.yes));
+					binder().bind(new TypeLiteral<StrategyChooser<Plan, Person>>() {
+					}).toInstance(new ForceInnovationStrategyChooser<>((int) Math.ceil(1.0 / weight), ForceInnovationStrategyChooser.Permute.yes));
 				}
 			});
 		}
