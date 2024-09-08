@@ -288,7 +288,7 @@ $p/berlin-$V-25pct.plans_cadyts.xml.gz:
 # These depend on the output of optimization runs
 $p/berlin-$V-25pct.plans-initial.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
 	$(sc) prepare filter-relevant-agents\
-	 --input $p/berlin-$V-25pct.plans_log_error.xml.gz --output $@\
+	 --input $p/berlin-$V-25pct.plans_cadyts.xml.gz --output $@\
 	 --shp input/$V/area/area.shp\
 	 --facilities $<\
 	 --network $(word 2,$^)
