@@ -142,4 +142,10 @@ def read_trip_choices(input_file: str) -> TripChoice:
 
     print("Varying:", varying)
 
+    dists = df.groupby("person").agg(dist=("beelineDist", "sum"))
+
+    # Trips weighted by distance during the whole day
+    dist_weight = df.beelineDist / dists.loc[df.person].dist.to_numpy()
+    df["dist_weight"] = dist_weight
+
     return TripChoice(df, modes, varying, read_global_income(input_file))

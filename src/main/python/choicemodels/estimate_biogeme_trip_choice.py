@@ -2,14 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-from collections import defaultdict
-
 import biogeme.biogeme as bio
 import biogeme.database as db
 import biogeme.models as models
 from biogeme.expressions import Beta, bioDraws, PanelLikelihoodTrajectory, log, MonteCarlo
 
-from prepare import read_trip_choices
+from prepare import read_trip_choices, daily_costs, km_costs
 
 ESTIMATE = 0
 FIXED = 1
@@ -22,6 +20,9 @@ if __name__ == "__main__":
     parser.add_argument("--est-performing", help="Estimate the beta for performing", action="store_true")
     parser.add_argument("--est-exp-income", help="Estimate exponent for income", action="store_true")
     parser.add_argument("--est-util-money", help="Estimate utility of money", action="store_true")
+    parser.add_argument("--est-fixed-price-perception", help="Estimate price perception of daily costs",
+                        action="store_true")
+
     parser.add_argument("--no-income", help="Don't consider the income", action="store_true")
 
     args = parser.parse_args()
@@ -33,8 +34,6 @@ if __name__ == "__main__":
 
     database = db.Database("data/choices", df)
     v = database.variables
-
-    km_costs = defaultdict(lambda: 0.0, car=-0.149, ride=-0.149)
 
     ASC = {}
     for mode in ds.modes:
@@ -51,11 +50,14 @@ if __name__ == "__main__":
     EXP_INCOME = Beta('EXP_INCOME', 1, 0, 1.5, ESTIMATE if args.est_exp_income else FIXED)
     UTIL_MONEY = Beta('UTIL_MONEY', 1, 0, 2, ESTIMATE if args.est_util_money else FIXED)
     BETA_PERFORMING = Beta('BETA_PERFORMING', 6.88, 1, 15, ESTIMATE if args.est_performing else FIXED)
+    BETA_PRICE_PERCEPTION = Beta('BETA_PRICE_PERCEPTION', 0, 0, 1,
+                                 ESTIMATE if args.est_fixed_price_perception else FIXED)
 
     for i, mode in enumerate(ds.modes, 1):
         u = ASC[mode] - BETA_PERFORMING * v[f"{mode}_hours"] * (2 if mode == "ride" else 1)
 
         price = km_costs[mode] * v[f"{mode}_km"]
+        price += daily_costs[mode] * v["dist_weight"] * BETA_PRICE_PERCEPTION
         u += price * UTIL_MONEY * (1 if args.no_income else (ds.global_income / v["income"]) ** EXP_INCOME)
 
         if mode == "pt":
@@ -83,6 +85,8 @@ if __name__ == "__main__":
         modelName += "_exp_income"
     if args.est_util_money:
         modelName += "_util_money"
+    if args.est_fixed_price_perception:
+        modelName += "_fixed_price_perception"
 
     biogeme.modelName = modelName
     biogeme.weight = v["weight"]

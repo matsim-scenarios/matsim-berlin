@@ -1,0 +1,39 @@
+#Modes:  ['walk', 'pt', 'car', 'bike', 'ride']
+#Number of choices:  27235
+#Varying: ['km', 'hours', 'walking_km', 'switches', 'valid']
+#  Results for model trip_choice_performing_exp_income_util_money_fixed_price_perception
+#Nbr of parameters:		8
+#Sample size:			27235
+#Excluded data:			0
+#Null log likelihood:		-40155.25
+#Final log likelihood:		-31522.25
+#Likelihood ratio test (null):		17266
+#Rho square (null):			0.215
+#Rho bar square (null):			0.215
+#Akaike Information Criterion:	63060.49
+#Bayesian Information Criterion:	63126.19
+#  Value  Rob. Std err  Rob. t-test  Rob. p-value
+#  ASC_bike              -1.689491      0.032510   -51.968167  0.000000e+00
+#  ASC_car               -1.920529      0.046183   -41.584864  0.000000e+00
+#  ASC_pt                -0.866749      0.029893   -28.995219  0.000000e+00
+#  ASC_ride              -2.401215      0.033845   -70.946824  0.000000e+00
+#  BETA_PERFORMING        5.677002      0.166151    34.167734  0.000000e+00
+#  BETA_PRICE_PERCEPTION  0.216186      0.027424     7.883173  3.108624e-15
+#  EXP_INCOME             0.197429      0.036124     5.465322  4.620660e-08
+#  UTIL_MONEY             0.534645      0.028387    18.834091  0.000000e+00
+
+scoring:
+  scoringParameters:
+    - performing: 5.677002
+      marginalUtilityOfMoney: 0.534645
+      modeParams:
+        - mode: walk
+          constant: 0
+        - mode: car
+          constant: 0
+          dailyMonetaryConstant: -3.0914598
+        - mode: pt
+          constant: 0
+          dailyMonetaryConstant: -0.648558
+advancedScoring:
+  incomeExponent: 0.197429
