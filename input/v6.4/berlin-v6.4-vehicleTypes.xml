@@ -15,6 +15,18 @@
 		<passengerCarEquivalents pce="1.0"/>
 	</vehicleType>
 
+	<vehicleType id="bike">
+		<attributes>
+			<attribute name="accessTimeInSecondsPerPerson" class="java.lang.Double">1</attribute>
+			<attribute name="egressTimeInSecondsPerPerson" class="java.lang.Double">1</attribute>
+		</attributes>
+		<length meter="2.0"/>
+		<width meter="1.0"/>
+		<!-- 15 kmh -->
+		<maximumVelocity meterPerSecond="4.16"/>
+		<passengerCarEquivalents pce="0.2"/>
+	</vehicleType>
+
 	<vehicleType id="ride">
 		<attributes>
 			<attribute name="accessTimeInSecondsPerPerson" class="java.lang.Double">1</attribute>

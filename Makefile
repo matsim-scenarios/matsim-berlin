@@ -59,8 +59,9 @@ $(berlin)/input/shp/Planungsraum_EPSG_25833.shp:
 
 input/network.osm: input/brandenburg.osm.pbf
 
+	# Detailed network includes bikes as well
 	$(osmosis) --rb file=$<\
-	 --tf accept-ways highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction,residential,living_street,unclassified\
+	 --tf accept-ways bicycle=yes,designated highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction,residential,living_street,unclassified,cycleway\
 	 --bounding-polygon file="$p/area/area.poly"\
 	 --used-node --wb input/network-detailed.osm.pbf
 
@@ -87,7 +88,7 @@ input/sumo.net.xml: input/network.osm
 	 --no-internal-links --keep-edges.by-vclass passenger,truck,bicycle\
 	 --remove-edges.by-vclass hov,tram,rail,rail_urban,rail_fast,pedestrian\
 	 --output.original-names --output.street-names\
-	 --osm.lane-access true	--osm.bike-access true\
+	 --osm.lane-access false --osm.bike-access false\
 	 --osm.all-attributes\
 	 --osm.extra-attributes tunnel,highway,traffic_sign,bus:lanes,bus:lanes:forward,bus:lanes:backward,cycleway,cycleway:right,cycleway:left\
 	 --proj "+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"\
@@ -97,7 +98,7 @@ input/sumo.net.xml: input/network.osm
 $p/berlin-$V-network.xml.gz: input/sumo.net.xml
 	$(sc) prepare network-from-sumo $< --target-crs $(CRS) --lane-restrictions REDUCE_CAR_LANES --output $@
 
-	$(sc) prepare clean-network $@  --output $@ --modes car,ride,truck --remove-turn-restrictions
+	$(sc) prepare clean-network $@  --output $@ --modes car,bike,ride,truck --remove-turn-restrictions
 
 	$(sc) prepare reproject-network\
 	 --input $@	--output $@\

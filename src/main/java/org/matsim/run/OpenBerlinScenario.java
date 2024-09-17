@@ -141,6 +141,11 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 			addTravelTimeBinding("freight").to(Key.get(TravelTime.class, Names.named(TransportMode.truck)));
 			addTravelDisutilityFactoryBinding("freight").to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
+
+			// TODO: bike should have freespeed travel time
+			addTravelTimeBinding(TransportMode.bike).to(networkTravelTime());
+			addTravelDisutilityFactoryBinding(TransportMode.bike).to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.bike)));
+
 		}
 	}
 
