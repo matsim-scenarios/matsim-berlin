@@ -15,10 +15,12 @@ import org.matsim.core.config.groups.ReplanningConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
+import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutilityFactory;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scoring.functions.PersonScoringParametersFromPersonAttributes;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
+import org.matsim.core.trafficmonitoring.FreeSpeedTravelTime;
 import org.matsim.run.scoring.AdvancedScoringConfigGroup;
 import org.matsim.run.scoring.AdvancedScoringModule;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
@@ -142,9 +144,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 			addTravelTimeBinding("freight").to(Key.get(TravelTime.class, Names.named(TransportMode.truck)));
 			addTravelDisutilityFactoryBinding("freight").to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
 
-			// TODO: bike should have freespeed travel time
-			addTravelTimeBinding(TransportMode.bike).to(networkTravelTime());
-			addTravelDisutilityFactoryBinding(TransportMode.bike).to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.bike)));
+			// Bike should use free speed travel time
+			addTravelTimeBinding(TransportMode.bike).to(FreeSpeedTravelTime.class);
+			addTravelDisutilityFactoryBinding(TransportMode.bike).to(OnlyTimeDependentTravelDisutilityFactory.class);
 
 		}
 	}

@@ -23,7 +23,7 @@
 		<param name="inputNetworkFile" value="./berlin-v6.4-network-with-pt.xml.gz"/>
 	</module>
 	<module name="plans">
-		<param name="inputPlansFile" value="./berlin-v6.4-10pct.plans.xml.gz"/>
+		<param name="inputPlansFile" value="./berlin-v6.4-10pct.plans-initial.xml.gz"/>
 		<param name="removingUnnecessaryPlanAttributes" value="true"/>
 	</module>
 	<module name="vehicles">
@@ -39,7 +39,7 @@
 		<param name="inputFacilitiesFile" value="./berlin-v6.4-facilities.xml.gz"/>
 	</module>
 	<module name="routing">
-		<param name="networkModes" value="car,truck,freight,ride"/>
+		<param name="networkModes" value="car,truck,freight,ride,bike"/>
 		<param name="accessEgressType" value="accessEgressModeToLink"/>
 		<parameterset type="teleportedModeParameters">
 			<param name="beelineDistanceFactor" value="1.3"/>
