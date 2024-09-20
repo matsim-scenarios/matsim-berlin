@@ -1,0 +1,42 @@
+#Modes:  ['walk', 'pt', 'car', 'bike', 'ride']
+#Number of choices:  27235
+#Varying: ['km', 'hours', 'walking_km', 'switches', 'valid']
+#  The sum of the weights (26625.70501375963) is different from the sample size (27235). Multiply the weights by 1.0228837127852763 to reconcile the two.
+#  Results for model trip_choice_performing_exp_income_util_money_car_price_perception_pt_price_perception_pt_switches
+#Nbr of parameters:		9
+#Sample size:			27235
+#Excluded data:			0
+#Null log likelihood:		-40155.25
+#Final log likelihood:		-29555.53
+#Likelihood ratio test (null):		21199.42
+#Rho square (null):			0.264
+#Rho bar square (null):			0.264
+#Akaike Information Criterion:	59129.07
+#Bayesian Information Criterion:	59202.98
+#  Value  Active bound  ...  Rob. t-test  Rob. p-value
+#  ASC_bike                  -1.545543           0.0  ...   -43.286963  0.000000e+00
+#  ASC_car                   -2.233102           0.0  ...   -28.207947  0.000000e+00
+#  ASC_pt                    -0.980155           0.0  ...   -33.584408  0.000000e+00
+#  ASC_ride                  -2.622651           0.0  ...   -63.860835  0.000000e+00
+#  BETA_CAR_PRICE_PERCEPTION  0.309765           0.0  ...     2.046619  4.069552e-02
+#  BETA_PERFORMING            5.159459           0.0  ...    30.825908  0.000000e+00
+#  BETA_PT_SWITCHES           0.000000           1.0  ...     0.000000  1.000000e+00
+#  EXP_INCOME                 0.789770           0.0  ...     3.803749  1.425223e-04
+#  UTIL_MONEY                 0.156224           0.0  ...     8.080423  6.661338e-16
+
+scoring:
+  scoringParameters:
+    - performing: 5.159459
+      utilityOfLineSwitch: 0
+      marginalUtilityOfMoney: 0.156224
+      modeParams:
+        - mode: walk
+          constant: 0
+        - mode: car
+          constant: 0
+          dailyMonetaryConstant: -4.4296395
+        - mode: pt
+          constant: 0
+          dailyMonetaryConstant: -0.929295
+advancedScoring:
+  incomeExponent: 0.789770

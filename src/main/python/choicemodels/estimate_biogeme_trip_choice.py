@@ -16,12 +16,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate the trip choice model")
     parser.add_argument("--input", help="Path to the input file", type=str, default="../../../../trip-choices.csv")
     parser.add_argument("--mxl-modes", help="Modes to use mixed logit for", nargs="*", type=set,
-                        default=["pt", "bike", "ride"])
+                        default=["pt", "bike", "ride", "car"])
     parser.add_argument("--est-performing", help="Estimate the beta for performing", action="store_true")
     parser.add_argument("--est-exp-income", help="Estimate exponent for income", action="store_true")
     parser.add_argument("--est-util-money", help="Estimate utility of money", action="store_true")
-    parser.add_argument("--est-fixed-price-perception", help="Estimate price perception of daily costs",
-                        action="store_true")
+    parser.add_argument("--est-pt-switches", help="Estimate the beta for PT switches", action="store_true")
+    parser.add_argument("--est-price-perception-car", help="Estimate price perception", action="store_true")
+    parser.add_argument("--est-price-perception-pt", help="Estimate price perception", action="store_true")
+    parser.add_argument("--same-price-perception", help="Only estimate one fixed price perception factor", action="store_true")
 
     parser.add_argument("--no-income", help="Don't consider the income", action="store_true")
 
@@ -50,24 +52,32 @@ if __name__ == "__main__":
     EXP_INCOME = Beta('EXP_INCOME', 1, 0, 1.5, ESTIMATE if args.est_exp_income else FIXED)
     UTIL_MONEY = Beta('UTIL_MONEY', 1, 0, 2, ESTIMATE if args.est_util_money else FIXED)
     BETA_PERFORMING = Beta('BETA_PERFORMING', 6.88, 1, 15, ESTIMATE if args.est_performing else FIXED)
-    BETA_PRICE_PERCEPTION = Beta('BETA_PRICE_PERCEPTION', 0, 0, 1,
-                                 ESTIMATE if args.est_fixed_price_perception else FIXED)
+
+    BETA_CAR_PRICE_PERCEPTION = Beta('BETA_CAR_PRICE_PERCEPTION', 1, 0, 1, ESTIMATE if args.est_price_perception_car else FIXED)
+    if args.same_price_perception:
+        BETA_PT_PRICE_PERCEPTION = BETA_CAR_PRICE_PERCEPTION
+    else:
+        BETA_PT_PRICE_PERCEPTION = Beta('BETA_PT_PRICE_PERCEPTION', 1, 0, 1, ESTIMATE if args.est_price_perception_pt else FIXED)
+
+    BETA_PT_SWITCHES = Beta('BETA_PT_SWITCHES', 1, 0, None, ESTIMATE if args.est_pt_switches else FIXED)
 
     for i, mode in enumerate(ds.modes, 1):
+        # Ride incurs double the cost as car, to account for the driver and passenger
         u = ASC[mode] - BETA_PERFORMING * v[f"{mode}_hours"] * (2 if mode == "ride" else 1)
 
         price = km_costs[mode] * v[f"{mode}_km"]
-        price += daily_costs[mode] * v["dist_weight"] * BETA_PRICE_PERCEPTION
+        price += daily_costs[mode] * v["dist_weight"] * (BETA_CAR_PRICE_PERCEPTION if mode == "car" else BETA_PT_PRICE_PERCEPTION)
         u += price * UTIL_MONEY * (1 if args.no_income else (ds.global_income / v["income"]) ** EXP_INCOME)
 
         if mode == "pt":
-            u -= v[f"{mode}_switches"]
+            u -= v[f"{mode}_switches"] * BETA_PT_SWITCHES
 
         U[i] = u
         AV[i] = v[f"{mode}_valid"]
 
     if not args.mxl_modes:
         logprob = models.loglogit(U, AV, v["choice"])
+        logprob = {'loglike': logprob, 'weight': v["weight"]}
 
     else:
         database.panel("person")
@@ -85,8 +95,12 @@ if __name__ == "__main__":
         modelName += "_exp_income"
     if args.est_util_money:
         modelName += "_util_money"
-    if args.est_fixed_price_perception:
-        modelName += "_fixed_price_perception"
+    if args.est_price_perception_car:
+        modelName += "_car_price_perception"
+    if args.est_price_perception_pt:
+        modelName += "_pt_price_perception"
+    if args.est_pt_switches:
+        modelName += "_pt_switches"
 
     biogeme.modelName = modelName
     biogeme.weight = v["weight"]
