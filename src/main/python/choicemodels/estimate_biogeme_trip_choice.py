@@ -24,6 +24,7 @@ if __name__ == "__main__":
     parser.add_argument("--est-price-perception-car", help="Estimate price perception", action="store_true")
     parser.add_argument("--est-price-perception-pt", help="Estimate price perception", action="store_true")
     parser.add_argument("--est-ride-alpha", help="Estimate ride detour parameter", action="store_true")
+    parser.add_argument("--est-bike-effort", help="Estimate parameter for bike effort", action="store_true")
     parser.add_argument("--same-price-perception", help="Only estimate one fixed price perception factor", action="store_true")
 
     parser.add_argument("--no-income", help="Don't consider the income", action="store_true")
@@ -61,18 +62,25 @@ if __name__ == "__main__":
         BETA_PT_PRICE_PERCEPTION = Beta('BETA_PT_PRICE_PERCEPTION', 1, 0, 1, ESTIMATE if args.est_price_perception_pt else FIXED)
 
     BETA_PT_SWITCHES = Beta('BETA_PT_SWITCHES', 1, 0, None, ESTIMATE if args.est_pt_switches else FIXED)
+
+    # THe detour factor for ride trip, influences the time costs, as well as distance cost
     BETA_RIDE_ALPHA = Beta('BETA_RIDE_ALPHA', 1, 0, 2, ESTIMATE if args.est_ride_alpha else FIXED)
+
+    BETA_BIKE_EFFORT = Beta('BETA_BIKE_UTIL_KM', 0, 0, 10, ESTIMATE if args.est_bike_effort else FIXED)
 
     for i, mode in enumerate(ds.modes, 1):
         # Ride incurs double the cost as car, to account for the driver and passenger
         u = ASC[mode] - BETA_PERFORMING * v[f"{mode}_hours"] * ( (1 + BETA_RIDE_ALPHA) if mode == "ride" else 1)
 
-        price = km_costs[mode] * v[f"{mode}_km"]
+        price = km_costs[mode] * v[f"{mode}_km"] * (BETA_RIDE_ALPHA if mode == "ride" else 1)
         price += daily_costs[mode] * v["dist_weight"] * (BETA_CAR_PRICE_PERCEPTION if mode == "car" else BETA_PT_PRICE_PERCEPTION)
         u += price * UTIL_MONEY * (1 if args.no_income else (ds.global_income / v["income"]) ** EXP_INCOME)
 
         if mode == "pt":
             u -= v[f"{mode}_switches"] * BETA_PT_SWITCHES
+
+        if mode == "bike":
+            u -= v[f"{mode}_hours"] * BETA_BIKE_EFFORT
 
         U[i] = u
         AV[i] = v[f"{mode}_valid"]
