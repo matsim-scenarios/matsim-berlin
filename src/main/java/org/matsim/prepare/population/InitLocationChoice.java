@@ -1,5 +1,6 @@
 package org.matsim.prepare.population;
 
+import it.unimi.dsi.fastutil.doubles.DoubleList;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import me.tongfei.progressbar.ProgressBar;
@@ -250,20 +251,17 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 						// Needed for lambda
 						final Coord refCoord = lastCoord;
 
-						List<AttributedActivityFacility> query = facilities.index.get(type).query(MGC.coord2Point(lastCoord).buffer(dist * 1.2).getEnvelopeInternal());
 
-						// Distance should be within the bounds
-						List<AttributedActivityFacility> res = query.stream().filter(f -> checkDistanceBound(dist, refCoord, f.getCoord(), 1)).toList();
+						// Try to find a facility within the bounds
+						// increase bounds if no facility is found
+						for (Double b : DoubleList.of(1, 1.2, 1.5)) {
+							List<AttributedActivityFacility> query = facilities.index.get(type).query(MGC.coord2Point(lastCoord).buffer(dist * (b + 0.2)).getEnvelopeInternal());
+							// Distance should be within the bounds
+							List<AttributedActivityFacility> res = query.stream().filter(f -> checkDistanceBound(dist, refCoord, f.getCoord(), b)).toList();
 
-						if (!res.isEmpty()) {
-							location = query.get(FacilityIndex.sampleByWeight(query, AttributedActivityFacility::getOtherAttraction, rnd));
-						}
-
-						// Try with larger bounds again
-						if (location == null) {
-							res = query.stream().filter(f -> checkDistanceBound(dist, refCoord, f.getCoord(), 1.2)).toList();
 							if (!res.isEmpty()) {
 								location = query.get(FacilityIndex.sampleByWeight(query, AttributedActivityFacility::getOtherAttraction, rnd));
+								break;
 							}
 						}
 					}
@@ -388,8 +386,13 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 	 * General logic to filter coordinate within target distance.
 	 */
 	private boolean checkDistanceBound(double target, Coord refCoord, Coord other, double factor) {
-		double lower = target * 0.8 * (2 - factor);
-		double upper = target * 1.15 * factor;
+
+		// Constant added to the bounds, needed for trips with low base distance
+		double constant = (factor - 1) * 100;
+
+		// Percentage based bounds
+		double lower = target * 0.8 * (2 - factor) - constant;
+		double upper = target * 1.15 * factor + constant;
 
 		double dist = CoordUtils.calcEuclideanDistance(refCoord, other);
 		return dist >= lower && dist <= upper;
