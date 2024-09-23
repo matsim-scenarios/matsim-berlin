@@ -17,6 +17,11 @@ PlanChoice = namedtuple("PlanChoice", ["df", "modes", "varying", "k", "global_in
 TripChoice = namedtuple("TripChoice", ["df", "modes", "varying", "global_income"])
 
 
+# Set pandas options, when this package is used
+pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1000)
+
 def read_global_income(input_file: str) -> float:
     """ Read global income from input file """
 

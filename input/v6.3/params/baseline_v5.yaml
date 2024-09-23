@@ -2,41 +2,70 @@
 #Number of choices:  27235
 #Varying: ['km', 'hours', 'walking_km', 'switches', 'valid']
 #  The sum of the weights (26625.70501375963) is different from the sample size (27235). Multiply the weights by 1.0228837127852763 to reconcile the two.
-#  Results for model trip_choice_performing_exp_income_util_money_car_price_perception_pt_price_perception_pt_switches
-#Nbr of parameters:		9
+#  Results for model trip_choice_performing_exp_income_util_money_car_price_perception_pt_price_perception
+#Nbr of parameters:		8
 #Sample size:			27235
 #Excluded data:			0
 #Null log likelihood:		-40155.25
-#Final log likelihood:		-29555.53
-#Likelihood ratio test (null):		21199.42
-#Rho square (null):			0.264
-#Rho bar square (null):			0.264
-#Akaike Information Criterion:	59129.07
-#Bayesian Information Criterion:	59202.98
-#  Value  Active bound  ...  Rob. t-test  Rob. p-value
-#  ASC_bike                  -1.545543           0.0  ...   -43.286963  0.000000e+00
-#  ASC_car                   -2.233102           0.0  ...   -28.207947  0.000000e+00
-#  ASC_pt                    -0.980155           0.0  ...   -33.584408  0.000000e+00
-#  ASC_ride                  -2.622651           0.0  ...   -63.860835  0.000000e+00
-#  BETA_CAR_PRICE_PERCEPTION  0.309765           0.0  ...     2.046619  4.069552e-02
-#  BETA_PERFORMING            5.159459           0.0  ...    30.825908  0.000000e+00
-#  BETA_PT_SWITCHES           0.000000           1.0  ...     0.000000  1.000000e+00
-#  EXP_INCOME                 0.789770           0.0  ...     3.803749  1.425223e-04
-#  UTIL_MONEY                 0.156224           0.0  ...     8.080423  6.661338e-16
+#Final log likelihood:		-30195.23
+#Likelihood ratio test (null):		19920.03
+#Rho square (null):			0.248
+#Rho bar square (null):			0.248
+#Akaike Information Criterion:	60406.46
+#Bayesian Information Criterion:	60472.16
+#  Value  Rob. Std err  Rob. t-test  Rob. p-value
+#  ASC_bike                  -1.715849      0.031549   -54.386385  0.000000e+00
+#  ASC_car                   -2.158581      0.048948   -44.099241  0.000000e+00
+#  ASC_pt                    -0.809443      0.029379   -27.551863  0.000000e+00
+#  ASC_ride                  -2.564303      0.034765   -73.759994  0.000000e+00
+#  BETA_CAR_PRICE_PERCEPTION  0.158473      0.023321     6.795296  1.080913e-11
+#  BETA_PERFORMING            5.700208      0.155554    36.644578  0.000000e+00
+#  EXP_INCOME                 0.391611      0.038146    10.266193  0.000000e+00
+#  UTIL_MONEY                 0.532500      0.026424    20.152200  0.000000e+00
+#  Correlation matrix
+#  Covariance  Correlation     t-test       p-value  Rob. cov.  Rob. corr.  Rob. t-test  Rob. p-value
+#  ASC_car-ASC_bike                             0.000256     0.259219 -10.160431  0.000000e+00   0.000597    0.386459    -9.444052  0.000000e+00
+#  ASC_pt-ASC_bike                              0.000342     0.581612  40.475364  0.000000e+00   0.000640    0.690007    37.657118  0.000000e+00
+#  ASC_pt-ASC_car                               0.000501     0.444600  34.126157  0.000000e+00   0.000735    0.511313    31.901856  0.000000e+00
+#  ASC_ride-ASC_bike                            0.000265     0.364104 -26.690799  0.000000e+00   0.000547    0.498303   -25.456136  0.000000e+00
+#  ASC_ride-ASC_car                             0.000231     0.165875  -8.185488  2.220446e-16   0.000432    0.254041    -7.750977  9.103829e-15
+#  ASC_ride-ASC_pt                              0.000185     0.223678 -48.261224  0.000000e+00   0.000326    0.318985   -46.566639  0.000000e+00
+#  BETA_CAR_PRICE_PERCEPTION-ASC_bike          -0.000056    -0.125556  59.076207  0.000000e+00  -0.000211   -0.286277    42.331376  0.000000e+00
+#  BETA_CAR_PRICE_PERCEPTION-ASC_car            0.000454     0.534917  62.657319  0.000000e+00   0.000416    0.364650    50.474740  0.000000e+00
+#  BETA_CAR_PRICE_PERCEPTION-ASC_pt             0.000134     0.266074  34.658122  0.000000e+00   0.000061    0.088306    26.991066  0.000000e+00
+#  BETA_CAR_PRICE_PERCEPTION-ASC_ride          -0.000193    -0.310452  64.360946  0.000000e+00  -0.000357   -0.440557    54.819792  0.000000e+00
+#  BETA_PERFORMING-ASC_bike                    -0.000887    -0.532129  84.685568  0.000000e+00  -0.003942   -0.803238    40.776913  0.000000e+00
+#  BETA_PERFORMING-ASC_car                     -0.000821    -0.257024  83.230030  0.000000e+00  -0.003268   -0.429151    43.177454  0.000000e+00
+#  BETA_PERFORMING-ASC_pt                      -0.000681    -0.358833  75.628198  0.000000e+00  -0.002829   -0.619080    37.141330  0.000000e+00
+#  BETA_PERFORMING-ASC_ride                    -0.000530    -0.225850  95.669603  0.000000e+00  -0.002595   -0.479940    47.247686  0.000000e+00
+#  BETA_PERFORMING-BETA_CAR_PRICE_PERCEPTION    0.000209     0.146243  75.832229  0.000000e+00   0.001180    0.325401    37.043819  0.000000e+00
+#  EXP_INCOME-ASC_bike                          0.000101     0.148132  60.457025  0.000000e+00   0.000365    0.303395    50.812503  0.000000e+00
+#  EXP_INCOME-ASC_car                          -0.000458    -0.350799  41.851560  0.000000e+00  -0.000563   -0.301518    36.148432  0.000000e+00
+#  EXP_INCOME-ASC_pt                            0.000002     0.003219  30.364000  0.000000e+00   0.000115    0.102178    26.276838  0.000000e+00
+#  EXP_INCOME-ASC_ride                          0.000096     0.099515  70.997536  0.000000e+00   0.000375    0.282524    67.557954  0.000000e+00
+#  EXP_INCOME-BETA_CAR_PRICE_PERCEPTION        -0.000245    -0.419629   5.540331  3.019004e-08  -0.000524   -0.588607     4.224089  2.399087e-05
+#  EXP_INCOME-BETA_PERFORMING                  -0.000380    -0.172496 -63.271976  0.000000e+00  -0.001964   -0.330957   -30.866171  0.000000e+00
+#  UTIL_MONEY-ASC_bike                         -0.000096    -0.203938  66.582694  0.000000e+00  -0.000304   -0.364746    46.863781  0.000000e+00
+#  UTIL_MONEY-ASC_car                           0.000053     0.058231  57.096476  0.000000e+00  -0.000053   -0.040687    47.576467  0.000000e+00
+#  UTIL_MONEY-ASC_pt                           -0.000215    -0.400498  34.302566  0.000000e+00  -0.000380   -0.489254    27.854800  0.000000e+00
+#  UTIL_MONEY-ASC_ride                          0.000171     0.256846  92.796138  0.000000e+00   0.000108    0.118027    75.330081  0.000000e+00
+#  UTIL_MONEY-BETA_CAR_PRICE_PERCEPTION        -0.000204    -0.503111  10.718115  0.000000e+00  -0.000244   -0.396093     8.991802  0.000000e+00
+#  UTIL_MONEY-BETA_PERFORMING                   0.000379     0.249067 -72.708055  0.000000e+00   0.001548    0.376691   -35.001272  0.000000e+00
+#  UTIL_MONEY-EXP_INCOME                       -0.000114    -0.182041   3.567757  3.600502e-04  -0.000174   -0.172640     2.817023  4.847105e-03
+
 
 scoring:
   scoringParameters:
-    - performing: 5.159459
-      utilityOfLineSwitch: 0
-      marginalUtilityOfMoney: 0.156224
+    - performing: 5.700208
+      marginalUtilityOfMoney: 0.532500
       modeParams:
         - mode: walk
           constant: 0
         - mode: car
           constant: 0
-          dailyMonetaryConstant: -4.4296395
+          dailyMonetaryConstant: -2.2661639
         - mode: pt
           constant: 0
-          dailyMonetaryConstant: -0.929295
+          dailyMonetaryConstant: -0.475419
 advancedScoring:
-  incomeExponent: 0.789770
+  incomeExponent: 0.391611

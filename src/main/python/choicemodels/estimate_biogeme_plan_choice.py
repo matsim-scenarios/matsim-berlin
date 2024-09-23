@@ -138,6 +138,8 @@ if __name__ == "__main__":
         prob = models.logit(U, AV, v["choice"])
         logprob = log(MonteCarlo(prob))
 
+
+    logprob = {'loglike': logprob, 'weight': v["weight"]}
     biogeme = bio.BIOGEME(database, logprob)
 
     modelName = os.path.basename(args.input).replace(".csv", "")
@@ -166,3 +168,9 @@ if __name__ == "__main__":
 
     pandas_results = results.getEstimatedParameters()
     print(pandas_results)
+
+    print()
+    print("Correlation matrix")
+
+    corr_matrix = results.getCorrelationResults()
+    print(corr_matrix)
