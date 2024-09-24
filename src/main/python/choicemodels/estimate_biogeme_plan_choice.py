@@ -17,9 +17,10 @@ FIXED = 1
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate choice model for daily trip usage")
     parser.add_argument("--input", help="Path to the input file", type=str,
-                        default="../../../../plan-choices-diverse_9-tt-only.csv")
+                        default="../../../../plan-choices-subtour_70.csv")
     parser.add_argument("--mxl-modes", help="Modes to use mixed logit for", nargs="+", type=str,
-                        default=["pt", "bike", "ride"])
+                        default=["pt", "bike", "ride", "car"])
+    parser.add_argument("--no-mxl", help="Disable mixed logit", action="store_true")
     parser.add_argument("--est-performing", help="Estimate the beta for performing", action="store_true")
     parser.add_argument("--performing", help="Beta for performing", type=float, default=6.88)
     parser.add_argument("--est-exp-income", help="Estimate exponent for income", action="store_true")
@@ -29,9 +30,9 @@ if __name__ == "__main__":
     parser.add_argument("--est-price-perception-car", help="Estimate price perception", action="store_true")
     parser.add_argument("--est-price-perception-pt", help="Estimate price perception", action="store_true")
     parser.add_argument("--same-price-perception", help="Only estimate one fixed price perception factor", action="store_true")
+    parser.add_argument("--price-perception", help="Given value for fixed price perception", type=float, default=1)
     parser.add_argument("--ascs", help="Predefined ASCs", nargs="+", action='append', default=[])
     parser.add_argument("--car-util", help="Fixed utility for car", type=float, default=None)
-    parser.add_argument("--no-mxl", help="Disable mixed logit", action="store_true")
     parser.add_argument("--no-income", help="Don't consider the income", action="store_true")
 
     args = parser.parse_args()
@@ -67,12 +68,12 @@ if __name__ == "__main__":
     UTIL_MONEY = Beta('UTIL_MONEY', args.util_money, 0, 2, ESTIMATE if args.est_util_money else FIXED)
 
     BETA_PERFORMING = Beta('BETA_PERFORMING', args.performing, 1, 15, ESTIMATE if args.est_performing else FIXED)
-    BETA_CAR_PRICE_PERCEPTION = Beta('BETA_CAR_PRICE_PERCEPTION', 1, 0, 1, ESTIMATE if args.est_price_perception_car else FIXED)
+    BETA_CAR_PRICE_PERCEPTION = Beta('BETA_CAR_PRICE_PERCEPTION', args.price_perception, 0, 1, ESTIMATE if args.est_price_perception_car else FIXED)
 
     if args.same_price_perception:
         BETA_PT_PRICE_PERCEPTION = BETA_CAR_PRICE_PERCEPTION
     else:
-        BETA_PT_PRICE_PERCEPTION = Beta('BETA_PT_PRICE_PERCEPTION', 1, 0, 1, ESTIMATE if args.est_price_perception_pt else FIXED)
+        BETA_PT_PRICE_PERCEPTION = Beta('BETA_PT_PRICE_PERCEPTION', args.price_perception, 0, 1, ESTIMATE if args.est_price_perception_pt else FIXED)
 
     is_est_car = "car" in args.mxl_modes
 

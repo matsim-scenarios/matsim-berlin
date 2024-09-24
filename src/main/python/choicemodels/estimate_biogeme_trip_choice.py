@@ -128,20 +128,3 @@ if __name__ == "__main__":
 
     corr_matrix = results.getCorrelationResults()
     print(corr_matrix)
-
-    # TOOD: matrix of correlations, costs correlations ?
-
-    # sim_results = biogeme.simulate(results.getBetaValues())
-
-    # print(sim_results)
-    #
-    # print("Given shares")
-    #
-    # # TODO: might not respect the availability of modes
-    #
-    # dist = df.groupby("choice").count()["seq"]
-    # print(dist / dist.sum())
-    #
-    # print("Simulated shares")
-    # choices = softmax(sim_results, axis=1)
-    # print(np.mean(choices, axis=0))
