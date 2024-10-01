@@ -2,8 +2,7 @@ package org.matsim.run;
 
 import com.google.inject.Key;
 import com.google.inject.name.Names;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.matsim.analysis.QsimTimingModule;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.application.MATSimApplication;
@@ -16,7 +15,6 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
-import org.matsim.prepare.RunOpenBerlinCalibration;
 import org.matsim.run.scoring.AdvancedScoringConfigGroup;
 import org.matsim.run.scoring.AdvancedScoringModule;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
@@ -30,8 +28,6 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 	public static final String VERSION = "6.3";
 	public static final String CRS = "EPSG:25832";
-
-	private static final Logger log = LogManager.getLogger(RunOpenBerlinCalibration.class);
 
 	@CommandLine.Mixin
 	private final SampleOptions sample = new SampleOptions(10, 25, 3, 1);
@@ -110,6 +106,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 		controler.addOverridingModule(new SimWrapperModule());
 
 		controler.addOverridingModule(new TravelTimeBinding());
+
+		controler.addOverridingModule(new QsimTimingModule());
 
 		if (ConfigUtils.hasModule(controler.getConfig(), AdvancedScoringConfigGroup.class)) {
 			controler.addOverridingModule(new AdvancedScoringModule());
