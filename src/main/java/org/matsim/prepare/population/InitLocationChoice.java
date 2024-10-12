@@ -388,7 +388,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 	private boolean checkDistanceBound(double target, Coord refCoord, Coord other, double factor) {
 
 		// Constant added to the bounds, needed for trips with low base distance
-		double constant = (factor - 1) * 100;
+		double constant = (factor - 0.95) * 1000;
 
 		// Percentage based bounds
 		double lower = target * 0.8 * (2 - factor) - constant;

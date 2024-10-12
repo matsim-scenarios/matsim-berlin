@@ -280,6 +280,10 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 			config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.ignore);
 
+			// Reduce number of threads, to reduce memory usage
+			config.global().setNumberOfThreads(Math.max(8, config.global().getNumberOfThreads()));
+			config.qsim().setNumberOfThreads(Math.max(8, config.qsim().getNumberOfThreads()));
+
 		} else if (mode == CalibrationMode.routeChoice) {
 
 			// Re-route for all populations
