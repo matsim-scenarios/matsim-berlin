@@ -156,6 +156,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	}
 
 	@Override
+	@SuppressWarnings("JavaNCSS")
 	protected Config prepareConfig(Config config) {
 
 		if (populationPath == null) {
