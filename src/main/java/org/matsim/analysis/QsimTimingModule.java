@@ -14,13 +14,18 @@ import org.matsim.core.mobsim.framework.events.MobsimInitializedEvent;
 import org.matsim.core.mobsim.framework.listeners.MobsimBeforeCleanupListener;
 import org.matsim.core.mobsim.framework.listeners.MobsimInitializedListener;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 
-public class QsimTimingModule extends AbstractModule {
+/**
+ * This module measures the runtime of the QSim and writes it to a CSV file.
+ */
+public final class QsimTimingModule extends AbstractModule {
 
 	@Override
 	public void install() {
@@ -31,7 +36,7 @@ public class QsimTimingModule extends AbstractModule {
 		addControlerListenerBinding().to(CheckForLastIteration.class);
 	}
 
-	private static class CheckForLastIteration implements BeforeMobsimListener {
+	private static final class CheckForLastIteration implements BeforeMobsimListener {
 
 		private final Timer timer;
 		private final Config config;
@@ -49,7 +54,7 @@ public class QsimTimingModule extends AbstractModule {
 		}
 	}
 
-	private static class Timer implements MobsimInitializedListener, MobsimBeforeCleanupListener {
+	private static final class Timer implements MobsimInitializedListener, MobsimBeforeCleanupListener {
 		private Instant start;
 		private boolean isLastIteration;
 
@@ -76,12 +81,12 @@ public class QsimTimingModule extends AbstractModule {
 		@Override
 		public void notifyMobsimBeforeCleanup(MobsimBeforeCleanupEvent e) {
 			if (isLastIteration) {
-				var now = Instant.now();
-				var duration = Duration.between(start, now);
-				var size = config.qsim().getNumberOfThreads();
-				var filename = Paths.get(outDir.getOutputFilename("runtimes.csv"));
-				try (var writer = Files.newBufferedWriter(filename); var p = new CSVPrinter(writer, createWriteFormat("size", "rank", "runtime", "rtr"))) {
-					var rtr = config.qsim().getEndTime().seconds() / duration.toSeconds();
+				Instant now = Instant.now();
+				Duration duration = Duration.between(start, now);
+				int size = config.qsim().getNumberOfThreads();
+				Path filename = Paths.get(outDir.getOutputFilename("runtimes.csv"));
+				try (BufferedWriter writer = Files.newBufferedWriter(filename); var p = new CSVPrinter(writer, createWriteFormat("size", "rank", "runtime", "rtr"))) {
+					double rtr = config.qsim().getEndTime().seconds() / duration.toSeconds();
 					p.printRecord(size, 0, duration.toMillis(), rtr);
 				} catch (IOException ex) {
 					throw new RuntimeException(ex);
