@@ -136,18 +136,30 @@ public class OpenBerlinScenario extends MATSimApplication {
 	 * Add travel time bindings for ride and freight modes, which are not actually network modes.
 	 */
 	public static final class TravelTimeBinding extends AbstractModule {
+
+		private final boolean carOnly;
+
+		public TravelTimeBinding() {
+			this.carOnly = false;
+		}
+
+		public TravelTimeBinding(boolean carOnly) {
+			this.carOnly = carOnly;
+		}
+
 		@Override
 		public void install() {
 			addTravelTimeBinding(TransportMode.ride).to(networkTravelTime());
 			addTravelDisutilityFactoryBinding(TransportMode.ride).to(carTravelDisutilityFactoryKey());
 
-			addTravelTimeBinding("freight").to(Key.get(TravelTime.class, Names.named(TransportMode.truck)));
-			addTravelDisutilityFactoryBinding("freight").to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
+			if (!carOnly) {
+				addTravelTimeBinding("freight").to(Key.get(TravelTime.class, Names.named(TransportMode.truck)));
+				addTravelDisutilityFactoryBinding("freight").to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
 
-			// Bike should use free speed travel time
-			addTravelTimeBinding(TransportMode.bike).to(FreeSpeedTravelTime.class);
-			addTravelDisutilityFactoryBinding(TransportMode.bike).to(OnlyTimeDependentTravelDisutilityFactory.class);
-
+				// Bike should use free speed travel time
+				addTravelTimeBinding(TransportMode.bike).to(FreeSpeedTravelTime.class);
+				addTravelDisutilityFactoryBinding(TransportMode.bike).to(OnlyTimeDependentTravelDisutilityFactory.class);
+			}
 		}
 	}
 

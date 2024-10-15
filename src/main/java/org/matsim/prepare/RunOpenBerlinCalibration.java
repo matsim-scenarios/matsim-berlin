@@ -27,12 +27,15 @@ import org.matsim.contrib.locationchoice.frozenepsilons.FrozenTastesConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.ReplanningConfigGroup;
+import org.matsim.core.config.groups.RoutingConfigGroup;
 import org.matsim.core.config.groups.ScoringConfigGroup;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.population.PopulationUtils;
+import org.matsim.core.population.routes.NetworkRoute;
+import org.matsim.core.population.routes.mediumcompressed.MediumCompressedNetworkRouteFactory;
 import org.matsim.core.replanning.choosers.ForceInnovationStrategyChooser;
 import org.matsim.core.replanning.choosers.StrategyChooser;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
@@ -177,6 +180,9 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
 
 		config.replanningAnnealer().setActivateAnnealingModule(false);
+		config.replanning().setFractionOfIterationsToDisableInnovation(0.7);
+		config.scoring().setFractionOfIterationsToStartScoreMSA(0.7);
+
 
 		if (sample.isSet()) {
 			double sampleSize = sample.getSample();
@@ -204,6 +210,23 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 			// Disable dashboards, for all car runs, these take too many resources
 			sw.defaultDashboards = SimWrapperConfigGroup.Mode.disabled;
+
+			// Only car and ride will be network modes, ride is not simulated on the network though
+			config.routing().setNetworkModes(List.of(TransportMode.car, TransportMode.ride));
+			config.routing().addTeleportedModeParams(new RoutingConfigGroup.TeleportedModeParams(TransportMode.bike)
+				.setBeelineDistanceFactor(1.3)
+				.setTeleportedModeSpeed(3.1388889)
+			);
+			config.routing().addTeleportedModeParams(new RoutingConfigGroup.TeleportedModeParams(TransportMode.truck)
+				.setBeelineDistanceFactor(1.3)
+				.setTeleportedModeSpeed(8.3)
+			);
+			config.routing().addTeleportedModeParams(new RoutingConfigGroup.TeleportedModeParams("freight")
+				.setBeelineDistanceFactor(1.3)
+				.setTeleportedModeSpeed(8.3)
+			);
+
+			config.qsim().setMainModes(List.of(TransportMode.car));
 		}
 
 		// Required for all calibration strategies
@@ -282,8 +305,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.ignore);
 
 			// Reduce number of threads, to reduce memory usage
-			config.global().setNumberOfThreads(Math.max(8, config.global().getNumberOfThreads()));
-			config.qsim().setNumberOfThreads(Math.max(8, config.qsim().getNumberOfThreads()));
+			config.global().setNumberOfThreads(Math.min(12, config.global().getNumberOfThreads()));
+			config.qsim().setNumberOfThreads(Math.min(12, config.qsim().getNumberOfThreads()));
 
 		} else if (mode == CalibrationMode.routeChoice) {
 
@@ -330,6 +353,9 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		}
 
 		if (allCar) {
+
+			scenario.getPopulation().getFactory().getRouteFactories()
+				.setRouteFactory(NetworkRoute.class, new MediumCompressedNetworkRouteFactory());
 
 			log.info("Converting all agents to car plans.");
 
@@ -443,7 +469,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			}
 		});
 
-		controler.addOverridingModule(new OpenBerlinScenario.TravelTimeBinding());
+		controler.addOverridingModule(new OpenBerlinScenario.TravelTimeBinding(allCar));
 		controler.addOverridingModule(new SimWrapperModule());
 
 		if (ConfigUtils.hasModule(controler.getConfig(), AdvancedScoringConfigGroup.class)) {
