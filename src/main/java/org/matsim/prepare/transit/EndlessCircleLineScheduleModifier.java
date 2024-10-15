@@ -121,6 +121,7 @@ public class EndlessCircleLineScheduleModifier {
 			routeToCopy.getStops().getLast().getStopFacility(),
 			routeToCopy.getStops().getFirst().getArrivalOffset(),
 			routeToCopy.getStops().getFirst().getDepartureOffset());
+		firstRouteStop.setAwaitDepartureTime(true);
 		transitRouteStops.add(firstRouteStop);
 
 		loopingNetworkRouteLinks.add(firstRouteStop.getStopFacility().getLinkId());
@@ -131,20 +132,24 @@ public class EndlessCircleLineScheduleModifier {
 
 			// skip first and last stop and add merged stop instead to avoid stopping twice at loopStartTransitStopId
 			for (TransitRouteStop stop : routeToCopy.getStops().subList(1, routeToCopy.getStops().size() - 1)) {
-				transitRouteStops.add(factory.createTransitRouteStop(stop.getStopFacility(),
+				TransitRouteStop transitRouteStop = factory.createTransitRouteStop(stop.getStopFacility(),
 					stop.getArrivalOffset().seconds() + loopingsDone * loopingTravelTime,
-					stop.getDepartureOffset().seconds() + loopingsDone * loopingTravelTime));
+					stop.getDepartureOffset().seconds() + loopingsDone * loopingTravelTime);
+				transitRouteStop.setAwaitDepartureTime(true);
+				transitRouteStops.add(transitRouteStop);
 			}
 			// add last stop of this looping which is first stop of next looping
 			TransitRouteStop lastRouteStop = factory.createTransitRouteStop(
 				routeToCopy.getStops().getLast().getStopFacility(),
                     routeToCopy.getStops().getLast().getArrivalOffset().seconds() + loopingsDone * loopingTravelTime,
 				routeToCopy.getStops().getFirst().getDepartureOffset().seconds() + (loopingsDone + 1) * loopingTravelTime);
+			lastRouteStop.setAwaitDepartureTime(true);
 			transitRouteStops.add(lastRouteStop);
 		}
 		// at least for S41 and S42 last link in network route ends at same node as first link -> continuous
 		NetworkRoute networkRoute = RouteUtils.createNetworkRoute(loopingNetworkRouteLinks);
 		TransitRoute loopingRoute = factory.createTransitRoute(loopingTransitRouteId, networkRoute, transitRouteStops, "multiple loopings in one route");
+		loopingRoute.setTransportMode(routeToCopy.getTransportMode());
 
 		int departureIdCounter = 0;
 		for (double departureTime = firstDepartureTime; departureTime < firstDepartureTime + loopingTravelTime; departureTime = departureTime + headway) {
