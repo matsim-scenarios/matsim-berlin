@@ -288,11 +288,14 @@ $p/berlin-$V-25pct.plans_cadyts.xml.gz:
 
 # These depend on the output of optimization runs
 $p/berlin-$V-25pct.plans-initial.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
-	$(sc) prepare filter-relevant-agents\
-	 --input $p/berlin-$V-25pct.plans_cadyts.xml.gz --output $@\
-	 --shp input/$V/area/area.shp\
+	$(sc) prepare scenario-cutout\
+	 --population $p/berlin-$V-25pct.plans_cadyts.xml.gz\
 	 --facilities $<\
-	 --network $(word 2,$^)
+	 --network $(word 2,$^)\
+	 --output-population $@\
+	 --output-network $p/network-cutout.xml.gz\
+	 --output-facilities $p/facilities-cutout.xml.gz\
+	 --shp input/$V/area/area.shp\
 
 	$(sc) prepare split-activity-types-duration\
  	 --exclude commercial_start,commercial_end,freight_start,freight_end\

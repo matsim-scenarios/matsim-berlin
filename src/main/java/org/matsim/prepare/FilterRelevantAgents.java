@@ -45,6 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
 	name = "filter-relevant-agents",
 	description = "Filter agents that have any activities or routes within the shp file."
 )
+@Deprecated
 public class FilterRelevantAgents implements MATSimAppCommand, PersonAlgorithm {
 
 	private static final Logger log = LogManager.getLogger(FilterRelevantAgents.class);
