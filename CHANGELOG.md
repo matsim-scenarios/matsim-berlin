@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
   - The weight is based on an attraction factor and zone specific probabilities determined from survey data
 - Update GTFS schedule
   - TODO
+- New dashboard
+  -  PT Transit viewer
 
 ### 6.3 (2024-07)
 - Include additional trip analysis and updated dashboard

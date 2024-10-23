@@ -121,9 +121,12 @@ $p/berlin-$V-network.xml.gz: input/sumo.net.xml
 
 $p/berlin-$V-network-with-pt.xml.gz: $p/berlin-$V-network.xml.gz
 	$(sc) prepare transit-from-gtfs --network $< --output=$p\
-	 --name berlin-$V --date "2024-11-19" --target-crs $(CRS) \
-	 $(germany)/gtfs/complete-pt-2024-10-14.zip\ # TODO waiting for update
+	 --name berlin-$V --date "2024-11-18" --target-crs $(CRS) \
+	 $(germany)/gtfs/complete-pt-2024-10-21.zip\
 	 --copy-late-early\
+	 --transform-stops org.matsim.prepare.pt.CorrectStopLocations\
+	 --transform-routes org.matsim.prepare.pt.CorrectRouteTypes\
+	 --transform-schedule org.matsim.application.prepare.pt.AdjustSameDepartureTimes\
 	 --shp $p/pt-area/pt-area.shp
 
 $p/berlin-$V-counts-vmz.xml.gz: $p/berlin-$V-network.xml.gz
@@ -295,7 +298,8 @@ $p/berlin-$V-25pct.plans-initial.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berli
 	 --output-population $@\
 	 --output-network $p/network-cutout.xml.gz\
 	 --output-facilities $p/facilities-cutout.xml.gz\
-	 --shp input/$V/area/area.shp\
+	 --input-crs $(CRS)\
+	 --shp input/$V/area/area.shp
 
 	$(sc) prepare split-activity-types-duration\
  	 --exclude commercial_start,commercial_end,freight_start,freight_end\

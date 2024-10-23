@@ -25,6 +25,7 @@
 		<!-- 15 kmh -->
 		<maximumVelocity meterPerSecond="4.16"/>
 		<passengerCarEquivalents pce="0.2"/>
+		<networkMode networkMode="bike"/>
 	</vehicleType>
 
 	<vehicleType id="ride">
@@ -36,6 +37,7 @@
 		<length meter="7.5"/>
 		<width meter="1.0"/>
 		<passengerCarEquivalents pce="1.0"/>
+		<networkMode networkMode="car"/>
 	</vehicleType>
 
 	<vehicleType id="freight">
