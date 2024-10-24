@@ -16,6 +16,8 @@ import org.locationtech.jts.index.strtree.STRtree;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.OptionalDouble;
+import java.util.function.Predicate;
 
 /**
  * Class to extract more features / columns for the facility shape file.
@@ -50,6 +52,8 @@ final class FacilityFeatureExtractor {
 		typeBuilder.add("area", Double.class);
 		typeBuilder.add("levels", Integer.class);
 		typeBuilder.add("landuse", Boolean.class);
+		typeBuilder.add("building", Boolean.class);
+		typeBuilder.add("residential_only", Boolean.class);
 		typeBuilder.add("landuse_residential_500m", Double.class);
 		typeBuilder.add("landuse_residential_1500m", Double.class);
 		typeBuilder.add("landuse_retail_500m", Double.class);
@@ -57,6 +61,10 @@ final class FacilityFeatureExtractor {
 		typeBuilder.add("landuse_commercial_500m", Double.class);
 		typeBuilder.add("landuse_commercial_1500m", Double.class);
 		typeBuilder.add("landuse_recreation_1500m", Double.class);
+		typeBuilder.add("parking_space_500m", Double.class);
+		typeBuilder.add("nearest_bus_stop", Double.class);
+		typeBuilder.add("nearest_train_station", Double.class);
+
 		typeBuilder.add("poi_leisure", Integer.class);
 		typeBuilder.add("poi_leisure_250m", Integer.class);
 		typeBuilder.add("poi_shop", Integer.class);
@@ -96,6 +104,8 @@ final class FacilityFeatureExtractor {
 		b.add(BigDecimal.valueOf(ft.geometry.getArea()).setScale(2, RoundingMode.HALF_EVEN).doubleValue());
 		b.add(ft.getLevels());
 		b.add(ft.hasLanduse(null));
+		b.add(ft.isBuilding);
+		b.add(ft.isResidentialOnly());
 
 		b.add(calcLanduse("residential", ft, 500));
 		b.add(calcLanduse("residential", ft, 1500));
@@ -104,6 +114,9 @@ final class FacilityFeatureExtractor {
 		b.add(calcLanduse("commercial", ft, 500));
 		b.add(calcLanduse("commercial", ft, 1500));
 		b.add(calcLanduse("recreation_ground", ft, 1500));
+		b.add(calcArea("parking", ft, 500));
+		b.add(findNearest(ft, f -> f.isBusStop));
+		b.add(findNearest(ft, f -> f.isTrainStop));
 
 		b.add(countPOIs("leisure", ft));
 		b.add(countPOIs("leisure", ft, 250));
@@ -146,6 +159,57 @@ final class FacilityFeatureExtractor {
 
 		// convert to square kilometers
 		return BigDecimal.valueOf(res / 1_000_000).setScale(4, RoundingMode.HALF_EVEN).doubleValue();
+	}
+
+	private double calcArea(String activityType, Feature ft, double radius) {
+
+		if (ft.isResidentialOnly()) {
+			return 0;
+		}
+
+		MultiPolygon geometry = ft.geometry;
+		Geometry bbox = geometry.getCentroid().buffer(radius);
+
+		double res = 0;
+		List<Feature> query = entities.query(bbox.getEnvelopeInternal());
+		for (Feature q : query) {
+			if (!q.geomIssues && q.hasType(activityType)) {
+				try {
+					res += q.geometry.intersection(bbox).getArea();
+				} catch (TopologyException e) {
+					q.geomIssues = true;
+				}
+			}
+		}
+
+		return BigDecimal.valueOf(res / 1_000).setScale(4, RoundingMode.HALF_EVEN).doubleValue();
+	}
+
+	private double findNearest(Feature ft, Predicate<Feature> filter) {
+
+		if (ft.isResidentialOnly()) {
+			return 0;
+		}
+
+		MultiPolygon geometry = ft.geometry;
+		for (Integer radius : List.of(500, 5000, 20000)) {
+
+			Geometry bbox = geometry.getCentroid().buffer(radius);
+
+			List<Feature> query = pois.query(bbox.getEnvelopeInternal());
+
+			OptionalDouble dist = query.stream()
+				.filter(filter)
+				.mapToDouble(a -> a.geometry.distance(geometry))
+				.min();
+
+			if (dist.isPresent()) {
+				return dist.getAsDouble();
+			}
+
+		}
+
+		return 20000;
 	}
 
 	private int countPOIs(String type, Feature ft) {

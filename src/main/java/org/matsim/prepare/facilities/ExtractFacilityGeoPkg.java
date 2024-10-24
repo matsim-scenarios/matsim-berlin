@@ -274,11 +274,17 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 		while (it.hasNext()) {
 			Feature ft = it.next();
 
+			if (!ft.isAssignable())
+				continue;
+
 			List<Feature> query = index.query(ft.geometry.getBoundary().getEnvelopeInternal());
 
 			for (Feature other : query) {
 				// Assign other features to the buildings
 				double otherArea = other.geometry.getArea();
+
+				if (!other.isAssignable())
+					continue;
 
 				if (otherArea < MAX_ASSIGN) {
 					Geometry intersect = intersect(ft.geometry, other.geometry);
@@ -358,6 +364,8 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 		boolean filtered = true;
 		boolean isBuilding = false;
 		boolean isUnspecific = false;
+		boolean isBusStop = false;
+		boolean isTrainStation = false;
 
 		int n = entity.getNumberOfTags();
 		for (int i = 0; i < n; i++) {
@@ -370,6 +378,19 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 				if (tag.getValue().equals("yes")) {
 					isUnspecific = true;
 				}
+				break;
+			}
+
+			if (tag.getKey().equals("highway") && tag.getValue().equals("bus_stop")) {
+				isBusStop = true;
+				filtered = false;
+				break;
+			}
+
+			if ((tag.getKey().equals("railway") && tag.getValue().equals("stop")) ||
+				(tag.getKey().equals("railway") && tag.getValue().equals("tram_stop"))) {
+				isTrainStation = true;
+				filtered = false;
 				break;
 			}
 
@@ -397,7 +418,7 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 				return;
 			}
 
-			Feature ft = new Feature(entity, types, geometry, false,  isUnspecific,false);
+			Feature ft = new Feature(entity, types, geometry, false, isUnspecific, false, isBusStop, isTrainStation);
 			parse(ft, entity);
 			pois.put(entity.getId(), ft);
 		} else {
@@ -427,7 +448,7 @@ public class ExtractFacilityGeoPkg implements MATSimAppCommand {
 				return;
 			}
 
-			Feature ft = new Feature(entity, types, geometry, isBuilding, isUnspecific, landuse);
+			Feature ft = new Feature(entity, types, geometry, isBuilding, isUnspecific, landuse, isBusStop, isTrainStation);
 			parse(ft, entity);
 			if (landuse) {
 				this.landuse.put(ft.entity.getId(), ft);

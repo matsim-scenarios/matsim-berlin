@@ -23,6 +23,8 @@ final class Feature {
 	final boolean isBuilding;
 	final boolean isUnspecific;
 	final boolean isLanduse;
+	final boolean isBusStop;
+	final boolean isTrainStop;
 	final MultiPolygon geometry;
 
 	/**
@@ -56,7 +58,7 @@ final class Feature {
 	public boolean geomIssues = false;
 
 	Feature(OsmEntity entity, Object2IntMap<String> types, MultiPolygon geometry,
-			boolean isBuilding, boolean isUnspecific, boolean isLanduse) {
+			boolean isBuilding, boolean isUnspecific, boolean isLanduse, boolean isBusStop, boolean isTrainStop) {
 
 		this.entity = entity;
 		this.osmType = entity instanceof OsmWay ? OsmType.way : entity instanceof OsmNode ? OsmType.node : OsmType.relation;
@@ -65,6 +67,8 @@ final class Feature {
 		this.isBuilding = isBuilding;
 		this.isUnspecific = isUnspecific;
 		this.isLanduse = isLanduse;
+		this.isBusStop = isBusStop;
+		this.isTrainStop = isTrainStop;
 		this.bits.clear();
 		this.geometry = geometry;
 	}
@@ -74,6 +78,15 @@ final class Feature {
 	 */
 	boolean hasTypes() {
 		return !bits.isEmpty();
+	}
+
+	boolean isAssignable() {
+		// bus and trains stops should not be assigned other types
+		return hasTypes() || (!isBusStop && !isTrainStop);
+	}
+
+	boolean hasType(String act) {
+		return bits.get(types.getInt(act));
 	}
 
 	void set(Set<String> acts) {
