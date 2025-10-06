@@ -26,17 +26,6 @@ public class EnergyConsumptionDashboard implements Dashboard {
 				" If no shape file was provided, ALL person agents are considered to be residents." +
 				" Results are scaled to 100%.";
 
-		layout.row("shape")
-				.el(MapPlot.class, (viz, data) -> {
-					viz.title = "Considered Area";
-					viz.description = "Area determining residents and non-residents for the energy consumption estimation.";
-					viz.setShape(data.compute(EnergyConsumptionAnalysis.class, "energy_consumption_area.gpkg"));
-					viz.center = data.context().getCenter();
-					viz.zoom = data.context().getMapZoomLevel();
-					viz.display.fill.fixedColors = new String[]{"#e15759"}; //
-					viz.height = 10.0;
-				});
-
 		layout.row("distance")
 				.el(Tile.class, (viz, data) -> {
 					viz.title = "Distance Statistics";
@@ -58,6 +47,17 @@ public class EnergyConsumptionDashboard implements Dashboard {
 							" The estimation does not consider any specific vehicle characteristics (e.g. battery size, efficiency, etc.). \n" +
 							" The estimation does not consider any trip characteristics (e.g. speed, congestion, etc.). \n" +
 							" The estimation assumes that all car trips are conducted by electric vehicles.";
+				});
+
+		layout.row("shape")
+				.el(MapPlot.class, (viz, data) -> {
+					viz.title = "Considered Area";
+					viz.description = "Area determining residents and non-residents for the energy consumption estimation.";
+					viz.setShape(data.compute(EnergyConsumptionAnalysis.class, "energy_consumption_area.gpkg"));
+					viz.center = data.context().getCenter();
+					viz.zoom = data.context().getMapZoomLevel();
+					viz.display.fill.fixedColors = new String[]{"#e15759"}; //
+					viz.height = 10.0;
 				});
 
 	}

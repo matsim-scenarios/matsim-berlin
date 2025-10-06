@@ -55,12 +55,11 @@ public class CreateEnergyConsumptionDashboard implements MATSimAppCommand {
 //                simwrapperCfg.defaultParams().setShp(shp.getShapeFile());
 //            }
 
-            simwrapperCfg.defaultParams().setShp("D:/git/matsim-berlin/input/v6.4/area/area.shp");
             SimWrapperConfigGroup.ContextParams gartenfeldParams = (SimWrapperConfigGroup.ContextParams) simwrapperCfg.getParameterSets().get("params").stream()
                     .filter(p -> p instanceof SimWrapperConfigGroup.ContextParams)
                     .filter(p -> ((SimWrapperConfigGroup.ContextParams) p).getContext().equals("gartenfeld"))
                     .findAny().orElseThrow();
-            gartenfeldParams.setShp("D:/git/matsim-berlin/input/gartenfeld/DNG_area.gpkg");
+            gartenfeldParams.setShp("ADJUST TO YOUR ABSOLUTE LOCAL PATH TO: /input/gartenfeld/DNG_area.gpkg");
 
             //skip default dashboards
             simwrapperCfg.setDefaultDashboards(SimWrapperConfigGroup.Mode.disabled);
