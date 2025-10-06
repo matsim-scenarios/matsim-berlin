@@ -26,18 +26,18 @@ public class EnergyConsumptionDashboard implements Dashboard {
 				" If no shape file was provided, ALL person agents are considered to be residents." +
 				" Results are scaled to 100%.";
 
-		layout.row("distance")
+		layout.row("distance_residents")
 				.el(Tile.class, (viz, data) -> {
-					viz.title = "Distance Statistics";
-					viz.dataset = data.compute(EnergyConsumptionAnalysis.class, "distance_stats.csv");
+					viz.title = "Residents: Distance Statistics";
+					viz.dataset = data.compute(EnergyConsumptionAnalysis.class, "distance_stats_residents.csv");
 					viz.height = 1.;
 					viz.description = " Note that the values are scaled to 100%.";
 				});
 
-		layout.row("consumption")
+		layout.row("consumption_residents")
 				.el(Tile.class, (viz, data) -> {
-					viz.title = "Energy Consumption Estimation";
-					viz.dataset = data.compute(EnergyConsumptionAnalysis.class, "energy_consumption_stats.csv");
+					viz.title = "Residents: Energy Consumption Estimation";
+					viz.dataset = data.compute(EnergyConsumptionAnalysis.class, "energy_consumption_residents.csv");
 					viz.height = 1.;
 					viz.description = "The energy consumption should not be directly translated into charging demand, as charging can also happen at other places (e.g. at work, depot, etc.). \n" +
 							" Note that the values are scaled to 100% electrification and the average consumption value is configurable. \n" +
@@ -48,6 +48,32 @@ public class EnergyConsumptionDashboard implements Dashboard {
 							" The estimation does not consider any trip characteristics (e.g. speed, congestion, etc.). \n" +
 							" The estimation assumes that all car trips are conducted by electric vehicles.";
 				});
+
+		layout.row("distance_residents")
+				.el(Tile.class, (viz, data) -> {
+					viz.title = "Non-Residents: Distance Statistics";
+					viz.dataset = data.compute(EnergyConsumptionAnalysis.class, "distance_stats_non_residents.csv");
+					viz.height = 1.;
+					viz.description = " Note that the values are scaled to 100%.";
+				});
+
+
+		layout.row("consumption_residents")
+				.el(Tile.class, (viz, data) -> {
+					viz.title = "Non-Residents: Energy Consumption Estimation";
+					viz.dataset = data.compute(EnergyConsumptionAnalysis.class, "energy_consumption_non_residents.csv");
+					viz.height = 1.;
+					//TODO no duplicate description ?
+					viz.description = "The energy consumption should not be directly translated into charging demand, as charging can also happen at other places (e.g. at work, depot, etc.). \n" +
+							" Note that the values are scaled to 100% electrification and the average consumption value is configurable. \n" +
+							" The estimation does not consider any temporal aspects (when cars are charged). \n" +
+							" The estimation does not consider any spatial aspects (where cars are charged). \n" +
+							" The estimation does not consider any vehicle types (e.g. vans, trucks, etc.). \n" +
+							" The estimation does not consider any specific vehicle characteristics (e.g. battery size, efficiency, etc.). \n" +
+							" The estimation does not consider any trip characteristics (e.g. speed, congestion, etc.). \n" +
+							" The estimation assumes that all car trips are conducted by electric vehicles.";
+				});
+
 
 		layout.row("shape")
 				.el(MapPlot.class, (viz, data) -> {

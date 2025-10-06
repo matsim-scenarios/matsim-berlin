@@ -40,7 +40,9 @@ import java.util.stream.Collectors;
 @CommandSpec(
         requireRunDirectory = true,
         requirePopulation = true,
-        produces = {"energy_consumption_stats.csv", "distance_stats.csv", "energy_consumption_area.gpkg"})
+        produces = {"energy_consumption_residents.csv", "energy_consumption_non_residents.csv",
+                "distance_stats_residents.csv", "distance_stats_non_residents.csv",
+                "energy_consumption_area.gpkg"})
 public class EnergyConsumptionAnalysis implements MATSimAppCommand {
 
     private static final Logger log = LogManager.getLogger(EnergyConsumptionAnalysis.class);
@@ -182,18 +184,31 @@ public class EnergyConsumptionAnalysis implements MATSimAppCommand {
 
         // Total stats
         DecimalFormat df = new DecimalFormat("#", DecimalFormatSymbols.getInstance(Locale.US));
-        try (CSVPrinter printer = new CSVPrinter(IOUtils.getBufferedWriter(output.getPath("distance_stats.csv").toString()), CSVFormat.DEFAULT)) {
+        try (CSVPrinter printer = new CSVPrinter(IOUtils.getBufferedWriter(output.getPath("distance_stats_residents.csv").toString()), CSVFormat.DEFAULT)) {
             printer.printRecord("Total driven car distance by residents  [km]:", df.format(inhabitantsCarDistanceStats.getSum() * factor));
-            printer.printRecord("Mean driven car distance by residents [km]:", df.format(inhabitantsCarDistanceStats.getMean() * factor));
-            printer.printRecord("Total driven car distance by non-residents with 1+ activities in shape [km]:", df.format(destinationAgentsCarDistanceStats.getSum() * factor));
-            printer.printRecord("Mean driven car distance by non-residents with 1+ activities in shape [km]:", df.format(destinationAgentsCarDistanceStats.getMean() * factor));
+            printer.printRecord("Mean driven car distance by resident car drivers [km]:", df.format(inhabitantsCarDistanceStats.getMean())); //no scale factor, because this a mean!
+            printer.printRecord("Number of resident car drivers [1]:", df.format(inhabitantsCarDistanceStats.getN() * factor));
         } catch (IOException ex) {
             log.error(ex);
         }
-        try (CSVPrinter printer = new CSVPrinter(IOUtils.getBufferedWriter(output.getPath("energy_consumption_stats.csv").toString()), CSVFormat.DEFAULT)) {
+        try (CSVPrinter printer = new CSVPrinter(IOUtils.getBufferedWriter(output.getPath("distance_stats_non_residents.csv").toString()), CSVFormat.DEFAULT)) {
+            printer.printRecord("Total driven car distance by non-residents with 1+ activities in shape [km]:", df.format(destinationAgentsCarDistanceStats.getSum() * factor));
+            printer.printRecord("Mean driven car distance by non-resident car drivers with 1+ activities in shape [km]:", df.format(destinationAgentsCarDistanceStats.getMean()));
+            printer.printRecord("Number of non-resident  car drivers [1]:", df.format(destinationAgentsCarDistanceStats.getN() * factor));
+        } catch (IOException ex) {
+            log.error(ex);
+        }
+        try (CSVPrinter printer = new CSVPrinter(IOUtils.getBufferedWriter(output.getPath("energy_consumption_residents.csv").toString()), CSVFormat.DEFAULT)) {
             printer.printRecord("Assumed energy consumption [kWh/100km]:", df.format(this.averageConsumptionInKWhPer100km));
-            printer.printRecord("Total energy consumption by inhabitants  [kWh]:", df.format(inhabitantsCarDistanceStats.getSum()  * factor / 100.0 * this.averageConsumptionInKWhPer100km));
-            printer.printRecord("Mean energy consumption by inhabitants [kWh]:", df.format(inhabitantsCarDistanceStats.getMean()  * factor/ 100.0 * this.averageConsumptionInKWhPer100km));
+            printer.printRecord("Total energy consumption by resident car drivers  [kWh]:", df.format(inhabitantsCarDistanceStats.getSum()  * factor / 100.0 * this.averageConsumptionInKWhPer100km));
+            printer.printRecord("Mean energy consumption by resident car drivers [kWh]:", df.format(inhabitantsCarDistanceStats.getMean()  * factor / 100.0 * this.averageConsumptionInKWhPer100km));
+        } catch (IOException ex) {
+            log.error(ex);
+        }
+        try (CSVPrinter printer = new CSVPrinter(IOUtils.getBufferedWriter(output.getPath("energy_consumption_non_residents.csv").toString()), CSVFormat.DEFAULT)) {
+            printer.printRecord("Assumed energy consumption [kWh/100km]:", df.format(this.averageConsumptionInKWhPer100km));
+            printer.printRecord("Total energy consumption by resident car drivers  [kWh]:", df.format(destinationAgentsCarDistanceStats.getSum()  * factor / 100.0 * this.averageConsumptionInKWhPer100km));
+            printer.printRecord("Mean energy consumption by resident car drivers [kWh]:", df.format(destinationAgentsCarDistanceStats.getMean()  * factor / 100.0 * this.averageConsumptionInKWhPer100km));
         } catch (IOException ex) {
             log.error(ex);
         }
