@@ -82,7 +82,7 @@ public class DTVComparisonDashboard implements Dashboard {
 				viz.addDataset("dtv", data.compute(DTVAnalysis.class, "dtv_comparison.csv", "--input-dtv", dtvPath));
 
 				viz.center = data.context().getCenter();
-				viz.zoom = data.context().mapZoomLevel;
+				viz.zoom = data.context().getMapZoomLevel();
 
 				viz.display.lineColor.dataset = "dtv";
 				viz.display.lineColor.columnName = "quality";

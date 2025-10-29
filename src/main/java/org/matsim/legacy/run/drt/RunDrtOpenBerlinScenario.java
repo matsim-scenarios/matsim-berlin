@@ -123,7 +123,7 @@ public final class RunDrtOpenBerlinScenario {
 
 		for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(config).getModalElements()) {
 
-			String drtServiceAreaShapeFile = drtCfg.drtServiceAreaShapeFile;
+			String drtServiceAreaShapeFile = drtCfg.getDrtServiceAreaShapeFile();
 			if (drtServiceAreaShapeFile != null && !drtServiceAreaShapeFile.equals("") && !drtServiceAreaShapeFile.equals("null")) {
 
 				// Michal says restricting drt to a drt network roughly the size of the service area helps to speed up.

@@ -1,7 +1,19 @@
 package org.matsim.prepare.choices;
 
-import com.google.inject.Injector;
-import me.tongfei.progressbar.ProgressBar;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.logging.log4j.LogManager;
@@ -22,24 +34,29 @@ import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.algorithms.ParallelPersonAlgorithmUtils;
 import org.matsim.core.population.algorithms.PermissibleModesCalculator;
 import org.matsim.core.population.algorithms.PersonAlgorithm;
-import org.matsim.core.router.*;
+import org.matsim.core.router.DefaultAnalysisMainModeIdentifier;
+import org.matsim.core.router.MainModeIdentifier;
+import org.matsim.core.router.PlanRouter;
+import org.matsim.core.router.TripRouter;
+import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.utils.timing.TimeInterpretation;
-import org.matsim.modechoice.*;
+import org.matsim.modechoice.InformedModeChoiceConfigGroup;
+import org.matsim.modechoice.InformedModeChoiceModule;
+import org.matsim.modechoice.ModeOptions;
+import org.matsim.modechoice.PlanCandidate;
+import org.matsim.modechoice.PlanModel;
 import org.matsim.modechoice.constraints.RelaxedMassConservationConstraint;
 import org.matsim.modechoice.estimators.DefaultLegScoreEstimator;
 import org.matsim.modechoice.estimators.FixedCostsEstimator;
 import org.matsim.modechoice.search.TopKChoicesGenerator;
 import org.matsim.prepare.population.Attributes;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
-import picocli.CommandLine;
 
-import javax.annotation.Nullable;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
+import com.google.inject.Injector;
+
+import jakarta.annotation.Nullable;
+import me.tongfei.progressbar.ProgressBar;
+import picocli.CommandLine;
 
 
 @CommandLine.Command(
@@ -110,7 +127,7 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 		config.controller().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
 
 		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
-		sw.defaultDashboards = SimWrapperConfigGroup.Mode.disabled;
+		sw.setDefaultDashboards(SimWrapperConfigGroup.Mode.disabled);
 
 		if (timeUtil) {
 			// All utilities except travel time become zero

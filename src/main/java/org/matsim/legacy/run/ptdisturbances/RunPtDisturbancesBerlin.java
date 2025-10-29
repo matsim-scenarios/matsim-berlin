@@ -25,8 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.inject.Provider;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -43,15 +41,14 @@ import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.config.groups.RoutingConfigGroup;
 import org.matsim.core.config.groups.ScoringConfigGroup.ActivityParams;
-import org.matsim.core.config.groups.ScoringConfigGroup;
-import org.matsim.core.config.groups.QSimConfigGroup.TrafficDynamics;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
-import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
+import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.gbl.Gbl;
 import org.matsim.core.mobsim.framework.MobsimAgent;
 import org.matsim.core.mobsim.qsim.AbstractQSimModule;
@@ -62,11 +59,11 @@ import org.matsim.core.mobsim.qsim.components.QSimComponentsConfigGroup;
 import org.matsim.core.mobsim.qsim.interfaces.MobsimEngine;
 import org.matsim.core.mobsim.qsim.pt.TransitDriverAgentImpl;
 import org.matsim.core.network.NetworkChangeEvent;
+import org.matsim.core.network.NetworkChangeEvent.ChangeType;
+import org.matsim.core.network.NetworkChangeEvent.ChangeValue;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.population.routes.RouteUtils;
-import org.matsim.core.network.NetworkChangeEvent.ChangeType;
-import org.matsim.core.network.NetworkChangeEvent.ChangeValue;
 import org.matsim.core.router.StageActivityTypeIdentifier;
 import org.matsim.core.router.TripRouter;
 import org.matsim.core.router.TripStructureUtils;
@@ -83,6 +80,7 @@ import org.matsim.withinday.utils.EditTrips;
 import org.matsim.withinday.utils.ReplanningException;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 
 import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
 

@@ -1,30 +1,45 @@
 package org.matsim.prepare;
 
-import com.google.inject.Inject;
-import com.google.inject.TypeLiteral;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.api.core.v01.population.*;
+import org.matsim.api.core.v01.population.Activity;
+import org.matsim.api.core.v01.population.Leg;
+import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Plan;
+import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.MATSimApplication;
 import org.matsim.application.options.SampleOptions;
 import org.matsim.application.prepare.CreateLandUseShp;
-import org.matsim.application.prepare.freight.tripExtraction.ExtractRelevantFreightTrips;
+import org.matsim.application.prepare.longDistanceFreightGER.tripExtraction.ExtractRelevantFreightTrips;
 import org.matsim.application.prepare.network.CleanNetwork;
 import org.matsim.application.prepare.network.CreateNetworkFromSumo;
 import org.matsim.application.prepare.network.params.ApplyNetworkParams;
-import org.matsim.application.prepare.population.*;
+import org.matsim.application.prepare.population.CheckCarAvailability;
+import org.matsim.application.prepare.population.CleanPopulation;
+import org.matsim.application.prepare.population.DownSamplePopulation;
+import org.matsim.application.prepare.population.FixSubtourModes;
+import org.matsim.application.prepare.population.MergePopulations;
+import org.matsim.application.prepare.population.SetCarAvailabilityByAge;
+import org.matsim.application.prepare.population.SplitActivityTypesDuration;
 import org.matsim.application.prepare.pt.CreateTransitScheduleFromGtfs;
 import org.matsim.application.prepare.scenario.CreateScenarioCutOut;
 import org.matsim.contrib.bicycle.BicycleConfigGroup;
 import org.matsim.contrib.cadyts.car.CadytsCarModule;
 import org.matsim.contrib.cadyts.car.CadytsContext;
 import org.matsim.contrib.cadyts.general.CadytsScoring;
-import org.matsim.contrib.locationchoice.frozenepsilons.FrozenTastes;
 import org.matsim.contrib.locationchoice.frozenepsilons.FrozenTastesConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -61,7 +76,12 @@ import org.matsim.prepare.facilities.ExtractFacilityGeoPkg;
 import org.matsim.prepare.opt.ExtractPlanIndexFromType;
 import org.matsim.prepare.opt.RunCountOptimization;
 import org.matsim.prepare.opt.SelectPlansFromIndex;
-import org.matsim.prepare.population.*;
+import org.matsim.prepare.population.AssignReferencePopulation;
+import org.matsim.prepare.population.CreateBerlinPopulation;
+import org.matsim.prepare.population.CreateBrandenburgPopulation;
+import org.matsim.prepare.population.InitLocationChoice;
+import org.matsim.prepare.population.LookupRegioStaR;
+import org.matsim.prepare.population.RunActivitySampling;
 import org.matsim.prepare.transit.EndlessCircleLineScheduleModifier;
 import org.matsim.run.Activities;
 import org.matsim.run.OpenBerlinScenario;
@@ -71,15 +91,11 @@ import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
 import org.matsim.smallScaleCommercialTrafficGeneration.GenerateSmallScaleCommercialTrafficDemand;
 import org.matsim.smallScaleCommercialTrafficGeneration.prepare.CreateDataDistributionOfStructureData;
-import picocli.CommandLine;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.google.inject.Inject;
+import com.google.inject.TypeLiteral;
+
+import picocli.CommandLine;
 
 /**
  * This scenario class is used for run a MATSim scenario in various stages of the calibration process.
@@ -198,7 +214,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			config.counts().setCountsScaleFactor(sampleSize * countScale);
 			config.plans().setInputFile(sample.adjustName(config.plans().getInputFile()));
 
-			sw.sampleSize = sampleSize * countScale;
+			sw.setSampleSize(sampleSize * countScale);
 		}
 
 		// Routes are not relaxed yet, and there should not be too heavy congestion
@@ -212,7 +228,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			config.transit().setUseTransit(false);
 
 			// Disable dashboards, for all car runs, these take too many resources
-			sw.defaultDashboards = SimWrapperConfigGroup.Mode.disabled;
+			sw.setDefaultDashboards(SimWrapperConfigGroup.Mode.disabled);
 
 			// Only car and ride will be network modes, ride is not simulated on the network though
 			config.routing().setNetworkModes(List.of(TransportMode.car, TransportMode.ride));
@@ -250,7 +266,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		if (mode == CalibrationMode.locationChoice) {
 
 			config.replanning().addStrategySettings(new ReplanningConfigGroup.StrategySettings()
-				.setStrategyName(FrozenTastes.LOCATION_CHOICE_PLAN_STRATEGY)
 				.setWeight(weight)
 				.setSubpopulation("person")
 			);
@@ -411,8 +426,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	protected void prepareControler(Controler controler) {
 
 		if (mode == CalibrationMode.locationChoice) {
-			FrozenTastes.configure(controler);
-
 			controler.addOverridingModule(new AbstractModule() {
 				@Override
 				public void install() {

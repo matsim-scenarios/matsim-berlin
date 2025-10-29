@@ -1,17 +1,18 @@
 package org.matsim.prepare.population;
 
+import java.nio.file.Path;
+import java.util.Objects;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.geotools.api.feature.simple.SimpleFeature;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.application.options.ShpOptions;
-import picocli.CommandLine;
 
-import javax.annotation.Nullable;
-import java.nio.file.Path;
-import java.util.Objects;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import jakarta.annotation.Nullable;
+import picocli.CommandLine;
 
 /**
  * Options to work with facility shape file.
