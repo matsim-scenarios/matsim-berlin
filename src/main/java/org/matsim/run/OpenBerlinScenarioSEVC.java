@@ -31,6 +31,8 @@ import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
+import org.matsim.core.replanning.strategies.KeepLastSelected;
+import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule.DefaultSelector;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutilityFactory;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
@@ -167,20 +169,19 @@ public class OpenBerlinScenarioSEVC extends MATSimApplication {
 		roadTypeMapping.addHbefaMappings(scenario.getNetwork());
 
 		// SEVC: We only work with persons
-		IdSet<Person> remove = new IdSet<>(Person.class);
-
-		for (Person person : scenario.getPopulation().getPersons().values()) {
-			if (!PopulationUtils.getSubpopulation(person).equals("person")) {
-				remove.add(person.getId());
-			}
-		}
-
-		remove.forEach(scenario.getPopulation()::removePerson);
-
 		infrastructureSpecification = sevcConfigurator.apply(scenario);
 
 		for (var strategy : scenario.getConfig().replanning().getStrategySettings()) {
 			strategy.setSubpopulation("person");
+		}
+
+		for (String subpopulation : List.of("freight", "goodsTraffic", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
+			scenario.getConfig().replanning().addStrategySettings(
+				new ReplanningConfigGroup.StrategySettings()
+					.setStrategyName(DefaultSelector.KeepLastSelected)
+					.setWeight(1.0)
+					.setSubpopulation(subpopulation)
+			);
 		}
 	}
 
