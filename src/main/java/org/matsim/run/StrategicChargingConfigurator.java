@@ -672,8 +672,11 @@ public class StrategicChargingConfigurator {
             for (Activity activity : TripStructureUtils.getActivities(person.getSelectedPlan(),
                     StageActivityHandling.ExcludeStageActivities)) {
                 if (activity.getType().startsWith("work")) {
-                    Id<ActivityFacility> facilityId = Objects.requireNonNull(activity.getFacilityId());
-                    count.compute(facilityId, (key, value) -> value == null ? 1 : value + 1);
+                    Id<ActivityFacility> facilityId = activity.getFacilityId();
+
+                    if (facilityId != null) {
+                        count.compute(facilityId, (key, value) -> value == null ? 1 : value + 1);
+                    }
                 }
             }
         }
