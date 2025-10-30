@@ -1,10 +1,10 @@
 package org.matsim.run;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import org.matsim.analysis.QsimTimingModule;
 import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
-import org.matsim.api.core.v01.IdSet;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Person;
@@ -32,7 +32,6 @@ import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
-import org.matsim.core.replanning.strategies.KeepLastSelected;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule.DefaultSelector;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutilityFactory;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
@@ -176,8 +175,23 @@ public class OpenBerlinScenarioSEVC extends MATSimApplication {
 		HbefaRoadTypeMapping roadTypeMapping = OsmHbefaMapping.build();
 		roadTypeMapping.addHbefaMappings(scenario.getNetwork());
 
+		// back up non-person agents
+		List<Person> backup = new LinkedList<>();
+		for (Person person : scenario.getPopulation().getPersons().values()) {
+			if (!PopulationUtils.getSubpopulation(person).equals("person")) {
+				backup.add(person);
+			}
+		}
+
+		for (Person person : backup) {
+			scenario.getPopulation().removePerson(person.getId());
+		}
+
 		// SEVC: We only work with persons
 		infrastructureSpecification = sevcConfigurator.apply(scenario);
+
+		// add them back
+		backup.forEach(scenario.getPopulation()::addPerson);
 
 		for (var strategy : scenario.getConfig().replanning().getStrategySettings()) {
 			strategy.setSubpopulation("person");
