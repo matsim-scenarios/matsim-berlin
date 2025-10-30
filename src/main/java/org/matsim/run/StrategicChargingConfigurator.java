@@ -679,7 +679,11 @@ public class StrategicChargingConfigurator {
 
                         if (facility.getLinkId() != null) {
                             count.compute(facilityId, (key, value) -> value == null ? 1 : value + 1);
+                        } else {
+                            System.out.println("MISSING LINK for facility " + facility.getId());
                         }
+                    } else {
+                        System.out.println("MISSING FACILITY for person " + person.getId());
                     }
                 }
             }
