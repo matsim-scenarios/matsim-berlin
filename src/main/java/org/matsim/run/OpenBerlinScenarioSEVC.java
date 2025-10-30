@@ -80,7 +80,7 @@ public class OpenBerlinScenarioSEVC extends MATSimApplication {
 	private ChargingInfrastructureSpecification infrastructureSpecification;
 
 	public static void main(String[] args) {
-		MATSimApplication.run(OpenBerlinScenario.class, args);
+		MATSimApplication.run(OpenBerlinScenarioSEVC.class, args);
 	}
 
 	@Override
