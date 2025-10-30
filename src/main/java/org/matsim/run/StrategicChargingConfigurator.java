@@ -46,6 +46,8 @@ import org.matsim.core.config.CommandLine.ConfigurationException;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.ConfigWriter;
+import org.matsim.core.network.NetworkUtils;
+import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
 import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.StageActivityHandling;
@@ -327,6 +329,9 @@ public class StrategicChargingConfigurator {
          * - we assign to each workplace plugsPerEmployee plugs
          */
 
+        Network roadNetwork = NetworkUtils.createNetwork(scenario.getConfig());
+        new TransportModeNetworkFilter(scenario.getNetwork()).filter(roadNetwork, Collections.singleton("car"));
+
         ActivityFacilities facilities = scenario.getActivityFacilities();
 
         int numberOfWorkChargers = 0;
@@ -338,6 +343,13 @@ public class StrategicChargingConfigurator {
             if (employees >= settings.workMinimumEmployees) {
                 ActivityFacility facility = facilities.getFacilities().get(entry.getKey());
                 int plugs = (int) Math.floor(employees * settings.workPlugsPerEmployee);
+
+                // find the link id
+                Id<Link> linkId = facility.getLinkId();
+
+                if (linkId == null) {
+                    linkId = NetworkUtils.getNearestLink(roadNetwork, facility.getCoord()).getId();
+                }
 
                 // describe the charger
                 ChargerSpecification charger = ImmutableChargerSpecification.newBuilder() //
@@ -371,16 +383,9 @@ public class StrategicChargingConfigurator {
          * - we distribute plugChargerCount chargers randomly in the network
          */
 
-        Network network = scenario.getNetwork();
-
         // make a list of all links and shuffle it
-        List<Link> links = new LinkedList<>(network.getLinks().values());
+        List<Link> links = new LinkedList<>(roadNetwork.getLinks().values());
         Collections.shuffle(links, random);
-
-        // only keep links that are accessible by car
-        links.removeIf(link -> {
-            return !link.getAllowedModes().contains("car");
-        });
 
         for (int k = 0; k < settings.publicChargerCount; k++) { // create N chargers for the first N links
             Link link = links.get(k);
@@ -675,15 +680,7 @@ public class StrategicChargingConfigurator {
                     Id<ActivityFacility> facilityId = activity.getFacilityId();
 
                     if (facilityId != null) {
-                        ActivityFacility facility = facilities.getFacilities().get(facilityId);
-
-                        if (facility.getLinkId() != null) {
-                            count.compute(facilityId, (key, value) -> value == null ? 1 : value + 1);
-                        } else {
-                            System.out.println("MISSING LINK for facility " + facility.getId());
-                        }
-                    } else {
-                        System.out.println("MISSING FACILITY for person " + person.getId());
+                        count.compute(facilityId, (key, value) -> value == null ? 1 : value + 1);
                     }
                 }
             }
