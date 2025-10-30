@@ -332,7 +332,7 @@ public class StrategicChargingConfigurator {
         int numberOfWorkChargers = 0;
         int maximumNumberOfWorkPlugs = 0;
 
-        for (var entry : countEmployees(population).entrySet()) {
+        for (var entry : countEmployees(population, facilities).entrySet()) {
             int employees = entry.getValue();
 
             if (employees >= settings.workMinimumEmployees) {
@@ -353,7 +353,7 @@ public class StrategicChargingConfigurator {
 
                 // add it to the infrastructure
                 infrastructure.addChargerSpecification(charger);
-                
+
                 // for aggregated analysis
                 ChargerTypeAnalysisListener.addAnalysisType(charger, "work");
 
@@ -665,7 +665,7 @@ public class StrategicChargingConfigurator {
         throw new IllegalStateException();
     }
 
-    private IdMap<ActivityFacility, Integer> countEmployees(Population population) {
+    private IdMap<ActivityFacility, Integer> countEmployees(Population population, ActivityFacilities facilities) {
         IdMap<ActivityFacility, Integer> count = new IdMap<>(ActivityFacility.class);
 
         for (Person person : population.getPersons().values()) {
@@ -675,7 +675,11 @@ public class StrategicChargingConfigurator {
                     Id<ActivityFacility> facilityId = activity.getFacilityId();
 
                     if (facilityId != null) {
-                        count.compute(facilityId, (key, value) -> value == null ? 1 : value + 1);
+                        ActivityFacility facility = facilities.getFacilities().get(facilityId);
+
+                        if (facility.getLinkId() != null) {
+                            count.compute(facilityId, (key, value) -> value == null ? 1 : value + 1);
+                        }
                     }
                 }
             }
