@@ -163,6 +163,9 @@ public class OpenBerlinScenarioSEVC extends MATSimApplication {
 		evConfig.setChargersFile("injected");
 		config.addModule(evConfig);
 
+		// avoid aborting
+		config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
+
 		return config;
 	}
 
