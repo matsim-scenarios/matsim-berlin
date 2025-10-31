@@ -2,6 +2,8 @@ package org.matsim.run;
 
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.application.MATSimApplication;
+import org.matsim.contrib.ev.EvConfigGroup;
+import org.matsim.contrib.ev.strategic.StrategicChargingConfigGroup;
 import org.matsim.contrib.ev.strategic.StrategicChargingScenarioConfigurator;
 import org.matsim.contrib.ev.strategic.StrategicChargingScenarioConfigurator.Settings;
 import org.matsim.contrib.ev.strategic.StrategicChargingUtils;
@@ -27,6 +29,9 @@ public class OpenBerlinScenarioWithStrategicCharging extends OpenBerlinScenario 
 
 		// avoid aborting because not ChangeExpBeta is defined
 		config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
+
+		// set up anaylsis
+		configureAnalysis(config);
 
 		return config;
 	}
@@ -58,5 +63,16 @@ public class OpenBerlinScenarioWithStrategicCharging extends OpenBerlinScenario 
 
 		// feed back infrastructure into the controller
 		configurator.applyInfrastructure(controler);
+	}
+
+	private void configureAnalysis(Config config) {
+		// track score every 10 iterations
+		StrategicChargingConfigGroup sevcConfig = StrategicChargingConfigGroup.get(config);
+		sevcConfig.setScoreTrackingInterval(10);
+
+		// some output for visualization and analysis
+		EvConfigGroup evConfig = EvConfigGroup.get(config);
+		evConfig.setWriteVehicleTrajectoriesInterval(100);
+		evConfig.setWriteZonalEnergyDemandInterval(1);
 	}
 }
