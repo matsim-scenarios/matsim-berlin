@@ -532,6 +532,8 @@ public class StrategicChargingScenarioConfigurator {
         loadExistingChargingInfrastructure(scenario);
         configureChargers(scenario);
 
+        configureCosts(scenario.getConfig());
+
         if (settings.subscriptions.subscriptionRate > 0.0 && settings.subscriptions.availabilityRate > 0.0) {
             configureSubscriptions(scenario);
         }

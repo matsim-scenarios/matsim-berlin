@@ -59,9 +59,6 @@ public class OpenBerlinScenarioWithStrategicCharging extends OpenBerlinScenario 
 		// activate persons, add vehicles, add chargers
 		configurator = new StrategicChargingScenarioConfigurator(settings);
 		configurator.configureScenario(scenario);
-
-		// update cost structures
-		configurator.configureCosts(scenario.getConfig());
 	}
 
 	@Override
