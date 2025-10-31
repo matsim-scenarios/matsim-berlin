@@ -354,7 +354,7 @@ public class StrategicChargingConfigurator {
                 // describe the charger
                 ChargerSpecification charger = ImmutableChargerSpecification.newBuilder() //
                         .id(Id.create("sevc:work:" + facility.getId().toString(), Charger.class)) // ,
-                        .linkId(facility.getLinkId()) //
+                        .linkId(linkId) //
                         .chargerType("work") // only for analysis, no logical meaning
                         .plugPower(settings.workPlugPower_kW * 1e3) //
                         .plugCount(plugs) // dependent on employee count
