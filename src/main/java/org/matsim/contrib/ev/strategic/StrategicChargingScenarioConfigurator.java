@@ -203,6 +203,8 @@ public class StrategicChargingScenarioConfigurator {
 
         public PublicChargerSettings publicChargers = new PublicChargerSettings();
 
+        public boolean considerExistingChargingInfrastructure = false;
+
         public class SubscriptionSettings {
             // number of ev users holding a special tariff subscription for public chargers
             public double subscriptionRate = 0.2;
@@ -357,7 +359,7 @@ public class StrategicChargingScenarioConfigurator {
     public void loadExistingChargingInfrastructure(Scenario scenario) {
         EvConfigGroup evConfig = EvConfigGroup.get(scenario.getConfig());
 
-        if (evConfig.getChargersFile() != null) {
+        if (evConfig.getChargersFile() != null && settings.considerExistingChargingInfrastructure) {
             new ChargerReader(infrastructure).readURL(
                     ConfigGroup.getInputFileURL(scenario.getConfig().getContext(), evConfig.getChargersFile()));
         }
