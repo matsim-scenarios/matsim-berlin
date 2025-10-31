@@ -30,9 +30,6 @@ public class OpenBerlinScenarioWithStrategicCharging extends OpenBerlinScenario 
 		// set up general base configuration for strategic charging
 		StrategicChargingUtils.configure(config);
 
-		// TODO: Remove once null is allowed
-		EvConfigGroup.get(config).setChargersFile("injected");
-
 		// configure standalone strategic charging (without mode choice, etc.) for the
 		// "person" subpopulation
 		StrategicChargingUtils.configureStandaloneReplanning(config, "person");
