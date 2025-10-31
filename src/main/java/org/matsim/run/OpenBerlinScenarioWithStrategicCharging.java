@@ -1,11 +1,15 @@
 package org.matsim.run;
 
+import java.io.File;
+
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.application.MATSimApplication;
 import org.matsim.contrib.common.zones.systems.grid.square.SquareGridZoneSystemParams;
 import org.matsim.contrib.ev.EvConfigGroup;
+import org.matsim.contrib.ev.infrastructure.ChargerWriter;
+import org.matsim.contrib.ev.infrastructure.ChargingInfrastructureSpecification;
 import org.matsim.contrib.ev.strategic.StrategicChargingConfigGroup;
 import org.matsim.contrib.ev.strategic.StrategicChargingScenarioConfigurator;
 import org.matsim.contrib.ev.strategic.StrategicChargingScenarioConfigurator.Settings;
@@ -59,6 +63,9 @@ public class OpenBerlinScenarioWithStrategicCharging extends OpenBerlinScenario 
 		// activate persons, add vehicles, add chargers
 		configurator = new StrategicChargingScenarioConfigurator(settings);
 		configurator.configureScenario(scenario);
+
+		// write chargers now for convenience and analysis
+		writeChargers(scenario.getConfig(), configurator.getInfrastructure());
 	}
 
 	@Override
@@ -109,5 +116,12 @@ public class OpenBerlinScenarioWithStrategicCharging extends OpenBerlinScenario 
 				}
 			}
 		}
+	}
+
+	private final String CHARGERS_FILE = "initial_chargers.xml.gz";
+
+	private void writeChargers(Config config, ChargingInfrastructureSpecification infrastructure) {
+		new ChargerWriter(infrastructure.getChargerSpecifications().values().stream())
+				.write(new File(config.controller().getOutputDirectory(), CHARGERS_FILE).toString());
 	}
 }
