@@ -2,6 +2,7 @@ package org.matsim.run;
 
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.application.MATSimApplication;
+import org.matsim.contrib.common.zones.systems.grid.square.SquareGridZoneSystemParams;
 import org.matsim.contrib.ev.EvConfigGroup;
 import org.matsim.contrib.ev.strategic.StrategicChargingConfigGroup;
 import org.matsim.contrib.ev.strategic.StrategicChargingScenarioConfigurator;
@@ -74,5 +75,9 @@ public class OpenBerlinScenarioWithStrategicCharging extends OpenBerlinScenario 
 		EvConfigGroup evConfig = EvConfigGroup.get(config);
 		evConfig.setWriteVehicleTrajectoriesInterval(100);
 		evConfig.setWriteZonalEnergyDemandInterval(1);
+
+		SquareGridZoneSystemParams gridParams = new SquareGridZoneSystemParams();
+		gridParams.setCellSize(1000.0);
+		evConfig.addParameterSet(gridParams);
 	}
 }
