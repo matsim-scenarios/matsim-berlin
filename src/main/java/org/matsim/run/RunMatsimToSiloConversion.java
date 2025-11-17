@@ -36,8 +36,8 @@ import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParamete
 
 import java.util.List;
 
-@CommandLine.Command(header = ":: Open Berlin Scenario ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true, showDefaultValues = true)
-public class OpenBerlinScenario extends MATSimApplication {
+@CommandLine.Command(header = ":: Open Berlin Scenario ::", version = RunMatsimToSiloConversion.VERSION, mixinStandardHelpOptions = true, showDefaultValues = true)
+public class RunMatsimToSiloConversion extends MATSimApplication {
 
 	public static final String VERSION = "6.5";
 	public static final String CRS = "EPSG:25832";
@@ -57,12 +57,12 @@ public class OpenBerlinScenario extends MATSimApplication {
 		defaultValue = DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta)
 	private String planSelector;
 
-	public OpenBerlinScenario() {
+	public RunMatsimToSiloConversion() {
 		super(String.format("input/v%s/berlin-v%s.config.xml", VERSION, VERSION));
 	}
 
 	public static void main(String[] args) {
-		MATSimApplication.run(OpenBerlinScenario.class, args);
+		MATSimApplication.run(RunMatsimToSiloConversion.class, args);
 	}
 
 	@Override
@@ -145,7 +145,6 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 	@Override
 	protected void prepareScenario(Scenario scenario) {
-
 
 		// add hbefa link attributes.
 		HbefaRoadTypeMapping roadTypeMapping = OsmHbefaMapping.build();
