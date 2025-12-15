@@ -450,7 +450,7 @@ public final class RunPtDisturbancesBerlin {
 
 	static void replanPtPassengers(double now, final Id<TransitLine> disturbedLineId, Provider<TripRouter> tripRouterProvider, Scenario scenario, InternalInterface internalInterface) {
 
-		final QSim qsim = internalInterface.getMobsim() ;
+		final QSim qsim = (QSim) internalInterface.getMobsim() ;
 
 		// force new transit router:
 		final TripRouter tripRouter = tripRouterProvider.get();
