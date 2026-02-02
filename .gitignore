@@ -1,5 +1,8 @@
 # Add own ignores on top, don't edit the template
 
+# config for the checkstyle-eclipse-plugin
+/.checkstyle
+
 /RunGTFS2MATSimOpenBerlin/
 
 # Common files to ignore when working with matsim
