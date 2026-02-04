@@ -5,13 +5,18 @@ V := v7.0
 CRS := EPSG:25832
 
 p := input/$V
-germany := ../shared-svn/projects/matsim-germany
-berlin := ../public-svn/matsim/scenarios/countries/de/berlin/berlin-$V
+germany := ../../../shared-svn/projects/matsim-germany
+berlinShared := ../../../shared-svn/projects/matsim-berlin
+berlin := ../../../public-svn/matsim/scenarios/countries/de/berlin/berlin-$V
 
 MEMORY ?= 20G
 REGIONS := brandenburg
 
-osmosis := osmosis/bin/osmosis
+## either use the global isntallation via, e.g. apt-get, or define where this is comming from
+osmosis := osmosis
+
+## you need SUMO (set $(SUMO_HOME) )to run this script in version 1.20.0 (or greater ?), either build it yourself 
+## or use https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-germany/sumo/sumo_1.20.0/
 
 # Scenario creation tool
 sc := java -Xmx$(MEMORY) -XX:+UseParallelGC -cp $(JAR) org.matsim.prepare.RunOpenBerlinCalibration
@@ -20,7 +25,7 @@ sc := java -Xmx$(MEMORY) -XX:+UseParallelGC -cp $(JAR) org.matsim.prepare.RunOpe
 .DELETE_ON_ERROR:
 
 $(JAR):
-	mvn package
+	./mvnw clean package -DskipTests=true
 
 input/brandenburg.osm.pbf:
 	curl https://download.geofabrik.de/europe/germany/brandenburg-230101.osm.pbf -o $@
@@ -50,10 +55,11 @@ input/ref_facilities.gpkg: input/facilities.osm.pbf
 	 --input $<\
 	 --output $@
 
-input/PLR_2013_2020.csv:
-	curl https://instantatlas.statistik-berlin-brandenburg.de/instantatlas/interaktivekarten/kommunalatlas/Kommunalatlas.zip --insecure -o atlas.zip
-	unzip atlas.zip -d input
-	rm atlas.zip
+$(berlinShared)/data/statistik-berlin-brandenburg/PLR_2013_2020.csv:
+	#curl https://instantatlas.statistik-berlin-brandenburg.de/instantatlas/interaktivekarten/kommunalatlas/Kommunalatlas.zip --insecure -o atlas.zip
+	#unzip atlas.zip -d input
+	#rm atlas.zip
+	echo "PLR_2013_2020.csv does no longer exist."
 # (Kommunalatlas = kleinräumiges Datenangebot.  "PLR" is the file name after expanding the zipfile; it may mean "Planungsraum".  Contains attributes of LOR zones (at 500 zones level).)
 # (link no longer active)
 
@@ -100,6 +106,7 @@ input/sumo.net.xml: input/network.osm
 	 --osm.all-attributes\
 	 --osm.extra-attributes smoothness,surface,crossing,tunnel,traffic_sign,bus:lanes,bus:lanes:forward,bus:lanes:backward,cycleway,cycleway:right,cycleway:left,bicycle\
 	 --proj "+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"\
+	 --ignore-errors --ignore-errors.connections\
 	 --osm-files $< -o=$@
 
 # converting the network from SUMO format to MATSim format:
@@ -156,7 +163,7 @@ $p/berlin-$V-network-with-pt.xml.gz: $p/berlin-$V-network.xml.gz $p/berlin-$V-co
 # register the VMZ counts (from 2018; see filename below) onto the network:
 $p/berlin-$V-counts-vmz.xml.gz: $p/berlin-$V-network.xml.gz
 	$(sc) prepare counts-from-vmz\
-	 --excel ../shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx\
+	 --excel $(berlinShared)/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx\
 	 --network $<\
 	 --network-geometries $p/berlin-$V-network-linkGeometries.csv\
 	 --output $@\
@@ -171,7 +178,7 @@ $p/berlin-$V-facilities.xml.gz: $p/berlin-$V-network.xml.gz input/facilities.gpk
 	 --zones-shp $(word 3,$^)\
 	 --output $@
 
-$p/berlin-only-$V-100pct.plans.xml.gz: input/PLR_2013_2020.csv $(berlin)/input/shp/Planungsraum_EPSG_25833.shp input/facilities.gpkg
+$p/berlin-only-$V-100pct.plans.xml.gz: $(berlinShared)/data/statistik-berlin-brandenburg/PLR_2013_2020.csv $(berlin)/input/shp/Planungsraum_EPSG_25833.shp input/facilities.gpkg
 	$(sc) prepare berlin-population\
 		--input $<\
 		--sample 1.0\
@@ -179,7 +186,7 @@ $p/berlin-only-$V-100pct.plans.xml.gz: input/PLR_2013_2020.csv $(berlin)/input/s
 		--facilities $(word 3,$^) --facilities-attr resident\
 		--output $@
 
-$p/berlin-only-$V-25pct.plans.xml.gz: input/PLR_2013_2020.csv $(berlin)/input/shp/Planungsraum_EPSG_25833.shp input/facilities.gpkg
+$p/berlin-only-$V-25pct.plans.xml.gz: $(berlinShared)/data/statistik-berlin-brandenburg/PLR_2013_2020.csv $(berlin)/input/shp/Planungsraum_EPSG_25833.shp input/facilities.gpkg
 	$(sc) prepare berlin-population\
 		--input $<\
 		--shp $(word 2,$^) --shp-crs EPSG:25833\
@@ -203,12 +210,12 @@ $p/berlin-static-$V-25pct.plans.xml.gz: $p/berlin-only-$V-25pct.plans.xml.gz $p/
 # (merges the two population, and joins spatial category into each person)
 
 $p/berlin-activities-$V-25pct.plans.xml.gz: $p/berlin-static-$V-25pct.plans.xml.gz $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
-	$(sc) prepare activity-sampling --seed 1 --input $< --output $@ --persons src/main/python/table-persons.csv --activities src/main/python/table-activities.csv
+	$(sc) prepare activity-sampling --seed 1 --input $< --output $@ --persons $(berlinShared)/data/SrV/2018/converted/table-persons.csv --activities $(berlinShared)/data/SrV/2018/converted/table-activities.csv
 
 	$(sc) prepare assign-reference-population --population $@ --output $@\
-	 --persons src/main/python/table-persons.csv\
-  	 --activities src/main/python/table-activities.csv\
-  	 --shp $(germany)/../matsim-berlin/data/SrV/zones/zones.shp\
+	 --persons $(berlinShared)/data/SrV/2018/converted/table-persons.csv\
+  	 --activities $(berlinShared)/data/SrV/2018/converted/table-activities.csv\
+  	 --shp $(berlinShared)/data/SrV/2018/zones/zones.shp\
   	 --shp-crs $(CRS)\
 	 --facilities $(word 2,$^)\
 	 --network $(word 3,$^)\
