@@ -11,9 +11,93 @@ berlin := ../../../public-svn/matsim/scenarios/countries/de/berlin/berlin-$V
 
 MEMORY ?= 20G
 REGIONS := brandenburg
-DAY_FOR_TRANSITSCHEDULE := "2024-11-19"
+GTFS_DAY_TO_CONVERT := "2024-11-19"
+GTFS_DATA := $(germany)/gtfs/complete-pt-2024-10-27.zip 
 
-## either use the global isntallation via, e.g. apt-get, or define where this is comming from
+BRANDENBURG_OSM_LOCAL := input/brandenburg.osm.pbf
+BRANDENBURG_OSM_URL := https://download.geofabrik.de/europe/germany/brandenburg-230101.osm.pbf 
+
+REGIOSTAR := $(germany)/RegioStaR-Referenzdateien.xlsx
+# (link no longer working; in general, mcloud no longer exists; RegioStar = spatial planning categories)
+REGIOSTAR_URL := https://mcloud.de/downloads/mcloud/536149D1-2902-4975-9F7D-253191C0AD07/RegioStaR-Referenzdateien.xlsx
+
+FACILITIES_GPKG := input/facilities.gpkg
+ACTIVITY_MAPPING := input/activity_mapping.json
+
+PLR_2013_2020 := $(berlinShared)/data/statistik-berlin-brandenburg/PLR_2013_2020.csv
+
+PLANUNGSRAUM_25833 := $(berlin)/input/shp/Planungsraum_EPSG_25833.shp
+PLANUNGSRAUM_25833_URL := https://www.stadtentwicklung.berlin.de/planen/basisdaten_stadtentwicklung/lor/download/LOR_SHP_EPSG_25833.zip
+
+AREA_POLY := $p/area/area.poly
+REMOVE_RAILWAY := input/remove-railway.xml
+NETWORK_OSM := input/network.osm
+NETWORK_SUMO := input/sumo.net.xml
+NETWORK_MATSIM := $p/berlin-$V-network.xml.gz
+SUMO_OSM_NETCONVERT := $(SUMO_HOME)/data/typemap/osmNetconvert.typ.xml
+SUMO_OSM_NETCONVERT_URBAN_DE := $(SUMO_HOME)/data/typemap/osmNetconvertUrbanDe.typ.xml
+NETWORK_MATSIM_PT := $p/berlin-$V-network-with-pt.xml.gz
+
+PT_AREA := $p/pt-area/pt-area.shp
+VMZ_COUNTS := $p/berlin-$V-counts-vmz.xml.gz
+COUNTS_UNDERESTIMATED := input/counts_underestimated.csv
+COUNTS_BERLIN_2018 := $(berlinShared)/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx
+LINK_GEOMETRIES := $p/berlin-$V-network-linkGeometries.csv
+COUNTS_MAPPING := input/counts_mapping.csv
+FACILITY_MAPPING := input/facility_mapping.json
+FACILITIES_XML := $p/berlin-$V-facilities.xml.gz
+
+BERLIN_ONLY_100PCT := $p/berlin-only-$V-100pct.plans.xml.gz
+BERLIN_ONLY_25PCT := $p/berlin-only-$V-25pct.plans.xml.gz
+BRANDENBURG_ONLY_25PCT := $p/brandenburg-only-$V-25pct.plans.xml.gz
+BERLIN_BRANDENBURG_STATIC_25PCT := $p/berlin-static-$V-25pct.plans.xml.gz
+SRV_PERSONS := $(berlinShared)/data/SrV/2018/converted/table-persons.csv
+SRV_ACTS := $(berlinShared)/data/SrV/2018/converted/table-activities.csv
+SRV_ZONES := $(berlinShared)/data/SrV/2018/zones/zones.shp
+
+VG5000_GEM := $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp
+REGIONALSTAT_POP := $(germany)/regionalstatistik/population.csv
+REGIONALSTAT_EMPL := $(germany)/regionalstatistik/employed.json
+BERLIN_BRANDENBURG_ACTS_25PCT := $p/berlin-activities-$V-25pct.plans.xml.gz
+REGIONALSTAT_COMMUTER := $(germany)/regionalstatistik/commuter.csv
+BERLIN_COMMUTER := input/berlin-work-commuter.csv
+BERLIN_BRANDENBURG_INITIAL_25PCT := $p/berlin-initial-$V-25pct.plans.xml.gz
+
+BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT := $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz
+GERMAN_FREIGHT_25PCT := ../public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/german_freight.25pct.plans.xml.gz
+GERMAN_FREIGHT_NETWORK := ../public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/germany-europe-network.xml.gz
+FREIGHT_AREA := $p/area/area.shp
+COMMERCIAL_FACILITIES := $p/commercialFacilities.xml.gz
+DATA_DISTR_PER_ZONE := $p/dataDistributionPerZone.csv
+REGION_4326 := $(berlin)/input/shp/region_4326.shp
+BB_ZONES_4326 := $(BB_ZONES_VKZ_4326)
+BB_BUILDINGS_4326 := $(berlin)/input/shp/buildings_BerlinBrandenburg_4326.shp
+BERLIN_LANDUSE_4326 := $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp
+COMMERCIAL_TRAFFIC_AREA_DATA := input/commercialTrafficAreaData.csv
+BB_ZONES_VKZ_4326 := $(berlin)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp
+BERLIN_SMALLSCALE_COMMERCIAL_25PCT := $p/berlin-small-scale-commercialTraffic-$V-25pct.plans.xml.gz
+BERLIN_CADYTS_INPUT_25PCT := $p/berlin-cadyts-input-$V-25pct.plans.xml.gz
+BERLIN_CADYTS_OUTPUT_25PCT := output/cadyts/cadyts.output_plans.xml.gz
+BERLIN_CADYTS_FINAL_25PCT := $p/berlin-$V-25pct.plans_cadyts.xml.gz
+BERLIN_CADYTS_SELECTION_25PCT := $p/berlin-$V-25pct.plans_selection_cadyts.csv
+
+INPUT_AREA := input/$V/area/area.shp
+
+BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS := $p/berlin-$V-25pct.plans-initial.xml.gz
+
+MODECHOICE_10PCT_BASELINE_PLANS := mode-choice-10pct-baseline/runs/008/008.output_plans.xml.gz
+CHOICE_EXPERIMENTS_10PCT_BASELINE_PLANS := choice-experiments/baseline/runs/008/008.output_plans.xml.gz
+BERLIN_10PCT_AFTER_CHOICE_EXPERIMENTS := $p/berlin-$V-10pct.plans.xml.gz
+
+BERLIN_INNER_CITY_GPKG := $(berlin)/../berlin-v6.4/input/shp/berlin_inner_city.gpkg
+BERLIN_DOWNTOWN_3PCT_PLANS := $p/inner-city/berlin-downtown-$V-3pct.xml.gz
+BERLIN_3PCT_PLANS := $p/berlin-$V-3pct.plans.xml.gz
+BERLIN_INNER_CITY_GPKG2 := $(berlin)/berlin-$V/input/shp/berlin_inner_city.gpkg
+BERLIN_SHP_25832 := $(berlin)/berlin-$V/input/shp/Berlin_25832.shp
+
+RANDOM_DRT_FLEET_10K := $p/berlin-$V.drt-by-rndLocations-10000vehicles-4seats.xml.gz
+
+## either use the global installation via, e.g. apt-get, or define where this is comming from
 osmosis := osmosis
 
 ## you need SUMO (set $(SUMO_HOME) )to run this script in version 1.20.0 (or greater ?), either build it yourself 
@@ -22,57 +106,59 @@ osmosis := osmosis
 # Scenario creation tool
 sc := java -Xmx$(MEMORY) -XX:+UseParallelGC -cp $(JAR) org.matsim.prepare.RunOpenBerlinCalibration
 
-.PHONY: prepare
+.PHONY: prepare prepare-calibration prepare-initial prepare-drt
 .DELETE_ON_ERROR:
 
 $(JAR):
 	./mvnw clean package -DskipTests=true
 
-input/brandenburg.osm.pbf:
-	curl https://download.geofabrik.de/europe/germany/brandenburg-230101.osm.pbf -o $@
+$(BRANDENBURG_OSM_LOCAL):
+	curl $(BRANDENBURG_OSM_URL) -o $@
 # (Brandenburg OSM, presumably from 2023-01-01)
 
-input/facilities.osm.pbf:
-	# Same OSM version as reference visitations
-	curl https://download.geofabrik.de/europe/germany/brandenburg-210101.osm.pbf -o $@
-# (Brandenburg OSM, presumably from 2021-01-01; for "reference visitations" which are used in covid project. Not necessary for transport planning purposes.
+$(FACILITIES_OSM_LOCAL):
+	curl $(FACILITIES_OSM_URL) -o $@
 
 
-$(germany)/RegioStaR-Referenzdateien.xlsx:
-	curl https://mcloud.de/downloads/mcloud/536149D1-2902-4975-9F7D-253191C0AD07/RegioStaR-Referenzdateien.xlsx -o $@
-# (link no longer working; in general, mcloud no longer exists; RegioStar = spatial planning categories)
+$(REGIOSTAR):
+	curl $(REGIOSTAR_URL) -o $@
 
 # Preprocessing and cleaning of raw osm data to geo-referenced activity facilities.
-input/facilities.gpkg: input/brandenburg.osm.pbf input/activity_mapping.json
+$(FACILITIES_GPKG): $(BRANDENBURG_OSM_LOCAL) $(ACTIVITY_MAPPING)
 	$(sc) prepare facility-shp\
 	 --activity-mapping $(word 2,$^)\
 	 --input $<\
 	 --output $@
 
+# NEVER used ?!?
+#Same OSM version as reference visitations
+# (Brandenburg OSM, presumably from 2021-01-01; for "reference visitations" which are used in covid project. Not necessary for transport planning purposes.
+#FACILITIES_OSM_LOCAL := input/facilities.osm.pbf
+#FACILITIES_OSM_URL := https://download.geofabrik.de/europe/germany/brandenburg-210101.osm.pbf
 # The reference visitations used in the covid project refer to this older osm data version.
-input/ref_facilities.gpkg: input/facilities.osm.pbf input/activity_mapping.json
-	$(sc) prepare facility-shp\
-	 --activity-mapping $(word 2,$^)\
-	 --input $<\
-	 --output $@
+#input/ref_facilities.gpkg: $(FACILITIES_OSM_LOCAL) $(ACTIVITY_MAPPING)
+#	$(sc) prepare facility-shp\
+#	 --activity-mapping $(word 2,$^)\
+#	 --input $<\
+#	 --output $@
 
-$(berlinShared)/data/statistik-berlin-brandenburg/PLR_2013_2020.csv:
+$(PLR_2013_2020):
 	#curl https://instantatlas.statistik-berlin-brandenburg.de/instantatlas/interaktivekarten/kommunalatlas/Kommunalatlas.zip --insecure -o atlas.zip
 	#unzip atlas.zip -d input
 	#rm atlas.zip
-	echo "PLR_2013_2020.csv does no longer exist."
+	echo "URL for Kommunalatlas.zip does no longer exist. Use local PLR_2013_2020.csv."
 # (Kommunalatlas = kleinräumiges Datenangebot.  "PLR" is the file name after expanding the zipfile; it may mean "Planungsraum".  Contains attributes of LOR zones (at 500 zones level).)
 # (link no longer active)
 
-$(berlin)/input/shp/Planungsraum_EPSG_25833.shp:
+$(PLANUNGSRAUM_25833):
 	# This link is broken, the file is available in the public svn
-	curl https://www.stadtentwicklung.berlin.de/planen/basisdaten_stadtentwicklung/lor/download/LOR_SHP_EPSG_25833.zip -o tmp.zip
+	curl $(PLANUNGSRAUM_25833_URL) -o tmp.zip
 	unzip tmp.zip -d $(berlin)/input
 	rm tmp.zip
 # (shapefiles LORs = Berlin local system of zones)
 
 # filtering for those parts of the osm data that we need for the network:
-input/network.osm: input/brandenburg.osm.pbf $p/area/area.poly input/remove-railway.xml
+$(NETWORK_OSM): $(BRANDENBURG_OSM_LOCAL) $(AREA_POLY) $(REMOVE_RAILWAY)
 
 	# Detailed network includes bikes as well
 	$(osmosis) --rb file=$<\
@@ -95,7 +181,7 @@ input/network.osm: input/brandenburg.osm.pbf $p/area/area.poly input/remove-rail
 	rm input/network-coarse.osm.pbf
 
 # converting the network from OSM format to SUMO format:
-input/sumo.net.xml: input/network.osm $(SUMO_HOME)/data/typemap/osmNetconvert.typ.xml $(SUMO_HOME)/data/typemap/osmNetconvertUrbanDe.typ.xml
+$(NETWORK_SUMO): $(NETWORK_OSM) $(SUMO_OSM_NETCONVERT) $(SUMO_OSM_NETCONVERT_URBAN_DE)
 
 	$(SUMO_HOME)/bin/netconvert --geometry.remove --ramps.guess --ramps.no-split\
 	 --type-files $(word 2,$^),$(word 3,$^)\
@@ -113,7 +199,7 @@ input/sumo.net.xml: input/network.osm $(SUMO_HOME)/data/typemap/osmNetconvert.ty
 	 --osm-files $< -o=$@
 
 # converting the network from SUMO format to MATSim format:
-$p/berlin-$V-network.xml.gz: input/sumo.net.xml
+$(NETWORK_MATSIM): $(NETWORK_SUMO)
 	$(sc) prepare network-from-sumo $< --target-crs $(CRS) --lane-restrictions REDUCE_CAR_LANES --output $@
 
 	$(sc) prepare clean-network $@ --output $@ --modes car,bike,ride,truck --remove-turn-restrictions
@@ -138,9 +224,9 @@ $p/berlin-$V-network.xml.gz: input/sumo.net.xml
 	  --decrease-only
 
 # add the PT network. Generates MATSim transit schedule as a side effect.  Note that this uses "complete-pt-2024-10-27.zip" as hardcoded input.
-$p/berlin-$V-network-with-pt.xml.gz: $p/berlin-$V-network.xml.gz $(germany)/gtfs/complete-pt-2024-10-27.zip $p/pt-area/pt-area.shp $p/berlin-$V-counts-vmz.xml.gz input/counts_underestimated.csv
+$(NETWORK_MATSIM_PT): $(NETWORK_MATSIM) $(GTFS_DATA) $(PT_AREA) $(VMZ_COUNTS) $(COUNTS_UNDERESTIMATED)
 	$(sc) prepare transit-from-gtfs --network $< --output=$p\
-	 --name berlin-$V --date $(DAY_FOR_TRANSITSCHEDULE) --target-crs $(CRS) \
+	 --name berlin-$V --date $(GTFS_DAY_TO_CONVERT) --target-crs $(CRS) \
 	 $(word 2,$^)\
 	 --copy-late-early\
 	 --transform-stops org.matsim.prepare.pt.CorrectStopLocations\
@@ -151,7 +237,7 @@ $p/berlin-$V-network-with-pt.xml.gz: $p/berlin-$V-network.xml.gz $(germany)/gtfs
 	 --shp $(word 3,$^)
 
 	$(sc) prepare endless-circle-line\
-	  --network $p/berlin-$V-network-with-pt.xml.gz\
+	  --network $(NETWORK_MATSIM_PT)\
 	  --transit-schedule $p/berlin-$V-transitSchedule.xml.gz\
 	  --transit-vehicles $p/berlin-$V-transitVehicles.xml.gz\
 	  --output-transit-schedule $p/berlin-$V-transitSchedule.xml.gz\
@@ -165,7 +251,7 @@ $p/berlin-$V-network-with-pt.xml.gz: $p/berlin-$V-network.xml.gz $(germany)/gtfs
 	 	--output $@
 
 # register the VMZ counts (from 2018; see filename below) onto the network:
-$p/berlin-$V-counts-vmz.xml.gz: $p/berlin-$V-network.xml.gz $(berlinShared)/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx $p/berlin-$V-network-linkGeometries.csv input/counts_mapping.csv
+$(VMZ_COUNTS): $(NETWORK_MATSIM) $(COUNTS_BERLIN_2018) $(LINK_GEOMETRIES) $(COUNTS_MAPPING)
 	$(sc) prepare counts-from-vmz\
 	 --network $<\
 	 --excel $(word 2,$^)\
@@ -176,13 +262,13 @@ $p/berlin-$V-counts-vmz.xml.gz: $p/berlin-$V-network.xml.gz $(berlinShared)/berl
 	 --counts-mapping $(word 4, $^)
 
 # convert the gpkg facilities (for activity locations) into MATSim format.
-$p/berlin-$V-facilities.xml.gz: $p/berlin-$V-network.xml.gz input/facilities.gpkg input/facility_mapping.json $(berlin)/input/shp/Planungsraum_EPSG_25833.shp
+$(FACILITIES_XML): $(NETWORK_MATSIM) $(FACILITIES_GPKG) $(FACILITY_MAPPING) $(PLANUNGSRAUM_25833)
 	$(sc) prepare facilities --network $< --shp $(word 2,$^)\
 	 --facility-mapping $(word 3,$^)\
 	 --zones-shp $(word 4,$^)\
 	 --output $@
 
-$p/berlin-only-$V-100pct.plans.xml.gz: $(berlinShared)/data/statistik-berlin-brandenburg/PLR_2013_2020.csv $(berlin)/input/shp/Planungsraum_EPSG_25833.shp input/facilities.gpkg
+$(BERLIN_ONLY_100PCT): $(PLR_2013_2020) $(PLANUNGSRAUM_25833) $(FACILITIES_GPKG)
 	$(sc) prepare berlin-population\
 		--input $<\
 		--sample 1.0\
@@ -190,7 +276,7 @@ $p/berlin-only-$V-100pct.plans.xml.gz: $(berlinShared)/data/statistik-berlin-bra
 		--facilities $(word 3,$^) --facilities-attr resident\
 		--output $@
 
-$p/berlin-only-$V-25pct.plans.xml.gz: $(berlinShared)/data/statistik-berlin-brandenburg/PLR_2013_2020.csv $(berlin)/input/shp/Planungsraum_EPSG_25833.shp input/facilities.gpkg
+$(BERLIN_ONLY_25PCT): $(PLR_2013_2020) $(PLANUNGSRAUM_25833) $(FACILITIES_GPKG)
 	$(sc) prepare berlin-population\
 		--input $<\
 		--shp $(word 2,$^) --shp-crs EPSG:25833\
@@ -198,7 +284,7 @@ $p/berlin-only-$V-25pct.plans.xml.gz: $(berlinShared)/data/statistik-berlin-bran
 		--output $@
 # (presumably generates a synthetic population for Berlin from the "PLR" data, i.e. the population attribute marginals at LOR500 level)
 
-$p/brandenburg-only-$V-25pct.plans.xml.gz: input/facilities.gpkg $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp $(germany)/regionalstatistik/population.csv $(germany)/regionalstatistik/employed.json
+$(BRANDENBURG_ONLY_25PCT): $(FACILITIES_GPKG) $(VG5000_GEM) $(REGIONALSTAT_POP) $(REGIONALSTAT_EMPL)
 	$(sc) prepare brandenburg-population\
 	 --shp $(word 2,$^)\
 	 --population $(word 3,$^)\
@@ -206,15 +292,15 @@ $p/brandenburg-only-$V-25pct.plans.xml.gz: input/facilities.gpkg $(germany)/vg50
  	 --facilities $< --facilities-attr resident\
  	 --output $@
 
-$p/berlin-static-$V-25pct.plans.xml.gz: $p/berlin-only-$V-25pct.plans.xml.gz $p/brandenburg-only-$V-25pct.plans.xml.gz $(germany)/RegioStaR-Referenzdateien.xlsx
+$(BERLIN_BRANDENBURG_STATIC_25PCT): $(BERLIN_ONLY_25PCT) $(BRANDENBURG_ONLY_25PCT) $(REGIOSTAR)
 	$(sc) prepare merge-populations $< $(word 2, $^)\
 	 --output $@
 
 	$(sc) prepare lookup-regiostar --input $@ --output $@ --xls $(word 3, $^)
 # (merges the two population, and joins spatial category into each person)
 
-$p/berlin-activities-$V-25pct.plans.xml.gz: $p/berlin-static-$V-25pct.plans.xml.gz $(berlinShared)/data/SrV/2018/converted/table-persons.csv $(berlinShared)/data/SrV/2018/converted/table-activities.csv $(berlinShared)/data/SrV/2018/zones/zones.shp $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz
-	$(sc) prepare activity-sampling --seed 1 --input $< --output $@ --persons $(word 2, $^) --activities $(berlinShared)/data/SrV/2018/converted/table-activities.csv
+$(BERLIN_BRANDENBURG_ACTS_25PCT): $(BERLIN_BRANDENBURG_STATIC_25PCT) $(SRV_PERSONS) $(SRV_ACTS) $(SRV_ZONES) $(FACILITIES_XML) $(NETWORK_MATSIM)
+	$(sc) prepare activity-sampling --seed 1 --input $< --output $@ --persons $(word 2, $^) --activities $(SRV_ACTS)
 
 	$(sc) prepare assign-reference-population --population $@ --output $@\
 	 --persons $(word 2, $^)\
@@ -227,7 +313,7 @@ $p/berlin-activities-$V-25pct.plans.xml.gz: $p/berlin-static-$V-25pct.plans.xml.
 # ("reference population" = population taken from SrV; used to assign activity chains. SrV records have to be processed (manually, not automatically done here) by extract_population_data.py to create src/main/python/table-....csv as input.
 # Input tables can also be found on shared-svn (restricted access): https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-berlin/data/SrV/converted/
 
-$p/berlin-initial-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans.xml.gz $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz $(germany)/vg5000/vg5000_ebenen_0101/VG5000_GEM.shp $(germany)/regionalstatistik/commuter.csv input/berlin-work-commuter.csv
+$(BERLIN_BRANDENBURG_INITIAL_25PCT): $(BERLIN_BRANDENBURG_ACTS_25PCT) $(FACILITIES_XML) $(NETWORK_MATSIM) $(VG5000_GEM) $(REGIONALSTAT_COMMUTER) $(BERLIN_COMMUTER)
 	$(sc) prepare init-location-choice\
 	 --input $<\
 	 --output $@\
@@ -244,9 +330,9 @@ $p/berlin-initial-$V-25pct.plans.xml.gz: $p/berlin-activities-$V-25pct.plans.xml
 
 # Assign activity locations to agents (except home, which is set before).
 
-$p/berlin-longHaulFreight-$V-25pct.plans.xml.gz: ../public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/german_freight.25pct.plans.xml.gz ../public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/germany-europe-network.xml.gz $p/area/area.shp
+$(BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT): $(GERMAN_FREIGHT_25PCT) $(GERMAN_FREIGHT_NETWORK) $(FREIGHT_AREA)
 
-# $p/berlin-$V-network.xml.gz was defined as input but never used?!
+# $(NETWORK_MATSIM) was defined as input but never used?!
 	$(sc) prepare extract-freight-trips $<\
 	 --network $(word 2,$^)\
 	 --input-crs $(CRS)\
@@ -255,7 +341,7 @@ $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz: ../public-svn/matsim/scenarios/
 	 --cut-on-boundary\
 	 --output $@
 
-$p/commercialFacilities.xml.gz: $p/dataDistributionPerZone.csv $(berlin)/input/shp/region_4326.shp $(berlin)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp $(berlin)/input/shp/buildings_BerlinBrandenburg_4326.shp $(berlin)/input/shp/berlinBrandenburg_landuse_4326.shp input/commercialTrafficAreaData.csv
+$(COMMERCIAL_FACILITIES): $(DATA_DISTR_PER_ZONE) $(REGION_4326) $(BB_ZONES_4326) $(BB_BUILDINGS_4326) $(BERLIN_LANDUSE_4326) $(COMMERCIAL_TRAFFIC_AREA_DATA)
 	$(sc) prepare create-data-distribution-of-structure-data\
 	 --outputFacilityFile $@\
 	 --outputDataDistributionFile $<\
@@ -271,7 +357,7 @@ $p/commercialFacilities.xml.gz: $p/dataDistributionPerZone.csv $(berlin)/input/s
 	 --shapeCRS "EPSG:4326"\
 	 --pathToInvestigationAreaData $(word 6,$^)
 
-$p/berlin-small-scale-commercialTraffic-$V-25pct.plans.xml.gz: $p/berlin-$V-network.xml.gz $p/commercialFacilities.xml.gz $p/dataDistributionPerZone.csv $(berlin)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp
+$(BERLIN_SMALLSCALE_COMMERCIAL_25PCT): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DATA_DISTR_PER_ZONE) $(BB_ZONES_VKZ_4326)
 	$(sc) prepare generate-small-scale-commercial-traffic\
 	  input/$V/berlin-$V.config.xml\
 	 --pathToDataDistributionToZones $(word 3,$^)\
@@ -292,11 +378,17 @@ $p/berlin-small-scale-commercialTraffic-$V-25pct.plans.xml.gz: $p/berlin-$V-netw
 	#rm -r output/commercialPersonTraffic delete or keep?
 
 
-$p/berlin-cadyts-input-$V-25pct.plans.xml.gz: $p/berlin-initial-$V-25pct.plans.xml.gz $p/berlin-small-scale-commercialTraffic-$V-25pct.plans.xml.gz
+$(BERLIN_CADYTS_INPUT_25PCT): $(BERLIN_BRANDENBURG_INITIAL_25PCT) $(BERLIN_SMALLSCALE_COMMERCIAL_25PCT)
 	$(sc) prepare merge-populations $^\
 	 --output $@
+	 
+$(BERLIN_CADYTS_OUTPUT_25PCT): $(BERLIN_CADYTS_INPUT_25PCT)
+	echo "=== NOT YET IMPLEMENTED, HERE SHOULD PROBABLY RUN CADYTS === 
+	
+$(BERLIN_CADYTS_SELECTION_25PCT):$(BERLIN_CADYTS_OUTPUT_25PCT)
+	echo "this is only a dummy-step, because CADYTS produces more than one file we need"
 
-$p/berlin-$V-25pct.plans_cadyts.xml.gz: output/cadyts/cadyts.output_plans.xml.gz $p/berlin-cadyts-input-$V-25pct.plans.xml.gz $p/berlin-$V-25pct.plans_selection_cadyts.csv
+$(BERLIN_CADYTS_FINAL_25PCT): $(BERLIN_CADYTS_OUTPUT_25PCT) $(BERLIN_CADYTS_INPUT_25PCT) $(BERLIN_CADYTS_SELECTION_25PCT)
 	$(sc) prepare extract-plans-idx\
 	 --input $<\
 	 --output $@
@@ -307,13 +399,13 @@ $p/berlin-$V-25pct.plans_cadyts.xml.gz: output/cadyts/cadyts.output_plans.xml.gz
 	 --output $@
 
 # These depend on the output of cadyts calibration runs
-$p/berlin-$V-25pct.plans-initial.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berlin-$V-network.xml.gz $p/berlin-longHaulFreight-$V-25pct.plans.xml.gz $p/berlin-$V-25pct.plans_cadyts.xml.gz input/$V/area/area.shp
+$(BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MATSIM) $(BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT) $(BERLIN_CADYTS_FINAL_25PCT) $(INPUT_AREA)
 	$(sc) prepare scenario-cutout\
 	 --population $(word 4,$^)\
 	 --facilities $<\
 	 --network $(word 2,$^)\
 	 --output-population $@\
-	 # TODO 
+	 # TODO where is this comming from
 	 --output-network $p/network-cutout.xml.gz\
 	 --output-facilities $p/facilities-cutout.xml.gz\
 	 --input-crs $(CRS)\
@@ -336,7 +428,7 @@ $p/berlin-$V-25pct.plans-initial.xml.gz: $p/berlin-$V-facilities.xml.gz $p/berli
 		 --sample-size 0.25\
 		 --samples 0.1 0.03 0.01 0.001\
 
-$p/berlin-$V-10pct.plans.xml.gz: mode-choice-10pct-baseline/runs/008/008.output_plans.xml.gz choice-experiments/baseline/runs/008/008.output_plans.xml.gz
+$(BERLIN_10PCT_AFTER_CHOICE_EXPERIMENTS): $(MODECHOICE_10PCT_BASELINE_PLANS) $(CHOICE_EXPERIMENTS_10PCT_BASELINE_PLANS)
 	$(sc) prepare clean-population\
 	 --plans $<\
 	 --remove-unselected-plans\
@@ -354,21 +446,21 @@ $p/berlin-$V-10pct.plans.xml.gz: mode-choice-10pct-baseline/runs/008/008.output_
 	 	--remove-unselected-plans\
 	 	--output $(subst 10pct,3pct,$@)
 
-$p/inner-city/berlin-downtown-$V-3pct.xml.gz: $(berlin)/../berlin-v6.4/input/shp/berlin_inner_city.gpkg
+$(BERLIN_DOWNTOWN_3PCT_PLANS): $(BERLIN_INNER_CITY_GPKG) $(BERLIN_3PCT_PLANS) $(FACILITIES_XML) $(NETWORK_MATSIM)
 
 	mkdir -p $p/inner-city
 
 	$(sc) prepare scenario-cutout\
-	 --population $p/berlin-$V-3pct.plans.xml.gz\
-	 --facilities $p/berlin-$V-facilities.xml.gz\
-	 --network $p/berlin-$V-network.xml.gz\
+	 --population $(word 2,$^)\
+	 --facilities $(word 3,$^)\
+	 --network $(word 4,$^)\
 	 --output-population $@\
 	 --output-network $p/inner-city/berlin-downtown-$V-network.xml.gz\
 	 --output-facilities $p/inner-city/berlin-downtown-$V-facilities.xml.gz\
 	 --input-crs $(CRS)\
 	 --shp "$<"
 
-$p/berlin-$V.drt-by-rndLocations-10000vehicles-4seats.xml.gz: $p/berlin-$V-network.xml.gz $(berlin)/berlin-$V/input/shp/Berlin_25832.shp $(berlin)/berlin-$V/input/shp/berlin_inner_city.gpkg
+$(RANDOM_DRT_FLEET_10K): $(NETWORK_MATSIM) $(BERLIN_SHP_25832) $(BERLIN_INNER_CITY_GPKG2)
 	$(sc) prepare create-drt-vehicles\
 	 --network $<\
 	 --shp "$(word 2,$^)"\
@@ -384,18 +476,18 @@ $p/berlin-$V.drt-by-rndLocations-10000vehicles-4seats.xml.gz: $p/berlin-$V-netwo
 	 --seats 4
 
 
-prepare-calibration: $p/berlin-activities-$V-25pct.plans.xml.gz $p/berlin-$V-network-with-pt.xml.gz $p/berlin-$V-counts-vmz.xml.gz
-	-make -Bnd prepare-calibration | make2graph | dot -Tpng -o prepare-calibration_graph.png
+prepare-calibration: $(BERLIN_BRANDENBURG_ACTS_25PCT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
+	make -Bndri prepare-calibration | make2graph | gv2gml -o prepare-calibration_graph.gml
 	echo "Done"
 
-prepare-initial: $p/berlin-$V-25pct.plans-initial.xml.gz $p/berlin-$V-network-with-pt.xml.gz
-	-make -Bnd prepare-initial | make2graph | dot -Tpng -o prepare-initial_graph.png
+prepare-initial: $(BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS) $(NETWORK_MATSIM_PT)
+	make -Bndri prepare-initial | make2graph | gv2gml -o prepare-initial_graph.gml
 	echo "Done"
 
-prepare-drt: $p/berlin-$V.drt-by-rndLocations-10000vehicles-4seats.xml.gz
-	-make -Bnd prepare-drt | make2graph | dot -Tpng -o prepare-drt_graph.png
+prepare-drt: $(RANDOM_DRT_FLEET_10K)
+	make -Bndri prepare-drt | make2graph | gv2gml -o prepare-drt_graph.gml
 	echo "Done"
 
-prepare: $p/berlin-$V-10pct.plans.xml.gz
-	-make -Bnd prepare | make2graph | dot -Tpng -o prepare_graph.png
+prepare: $(BERLIN_10PCT_AFTER_CHOICE_EXPERIMENTS)
+	make -Bndri prepare | make2graph | gv2gml -o prepare_graph.gml
 	echo "Done"
