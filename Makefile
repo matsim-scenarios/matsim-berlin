@@ -108,6 +108,7 @@ BERLIN_3PCT_PLANS := $(OUTPUT)/berlin-$(VERSION)-3pct.plans.xml.gz
 RANDOM_DRT_FLEET_10K := $(OUTPUT)/berlin-$(VERSION).drt-by-rndLocations-10000vehicles-4seats.xml.gz
 
 ## TODO where is this comming from
+NETWORK_FT := $(OUTPUT)/berlin-$(VERSION)-network-ft.csv.gz
 BERLIN_COMMUTER := $(OUTPUT)/berlin-work-commuter.csv
 MODECHOICE_10PCT_BASELINE_PLANS := mode-choice-10pct-baseline/runs/008/008.output_plans.xml.gz
 CHOICE_EXPERIMENTS_10PCT_BASELINE_PLANS := choice-experiments/baseline/runs/008/008.output_plans.xml.gz
@@ -169,15 +170,14 @@ $(PLANUNGSRAUM_25833):
 $(NETWORK_OSM): $(BRANDENBURG_OSM_LOCAL) $(AREA_POLY) $(REMOVE_RAILWAY)
 
 	# Detailed network includes bikes as well
+	 # hard-coded because we delete within this step
 	$(osmosis) --rb file=$<\
 	 --tf accept-ways bicycle=designated highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction,residential,living_street,unclassified,cycleway\
 	 --bounding-polygon file="$(word 2,$^)"\
-	 # hard-coded because we delete within this step
 	 --used-node --wb input/network-detailed.osm.pbf
 
 	$(osmosis) --rb file=$<\
 	 --tf accept-ways highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction\
-	 # hard-coded because we delete within this step
 	 --used-node --wb input/network-coarse.osm.pbf
 
 	$(osmosis) --rb file=input/network-coarse.osm.pbf --rb file=input/network-detailed.osm.pbf\
@@ -217,17 +217,14 @@ $(NETWORK_MATSIM): $(NETWORK_SUMO)
 	 --input-crs $(CRS) --target-crs $(CRS)\
 	 --mode truck=freight\
 
-# where is $(OUTPUT)/berlin-$(VERSION)-network-ft.csv.gz coming from?
 	$(JAVA_APP) prepare apply-network-params freespeed capacity\
  	  --network $@ --output $@\
-	  ## TODO where is this coming from?
-	  --input-features $(OUTPUT)/berlin-$(VERSION)-network-ft.csv.gz\
+	  --input-features $(NETWORK_FT)\
 	  --model org.matsim.prepare.network.BerlinNetworkParams
 
 	$(JAVA_APP) prepare apply-network-params capacity\
  	  --network $@ --output $@\
-	  ## TODO where is this coming from?
-	  --input-features $(OUTPUT)/berlin-$(VERSION)-network-ft.csv.gz\
+	  --input-features $(NETWORK_FT)\
 	  --road-types residential,living_street\
 	  --capacity-bounds 0.3\
 	  --model org.matsim.application.prepare.network.params.hbs.HBSNetworkParams\
@@ -286,13 +283,13 @@ $(BERLIN_ONLY_100PCT): $(PLR_2013_2020) $(PLANUNGSRAUM_25833) $(FACILITIES_GPKG)
 		--facilities $(word 3,$^) --facilities-attr resident\
 		--output $@
 
+# (presumably generates a synthetic population for Berlin from the "PLR" data, i.e. the population attribute marginals at LOR500 level)
 $(BERLIN_ONLY_25PCT): $(PLR_2013_2020) $(PLANUNGSRAUM_25833) $(FACILITIES_GPKG)
 	$(JAVA_APP) prepare berlin-population\
 		--input $<\
 		--shp $(word 2,$^) --shp-crs EPSG:25833\
 		--facilities $(word 3,$^) --facilities-attr resident\
 		--output $@
-# (presumably generates a synthetic population for Berlin from the "PLR" data, i.e. the population attribute marginals at LOR500 level)
 
 $(BRANDENBURG_ONLY_25PCT): $(FACILITIES_GPKG) $(VG5000_GEM) $(REGIONALSTAT_POP) $(REGIONALSTAT_EMPL)
 	$(JAVA_APP) prepare brandenburg-population\
@@ -302,12 +299,12 @@ $(BRANDENBURG_ONLY_25PCT): $(FACILITIES_GPKG) $(VG5000_GEM) $(REGIONALSTAT_POP) 
  	 --facilities $< --facilities-attr resident\
  	 --output $@
 
+# (merges the two population, and joins spatial category into each person)
 $(BERLIN_BRANDENBURG_STATIC_25PCT): $(BERLIN_ONLY_25PCT) $(BRANDENBURG_ONLY_25PCT) $(REGIOSTAR)
 	$(JAVA_APP) prepare merge-populations $< $(word 2, $^)\
 	 --output $@
 
 	$(JAVA_APP) prepare lookup-regiostar --input $@ --output $@ --xls $(word 3, $^)
-# (merges the two population, and joins spatial category into each person)
 
 $(BERLIN_BRANDENBURG_ACTS_25PCT): $(BERLIN_BRANDENBURG_STATIC_25PCT) $(SRV_PERSONS) $(SRV_ACTS) $(SRV_ZONES) $(FACILITIES_XML) $(NETWORK_MATSIM)
 	$(JAVA_APP) prepare activity-sampling --seed 1 --input $< --output $@ --persons $(word 2, $^) --activities $(SRV_ACTS)
@@ -322,7 +319,7 @@ $(BERLIN_BRANDENBURG_ACTS_25PCT): $(BERLIN_BRANDENBURG_STATIC_25PCT) $(SRV_PERSO
 
 # ("reference population" = population taken from SrV; used to assign activity chains. SrV records have to be processed (manually, not automatically done here) by extract_population_data.py to create src/main/python/table-....csv as input.
 # Input tables can also be found on shared-svn (restricted access): https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-berlin/data/SrV/converted/
-
+# Assign activity locations to agents (except home, which is set before).
 $(BERLIN_BRANDENBURG_INITIAL_25PCT): $(BERLIN_BRANDENBURG_ACTS_25PCT) $(FACILITIES_XML) $(NETWORK_MATSIM) $(VG5000_GEM) $(REGIONALSTAT_COMMUTER) $(BERLIN_COMMUTER)
 	$(JAVA_APP) prepare init-location-choice\
 	 --input $<\
@@ -337,8 +334,6 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT): $(BERLIN_BRANDENBURG_ACTS_25PCT) $(FACILITI
 	$(JAVA_APP) prepare downsample-population $@\
 		 --sample-size 0.25\
 		 --samples 0.1 0.03 0.01\
-
-# Assign activity locations to agents (except home, which is set before).
 
 $(BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT): $(GERMAN_FREIGHT_25PCT) $(GERMAN_FREIGHT_NETWORK) $(AREA_SHP)
 
@@ -386,7 +381,6 @@ $(BERLIN_SMALLSCALE_COMMERCIAL_25PCT): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES
 
 	mv output/commercialPersonTraffic/$(notdir $@) $@
 	#rm -r output/commercialPersonTraffic delete or keep?
-
 
 $(BERLIN_CADYTS_INPUT_25PCT): $(BERLIN_BRANDENBURG_INITIAL_25PCT) $(BERLIN_SMALLSCALE_COMMERCIAL_25PCT)
 	$(JAVA_APP) prepare merge-populations $^\
@@ -443,7 +437,8 @@ $(BERLIN_10PCT_AFTER_CHOICE_EXPERIMENTS): $(MODECHOICE_10PCT_BASELINE_PLANS) $(C
 	 --plans $<\
 	 --remove-unselected-plans\
 	 --output $@
-	# read from and write into the same file?
+	 
+	# TODO read from and write into the same file?
 	$(JAVA_APP) prepare taste-variations\
  	 --input $@ --output $@
 
@@ -484,7 +479,6 @@ $(RANDOM_DRT_FLEET_10K): $(NETWORK_MATSIM) $(BERLIN_SHP_25832) $(BERLIN_INNER_CI
 	 --output $(OUTPUT)/berlin-$(VERSION).\
 	 --vehicles 500\
 	 --seats 4
-
 
 prepare-calibration: $(BERLIN_BRANDENBURG_ACTS_25PCT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	make -Bndri prepare-calibration | make2graph | gv2gml -o prepare-calibration_graph.gml
