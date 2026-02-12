@@ -27,10 +27,10 @@ import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutilityFactory;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
-import org.matsim.core.scoring.functions.PersonScoringParametersFromPersonAttributes;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.run.scoring.AdvancedScoringConfigGroup;
 import org.matsim.run.scoring.AdvancedScoringModule;
+import org.matsim.run.scoring.BerlinPersonScoringParametersFromPersonAttributes;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
 import picocli.CommandLine;
@@ -176,7 +176,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 			controler.addOverridingModule( new AbstractModule() {
 				@Override
 				public void install() {
-					bind(ScoringParametersForPerson.class).to(PersonScoringParametersFromPersonAttributes.class).in(Singleton.class);
+					bind(ScoringParametersForPerson.class).to(BerlinPersonScoringParametersFromPersonAttributes.class).in(Singleton.class);
 				}
 			});
 		} else if (personSpecificAscsUsage == PersonSpecificAscsUsage.USE_DEFAULT_BERLIN_SCORING) {
