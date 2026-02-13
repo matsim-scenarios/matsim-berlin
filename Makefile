@@ -24,8 +24,8 @@ GERMANY := $(SVN_PATH)/shared-svn/projects/matsim-germany
 BERLINSHARED := $(SVN_PATH)/shared-svn/projects/matsim-berlin
 BERLINPUBLIC := $(SVN_PATH)/public-svn/matsim/scenarios/countries/de/berlin/berlin-$(VERSION)
 
-GERMAN_FREIGHT_25PCT := ../../../public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/german_freight.25pct.plans.xml.gz
-GERMAN_FREIGHT_NETWORK := ../../../public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/germany-europe-network.xml.gz
+GERMAN_FREIGHT_25PCT := $(SVN_PATH)/public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/german_freight.25pct.plans.xml.gz
+GERMAN_FREIGHT_NETWORK := $(SVN_PATH)/public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/germany-europe-network.xml.gz
 
 AREA_POLY := input/$(VERSION)/area/area.poly
 AREA_SHP := input/$(VERSION)/area/area.shp
@@ -60,6 +60,7 @@ COUNTS_BERLIN_2018 := $(BERLINSHARED)/berlin-v5.5/original_data/vmz_counts_2018/
 PLR_2013_2020 := $(BERLINSHARED)/data/statistik-berlin-brandenburg/PLR_2013_2020.csv
 SRV_PERSONS := $(BERLINSHARED)/data/SrV/2018/converted/table-persons.csv
 SRV_ACTS := $(BERLINSHARED)/data/SrV/2018/converted/table-activities.csv
+BERLIN_COMMUTER := $(BERLINSHARED)/data/SrV/2018/converted/berlin-work-commuter.csv
 SRV_ZONES := $(BERLINSHARED)/data/SrV/2018/zones/zones.shp
 
 GTFS_DAY_TO_CONVERT := "2024-11-19"
@@ -109,7 +110,6 @@ RANDOM_DRT_FLEET_10K := $(OUTPUT)/berlin-$(VERSION).drt-by-rndLocations-10000veh
 
 ## TODO where is this comming from
 NETWORK_FT := $(OUTPUT)/berlin-$(VERSION)-network-ft.csv.gz
-BERLIN_COMMUTER := $(OUTPUT)/berlin-work-commuter.csv
 MODECHOICE_10PCT_BASELINE_PLANS := mode-choice-10pct-baseline/runs/008/008.output_plans.xml.gz
 CHOICE_EXPERIMENTS_10PCT_BASELINE_PLANS := choice-experiments/baseline/runs/008/008.output_plans.xml.gz
 
@@ -326,9 +326,9 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT): $(BERLIN_BRANDENBURG_ACTS_25PCT) $(FACILITI
 	 --output $@\
 	 --facilities $(word 2,$^)\
 	 --network $(word 3,$^)\
-	 --shp $(word 3,$^)\
-	 --commuter $(word 4,$^)\
-	 --berlin-commuter $(word 5,$^)
+	 --shp $(word 4,$^)\
+	 --commuter $(word 5,$^)\
+	 --berlin-commuter $(word 6,$^)
 
 	# For debugging and visualization
 	$(JAVA_APP) prepare downsample-population $@\
