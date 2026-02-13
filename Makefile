@@ -104,7 +104,6 @@ BERLIN_BRANDENBURG_ACTS_25PCT := $(OUTPUT)/berlin-activities-$(VERSION)-25pct.pl
 BERLIN_BRANDENBURG_INITIAL_25PCT := $(OUTPUT)/berlin-initial-$(VERSION)-25pct.plans.xml.gz
 BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT := $(OUTPUT)/berlin-longHaulFreight-$(VERSION)-25pct.plans.xml.gz
 COMMERCIAL_FACILITIES := $(OUTPUT)/commercialFacilities.xml.gz
-DATA_DISTR_PER_ZONE := $(OUTPUT)/dataDistributionPerZone.csv
 BERLIN_SMALLSCALE_COMMERCIAL_25PCT := $(OUTPUT)/berlin-small-scale-commercialTraffic-$(VERSION)-25pct.plans.xml.gz
 BERLIN_CADYTS_INPUT_25PCT := $(OUTPUT)/berlin-cadyts-input-$(VERSION)-25pct.plans.xml.gz
 BERLIN_CADYTS_OUTPUT_25PCT := $(OUTPUT)/cadyts/cadyts.output_plans.xml.gz
@@ -118,6 +117,7 @@ BERLIN_3PCT_PLANS := $(OUTPUT)/berlin-$(VERSION)-3pct.plans.xml.gz
 RANDOM_DRT_FLEET_10K := $(OUTPUT)/berlin-$(VERSION).drt-by-rndLocations-10000vehicles-4seats.xml.gz
 
 ## TODO where is this comming from
+DATA_DISTR_PER_ZONE := $(OUTPUT)/dataDistributionPerZone.csv
 NETWORK_FT := $(OUTPUT)/berlin-$(VERSION)-network-ft.csv.gz
 MODECHOICE_10PCT_BASELINE_PLANS := mode-choice-10pct-baseline/runs/008/008.output_plans.xml.gz
 CHOICE_EXPERIMENTS_10PCT_BASELINE_PLANS := choice-experiments/baseline/runs/008/008.output_plans.xml.gz
