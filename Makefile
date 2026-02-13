@@ -164,9 +164,10 @@ $(PLR_2013_2020):
 # (Kommunalatlas = kleinräumiges Datenangebot.  "PLR" is the file name after expanding the zipfile; it may mean "Planungsraum".  Contains attributes of LOR zones (at 500 zones level).)
 
 $(PLANUNGSRAUM_25833):
-	curl $(PLANUNGSRAUM_25833_URL) -o tmp.zip
-	unzip tmp.zip -d $(OUTPUT)
-	rm tmp.zip
+	#curl $(PLANUNGSRAUM_25833_URL) -o tmp.zip
+	#unzip tmp.zip -d $(OUTPUT)
+	#rm tmp.zip
+	echo "Link is broken: $(PLANUNGSRAUM_25833_URL), use $(PLANUNGSRAUM_25833)"
 # (shapefiles LORs = Berlin local system of zones)
 
 # filtering for those parts of the osm data that we need for the network:
