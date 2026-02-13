@@ -6,18 +6,21 @@ JAR := matsim-berlin-*.jar
 VERSION := v7.0
 CRS := EPSG:25832
 MEMORY ?= 20G
-## either use the global installation via, e.g. apt-get, or define where this is comming from
-osmosis := osmosis
-# Scenario creation tool
-JAVA_APP := java -Xmx$(MEMORY) -XX:+UseParallelGC -cp $(JAR) org.matsim.prepare.RunOpenBerlinCalibration
+
+# you need SUMO (set $(SUMO_HOME) )to run this script in version 1.20.0 (or greater ?), either build it yourself 
+# or use https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-germany/sumo/sumo_1.20.0/
+
 
 ## if you want to override thes variables set them as environment-variables and run make -e
 ## make will then use the environment-variable instead what you defined here.
 SVN_PATH := ..
 OUTPUT := output/$(VERSION)
-
-# you need SUMO (set $(SUMO_HOME) )to run this script in version 1.20.0 (or greater ?), either build it yourself 
-# or use https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-germany/sumo/sumo_1.20.0/
+## either use the global installation via, e.g. apt-get, or define where this is comming from
+OSMOSIS := osmosis
+## we use a tmp-dir because on the cluster the default-tmp-dir is to small
+TMP_DIR := ./tmp
+# Scenario creation tool
+JAVA_APP := java -Xmx$(MEMORY) -XX:+UseParallelGC -Djava.io.tmpdir=$(TMP_DIR) -cp $(JAR) org.matsim.prepare.RunOpenBerlinCalibration
 
 .PHONY: setup prepare prepare-calibration prepare-initial prepare-drt
 .DELETE_ON_ERROR:
@@ -175,16 +178,16 @@ $(NETWORK_OSM): $(BRANDENBURG_OSM_LOCAL) $(AREA_POLY) $(REMOVE_RAILWAY)
 
 	# Detailed network includes bikes as well
 	 # hard-coded because we delete within this step
-	$(osmosis) --rb file=$<\
+	$(OSMOSIS) --rb file=$<\
 	 --tf accept-ways bicycle=designated highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction,residential,living_street,unclassified,cycleway\
 	 --bounding-polygon file="$(word 2,$^)"\
 	 --used-node --wb input/network-detailed.osm.pbf
 
-	$(osmosis) --rb file=$<\
+	$(OSMOSIS) --rb file=$<\
 	 --tf accept-ways highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction\
 	 --used-node --wb input/network-coarse.osm.pbf
 
-	$(osmosis) --rb file=input/network-coarse.osm.pbf --rb file=input/network-detailed.osm.pbf\
+	$(OSMOSIS) --rb file=input/network-coarse.osm.pbf --rb file=input/network-detailed.osm.pbf\
   	 --merge\
   	 --tag-transform file=$(word 3,$^)\
   	 --wx $@
@@ -487,6 +490,7 @@ $(RANDOM_DRT_FLEET_10K): $(NETWORK_MATSIM) $(BERLIN_SHP_25832) $(BERLIN_INNER_CI
 setup: 
 	echo "setup $(OUTPUT)"
 	mkdir -p $(OUTPUT)
+	mkdir -p $(TMP_DIR)
 	
 prepare-calibration: $(BERLIN_BRANDENBURG_ACTS_25PCT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	make -Bndri prepare-calibration | make2graph | gv2gml -o prepare-calibration_graph.gml
