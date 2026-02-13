@@ -10,11 +10,17 @@ MEMORY ?= 20G
 osmosis := osmosis
 # Scenario creation tool
 JAVA_APP := java -Xmx$(MEMORY) -XX:+UseParallelGC -cp $(JAR) org.matsim.prepare.RunOpenBerlinCalibration
-SVN_PATH := ../../..
+
+## if you want to override thes variables set them as environment-variables and run make -e
+## make will then use the environment-variable instead what you defined here.
+SVN_PATH := ..
 OUTPUT := output/$(VERSION)
 
 # you need SUMO (set $(SUMO_HOME) )to run this script in version 1.20.0 (or greater ?), either build it yourself 
 # or use https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-germany/sumo/sumo_1.20.0/
+
+.PHONY: setup prepare prepare-calibration prepare-initial prepare-drt
+.DELETE_ON_ERROR:
 
 ###################################
 ######## INPUT ####################
@@ -112,9 +118,6 @@ RANDOM_DRT_FLEET_10K := $(OUTPUT)/berlin-$(VERSION).drt-by-rndLocations-10000veh
 NETWORK_FT := $(OUTPUT)/berlin-$(VERSION)-network-ft.csv.gz
 MODECHOICE_10PCT_BASELINE_PLANS := mode-choice-10pct-baseline/runs/008/008.output_plans.xml.gz
 CHOICE_EXPERIMENTS_10PCT_BASELINE_PLANS := choice-experiments/baseline/runs/008/008.output_plans.xml.gz
-
-.PHONY: prepare prepare-calibration prepare-initial prepare-drt
-.DELETE_ON_ERROR:
 
 ###################################
 ######## OUTPUT ###################
@@ -479,7 +482,11 @@ $(RANDOM_DRT_FLEET_10K): $(NETWORK_MATSIM) $(BERLIN_SHP_25832) $(BERLIN_INNER_CI
 	 --output $(OUTPUT)/berlin-$(VERSION).\
 	 --vehicles 500\
 	 --seats 4
-
+	 
+setup: 
+	echo "setup $(OUTPUT)"
+	mkdir -p $(OUTPUT)
+	
 prepare-calibration: $(BERLIN_BRANDENBURG_ACTS_25PCT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	make -Bndri prepare-calibration | make2graph | gv2gml -o prepare-calibration_graph.gml
 	echo "Done"
