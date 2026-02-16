@@ -108,7 +108,6 @@ BERLIN_SMALLSCALE_COMMERCIAL_25PCT := $(OUTPUT)/berlin-small-scale-commercialTra
 BERLIN_CADYTS_INPUT_25PCT := $(OUTPUT)/berlin-cadyts-input-$(VERSION)-25pct.plans.xml.gz
 BERLIN_CADYTS_OUTPUT_25PCT := $(OUTPUT)/cadyts/cadyts.output_plans.xml.gz
 BERLIN_CADYTS_FINAL_25PCT := $(OUTPUT)/berlin-$(VERSION)-25pct.plans_cadyts.xml.gz
-BERLIN_CADYTS_SELECTION_25PCT := $(OUTPUT)/berlin-$(VERSION)-25pct.plans_selection_cadyts.csv
 BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS := $(OUTPUT)/berlin-$(VERSION)-25pct.plans-initial.xml.gz
 BERLIN_10PCT_AFTER_CHOICE_EXPERIMENTS := $(OUTPUT)/berlin-$(VERSION)-10pct.plans.xml.gz
 BERLIN_DOWNTOWN_3PCT_PLANS := $(OUTPUT)/inner-city/berlin-downtown-$(VERSION)-3pct.xml.gz
@@ -116,8 +115,12 @@ BERLIN_3PCT_PLANS := $(OUTPUT)/berlin-$(VERSION)-3pct.plans.xml.gz
 
 RANDOM_DRT_FLEET_10K := $(OUTPUT)/berlin-$(VERSION).drt-by-rndLocations-10000vehicles-4seats.xml.gz
 
-## TODO where is this comming from
+## this is produced together with BERLIN_CADYTS_FINAL_25PCT, it has an own target now
+BERLIN_CADYTS_SELECTION_25PCT := $(OUTPUT)/berlin-$(VERSION)-25pct.plans_selection_cadyts.csv
+## its produced together with the commercial-facilities and has an own target now
 DATA_DISTR_PER_ZONE := $(OUTPUT)/dataDistributionPerZone.csv
+
+## TODO where is this comming from
 NETWORK_FT := $(OUTPUT)/berlin-$(VERSION)-network-ft.csv.gz
 MODECHOICE_10PCT_BASELINE_PLANS := mode-choice-10pct-baseline/runs/008/008.output_plans.xml.gz
 CHOICE_EXPERIMENTS_10PCT_BASELINE_PLANS := choice-experiments/baseline/runs/008/008.output_plans.xml.gz
@@ -398,19 +401,19 @@ $(BERLIN_CADYTS_INPUT_25PCT): $(BERLIN_BRANDENBURG_INITIAL_25PCT) $(BERLIN_SMALL
 	 
 $(BERLIN_CADYTS_OUTPUT_25PCT): $(BERLIN_CADYTS_INPUT_25PCT)
 	echo "=== NOT YET IMPLEMENTED, HERE SHOULD PROBABLY RUN CADYTS === 
-	
-$(BERLIN_CADYTS_SELECTION_25PCT):$(BERLIN_CADYTS_OUTPUT_25PCT)
-	echo "this is only a dummy-step, because CADYTS produces more than one file we need"
 
-$(BERLIN_CADYTS_FINAL_25PCT): $(BERLIN_CADYTS_OUTPUT_25PCT) $(BERLIN_CADYTS_INPUT_25PCT) $(BERLIN_CADYTS_SELECTION_25PCT)
+$(BERLIN_CADYTS_FINAL_25PCT): $(BERLIN_CADYTS_OUTPUT_25PCT) $(BERLIN_CADYTS_INPUT_25PCT) 
 	$(JAVA_APP) prepare extract-plans-idx\
 	 --input $<\
-	 --output $@
+	 --output $(BERLIN_CADYTS_SELECTION_25PCT)
 
 	$(JAVA_APP) prepare select-plans-idx\
 	 --input $(word 2,$^)\
-	 --csv $(work 3,$^)\
+	 --csv $(BERLIN_CADYTS_SELECTION_25PCT)\
 	 --output $@
+ 
+$(BERLIN_CADYTS_SELECTION_25PCT): $(BERLIN_CADYTS_FINAL_25PCT)
+	echo "check if $(BERLIN_CADYTS_SELECTION_25PCT) was produced" 
 
 # These depend on the output of cadyts calibration runs
 $(BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MATSIM) $(BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT) $(BERLIN_CADYTS_FINAL_25PCT) $(AREA_SHP)
