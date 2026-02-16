@@ -353,21 +353,24 @@ $(BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT): $(GERMAN_FREIGHT_25PCT) $(GERMAN_FR
 	 --cut-on-boundary\
 	 --output $@
 
-$(COMMERCIAL_FACILITIES): $(DATA_DISTR_PER_ZONE) $(REGION_4326) $(BB_ZONES_4326) $(BB_BUILDINGS_4326) $(BERLIN_LANDUSE_4326) $(COMMERCIAL_TRAFFIC_AREA_DATA)
+$(COMMERCIAL_FACILITIES): $(REGION_4326) $(BB_ZONES_4326) $(BB_BUILDINGS_4326) $(BERLIN_LANDUSE_4326) $(COMMERCIAL_TRAFFIC_AREA_DATA)
 	$(JAVA_APP) prepare create-data-distribution-of-structure-data\
 	 --outputFacilityFile $@\
-	 --outputDataDistributionFile $<\
+	 --outputDataDistributionFile $(DATA_DISTR_PER_ZONE)\
 	 --landuseConfiguration useOSMBuildingsAndLanduse\
- 	 --regionsShapeFileName $(word 2$^)\
+ 	 --regionsShapeFileName $<\
 	 --regionsShapeRegionColumn "GEN"\
-	 --zoneShapeFileName $(word 3,$^)\
+	 --zoneShapeFileName $(word 2,$^)\
 	 --zoneShapeFileNameColumn "id"\
-	 --buildingsShapeFileName $(word 4,$^)\
+	 --buildingsShapeFileName $(word 3,$^)\
 	 --shapeFileBuildingTypeColumn "type"\
-	 --landuseShapeFileName $(word 5,$^)\
+	 --landuseShapeFileName $(word 4,$^)\
 	 --shapeFileLanduseTypeColumn "fclass"\
 	 --shapeCRS "EPSG:4326"\
-	 --pathToInvestigationAreaData $(word 6,$^)
+	 --pathToInvestigationAreaData $(word 5,$^)
+	 
+$(DATA_DISTR_PER_ZONE): $(COMMERCIAL_FACILITIES)
+	echo "this is only here because $(DATA_DISTR_PER_ZONE) is created together with $(COMMERCIAL_FACILITIES)"
 
 $(BERLIN_SMALLSCALE_COMMERCIAL_25PCT): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DATA_DISTR_PER_ZONE) $(BB_ZONES_VKZ_4326)
 	$(JAVA_APP) prepare generate-small-scale-commercial-traffic\
