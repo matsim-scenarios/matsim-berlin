@@ -19,8 +19,6 @@ TMP_DIR := ./tmp
 # Scenario creation tool
 JAVA_APP := java -Xmx$(MEMORY) -XX:+UseParallelGC -Djava.io.tmpdir=$(TMP_DIR) -cp $(JAR) org.matsim.prepare.RunOpenBerlinCalibration
 
-PYTHON_ENV := venv
-
 .PHONY: setup prepare prepare-calibration prepare-initial prepare-drt
 .DELETE_ON_ERROR:
 
@@ -204,13 +202,11 @@ $(NETWORK_OSM): $(BRANDENBURG_OSM_LOCAL) $(AREA_POLY) $(REMOVE_RAILWAY)
 
 $(SUMO_OSM_NETCONVERT) : 
 	curl $(SUMO_OSM_NETCONVERT_URL) -o $(SUMO_OSM_NETCONVERT)
-	
+
 $(SUMO_OSM_NETCONVERT_URBAN_DE) : 
 	curl $(SUMO_OSM_NETCONVERT_URBAN_DE_URL) -o $(SUMO_OSM_NETCONVERT_URBAN_DE)
 
 $(NETWORK_SUMO): $(NETWORK_OSM) $(SUMO_OSM_NETCONVERT) $(SUMO_OSM_NETCONVERT_URBAN_DE)
-	source $(PYTHON_ENV)/bin/activate
-
 	netconvert --geometry.remove --ramps.guess --ramps.no-split\
 	 --type-files $(word 2,$^),$(word 3,$^)\
 	 --tls.guess-signals true --tls.discard-simple --tls.join --tls.default-type actuated\
@@ -225,8 +221,7 @@ $(NETWORK_SUMO): $(NETWORK_OSM) $(SUMO_OSM_NETCONVERT) $(SUMO_OSM_NETCONVERT_URB
 	 --proj "+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"\
 	 --ignore-errors --ignore-errors.connections\
 	 --osm-files $< -o=$@
-	
-	deactivate
+
 
 # converting the network from SUMO format to MATSim format:
 $(NETWORK_MATSIM): $(NETWORK_SUMO)
@@ -240,12 +235,12 @@ $(NETWORK_MATSIM): $(NETWORK_SUMO)
 	 --mode truck=freight\
 
 	$(JAVA_APP) prepare apply-network-params freespeed capacity\
- 	  --network $@ --output $@\
+	  --network $@ --output $@\
 	  --input-features $(NETWORK_FT)\
 	  --model org.matsim.prepare.network.BerlinNetworkParams
 
 	$(JAVA_APP) prepare apply-network-params capacity\
- 	  --network $@ --output $@\
+	  --network $@ --output $@\
 	  --input-features $(NETWORK_FT)\
 	  --road-types residential,living_street\
 	  --capacity-bounds 0.3\
@@ -333,9 +328,9 @@ $(BERLIN_BRANDENBURG_ACTS_25PCT): $(BERLIN_BRANDENBURG_STATIC_25PCT) $(SRV_PERSO
 
 	$(JAVA_APP) prepare assign-reference-population --population $@ --output $@\
 	 --persons $(word 2, $^)\
-  	 --activities $(word 3, $^)\
-  	 --shp $(word 4,$^)\
-  	 --shp-crs $(CRS)\
+	 --activities $(word 3, $^)\
+	 --shp $(word 4,$^)\
+	 --shp-crs $(CRS)\
 	 --facilities $(word 5,$^)\
 	 --network $(word 6,$^)\
 
@@ -373,7 +368,7 @@ $(COMMERCIAL_FACILITIES): $(REGION_4326) $(BB_ZONES_4326) $(BB_BUILDINGS_4326) $
 	 --outputFacilityFile $@\
 	 --outputDataDistributionFile $(DATA_DISTR_PER_ZONE)\
 	 --landuseConfiguration useOSMBuildingsAndLanduse\
- 	 --regionsShapeFileName $<\
+	 --regionsShapeFileName $<\
 	 --regionsShapeRegionColumn "GEN"\
 	 --zoneShapeFileName $(word 2,$^)\
 	 --zoneShapeFileNameColumn "id"\
@@ -410,7 +405,7 @@ $(BERLIN_SMALLSCALE_COMMERCIAL_25PCT): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES
 $(BERLIN_CADYTS_INPUT_25PCT): $(BERLIN_BRANDENBURG_INITIAL_25PCT) $(BERLIN_SMALLSCALE_COMMERCIAL_25PCT)
 	$(JAVA_APP) prepare merge-populations $^\
 	 --output $@
-	 
+
 $(BERLIN_CADYTS_OUTPUT_25PCT): $(BERLIN_CADYTS_INPUT_25PCT)
 	echo "=== NOT YET IMPLEMENTED, HERE SHOULD PROBABLY RUN CADYTS === 
 
@@ -509,11 +504,6 @@ setup:
 	echo "setup $(OUTPUT)"
 	mkdir -p $(OUTPUT)
 	mkdir -p $(TMP_DIR)
-	python3.9 -m venv $(PYTHON_ENV)
-	source env/bin/activate
-	pip install --upgrade pip
-	pip install eclipse-sumo==$(SUMO_VERSION)
-	deactivate
 	
 prepare-calibration: $(BERLIN_BRANDENBURG_ACTS_25PCT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	make -Bndri prepare-calibration | make2graph | gv2gml -o prepare-calibration_graph.gml
