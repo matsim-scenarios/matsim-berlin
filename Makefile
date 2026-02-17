@@ -378,14 +378,14 @@ $(DATA_DISTR_PER_ZONE): $(COMMERCIAL_FACILITIES)
 $(BERLIN_SMALLSCALE_COMMERCIAL_25PCT): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DATA_DISTR_PER_ZONE) $(BB_ZONES_VKZ_4326)
 	$(JAVA_APP) prepare generate-small-scale-commercial-traffic\
 	  input/$(VERSION)/berlin-$(VERSION).config.xml\
-	 --pathToDataDistributionToZones $(word 3,$^)\
-	 --pathToCommercialFacilities $(notdir $(word 2,$^))\
+	 --pathToDataDistributionToZones $(abspath $(word 3,$^))\
+	 --pathToCommercialFacilities $(abspath $(word 2,$^))\
 	 --sample 0.25\
 	 --jspritIterations 10\
 	 --creationOption createNewCarrierFile\
-	 --network $(notdir $<)\
+	 --network $(abspath $<)\
 	 --smallScaleCommercialTrafficType completeSmallScaleCommercialTraffic\
-	 --zoneShapeFileName $(word 4,$^)\
+	 --zoneShapeFileName $(abspath $(word 4,$^))\
 	 --zoneShapeFileNameColumn "id"\
 	 --shapeCRS "EPSG:4326"\
 	 --numberOfPlanVariantsPerAgent 5\
