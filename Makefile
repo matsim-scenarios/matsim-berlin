@@ -43,8 +43,8 @@ FACILITY_MAPPING := input/facility_mapping.json
 COMMERCIAL_TRAFFIC_AREA_DATA := input/commercialTrafficAreaData.csv
 ACTIVITY_MAPPING := input/activity_mapping.json
 
-SUMO_OSM_NETCONVERT_URL := https://github.com/eclipse-sumo/sumo/blob/v1_20_0/data/typemap/osmNetconvert.typ.xml 
-SUMO_OSM_NETCONVERT_URBAN_DE_URL  := https://github.com/eclipse-sumo/sumo/blob/v1_20_0/data/typemap/osmNetconvertUrbanDe.typ.xml
+SUMO_OSM_NETCONVERT_URL := https://raw.githubusercontent.com/eclipse-sumo/sumo/refs/tags/v1_20_0/data/typemap/osmNetconvert.typ.xml
+SUMO_OSM_NETCONVERT_URBAN_DE_URL  := https://raw.githubusercontent.com/eclipse-sumo/sumo/refs/tags/v1_20_0/data/typemap/osmNetconvertUrbanDe.typ.xml
 
 ## TODO this should be store in shared-svn
 BRANDENBURG_OSM_LOCAL := input/brandenburg.osm.pbf
