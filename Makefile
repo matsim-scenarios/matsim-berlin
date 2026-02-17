@@ -6,10 +6,7 @@ JAR := matsim-berlin-*.jar
 VERSION := v7.0
 CRS := EPSG:25832
 MEMORY ?= 20G
-
-# you need SUMO (set $(SUMO_HOME) )to run this script in version 1.20.0 (or greater ?), either build it yourself 
-# or use https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-germany/sumo/sumo_1.20.0/
-
+SUMO_VERSION := 1.20.0
 
 ## if you want to override thes variables set them as environment-variables and run make -e
 ## make will then use the environment-variable instead what you defined here.
@@ -21,6 +18,8 @@ OSMOSIS := osmosis
 TMP_DIR := ./tmp
 # Scenario creation tool
 JAVA_APP := java -Xmx$(MEMORY) -XX:+UseParallelGC -Djava.io.tmpdir=$(TMP_DIR) -cp $(JAR) org.matsim.prepare.RunOpenBerlinCalibration
+
+PYTHON_ENV := venv
 
 .PHONY: setup prepare prepare-calibration prepare-initial prepare-drt
 .DELETE_ON_ERROR:
@@ -46,8 +45,8 @@ FACILITY_MAPPING := input/facility_mapping.json
 COMMERCIAL_TRAFFIC_AREA_DATA := input/commercialTrafficAreaData.csv
 ACTIVITY_MAPPING := input/activity_mapping.json
 
-SUMO_OSM_NETCONVERT := $(SUMO_HOME)/data/typemap/osmNetconvert.typ.xml
-SUMO_OSM_NETCONVERT_URBAN_DE := $(SUMO_HOME)/data/typemap/osmNetconvertUrbanDe.typ.xml
+SUMO_OSM_NETCONVERT_URL := https://github.com/eclipse-sumo/sumo/blob/v1_20_0/data/typemap/osmNetconvert.typ.xml 
+SUMO_OSM_NETCONVERT_URBAN_DE_URL  := https://github.com/eclipse-sumo/sumo/blob/v1_20_0/data/typemap/osmNetconvertUrbanDe.typ.xml
 
 ## TODO this should be store in shared-svn
 BRANDENBURG_OSM_LOCAL := input/brandenburg.osm.pbf
@@ -87,6 +86,9 @@ REGIOSTAR := $(GERMANY)/RegioStaR-Referenzdateien.xlsx
 ###################################
 
 FACILITIES_GPKG := $(OUTPUT)/facilities.gpkg
+
+SUMO_OSM_NETCONVERT := $(OUTPUT)/osmNetconvert.typ.xml
+SUMO_OSM_NETCONVERT_URBAN_DE := $(OUTPUT)/osmNetconvertUrbanDe.typ.xml
 
 NETWORK_OSM := $(OUTPUT)/network.osm
 NETWORK_SUMO := $(OUTPUT)/sumo.net.xml
@@ -199,9 +201,17 @@ $(NETWORK_OSM): $(BRANDENBURG_OSM_LOCAL) $(AREA_POLY) $(REMOVE_RAILWAY)
 	rm input/network-coarse.osm.pbf
 
 # converting the network from OSM format to SUMO format:
-$(NETWORK_SUMO): $(NETWORK_OSM) $(SUMO_OSM_NETCONVERT) $(SUMO_OSM_NETCONVERT_URBAN_DE)
 
-	$(SUMO_HOME)/bin/netconvert --geometry.remove --ramps.guess --ramps.no-split\
+$(SUMO_OSM_NETCONVERT) : 
+	curl $(SUMO_OSM_NETCONVERT_URL) -o $(SUMO_OSM_NETCONVERT)
+	
+$(SUMO_OSM_NETCONVERT_URBAN_DE) : 
+	curl $(SUMO_OSM_NETCONVERT_URBAN_DE_URL) -o $(SUMO_OSM_NETCONVERT_URBAN_DE)
+
+$(NETWORK_SUMO): $(NETWORK_OSM) $(SUMO_OSM_NETCONVERT) $(SUMO_OSM_NETCONVERT_URBAN_DE)
+	source $(PYTHON_ENV)/bin/activate
+
+	netconvert --geometry.remove --ramps.guess --ramps.no-split\
 	 --type-files $(word 2,$^),$(word 3,$^)\
 	 --tls.guess-signals true --tls.discard-simple --tls.join --tls.default-type actuated\
 	 --junctions.join --junctions.corner-detail 5\
@@ -215,6 +225,8 @@ $(NETWORK_SUMO): $(NETWORK_OSM) $(SUMO_OSM_NETCONVERT) $(SUMO_OSM_NETCONVERT_URB
 	 --proj "+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"\
 	 --ignore-errors --ignore-errors.connections\
 	 --osm-files $< -o=$@
+	
+	deactivate
 
 # converting the network from SUMO format to MATSim format:
 $(NETWORK_MATSIM): $(NETWORK_SUMO)
@@ -497,6 +509,11 @@ setup:
 	echo "setup $(OUTPUT)"
 	mkdir -p $(OUTPUT)
 	mkdir -p $(TMP_DIR)
+	python3.9 -m venv $(PYTHON_ENV)
+	source env/bin/activate
+	pip install --upgrade pip
+	pip install eclipse-sumo==$(SUMO_VERSION)
+	deactivate
 	
 prepare-calibration: $(BERLIN_BRANDENBURG_ACTS_25PCT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	make -Bndri prepare-calibration | make2graph | gv2gml -o prepare-calibration_graph.gml
