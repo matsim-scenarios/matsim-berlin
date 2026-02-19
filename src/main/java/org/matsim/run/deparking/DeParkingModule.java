@@ -18,7 +18,6 @@
 
 package org.matsim.run.deparking;
 
-import org.matsim.analysis.autofrei.ParkingAnalyzer;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.core.controler.AbstractModule;
 
@@ -36,7 +35,6 @@ public class DeParkingModule extends AbstractModule {
 	public void install() {
 		Collection<String> mainModes = switch (getConfig().controller().getMobsim()) {
 			case "qsim" -> getConfig().qsim().getMainModes();
-			case "hermes" -> getConfig().hermes().getMainModes();
 			default -> throw new RuntimeException("ParkingCosts are currently supported for Qsim and Hermes");
 		};
 

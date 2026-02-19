@@ -1,4 +1,4 @@
-package org.matsim.analysis.autofrei;
+package org.matsim.run.deparking;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -30,6 +30,10 @@ import java.util.function.Consumer;
 public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimListener {
 	private static final Logger log = LogManager.getLogger(ParkingAnalyzer.class);
 
+	/**
+	 * Main method to let this class be run on as standalone. It analyzes the parking occupancy of links based on the events of a MATSim run.
+	 * It tracks when vehicles enter and leave traffic to determine when they are parked.
+	 */
 	public static void main(String[] args) {
 		String events = "./output/berlin-autofrei-v6.4-baseCaseCtd/berlin-v6.4.output_events.xml.gz";
 		String networkPath = "./output/berlin-autofrei-v6.4-baseCaseCtd/berlin-v6.4.output_network.xml.gz";
@@ -121,6 +125,11 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 
 	@Override
 	public void notifyAfterMobsim(AfterMobsimEvent event) {
+		if (event.getIteration() % 50 == 0) {
+			log.info("Writing parking occupancy for iteration {}.", event.getIteration());
+			Path file = Path.of(event.getServices().getControlerIO().getIterationFilename(event.getIteration(), "parking_occupancy.csv"));
+			writeCsv(file, event.getServices().getScenario().getNetwork(), parkingEventHandler.getOccupancyEntriesByLink());
+		}
 		this.lock = false;
 	}
 

@@ -1,5 +1,7 @@
 package org.matsim.run.policies.autofrei;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.geotools.api.referencing.FactoryException;
@@ -29,11 +31,18 @@ import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 public class RunAutofreiPolicy extends OpenBerlinScenario {
+	private static final double SAMPLE = 0.1;
+	public static final String PARKING_SPOTS_ATTR = "parkingSpots";
+
 	private static final Logger log = LogManager.getLogger(RunAutofreiPolicy.class);
 	private static final Set<String> RESTRICTED_MODES = Set.of(TransportMode.car, TransportMode.ride);
 	public static final String NEW_MODE_SMALL_SCALE_COMMERCIAL = "commercial_car";
@@ -107,10 +116,29 @@ public class RunAutofreiPolicy extends OpenBerlinScenario {
 		replaceCarByCarCommercial(scenario);
 		cleanPopulation(scenario.getPopulation());
 
-//		Population population = PopulationUtils.createPopulation(scenario.getConfig());
-//		var commercialPersonTraffic1205100012 = scenario.getPopulation().getPersons().get(Id.createPersonId("commercialPersonTraffic_12051000_1_2"));
-//		population.addPerson(commercialPersonTraffic1205100012);
-//		PopulationUtils.writePopulation(population, "testPop.xml");
+		// read csv with parking spots
+		// header is linkId,from_time,to_time,length,occupancy,initial
+		// for each linkId, get the corresponding link from the network and add an entry in attributes with the occupancy value.
+		var links = new HashSet<Id<Link>>(network.getLinks().keySet());
+
+		try (Reader r = Files.newBufferedReader(Path.of("csv"))) {
+			for (CSVRecord record : CSVFormat.Builder.create().setSkipHeaderRecord(true).build().parse(r)) {
+				Id<Link> linkId = Id.createLinkId(record.get("linkId"));
+				links.remove(linkId);
+
+				Link link = network.getLinks().get(linkId);
+				link.getAttributes().putAttribute(PARKING_SPOTS_ATTR, Double.parseDouble(record.get("occupancy")));
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		// For the links with no entry in the csv, set parkingSpots based on link length
+		for (Id<Link> linkId : links) {
+			Link link = network.getLinks().get(linkId);
+			double parkingSpots = Math.floor(link.getLength() / 7.5) * SAMPLE; // assume 7.5m per parking spot
+			link.getAttributes().putAttribute(PARKING_SPOTS_ATTR, parkingSpots);
+		}
 	}
 
 	private static void addCommercialCarVehicle(Scenario scenario) {

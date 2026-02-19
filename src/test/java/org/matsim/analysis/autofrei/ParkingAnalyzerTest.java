@@ -23,6 +23,7 @@ import org.matsim.core.controler.events.IterationStartsEvent;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.run.deparking.DeParkingModule;
+import org.matsim.run.deparking.ParkingAnalyzer;
 import org.matsim.testcases.MatsimTestUtils;
 
 import java.util.List;

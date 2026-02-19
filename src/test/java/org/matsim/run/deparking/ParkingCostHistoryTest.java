@@ -3,7 +3,6 @@ package org.matsim.run.deparking;
 import org.apache.commons.lang.NotImplementedException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.matsim.analysis.autofrei.ParkingAnalyzer;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
@@ -25,7 +24,7 @@ class ParkingCostHistoryTest {
 		Network network = createNetworkWithLink("1", 100.0);
 
 		ParkingCostHistory history = new ParkingCostHistory(
-			linkIndexMap, costs, null, 3600, null, network, 1.0, 7.5
+			linkIndexMap, costs, null, 3600, null, network
 		);
 
 		// Bin 0: 0-3600s
@@ -59,7 +58,7 @@ class ParkingCostHistoryTest {
 		Network network = createNetworkWithLinks(Map.of("A", 100.0, "B", 100.0));
 
 		ParkingCostHistory history = new ParkingCostHistory(
-			linkIndexMap, costs, null, 3600, null, network, 1.0, 7.5
+			linkIndexMap, costs, null, 3600, null, network
 		);
 
 		Assertions.assertEquals(10.0, history.cost(Id.createLinkId("A"), 0));
@@ -93,7 +92,7 @@ class ParkingCostHistoryTest {
 		DeParkingApproach approach = new InverseLinearDeParkingApproach();
 
 		ParkingCostHistory history = new ParkingCostHistory(
-			linkIndexMap, costs, mockAnalyzer, 3600, approach, network, sample, parkingSpotLength
+			linkIndexMap, costs, mockAnalyzer, 3600, approach, network
 		);
 
 		// Simulate iteration end
@@ -135,7 +134,7 @@ class ParkingCostHistoryTest {
 		DeParkingApproach approach = (relOcc, prevCost) -> relOcc;
 
 		ParkingCostHistory history = new ParkingCostHistory(
-			linkIndexMap, costs, mockAnalyzer, 3600, approach, network, 1.0, 7.5
+			linkIndexMap, costs, mockAnalyzer, 3600, approach, network
 		);
 
 		history.notifyIterationEnds(new org.matsim.core.controler.events.IterationEndsEvent(null, 0, false));
@@ -165,7 +164,7 @@ class ParkingCostHistoryTest {
 		DeParkingApproach approach = (relOcc, prevCost) -> relOcc;
 
 		ParkingCostHistory history = new ParkingCostHistory(
-			linkIndexMap, costs, mockAnalyzer, 3600, approach, network, 0.25, 7.5
+			linkIndexMap, costs, mockAnalyzer, 3600, approach, network
 		);
 
 		history.notifyIterationEnds(new org.matsim.core.controler.events.IterationEndsEvent(null, 0, false));
