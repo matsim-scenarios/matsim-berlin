@@ -25,8 +25,7 @@ import java.util.stream.Collectors;
  * All necessary configs will be made in this class.
  */
 public class OpenBerlinRoadSpeedScenario extends OpenBerlinScenario {
-
-	Logger log = LogManager.getLogger(OpenBerlinRoadSpeedScenario.class);
+	private static final Logger log = LogManager.getLogger(OpenBerlinRoadSpeedScenario.class);
 
 	@CommandLine.Option(names = "--speed-shp", description = "Path to shp file for adaption of link speeds.", defaultValue = "TODO")
 	private String speedAreaShp;
@@ -40,11 +39,6 @@ public class OpenBerlinRoadSpeedScenario extends OpenBerlinScenario {
 		//		apply all config changes from base scenario class
 		super.prepareConfig(config);
 
-		if (relativeSpeedChange == 0.0) {
-			log.fatal("You tried to set a relative freespeed change of {}. This results in freespeeds of 0 km/h on affected links, which is invalid. Aborting!", relativeSpeedChange);
-			throw new IllegalStateException("");
-		}
-
 		return config;
 	}
 
@@ -52,6 +46,24 @@ public class OpenBerlinRoadSpeedScenario extends OpenBerlinScenario {
 	public void prepareScenario(Scenario scenario) {
 		//		apply all scenario changes from base scenario class
 		super.prepareScenario(scenario);
+
+		applyRelativeSpeedChangeToLinksInScenario(scenario, relativeSpeedChange, speedAreaShp);
+	}
+
+	@Override
+	public void prepareControler(Controler controler) {
+		//		apply all controller changes from base scenario class
+		super.prepareControler(controler);
+	}
+
+	/**
+	 * applies the given change of freespeed to all affected links.
+	 */
+	static void applyRelativeSpeedChangeToLinksInScenario(Scenario scenario, double relativeSpeedChange, String speedAreaShp) {
+		if (relativeSpeedChange == 0.0) {
+			log.fatal("You tried to set a relative freespeed change of {}. This results in freespeeds of 0 km/h on affected links, which is invalid. Aborting!", relativeSpeedChange);
+			throw new IllegalStateException("");
+		}
 
 		List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(IOUtils.extendUrl(scenario.getConfig().getContext(), speedAreaShp));
 
@@ -82,11 +94,5 @@ public class OpenBerlinRoadSpeedScenario extends OpenBerlinScenario {
 			log.fatal("Speed reduction value of {} is invalid. Please put a 0.0 <= value < 1.0", relativeSpeedChange);
 			throw new IllegalArgumentException("");
 		}
-	}
-
-	@Override
-	public void prepareControler(Controler controler) {
-		//		apply all controller changes from base scenario class
-		super.prepareControler(controler);
 	}
 }

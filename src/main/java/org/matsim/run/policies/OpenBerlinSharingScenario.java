@@ -67,6 +67,44 @@ public class OpenBerlinSharingScenario extends OpenBerlinScenario {
 		//		apply all config changes from base scenario class
 		super.prepareConfig(config);
 
+		addSharingServiceInConfig(config, serviceFile, baseFare, distanceFare, timeFare, intermodal);
+
+		return config;
+	}
+
+	@Override
+	public void prepareScenario(Scenario scenario) {
+		//		apply all scenario changes from base scenario class
+		super.prepareScenario(scenario);
+
+		copyBikeModeConstantsForSharingInScenario(scenario);
+
+//		tag intermodal eScooter-pt-stations
+		OpenBerlinDrtScenario.tagTransitStopsInServiceArea(scenario.getTransitSchedule(),
+			STOP_FILTER, STOP_FILTER_VALUE,
+			BERLIN_SHP_STRING,
+			"stopFilter", "station_S/U/RE/RB",
+			// some S+U stations are located slightly outside the shp File, e.g. U7 Neukoelln, U8
+			// Hermannstr., so allow buffer around the shape.
+			// This does not mean that a drt vehicle can pick the passenger up outside the service area,
+			// rather the passenger has to walk the last few meters from the drt drop off to the station.
+//			we now use whole of berlin instead of Hundekopf, but will keep using the buffer, assuming that the same issues might occur for other stations -sm0126
+			200.0);
+	}
+
+	@Override
+	public void prepareControler(Controler controler) {
+		//		apply all controller changes from base scenario class
+		super.prepareControler(controler);
+
+		addSharingModuleAndIntermodalFareCompensationInController(controler);
+	}
+
+	/**
+	 * add and configure the sharing config group with the given parameters.
+	 */
+	static void addSharingServiceInConfig(Config config, String serviceFile, double baseFare, double distanceFare, double timeFare,
+										  EScooterIntermodalityHandling intermodal) {
 		SharingConfigGroup sharingConfigGroup = ConfigUtils.addOrGetModule(config, SharingConfigGroup.class);
 		SharingServiceConfigGroup serviceConfig = new SharingServiceConfigGroup();
 		serviceConfig.setId(E_SCOOTER);
@@ -139,15 +177,12 @@ public class OpenBerlinSharingScenario extends OpenBerlinScenario {
 		intermodalParams.setStopFilterValue(STOP_FILTER_VALUE);
 
 		raptorConfigGroup.addIntermodalAccessEgress(intermodalParams);
-
-		return config;
 	}
 
-	@Override
-	public void prepareScenario(Scenario scenario) {
-		//		apply all scenario changes from base scenario class
-		super.prepareScenario(scenario);
-
+	/**
+	 * copy bike mode constants for eScooter if available.
+	 */
+	static void copyBikeModeConstantsForSharingInScenario(Scenario scenario) {
 		for (Person person : scenario.getPopulation().getPersons().values()) {
 			if (PersonUtils.getModeConstants(person) != null && PersonUtils.getModeConstants(person).containsKey(TransportMode.bike)) {
 //				assume that preference for bike is similar for eScooter
@@ -156,27 +191,13 @@ public class OpenBerlinSharingScenario extends OpenBerlinScenario {
 				modeConstants.put(E_SCOOTER, modeConstants.get(TransportMode.bike));
 				PersonUtils.setModeConstants(person, modeConstants);
 			}
-
 		}
-
-//		tag intermodal eScooter-pt-stations
-		OpenBerlinDrtScenario.tagTransitStopsInServiceArea(scenario.getTransitSchedule(),
-			STOP_FILTER, STOP_FILTER_VALUE,
-			BERLIN_SHP_STRING,
-			"stopFilter", "station_S/U/RE/RB",
-			// some S+U stations are located slightly outside the shp File, e.g. U7 Neukoelln, U8
-			// Hermannstr., so allow buffer around the shape.
-			// This does not mean that a drt vehicle can pick the passenger up outside the service area,
-			// rather the passenger has to walk the last few meters from the drt drop off to the station.
-//			we now use whole of berlin instead of Hundekopf, but will keep using the buffer, assuming that the same issues might occur for other stations -sm0126
-			200.0);
 	}
 
-	@Override
-	public void prepareControler(Controler controler) {
-		//		apply all controller changes from base scenario class
-		super.prepareControler(controler);
-
+	/**
+	 * add sharin module as well as refund handler for intermodal pt-eScooter trips.
+	 */
+	static void addSharingModuleAndIntermodalFareCompensationInController(Controler controler) {
 		controler.addOverridingModule(new SharingModule());
 		controler.configureQSimComponents(SharingUtils.configureQSim(ConfigUtils.addOrGetModule(controler.getConfig(), SharingConfigGroup.class)));
 
@@ -197,7 +218,7 @@ public class OpenBerlinSharingScenario extends OpenBerlinScenario {
 	/**
 	 * Helper enum to enable/disable functionalities.
 	 */
-	private enum EScooterIntermodalityHandling {INTERMODAL_E_SCOOTER_ONLY, E_SCOOTER_REGULAR_AND_INTERMODAL}
+	enum EScooterIntermodalityHandling {INTERMODAL_E_SCOOTER_ONLY, E_SCOOTER_REGULAR_AND_INTERMODAL}
 
 	private static final class SharingRefundHandler implements PersonDepartureEventHandler, PersonMoneyEventHandler, AfterMobsimListener {
 		@Inject

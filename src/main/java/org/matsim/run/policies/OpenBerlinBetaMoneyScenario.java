@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
  * All necessary configs will be made in this class.
  */
 public class OpenBerlinBetaMoneyScenario extends OpenBerlinScenario {
-	Logger log = LogManager.getLogger(OpenBerlinBetaMoneyScenario.class);
+	private static final Logger log = LogManager.getLogger(OpenBerlinBetaMoneyScenario.class);
 
 	@CommandLine.Option(names = "--beta-money", description = "Defines to which value the general marginal ut. of money is set. Default = 1.0", defaultValue = "1.0")
 	private double betaMoney;
@@ -27,10 +27,7 @@ public class OpenBerlinBetaMoneyScenario extends OpenBerlinScenario {
 		//		apply all config changes from base scenario class
 		super.prepareConfig(config);
 
-		config.scoring().setMarginalUtilityOfMoney(betaMoney);
-		if (betaMoney != 1.0) {
-			log.info("Marginal utility of money was set to {}. Default is 1.0. Make sure this is what you want.", betaMoney);
-		}
+		setBetaMoneyInConfig(config, betaMoney);
 		return config;
 	}
 
@@ -44,5 +41,15 @@ public class OpenBerlinBetaMoneyScenario extends OpenBerlinScenario {
 	public void prepareControler(Controler controler) {
 		//		apply all controller changes from base scenario class
 		super.prepareControler(controler);
+	}
+
+	/**
+	 * betaMoney in [util/Eu].
+	 */
+	static void setBetaMoneyInConfig(Config config, double betaMoney) {
+		config.scoring().setMarginalUtilityOfMoney(betaMoney);
+		if (betaMoney != 1.0) {
+			log.info("Marginal utility of money was set to {}. Default is 1.0. Make sure this is what you want.", betaMoney);
+		}
 	}
 }

@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * All necessary configs will be made in this class.
  */
 public class OpenBerlinRoadCapacitiesScenario extends OpenBerlinScenario {
-	Logger log = LogManager.getLogger(OpenBerlinRoadCapacitiesScenario.class);
+	private static final Logger log = LogManager.getLogger(OpenBerlinRoadCapacitiesScenario.class);
 
 	@CommandLine.Option(names = "--capacities-shp", description = "Path to shp file for adaption of link capacities. Should be shape of berlin or related.", required = true)
 	private String capacityShp;
@@ -37,11 +37,6 @@ public class OpenBerlinRoadCapacitiesScenario extends OpenBerlinScenario {
 		//		we do not want to set changed road capacities via qsim cfg group because this would affect all links.
 //		the network of this model includes the whole of Brandenburg.
 
-		if (relativeCapacityChange == 0.0) {
-			log.fatal("You tried to set a relative road capacity change of {}. This results in road capacities of 0 veh/h, which is invalid. Aborting!", relativeCapacityChange);
-			throw new IllegalStateException("");
-		}
-
 		return config;
 	}
 
@@ -49,6 +44,25 @@ public class OpenBerlinRoadCapacitiesScenario extends OpenBerlinScenario {
 	public void prepareScenario(Scenario scenario) {
 		//		apply all scenario changes from base scenario class
 		super.prepareScenario(scenario);
+
+		changeLinkCapacitiesInScenario(scenario, relativeCapacityChange, capacityShp);
+	}
+
+	@Override
+	public void prepareControler(Controler controler) {
+		//		apply all controller changes from base scenario class
+		super.prepareControler(controler);
+	}
+
+
+	/**
+	 * apply given link capacity to all affected links.
+	 */
+	static void changeLinkCapacitiesInScenario(Scenario scenario, double relativeCapacityChange, String capacityShp) {
+		if (relativeCapacityChange == 0.0) {
+			log.fatal("You tried to set a relative road capacity change of {}. This results in road capacities of 0 veh/h, which is invalid. Aborting!", relativeCapacityChange);
+			throw new IllegalStateException("");
+		}
 
 		Geometry geom = new ShpOptions(capacityShp, null, null).getGeometry();
 
@@ -72,11 +86,5 @@ public class OpenBerlinRoadCapacitiesScenario extends OpenBerlinScenario {
 
 			log.info("For {} network links the link capacity has been adapted by a factor of {}.", count.get(), relativeCapacityChange);
 		}
-	}
-
-	@Override
-	public void prepareControler(Controler controler) {
-		//		apply all controller changes from base scenario class
-		super.prepareControler(controler);
 	}
 }

@@ -94,7 +94,7 @@ public class OpenBerlinDrtScenario extends OpenBerlinScenario {
 	 *
 	 * @param scenario network and transit schedule are mutated as side effects.
 	 */
-	private static void prepareNetworkAndTransitScheduleForDrt(Scenario scenario) {
+	public static void prepareNetworkAndTransitScheduleForDrt(Scenario scenario) {
 		BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(scenario.getConfig(), BerlinExperimentalConfigGroup.class);
 		DvrpConfigGroup dvrpConfigGroup = DvrpConfigGroup.get(scenario.getConfig());
 

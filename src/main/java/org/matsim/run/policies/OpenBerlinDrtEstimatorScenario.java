@@ -1,5 +1,6 @@
 package org.matsim.run.policies;
 
+import ch.sbb.matsim.routing.pt.raptor.RaptorIntermodalAccessEgress;
 import com.google.common.collect.ImmutableSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,16 +13,27 @@ import org.matsim.contrib.drt.estimator.impl.distribution.NormalDistributionGene
 import org.matsim.contrib.drt.estimator.impl.trip_estimation.ConstantRideDurationEstimator;
 import org.matsim.contrib.drt.estimator.impl.waiting_time_estimation.ConstantWaitingTimeEstimator;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
+import org.matsim.contrib.drt.run.DrtConfigs;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
+import org.matsim.contrib.drt.run.MultiModeDrtModule;
+import org.matsim.contrib.dvrp.run.DvrpModule;
+import org.matsim.contrib.dvrp.run.DvrpQSimComponents;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.groups.QSimConfigGroup;
 import org.matsim.core.config.groups.ScoringConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.router.AnalysisMainModeIdentifier;
+import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup;
 import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
 import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
-import org.matsim.run.OpenBerlinDrtScenario;
+import org.matsim.extensions.pt.routing.EnhancedRaptorIntermodalAccessEgress;
+import org.matsim.extensions.pt.routing.ptRoutingModes.PtIntermodalRoutingModesModule;
+import org.matsim.legacy.run.drt.OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier;
+import org.matsim.legacy.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
+import org.matsim.run.OpenBerlinScenario;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleCapacity;
 import org.matsim.vehicles.VehicleType;
@@ -29,15 +41,18 @@ import org.matsim.vehicles.VehicleUtils;
 import picocli.CommandLine;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.matsim.run.OpenBerlinDrtScenario.prepareNetworkAndTransitScheduleForDrt;
+
 /**
  * Berlin scenario including estimated drt.
- * This class uses the changes made in OpenBerlinDrtScenario and changes some of them.
+ * This class uses the changes made in OpenBerlinDrtScenario and changes some of them by copying them, see comments in some methods.
  * All necessary configs will be made in this class.
  */
-public class OpenBerlinDrtEstimatorScenario extends OpenBerlinDrtScenario {
+public class OpenBerlinDrtEstimatorScenario extends OpenBerlinScenario {
 	Logger log = LogManager.getLogger(OpenBerlinDrtEstimatorScenario.class);
 
 	@CommandLine.Option(names = "--typ-wt", description = "typical waiting time (base)", defaultValue = "300")
@@ -63,26 +78,113 @@ public class OpenBerlinDrtEstimatorScenario extends OpenBerlinDrtScenario {
 	@CommandLine.Option(names = "--drt-fare", description = "Daily drt fare to be charged for drt trips. Default = -3Eu := same as PT", defaultValue = "-3.0")
 	private double drtFare;
 
+	@CommandLine.Option(names = "--drt-config",
+		defaultValue = "input/v" + OpenBerlinScenario.VERSION + "/berlin-v" + OpenBerlinScenario.VERSION + ".drt-config.xml",
+		description = "Path to drt (only) config. Should contain only additional stuff to base config. Otherwise overrides.")
+	private String drtConfig;
+
 	@Nullable
 	@Override
 	public Config prepareConfig(Config config) {
 		//		apply all config changes from base scenario class
-//		plus all changes from OpenBerlinDrtScenario. Some of them will be overwritten in the following.
 		super.prepareConfig(config);
+
+
+		configureDrtInConfig(config, drtConfig, drtFare, intermodal);
 
 		//modify output directory and runId
 		config.controller().setOutputDirectory(config.controller().getOutputDirectory() + "-alpha-" + rideTimeAlpha + "-beta-" + rideTimeBeta + "-fare-" + drtFare);
 		config.controller().setRunId(config.controller().getRunId() + "-alpha-" + rideTimeAlpha + "-beta-" + rideTimeBeta + "-fare-" + drtFare);
+
+		return config;
+	}
+
+//	TODO: we may need the following, but for estimator I do not see why?
+//	@Override
+//	protected Scenario createScenario(Config config) {
+//		Scenario scenario = ScenarioUtils.createScenario(config);
+//
+//		//if the input plans contain DrtRoutes, this will cause problems later in the DrtRouteFactory
+//		//to avoid this, the DrtRouteFactory would have to get set before loading the scenario, just like in Open Berlin v5.x
+//		RouteFactories routeFactories = scenario.getPopulation().getFactory().getRouteFactories();
+//		routeFactories.setRouteFactory(DrtRoute.class, new DrtRouteFactory());
+//
+//		ScenarioUtils.loadScenario(scenario);
+//		return scenario;
+//	}
+
+	@Override
+	public void prepareScenario(Scenario scenario) {
+		//		apply all scenario changes from base scenario class
+		super.prepareScenario(scenario);
+
+		configureDrtInScenario(scenario);
+	}
+
+	@Override
+	public void prepareControler(Controler controler) {
+		//		apply all controller changes from base scenario class
+		super.prepareControler(controler);
+
+		configureDrtInController(controler, typicalWaitTime, waitTimeStd, rideTimeAlpha, rideTimeBeta, rideTimeStd, drtFare);
+	}
+
+	/**
+	 * make all necessary config changes to simulate drt from OpenBerlinDrtScenario (see comment) and OpenBerlinDrtEstimatorScenario.
+	 */
+	static void configureDrtInConfig(Config config, String drtConfig, double drtFare, DrtIntermodalityHandling intermodal) {
+		//		###################### the following is copied from OpenBerlinDrtScenario ##############################################################
+//		there is no way around copying it unfortunately:
+//		this class relies on changes in OpenBerlinDrtScenario + overrides some of the methods there.
+//		for the M2GScenario run classes we want to apply all changes from OpenBerlinDrtScenario as well as this class, so we need static methods
+//		which can be called in the M2GScenario classes. If we extract changes in OpenBerlinScenario to static methods, the overridable methods used in this class here
+//		also need to be static (we cannot reference a non-static object from a static context). But a static object cannot be overriden.
+//		Hence, the copy. -sm0226
+
+		ConfigUtils.loadConfig(config, drtConfig);
+
+		//drt only works with the following sim start time interpretation
+		config.qsim().setSimStarttimeInterpretation(QSimConfigGroup.StarttimeInterpretation.onlyUseStarttime);
+
+		MultiModeDrtConfigGroup multiModeDrtCfg = MultiModeDrtConfigGroup.get(config);
+		DrtConfigs.adjustMultiModeDrtConfig(multiModeDrtCfg, config.scoring(), config.routing());
+
+		Set<String> drtModes = new HashSet<>();
+
+		ScoringConfigGroup.ModeParams ptParams = config.scoring().getModes().get(TransportMode.pt);
+
+		for (DrtConfigGroup drtCfg : multiModeDrtCfg.getModalElements()) {
+			drtModes.add(drtCfg.getMode());
+
+			//copy all scoring params from pt
+			ScoringConfigGroup.ModeParams modeParams = new ScoringConfigGroup.ModeParams(drtCfg.getMode());
+			modeParams.setConstant(ptParams.getConstant());
+			modeParams.setMarginalUtilityOfDistance(ptParams.getMarginalUtilityOfDistance());
+			modeParams.setMarginalUtilityOfTraveling(ptParams.getMarginalUtilityOfTraveling());
+			modeParams.setDailyUtilityConstant(ptParams.getDailyUtilityConstant());
+
+			//assume that the drt is fully integrated in pt, i.e. fare integration
+			modeParams.setMonetaryDistanceRate(ptParams.getMonetaryDistanceRate());
+			modeParams.setDailyMonetaryConstant(ptParams.getDailyMonetaryConstant());
+			config.scoring().addModeParams(modeParams);
+		}
+
+		configureIntermodalTripFareCompensation(config, drtModes, drtFare);
+
+		//include drt in mode-choice and add mode params.
+		//by using a Set, it should be assured that they aren't included twice.
+		drtModes.addAll(Arrays.asList(config.subtourModeChoice().getModes()));
+		config.subtourModeChoice().setModes(drtModes.toArray(String[]::new));
+
+//		##################################################### end of copied lines ###############################################################
 
 //		adapt dailyMonetaryConstant to param drtFare if drtFare != dailyMonetaryConstantPT
 		if (drtFare != config.scoring().getModes().get(TransportMode.pt).getDailyMonetaryConstant()) {
 			config.scoring().getModes().get(TransportMode.drt).setDailyMonetaryConstant(drtFare);
 		}
 
-		MultiModeDrtConfigGroup multiModeDrtConfigGroup = ConfigUtils.addOrGetModule(config, MultiModeDrtConfigGroup.class);
-
 //		we want to estimate drt, so we do not need the pre-defined vehicles file
-		multiModeDrtConfigGroup.getModalElements().forEach(e -> {
+		multiModeDrtCfg.getModalElements().forEach(e -> {
 			e.vehiclesFile = null;
 			e.drtServiceAreaShapeFile = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.4/input/shp/Berlin_25832.shp";
 		});
@@ -96,19 +198,28 @@ public class OpenBerlinDrtEstimatorScenario extends OpenBerlinDrtScenario {
 
 		// set to drt estimate and teleport
 //		this enables the usage of the DrtEstimator by CL
-		for (DrtConfigGroup drtConfigGroup : multiModeDrtConfigGroup.getModalElements()) {
+		for (DrtConfigGroup drtConfigGroup : multiModeDrtCfg.getModalElements()) {
 			drtConfigGroup.simulationType = DrtConfigGroup.SimulationType.estimateAndTeleport;
 		}
 
 		config.removeModule("");
-
-		return config;
 	}
 
-	@Override
-	public void prepareScenario(Scenario scenario) {
-		//		apply all scenario changes from base scenario class
-		super.prepareScenario(scenario);
+	/**
+	 * make all necessary scenario changes to simulate drt from OpenBerlinDrtScenario (see comment) and OpenBerlinDrtEstimatorScenario.
+	 */
+	static void configureDrtInScenario(Scenario scenario) {
+		//		###################### the following is copied from OpenBerlinDrtScenario ##############################################################
+//		there is no way around copying it unfortunately:
+//		this class relies on changes in OpenBerlinDrtScenario + overrides some of the methods there.
+//		for the M2GScenario run classes we want to apply all changes from OpenBerlinDrtScenario as well as this class, so we need static methods
+//		which can be called in the M2GScenario classes. If we extract changes in OpenBerlinScenario to static methods, the overridable methods used in this class here
+//		also need to be static (we cannot reference a non-static object from a static context). But a static object cannot be overriden.
+//		Hence, the copy. -sm0226
+
+		prepareNetworkAndTransitScheduleForDrt(scenario);
+
+//		##################################################### end of copied lines ###############################################################
 
 		//		add drt veh type if not already existing
 		Id<VehicleType> drtTypeId = Id.create(TransportMode.drt, VehicleType.class);
@@ -133,10 +244,40 @@ public class OpenBerlinDrtEstimatorScenario extends OpenBerlinDrtScenario {
 		}
 	}
 
-	@Override
-	public void prepareControler(Controler controler) {
-		//		apply all controller changes from base scenario class
-		super.prepareControler(controler);
+	/**
+	 * make all necessary controller changes to simulate drt from OpenBerlinDrtScenario (see comment) and OpenBerlinDrtEstimatorScenario.
+	 */
+	static void configureDrtInController(Controler controler, double typicalWaitTime, double waitTimeStd, double rideTimeAlpha,
+										 double rideTimeBeta, double rideTimeStd, double drtFare) {
+		//		###################### the following is copied from OpenBerlinDrtScenario ##############################################################
+//		there is no way around copying it unfortunately:
+//		this class relies on changes in OpenBerlinDrtScenario + overrides some of the methods there.
+//		for the M2GScenario run classes we want to apply all changes from OpenBerlinDrtScenario as well as this class, so we need static methods
+//		which can be called in the M2GScenario classes. If we extract changes in OpenBerlinScenario to static methods, the overridable methods used in this class here
+//		also need to be static (we cannot reference a non-static object from a static context). But a static object cannot be overriden.
+//		Hence, the copy. -sm0226
+
+		// drt + dvrp modules
+		controler.addOverridingModule(new MultiModeDrtModule());
+		controler.addOverridingModule(new DvrpModule());
+		controler.configureQSimComponents(DvrpQSimComponents.activateAllModes(MultiModeDrtConfigGroup.get(controler.getConfig())));
+
+		controler.addOverridingModule(new AbstractModule() {
+
+			@Override
+			public void install() {
+				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier.class);
+				bind(MainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtRouterModeIdentifier.class);
+				bind(RaptorIntermodalAccessEgress.class).to(EnhancedRaptorIntermodalAccessEgress.class);
+
+			}
+		});
+
+		// yyyy there is fareSModule (with S) in config. ?!?!  kai, jul'19
+		addIntermodalTripFareCompensatorsModule(controler, drtFare);
+		controler.addOverridingModule(new PtIntermodalRoutingModesModule());
+
+//		##################################################### end of copied lines ###############################################################
 
 		for (DrtConfigGroup drtConfigGroup : MultiModeDrtConfigGroup.get(controler.getConfig()).getModalElements()) {
 			controler.addOverridingModule(new AbstractModule() {
@@ -156,24 +297,15 @@ public class OpenBerlinDrtEstimatorScenario extends OpenBerlinDrtScenario {
 		}
 	}
 
-	/**
-	 * this method overrides the addIntermodalTripFareCompensatorsModule method in OpenBerlinDrtScenario (parent class).
-	 * we only want to use intermodal trip fare compensation if a drt fare is charged at all.
-	 */
-	@Override
-	public void addIntermodalTripFareCompensatorsModule(Controler controler) {
+	private static void addIntermodalTripFareCompensatorsModule(Controler controler, double drtFare) {
 //		we do not need intermodal trip fare compensation when drt has no fare
 		if (drtFare != 0.) {
 			controler.addOverridingModule(new IntermodalTripFareCompensatorsModule());
 		}
 	}
 
-	/**
-	 * this method overrides the configureIntermodalTripFareCompensation method in OpenBerlinDrtScenario (parent class).
-	 * we only want to use intermodal trip fare compensation if a drt fare is charged at all.
-	 */
-	@Override
-	public void configureIntermodalTripFareCompensation(Config config, ScoringConfigGroup.ModeParams ptParams, Set<String> drtModes) {
+
+	private static void configureIntermodalTripFareCompensation(Config config, Set<String> drtModes, double drtFare) {
 		//		we do not need intermodal trip fare compensation when drt has no fare
 		if (drtFare != 0.) {
 			IntermodalTripFareCompensatorsConfigGroup compensatorsConfig = ConfigUtils.addOrGetModule(config, IntermodalTripFareCompensatorsConfigGroup.class);
@@ -194,5 +326,5 @@ public class OpenBerlinDrtEstimatorScenario extends OpenBerlinDrtScenario {
 	/**
 	 * Helper enum to enable/disable functionalities.
 	 */
-	private enum DrtIntermodalityHandling {INTERMODAL_DRT_ONLY, DRT_REGULAR_AND_INTERMODAL}
+	enum DrtIntermodalityHandling {INTERMODAL_DRT_ONLY, DRT_REGULAR_AND_INTERMODAL}
 }

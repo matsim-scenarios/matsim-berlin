@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
  * All necessary configs will be made in this class.
  */
 public class OpenBerlinBikeSpeedScenario extends OpenBerlinScenario {
-	Logger log = LogManager.getLogger(OpenBerlinBikeSpeedScenario.class);
+	private static final Logger log = LogManager.getLogger(OpenBerlinBikeSpeedScenario.class);
 
 	@CommandLine.Option(names = "--max-bike-speed", description = "Defines to which value in km/h the maximum velocity of bikes is set. Default = 10.728 km/h", defaultValue = "10.728")
 	private double maxBikeSpeedKmH;
@@ -29,7 +29,31 @@ public class OpenBerlinBikeSpeedScenario extends OpenBerlinScenario {
 		//		apply all config changes from base scenario class
 		super.prepareConfig(config);
 
-		if (maxBikeSpeedKmH == 0.0) {
+		assertNoTeleportedBikeParamsInConfig(config, maxBikeSpeedKmH);
+
+		return config;
+	}
+
+	@Override
+	public void prepareScenario(Scenario scenario) {
+		//		apply all scenario changes from base scenario class
+		super.prepareScenario(scenario);
+
+		setMaxBikeSpeedInScenario(scenario, maxBikeSpeedKmH);
+	}
+
+	@Override
+	public void prepareControler(Controler controler) {
+		//		apply all controller changes from base scenario class
+		super.prepareControler(controler);
+	}
+
+	/**
+	 * this method makes sure that the provided max. bike speed is valid +
+	 * there are no teleported mode params for bike (bike is routed on the network).
+	 */
+	static void assertNoTeleportedBikeParamsInConfig(Config config, double maxBikeSpeedKmH) {
+		if (maxBikeSpeedKmH <= 0.0) {
 			log.fatal("You tried to set the maximum bike speed to {}. It is invalid. Aborting!", maxBikeSpeedKmH);
 			throw new IllegalStateException("");
 		}
@@ -41,24 +65,16 @@ public class OpenBerlinBikeSpeedScenario extends OpenBerlinScenario {
 				" In matsim-berlin v6.4 {} is routed on the network, so there should not be teleported mode params for this mode! Aborting!", TransportMode.bike, TransportMode.bike);
 			throw new IllegalStateException("");
 		}
-
-		return config;
 	}
 
-	@Override
-	public void prepareScenario(Scenario scenario) {
-		//		apply all scenario changes from base scenario class
-		super.prepareScenario(scenario);
-//		original bike speed of berlin 6.4 is 2.98 m/s = 10.728 km/h
+	/**
+	 * set max. bike speed to the given value in the vehicle type "bike".
+	 */
+	static void setMaxBikeSpeedInScenario(Scenario scenario, double maxBikeSpeedKmH) {
+		//		original bike speed of berlin 6.4 is 2.98 m/s = 10.728 km/h
 		if (maxBikeSpeedKmH != 10.728) {
 			scenario.getVehicles().getVehicleTypes().get(Id.create(TransportMode.bike, VehicleType.class)).setMaximumVelocity(maxBikeSpeedKmH / 3.6);
 			log.info("Maximum velocity for {} was set to {} km/h. Default is 10.728 km/h. Make sure this is what you want.", TransportMode.bike, maxBikeSpeedKmH);
 		}
-	}
-
-	@Override
-	public void prepareControler(Controler controler) {
-		//		apply all controller changes from base scenario class
-		super.prepareControler(controler);
 	}
 }
