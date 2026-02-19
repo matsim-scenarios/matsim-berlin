@@ -128,6 +128,7 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 //		4) bicycle speed
 //		no changes in controller compared to base case
 //		5) sharing
+//		TODO: the bindings here will fail because we have bindings to the same classes with drt.
 		OpenBerlinSharingScenario.addSharingModuleAndIntermodalFareCompensationInController(controler);
 //		6) home office
 //		no changes in controller compared to base case
