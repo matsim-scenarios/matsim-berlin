@@ -5,7 +5,7 @@
 JAR := matsim-berlin-*.jar
 VERSION := v7.0
 CRS := EPSG:25832
-MEMORY ?= 20G
+MAKE_XMX ?= 20G
 SUMO_VERSION := 1.20.0
 
 ## if you want to override thes variables set them as environment-variables and run make -e
@@ -17,7 +17,7 @@ OSMOSIS := osmosis
 ## we use a tmp-dir because on the cluster the default-tmp-dir is to small
 TMP_DIR := ./tmp
 # Scenario creation tool
-JAVA_APP := java -Xmx$(MEMORY) -XX:+UseParallelGC -Djava.io.tmpdir=$(TMP_DIR) -cp $(JAR) org.matsim.prepare.RunOpenBerlinCalibration
+JAVA_APP := java -Xmx$(MAKE_XMX) -XX:+UseParallelGC -Djava.io.tmpdir=$(TMP_DIR) -cp $(JAR) org.matsim.prepare.RunOpenBerlinCalibration
 
 .PHONY: setup prepare prepare-calibration prepare-initial prepare-drt
 .DELETE_ON_ERROR:
