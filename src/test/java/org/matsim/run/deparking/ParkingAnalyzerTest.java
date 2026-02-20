@@ -1,4 +1,4 @@
-package org.matsim.analysis.autofrei;
+package org.matsim.run.deparking;
 
 import com.google.inject.Injector;
 import org.junit.jupiter.api.Assertions;
@@ -22,8 +22,6 @@ import org.matsim.core.controler.events.AfterMobsimEvent;
 import org.matsim.core.controler.events.IterationStartsEvent;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.run.deparking.DeParkingModule;
-import org.matsim.run.deparking.ParkingAnalyzer;
 import org.matsim.testcases.MatsimTestUtils;
 
 import java.util.List;

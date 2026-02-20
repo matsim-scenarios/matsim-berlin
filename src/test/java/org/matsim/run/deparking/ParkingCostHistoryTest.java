@@ -1,30 +1,58 @@
 package org.matsim.run.deparking;
 
-import org.apache.commons.lang.NotImplementedException;
+import com.google.inject.Injector;
+import com.google.inject.Provider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.matsim.analysis.CalcLinkStats;
+import org.matsim.analysis.IterationStopWatch;
+import org.matsim.analysis.ScoreStats;
+import org.matsim.analysis.VolumesAnalyzer;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.NetworkFactory;
 import org.matsim.api.core.v01.network.Node;
+import org.matsim.core.api.experimental.events.EventsManager;
+import org.matsim.core.config.Config;
+import org.matsim.core.config.groups.ControllerConfigGroup;
+import org.matsim.core.controler.MatsimServices;
+import org.matsim.core.controler.OutputDirectoryHierarchy;
+import org.matsim.core.controler.listener.ControlerListener;
 import org.matsim.core.network.NetworkUtils;
+import org.matsim.core.replanning.StrategyManager;
+import org.matsim.core.router.TripRouter;
+import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
+import org.matsim.core.router.util.LeastCostPathCalculatorFactory;
+import org.matsim.core.router.util.TravelDisutility;
+import org.matsim.core.router.util.TravelTime;
+import org.matsim.core.scoring.ScoringFunctionFactory;
+import org.matsim.run.policies.autofrei.RunAutofreiPolicy;
+import org.matsim.testcases.MatsimTestUtils;
 
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Unit tests for ParkingCostHistory. Focuses on cost retrieval and cost updates based on occupancy.
+ * The test assumes 7.5m parking spots, which are set as an attribute on the links in the test network.
+ */
 class ParkingCostHistoryTest {
+	@RegisterExtension
+	MatsimTestUtils utils = new MatsimTestUtils();
 
 	@Test
 	void cost_singleLink_returnsCorrectBin() {
-		// Setup: 1 link, 3 time bins (each 3600s), costs = [1.0, 2.0, 3.0]
+		// Setup: 1 link, 3 time bins (each 3600s), initialCosts = [1.0, 2.0, 3.0]
 		Map<Id<Link>, Integer> linkIndexMap = Map.of(Id.createLinkId("1"), 0);
-		double[][] costs = new double[][]{{1.0, 2.0, 3.0}};
+		double[][] initialCosts = new double[][]{{1.0, 2.0, 3.0}};
 		Network network = createNetworkWithLink("1", 100.0);
 
 		ParkingCostHistory history = new ParkingCostHistory(
-			linkIndexMap, costs, null, 3600, null, network
+			linkIndexMap, initialCosts, null, 3600, null, network
 		);
 
 		// Bin 0: 0-3600s
@@ -72,7 +100,6 @@ class ParkingCostHistoryTest {
 		int occupancy = 5;
 		double initialCost = 5.0;
 		double length = 75.0;
-		double sample = 1.0;
 		double parkingSpotLength = 7.5;
 
 		Id<Link> linkId = Id.createLinkId("1");
@@ -96,82 +123,47 @@ class ParkingCostHistoryTest {
 		);
 
 		// Simulate iteration end
-		history.notifyIterationEnds(new org.matsim.core.controler.events.IterationEndsEvent(null, 0, false));
+		history.notifyIterationEnds(new org.matsim.core.controler.events.IterationEndsEvent(new MockMatsimTestServices(utils.getOutputDirectory()), 0, false));
 
-		// Expected: weightedOccupancy = 5, availableSpots = 75/7.5/1.0 = 10
-		// relativeOccupancy = 5/10 = 0.5
-		// newCost = 0.5 * 5.0 = 2.5
-		double availableSpots = length / parkingSpotLength / sample; //75/7.5/1.0 = 10
+		double availableSpots = length / parkingSpotLength; //75/7.5 = 10
 		double relativeOccupancy = occupancy / availableSpots; //5/10 = 0.5
-		double newCost = relativeOccupancy * initialCost; //0.5 * 5 = 2.5
+		double newCost = approach.newParkingCost(relativeOccupancy, initialCost);
+		Assertions.assertEquals(3.75, newCost);
 		Assertions.assertEquals(newCost, history.cost(linkId, 0), 0.001);
 	}
 
 	@Test
 	void notifyIterationEnds_weightedOccupancy_partialBins() {
-		throw new NotImplementedException();
-		// Test weighted occupancy when occupancy changes mid-bin
-		// Bin: 0-3600s
-		// Occupancy: 0-1800s = 2 cars, 1800-3600s = 8 cars
-		// Weighted = (1800*2 + 1800*8) / 3600 = (3600 + 14400) / 3600 = 5.0
+		double initialCost = 5.0;
+		double length = 75.0;
 
 		Id<Link> linkId = Id.createLinkId("1");
 		Map<Id<Link>, Integer> linkIndexMap = Map.of(linkId, 0);
-		double[][] costs = new double[][]{{0.0}};
-		Network network = createNetworkWithLink("1", 75.0);  // 10 parking spots
+		double[][] costs = new double[][]{{initialCost}};
+		Network network = createNetworkWithLink("1", length); // 10 available spots
 
+		// Bin 0 [0,3600): occupancy is 2 for the first half and 8 for the second half.
 		ParkingAnalyzer mockAnalyzer = new ParkingAnalyzer() {
 			@Override
 			public List<OccupancyEntry> occupancy(int iteration, Id<Link> link, double from, double to) {
 				return List.of(
-					new OccupancyEntry(0, 1800, 2),
-					new OccupancyEntry(1800, 3600, 8)
+					new OccupancyEntry(from, from + 1800, 2),
+					new OccupancyEntry(from + 1800, to, 8)
 				);
 			}
 		};
 
-		// Return weighted occupancy directly as cost for easy verification
-		DeParkingApproach approach = (relOcc, prevCost) -> relOcc;
-
+		DeParkingApproach approach = new InverseLinearDeParkingApproach();
 		ParkingCostHistory history = new ParkingCostHistory(
 			linkIndexMap, costs, mockAnalyzer, 3600, approach, network
 		);
 
-		history.notifyIterationEnds(new org.matsim.core.controler.events.IterationEndsEvent(null, 0, false));
+		history.notifyIterationEnds(new org.matsim.core.controler.events.IterationEndsEvent(new MockMatsimTestServices(utils.getOutputDirectory()), 0, false));
 
-		// weightedOccupancy = 5.0, availableSpots = 10, relativeOccupancy = 0.5
-		Assertions.assertEquals(0.5, history.cost(linkId, 0), 0.001);
-	}
-
-	@Test
-	void notifyIterationEnds_respectsSampleSize() {
-		throw new NotImplementedException();
-		// With sample = 0.25, available spots should be divided by sample
-		// 75m link, 7.5m spots => 10 spots at sample=1.0, but 40 spots at sample=0.25
-
-		Id<Link> linkId = Id.createLinkId("1");
-		Map<Id<Link>, Integer> linkIndexMap = Map.of(linkId, 0);
-		double[][] costs = new double[][]{{0.0}};
-		Network network = createNetworkWithLink("1", 75.0);
-
-		ParkingAnalyzer mockAnalyzer = new ParkingAnalyzer() {
-			@Override
-			public List<OccupancyEntry> occupancy(int iteration, Id<Link> link, double from, double to) {
-				return List.of(new OccupancyEntry(from, to, 10));  // 10 cars parked
-			}
-		};
-
-		DeParkingApproach approach = (relOcc, prevCost) -> relOcc;
-
-		ParkingCostHistory history = new ParkingCostHistory(
-			linkIndexMap, costs, mockAnalyzer, 3600, approach, network
-		);
-
-		history.notifyIterationEnds(new org.matsim.core.controler.events.IterationEndsEvent(null, 0, false));
-
-		// availableSpots = 75 / 7.5 / 0.25 = 40
-		// relativeOccupancy = 10 / 40 = 0.25
-		Assertions.assertEquals(0.25, history.cost(linkId, 0), 0.001);
+		// weightedOccupancy = (1800*2 + 1800*8) / 3600 = 5
+		// relativeOccupancy = 5 / 10 = 0.5
+		// newCost = approach.newParkingCost(0.5, 5.0) = 3.75
+		Assertions.assertEquals(3.75, history.cost(linkId, 0), 0.001);
 	}
 
 	private Network createNetworkWithLink(String linkId, double length) {
@@ -192,10 +184,104 @@ class ParkingCostHistoryTest {
 
 			Link link = factory.createLink(Id.createLinkId(entry.getKey()), fromNode, toNode);
 			link.setLength(entry.getValue());
+			link.getAttributes().putAttribute(RunAutofreiPolicy.PARKING_SPOTS_ATTR, entry.getValue() / 7.5); // 7.5m per parking spot
 			network.addLink(link);
 			i++;
 		}
 
 		return network;
+	}
+
+	private record MockMatsimTestServices(String testDir) implements MatsimServices {
+
+		@Override
+		public IterationStopWatch getStopwatch() {
+			return null;
+		}
+
+		@Override
+		public TravelTime getLinkTravelTimes() {
+			return null;
+		}
+
+		@Override
+		public Provider<TripRouter> getTripRouterProvider() {
+			return null;
+		}
+
+		@Override
+		public TravelDisutility createTravelDisutilityCalculator() {
+			return null;
+		}
+
+		@Override
+		public LeastCostPathCalculatorFactory getLeastCostPathCalculatorFactory() {
+			return null;
+		}
+
+		@Override
+		public ScoringFunctionFactory getScoringFunctionFactory() {
+			return null;
+		}
+
+		@Override
+		public Config getConfig() {
+			return null;
+		}
+
+		@Override
+		public Scenario getScenario() {
+			return null;
+		}
+
+		@Override
+		public EventsManager getEvents() {
+			return null;
+		}
+
+		@Override
+		public Injector getInjector() {
+			return null;
+		}
+
+		@Override
+		public CalcLinkStats getLinkStats() {
+			return null;
+		}
+
+		@Override
+		public VolumesAnalyzer getVolumes() {
+			return null;
+		}
+
+		@Override
+		public ScoreStats getScoreStats() {
+			return null;
+		}
+
+		@Override
+		public TravelDisutilityFactory getTravelDisutilityFactory() {
+			return null;
+		}
+
+		@Override
+		public StrategyManager getStrategyManager() {
+			return null;
+		}
+
+		@Override
+		public OutputDirectoryHierarchy getControlerIO() {
+			return new OutputDirectoryHierarchy(testDir, OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles, ControllerConfigGroup.CompressionType.none);
+		}
+
+		@Override
+		public void addControlerListener(ControlerListener controlerListener) {
+
+		}
+
+		@Override
+		public Integer getIterationNumber() {
+			return 0;
+		}
 	}
 }

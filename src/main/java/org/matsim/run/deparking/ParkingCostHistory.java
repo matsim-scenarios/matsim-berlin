@@ -13,6 +13,7 @@ import org.matsim.core.controler.listener.IterationEndsListener;
 import org.matsim.run.policies.autofrei.RunAutofreiPolicy;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -64,6 +65,11 @@ public class ParkingCostHistory implements IterationEndsListener {
 		});
 
 		Path file = Path.of(event.getServices().getControlerIO().getIterationFilename(event.getIteration(), "parking_costs.csv"));
+		try {
+			Files.createDirectories(file.getParent());
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 		writeCsv(file);
 
 		// replace old costs with new costs
