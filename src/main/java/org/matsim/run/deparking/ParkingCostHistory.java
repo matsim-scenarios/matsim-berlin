@@ -70,13 +70,19 @@ public class ParkingCostHistory implements IterationEndsListener {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		writeCsv(file);
+
+		if (event.isLastIteration() || event.getIteration() % 50 == 0) {
+			log.info("Writing parking costs for iteration {} to file {}.", event.getIteration(), file);
+			writeCsv(file);
+		}
 
 		// replace old costs with new costs
 		costs = newCosts;
 	}
 
 	private void writeCsv(Path file) {
+		log.info("Writing parking costs to {}.", file);
+
 		var header = List.of("linkId", "from_time", "to_time", "cost");
 
 		// Use Apache Commons CSV to write the file
@@ -85,11 +91,15 @@ public class ParkingCostHistory implements IterationEndsListener {
 			for (Id<Link> linkId : network.getLinks().keySet()) {
 				double[] costForLink = this.costs[linkIndexMap.get(linkId)];
 				for (int bin = 0; bin < binCount; bin++) {
+					double cost = costForLink[bin];
+					if (cost == 0.) {
+						continue; // skip zero costs to reduce file size
+					}
 					var row = List.of(
 						linkId.toString(),
 						String.valueOf(bin * binSizeInSeconds),
 						String.valueOf((bin + 1) * binSizeInSeconds),
-						String.valueOf(costForLink[bin])
+						String.valueOf(cost)
 					);
 					csvPrinter.printRecord(row);
 				}

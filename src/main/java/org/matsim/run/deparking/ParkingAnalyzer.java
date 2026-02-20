@@ -125,7 +125,7 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 
 	@Override
 	public void notifyAfterMobsim(AfterMobsimEvent event) {
-		if (event.getIteration() % 50 == 0) {
+		if (event.getIteration() % 50 == 0 || event.isLastIteration()) {
 			log.info("Writing parking occupancy for iteration {}.", event.getIteration());
 			Path file = Path.of(event.getServices().getControlerIO().getIterationFilename(event.getIteration(), "parking_occupancy.csv"));
 			writeCsv(file, event.getServices().getScenario().getNetwork(), parkingEventHandler.getOccupancyEntriesByLink());
@@ -239,7 +239,7 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 		public void reset(int iteration) {
 			occupancyChangesByLink.clear();
 			lastParkingLinkByPersonAndMode.clear();
-			occupancyEntriesByLinkCache.clear();
+			occupancyEntriesByLinkCache = null;
 			initialized = false;
 		}
 
@@ -299,7 +299,7 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 			@Inject
 			private ParkingInitializerEventsHandler initializer;
 
-			private Set<String> parkingModes = Set.of(TransportMode.car, TransportMode.truck, "freight", RunAutofreiPolicy.NEW_MODE_SMALL_SCALE_COMMERCIAL);
+			private Set<String> parkingModes;
 
 			public Factory(Set<String> parkingModes) {
 				this.parkingModes = parkingModes;

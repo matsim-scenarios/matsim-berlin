@@ -23,12 +23,15 @@ import org.matsim.application.prepare.population.CleanPopulation;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.ScoringConfigGroup;
+import org.matsim.core.controler.Controler;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.run.OpenBerlinScenario;
+import org.matsim.run.deparking.DeParkingModule;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
+import picocli.CommandLine;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,9 +50,11 @@ public class RunAutofreiPolicy extends OpenBerlinScenario {
 	private static final Set<String> RESTRICTED_MODES = Set.of(TransportMode.car, TransportMode.ride);
 	public static final String NEW_MODE_SMALL_SCALE_COMMERCIAL = "commercial_car";
 
+	@CommandLine.Option(names = "--parking-spots")
+	private String parkingSpotsFile;
+
 	public static void main(String[] args) {
 		MATSimApplication.run(RunAutofreiPolicy.class, args);
-//		readWriteNetwork();
 	}
 
 	private static void readWriteNetwork() {
@@ -108,6 +113,7 @@ public class RunAutofreiPolicy extends OpenBerlinScenario {
 	protected void prepareScenario(Scenario scenario) {
 		super.prepareScenario(scenario);
 		Network network = scenario.getNetwork();
+		addParkingSpots(network);
 
 		addCommercialCarMode(network);
 		addCommercialCarVehicle(scenario);
@@ -115,18 +121,30 @@ public class RunAutofreiPolicy extends OpenBerlinScenario {
 		restrictHighwayLinks(network);
 		replaceCarByCarCommercial(scenario);
 		cleanPopulation(scenario.getPopulation());
+	}
 
+	@Override
+	protected void prepareControler(Controler controler) {
+		super.prepareControler(controler);
+		controler.addOverridingModule(new DeParkingModule());
+	}
+
+	private void addParkingSpots(Network network) {
 		// read csv with parking spots
 		// header is linkId,from_time,to_time,length,occupancy,initial
 		// for each linkId, get the corresponding link from the network and add an entry in attributes with the occupancy value.
-		var links = new HashSet<Id<Link>>(network.getLinks().keySet());
+		var links = new HashSet<>(network.getLinks().keySet());
 
-		try (Reader r = Files.newBufferedReader(Path.of("csv"))) {
-			for (CSVRecord record : CSVFormat.Builder.create().setSkipHeaderRecord(true).build().parse(r)) {
+		try (Reader r = Files.newBufferedReader(Path.of(this.parkingSpotsFile))) {
+			for (CSVRecord record : CSVFormat.Builder.create().setHeader("linkId", "from_time", "to_time", "length", "occupancy", "initial")
+				.setSkipHeaderRecord(true).build().parse(r)) {
 				Id<Link> linkId = Id.createLinkId(record.get("linkId"));
 				links.remove(linkId);
 
 				Link link = network.getLinks().get(linkId);
+				if (link == null) {
+					throw new RuntimeException("Unable to find link with id " + linkId);
+				}
 				link.getAttributes().putAttribute(PARKING_SPOTS_ATTR, Double.parseDouble(record.get("occupancy")));
 			}
 		} catch (IOException e) {
