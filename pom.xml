@@ -246,16 +246,16 @@
 			<version>9.44.0.Final</version>
 		</dependency>
 
-		<dependency>
-			<groupId>org.apache.poi</groupId>
-			<artifactId>poi-ooxml</artifactId>
-			<version>5.3.0</version>
-		</dependency>
+		<!--		<dependency>-->
+		<!--			<groupId>org.apache.poi</groupId>-->
+		<!--			<artifactId>poi-ooxml</artifactId>-->
+		<!--			<version>5.3.0</version>-->
+		<!--		</dependency>-->
 
 		<dependency>
 			<groupId>de.topobyte</groupId>
 			<artifactId>osm4j-pbf</artifactId>
-			<version>1.3.0</version>
+			<version>1.4.1</version>
 		</dependency>
 		<dependency>
 			<groupId>de.topobyte</groupId>
@@ -273,16 +273,16 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-math3</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-statistics-distribution</artifactId>
-			<version>1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-rng-simple</artifactId>
-			<version>1.5</version>
-		</dependency>
+		<!--		<dependency>-->
+		<!--			<groupId>org.apache.commons</groupId>-->
+		<!--			<artifactId>commons-statistics-distribution</artifactId>-->
+		<!--			<version>1.0</version>-->
+		<!--		</dependency>-->
+		<!--		<dependency>-->
+		<!--			<groupId>org.apache.commons</groupId>-->
+		<!--			<artifactId>commons-rng-simple</artifactId>-->
+		<!--			<version>1.5</version>-->
+		<!--		</dependency>-->
 
 
 		<!-- Include the JUnit testing library.  Not transitive. -->
