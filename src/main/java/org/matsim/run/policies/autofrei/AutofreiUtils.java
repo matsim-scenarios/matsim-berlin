@@ -22,6 +22,7 @@ import org.matsim.core.config.groups.ScoringConfigGroup;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
 import org.matsim.core.utils.geometry.geotools.MGC;
+import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 
@@ -131,6 +132,13 @@ public class AutofreiUtils {
 			if (vehicleTypeId != null) {
 				// in this case, the person has a car
 				vehicleTypes.put(newMode, vehicleTypeId);
+			}
+
+			Map<String, Id<Vehicle>> vehicleIds = VehicleUtils.getVehicleIds(person);
+			Id<Vehicle> vehicleId = vehicleIds.get(TransportMode.car);
+			if (vehicleId != null) {
+				// replace the car vehicle id with the new mode.
+				vehicleIds.put(newMode, Id.createVehicleId(vehicleId.toString().replace("_car$", newMode)));
 			}
 
 
