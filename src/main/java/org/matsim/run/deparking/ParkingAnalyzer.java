@@ -46,7 +46,7 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 	// convenience method to run the parking analyzer standalone
 	public static ParkingEventHandler run(Consumer<EventsManager> readEvents) {
 		EventsManager eventsManager = EventsUtils.createEventsManager();
-		Set<String> modes = Set.of(TransportMode.car, TransportMode.truck, "freight", RunAutofreiPolicy.NEW_MODE_SMALL_SCALE_COMMERCIAL);
+		Set<String> modes = Set.of(TransportMode.car, TransportMode.truck, "freight", RunAutofreiPolicy.NEW_MODE_SMALL_SCALE_COMMERCIAL_AND_GOODS_TRAFFIC);
 
 		ParkingInitializerEventsHandler initializer = new ParkingInitializerEventsHandler(modes);
 		eventsManager.addHandler(initializer);

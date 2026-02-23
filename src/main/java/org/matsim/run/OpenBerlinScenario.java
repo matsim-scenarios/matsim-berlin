@@ -46,20 +46,20 @@ public class OpenBerlinScenario extends MATSimApplication {
 	private static final String HBEFA_2020_PATH = "https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/0e73947443d68f95202b71a156b337f7f71604ae/";
 	private static final String HBEFA_FILE_COLD_DETAILED = HBEFA_2020_PATH + "82t7b02rc0rji2kmsahfwp933u2rfjlkhfpi2u9r20.enc";
 	private static final String HBEFA_FILE_WARM_DETAILED = HBEFA_2020_PATH + "944637571c833ddcf1d0dfcccb59838509f397e6.enc";
-	private static final String HBEFA_FILE_COLD_AVERAGE = HBEFA_2020_PATH + "r9230ru2n209r30u2fn0c9rn20n2rujkhkjhoewt84202.enc" ;
+	private static final String HBEFA_FILE_COLD_AVERAGE = HBEFA_2020_PATH + "r9230ru2n209r30u2fn0c9rn20n2rujkhkjhoewt84202.enc";
 	private static final String HBEFA_FILE_WARM_AVERAGE = HBEFA_2020_PATH + "7eff8f308633df1b8ac4d06d05180dd0c5fdf577.enc";
 
 	@CommandLine.Mixin
-	private final SampleOptions sample = new SampleOptions(10, 25, 3, 1);
+	final SampleOptions sample = new SampleOptions(10, 25, 3, 1);
 
 	@CommandLine.Option(names = "--plan-selector",
 		description = "Plan selector to use.",
 		defaultValue = DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta)
 	private String planSelector;
 
-	public OpenBerlinScenario() {
-		super(String.format("input/v%s/berlin-v%s-10pct.config.xml", VERSION, VERSION));
-	}
+//	public OpenBerlinScenario() {
+//		super(String.format("input/v%s/berlin-v%s-10pct.config.xml", VERSION, VERSION));
+//	}
 
 	public static void main(String[] args) {
 		MATSimApplication.run(OpenBerlinScenario.class, args);
@@ -78,7 +78,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 			// Counts can be scaled with sample size
 			config.counts().setCountsScaleFactor(sampleSize);
-			sw.sampleSize = sampleSize;
+			sw.setSampleSize(sampleSize);
 
 			config.controller().setRunId(sample.adjustName(config.controller().getRunId()));
 			config.controller().setOutputDirectory(sample.adjustName(config.controller().getOutputDirectory()));

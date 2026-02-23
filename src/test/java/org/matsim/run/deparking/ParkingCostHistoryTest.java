@@ -21,7 +21,7 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.groups.ControllerConfigGroup;
 import org.matsim.core.controler.MatsimServices;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
-import org.matsim.core.controler.listener.ControlerListener;
+import org.matsim.core.controler.listener.ControllerListener;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.replanning.StrategyManager;
 import org.matsim.core.router.TripRouter;
@@ -30,7 +30,8 @@ import org.matsim.core.router.util.LeastCostPathCalculatorFactory;
 import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scoring.ScoringFunctionFactory;
-import org.matsim.run.policies.autofrei.RunAutofreiPolicy;
+import org.matsim.dsim.ExecutionContext;
+import org.matsim.run.policies.autofrei.RunAutofreiPolicyDeparking;
 import org.matsim.testcases.MatsimTestUtils;
 
 import java.util.List;
@@ -184,7 +185,7 @@ class ParkingCostHistoryTest {
 
 			Link link = factory.createLink(Id.createLinkId(entry.getKey()), fromNode, toNode);
 			link.setLength(entry.getValue());
-			link.getAttributes().putAttribute(RunAutofreiPolicy.PARKING_SPOTS_ATTR, entry.getValue() / 7.5); // 7.5m per parking spot
+			link.getAttributes().putAttribute(RunAutofreiPolicyDeparking.PARKING_SPOTS_ATTR, entry.getValue() / 7.5); // 7.5m per parking spot
 			network.addLink(link);
 			i++;
 		}
@@ -270,12 +271,22 @@ class ParkingCostHistoryTest {
 		}
 
 		@Override
+		public OutputDirectoryHierarchy getControllerIO() {
+			return null;
+		}
+
+		@Override
 		public OutputDirectoryHierarchy getControlerIO() {
 			return new OutputDirectoryHierarchy(testDir, OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles, ControllerConfigGroup.CompressionType.none);
 		}
 
 		@Override
-		public void addControlerListener(ControlerListener controlerListener) {
+		public ExecutionContext getSimulationContext() {
+			return null;
+		}
+
+		@Override
+		public void addControllerListener(ControllerListener controllerListener) {
 
 		}
 

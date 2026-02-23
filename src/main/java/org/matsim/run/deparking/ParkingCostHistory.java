@@ -10,7 +10,7 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.config.Config;
 import org.matsim.core.controler.events.IterationEndsEvent;
 import org.matsim.core.controler.listener.IterationEndsListener;
-import org.matsim.run.policies.autofrei.RunAutofreiPolicy;
+import org.matsim.run.policies.autofrei.RunAutofreiPolicyDeparking;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -58,7 +58,7 @@ public class ParkingCostHistory implements IterationEndsListener {
 			for (int bin = 0; bin < binCount; bin++) {
 				List<ParkingAnalyzer.OccupancyEntry> occupancies = parkingAnalyzer.occupancy(event.getIteration(), id, bin * binSizeInSeconds, (bin + 1) * binSizeInSeconds);
 				double weightedOccupancy = occupancies.stream().mapToDouble(o -> (o.toTime() - o.fromTime()) * o.occupancy()).sum() / binSizeInSeconds;
-				double availableSpots = (Double) network.getLinks().get(id).getAttributes().getAttribute(RunAutofreiPolicy.PARKING_SPOTS_ATTR);
+				double availableSpots = (Double) network.getLinks().get(id).getAttributes().getAttribute(RunAutofreiPolicyDeparking.PARKING_SPOTS_ATTR);
 				double weightedRelativeOccupancy = weightedOccupancy / availableSpots;
 				newCosts[linkIndex][bin] = deParkingApproach.newParkingCost(weightedRelativeOccupancy, costs[linkIndex][bin]);
 			}
