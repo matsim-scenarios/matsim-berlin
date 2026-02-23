@@ -6,7 +6,7 @@ import org.matsim.run.OpenBerlinScenario;
 
 public class RunAutofreiBaseCaseCtd extends OpenBerlinScenario {
 	public static void main(String[] args) {
-		MATSimApplication.run(RunAutofreiPolicyDeparking.class, args);
+		MATSimApplication.run(RunAutofreiBaseCaseCtd.class, args);
 	}
 
 	@Override
