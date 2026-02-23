@@ -123,6 +123,10 @@ java -jar [FILENAME].jar
 
 For more information about MATSim, see here: https://www.matsim.org/
 
+Berlin v6.3 is documented at https://doi.org/10.1016/j.trpro.2025.04.091 , with supp. mat. at https://doi.org/10.14279/depositonce-20678 .
+
+There does not seem to be a similar documentation of v6.4.
+
 ## Internal documentation
 
 Internal documentation can be found here:
