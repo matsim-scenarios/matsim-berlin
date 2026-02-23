@@ -128,10 +128,10 @@ public class AutofreiUtils {
 
 			Map<String, Id<VehicleType>> vehicleTypes = VehicleUtils.getVehicleTypes(person);
 			Id<VehicleType> vehicleTypeId = vehicleTypes.get(TransportMode.car);
-			if (vehicleTypeId == null) {
-				throw new RuntimeException("Cannot find vehicle type for car for person " + person.getId());
+			if (vehicleTypeId != null) {
+				// in this case, the person has a car
+				vehicleTypes.put(newMode, vehicleTypeId);
 			}
-			vehicleTypes.put(newMode, vehicleTypeId);
 
 
 			for (Plan plan : person.getPlans()) {
