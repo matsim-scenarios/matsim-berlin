@@ -17,7 +17,7 @@ OSMOSIS := osmosis
 ## we use a tmp-dir because on the cluster the default-tmp-dir is to small
 TMP_DIR := ./tmp
 # Scenario creation tool
-JAVA_APP := java -Xmx$(MAKE_XMX) -XX:+UseParallelGC -Djava.io.tmpdir=$(TMP_DIR) -cp $(JAR) org.matsim.prepare.RunOpenBerlinCalibration
+JAVA_APP := java -Xmx$(MAKE_XMX) -XX:+UseParallelGC -Dorg.geotools.referencing.forceXY=true -Djava.io.tmpdir=$(TMP_DIR) -cp $(JAR) org.matsim.prepare.RunOpenBerlinCalibration
 
 .PHONY: setup prepare prepare-calibration prepare-initial prepare-drt
 .DELETE_ON_ERROR:
