@@ -29,7 +29,7 @@ public class MyMultimodalLinkChooser implements MultimodalLinkChooser {
 	@Override
 	public Link decideEgressLink(RoutingRequest routingRequest, String mode, Network network) {
 		if (mode.equals("bike")) {
-			return decideOnLink(routingRequest.getFromFacility(), network);
+			return decideOnLink(routingRequest.getToFacility(), network);
 		}
 		return delegate.decideEgressLink(routingRequest, mode, network);
 	}
