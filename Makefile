@@ -414,8 +414,9 @@ $(BERLIN_CADYTS_INPUT_25PCT): $(BERLIN_BRANDENBURG_INITIAL_25PCT) $(BERLIN_SMALL
 	$(JAVA_APP) prepare merge-populations $^\
 	 --output $@
 
-$(BERLIN_CADYTS_OUTPUT_25PCT): $(BERLIN_CADYTS_INPUT_25PCT)
-	echo "=== NOT YET IMPLEMENTED, HERE SHOULD PROBABLY RUN CADYTS === 
+$(BERLIN_CADYTS_OUTPUT_25PCT): (BERLIN_CADYTS_INPUT_25PCT) 
+	cat input/cadyts-config-template.xml | sed -e "s/==VERSION==/$(VERSION)/g" > ${OUTPUT}/cadyts.config.xml
+	echo "ath this point cadyts should start automatically, but this is not implemented yet"
 
 $(BERLIN_CADYTS_FINAL_25PCT): $(BERLIN_CADYTS_OUTPUT_25PCT) $(BERLIN_CADYTS_INPUT_25PCT) 
 	$(JAVA_APP) prepare extract-plans-idx\
@@ -460,6 +461,8 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MA
 		 --sample-size 0.25\
 		 --samples 0.1 0.03 0.01 0.001\
 
+
+# not clear what heppens between BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS and the following step
 $(BERLIN_10PCT_AFTER_CHOICE_EXPERIMENTS): $(MODECHOICE_10PCT_BASELINE_PLANS) $(CHOICE_EXPERIMENTS_10PCT_BASELINE_PLANS)
 	$(JAVA_APP) prepare clean-population\
 	 --plans $<\
