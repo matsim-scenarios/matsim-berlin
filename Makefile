@@ -416,7 +416,7 @@ $(BERLIN_CADYTS_INPUT_25PCT): $(BERLIN_BRANDENBURG_INITIAL_25PCT) $(BERLIN_SMALL
 	$(JAVA_APP) prepare merge-populations $^\
 	 --output $@
 
-$(BERLIN_CADYTS_OUTPUT_25PCT): (BERLIN_CADYTS_INPUT_25PCT) 
+$(BERLIN_CADYTS_OUTPUT_25PCT): $(BERLIN_CADYTS_INPUT_25PCT) 
 	cat input/cadyts-config-template.xml | sed -e "s/==VERSION==/$(VERSION)/g" > ${OUTPUT}/cadyts.config.xml
 	echo "ath this point cadyts should start automatically, but this is not implemented yet"
 
