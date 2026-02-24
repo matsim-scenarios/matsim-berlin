@@ -114,6 +114,9 @@ BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS := $(OUTPUT)/berlin-$(VERSION)-25p
 BERLIN_10PCT_AFTER_CHOICE_EXPERIMENTS := $(OUTPUT)/berlin-$(VERSION)-10pct.plans.xml.gz
 BERLIN_DOWNTOWN_3PCT_PLANS := $(OUTPUT)/inner-city/berlin-downtown-$(VERSION)-3pct.xml.gz
 BERLIN_3PCT_PLANS := $(OUTPUT)/berlin-$(VERSION)-3pct.plans.xml.gz
+# this is coming from an external process. You can set it via environment-variable. For more info see comment 
+## below where this file is used. 
+MODECHOICE_10PCT_BASELINE_PLANS := ""
 
 ## this currrently does not work. Should probably move to a separate makefile
 #BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT := $(OUTPUT)/berlin-longHaulFreight-$(VERSION)-25pct.plans.xml.gz
@@ -129,8 +132,7 @@ DATA_DISTR_PER_ZONE := $(OUTPUT)/dataDistributionPerZone.csv
 
 ## TODO where is this comming from
 NETWORK_FT := $(OUTPUT)/berlin-$(VERSION)-network-ft.csv.gz
-MODECHOICE_10PCT_BASELINE_PLANS := mode-choice-10pct-baseline/runs/008/008.output_plans.xml.gz
-CHOICE_EXPERIMENTS_10PCT_BASELINE_PLANS := choice-experiments/baseline/runs/008/008.output_plans.xml.gz
+
 
 ###################################
 ######## OUTPUT ###################
@@ -461,9 +463,12 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MA
 		 --sample-size 0.25\
 		 --samples 0.1 0.03 0.01 0.001\
 
-
-# not clear what heppens between BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS and the following step
-$(BERLIN_10PCT_AFTER_CHOICE_EXPERIMENTS): $(MODECHOICE_10PCT_BASELINE_PLANS) $(CHOICE_EXPERIMENTS_10PCT_BASELINE_PLANS)
+#  According to a discussion with CR: The following step is based on the output of the constant-calibration and is executed 
+# manually with src/main/sh/runCalib.sh and src/main/python/calibrate.py. In the following step only the first two sub-steps 
+# are necessary and should be repeated for every sample you are interested in. The both input-files in the original-version 
+# are the output of the constant- calibration. 
+#$(BERLIN_10PCT_AFTER_CHOICE_EXPERIMENTS): $(MODECHOICE_10PCT_BASELINE_PLANS) $(CHOICE_EXPERIMENTS_10PCT_BASELINE_PLANS)
+$(BERLIN_10PCT_AFTER_CHOICE_EXPERIMENTS): $(MODECHOICE_10PCT_BASELINE_PLANS) 
 	$(JAVA_APP) prepare clean-population\
 	 --plans $<\
 	 --remove-unselected-plans\
@@ -471,16 +476,16 @@ $(BERLIN_10PCT_AFTER_CHOICE_EXPERIMENTS): $(MODECHOICE_10PCT_BASELINE_PLANS) $(C
 	 
 	# TODO read from and write into the same file?
 	$(JAVA_APP) prepare taste-variations\
- 	 --input $@ --output $@
+	 --input $@ --output $@
 
-	$(JAVA_APP) prepare downsample-population $@\
-		--sample-size 0.1\
-		--samples 0.01 0.001\
-
-	$(JAVA_APP) prepare clean-population\
-	 	--plans $(word 2,$^)\
-	 	--remove-unselected-plans\
-	 	--output $(subst 10pct,3pct,$@)
+#	$(JAVA_APP) prepare downsample-population $@\
+#		--sample-size 0.1\
+#		--samples 0.01 0.001\
+#
+#	$(JAVA_APP) prepare clean-population\
+#	 	--plans $(word 2,$^)\
+#	 	--remove-unselected-plans\
+#	 	--output $(subst 10pct,3pct,$@)
 
 $(BERLIN_DOWNTOWN_3PCT_PLANS): $(BERLIN_INNER_CITY_GPKG) $(BERLIN_3PCT_PLANS) $(FACILITIES_XML) $(NETWORK_MATSIM)
 
