@@ -79,14 +79,14 @@
 	</module>
 	-->
 
-	<module name="simwrapper" >
-		<param name="sampleSize" value="0.01" />
+	<module name="simwrapper">
+		<param name="sampleSize" value="0.01"/>
 
-		<parameterset type="params" >
-			<param name="context" value="" />
-			<param name="mapCenter" value="13.39,52.51" />
-			<param name="mapZoomLevel" value="9.1" />
-			<param name="shp" value="./area/area.shp" />
+		<parameterset type="params">
+			<param name="context" value=""/>
+			<param name="mapCenter" value="13.39,52.51"/>
+			<param name="mapZoomLevel" value="9.1"/>
+			<param name="shp" value="./area/area.shp"/>
 		</parameterset>
 	</module>
 
@@ -114,73 +114,73 @@
 			<param name="performing" value="6.88"/>
 
 			<parameterset type="modeParams">
-				<param name="constant" value="-0.38709756406728074" />
+				<param name="constant" value="0.38709756406728074"/>
 				<!-- result of the calibration, lower than full vehicle ownership cost which gave too unattractive car mode in calibration -->
-				<param name="dailyMonetaryConstant" value="-5.0" />
-				<param name="dailyUtilityConstant" value="0" />
-				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="dailyMonetaryConstant" value="-5.0"/>
+				<param name="dailyUtilityConstant" value="0"/>
+				<param name="marginalUtilityOfDistance_util_m" value="0.0"/>
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0"/>
 				<!-- only petrol price 2022, other cost components were excluded -->
-				<param name="monetaryDistanceRate" value="-1.49E-4" />
-				<param name="mode" value="car" />
+				<param name="monetaryDistanceRate" value="-1.49E-4"/>
+				<param name="mode" value="car"/>
 			</parameterset>
 			<parameterset type="modeParams">
-				<param name="constant" value="-1.7467953196549324" />
-				<param name="dailyMonetaryConstant" value="0.0" />
-				<param name="dailyUtilityConstant" value="0.0" />
-				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<param name="constant" value="-1.7467953196549324"/>
+				<param name="dailyMonetaryConstant" value="0.0"/>
+				<param name="dailyUtilityConstant" value="0.0"/>
+				<param name="marginalUtilityOfDistance_util_m" value="0.0"/>
 				<!-- alpha=1 -->
 				<!-- (alpha)*beta_performing+(alpha+1)*car_marginalUtilityOfDistance_util_m -->
-				<param name="marginalUtilityOfTraveling_util_hr" value="-6.88" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="-6.88"/>
 				<!-- alpha*car_monetaryDistanceRate -->
-				<param name="monetaryDistanceRate" value="-1.49E-4" />
-				<param name="mode" value="ride" />
+				<param name="monetaryDistanceRate" value="-1.49E-4"/>
+				<param name="mode" value="ride"/>
 			</parameterset>
 			<parameterset type="modeParams">
-				<param name="constant" value="-0.05667946733174506" />
+				<param name="constant" value="-0.05667946733174506"/>
 				<!-- 2022: 4-trips AB 10Euro -> 2.5 Eu/trip. yearly 761 Eu / 250 days = 3.04 Eu/day -->
-				<param name="dailyMonetaryConstant" value="-3.0" />
-				<param name="dailyUtilityConstant" value="0.0" />
-				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-				<param name="monetaryDistanceRate" value="0.0" />
-				<param name="mode" value="pt" />
+				<param name="dailyMonetaryConstant" value="-3.0"/>
+				<param name="dailyUtilityConstant" value="0.0"/>
+				<param name="marginalUtilityOfDistance_util_m" value="0.0"/>
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0"/>
+				<param name="monetaryDistanceRate" value="0.0"/>
+				<param name="mode" value="pt"/>
 			</parameterset>
 			<parameterset type="modeParams">
-				<param name="constant" value="-1.1112247503331607" />
-				<param name="dailyMonetaryConstant" value="0.0" />
-				<param name="dailyUtilityConstant" value="0.0" />
-				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-				<param name="monetaryDistanceRate" value="0.0" />
-				<param name="mode" value="bike" />
+				<param name="constant" value="-1.1112247503331607"/>
+				<param name="dailyMonetaryConstant" value="0.0"/>
+				<param name="dailyUtilityConstant" value="0.0"/>
+				<param name="marginalUtilityOfDistance_util_m" value="0.0"/>
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0"/>
+				<param name="monetaryDistanceRate" value="0.0"/>
+				<param name="mode" value="bike"/>
 			</parameterset>
 			<parameterset type="modeParams">
-				<param name="constant" value="0.0" />
-				<param name="dailyMonetaryConstant" value="0.0" />
-				<param name="dailyUtilityConstant" value="0.0" />
-				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-				<param name="monetaryDistanceRate" value="0.0" />
-				<param name="mode" value="walk" />
+				<param name="constant" value="0.0"/>
+				<param name="dailyMonetaryConstant" value="0.0"/>
+				<param name="dailyUtilityConstant" value="0.0"/>
+				<param name="marginalUtilityOfDistance_util_m" value="0.0"/>
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0"/>
+				<param name="monetaryDistanceRate" value="0.0"/>
+				<param name="mode" value="walk"/>
 			</parameterset>
-			<parameterset type="modeParams" >
-				<param name="constant" value="0.0" />
-				<param name="dailyMonetaryConstant" value="0.0" />
-				<param name="dailyUtilityConstant" value="0.0" />
-				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-				<param name="monetaryDistanceRate" value="-4.0E-4" />
-				<param name="mode" value="freight" />
+			<parameterset type="modeParams">
+				<param name="constant" value="0.0"/>
+				<param name="dailyMonetaryConstant" value="0.0"/>
+				<param name="dailyUtilityConstant" value="0.0"/>
+				<param name="marginalUtilityOfDistance_util_m" value="0.0"/>
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0"/>
+				<param name="monetaryDistanceRate" value="-4.0E-4"/>
+				<param name="mode" value="freight"/>
 			</parameterset>
-			<parameterset type="modeParams" >
-				<param name="constant" value="0.0" />
-				<param name="dailyMonetaryConstant" value="0.0" />
-				<param name="dailyUtilityConstant" value="0.0" />
-				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
-				<param name="monetaryDistanceRate" value="-4.0E-4" />
-				<param name="mode" value="truck" />
+			<parameterset type="modeParams">
+				<param name="constant" value="0.0"/>
+				<param name="dailyMonetaryConstant" value="0.0"/>
+				<param name="dailyUtilityConstant" value="0.0"/>
+				<param name="marginalUtilityOfDistance_util_m" value="0.0"/>
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0"/>
+				<param name="monetaryDistanceRate" value="-4.0E-4"/>
+				<param name="mode" value="truck"/>
 			</parameterset>
 		</parameterset>
 	</module>
@@ -196,17 +196,17 @@
 	</module>
 
 	<module name="replanningAnnealer">
-		<param name="activateAnnealingModule" value="true" />
-		<parameterset type="AnnealingVariable" >
-			<param name="annealParameter" value="globalInnovationRate" />
-			<param name="annealType" value="sigmoid" />
-			<param name="subpopulation" value="person" />
+		<param name="activateAnnealingModule" value="true"/>
+		<parameterset type="AnnealingVariable">
+			<param name="annealParameter" value="globalInnovationRate"/>
+			<param name="annealType" value="sigmoid"/>
+			<param name="subpopulation" value="person"/>
 			<!-- this parameter enters the exponential and sigmoid formulas. May be an iteration or a share, i.e. 0.5 for halfLife at 50% of iterations. Exponential: startValue / exp(it/halfLife) -->
-			<param name="halfLife" value="0.5" />
+			<param name="halfLife" value="0.5"/>
 			<!-- sigmoid: 1/(1+e^(shapeFactor*(it - halfLife))); geometric: startValue * shapeFactor^it; msa: startValue / it^shapeFactor -->
-			<param name="shapeFactor" value="0.01" />
-			<param name="startValue" value="0.45" />
-			<param name="endValue" value="0.01" />
+			<param name="shapeFactor" value="0.01"/>
+			<param name="startValue" value="0.45"/>
+			<param name="endValue" value="0.01"/>
 		</parameterset>
 	</module>
 
