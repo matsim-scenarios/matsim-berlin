@@ -296,6 +296,26 @@ public class AutofreiUtils {
 		//Prenzlauer Allee
 		remove.add("Prenzlauer Allee");
 
+		//Stadtautobahn im Westen
+		linksAdd.add(Id.createLinkId("169762615"));
+		linksAdd.add(Id.createLinkId("407967885"));
+		linksAdd.add(Id.createLinkId("26144116"));
+		linksAdd.add(Id.createLinkId("227985279"));
+		linksAdd.add(Id.createLinkId("322543975"));
+		linksAdd.add(Id.createLinkId("334005608"));
+		linksAdd.add(Id.createLinkId("24844237"));
+		linksAdd.add(Id.createLinkId("334005611"));
+		linksAdd.add(Id.createLinkId("429447291"));
+		linksAdd.add(Id.createLinkId("459810103"));
+		linksAdd.add(Id.createLinkId("429447289"));
+		linksAdd.add(Id.createLinkId("4434508#0"));
+		linksAdd.add(Id.createLinkId("227985278"));
+		linksAdd.add(Id.createLinkId("233763053"));
+		linksAdd.add(Id.createLinkId("4434509#0"));
+		linksAdd.add(Id.createLinkId("61727064"));
+		linksAdd.add(Id.createLinkId("429447289"));
+		linksAdd.add(Id.createLinkId("407967885"));
+
 		return new Corrections(linksRemove, linksAdd, remove, add);
 	}
 

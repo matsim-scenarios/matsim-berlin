@@ -15,12 +15,6 @@ public class RunAutofreiPolicy extends RunAutofreiBaseCaseCtdExtended {
 		MATSimApplication.run(RunAutofreiPolicy.class, args);
 	}
 
-//	private static void readWriteNetwork() {
-//		Network network = NetworkUtils.readNetwork(ConfigUtils.loadConfig("input/v6.4/berlin-v6.4.config.xml").network().getInputFile());
-//		AutofreiUtils.restrictHighwayLinks(network, RESTRICTED_MODES);
-//		NetworkUtils.writeNetwork(network, "berlin-v6.4.network-restricted.xml.gz");
-//	}
-
 	@Override
 	protected void prepareScenario(Scenario scenario) {
 		super.prepareScenario(scenario);
