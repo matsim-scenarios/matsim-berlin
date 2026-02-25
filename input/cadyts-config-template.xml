@@ -27,7 +27,7 @@
 		<param name="removingUnnecessaryPlanAttributes" value="true"/>
 	</module>
 	<module name="vehicles">
-		<param name="vehiclesFile" value=".../../input/==VERSION==/berlin-==VERSION==-vehicleTypes.xml"/>
+		<param name="vehiclesFile" value="../../input/==VERSION==/berlin-==VERSION==-vehicleTypes.xml"/>
 	</module>
 	<module name="transit">
 		<param name="transitScheduleFile" value="./berlin-==VERSION==-transitSchedule.xml.gz"/>
