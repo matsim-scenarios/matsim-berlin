@@ -83,7 +83,7 @@ REGIONALSTAT_POP := $(GERMANY)/regionalstatistik/population.csv
 REGIONALSTAT_EMPL := $(GERMANY)/regionalstatistik/employed.json
 REGIONALSTAT_COMMUTER := $(GERMANY)/regionalstatistik/commuter.csv
 ## (link no longer working; in general, mcloud no longer exists; RegioStar = spatial planning categories)
-REGIOSTAR_URL := https://mcloud.de/downloads/mcloud/536149D1-2902-4975-9F7D-253191C0AD07/RegioStaR-Referenzdateien.xlsx
+#REGIOSTAR_URL := https://mcloud.de/downloads/mcloud/536149D1-2902-4975-9F7D-253191C0AD07/RegioStaR-Referenzdateien.xlsx
 REGIOSTAR := $(GERMANY)/RegioStaR-Referenzdateien.xlsx
 
 ###################################
@@ -140,51 +140,12 @@ NETWORK_FT := $(OUTPUT)/berlin-$(VERSION)-network-ft.csv.gz
 $(JAR):
 	./mvnw clean package -DskipTests=true
 
-$(BRANDENBURG_OSM_LOCAL):
-	curl $(BRANDENBURG_OSM_URL) -o $@
-# (Brandenburg OSM, presumably from 2023-01-01)
-
-$(FACILITIES_OSM_LOCAL):
-	curl $(FACILITIES_OSM_URL) -o $@
-
-
-$(REGIOSTAR):
-	curl $(REGIOSTAR_URL) -o $@
-
 # Preprocessing and cleaning of raw osm data to geo-referenced activity facilities.
 $(FACILITIES_GPKG): $(BRANDENBURG_OSM_LOCAL) $(ACTIVITY_MAPPING)
 	$(JAVA_APP) prepare facility-shp\
 	 --activity-mapping $(word 2,$^)\
 	 --input $<\
 	 --output $@
-
-# NEVER used ?!?
-#Same OSM version as reference visitations
-# (Brandenburg OSM, presumably from 2021-01-01; for "reference visitations" which are used in covid project. Not necessary for transport planning purposes.
-#FACILITIES_OSM_LOCAL := input/facilities.osm.pbf
-#FACILITIES_OSM_URL := https://download.geofabrik.de/europe/germany/brandenburg-210101.osm.pbf
-# The reference visitations used in the covid project refer to this older osm data version.
-#input/ref_facilities.gpkg: $(FACILITIES_OSM_LOCAL) $(ACTIVITY_MAPPING)
-#	$(JAVA_APP) prepare facility-shp\
-#	 --activity-mapping $(word 2,$^)\
-#	 --input $<\
-#	 --output $@
-
-# this file is in shared-svn now
-#$(PLR_2013_2020):
-#	#curl https://instantatlas.statistik-berlin-brandenburg.de/instantatlas/interaktivekarten/kommunalatlas/Kommunalatlas.zip --insecure -o atlas.zip
-#	#unzip atlas.zip -d input
-#	#rm atlas.zip
-#	echo "URL for Kommunalatlas.zip does no longer exist. Use local PLR_2013_2020.csv."
-# (Kommunalatlas = kleinräumiges Datenangebot.  "PLR" is the file name after expanding the zipfile; it may mean "Planungsraum".  Contains attributes of LOR zones (at 500 zones level).)
-
-# this file is in shared-svn now
-#$(PLANUNGSRAUM_25833):
-#	#curl $(PLANUNGSRAUM_25833_URL) -o tmp.zip
-#	#unzip tmp.zip -d $(OUTPUT)
-#	#rm tmp.zip
-#	echo "Link is broken: $(PLANUNGSRAUM_25833_URL), use $(PLANUNGSRAUM_25833)"
-# (shapefiles LORs = Berlin local system of zones)
 
 # filtering for those parts of the osm data that we need for the network:
 $(NETWORK_OSM): $(BRANDENBURG_OSM_LOCAL) $(AREA_POLY) $(REMOVE_RAILWAY)
@@ -209,14 +170,6 @@ $(NETWORK_OSM): $(BRANDENBURG_OSM_LOCAL) $(AREA_POLY) $(REMOVE_RAILWAY)
 	rm input/network-coarse.osm.pbf
 
 # converting the network from OSM format to SUMO format:
-
-# files are store in shared-svn
-#$(SUMO_OSM_NETCONVERT) : 
-#	curl $(SUMO_OSM_NETCONVERT_URL) -o $(SUMO_OSM_NETCONVERT)
-
-#$(SUMO_OSM_NETCONVERT_URBAN_DE) : 
-#	curl $(SUMO_OSM_NETCONVERT_URBAN_DE_URL) -o $(SUMO_OSM_NETCONVERT_URBAN_DE)
-
 $(NETWORK_SUMO): $(NETWORK_OSM) $(SUMO_OSM_NETCONVERT) $(SUMO_OSM_NETCONVERT_URBAN_DE)
 	netconvert --geometry.remove --ramps.guess --ramps.no-split\
 	 --type-files $(word 2,$^),$(word 3,$^)\
