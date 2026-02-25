@@ -524,17 +524,17 @@ setup:
 	mkdir -p $(TMP_DIR)
 	
 prepare-calibration: $(BERLIN_BRANDENBURG_ACTS_25PCT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
-	make -Bndri prepare-calibration | make2graph | gv2gml -o prepare-calibration_graph.gml
+	#make -Bndri prepare-calibration | make2graph | gv2gml -o prepare-calibration_graph.gml
 	echo "Done"
 
 prepare-initial: $(BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS) $(NETWORK_MATSIM_PT)
-	make -Bndri prepare-initial | make2graph | gv2gml -o prepare-initial_graph.gml
+	#make -Bndri prepare-initial | make2graph | gv2gml -o prepare-initial_graph.gml
 	echo "Done"
 
 prepare-drt: $(RANDOM_DRT_FLEET_10K)
-	make -Bndri prepare-drt | make2graph | gv2gml -o prepare-drt_graph.gml
+	#make -Bndri prepare-drt | make2graph | gv2gml -o prepare-drt_graph.gml
 	echo "Done"
 
 prepare: $(BERLIN_10PCT_AFTER_CHOICE_EXPERIMENTS)
-	make -Bndri prepare | make2graph | gv2gml -o prepare_graph.gml
+	#make -Bndri prepare | make2graph | gv2gml -o prepare_graph.gml
 	echo "Done"
