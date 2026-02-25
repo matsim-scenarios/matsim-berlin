@@ -19,7 +19,7 @@ TMP_DIR := ./tmp
 # Scenario creation tool
 JAVA_APP := java -Xmx$(MAKE_XMX) -XX:+UseParallelGC -Dorg.geotools.referencing.forceXY=true -Djava.io.tmpdir=$(TMP_DIR) -cp $(JAR) org.matsim.prepare.RunOpenBerlinCalibration
 
-.PHONY: setup prepare prepare-calibration prepare-initial prepare-drt
+.PHONY: setup prepare prepare-network-and-counts prepare-calibration prepare-run-cadyts prepare-initial prepare-drt
 .DELETE_ON_ERROR:
 
 ###################################
@@ -420,7 +420,7 @@ $(BERLIN_CADYTS_INPUT_25PCT): $(BERLIN_BRANDENBURG_INITIAL_25PCT) $(BERLIN_SMALL
 
 $(BERLIN_CADYTS_OUTPUT_25PCT): $(BERLIN_CADYTS_INPUT_25PCT) 
 	cat input/cadyts-config-template.xml | sed -e "s/==VERSION==/$(VERSION)/g" > ${OUTPUT}/cadyts.config.xml
-	echo "ath this point cadyts should start automatically, but this is not implemented yet"
+	./src/sh/cadyts.sh ${OUTPUT}/cadyts.config.xml $(VERSION)
 
 $(BERLIN_CADYTS_FINAL_25PCT): $(BERLIN_CADYTS_OUTPUT_25PCT) $(BERLIN_CADYTS_INPUT_25PCT) 
 	$(JAVA_APP) prepare extract-plans-idx\
@@ -523,9 +523,16 @@ setup:
 	mkdir -p $(OUTPUT)
 	mkdir -p $(TMP_DIR)
 	
-prepare-calibration: $(BERLIN_BRANDENBURG_ACTS_25PCT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
+	
+prepare-network-and-counts: $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
+	ehco done
+
+prepare-calibration: $(BERLIN_CADYTS_INPUT_25PCT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	#make -Bndri prepare-calibration | make2graph | gv2gml -o prepare-calibration_graph.gml
 	echo "Done"
+	
+prepare-run-cadyts: $(BERLIN_CADYTS_OUTPUT_25PCT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
+	echo "done"
 
 prepare-initial: $(BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS) $(NETWORK_MATSIM_PT)
 	#make -Bndri prepare-initial | make2graph | gv2gml -o prepare-initial_graph.gml
