@@ -55,7 +55,7 @@ SUMO_OSM_NETCONVERT := $(BERLINSHARED)/data/sumo/osmNetconvert.typ.xml
 SUMO_OSM_NETCONVERT_URBAN_DE := $(BERLINSHARED)/data/sumo/osmNetconvertUrbanDe.typ.xml
 
 #BRANDENBURG_OSM_URL := https://download.geofabrik.de/europe/germany/brandenburg-230101.osm.pbf 
-BRANDENBURG_OSM_LOCAL := $(BERLINSHARED)/data/osm/brandenburg.osm.pbf
+BRANDENBURG_OSM_LOCAL := $(BERLINSHARED)/data/osm/brandenburg-230101.osm.pbf 
 
 PLANUNGSRAUM_25833 := $(BERLINPUBLIC)/input/shp/Planungsraum_EPSG_25833.shp
 ## link no longer working
@@ -373,7 +373,7 @@ $(BERLIN_CADYTS_INPUT_25PCT): $(BERLIN_BRANDENBURG_INITIAL_25PCT) $(BERLIN_SMALL
 
 $(BERLIN_CADYTS_OUTPUT_25PCT): $(BERLIN_CADYTS_INPUT_25PCT) 
 	cat input/cadyts-config-template.xml | sed -e "s/==VERSION==/$(VERSION)/g" > ${OUTPUT}/cadyts.config.xml
-	./src/sh/cadyts.sh ${OUTPUT}/cadyts.config.xml $(VERSION)
+	./src/main/sh/cadyts.sh ${OUTPUT}/cadyts.config.xml $(VERSION)
 
 $(BERLIN_CADYTS_FINAL_25PCT): $(BERLIN_CADYTS_OUTPUT_25PCT) $(BERLIN_CADYTS_INPUT_25PCT) 
 	$(JAVA_APP) prepare extract-plans-idx\
