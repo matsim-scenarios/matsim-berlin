@@ -48,16 +48,18 @@ FACILITY_MAPPING := input/facility_mapping.json
 COMMERCIAL_TRAFFIC_AREA_DATA := input/commercialTrafficAreaData.csv
 ACTIVITY_MAPPING := input/activity_mapping.json
 
-SUMO_OSM_NETCONVERT_URL := https://raw.githubusercontent.com/eclipse-sumo/sumo/refs/tags/v1_20_0/data/typemap/osmNetconvert.typ.xml
-SUMO_OSM_NETCONVERT_URBAN_DE_URL  := https://raw.githubusercontent.com/eclipse-sumo/sumo/refs/tags/v1_20_0/data/typemap/osmNetconvertUrbanDe.typ.xml
 
-## TODO this should be store in shared-svn
-BRANDENBURG_OSM_LOCAL := input/brandenburg.osm.pbf
-BRANDENBURG_OSM_URL := https://download.geofabrik.de/europe/germany/brandenburg-230101.osm.pbf 
+#SUMO_OSM_NETCONVERT_URL := https://raw.githubusercontent.com/eclipse-sumo/sumo/refs/tags/v1_20_0/data/typemap/osmNetconvert.typ.xml
+SUMO_OSM_NETCONVERT := $(BERLINSHARED)/data/sumo/osmNetconvert.typ.xml
+#SUMO_OSM_NETCONVERT_URBAN_DE_URL  := https://raw.githubusercontent.com/eclipse-sumo/sumo/refs/tags/v1_20_0/data/typemap/osmNetconvertUrbanDe.typ.xml
+SUMO_OSM_NETCONVERT_URBAN_DE := $(BERLINSHARED)/data/sumo/osmNetconvertUrbanDe.typ.xml
+
+#BRANDENBURG_OSM_URL := https://download.geofabrik.de/europe/germany/brandenburg-230101.osm.pbf 
+BRANDENBURG_OSM_LOCAL := $(BERLINSHARED)/data/osm/brandenburg.osm.pbf
 
 PLANUNGSRAUM_25833 := $(BERLINPUBLIC)/input/shp/Planungsraum_EPSG_25833.shp
 ## link no longer working
-PLANUNGSRAUM_25833_URL := https://www.stadtentwicklung.berlin.de/planen/basisdaten_stadtentwicklung/lor/download/LOR_SHP_EPSG_25833.zip
+#PLANUNGSRAUM_25833_URL := https://www.stadtentwicklung.berlin.de/planen/basisdaten_stadtentwicklung/lor/download/LOR_SHP_EPSG_25833.zip
 REGION_4326 := $(BERLINPUBLIC)/input/shp/region_4326.shp
 BB_ZONES_4326 := $(BERLINPUBLIC)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp
 BB_BUILDINGS_4326 := $(BERLINPUBLIC)/input/shp/buildings_BerlinBrandenburg_4326.shp
@@ -89,9 +91,6 @@ REGIOSTAR := $(GERMANY)/RegioStaR-Referenzdateien.xlsx
 ###################################
 
 FACILITIES_GPKG := $(OUTPUT)/facilities.gpkg
-
-SUMO_OSM_NETCONVERT := $(OUTPUT)/osmNetconvert.typ.xml
-SUMO_OSM_NETCONVERT_URBAN_DE := $(OUTPUT)/osmNetconvertUrbanDe.typ.xml
 
 NETWORK_OSM := $(OUTPUT)/network.osm
 NETWORK_SUMO := $(OUTPUT)/sumo.net.xml
@@ -171,18 +170,20 @@ $(FACILITIES_GPKG): $(BRANDENBURG_OSM_LOCAL) $(ACTIVITY_MAPPING)
 #	 --input $<\
 #	 --output $@
 
-$(PLR_2013_2020):
-	#curl https://instantatlas.statistik-berlin-brandenburg.de/instantatlas/interaktivekarten/kommunalatlas/Kommunalatlas.zip --insecure -o atlas.zip
-	#unzip atlas.zip -d input
-	#rm atlas.zip
-	echo "URL for Kommunalatlas.zip does no longer exist. Use local PLR_2013_2020.csv."
+# this file is in shared-svn now
+#$(PLR_2013_2020):
+#	#curl https://instantatlas.statistik-berlin-brandenburg.de/instantatlas/interaktivekarten/kommunalatlas/Kommunalatlas.zip --insecure -o atlas.zip
+#	#unzip atlas.zip -d input
+#	#rm atlas.zip
+#	echo "URL for Kommunalatlas.zip does no longer exist. Use local PLR_2013_2020.csv."
 # (Kommunalatlas = kleinräumiges Datenangebot.  "PLR" is the file name after expanding the zipfile; it may mean "Planungsraum".  Contains attributes of LOR zones (at 500 zones level).)
 
-$(PLANUNGSRAUM_25833):
-	#curl $(PLANUNGSRAUM_25833_URL) -o tmp.zip
-	#unzip tmp.zip -d $(OUTPUT)
-	#rm tmp.zip
-	echo "Link is broken: $(PLANUNGSRAUM_25833_URL), use $(PLANUNGSRAUM_25833)"
+# this file is in shared-svn now
+#$(PLANUNGSRAUM_25833):
+#	#curl $(PLANUNGSRAUM_25833_URL) -o tmp.zip
+#	#unzip tmp.zip -d $(OUTPUT)
+#	#rm tmp.zip
+#	echo "Link is broken: $(PLANUNGSRAUM_25833_URL), use $(PLANUNGSRAUM_25833)"
 # (shapefiles LORs = Berlin local system of zones)
 
 # filtering for those parts of the osm data that we need for the network:
@@ -209,11 +210,12 @@ $(NETWORK_OSM): $(BRANDENBURG_OSM_LOCAL) $(AREA_POLY) $(REMOVE_RAILWAY)
 
 # converting the network from OSM format to SUMO format:
 
-$(SUMO_OSM_NETCONVERT) : 
-	curl $(SUMO_OSM_NETCONVERT_URL) -o $(SUMO_OSM_NETCONVERT)
+# files are store in shared-svn
+#$(SUMO_OSM_NETCONVERT) : 
+#	curl $(SUMO_OSM_NETCONVERT_URL) -o $(SUMO_OSM_NETCONVERT)
 
-$(SUMO_OSM_NETCONVERT_URBAN_DE) : 
-	curl $(SUMO_OSM_NETCONVERT_URBAN_DE_URL) -o $(SUMO_OSM_NETCONVERT_URBAN_DE)
+#$(SUMO_OSM_NETCONVERT_URBAN_DE) : 
+#	curl $(SUMO_OSM_NETCONVERT_URBAN_DE_URL) -o $(SUMO_OSM_NETCONVERT_URBAN_DE)
 
 $(NETWORK_SUMO): $(NETWORK_OSM) $(SUMO_OSM_NETCONVERT) $(SUMO_OSM_NETCONVERT_URBAN_DE)
 	netconvert --geometry.remove --ramps.guess --ramps.no-split\
