@@ -478,7 +478,7 @@ setup:
 	
 	
 prepare-network-and-counts: $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
-	ehco done
+	echo done
 
 prepare-calibration: $(BERLIN_CADYTS_INPUT_25PCT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	#make -Bndri prepare-calibration | make2graph | gv2gml -o prepare-calibration_graph.gml
