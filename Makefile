@@ -389,13 +389,13 @@ $(BERLIN_CADYTS_SELECTION_25PCT): $(BERLIN_CADYTS_FINAL_25PCT)
 	echo "check if $(BERLIN_CADYTS_SELECTION_25PCT) was produced" 
 
 # These depend on the output of cadyts calibration runs
+# should we really use NETWORK_MATSIM here or not maybe NETWORK_MATSIM_PT
 $(BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MATSIM) $(BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT) $(BERLIN_CADYTS_FINAL_25PCT) $(AREA_SHP)
 	$(JAVA_APP) prepare scenario-cutout\
 	 --population $(word 4,$^)\
 	 --facilities $<\
 	 --network $(word 2,$^)\
 	 --output-population $@\
-	 # TODO where is this comming from
 	 --output-network $(OUTPUT)/network-cutout.xml.gz\
 	 --output-facilities $(OUTPUT)/facilities-cutout.xml.gz\
 	 --input-crs $(CRS)\
