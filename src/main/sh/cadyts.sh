@@ -2,24 +2,21 @@
 
 set -e
 
+.functions.sh 
 jar="matsim-berlin-*.jar"
 MEMORY="${MAKE_XMX:-60G}"
 CONFIG=$1
 VERSION=$2
 
-if [ -n "$SLURM_SUBMIT_DIR" ]; then
-	echo "running as slurm-job. Changing to $SLURM_SUBMIT_DIR"
-	cd "$SLURM_SUBMIT_DIR"
-else
-	echo "Manual started job. Stay in: $PWD"
-fi
+# chekc if we're on SLURM-cluster or if we really wan't to run this locally
+checkIfSlurmAndChangeDirOrAbort
 
 date
 hostname
 pwd
 
 ## the location of the population-file needs to be relative to the cadyts-config.xml, which is kind of weird to me
-arguments="--all-car --weight 0.15 --output output/v7.0/cadyts --mode cadyts --scale-factor 1.0 --25pct --iterations 50 --population ./berlin-cadyts-input-${VERSION}-25pct.plans.xml.gz"
+arguments="--all-car --weight 0.15 --output output/cadyts --mode cadyts --scale-factor 1.0 --25pct --iterations 50 --population ./berlin-cadyts-input-${VERSION}-25pct.plans.xml.gz"
 
 # Don't change anything below
 ################
