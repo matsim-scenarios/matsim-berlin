@@ -3,7 +3,7 @@
 ########### SETUP #################
 ###################################
 JAR := matsim-berlin-*.jar
-VERSION := v7.0
+VERSION := v7.1
 CRS := EPSG:25832
 MAKE_XMX ?= 20G
 SUMO_VERSION := 1.20.0
@@ -11,7 +11,7 @@ SUMO_VERSION := 1.20.0
 ## if you want to override thes variables set them as environment-variables and run make -e
 ## make will then use the environment-variable instead what you defined here.
 SVN_PATH := ..
-OUTPUT := output/$(VERSION)
+OUTPUT := output/
 ## either use the global installation via, e.g. apt-get, or define where this is comming from
 OSMOSIS := osmosis
 ## we use a tmp-dir because on the cluster the default-tmp-dir is to small
