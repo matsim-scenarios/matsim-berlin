@@ -28,19 +28,19 @@ JAVA_APP := java -Xmx$(MAKE_XMX) -XX:+UseParallelGC -Dorg.geotools.referencing.f
 
 GERMANY := $(SVN_PATH)/shared-svn/projects/matsim-germany
 BERLINSHARED := $(SVN_PATH)/shared-svn/projects/matsim-berlin
-BERLINPUBLIC := $(SVN_PATH)/public-svn/matsim/scenarios/countries/de/berlin/berlin-$(VERSION)
+BERLINPUBLIC := $(SVN_PATH)/public-svn/matsim/scenarios/countries/de/berlin
 
 ## Freight-Processing currrently does not work. Should probably move to a separate makefile
 #GERMAN_FREIGHT_25PCT := $(SVN_PATH)/public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/german_freight.25pct.plans.xml.gz
 #GERMAN_FREIGHT_NETWORK := $(SVN_PATH)/public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/germany-europe-network.xml.gz
 
 ## For the time being, use the old version
-BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT := $(BERLINPUBLIC)/input/berlin-longHaulFreight-v7.0-25pct.plans.xml.gz
-BERLIN_SMALLSCALE_COMMERCIAL_25PCT := $(BERLINPUBLIC)/input/berlin-small-scale-commercialTraffic-v7.0-25pct.plans.xml.gz
+BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT := $(BERLINPUBLIC)/berlin-v7.0/input/berlin-longHaulFreight-v7.0-25pct.plans.xml.gz
+BERLIN_SMALLSCALE_COMMERCIAL_25PCT := $(BERLINPUBLIC)/berlin-v7.0/input/berlin-small-scale-commercialTraffic-v7.0-25pct.plans.xml.gz
 
-AREA_POLY := input/$(VERSION)/area/area.poly
-AREA_SHP := input/$(VERSION)/area/area.shp
-PT_AREA := input/$(VERSION)/pt-area/pt-area.shp
+AREA_POLY := input/v7.0/area/area.poly
+AREA_SHP := input/v7.0/area/area.shp
+PT_AREA := input/v7.0/pt-area/pt-area.shp
 REMOVE_RAILWAY := input/remove-railway.xml
 COUNTS_UNDERESTIMATED := input/counts_underestimated.csv
 COUNTS_MAPPING := input/counts_mapping.csv
@@ -57,17 +57,16 @@ SUMO_OSM_NETCONVERT_URBAN_DE := $(BERLINSHARED)/data/sumo/osmNetconvertUrbanDe.t
 #BRANDENBURG_OSM_URL := https://download.geofabrik.de/europe/germany/brandenburg-230101.osm.pbf 
 BRANDENBURG_OSM_LOCAL := $(BERLINSHARED)/data/osm/brandenburg-230101.osm.pbf 
 
-PLANUNGSRAUM_25833 := $(BERLINPUBLIC)/input/shp/Planungsraum_EPSG_25833.shp
+PLANUNGSRAUM_25833 := $(BERLINPUBLIC)/berlin-v7.0/input/shp/Planungsraum_EPSG_25833.shp
 ## link no longer working
 #PLANUNGSRAUM_25833_URL := https://www.stadtentwicklung.berlin.de/planen/basisdaten_stadtentwicklung/lor/download/LOR_SHP_EPSG_25833.zip
-REGION_4326 := $(BERLINPUBLIC)/input/shp/region_4326.shp
-BB_ZONES_4326 := $(BERLINPUBLIC)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp
-BB_BUILDINGS_4326 := $(BERLINPUBLIC)/input/shp/buildings_BerlinBrandenburg_4326.shp
-BERLIN_LANDUSE_4326 := $(BERLINPUBLIC)/input/shp/berlinBrandenburg_landuse_4326.shp
-BB_ZONES_VKZ_4326 := $(BERLINPUBLIC)/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp
-BERLIN_INNER_CITY_GPKG := $(BERLINPUBLIC)/../berlin-v6.4/input/shp/berlin_inner_city.gpkg
-BERLIN_INNER_CITY_GPKG2 := $(BERLINPUBLIC)/berlin-$(VERSION)/input/shp/berlin_inner_city.gpkg
-BERLIN_SHP_25832 := $(BERLINPUBLIC)/berlin-$(VERSION)/input/shp/Berlin_25832.shp
+REGION_4326 := $(BERLINPUBLIC)/berlin-v7.0/input/shp/region_4326.shp
+BB_ZONES_4326 := $(BERLINPUBLIC)/berlin-v7.0/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp
+BB_BUILDINGS_4326 := $(BERLINPUBLIC)/berlin-v7.0/input/shp/buildings_BerlinBrandenburg_4326.shp
+BERLIN_LANDUSE_4326 := $(BERLINPUBLIC)/berlin-v7.0/input/shp/berlinBrandenburg_landuse_4326.shp
+BB_ZONES_VKZ_4326 := $(BERLINPUBLIC)/berlin-v7.0/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp
+BERLIN_INNER_CITY_GPKG := $(BERLINPUBLIC)/berlin-v6.4/input/shp/berlin_inner_city.gpkg
+BERLIN_SHP_25832 := $(BERLINPUBLIC)/berlin-v7.0/input/shp/Berlin_25832.shp
 
 COUNTS_BERLIN_2018 := $(BERLINSHARED)/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx
 PLR_2013_2020 := $(BERLINSHARED)/data/statistik-berlin-brandenburg/PLR_2013_2020.csv
@@ -456,7 +455,7 @@ $(BERLIN_DOWNTOWN_3PCT_PLANS): $(BERLIN_INNER_CITY_GPKG) $(BERLIN_3PCT_PLANS) $(
 	 --input-crs $(CRS)\
 	 --shp "$<"
 
-$(RANDOM_DRT_FLEET_10K): $(NETWORK_MATSIM) $(BERLIN_SHP_25832) $(BERLIN_INNER_CITY_GPKG2)
+$(RANDOM_DRT_FLEET_10K): $(NETWORK_MATSIM) $(BERLIN_SHP_25832) $(BERLIN_INNER_CITY_GPKG)
 	$(JAVA_APP) prepare create-drt-vehicles\
 	 --network $<\
 	 --shp "$(word 2,$^)"\
