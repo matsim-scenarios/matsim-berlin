@@ -95,18 +95,17 @@ if __name__ == "__main__":
         # Ride incurs double the cost as car, to account for the driver and passenger
         u = ASC[mode] - BETA_PERFORMING * v[f"{mode}_hours"] * ((1 + BETA_RIDE_ALPHA) if mode == "ride" else 1)
 
-        price = v[f"{mode}_km_costs"] * v[f"{mode}_km"] * (BETA_RIDE_ALPHA if mode == "ride" else 1)
+        #price = v[f"{mode}_km_costs"] * v[f"{mode}_km"] * (BETA_RIDE_ALPHA if mode == "ride" else 1)
+        if mode in ["car", "ride"]:
+            price = v[f"{mode}_km_costs"] * v[f"{mode}_km"] * (BETA_RIDE_ALPHA if mode == "ride" else 1)
+        else: price = 0
+
         price += v[f"{mode}_daily_costs"] * v["dist_weight"] * (
             BETA_CAR_PRICE_PERCEPTION if mode == "car" else BETA_PT_PRICE_PERCEPTION
         )
 
         u += price * UTIL_MONEY * (1 if args.no_income else (ds.global_income / v["income"]) ** EXP_INCOME)
-        if mode == "pt":
-            u -= v[f"{mode}_switches"] * BETA_PT_SWITCHES
-            u -= v[f"{mode}_bus_legs"] * BETA_BUS_USAGE
 
-        if mode == "bike":
-            u -= v[f"{mode}_hours"] * BETA_BIKE_EFFORT
 
         if mode in EXP_DIST:
             beta, exp = EXP_DIST[mode]

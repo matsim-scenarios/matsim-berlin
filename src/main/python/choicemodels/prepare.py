@@ -26,13 +26,22 @@ pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
-def read_global_income(input_file: str) -> float:
-    """ Read global income from input file """
+def compute_weighted_average_income(df):
 
-    with open(input_file) as f:
-        _, _, income = f.readline().rpartition(":")
-        return float(income.strip())
 
+    # Clean column names
+    # df.columns = df.columns.str.strip()
+
+    required = {"person", "income", "weight"}
+    missing = required - set(df.columns)
+    if missing:
+        raise ValueError(f"Missing required columns: {missing}")
+
+    persons = df.groupby("person", as_index=False).first()
+
+    return float(
+        np.average(persons["income"], weights=persons["weight"])
+    )
 
 def read_plan_choices(input_file: str, sample: float = 1, seed: int = 42) -> PlanChoice:
     """ Read plan choices from input file """
@@ -83,7 +92,7 @@ def read_plan_choices(input_file: str, sample: float = 1, seed: int = 42) -> Pla
 
     varying = list(df_wide.columns.str.extract(r"plan_1_([a-zA-z_]+)", expand=False).dropna().unique())
 
-    return PlanChoice(df_wide, modes, varying, k, read_global_income(input_file))
+    return PlanChoice(df_wide, modes, varying, k, compute_global_income(input_file))
 
 
 def tn_generator(sample_size: int, number_of_draws: int) -> np.ndarray:
@@ -191,4 +200,4 @@ def read_trip_choices(input_file: str) -> TripChoice:
 
     df.dist_weight = df.dist_weight.fillna(1)
 
-    return TripChoice(df, modes, varying, read_global_income(input_file))
+    return TripChoice(df, modes, varying, compute_weighted_average_income(df))
