@@ -12,6 +12,16 @@ from prepare import read_trip_choices, daily_costs, km_costs
 ESTIMATE = 0
 FIXED = 1
 
+# This runs the trip based choice model
+# For the thesis this script was run with:
+# --mxl-modes
+# --est-performing
+# --est-exp-income
+# --est-util-money
+# --est-price-perception-car
+# --est-price-perception-pt
+# --same-price-perception
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate the trip choice model")
     parser.add_argument("--input", help="Path to the input file", type=str, default="../../../../trip-choices.csv")

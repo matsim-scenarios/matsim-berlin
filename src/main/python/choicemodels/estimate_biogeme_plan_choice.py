@@ -15,6 +15,19 @@ from prepare import tn_s1_generator, tn_s2_generator, ztn_s2_generator, triangul
 ESTIMATE = 0
 FIXED = 1
 
+# This runs the plan based choice model
+# For the thesis this script was run with:
+#  --mxl-distribution NORMAL_ANTI
+#  --mxl-param tt_hours
+#  --car-util 0
+#  --performing 5.501071
+#  --exp-income 0.275502
+#  --util-money 0.397322
+#  --price-perception 0.268622
+#  --est-bus-legs
+#  --same-price-perception
+#  --effort ride nan
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate choice model for daily trip usage")
     parser.add_argument("--input", help="Path to the input file", type=str,
