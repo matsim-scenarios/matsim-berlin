@@ -2,13 +2,16 @@
 
 set -e
 
-. functions.sh
+## find out where this script lies, get the directory, assume that functions.sh is here, source it
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+. ${SCRIPT_DIR}/functions.sh
+
 jar="matsim-berlin-*.jar"
 MEMORY="${MAKE_XMX:-60G}"
 CONFIG=$1
 VERSION=$2
 
-# chekc if we're on SLURM-cluster or if we really wan't to run this locally
+# check if we're on SLURM-cluster or if we really wan't to run this locally
 checkIfSlurmAndChangeDirOrAbort
 
 date
