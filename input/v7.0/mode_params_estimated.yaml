@@ -1,189 +1,199 @@
 
 scoring:
   scoringParameters:
-    - performing: 5.330794
-      marginalUtilityOfMoney: 0.431700
-      utilityOfLineSwitch: 0.0
+    - performing: 5.501071
+      marginalUtilityOfMoney: 0.397322
+      utilityOfLineSwitch: -1
       modeParams:
         - mode: walk
           constant: 0
         - mode: bike
           constant: 0
-          marginalUtilityOfTraveling_util_hr: -0.576124
+          marginalUtilityOfTraveling_util_hr: -1.309362
         - mode: car
           constant: 0
-          # 14.30 * 0.269441
-          dailyMonetaryConstant: -3.8530063
+          # 14.30 * 0.268622
+          dailyMonetaryConstant: -3.8412946
         - mode: pt
           constant: 0
-          # 3 * 0.269441
-          dailyMonetaryConstant: -0.808323
+          # 3 * 0.268622
+          dailyMonetaryConstant: -0.805866
+          marginalUtilityOfTraveling_util_hr: 0     
         - mode: ride
           constant: 0
-          marginalUtilityOfTraveling_util_hr: -5.330794
+          marginalUtilityOfTraveling_util_hr: -4.442946
 advancedScoring:
-  incomeExponent: 0.259370
-  pseudoRamdomScale: 0.703588
-  pseudoRandomDistribution: normal
+  incomeExponent: 0.275502
+  pseudoRamdomScale: 0.495
   scoringParameters:
     - subpopulation: person
       modeParams:
         - mode: car
-          deltaConstant: 0.958581
+          deltaConstant: 1.506777
           varConstant: normal
         - mode: bike
-          deltaConstant: 0.842426
+          deltaConstant: 0.879757
           varConstant: normal
         - mode: pt
-          deltaConstant: 1.697001
+          deltaConstant: 1.737971
           varConstant: normal
         - mode: ride
-          deltaConstant: 2.663882
+          deltaConstant: 2.861008
           varConstant: normal
       ptParams:
         - mode: bus
-          deltaConstant: -0.423602
+          deltaConstant: -0.164051
 
-#  Results for model trip_choice_performing_exp_income_util_money_car_price_perception_pt_price_perception
-#Nbr of parameters:		9
-#Sample size:			27732
-#Excluded data:			0
-#Null log likelihood:		-40804.33
-#Final log likelihood:		-31049.91
-#Likelihood ratio test (null):		19508.84
-#Rho square (null):			0.239
-#Rho bar square (null):			0.239
-#Akaike Information Criterion:	62117.82
-#Bayesian Information Criterion:	62191.89
-#  Value  Rob. Std err  Rob. t-test  Rob. p-value
-#  ASC_bike                  -1.311896      0.030403   -43.150463  0.000000e+00
-#  ASC_car                   -2.084943      0.044532   -46.818726  0.000000e+00
-#  ASC_pt                    -0.793090      0.026723   -29.678676  0.000000e+00
-#  ASC_ride                  -2.650585      0.034903   -75.941628  0.000000e+00
-#  BETA_BIKE_UTIL_H           0.576124      0.069710     8.264547  2.220446e-16
-#  BETA_CAR_PRICE_PERCEPTION  0.269441      0.037276     7.228223  4.893863e-13
-#  BETA_PERFORMING            5.330794      0.105178    50.683688  0.000000e+00
-#  EXP_INCOME                 0.259370      0.036159     7.173128  7.329692e-13
-#  UTIL_MONEY                 0.431700      0.030386    14.207283  0.000000e+00
-#  Correlation matrix
-#  Covariance  Correlation     t-test   p-value  Rob. cov.  Rob. corr.  Rob. t-test  Rob. p-value
-#  ASC_car-ASC_bike                              0.000316     0.275809 -17.731721  0.000000   0.000469    0.346543   -17.421058      0.000000
-#  ASC_pt-ASC_bike                               0.000177     0.250315  15.910624  0.000000   0.000208    0.255436    14.832889      0.000000
-#  ASC_pt-ASC_car                                0.000455     0.406890  32.411153  0.000000   0.000463    0.389435    30.703205      0.000000
-#  ASC_ride-ASC_bike                             0.000215     0.245862 -36.421814  0.000000   0.000372    0.350599   -35.797530      0.000000
-#  ASC_ride-ASC_car                              0.000227     0.164631 -11.528691  0.000000   0.000375    0.241518   -11.426425      0.000000
-#  ASC_ride-ASC_pt                               0.000178     0.207931 -49.782047  0.000000   0.000102    0.109492   -44.683589      0.000000
-#  BETA_BIKE_UTIL_H-ASC_bike                     0.001067     0.634205  37.821325  0.000000   0.001389    0.655547    34.440869      0.000000
-#  BETA_BIKE_UTIL_H-ASC_car                      0.000295     0.110997  37.198573  0.000000   0.000511    0.164619    34.879709      0.000000
-#  BETA_BIKE_UTIL_H-ASC_pt                      -0.000433    -0.263585  18.532076  0.000000  -0.000413   -0.221780    17.115305      0.000000
-#  BETA_BIKE_UTIL_H-ASC_ride                    -0.000092    -0.045134  45.011570  0.000000   0.000194    0.079903    42.780424      0.000000
-#  BETA_CAR_PRICE_PERCEPTION-ASC_bike           -0.000041    -0.052535  39.108053  0.000000  -0.000209   -0.184038    30.259646      0.000000
-#  BETA_CAR_PRICE_PERCEPTION-ASC_car             0.000531     0.434614  59.395362  0.000000   0.000391    0.235250    46.247912      0.000000
-#  BETA_CAR_PRICE_PERCEPTION-ASC_pt              0.000229     0.302819  32.612719  0.000000   0.000329    0.330469    27.949289      0.000000
-#  BETA_CAR_PRICE_PERCEPTION-ASC_ride           -0.000336    -0.359397  57.769293  0.000000  -0.000649   -0.498960    46.721420      0.000000
-#  BETA_CAR_PRICE_PERCEPTION-BETA_BIKE_UTIL_H    0.000018     0.010274  -4.477690  0.000008  -0.000289   -0.111110    -3.711848      0.000206
-#  BETA_PERFORMING-ASC_bike                     -0.000917    -0.474040  75.653392  0.000000  -0.001890   -0.591127    52.901382      0.000000
-#  BETA_PERFORMING-ASC_car                      -0.000920    -0.301585  79.066364  0.000000  -0.001809   -0.386269    57.446851      0.000000
-#  BETA_PERFORMING-ASC_pt                       -0.000547    -0.289519  73.530820  0.000000  -0.001048   -0.372999    51.992332      0.000000
-#  BETA_PERFORMING-ASC_ride                     -0.000510    -0.218655  93.894826  0.000000  -0.001486   -0.404730    64.626872      0.000000
-#  BETA_PERFORMING-BETA_BIKE_UTIL_H             -0.000902    -0.201255  45.636019  0.000000  -0.001412   -0.192607    34.726667      0.000000
-#  BETA_PERFORMING-BETA_CAR_PRICE_PERCEPTION     0.000209     0.101233  67.877147  0.000000   0.001049    0.267592    49.741713      0.000000
-#  EXP_INCOME-ASC_bike                           0.000013     0.016322  39.687717  0.000000   0.000112    0.102085    35.070390      0.000000
-#  EXP_INCOME-ASC_car                           -0.000261    -0.208704  41.465277  0.000000  -0.000290   -0.180133    37.680978      0.000000
-#  EXP_INCOME-ASC_pt                             0.000004     0.005080  26.717002  0.000000  -0.000051   -0.052648    22.840300      0.000000
-#  EXP_INCOME-ASC_ride                           0.000077     0.080933  69.206006  0.000000   0.000239    0.189315    64.304457      0.000000
-#  EXP_INCOME-BETA_BIKE_UTIL_H                  -0.000101    -0.054966  -4.493093  0.000007   0.000098    0.039046    -4.099488      0.000041
-#  EXP_INCOME-BETA_CAR_PRICE_PERCEPTION         -0.000202    -0.238193  -0.219831  0.826002  -0.000502   -0.372363    -0.165548      0.868512
-#  EXP_INCOME-BETA_PERFORMING                   -0.000142    -0.067186 -63.883936  0.000000  -0.000581   -0.152867   -43.595371      0.000000
-#  UTIL_MONEY-ASC_bike                           0.000004     0.006643  50.730994  0.000000   0.000095    0.103243    42.835222      0.000000
-#  UTIL_MONEY-ASC_car                            0.000032     0.034932  53.586475  0.000000   0.000129    0.095120    48.896854      0.000000
-#  UTIL_MONEY-ASC_pt                            -0.000241    -0.426052  30.264847  0.000000  -0.000379   -0.467066    25.022323      0.000000
-#  UTIL_MONEY-ASC_ride                           0.000216     0.309122  93.518312  0.000000   0.000448    0.422218    87.322014      0.000000
-#  UTIL_MONEY-BETA_BIKE_UTIL_H                   0.000227     0.168591  -2.309612  0.020910   0.000559    0.263760    -2.114436      0.034478
-#  UTIL_MONEY-BETA_CAR_PRICE_PERCEPTION         -0.000438    -0.707633   3.485684  0.000491  -0.000901   -0.795289     2.529604      0.011419
-#  UTIL_MONEY-BETA_PERFORMING                    0.000194     0.125352 -67.766397  0.000000  -0.000030   -0.009528   -44.635923      0.000000
-#  UTIL_MONEY-EXP_INCOME                         -0.000011    -0.016630   4.687458  0.000003   0.000170    0.154418     3.962458      0.000074
+# Modes:  ['walk', 'pt', 'car', 'bike', 'ride']
+# Number of choices:  27732
+# Varying: ['km', 'hours', 'walking_km', 'switches', 'bus_legs', 'valid']
+# The sum of the weights (27263.97216834731) is different from the sample size (27732). Multiply the weights by 1.0171665313022897 to reconcile the two.
+# Results for model trip_choice_performing_exp_income_util_money_car_price_perception_pt_price_perception
+# Nbr of parameters:		8
+# Sample size:			27732
+# Excluded data:			0
+# Null log likelihood:		-40804.33
+# Final log likelihood:		-31093.86
+# Likelihood ratio test (null):		19420.94
+# Rho square (null):			0.238
+# Rho bar square (null):			0.238
+# Akaike Information Criterion:	62203.71
+# Bayesian Information Criterion:	62269.56
+#                               Value  Rob. Std err  Rob. t-test  Rob. p-value
+# ASC_bike                  -1.476754      0.022807   -64.749202  0.000000e+00
+# ASC_car                   -2.136224      0.043743   -48.835978  0.000000e+00
+# ASC_pt                    -0.731102      0.025823   -28.312026  0.000000e+00
+# ASC_ride                  -2.641495      0.034105   -77.452720  0.000000e+00
+# BETA_CAR_PRICE_PERCEPTION  0.268622      0.039362     6.824383  8.830492e-12
+# BETA_PERFORMING            5.501071      0.104479    52.652215  0.000000e+00
+# EXP_INCOME                 0.275502      0.037361     7.374144  1.654232e-13
+# UTIL_MONEY                 0.397322      0.028576    13.903859  0.000000e+00
+# Correlation matrix
+#                                            Covariance  Correlation     t-test   p-value  Rob. cov.  Rob. corr.  Rob. t-test  Rob. p-value
+# ASC_car-ASC_bike                             0.000227     0.257519 -15.705646  0.000000   0.000293    0.294068   -15.345434      0.000000
+# ASC_pt-ASC_bike                              0.000301     0.569774  34.266310  0.000000   0.000329    0.559021    32.434125      0.000000
+# ASC_pt-ASC_car                               0.000489     0.458892  37.031988  0.000000   0.000511    0.452657    35.602416      0.000000
+# ASC_ride-ASC_bike                            0.000239     0.354307 -36.909296  0.000000   0.000299    0.384646   -35.361562      0.000000
+# ASC_ride-ASC_car                             0.000230     0.169357 -10.412105  0.000000   0.000339    0.226947   -10.315047      0.000000
+# ASC_ride-ASC_pt                              0.000172     0.212078 -52.423679  0.000000   0.000141    0.160032   -48.554145      0.000000
+# BETA_CAR_PRICE_PERCEPTION-ASC_bike          -0.000048    -0.074080  45.254848  0.000000  -0.000124   -0.138523    36.249977      0.000000
+# BETA_CAR_PRICE_PERCEPTION-ASC_car            0.000580     0.445575  60.647087  0.000000   0.000476    0.276271    47.987272      0.000000
+# BETA_CAR_PRICE_PERCEPTION-ASC_pt             0.000245     0.313608  30.113503  0.000000   0.000298    0.293251    24.837937      0.000000
+# BETA_CAR_PRICE_PERCEPTION-ASC_ride          -0.000342    -0.344006  56.300366  0.000000  -0.000630   -0.469359    46.171065      0.000000
+# BETA_PERFORMING-ASC_bike                    -0.000640    -0.431653  85.016980  0.000000  -0.001393   -0.584614    58.510769      0.000000
+# BETA_PERFORMING-ASC_car                     -0.000835    -0.279554  82.990984  0.000000  -0.001612   -0.352792    60.276382      0.000000
+# BETA_PERFORMING-ASC_pt                      -0.000643    -0.359597  74.797213  0.000000  -0.001188   -0.440317    52.749348      0.000000
+# BETA_PERFORMING-ASC_ride                    -0.000512    -0.224847  96.786892  0.000000  -0.001380   -0.387298    66.843176      0.000000
+# BETA_PERFORMING-BETA_CAR_PRICE_PERCEPTION    0.000216     0.098752  70.301837  0.000000   0.000998    0.242734    51.139479      0.000000
+# EXP_INCOME-ASC_bike                          0.000048     0.073841  48.232788  0.000000   0.000095    0.112025    42.188482      0.000000
+# EXP_INCOME-ASC_car                          -0.000287    -0.217803  41.775260  0.000000  -0.000329   -0.201587    38.285532      0.000000
+# EXP_INCOME-ASC_pt                           -0.000007    -0.008811  24.932733  0.000000  -0.000031   -0.032233    21.837169      0.000000
+# EXP_INCOME-ASC_ride                          0.000077     0.076214  67.640468  0.000000   0.000236    0.185438    63.861563      0.000000
+# EXP_INCOME-BETA_CAR_PRICE_PERCEPTION        -0.000237    -0.245626   0.140261  0.888454  -0.000557   -0.378557     0.108000      0.913996
+# EXP_INCOME-BETA_PERFORMING                  -0.000194    -0.087684 -65.396464  0.000000  -0.000620   -0.158715   -44.890137      0.000000
+# UTIL_MONEY-ASC_bike                         -0.000063    -0.142927  59.229572  0.000000  -0.000079   -0.121017    48.476939      0.000000
+# UTIL_MONEY-ASC_car                           0.000010     0.011853  54.057247  0.000000   0.000054    0.043306    49.480124      0.000000
+# UTIL_MONEY-ASC_pt                           -0.000209    -0.395283  29.202009  0.000000  -0.000302   -0.409781    24.693613      0.000000
+# UTIL_MONEY-ASC_ride                          0.000205     0.304519  93.219332  0.000000   0.000377    0.387081    86.814623      0.000000
+# UTIL_MONEY-BETA_CAR_PRICE_PERCEPTION        -0.000460    -0.712015   2.677003  0.007428  -0.000886   -0.787789     2.000653      0.045430
+# UTIL_MONEY-BETA_PERFORMING                   0.000271     0.182823 -72.807412  0.000000   0.000218    0.072919   -48.018124      0.000000
+# UTIL_MONEY-EXP_INCOME                       -0.000013    -0.020514   3.206966  0.001341   0.000147    0.137283     2.780662      0.005425
 
-#  + python -u estimate_biogeme_plan_choice.py --input plan-choices-subtour_70.csv --car-util 0 --performing 5.330794 --exp-income 0.259370 --util-money 0.431700 --price-perception 0.269441 --effort bike 0.576124 --same-price-perception --est-bus-legs --est-pt-switches
-#/net/ils/matsim-berlin/calibration-v6.5/choice-experiments/prepare.py:36: DtypeWarning: Columns (1737,1768,1799,1830,1861,1886,1887,1888,1889,1890,1891,1892,1917,1918,1919,1920,1921,1922,1923,1948,1949,1950,1951,1952,1953,1954,1979,1980,1981,1982,1983,1984,1985,2010,2011,2012,2013,2014,2015,2016,2041,2042,2043,2044,2045,2046,2072,2073,2074,2075,2076,2077) have mixed types. Specify dtype option on import or set low_memory=False.
-#                                                                            df_wide = pd.read_csv(input_file, comment="#")
-#Modes:  ['walk', 'pt', 'car', 'bike', 'ride']
-#Number of plans:  8400
-#Number of choices for plan:  70
-#Number of choices: 8400
-#Using time effort {'bike': 0.576124}
-#  Using fixed utility for car 0.0
-#  Estimating car asc, instead of daily utility
-#  Using MXL modes ['pt', 'bike', 'ride', 'car']
-#  The sum of the weights (8243.41173365935) is different from the sample size (8400). Multiply the weights by 1.0189955653556975 to reconcile the two.
-#  Results for model plan-choices-subtour_70_effort_pt_switches_bus_legs
-#Nbr of parameters:		10
-#Sample size:			8400
-#Excluded data:			0
-#Null log likelihood:		-25278.78
-#Final log likelihood:		-16860.82
-#Likelihood ratio test (null):		16835.9
-#Rho square (null):			0.333
-#Rho bar square (null):			0.333
-#Akaike Information Criterion:	33741.65
-#Bayesian Information Criterion:	33812.01
-#
-#  Value  Active bound  Rob. Std err  Rob. t-test  Rob. p-value
-#  ASC_bike         -0.799666           0.0      0.033657   -23.759145  0.000000e+00
-#  ASC_bike_s        0.842426           0.0      0.046995    17.925847  0.000000e+00
-#  ASC_car          -1.653994           0.0      0.059983   -27.574234  0.000000e+00
-#  ASC_car_s         0.958581           0.0      0.071579    13.391960  0.000000e+00
-#  ASC_pt           -1.136964           0.0      0.054406   -20.897868  0.000000e+00
-#  ASC_pt_s          1.697001           0.0      0.078840    21.524600  0.000000e+00
-#  ASC_ride         -4.406457           0.0      0.203615   -21.641127  0.000000e+00
-#  ASC_ride_s        2.663882           0.0      0.150505    17.699605  0.000000e+00
-#  BETA_BUS_LEGS    -0.423602           0.0      0.063165    -6.706323  1.995892e-11
-#  BETA_PT_SWITCHES  0.000000           1.0      0.062405     0.000000  1.000000e+00
-#
-#  Correlation matrix
-#  Covariance  Correlation     t-test       p-value  Rob. cov.  Rob. corr.  Rob. t-test  Rob. p-value
-#  ASC_bike_s-ASC_bike              -0.000785    -0.656261  25.665387  0.000000e+00  -0.001138   -0.719729    21.907879  0.000000e+00
-#  ASC_car-ASC_bike                  0.000510     0.407557 -20.945476  0.000000e+00   0.001195    0.591910   -17.657947  0.000000e+00
-#  ASC_car-ASC_bike_s               -0.000319    -0.182850 -38.849079  0.000000e+00  -0.001215   -0.430860   -27.508610  0.000000e+00
-#  ASC_car_s-ASC_bike               -0.000277    -0.192152  28.409096  0.000000e+00  -0.001014   -0.420753    19.318309  0.000000e+00
-#  ASC_car_s-ASC_bike_s              0.000243     0.121033   1.936362  5.282335e-02   0.001256    0.373410     1.673088  9.430997e-02
-#  ASC_car_s-ASC_car                -0.001473    -0.700846  30.812033  0.000000e+00  -0.003617   -0.842392    20.683187  0.000000e+00
-#  ASC_pt-ASC_bike                   0.000383     0.263872  -6.685749  2.297451e-11   0.000629    0.343383    -6.334618  2.379299e-10
-#  ASC_pt-ASC_bike_s                -0.000146    -0.072348 -29.803617  0.000000e+00  -0.000446   -0.174287   -25.427515  0.000000e+00
-#  ASC_pt-ASC_car                    0.000509     0.240485   9.054596  0.000000e+00   0.001167    0.357711     7.955968  1.776357e-15
-#  ASC_pt-ASC_car_s                 -0.000175    -0.071667 -29.003988  0.000000e+00  -0.000931   -0.238986   -21.013439  0.000000e+00
-#  ASC_pt_s-ASC_bike                -0.000098    -0.050640  33.858536  0.000000e+00  -0.000481   -0.181370    27.386159  0.000000e+00
-#  ASC_pt_s-ASC_bike_s               0.000149     0.055132  11.269383  0.000000e+00   0.000807    0.217806    10.355396  0.000000e+00
-#  ASC_pt_s-ASC_car                 -0.000297    -0.104895  40.631633  0.000000e+00  -0.001431   -0.302505    29.764699  0.000000e+00
-#  ASC_pt_s-ASC_car_s                0.000308     0.094495   9.388791  0.000000e+00   0.001805    0.319923     8.399573  0.000000e+00
-#  ASC_pt_s-ASC_pt                  -0.001036    -0.316075  30.026981  0.000000e+00  -0.001750   -0.408094    25.170512  0.000000e+00
-#  ASC_ride-ASC_bike                 0.000420     0.081038 -20.396517  0.000000e+00   0.000714    0.104192   -17.777202  0.000000e+00
-#  ASC_ride-ASC_bike_s              -0.000212    -0.029345 -28.746234  0.000000e+00  -0.000483   -0.050471   -24.844860  0.000000e+00
-#  ASC_ride-ASC_car                  0.000663     0.087774 -15.446962  0.000000e+00   0.001788    0.146366   -13.514279  0.000000e+00
-#  ASC_ride-ASC_car_s               -0.000313    -0.035947 -28.970741  0.000000e+00  -0.001370   -0.093967   -24.157616  0.000000e+00
-#  ASC_ride-ASC_pt                  -0.000019    -0.002124 -17.799229  0.000000e+00  -0.000044   -0.003946   -15.497761  0.000000e+00
-#  ASC_ride-ASC_pt_s                 0.001328     0.113457 -33.609518  0.000000e+00   0.001540    0.095930   -28.902374  0.000000e+00
-#  ASC_ride_s-ASC_bike              -0.000096    -0.025058  25.691311  0.000000e+00  -0.000207   -0.040849    22.265236  0.000000e+00
-#  ASC_ride_s-ASC_bike_s             0.000089     0.016660  13.351195  0.000000e+00   0.000175    0.024680    11.634191  0.000000e+00
-#  ASC_ride_s-ASC_car               -0.000193    -0.034509  31.051809  0.000000e+00  -0.000807   -0.089418    25.866999  0.000000e+00
-#  ASC_ride_s-ASC_car_s              0.000098     0.015211  12.260119  0.000000e+00   0.000665    0.061705    10.486300  0.000000e+00
-#  ASC_ride_s-ASC_pt                 0.000247     0.038135  27.514432  0.000000e+00   0.000318    0.038788    24.049928  0.000000e+00
-#  ASC_ride_s-ASC_pt_s              -0.000889    -0.102593   6.336362  2.352536e-10  -0.000991   -0.083483     5.504959  3.692535e-08
-#  ASC_ride_s-ASC_ride              -0.021730    -0.939312  23.331194  0.000000e+00  -0.029193   -0.952613    20.201239  0.000000e+00
-#  BETA_BUS_LEGS-ASC_bike            0.000007     0.004229   5.857475  4.699582e-09   0.000069    0.032396     5.326423  1.001655e-07
-#  BETA_BUS_LEGS-ASC_bike_s         -0.000088    -0.037746 -17.693322  0.000000e+00  -0.000254   -0.085655   -15.459132  0.000000e+00
-#  BETA_BUS_LEGS-ASC_car             0.000011     0.004680  17.261739  0.000000e+00   0.000100    0.026433    14.315137  0.000000e+00
-#  BETA_BUS_LEGS-ASC_car_s          -0.000071    -0.025311 -18.088685  0.000000e+00  -0.000304   -0.067214   -14.018718  0.000000e+00
-#  BETA_BUS_LEGS-ASC_pt             -0.000859    -0.302944   8.265718  2.220446e-16  -0.001050   -0.305658     7.498459  6.461498e-14
-#  BETA_BUS_LEGS-ASC_pt_s           -0.001372    -0.362007 -20.789761  0.000000e+00  -0.001781   -0.357582   -18.073418  0.000000e+00
-#  BETA_BUS_LEGS-ASC_ride           -0.000517    -0.051085  21.120034  0.000000e+00  -0.000877   -0.068171    18.332118  0.000000e+00
-#  BETA_BUS_LEGS-ASC_ride_s          0.000349     0.046607 -21.995308  0.000000e+00   0.000535    0.056232   -19.307181  0.000000e+00
-#  BETA_PT_SWITCHES-ASC_bike         0.000091     0.057586  13.391142  0.000000e+00   0.000320    0.152591    12.074377  0.000000e+00
-#  BETA_PT_SWITCHES-ASC_bike_s      -0.000019    -0.008730 -12.430183  0.000000e+00  -0.000264   -0.089861   -10.346068  0.000000e+00
-#  BETA_PT_SWITCHES-ASC_car          0.000438     0.190753  26.696127  0.000000e+00   0.000890    0.237775    21.884134  0.000000e+00
-#  BETA_PT_SWITCHES-ASC_car_s       -0.000326    -0.123365 -12.417096  0.000000e+00  -0.000656   -0.146897    -9.431339  0.000000e+00
-#  BETA_PT_SWITCHES-ASC_pt          -0.000925    -0.347664  13.406179  0.000000e+00  -0.000994   -0.292718    12.091234  0.000000e+00
-#  BETA_PT_SWITCHES-ASC_pt_s         0.001279     0.359454 -24.717784  0.000000e+00   0.001324    0.269034   -19.644012  0.000000e+00
-#  BETA_PT_SWITCHES-ASC_ride         0.000430     0.045210  24.154079  0.000000e+00   0.000751    0.059102    21.042509  0.000000e+00
-#  BETA_PT_SWITCHES-ASC_ride_s      -0.000209    -0.029645 -18.637022  0.000000e+00  -0.000389   -0.041429   -16.115344  0.000000e+00
-#  BETA_PT_SWITCHES-BETA_BUS_LEGS   -0.001125    -0.365430   4.617512  3.883686e-06  -0.001229   -0.311701     4.165501  3.106702e-05
+
+# + python -u estimate_biogeme_plan_choice.py --input plan-choices-subtour_70.csv --name v8 --mxl-distribution NORMAL_ANTI --mxl-param constant --car-util 0 --performing 5.501071 --exp-income 0.275502 --util-money 0.397322 --price-perception 0.268622 --est-bus-legs --effort ride nan --effort bike nan --same-price-perception
+# /net/ils/matsim-berlin/calibration-v6.5/choice-experiments/prepare.py:40: DtypeWarning: Columns (1737,1768,1799,1830,1861,1886,1887,1888,1889,1890,1891,1892,1917,1918,1919,1920,1921,1922,1923,1948,1949,1950,1951,1952,1953,1954,1979,1980,1981,1982,1983,1984,1985,2010,2011,2012,2013,2014,2015,2016,2041,2042,2043,2044,2045,2046,2072,2073,2074,2075,2076,2077) have mixed types. Specify dtype option on import or set low_memory=False.
+#   df_wide = pd.read_csv(input_file, comment="#")
+# Modes:  ['walk', 'pt', 'car', 'bike', 'ride']
+# Number of plans:  8400
+# Number of choices for plan:  70
+# Number of choices: 8400
+# Using time effort {'ride': Beta('BETA_TT_ride', 0, -1.3407807929942596e+154, 1.3407807929942596e+154, 0), 'bike': Beta('BETA_TT_bike', 0, -1.3407807929942596e+154, 1.3407807929942596e+154, 0)}
+# Using distribution NORMAL_ANTI
+# Using MXL param constant
+# Using fixed utility for car 0.0
+# Estimating car asc, instead of daily utility
+# Using MXL modes ['pt', 'bike', 'ride', 'car']
+# Using ride beta performing * 1
+# The sum of the weights (8243.41173365935) is different from the sample size (8400). Multiply the weights by 1.0189955653556975 to reconcile the two.
+# Results for model plan-choices-subtour_70_v8_NORMAL_ANTI_constant_effort_bus_legs
+# Nbr of parameters:		11
+# Sample size:			8400
+# Excluded data:			0
+# Null log likelihood:		-25278.78
+# Final log likelihood:		-17084.51
+# Likelihood ratio test (null):		16388.52
+# Rho square (null):			0.324
+# Rho bar square (null):			0.324
+# Akaike Information Criterion:	34191.03
+# Bayesian Information Criterion:	34268.42
+
+#                   Value  Rob. Std err  Rob. t-test  Rob. p-value
+# ASC_bike      -0.692897      0.055074   -12.581212  0.000000e+00
+# ASC_bike_s     0.879757      0.049451    17.790543  0.000000e+00
+# ASC_car       -2.357067      0.107688   -21.887991  0.000000e+00
+# ASC_car_s      1.506777      0.112252    13.423219  0.000000e+00
+# ASC_pt        -1.063152      0.061501   -17.286763  0.000000e+00
+# ASC_pt_s       1.737971      0.079533    21.852230  0.000000e+00
+# ASC_ride      -5.065888      0.230045   -22.021277  0.000000e+00
+# ASC_ride_s     2.861008      0.153244    18.669659  0.000000e+00
+# BETA_BUS_LEGS -0.164051      0.063392    -2.587870  9.657151e-03
+# BETA_TT_bike   1.309362      0.163534     8.006689  1.110223e-15
+# BETA_TT_ride   4.442946      0.412840    10.761906  0.000000e+00
+
+# Correlation matrix
+#                             Covariance  Correlation     t-test       p-value  Rob. cov.  Rob. corr.  Rob. t-test  Rob. p-value
+# ASC_bike_s-ASC_bike          -0.000968    -0.568725  21.500189  0.000000e+00  -0.001768   -0.649273    16.563386  0.000000e+00
+# ASC_car-ASC_bike             -0.000502    -0.191909 -20.045043  0.000000e+00  -0.001948   -0.328519   -12.226458  0.000000e+00
+# ASC_car-ASC_bike_s            0.000013     0.004815 -41.482157  0.000000e+00  -0.000040   -0.007507   -27.237762  0.000000e+00
+# ASC_car_s-ASC_bike            0.000596     0.227250  32.019259  0.000000e+00   0.001944    0.314530    20.297332  0.000000e+00
+# ASC_car_s-ASC_bike_s         -0.000057    -0.020325   7.929609  2.220446e-15   0.000120    0.021656     5.153138  2.561632e-07
+# ASC_car_s-ASC_car            -0.003395    -0.788181  31.132777  0.000000e+00  -0.011158   -0.923038    17.915721  0.000000e+00
+# ASC_pt-ASC_bike              -0.000158    -0.075920  -5.442528  5.252976e-08  -0.000722   -0.213052    -4.074210  4.617085e-05
+# ASC_pt-ASC_bike_s             0.000010     0.004425 -28.901114  0.000000e+00   0.000070    0.022929   -24.900333  0.000000e+00
+# ASC_pt-ASC_car                0.001485     0.434418  20.344346  0.000000e+00   0.003928    0.593080    14.917793  0.000000e+00
+# ASC_pt-ASC_car_s             -0.000919    -0.268234 -27.278722  0.000000e+00  -0.003432   -0.497169   -16.855253  0.000000e+00
+# ASC_pt_s-ASC_bike             0.000332     0.120542  32.204743  0.000000e+00   0.000135    0.030839    25.498601  0.000000e+00
+# ASC_pt_s-ASC_bike_s           0.000004     0.001385  10.579260  0.000000e+00   0.000492    0.125007     9.725113  0.000000e+00
+# ASC_pt_s-ASC_car             -0.000702    -0.155015  40.025883  0.000000e+00  -0.002126   -0.248188    27.500558  0.000000e+00
+# ASC_pt_s-ASC_car_s            0.000660     0.145431   2.623257  8.709362e-03   0.002497    0.279641     1.958650  5.015381e-02
+# ASC_pt_s-ASC_pt              -0.000884    -0.245571  29.114988  0.000000e+00  -0.001403   -0.286927    24.648411  0.000000e+00
+# ASC_ride-ASC_bike             0.000207     0.024713 -20.610239  0.000000e+00  -0.000250   -0.019705   -18.404930  0.000000e+00
+# ASC_ride-ASC_bike_s          -0.000239    -0.026741 -27.680733  0.000000e+00  -0.000440   -0.038707   -25.069748  0.000000e+00
+# ASC_ride-ASC_car              0.001191     0.086809 -12.664226  0.000000e+00   0.005179    0.209054   -11.639722  0.000000e+00
+# ASC_ride-ASC_car_s           -0.000873    -0.063418 -29.422711  0.000000e+00  -0.004623   -0.179029   -24.037300  0.000000e+00
+# ASC_ride-ASC_pt               0.000171     0.015696 -18.619485  0.000000e+00   0.001388    0.098116   -17.236713  0.000000e+00
+# ASC_ride-ASC_pt_s             0.001569     0.108491 -31.907543  0.000000e+00   0.001177    0.064330   -28.525194  0.000000e+00
+# ASC_ride_s-ASC_bike           0.000018     0.003238  24.830012  0.000000e+00   0.000561    0.066511    22.301769  0.000000e+00
+# ASC_ride_s-ASC_bike_s         0.000203     0.034547  13.890949  0.000000e+00   0.000400    0.052784    12.498324  0.000000e+00
+# ASC_ride_s-ASC_car           -0.001045    -0.115900  32.796807  0.000000e+00  -0.005104   -0.309286    24.519843  0.000000e+00
+# ASC_ride_s-ASC_car_s          0.000935     0.103416   9.262344  0.000000e+00   0.004928    0.286470     8.361933  0.000000e+00
+# ASC_ride_s-ASC_pt            -0.000140    -0.019566  26.500095  0.000000e+00  -0.001412   -0.149833    22.622150  0.000000e+00
+# ASC_ride_s-ASC_pt_s          -0.000839    -0.088329   7.049952  1.789902e-12  -0.000456   -0.037444     6.407236  1.481815e-10
+# ASC_ride_s-ASC_ride          -0.025911    -0.899491  23.417088  0.000000e+00  -0.031721   -0.899819    21.197109  0.000000e+00
+# BETA_BUS_LEGS-ASC_bike       -0.000099    -0.044801   7.569180  3.752554e-14   0.000006    0.001764     6.303216  2.915330e-10
+# BETA_BUS_LEGS-ASC_bike_s     -0.000033    -0.013749 -14.798731  0.000000e+00  -0.000191   -0.060926   -12.615494  0.000000e+00
+# BETA_BUS_LEGS-ASC_car         0.000308     0.084496  26.654470  0.000000e+00   0.000476    0.069696    18.110113  0.000000e+00
+# BETA_BUS_LEGS-ASC_car_s      -0.000329    -0.090118 -18.603390  0.000000e+00  -0.000685   -0.096292   -12.457290  0.000000e+00
+# BETA_BUS_LEGS-ASC_pt         -0.001260    -0.434680   9.852236  0.000000e+00  -0.001673   -0.429051     8.516117  0.000000e+00
+# BETA_BUS_LEGS-ASC_pt_s       -0.001051    -0.273804 -19.058007  0.000000e+00  -0.001248   -0.247596   -16.784996  0.000000e+00
+# BETA_BUS_LEGS-ASC_ride       -0.000412    -0.035434  22.431571  0.000000e+00  -0.000568   -0.038949    20.340565  0.000000e+00
+# BETA_BUS_LEGS-ASC_ride_s      0.000209     0.027338 -20.582980  0.000000e+00   0.000369    0.038006   -18.490983  0.000000e+00
+# BETA_TT_bike-ASC_bike         0.002707     0.671648  25.072581  0.000000e+00   0.007243    0.804148    16.191891  0.000000e+00
+# BETA_TT_bike-ASC_bike_s      -0.000631    -0.146493   3.727733  1.932101e-04  -0.002596   -0.321039     2.316915  2.050835e-02
+# BETA_TT_bike-ASC_car         -0.003691    -0.557712  24.788401  0.000000e+00  -0.011622   -0.659957    14.774354  0.000000e+00
+# BETA_TT_bike-ASC_car_s        0.003054     0.460242  -2.152869  3.132894e-02   0.010771    0.586744    -1.479603  1.389792e-01
+# BETA_TT_bike-ASC_pt          -0.002125    -0.403484  18.107472  0.000000e+00  -0.005093   -0.506348    11.758567  0.000000e+00
+# BETA_TT_bike-ASC_pt_s         0.001550     0.222240  -3.934340  8.342572e-05   0.001823    0.140166    -2.498735  1.246375e-02
+# BETA_TT_bike-ASC_ride        -0.000910    -0.043026  26.974819  0.000000e+00  -0.004603   -0.122356    21.385506  0.000000e+00
+# BETA_TT_bike-ASC_ride_s       0.000994     0.071535  -9.418704  0.000000e+00   0.004816    0.192187    -7.701237  1.354472e-14
+# BETA_TT_bike-BETA_BUS_LEGS   -0.000448    -0.079733  12.371670  0.000000e+00  -0.000314   -0.030250     8.316411  0.000000e+00
+# BETA_TT_ride-ASC_bike         0.001260     0.097707  15.973496  0.000000e+00   0.004417    0.194261    12.657529  0.000000e+00
+# BETA_TT_ride-ASC_bike_s       0.000077     0.005621  10.945898  0.000000e+00   0.000030    0.001469     8.571147  0.000000e+00
+# BETA_TT_ride-ASC_car         -0.005244    -0.247745  19.705151  0.000000e+00  -0.019680   -0.442658    14.452005  0.000000e+00
+# BETA_TT_ride-ASC_car_s        0.004266     0.200990   9.280812  0.000000e+00   0.018931    0.408499     7.706082  1.287859e-14
+# BETA_TT_ride-ASC_pt          -0.003103    -0.184290  16.363118  0.000000e+00  -0.007945   -0.312924    12.628214  0.000000e+00
+# BETA_TT_ride-ASC_pt_s         0.002223     0.099676   8.362662  0.000000e+00   0.002966    0.090328     6.544560  5.967071e-11
+# BETA_TT_ride-ASC_ride         0.029124     0.430704  31.715027  0.000000e+00   0.028750    0.302725    23.348573  0.000000e+00
+# BETA_TT_ride-ASC_ride_s      -0.006334    -0.142561   4.291211  1.777015e-05   0.001555    0.024574     3.621492  2.929084e-04
+# BETA_TT_ride-BETA_BUS_LEGS   -0.000858    -0.047781  13.947293  0.000000e+00  -0.000201   -0.007697    11.017288  0.000000e+00
+# BETA_TT_ride-BETA_TT_bike     0.007655     0.234710   9.949575  0.000000e+00   0.024241    0.359059     8.126233  4.440892e-16
