@@ -21,7 +21,9 @@ This scenario contains a 10pct, 3pct and 1pct sample of the Greater Berlin popul
 
 ## Citation
 
-If you use the MATSim Open Berlin Scenario in your work, please cite the following paper:
+If you use the MATSim Open Berlin Scenario in your work, please cite the following:
+
+> Rakow, C. (2026). *From Data to Simulation: Advanced Methods for Agent-based Transport Modeling and Mode Choice Calibration*. PhD thesis, Technische Universität Berlin. https://doi.org/10.14279/depositonce-25155
 
 > Rakow, C., Kreuschner, M., & Nagel, K. (2025). Advancing the MATSim Open Berlin Scenario: Improvements in Transport Scenario Generation and Calibration Methods. *Transportation Research Procedia*, 86, 732–739. https://doi.org/10.1016/j.trpro.2025.04.091
 
