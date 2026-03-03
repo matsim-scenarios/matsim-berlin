@@ -2,7 +2,7 @@
 
 set -e
 
-.functions.sh 
+. functions.sh
 jar="matsim-berlin-*.jar"
 MEMORY="${MAKE_XMX:-60G}"
 CONFIG=$1
