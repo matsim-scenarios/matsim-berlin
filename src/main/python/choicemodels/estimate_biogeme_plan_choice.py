@@ -17,16 +17,17 @@ FIXED = 1
 
 # This runs the plan based choice model
 # For the thesis this script was run with:
-#  --mxl-distribution NORMAL_ANTI
-#  --mxl-param tt_hours
-#  --car-util 0
-#  --performing 5.501071
-#  --exp-income 0.275502
-#  --util-money 0.397322
-#  --price-perception 0.268622
-#  --est-bus-legs
-#  --same-price-perception
-#  --effort ride nan
+# --mxl-distribution NORMAL_ANTI
+# --mxl-param constant
+# --car-util 0
+# --performing 5.501071
+# --exp-income 0.275502
+# --util-money 0.397322
+# --price-perception 0.268622
+# --est-bus-legs
+# --effort ride nan
+# --effort bike nan
+# --same-price-perception
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate choice model for daily trip usage")
