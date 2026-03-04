@@ -12,6 +12,8 @@ import org.matsim.contrib.drt.estimator.impl.DirectTripBasedDrtEstimator;
 import org.matsim.contrib.drt.estimator.impl.distribution.NormalDistributionGenerator;
 import org.matsim.contrib.drt.estimator.impl.trip_estimation.ConstantRideDurationEstimator;
 import org.matsim.contrib.drt.estimator.impl.waiting_time_estimation.ConstantWaitingTimeEstimator;
+import org.matsim.contrib.drt.routing.DrtRoute;
+import org.matsim.contrib.drt.routing.DrtRouteFactory;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.drt.run.DrtConfigs;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
@@ -24,8 +26,10 @@ import org.matsim.core.config.groups.QSimConfigGroup;
 import org.matsim.core.config.groups.ScoringConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.population.routes.RouteFactories;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.MainModeIdentifier;
+import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorConfigGroup;
 import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorsConfigGroup;
 import org.matsim.extensions.pt.fare.intermodalTripFareCompensator.IntermodalTripFareCompensatorsModule;
@@ -99,19 +103,18 @@ public class OpenBerlinDrtEstimatorScenario extends OpenBerlinScenario {
 		return config;
 	}
 
-//	TODO: we may need the following, but for estimator I do not see why?
-//	@Override
-//	protected Scenario createScenario(Config config) {
-//		Scenario scenario = ScenarioUtils.createScenario(config);
-//
-//		//if the input plans contain DrtRoutes, this will cause problems later in the DrtRouteFactory
-//		//to avoid this, the DrtRouteFactory would have to get set before loading the scenario, just like in Open Berlin v5.x
-//		RouteFactories routeFactories = scenario.getPopulation().getFactory().getRouteFactories();
-//		routeFactories.setRouteFactory(DrtRoute.class, new DrtRouteFactory());
-//
-//		ScenarioUtils.loadScenario(scenario);
-//		return scenario;
-//	}
+	@Override
+	protected Scenario createScenario(Config config) {
+		Scenario scenario = ScenarioUtils.createScenario(config);
+
+		//if the input plans contain DrtRoutes, this will cause problems later in the DrtRouteFactory
+		//to avoid this, the DrtRouteFactory would have to get set before loading the scenario, just like in Open Berlin v5.x
+		RouteFactories routeFactories = scenario.getPopulation().getFactory().getRouteFactories();
+		routeFactories.setRouteFactory(DrtRoute.class, new DrtRouteFactory());
+
+		ScenarioUtils.loadScenario(scenario);
+		return scenario;
+	}
 
 	@Override
 	public void prepareScenario(Scenario scenario) {
