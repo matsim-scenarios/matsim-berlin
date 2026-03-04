@@ -52,13 +52,6 @@ if __name__ == "__main__":
     database = db.Database("data/choices", df)
     vv = database.variables
 
-    mean_dist = df.groupby("choice").agg(dist=("beelineDist", "mean")) * 1000
-
-    print("Mean trip distance = ", (df.beelineDist * 1000).mean())
-    print()
-    print("Mean trip distance by choice:\n", mean_dist)
-    print()
-
     ASC = {}
     for mode in ds.modes:
         # Base asc
@@ -104,18 +97,19 @@ if __name__ == "__main__":
 
     ASC['walk'] = 0
     BETA_RIDE_ALPHA = 1
-    BETA_CAR_PRICE_PERCEPTION = 0
-    BETA_PT_PRICE_PERCEPTION = 0
+    BETA_CAR_PRICE_PERCEPTION = 0.2
+    # BETA_PT_PRICE_PERCEPTION = 0
     EXP_INCOME = 0.
-    BETA_PT_SWITCHES = 0
+    BETA_PT_SWITCHES = -1
+    # (this now needs to be "-" the way I have specified that!)
 
     # == end overriding some things
 
     for i, mode in enumerate(ds.modes, 1):
         # Ride incurs double the cost as car, to account for the driver and passenger
-        # u = ASC[mode] - BETA_PERFORMING * vv[f"{mode}_hours"] * ((1 + BETA_RIDE_ALPHA) if mode == "ride" else 1)
+        u = ASC[mode] - BETA_PERFORMING * vv[f"{mode}_hours"] * ((1 + BETA_RIDE_ALPHA) if mode == "ride" else 1)
         # u = ASC[mode] - BETA_PERFORMING * v[f"{mode}_hours"] * ( (1 + BETA_RIDE_ALPHA) if mode == "ride" else 1) * ( 1.5 if mode == "pt" else 1)
-        u = ASC[mode] - BETA_PERFORMING * ( vv[f"{mode}_hours"] + ( vv["pt_walking_km"]/10 if mode=="pt" else 0 ) ) * ( (1 + BETA_RIDE_ALPHA) if mode == "ride" else 1)
+        # u = ASC[mode] - BETA_PERFORMING * ( vv[f"{mode}_hours"] + ( vv["pt_walking_km"]/10 if mode=="pt" else 0 ) ) * ( (1 + BETA_RIDE_ALPHA) if mode == "ride" else 1)
 
         price = km_costs[mode] * vv[f"{mode}_km"] * (BETA_RIDE_ALPHA if mode == "ride" else 1)
 
