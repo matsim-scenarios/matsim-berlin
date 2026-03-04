@@ -146,7 +146,7 @@ public class OpenBerlinDrtEstimatorScenario extends OpenBerlinScenario {
 		//drt only works with the following sim start time interpretation
 		config.qsim().setSimStarttimeInterpretation(QSimConfigGroup.StarttimeInterpretation.onlyUseStarttime);
 
-		MultiModeDrtConfigGroup multiModeDrtCfg = MultiModeDrtConfigGroup.get(config);
+		MultiModeDrtConfigGroup multiModeDrtCfg = ConfigUtils.addOrGetModule(config, MultiModeDrtConfigGroup.class);
 		DrtConfigs.adjustMultiModeDrtConfig(multiModeDrtCfg, config.scoring(), config.routing());
 
 		Set<String> drtModes = new HashSet<>();

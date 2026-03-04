@@ -96,7 +96,7 @@ public class OpenBerlinDrtScenario extends OpenBerlinScenario {
 	 */
 	public static void prepareNetworkAndTransitScheduleForDrt(Scenario scenario) {
 		BerlinExperimentalConfigGroup berlinCfg = ConfigUtils.addOrGetModule(scenario.getConfig(), BerlinExperimentalConfigGroup.class);
-		DvrpConfigGroup dvrpConfigGroup = DvrpConfigGroup.get(scenario.getConfig());
+		DvrpConfigGroup dvrpConfigGroup = ConfigUtils.addOrGetModule(scenario.getConfig(), DvrpConfigGroup.class);
 
 		for (DrtConfigGroup drtCfg : MultiModeDrtConfigGroup.get(scenario.getConfig()).getModalElements()) {
 			String drtServiceAreaShapeFile = drtCfg.drtServiceAreaShapeFile;
