@@ -45,7 +45,7 @@ public class OpenBerlinPtPricingScenario extends OpenBerlinScenario {
 	}
 
 	/**
-	 * betaMoney in [util/Eu].
+	 * dailyMonetaryConstantPt in [Eu/d].
 	 */
 	static void setDailyMonetaryConstantPtInConfig(Config config, double dailyMonetaryConstantPt) {
 		config.scoring().getModes().get(TransportMode.pt).setDailyMonetaryConstant(dailyMonetaryConstantPt);

@@ -13,13 +13,13 @@ import javax.annotation.Nullable;
  * The changes are called as methods from the according scenarios (e.g. OpenBerlinBetaMoneyScenario).
  * For the sake of readability and trying to prevent chaos the order of changes in each method of this class will be:
  * 1) vehicle composition
- * 2) drt
- * 3) marginal utility of money
- * 4) bicycle speed
- * 5) sharing
- * 6) home office
- * 7) road capacity
- * 8) (price change in pt)
+ * 2) price change in pt
+ * 3) drt
+ * 4) marginal utility of money
+ * 5) bicycle speed
+ * 6) sharing
+ * 7) home office
+ * 8) road capacity
  * 9) changes in maximum allowed speed for motorized vehicles
  * All necessary configurations will be made in this class.
  */
@@ -34,22 +34,22 @@ public class OpenBerlinM2GStagnationScenario extends OpenBerlinScenario {
 
 //		1) vehicle composition
 //		TODO: do this here or completely in post-processing?
-//		2) drt
+//		2) price change in pt
+//		no changes in config compared to base case
+//		3) drt
 //		no changes in config compared to base case
 //		TODO: drt is more complicated because the EstimatorScenario inherits from BerlinDrtScenario, not OpenBerlinScenario
-//		3) marginal utility of money
+//		4) marginal utility of money
 //		set marginal utility of money to 1.5: everything is/feels more expensive now (default 1.0)
 		OpenBerlinBetaMoneyScenario.setBetaMoneyInConfig(config, BETA_MONEY);
-//		4) bicycle speed
+//		5) bicycle speed
 //		no changes in config compared to base case
-//		5) sharing
+//		6) sharing
 //		no changes in config compared to base case
-//		6) home office
+//		7) home office
 //		no changes in config compared to base case
-//		7) road capacity
+//		8) road capacity
 //		no changes in config compared to base case
-//		8) (price change in pt)
-//		TODO: tbd
 //		9) changes in maximum allowed speed for motorized vehicles
 //		no changes in config compared to base case
 
@@ -63,21 +63,21 @@ public class OpenBerlinM2GStagnationScenario extends OpenBerlinScenario {
 
 //		1) vehicle composition
 //		TODO: do this here or completely in post-processing?
-//		2) drt
+//		2) price change in pt
+//		no changes in scenario compared to base case
+//		3) drt
 //		no changes in scenario compared to base case
 //		TODO: add createScenario method for drt here (if needed)
-//		3) marginal utility of money
+//		4) marginal utility of money
 //		no changes in scenario compared to base case
-//		4) bicycle speed
+//		5) bicycle speed
 //		no changes in scenario compared to base case
-//		5) sharing
+//		6) sharing
 //		no changes in scenario compared to base case
-//		6) home office
+//		7) home office
 //		no changes in scenario compared to base case
-//		7) road capacity
+//		8) road capacity
 //		no changes in scenario compared to base case
-//		8) (price change in pt)
-//		TODO: tbd
 //		9) changes in maximum allowed speed for motorized vehicles
 //		no changes in scenario compared to base case
 	}
@@ -89,20 +89,20 @@ public class OpenBerlinM2GStagnationScenario extends OpenBerlinScenario {
 
 //		1) vehicle composition
 //		TODO: do this here or completely in post-processing?
-//		2) drt
+//		2) price change in pt
 //		no changes in controller compared to base case
-//		3) marginal utility of money
+//		3) drt
 //		no changes in controller compared to base case
-//		4) bicycle speed
+//		4) marginal utility of money
 //		no changes in controller compared to base case
-//		5) sharing
+//		5) bicycle speed
 //		no changes in controller compared to base case
-//		6) home office
+//		6) sharing
 //		no changes in controller compared to base case
-//		7) road capacity
+//		7) home office
 //		no changes in controller compared to base case
-//		8) (price change in pt)
-//		TODO: tbd
+//		8) road capacity
+//		no changes in controller compared to base case
 //		9) changes in maximum allowed speed for motorized vehicles
 //		no changes in controller compared to base case
 	}

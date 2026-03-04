@@ -13,13 +13,13 @@ import javax.annotation.Nullable;
  * The changes are called as methods from the according scenarios (e.g. OpenBerlinBetaMoneyScenario).
  * For the sake of readability and trying to prevent chaos the order of changes in each method of this class will be:
  * 1) vehicle composition
- * 2) drt
- * 3) marginal utility of money
- * 4) bicycle speed
- * 5) sharing
- * 6) home office
- * 7) road capacity
- * 8) (price change in pt)
+ * 2) price change in pt
+ * 3) drt
+ * 4) marginal utility of money
+ * 5) bicycle speed
+ * 6) sharing
+ * 7) home office
+ * 8) road capacity
  * 9) changes in maximum allowed speed for motorized vehicles
  * All necessary configurations will be made in this class.
  */
@@ -45,6 +45,7 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 	private static final double ADDITIONAL_HOME_OFFICE_PCT = 0.1;
 	private static final double REL_ROAD_CAPACITY_CHANGE = 0.75;
 	private static final String BERLIN_SHP = "input/v" + OpenBerlinScenario.VERSION + "/Berlin_25832.shp";
+	private static final double DAILY_MONETARY_CONSTANT_PT = 0.;
 
 	@Nullable
 	@Override
@@ -54,16 +55,18 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 
 //		1) vehicle composition
 //		TODO: do this here or completely in post-processing?
-//		2) drt
+//		2) price change in pt
+		OpenBerlinPtPricingScenario.setDailyMonetaryConstantPtInConfig(config, DAILY_MONETARY_CONSTANT_PT);
+//		3) drt
 //		drt fare = pt fare = -3; intermodal drt only
 		OpenBerlinDrtEstimatorScenario.configureDrtInConfig(config, DRT_CONFIG, DRT_FARE, DRT_INTERMODALITY_HANDLING);
-//		3) marginal utility of money
+//		4) marginal utility of money
 //		set marginal utility of money to 0.5: everything is/feels less expensive now (default 1.0)
 		OpenBerlinBetaMoneyScenario.setBetaMoneyInConfig(config, BETA_MONEY);
-//		4) bicycle speed
+//		5) bicycle speed
 //		max bike speed 20km/h due to improved infrastructure
 		OpenBerlinBikeSpeedScenario.assertNoTeleportedBikeParamsInConfig(config, MAX_BIKE_SPEED);
-//		5) sharing
+//		6) sharing
 //		intermodal sharing only, base fare 1Eu, time fare 0.0045Eu/s, no distance fare
 //		sharing stations with 1000 veh capacity and 10 scooters each
 		OpenBerlinSharingScenario.addSharingServiceInConfig(config,
@@ -72,12 +75,10 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 			SHARING_DISTANCE_FARE,
 			SHARING_TIME_FARE,
 			SHARING_INTERMODALITY_HANDLING);
-//		6) home office
+//		7) home office
 //		no changes in config compared to base case
-//		7) road capacity
+//		8) road capacity
 //		no changes in config compared to base case
-//		8) (price change in pt)
-//		TODO: tbd
 //		9) changes in maximum allowed speed for motorized vehicles
 //		no changes in config compared to base case
 
@@ -91,25 +92,25 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 
 //		1) vehicle composition
 //		TODO: do this here or completely in post-processing?
-//		2) drt
+//		2) price change in pt
+//		no changes in controller compared to base case
+//		3) drt
 //		prepare transit schedule for drt and add dummy drt vehicle
 		OpenBerlinDrtEstimatorScenario.configureDrtInScenario(scenario);
-//		3) marginal utility of money
+//		4) marginal utility of money
 //		no changes in scenario compared to base case
-//		4) bicycle speed
+//		5) bicycle speed
 //		set max bike speed in bike vehicle type
 		OpenBerlinBikeSpeedScenario.setMaxBikeSpeedInScenario(scenario, MAX_BIKE_SPEED);
-//		5) sharing
+//		6) sharing
 //		copy mode constants := tase preferences from bike to eScooter if available
 		OpenBerlinSharingScenario.copyBikeModeConstantsForSharingInScenario(scenario);
-//		6) home office
+//		7) home office
 //		+10% more home office agents in Berlin aka stay home agents
 		OpenBerlinHomeOfficeScenario.addHomeOfficeWorkersInScenario(scenario, ADDITIONAL_HOME_OFFICE_PCT);
-//		7) road capacity
+//		8) road capacity
 //		reduced capacity to 0.075 := more inhabitants in Berlin, so road are more congested
 		OpenBerlinRoadCapacitiesScenario.changeLinkCapacitiesInScenario(scenario, REL_ROAD_CAPACITY_CHANGE, BERLIN_SHP);
-//		8) (price change in pt)
-//		TODO: tbd
 //		9) changes in maximum allowed speed for motorized vehicles
 //		appy relative freespeed change of 0.6 to all Berlin links except motorways
 		OpenBerlinRoadSpeedScenario.applyRelativeSpeedChangeToLinksInScenario(scenario, REL_ROAD_SPEED_CHANGE, BERLIN_SHP);
@@ -122,23 +123,23 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 
 //		1) vehicle composition
 //		TODO: do this here or completely in post-processing?
-//		2) drt
+//		2) price change in pt
+//		no changes in controller compared to base case
+//		3) drt
 //		this is: DRT with pooling and drt fare of 3Eu = pt fare
 		OpenBerlinDrtEstimatorScenario.configureDrtInController(controler, DRT_TYP_WAIT_TIME, DRT_WAIT_TIME_STD, DRT_RIDE_TIME_ALPHA, DRT_RIDE_TIME_BETA,
 			DRT_RIDE_TIME_STD, DRT_FARE);
-//		3) marginal utility of money
+//		4) marginal utility of money
 //		no changes in controller compared to base case
-//		4) bicycle speed
+//		5) bicycle speed
 //		no changes in controller compared to base case
-//		5) sharing
+//		6) sharing
 		//		TODO: the bindings here will fail because we have bindings to the same classes with drt.
 		OpenBerlinSharingScenario.addSharingModuleAndIntermodalFareCompensationInController(controler);
-//		6) home office
+//		7) home office
 //		no changes in controller compared to base case
-//		7) road capacity
+//		8) road capacity
 //		no changes in controller compared to base case
-//		8) (price change in pt)
-//		TODO: tbd
 //		9) changes in maximum allowed speed for motorized vehicles
 //		no changes in controller compared to base case
 	}
