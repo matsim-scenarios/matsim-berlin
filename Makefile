@@ -84,6 +84,7 @@ REGIONALSTAT_COMMUTER := $(GERMANY)/regionalstatistik/commuter.csv
 ## (link no longer working; in general, mcloud no longer exists; RegioStar = spatial planning categories)
 #REGIOSTAR_URL := https://mcloud.de/downloads/mcloud/536149D1-2902-4975-9F7D-253191C0AD07/RegioStaR-Referenzdateien.xlsx
 REGIOSTAR := $(GERMANY)/RegioStaR-Referenzdateien.xlsx
+VEHICLESFILE_IN := input/v7.0/berlin/berlin-v7.0-vehicleTypes.xml
 
 ###################################
 ######## OUTPUT ###################
@@ -127,6 +128,8 @@ RANDOM_DRT_FLEET_10K := $(OUTPUT)/berlin-$(VERSION).drt-by-rndLocations-10000veh
 BERLIN_CADYTS_SELECTION_25PCT := $(OUTPUT)/berlin-$(VERSION)-25pct.plans_selection_cadyts.csv
 ## its produced together with the commercial-facilities and has an own target now
 DATA_DISTR_PER_ZONE := $(OUTPUT)/dataDistributionPerZone.csv
+
+VEHICLESFILE_OUT := $(OUTPUT)/berlin-$(VERSION)-vehicleTypes.xml
 
 ## TODO where is this comming from
 NETWORK_FT := $(OUTPUT)/berlin-$(VERSION)-network-ft.csv.gz
@@ -369,6 +372,9 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT): $(BERLIN_BRANDENBURG_ACTS_25PCT) $(FACILITI
 $(BERLIN_CADYTS_INPUT_25PCT): $(BERLIN_BRANDENBURG_INITIAL_25PCT) $(BERLIN_SMALLSCALE_COMMERCIAL_25PCT)
 	$(JAVA_APP) prepare merge-populations $^\
 	 --output $@
+
+$(VEHICLESFILE_OUT): $(VEHICLESFILE_IN)
+	cp $(VEHICLESFILE_IN) $(VEHICLESFILE_OUT)
 
 $(BERLIN_CADYTS_OUTPUT_25PCT): $(BERLIN_CADYTS_INPUT_25PCT) 
 	cat input/cadyts-config-template.xml | sed -e "s/==VERSION==/$(VERSION)/g" > ${OUTPUT}/cadyts.config.xml
