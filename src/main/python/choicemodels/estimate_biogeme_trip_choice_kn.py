@@ -16,18 +16,19 @@ FIXED = 1
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate the trip choice model")
     parser.add_argument("--input", help="Path to the input file", type=str, default="../../../../trip-choices.csv")
+
     parser.add_argument("--mxl-modes", help="Modes to use mixed logit for", nargs="*", type=set, default=[])
 
     parser.add_argument("--est-performing", help="Estimate the beta for performing", action="store_true", default=1)
     # parser.add_argument("--est-exp-performing", help="Estimate the exp for performing", action="store_true", default=0)
 
-    parser.add_argument("--est-util-money", help="Estimate utility of money", action="store_true", default=1)
+    # parser.add_argument("--est-util-money", help="Estimate utility of money", action="store_true", default=1)
     parser.add_argument("--est-exp-income", help="Estimate exponent for income", action="store_true", default=1)
 
     parser.add_argument("--est-pt-switches", help="Estimate the beta for PT switches", action="store_true", default=1)
 
-    parser.add_argument("--est-price-perception-car", help="Estimate fixed cost perception car", action="store_true",default=0)
-    parser.add_argument("--est-price-perception-pt", help="Estimate fixed cost perceptionpt ", action="store_true", default=0)
+    parser.add_argument("--est-price-perception-car", help="Estimate fixed cost perception car", action="store_true",default=1)
+    parser.add_argument("--est-price-perception-pt", help="Estimate fixed cost perceptionpt ", action="store_true", default=1)
     parser.add_argument("--same-price-perception", help="Only estimate one fixed price perception factor", action="store_true", default=1)
 
     parser.add_argument("--est-ride-alpha", help="Estimate ride detour parameter", action="store_true")
@@ -55,33 +56,31 @@ if __name__ == "__main__":
     ASC = {}
     for mode in ds.modes:
         # Base asc
-        ASC[mode] = Beta(f"ASC_{mode}", 0, None, None, FIXED if mode == "walk" else ESTIMATE)
+        ASC[mode] = Beta(f"ASC{mode}", 0, None, None, FIXED if mode == "walk" else ESTIMATE)
 
-        if mode in args.mxl_modes:
-            sd = Beta(f"ASC_{mode}_s", 1, 0, None, ESTIMATE)
-            ASC[mode] += sd * bioDraws(f"{mode}_RND", "NORMAL_ANTI")
+        # if mode in args.mxl_modes:
+        #     sd = Beta(f"ASC_{mode}_s", 1, 0, None, ESTIMATE)
+        #     ASC[mode] += sd * bioDraws(f"{mode}_RND", "NORMAL_ANTI")
 
     U = {}
     AV = {}
 
-    UTIL_MONEY = Beta('UTIL_MONEY', 1, 0., None, ESTIMATE if args.est_util_money else FIXED)
-    EXP_INCOME = Beta('EXP_INCOME', 0.4, 0, 1.5, ESTIMATE if args.est_exp_income else FIXED)
+    UTIL_MONEY = Beta('betaMoney', 1, 0., None, ESTIMATE )
+    EXP_INCOME = Beta('lambdaIncome', 0.4, 0, 1.5, ESTIMATE if args.est_exp_income else FIXED)
 
-    BETA_PERFORMING = Beta('BETA_PERFORMING', 6.88, 1, 15, ESTIMATE if args.est_performing else FIXED)
-    # EXP_PERFORMING = Beta('EXP_PERFORMING', 0, None, None, ESTIMATE if args.est_exp_performing else FIXED)
+    BETA_PERFORMING = Beta('betaTt', -6.88, -15, -1, ESTIMATE )
 
-
-    BETA_CAR_PRICE_PERCEPTION = Beta('BETA_CAR_PRICE_PERCEPTION', 0, 0, None, ESTIMATE if args.est_price_perception_car else FIXED)
+    BETA_CAR_PRICE_PERCEPTION = Beta('betaFcpCar', 0, 0, None, ESTIMATE if args.est_price_perception_car else FIXED)
 
     if args.same_price_perception:
         BETA_PT_PRICE_PERCEPTION = BETA_CAR_PRICE_PERCEPTION
     else:
-        BETA_PT_PRICE_PERCEPTION = Beta('BETA_PT_PRICE_PERCEPTION', 0, 0, 1, ESTIMATE if args.est_price_perception_pt else FIXED)
+        BETA_PT_PRICE_PERCEPTION = Beta('betaFcpPt', 0, 0, 1, ESTIMATE if args.est_price_perception_pt else FIXED)
 
-    BETA_PT_SWITCHES = Beta('BETA_PT_SWITCHES', -1, None, 0, ESTIMATE if args.est_pt_switches else FIXED)
+    BETA_PT_SWITCHES = Beta('betaPtSwitches', -1, None, 0, ESTIMATE if args.est_pt_switches else FIXED)
 
     # THe detour factor for ride trip, influences the time costs, as well as distance cost
-    BETA_RIDE_ALPHA = Beta('BETA_RIDE_ALPHA', 1, 0, 2, ESTIMATE if args.est_ride_alpha else FIXED)
+    BETA_RIDE_ALPHA = Beta('alphaRide', 1, 0, 2, ESTIMATE if args.est_ride_alpha else FIXED)
 
     EXP_DIST = {}
     for mode in args.est_exp_dist:
@@ -90,16 +89,13 @@ if __name__ == "__main__":
 
     BETA_BIKE_EFFORT = Beta('BETA_BIKE_UTIL_H', 0, 0, 10, ESTIMATE if args.est_bike_effort else FIXED)
 
-    DIST_WEIGHT = Variable('dist_weight')
-    KM = Variable(f'{mode}_km')
-
     # == overriding some things
 
     ASC['walk'] = 0
     BETA_RIDE_ALPHA = 1
-    BETA_CAR_PRICE_PERCEPTION = 0.2
+    # BETA_CAR_PRICE_PERCEPTION = 0.
     # BETA_PT_PRICE_PERCEPTION = 0
-    EXP_INCOME = 0.
+    # EXP_INCOME = 0.
     BETA_PT_SWITCHES = -1
     # (this now needs to be "-" the way I have specified that!)
 
@@ -107,9 +103,9 @@ if __name__ == "__main__":
 
     for i, mode in enumerate(ds.modes, 1):
         # Ride incurs double the cost as car, to account for the driver and passenger
-        u = ASC[mode] - BETA_PERFORMING * vv[f"{mode}_hours"] * ((1 + BETA_RIDE_ALPHA) if mode == "ride" else 1)
-        # u = ASC[mode] - BETA_PERFORMING * v[f"{mode}_hours"] * ( (1 + BETA_RIDE_ALPHA) if mode == "ride" else 1) * ( 1.5 if mode == "pt" else 1)
-        # u = ASC[mode] - BETA_PERFORMING * ( vv[f"{mode}_hours"] + ( vv["pt_walking_km"]/10 if mode=="pt" else 0 ) ) * ( (1 + BETA_RIDE_ALPHA) if mode == "ride" else 1)
+        u = ASC[mode] + BETA_PERFORMING * vv[f"{mode}_hours"] * ((1 + BETA_RIDE_ALPHA) if mode == "ride" else 1)
+        # u = ASC[mode] + BETA_PERFORMING * v[f"{mode}_hours"] * ( (1 + BETA_RIDE_ALPHA) if mode == "ride" else 1) * ( 1.5 if mode == "pt" else 1)
+        # u = ASC[mode] + BETA_PERFORMING * ( vv[f"{mode}_hours"] + ( vv["pt_walking_km"]/10 if mode=="pt" else 0 ) ) * ( (1 + BETA_RIDE_ALPHA) if mode == "ride" else 1)
 
         price = km_costs[mode] * vv[f"{mode}_km"] * (BETA_RIDE_ALPHA if mode == "ride" else 1)
 
@@ -147,21 +143,21 @@ if __name__ == "__main__":
 
     biogeme = bio.BIOGEME(database, logprob)
 
-    modelName = "trip_choice"
-    if args.est_performing:
-        modelName += "_performing"
-    if args.est_exp_income:
-        modelName += "_exp_income"
-    if args.est_util_money:
-        modelName += "_util_money"
-    if args.est_price_perception_car:
-        modelName += "_car_price_perception"
-    if args.est_price_perception_pt:
-        modelName += "_pt_price_perception"
-    if args.est_pt_switches:
-        modelName += "_pt_switches"
+    # if args.est_performing:
+    #     modelName += "_performing"
+    # if args.est_exp_income:
+    #     modelName += "_exp_income"
+    # if args.est_util_money:
+    #     modelName += "_util_money"
+    # if args.est_price_perception_car:
+    #     modelName += "_car_price_perception"
+    # if args.est_price_perception_pt:
+    #     modelName += "_pt_price_perception"
+    # if args.est_pt_switches:
+    #     modelName += "_pt_switches"
 
-    biogeme.modelName = modelName
+    biogeme.modelName = "trip_choice"
+
     biogeme.weight = vv["weight"]
 
     biogeme.calculateNullLoglikelihood(AV)
@@ -192,6 +188,9 @@ if __name__ == "__main__":
     print()
 
     print(results.getEstimatedParameters())
+
+    # Generate LaTeX table
+    results.writeLaTeX()
 
     # print()
     # print("Correlation matrix")
