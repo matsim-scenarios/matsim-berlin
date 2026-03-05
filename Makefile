@@ -84,7 +84,7 @@ REGIONALSTAT_COMMUTER := $(GERMANY)/regionalstatistik/commuter.csv
 ## (link no longer working; in general, mcloud no longer exists; RegioStar = spatial planning categories)
 #REGIOSTAR_URL := https://mcloud.de/downloads/mcloud/536149D1-2902-4975-9F7D-253191C0AD07/RegioStaR-Referenzdateien.xlsx
 REGIOSTAR := $(GERMANY)/RegioStaR-Referenzdateien.xlsx
-VEHICLESFILE_IN := input/v7.0/berlin/berlin-v7.0-vehicleTypes.xml
+VEHICLESFILE_IN := input/v7.0/berlin-v7.0-vehicleTypes.xml
 
 ###################################
 ######## OUTPUT ###################
