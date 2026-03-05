@@ -45,10 +45,11 @@ command="java $jvm_opts $JAVA_OPTS -cp $jar org.matsim.prepare.RunOpenBerlinCali
 #fi
 #
 #echo ""
-#echo "command is $command"
 #
 #echo ""
 #module add java/21
+
+echo "command is $command"
 java -version
 
 $command
