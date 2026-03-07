@@ -41,7 +41,7 @@ import java.util.Map;
  * Unit tests for ParkingCostHistory. Focuses on cost retrieval and cost updates based on occupancy.
  * The test assumes 7.5m parking spots, which are set as an attribute on the links in the test network.
  */
-class ParkingCostHistoryTest {
+class ParkingCostTrackerTest {
 	@RegisterExtension
 	MatsimTestUtils utils = new MatsimTestUtils();
 
@@ -52,7 +52,7 @@ class ParkingCostHistoryTest {
 		double[][] initialCosts = new double[][]{{1.0, 2.0, 3.0}};
 		Network network = createNetworkWithLink("1", 100.0);
 
-		ParkingCostHistory history = new ParkingCostHistory(
+		ParkingCostTracker history = new ParkingCostTracker(
 			linkIndexMap, initialCosts, null, 3600, null, network
 		);
 
@@ -86,7 +86,7 @@ class ParkingCostHistoryTest {
 		};
 		Network network = createNetworkWithLinks(Map.of("A", 100.0, "B", 100.0));
 
-		ParkingCostHistory history = new ParkingCostHistory(
+		ParkingCostTracker history = new ParkingCostTracker(
 			linkIndexMap, costs, null, 3600, null, network
 		);
 
@@ -119,7 +119,7 @@ class ParkingCostHistoryTest {
 		// Simple approach: new cost = relative occupancy * 100
 		DeParkingApproach approach = new InverseLinearDeParkingApproach();
 
-		ParkingCostHistory history = new ParkingCostHistory(
+		ParkingCostTracker history = new ParkingCostTracker(
 			linkIndexMap, costs, mockAnalyzer, 3600, approach, network
 		);
 
@@ -155,7 +155,7 @@ class ParkingCostHistoryTest {
 		};
 
 		DeParkingApproach approach = new InverseLinearDeParkingApproach();
-		ParkingCostHistory history = new ParkingCostHistory(
+		ParkingCostTracker history = new ParkingCostTracker(
 			linkIndexMap, costs, mockAnalyzer, 3600, approach, network
 		);
 

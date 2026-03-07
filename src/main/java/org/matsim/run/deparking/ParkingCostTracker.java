@@ -19,8 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ParkingCostHistory implements IterationEndsListener {
-	private static final Logger log = LogManager.getLogger(ParkingCostHistory.class);
+public class ParkingCostTracker implements IterationEndsListener {
+	private static final Logger log = LogManager.getLogger(ParkingCostTracker.class);
 
 	// double array with dimensions [linkIndex][timeBin] to store parking costs for each link and time bin
 	private double[][] costs;
@@ -30,9 +30,10 @@ public class ParkingCostHistory implements IterationEndsListener {
 	private final ParkingAnalyzer parkingAnalyzer;
 	private final DeParkingApproach deParkingApproach;
 	private final Network network;
+	private final Map<Id<Link>, Double> parkingSpotCache = new HashMap<>();
 
 	// package-private for testing
-	ParkingCostHistory(Map<Id<Link>, Integer> linkIndexMap, double[][] costs, ParkingAnalyzer parkingAnalyzer, int binSizeInSeconds, DeParkingApproach deParkingApproach, Network network) {
+	ParkingCostTracker(Map<Id<Link>, Integer> linkIndexMap, double[][] costs, ParkingAnalyzer parkingAnalyzer, int binSizeInSeconds, DeParkingApproach deParkingApproach, Network network) {
 		this.linkIndexMap.putAll(linkIndexMap);
 		this.costs = costs;
 		this.binSizeInSeconds = binSizeInSeconds;
@@ -58,7 +59,7 @@ public class ParkingCostHistory implements IterationEndsListener {
 			for (int bin = 0; bin < binCount; bin++) {
 				List<ParkingAnalyzer.OccupancyEntry> occupancies = parkingAnalyzer.occupancy(event.getIteration(), id, bin * binSizeInSeconds, (bin + 1) * binSizeInSeconds);
 				double weightedOccupancy = occupancies.stream().mapToDouble(o -> (o.toTime() - o.fromTime()) * o.occupancy()).sum() / binSizeInSeconds;
-				double availableSpots = (Double) network.getLinks().get(id).getAttributes().getAttribute(RunAutofreiPolicyDeparking.PARKING_SPOTS_ATTR);
+				double availableSpots = getParkingSpots(id);
 				double weightedRelativeOccupancy = weightedOccupancy / availableSpots;
 				newCosts[linkIndex][bin] = deParkingApproach.newParkingCost(weightedRelativeOccupancy, costs[linkIndex][bin]);
 			}
@@ -80,10 +81,14 @@ public class ParkingCostHistory implements IterationEndsListener {
 		costs = newCosts;
 	}
 
+	private double getParkingSpots(Id<Link> linkId) {
+		return parkingSpotCache.computeIfAbsent(linkId, id -> (Double) network.getLinks().get(id).getAttributes().getAttribute(RunAutofreiPolicyDeparking.PARKING_SPOTS_ATTR));
+	}
+
 	private void writeCsv(Path file) {
 		log.info("Writing parking costs to {}.", file);
 
-		var header = List.of("linkId", "from_time", "to_time", "cost");
+		var header = List.of("linkId", "from_time", "to_time", "cost", "spots_available");
 
 		// Use Apache Commons CSV to write the file
 		try (var writer = java.nio.file.Files.newBufferedWriter(file);
@@ -99,7 +104,8 @@ public class ParkingCostHistory implements IterationEndsListener {
 						linkId.toString(),
 						String.valueOf(bin * binSizeInSeconds),
 						String.valueOf((bin + 1) * binSizeInSeconds),
-						String.valueOf(cost)
+						String.valueOf(cost),
+						String.valueOf(getParkingSpots(linkId))
 					);
 					csvPrinter.printRecord(row);
 				}
@@ -109,7 +115,7 @@ public class ParkingCostHistory implements IterationEndsListener {
 		}
 	}
 
-	public static class Factory implements Provider<ParkingCostHistory> {
+	public static class Factory implements Provider<ParkingCostTracker> {
 		private Map<Id<Link>, double[]> initialCosts = new HashMap<>();
 		private int binSizeInSeconds = 3600;
 		private double parkingSpotLength = 7.5;
@@ -138,7 +144,7 @@ public class ParkingCostHistory implements IterationEndsListener {
 		}
 
 		@Override
-		public ParkingCostHistory get() {
+		public ParkingCostTracker get() {
 			int endTime = (int) config.qsim().getEndTime().seconds();
 			int binCount = endTime / binSizeInSeconds;
 
@@ -173,7 +179,7 @@ public class ParkingCostHistory implements IterationEndsListener {
 
 			log.info("Created a ParkingCostHistory with {} links and {} time bins.", network.getLinks().size(), binCount);
 
-			return new ParkingCostHistory(linkIndexMap, costs, parkingAnalyzer, binSizeInSeconds, deParkingApproach, network);
+			return new ParkingCostTracker(linkIndexMap, costs, parkingAnalyzer, binSizeInSeconds, deParkingApproach, network);
 		}
 	}
 }

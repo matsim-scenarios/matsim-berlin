@@ -57,7 +57,7 @@ public class DeParkingTracker implements ActivityStartEventHandler, VehicleEnter
 	@Inject
 	Network network;
 	@Inject
-	ParkingCostHistory parkingCostHistory;
+	ParkingCostTracker parkingCostTracker;
 
 	public DeParkingTracker(String mode, Set<String> untrackedActivities) {
 		this.untrackedActivities = untrackedActivities;
@@ -74,7 +74,7 @@ public class DeParkingTracker implements ActivityStartEventHandler, VehicleEnter
 			}
 			Link link = network.getLinks().get(pi.parkingLinkId);
 			double parkDuration = event.getTime() - pi.startParkingTime;
-			double hourlyParkingCost = parkingCostHistory.cost(link.getId(), pi.startParkingTime);
+			double hourlyParkingCost = parkingCostTracker.cost(link.getId(), pi.startParkingTime);
 			double parkingCost = hourlyParkingCost * (parkDuration / 3600.0);
 			this.events.processEvent(new PersonMoneyEvent(event.getTime(), pi.driverId, -parkingCost, purpose, null, link.getId().toString()));
 		}
