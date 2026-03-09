@@ -1,5 +1,6 @@
 package org.matsim.run.deparking;
 
+import com.github.luben.zstd.ZstdOutputStream;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import org.apache.logging.log4j.LogManager;
@@ -22,6 +23,7 @@ import org.matsim.core.events.EventsUtils;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.run.policies.autofrei.RunAutofreiPolicy;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
@@ -30,17 +32,40 @@ import java.util.function.Consumer;
 public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimListener {
 	private static final Logger log = LogManager.getLogger(ParkingAnalyzer.class);
 
+	private int writeInterval = 50;
+
+	private int iteration = -1;
+
+	// This lock is unlocked after the mobsim has run and all events have been processed. This is because the event handlers need to finish to get correct results.
+	private boolean lock = true;
+
+	@Inject
+	private EventsManager eventsManager;
+
+	@Inject
+	private ParkingInitializerEventsHandler initializer;
+
+	@Inject
+	private ParkingEventHandler parkingEventHandler;
+
+	public ParkingAnalyzer(int writeInterval) {
+		this.writeInterval = writeInterval;
+	}
+
+	public ParkingAnalyzer() {
+	}
+
 	/**
 	 * Main method to let this class be run on as standalone. It analyzes the parking occupancy of links based on the events of a MATSim run.
 	 * It tracks when vehicles enter and leave traffic to determine when they are parked.
 	 */
 	public static void main(String[] args) {
-		String events = "./output/berlin-autofrei-v6.4-baseCaseCtd/berlin-v6.4.output_events.xml.gz";
-		String networkPath = "./output/berlin-autofrei-v6.4-baseCaseCtd/berlin-v6.4.output_network.xml.gz";
-		String output = "./output/berlin-autofrei-v6.4-baseCaseCtd/parking_occupancy_autofrei.csv";
+		String events = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-baseCaseCtdExtended/berlin-v6.4.output_events.xml.zst";
+		String networkPath = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-baseCaseCtdExtended/berlin-v6.4.output_network.xml.zst";
+		String output = "./output/berlin-autofrei-v6.4-baseCaseCtdExtended/parking_occupancy_autofrei-1pct.csv.zst";
 
 		ParkingEventHandler peh = run(events);
-		ParkingAnalyzer.writeCsv(Path.of(output), NetworkUtils.readNetwork(networkPath), peh.getOccupancyEntriesByLink());
+		ParkingAnalyzer.writeMaxRows(Path.of(output), NetworkUtils.readNetwork(networkPath), peh.getOccupancyEntriesByLink());
 	}
 
 	// convenience method to run the parking analyzer standalone
@@ -63,20 +88,6 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 	public static ParkingEventHandler run(String events) {
 		return run((em) -> EventsUtils.readEvents(em, events));
 	}
-
-	private int iteration = -1;
-
-	// This lock is unlocked after the mobsim has run and all events have been processed. This is because the event handlers need to finish to get correct results.
-	private boolean lock = true;
-
-	@Inject
-	private EventsManager eventsManager;
-
-	@Inject
-	private ParkingInitializerEventsHandler initializer;
-
-	@Inject
-	private ParkingEventHandler parkingEventHandler;
 
 	/// Returns the occupancy of a link at a given time bin (from, to) in a given iteration. Both from and to are included.
 	public List<OccupancyEntry> occupancy(int iteration, Id<Link> linkId, double from, double to) {
@@ -125,16 +136,15 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 
 	@Override
 	public void notifyAfterMobsim(AfterMobsimEvent event) {
-		if (event.getIteration() % 50 == 0 || event.isLastIteration()) {
+		if (event.getIteration() % writeInterval == 0 || event.isLastIteration()) {
 			log.info("Writing parking occupancy for iteration {}.", event.getIteration());
-			Path file = Path.of(event.getServices().getControlerIO().getIterationFilename(event.getIteration(), "parking_occupancy.csv"));
-			writeCsv(file, event.getServices().getScenario().getNetwork(), parkingEventHandler.getOccupancyEntriesByLink());
+			Path file = Path.of(event.getServices().getControlerIO().getIterationFilename(event.getIteration(), "parking_occupancy.csv.zst"));
+			writeAllRows(file, event.getServices().getScenario().getNetwork(), parkingEventHandler.getOccupancyEntriesByLink());
 		}
 		this.lock = false;
 	}
 
-	static void writeCsv(Path file, Network network, Map<Id<Link>, List<OccupancyEntry>> occupancyEntries) {
-		var header = List.of("linkId", "from_time", "to_time", "length", "occupancy", "initial");
+	static void writeMaxRows(Path file, Network network, Map<Id<Link>, List<OccupancyEntry>> occupancyEntries) {
 		var rows = new ArrayList<List<String>>();
 
 		for (var entries : occupancyEntries.entrySet()) {
@@ -152,8 +162,37 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 			rows.add(row);
 		}
 
-		// Use Apache Commons CSV to write the file
-		try (var writer = java.nio.file.Files.newBufferedWriter(file);
+		writeRows(file, rows);
+	}
+
+	static void writeAllRows(Path file, Network network, Map<Id<Link>, List<OccupancyEntry>> occupancyEntries) {
+		var rows = new ArrayList<List<String>>();
+
+		for (var entries : occupancyEntries.entrySet()) {
+			Id<Link> linkId = entries.getKey();
+
+			for (OccupancyEntry entry : entries.getValue()) {
+				var row = List.of(
+					linkId.toString(),
+					String.valueOf(entry.fromTime()),
+					String.valueOf(entry.toTime()),
+					String.valueOf(network.getLinks().get(linkId).getLength()),
+					String.valueOf(entry.occupancy()),
+					String.valueOf(entries.getValue().getFirst().occupancy)
+				);
+				rows.add(row);
+			}
+		}
+
+		writeRows(file, rows);
+	}
+
+	private static void writeRows(Path file, ArrayList<List<String>> rows) {
+		List<String> header = List.of("linkId", "from_time", "to_time", "length", "occupancy", "initial");
+		// Use Apache Commons CSV to write the file with Zstandard compression
+		try (var outputStream = java.nio.file.Files.newOutputStream(file);
+			 var zstdOutputStream = new ZstdOutputStream(new BufferedOutputStream(outputStream));
+			 var writer = new java.io.OutputStreamWriter(zstdOutputStream, java.nio.charset.StandardCharsets.UTF_8);
 			 var csvPrinter = org.apache.commons.csv.CSVFormat.DEFAULT.builder().setHeader(header.toArray(new String[0])).build().print(writer)) {
 			for (var row : rows) {
 				csvPrinter.printRecord(row);
@@ -386,6 +425,15 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 	}
 
 	public record OccupancyChange(double time, double change) {
+	}
+
+	public static class ParkingAnalyzerFactory implements Provider<ParkingAnalyzer> {
+
+
+		@Override
+		public ParkingAnalyzer get() {
+			return null;
+		}
 	}
 }
 

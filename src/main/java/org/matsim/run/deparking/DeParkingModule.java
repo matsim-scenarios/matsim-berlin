@@ -31,6 +31,16 @@ import java.util.Set;
 public class DeParkingModule extends AbstractModule {
 //	private final static Set<String> PARKING_MODES = Set.of(TransportMode.car, TransportMode.truck, "freight", RunAutofreiPolicy.NEW_MODE_SMALL_SCALE_COMMERCIAL);
 
+
+	public DeParkingModule() {
+	}
+
+	public DeParkingModule(int writeInterval) {
+		this.writeInterval = writeInterval;
+	}
+
+	private int writeInterval = 50;
+
 	@Override
 	public void install() {
 //		for (String mode : PARKING_MODES) {
@@ -47,7 +57,8 @@ public class DeParkingModule extends AbstractModule {
 		Set<String> mainModes = new HashSet<>(this.getConfig().qsim().getMainModes());
 
 		// Add parking analyzer and its event handlers
-		bind(ParkingAnalyzer.class).asEagerSingleton();
+		ParkingAnalyzer analyzer = new ParkingAnalyzer(writeInterval);
+		bind(ParkingAnalyzer.class).toInstance(analyzer);
 		bind(ParkingAnalyzer.ParkingInitializerEventsHandler.class).toInstance(new ParkingAnalyzer.ParkingInitializerEventsHandler(mainModes));
 		addControlerListenerBinding().to(ParkingAnalyzer.class);
 		addEventHandlerBinding().to(ParkingAnalyzer.ParkingInitializerEventsHandler.class);
@@ -56,7 +67,7 @@ public class DeParkingModule extends AbstractModule {
 		addEventHandlerBinding().to(ParkingAnalyzer.ParkingEventHandler.class);
 
 		// Bind cost and approach
-		bind(ParkingCostTracker.class).toProvider(new ParkingCostTracker.Factory(Map.of(), 2 * 3600)).asEagerSingleton();
+		bind(ParkingCostTracker.class).toProvider(new ParkingCostTracker.Factory(Map.of(), 2 * 3600, writeInterval)).asEagerSingleton();
 		addControlerListenerBinding().to(ParkingCostTracker.class);
 		bind(DeParkingApproach.class).to(InverseLinearDeParkingApproach.class);
 	}

@@ -1,5 +1,6 @@
 package org.matsim.run.policies.autofrei;
 
+import com.github.luben.zstd.ZstdInputStream;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.matsim.api.core.v01.Id;
@@ -12,6 +13,7 @@ import org.matsim.run.deparking.DeParkingModule;
 import picocli.CommandLine;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,7 +49,13 @@ public class RunAutofreiPolicyDeparking extends RunAutofreiPolicy {
 		// for each linkId, get the corresponding link from the network and add an entry in attributes with the occupancy value.
 		var links = new HashSet<>(network.getLinks().keySet());
 
-		try (Reader r = Files.newBufferedReader(Path.of(this.parkingSpotsFile))) {
+		// assert parkingSpotsFile ends with zst
+		if (!this.parkingSpotsFile.endsWith(".zst")) {
+			throw new RuntimeException("parkingSpotsFile must end with .zst");
+		}
+
+		try (ZstdInputStream zstdInputStream = new ZstdInputStream(Files.newInputStream(Path.of(this.parkingSpotsFile)));
+			 Reader r = new InputStreamReader(zstdInputStream)) {
 			for (CSVRecord record : CSVFormat.Builder.create().setHeader("linkId", "from_time", "to_time", "length", "occupancy", "initial")
 				.setSkipHeaderRecord(true).build().parse(r)) {
 				Id<Link> linkId = Id.createLinkId(record.get("linkId"));

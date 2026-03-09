@@ -53,7 +53,7 @@ class ParkingCostTrackerTest {
 		Network network = createNetworkWithLink("1", 100.0);
 
 		ParkingCostTracker history = new ParkingCostTracker(
-			linkIndexMap, initialCosts, null, 3600, null, network
+			linkIndexMap, initialCosts, null, 3600, null, network, 1
 		);
 
 		// Bin 0: 0-3600s
@@ -87,7 +87,7 @@ class ParkingCostTrackerTest {
 		Network network = createNetworkWithLinks(Map.of("A", 100.0, "B", 100.0));
 
 		ParkingCostTracker history = new ParkingCostTracker(
-			linkIndexMap, costs, null, 3600, null, network
+			linkIndexMap, costs, null, 3600, null, network, 1
 		);
 
 		Assertions.assertEquals(10.0, history.cost(Id.createLinkId("A"), 0));
@@ -120,7 +120,7 @@ class ParkingCostTrackerTest {
 		DeParkingApproach approach = new InverseLinearDeParkingApproach();
 
 		ParkingCostTracker history = new ParkingCostTracker(
-			linkIndexMap, costs, mockAnalyzer, 3600, approach, network
+			linkIndexMap, costs, mockAnalyzer, 3600, approach, network, 1
 		);
 
 		// Simulate iteration end
@@ -156,7 +156,7 @@ class ParkingCostTrackerTest {
 
 		DeParkingApproach approach = new InverseLinearDeParkingApproach();
 		ParkingCostTracker history = new ParkingCostTracker(
-			linkIndexMap, costs, mockAnalyzer, 3600, approach, network
+			linkIndexMap, costs, mockAnalyzer, 3600, approach, network, 1
 		);
 
 		history.notifyIterationEnds(new org.matsim.core.controler.events.IterationEndsEvent(new MockMatsimTestServices(utils.getOutputDirectory()), 0, false));

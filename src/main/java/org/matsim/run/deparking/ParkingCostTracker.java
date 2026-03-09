@@ -1,5 +1,6 @@
 package org.matsim.run.deparking;
 
+import com.github.luben.zstd.ZstdOutputStream;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import org.apache.logging.log4j.LogManager;
@@ -12,6 +13,7 @@ import org.matsim.core.controler.events.IterationEndsEvent;
 import org.matsim.core.controler.listener.IterationEndsListener;
 import org.matsim.run.policies.autofrei.RunAutofreiPolicyDeparking;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,9 +33,10 @@ public class ParkingCostTracker implements IterationEndsListener {
 	private final DeParkingApproach deParkingApproach;
 	private final Network network;
 	private final Map<Id<Link>, Double> parkingSpotCache = new HashMap<>();
+	private final int writeInterval;
 
 	// package-private for testing
-	ParkingCostTracker(Map<Id<Link>, Integer> linkIndexMap, double[][] costs, ParkingAnalyzer parkingAnalyzer, int binSizeInSeconds, DeParkingApproach deParkingApproach, Network network) {
+	ParkingCostTracker(Map<Id<Link>, Integer> linkIndexMap, double[][] costs, ParkingAnalyzer parkingAnalyzer, int binSizeInSeconds, DeParkingApproach deParkingApproach, Network network, int writeInterval) {
 		this.linkIndexMap.putAll(linkIndexMap);
 		this.costs = costs;
 		this.binSizeInSeconds = binSizeInSeconds;
@@ -41,6 +44,7 @@ public class ParkingCostTracker implements IterationEndsListener {
 		this.parkingAnalyzer = parkingAnalyzer;
 		this.deParkingApproach = deParkingApproach;
 		this.network = network;
+		this.writeInterval = writeInterval;
 	}
 
 	/// Returns the cost of parking at a given link at a given time in a given iteration.
@@ -65,14 +69,14 @@ public class ParkingCostTracker implements IterationEndsListener {
 			}
 		});
 
-		Path file = Path.of(event.getServices().getControlerIO().getIterationFilename(event.getIteration(), "parking_costs.csv"));
+		Path file = Path.of(event.getServices().getControlerIO().getIterationFilename(event.getIteration(), "parking_costs.csv.zst"));
 		try {
 			Files.createDirectories(file.getParent());
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 
-		if (event.isLastIteration() || event.getIteration() % 50 == 0) {
+		if (event.isLastIteration() || event.getIteration() % writeInterval == 0) {
 			log.info("Writing parking costs for iteration {} to file {}.", event.getIteration(), file);
 			writeCsv(file);
 		}
@@ -91,7 +95,8 @@ public class ParkingCostTracker implements IterationEndsListener {
 		var header = List.of("linkId", "from_time", "to_time", "cost", "spots_available");
 
 		// Use Apache Commons CSV to write the file
-		try (var writer = java.nio.file.Files.newBufferedWriter(file);
+		try (var outputStream = new ZstdOutputStream(new BufferedOutputStream(Files.newOutputStream(file)));
+			 var writer = new java.io.OutputStreamWriter(outputStream);
 			 var csvPrinter = org.apache.commons.csv.CSVFormat.DEFAULT.builder().setHeader(header.toArray(new String[0])).build().print(writer)) {
 			for (Id<Link> linkId : network.getLinks().keySet()) {
 				double[] costForLink = this.costs[linkIndexMap.get(linkId)];
@@ -118,7 +123,7 @@ public class ParkingCostTracker implements IterationEndsListener {
 	public static class Factory implements Provider<ParkingCostTracker> {
 		private Map<Id<Link>, double[]> initialCosts = new HashMap<>();
 		private int binSizeInSeconds = 3600;
-		private double parkingSpotLength = 7.5;
+		private int writeInterval = 50;
 
 		@Inject
 		private Network network;
@@ -132,15 +137,10 @@ public class ParkingCostTracker implements IterationEndsListener {
 		@Inject
 		private DeParkingApproach deParkingApproach;
 
-		public Factory(Map<Id<Link>, double[]> initialCosts, int binSizeInSeconds) {
+		public Factory(Map<Id<Link>, double[]> initialCosts, int binSizeInSeconds, int writeInterval) {
 			this.initialCosts = initialCosts;
 			this.binSizeInSeconds = binSizeInSeconds;
-		}
-
-		public Factory(Map<Id<Link>, double[]> initialCosts, int binSizeInSeconds, double parkingSpotLength) {
-			this.initialCosts = initialCosts;
-			this.binSizeInSeconds = binSizeInSeconds;
-			this.parkingSpotLength = parkingSpotLength;
+			this.writeInterval = writeInterval;
 		}
 
 		@Override
@@ -179,7 +179,7 @@ public class ParkingCostTracker implements IterationEndsListener {
 
 			log.info("Created a ParkingCostHistory with {} links and {} time bins.", network.getLinks().size(), binCount);
 
-			return new ParkingCostTracker(linkIndexMap, costs, parkingAnalyzer, binSizeInSeconds, deParkingApproach, network);
+			return new ParkingCostTracker(linkIndexMap, costs, parkingAnalyzer, binSizeInSeconds, deParkingApproach, network, writeInterval);
 		}
 	}
 }
