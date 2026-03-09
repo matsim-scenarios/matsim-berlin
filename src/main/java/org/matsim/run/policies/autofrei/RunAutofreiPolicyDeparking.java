@@ -25,6 +25,9 @@ public class RunAutofreiPolicyDeparking extends RunAutofreiPolicy {
 	@CommandLine.Option(names = "--parking-spots")
 	private String parkingSpotsFile;
 
+	@CommandLine.Option(names = "--write-interval")
+	private int writeInterval = -1;
+
 	public static void main(String[] args) {
 		MATSimApplication.run(RunAutofreiPolicyDeparking.class, args);
 	}
@@ -38,7 +41,11 @@ public class RunAutofreiPolicyDeparking extends RunAutofreiPolicy {
 	@Override
 	protected void prepareControler(Controler controler) {
 		super.prepareControler(controler);
-		controler.addOverridingModule(new DeParkingModule());
+		if (writeInterval > 0) {
+			controler.addOverridingModule(new DeParkingModule(writeInterval));
+		} else {
+			controler.addOverridingModule(new DeParkingModule());
+		}
 	}
 
 	private void addParkingSpots(Scenario scenario) {
