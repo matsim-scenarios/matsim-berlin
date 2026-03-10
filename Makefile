@@ -6,7 +6,11 @@ JAR := matsim-berlin-*.jar
 VERSION := v7.1
 CRS := EPSG:25832
 MAKE_XMX ?= 20G
-SUMO_VERSION := 1.20.0
+
+## we assume SUMO is installed locally via pip
+## use either the agimo-digital-twin-workflow or 
+## install via pip install eclipse-sumo==[VERSION]
+#SUMO_VERSION := 1.20.0
 
 ## if you want to override thes variables set them as environment-variables and run make -e
 ## make will then use the environment-variable instead what you defined here.
