@@ -31,17 +31,38 @@ def compute_weighted_average_income(df):
 
     # Clean column names
     # df.columns = df.columns.str.strip()
-
+    print("Calculating weighted average income...")
     required = {"person", "income", "weight"}
     missing = required - set(df.columns)
     if missing:
         raise ValueError(f"Missing required columns: {missing}")
 
     persons = df.groupby("person", as_index=False).first()
+    print("Weighted average income:", np.average(persons["income"], weights=persons["weight"]))
 
     return float(
         np.average(persons["income"], weights=persons["weight"])
     )
+
+def compute_average_income(df):
+
+    print("Calculating average income...")
+    # Clean column names
+    # df.columns = df.columns.str.strip()
+    print("Calculating average income...")
+    required = {"person", "income"}
+    missing = required - set(df.columns)
+    if missing:
+        raise ValueError(f"Missing required columns: {missing}")
+
+    persons = df.groupby("person", as_index=False).first()
+    print(persons["income"].mean())
+
+
+    return float(
+        persons["income"].mean()
+    )
+
 
 def read_plan_choices(input_file: str, sample: float = 1, seed: int = 42) -> PlanChoice:
     """ Read plan choices from input file """
@@ -182,6 +203,7 @@ def calc_plan_variables(df, k, modes):
 def read_trip_choices(input_file: str) -> TripChoice:
     """ Read trip choices from input file """
 
+
     df = pd.read_csv(input_file, comment="#")
 
     modes = list(df.columns.str.extract(r"([a-zA-z]+)_valid", expand=False).dropna().unique())
@@ -200,4 +222,4 @@ def read_trip_choices(input_file: str) -> TripChoice:
 
     df.dist_weight = df.dist_weight.fillna(1)
 
-    return TripChoice(df, modes, varying, compute_weighted_average_income(df))
+    return TripChoice(df, modes, varying, 1942)

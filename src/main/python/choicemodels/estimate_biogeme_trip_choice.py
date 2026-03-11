@@ -14,7 +14,7 @@ FIXED = 1
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate the trip choice model")
-    parser.add_argument("--input", help="Path to the input file", type=str, default="../../../../trip-choices.csv")
+    parser.add_argument("--input", help="Path to the input file", type=str, default="/Users/gregorr/Documents/work/respos/shared-svn/projects/matsim-berlin/data/SrV/2018/halil/trip-choices.csv")
     parser.add_argument("--mxl-modes", help="Modes to use mixed logit for", nargs="*", type=set,
                         default=["pt", "bike", "ride", "car"])
     parser.add_argument("--est-performing", help="Estimate the beta for performing", action="store_true")
