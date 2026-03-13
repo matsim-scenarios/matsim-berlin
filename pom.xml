@@ -252,11 +252,11 @@
 		<!--			<version>5.3.0</version>-->
 		<!--		</dependency>-->
 
-		<!--		<dependency>-->
-		<!--			<groupId>de.topobyte</groupId>-->
-		<!--			<artifactId>osm4j-pbf</artifactId>-->
-		<!--			<version>1.4.1</version>-->
-		<!--		</dependency>-->
+				<dependency>
+					<groupId>de.topobyte</groupId>
+					<artifactId>osm4j-pbf</artifactId>
+					<version>1.4.1</version>
+				</dependency>
 		<dependency>
 			<groupId>de.topobyte</groupId>
 			<artifactId>osm4j-geometry</artifactId>
