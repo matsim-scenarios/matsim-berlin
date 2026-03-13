@@ -20,6 +20,9 @@ public class DeparkingConfigGroup extends ReflectiveConfigGroup {
 	private double maxCost = 20.0;
 
 	@Parameter
+	private double targetRelativeOccupancy = 1.0;
+
+	@Parameter
 	private int writeInterval = 50;
 
 	@Parameter
@@ -68,6 +71,14 @@ public class DeparkingConfigGroup extends ReflectiveConfigGroup {
 
 	public void setMaxCost(double maxCost) {
 		this.maxCost = maxCost;
+	}
+
+	public double getTargetRelativeOccupancy() {
+		return targetRelativeOccupancy;
+	}
+
+	public void setTargetRelativeOccupancy(double targetRelativeOccupancy) {
+		this.targetRelativeOccupancy = targetRelativeOccupancy;
 	}
 
 	public int getWriteInterval() {

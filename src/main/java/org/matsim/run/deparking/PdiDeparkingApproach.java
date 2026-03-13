@@ -12,9 +12,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PdiDeparkingApproach implements DeParkingApproach {
-	private static final double TARGET_RELATIVE_OCCUPANCY = DeparkingApproachUtils.TARGET_RELATIVE_OCCUPANCY;
-
 	private final Map<Id<Link>, Double> parkingSpotCache = new HashMap<>();
+	// Controller state is tracked independently per link and time bin so one crowded period
+	// does not leak into another link or another bin on the same link.
 	private final Map<Id<Link>, Map<Integer, Double>> cumulativeErrorCache = new HashMap<>();
 	private final Map<Id<Link>, Map<Integer, Double>> previousErrorCache = new HashMap<>();
 
@@ -36,8 +36,17 @@ public class PdiDeparkingApproach implements DeParkingApproach {
 	public double newParkingCost(ParkingAnalyzer analyzer, Id<Link> linkId, int iteration, double from, double to) {
 		int bin = DeparkingApproachUtils.bin(from, to);
 		double relativeOccupancy = DeparkingApproachUtils.weightedRelativeOccupancy(analyzer, linkId, iteration, from, to, getParkingSpots(linkId));
-		double error = relativeOccupancy - TARGET_RELATIVE_OCCUPANCY;
+		double targetRelativeOccupancy = DeparkingApproachUtils.targetRelativeOccupancy(config);
+		// Error is measured against the configured target relative occupancy:
+		// error = relativeOccupancy - targetRelativeOccupancy.
+		double error = relativeOccupancy - targetRelativeOccupancy;
+		// Integral term:
+		// cumulativeError_t = cumulativeError_(t-1) + error_t
+		// For the first observation of a link/bin, the previous cumulative error is 0.
 		double cumulativeError = cumulativeErrorCache.getOrDefault(linkId, Map.of()).getOrDefault(bin, 0.0) + error;
+		// Derivative term input:
+		// previousError = error_(t-1)
+		// For the first observation of a link/bin, the previous error is 0.
 		double previousError = previousErrorCache.getOrDefault(linkId, Map.of()).getOrDefault(bin, 0.0);
 		double newCost = calcCost(error, cumulativeError, previousError);
 
@@ -47,6 +56,15 @@ public class PdiDeparkingApproach implements DeParkingApproach {
 		return newCost;
 	}
 
+	// Direct PDI control law:
+	// newCost = clamp(
+	//     Kp * error
+	//   + Ki * cumulativeError
+	//   + Kd * (error - previousError),
+	//   0,
+	//   maxCost
+	// )
+	// The controller output is the full next parking cost, not an increment on the previous cost.
 	double calcCost(double error, double cumulativeError, double previousError) {
 		DeparkingConfigGroup configGroup = ConfigUtils.addOrGetModule(config, DeparkingConfigGroup.class);
 		double rawCost = configGroup.getK_p() * error

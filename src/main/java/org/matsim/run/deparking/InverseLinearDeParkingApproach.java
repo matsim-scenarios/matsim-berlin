@@ -4,13 +4,13 @@ import com.google.inject.Inject;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
+import org.matsim.core.config.Config;
 import org.matsim.run.policies.autofrei.RunAutofreiPolicyDeparking;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class InverseLinearDeParkingApproach implements DeParkingApproach {
-	private static final double TARGET_RELATIVE_OCCUPANCY = DeparkingApproachUtils.TARGET_RELATIVE_OCCUPANCY;
 	private static final double LEARNING_RATE = 0.5;
 	private static final double MIN_ADJUSTMENT_BASE = 1.0;
 
@@ -20,11 +20,19 @@ public class InverseLinearDeParkingApproach implements DeParkingApproach {
 	@Inject
 	private Network network;
 
+	@Inject
+	private Config config;
+
 	InverseLinearDeParkingApproach() {
 	}
 
 	InverseLinearDeParkingApproach(Network network) {
 		this.network = network;
+	}
+
+	InverseLinearDeParkingApproach(Network network, Config config) {
+		this.network = network;
+		this.config = config;
 	}
 
 	@Override
@@ -45,9 +53,10 @@ public class InverseLinearDeParkingApproach implements DeParkingApproach {
 		double safePreviousCost = Math.max(0.0, previousCost);
 		// Ensure that previousRelativeOccupancy is between 0 and MAX_RELATIVE_OCCUPANCY.
 		double safeRelativeOccupancy = DeparkingApproachUtils.sanitizeRelativeOccupancy(previousRelativeOccupancy);
+		double targetRelativeOccupancy = DeparkingApproachUtils.targetRelativeOccupancy(config);
 		// Ensure that previousCost = 0 is no absorbing state.
 		double adjustmentBase = Math.max(safePreviousCost, MIN_ADJUSTMENT_BASE);
-		double delta = (safeRelativeOccupancy - TARGET_RELATIVE_OCCUPANCY) * adjustmentBase * LEARNING_RATE;
+		double delta = (safeRelativeOccupancy - targetRelativeOccupancy) * adjustmentBase * LEARNING_RATE;
 		return Math.max(0.0, safePreviousCost + delta);
 	}
 }

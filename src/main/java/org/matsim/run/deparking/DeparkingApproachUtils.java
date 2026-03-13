@@ -2,9 +2,11 @@ package org.matsim.run.deparking;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 
 final class DeparkingApproachUtils {
-	static final double TARGET_RELATIVE_OCCUPANCY = 1.0;
+	static final double DEFAULT_TARGET_RELATIVE_OCCUPANCY = 1.0;
 	static final double MAX_RELATIVE_OCCUPANCY = 4.0;
 
 	private DeparkingApproachUtils() {
@@ -20,6 +22,13 @@ final class DeparkingApproachUtils {
 			.mapToDouble(o -> (o.toTime() - o.fromTime()) * o.occupancy())
 			.sum() / binSizeInSeconds;
 		return sanitizeRelativeOccupancy(weightedOccupancy / availableSpots);
+	}
+
+	static double targetRelativeOccupancy(Config config) {
+		if (config == null) {
+			return DEFAULT_TARGET_RELATIVE_OCCUPANCY;
+		}
+		return ConfigUtils.addOrGetModule(config, DeparkingConfigGroup.class).getTargetRelativeOccupancy();
 	}
 
 	static double sanitizeRelativeOccupancy(double relativeOccupancy) {

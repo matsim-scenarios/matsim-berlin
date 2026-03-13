@@ -54,6 +54,18 @@ class PdiDeparkingApproachTest {
 	}
 
 	@Test
+	void newParkingCost_usesConfiguredTargetRelativeOccupancy() {
+		Config config = createConfig(2.0, 0.25, 0.5, 20.0);
+		ConfigUtils.addOrGetModule(config, DeparkingConfigGroup.class).setTargetRelativeOccupancy(1.5);
+		Network network = createNetworkWithSpots(Map.of("1", 10.0));
+		PdiDeparkingApproach approach = new PdiDeparkingApproach(config, network);
+
+		double newCost = approach.newParkingCost(fullBinAnalyzer(15.0), Id.createLinkId("1"), 0, 0.0, 3600.0);
+
+		Assertions.assertEquals(0.0, newCost, 1e-9);
+	}
+
+	@Test
 	void newParkingCost_accumulatesIntegralAcrossIterationsForSameLinkAndBin() {
 		Config config = createConfig(0.0, 1.0, 0.0, 20.0);
 		Network network = createNetworkWithSpots(Map.of("1", 10.0));
@@ -123,6 +135,7 @@ class PdiDeparkingApproachTest {
 		deparkingConfigGroup.setK_i(kI);
 		deparkingConfigGroup.setK_d(kD);
 		deparkingConfigGroup.setMaxCost(maxCost);
+		deparkingConfigGroup.setTargetRelativeOccupancy(1.0);
 		return config;
 	}
 
