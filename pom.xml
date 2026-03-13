@@ -252,11 +252,11 @@
 		<!--			<version>5.3.0</version>-->
 		<!--		</dependency>-->
 
-		<dependency>
-			<groupId>de.topobyte</groupId>
-			<artifactId>osm4j-pbf</artifactId>
-			<version>1.4.1</version>
-		</dependency>
+		<!--		<dependency>-->
+		<!--			<groupId>de.topobyte</groupId>-->
+		<!--			<artifactId>osm4j-pbf</artifactId>-->
+		<!--			<version>1.4.1</version>-->
+		<!--		</dependency>-->
 		<dependency>
 			<groupId>de.topobyte</groupId>
 			<artifactId>osm4j-geometry</artifactId>
@@ -498,10 +498,10 @@
 			<url>https://mvn.slimjars.com</url>
 		</repository>
 
-		<repository>
-			<id>jitpack.io</id>
-			<url>https://jitpack.io</url>
-		</repository>
+		<!--		<repository>-->
+		<!--			<id>jitpack.io</id>-->
+		<!--			<url>https://jitpack.io</url>-->
+		<!--		</repository>-->
 	</repositories>
 
 	<distributionManagement>

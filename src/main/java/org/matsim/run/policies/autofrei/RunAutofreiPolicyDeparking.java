@@ -36,6 +36,8 @@ public class RunAutofreiPolicyDeparking extends RunAutofreiPolicy {
 	protected void prepareScenario(Scenario scenario) {
 		super.prepareScenario(scenario);
 		addParkingSpots(scenario);
+//		scenario.getPopulation().getPersons().entrySet().removeIf(p -> !p.getKey().equals(Id.createPersonId("goodsTraffic_re_vkz.0053_4_80")) &&
+//			!p.getKey().equals(Id.createPersonId("berlin_12c8d407")));
 	}
 
 	@Override

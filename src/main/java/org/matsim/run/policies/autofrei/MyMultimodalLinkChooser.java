@@ -3,6 +3,7 @@ package org.matsim.run.policies.autofrei;
 import com.google.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.gbl.Gbl;
@@ -12,15 +13,21 @@ import org.matsim.core.router.MultimodalLinkChooserDefaultImpl;
 import org.matsim.core.router.RoutingRequest;
 import org.matsim.facilities.Facility;
 
+import java.util.Set;
+
+import static org.matsim.run.policies.autofrei.RunAutofreiPolicy.NEW_MODE_SMALL_SCALE_COMMERCIAL_AND_GOODS_TRAFFIC;
+
 public class MyMultimodalLinkChooser implements MultimodalLinkChooser {
 	private static final Logger log = LogManager.getLogger(MyMultimodalLinkChooser.class);
+
+	Set<String> modesToOverride = Set.of(NEW_MODE_SMALL_SCALE_COMMERCIAL_AND_GOODS_TRAFFIC, TransportMode.bike, TransportMode.truck, "freight");
 
 	@Inject
 	MultimodalLinkChooserDefaultImpl delegate;
 
 	@Override
 	public Link decideAccessLink(RoutingRequest routingRequest, String mode, Network network) {
-		if (mode.equals("bike")) {
+		if (modesToOverride.contains(mode)) {
 			return decideOnLink(routingRequest.getFromFacility(), network);
 		}
 		return delegate.decideAccessLink(routingRequest, mode, network);
@@ -28,7 +35,7 @@ public class MyMultimodalLinkChooser implements MultimodalLinkChooser {
 
 	@Override
 	public Link decideEgressLink(RoutingRequest routingRequest, String mode, Network network) {
-		if (mode.equals("bike")) {
+		if (modesToOverride.contains(mode)) {
 			return decideOnLink(routingRequest.getToFacility(), network);
 		}
 		return delegate.decideEgressLink(routingRequest, mode, network);

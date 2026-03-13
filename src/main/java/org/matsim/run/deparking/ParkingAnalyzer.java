@@ -62,7 +62,7 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 	public static void main(String[] args) {
 		String events = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-baseCaseCtdExtended/berlin-v6.4.output_events.xml.zst";
 		String networkPath = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-baseCaseCtdExtended/berlin-v6.4.output_network.xml.zst";
-		String output = "./output/berlin-autofrei-v6.4-baseCaseCtdExtended/parking_occupancy_autofrei-1pct.csv.zst";
+		String output = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-baseCaseCtdExtended/parking_occupancy_autofrei-1pct.csv.zst";
 
 		ParkingEventHandler peh = run(events);
 		ParkingAnalyzer.writeMaxRows(Path.of(output), NetworkUtils.readNetwork(networkPath), peh.getOccupancyEntriesByLink());
