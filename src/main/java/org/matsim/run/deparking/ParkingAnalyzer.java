@@ -2,18 +2,12 @@ package org.matsim.run.deparking;
 
 import com.github.luben.zstd.ZstdOutputStream;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.events.VehicleEntersTrafficEvent;
-import org.matsim.api.core.v01.events.VehicleLeavesTrafficEvent;
-import org.matsim.api.core.v01.events.handler.VehicleEntersTrafficEventHandler;
-import org.matsim.api.core.v01.events.handler.VehicleLeavesTrafficEventHandler;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
-import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.controler.events.AfterMobsimEvent;
 import org.matsim.core.controler.events.IterationStartsEvent;
@@ -48,6 +42,8 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 	@Inject
 	private ParkingEventHandler parkingEventHandler;
 
+	private Map<Integer, Map<Id<Link>, List<OccupancyEntry>>> occupancyEntriesByIteration = new HashMap<>();
+
 	public ParkingAnalyzer(int writeInterval) {
 		this.writeInterval = writeInterval;
 	}
@@ -60,9 +56,16 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 	 * It tracks when vehicles enter and leave traffic to determine when they are parked.
 	 */
 	public static void main(String[] args) {
-		String events = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-baseCaseCtdExtended/berlin-v6.4.output_events.xml.zst";
-		String networkPath = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-baseCaseCtdExtended/berlin-v6.4.output_network.xml.zst";
-		String output = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-baseCaseCtdExtended/parking_occupancy_autofrei-1pct.csv.zst";
+//		String events = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-baseCaseCtdExtended/berlin-v6.4.output_events.xml.zst";
+//		String networkPath = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-baseCaseCtdExtended/berlin-v6.4.output_network.xml.zst";
+//		String output = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-baseCaseCtdExtended/parking_occupancy_autofrei-1pct.csv.zst";
+
+		String events = "output/deparking-debug/ITERS/it.9/berlin-v6.4.9.events.xml.zst";
+		String networkPath = "output/deparking-debug/berlin-v6.4.output_network.xml.zst";
+		String output = "output/deparking-debug/parking_occupancy_it9.csv.zst";
+
+		// -1002247009
+
 
 		ParkingEventHandler peh = run(events);
 		ParkingAnalyzer.writeMaxRows(Path.of(output), NetworkUtils.readNetwork(networkPath), peh.getOccupancyEntriesByLink());
@@ -101,7 +104,17 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 			throw new RuntimeException("Iteration " + iteration + " is out of order");
 		}
 
-		List<OccupancyEntry> occupancyEntries = parkingEventHandler.getOccupancyEntriesByLink().getOrDefault(linkId, List.of());
+		return historicalOccupancy(iteration, linkId, from, to);
+	}
+
+	public List<OccupancyEntry> historicalOccupancy(int iteration, Id<Link> linkId, double from, double to) {
+		Map<Id<Link>, List<OccupancyEntry>> occupancyEntriesByLink = occupancyEntriesByIteration.get(iteration);
+		if (occupancyEntriesByLink == null) {
+			log.error("Requested historical occupancy for iteration {}, but no data is available. Returning NaN.", iteration);
+			throw new RuntimeException("No historical data for iteration " + iteration);
+		}
+
+		List<OccupancyEntry> occupancyEntries = occupancyEntriesByLink.getOrDefault(linkId, List.of());
 
 		// filter entries to only those that overlap with [from, to]
 		List<OccupancyEntry> list = getOccupancyEntriesInTimeBin(from, to, occupancyEntries);
@@ -123,7 +136,7 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 		return list;
 	}
 
-	private static boolean isPt(Id<Link> linkId) {
+	static boolean isPt(Id<Link> linkId) {
 		String s = linkId.toString();
 		return s.startsWith("pt_") || s.contains("_pt_");
 	}
@@ -138,13 +151,21 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 	public void notifyAfterMobsim(AfterMobsimEvent event) {
 		if (event.getIteration() % writeInterval == 0 || event.isLastIteration()) {
 			log.info("Writing parking occupancy for iteration {}.", event.getIteration());
-			Path file = Path.of(event.getServices().getControlerIO().getIterationFilename(event.getIteration(), "parking_occupancy.csv.zst"));
+			Path file = Path.of(event.getServices().getControllerIO().getIterationFilename(event.getIteration(), "parking_occupancy.csv.zst"));
 			writeAllRows(file, event.getServices().getScenario().getNetwork(), parkingEventHandler.getOccupancyEntriesByLink());
 		}
+
+		// deep copy parkingEventHandler.getOccupancyEntriesByLink()
+		Map<Id<Link>, List<OccupancyEntry>> copy = new HashMap<>();
+		for (var entry : parkingEventHandler.getOccupancyEntriesByLink().entrySet()) {
+			copy.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+		}
+		occupancyEntriesByIteration.put(event.getIteration(), copy);
+
 		this.lock = false;
 	}
 
-	static void writeMaxRows(Path file, Network network, Map<Id<Link>, List<OccupancyEntry>> occupancyEntries) {
+	private static void writeMaxRows(Path file, Network network, Map<Id<Link>, List<OccupancyEntry>> occupancyEntries) {
 		var rows = new ArrayList<List<String>>();
 
 		for (var entries : occupancyEntries.entrySet()) {
@@ -165,7 +186,7 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 		writeRows(file, rows);
 	}
 
-	static void writeAllRows(Path file, Network network, Map<Id<Link>, List<OccupancyEntry>> occupancyEntries) {
+	private static void writeAllRows(Path file, Network network, Map<Id<Link>, List<OccupancyEntry>> occupancyEntries) {
 		var rows = new ArrayList<List<String>>();
 
 		for (var entries : occupancyEntries.entrySet()) {
@@ -202,238 +223,11 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 		}
 	}
 
-	public static class ParkingEventHandler implements VehicleEntersTrafficEventHandler, VehicleLeavesTrafficEventHandler {
-		private final ParkingInitializerEventsHandler initializer;
-		private final Map<Id<Link>, List<OccupancyChange>> occupancyChangesByLink = new HashMap<>(600000);
-		private Map<Id<Link>, List<OccupancyEntry>> occupancyEntriesByLinkCache = null;
-
-		private final Set<String> parkingModes;
-		private final Map<String, Map<Id<Person>, Id<Link>>> lastParkingLinkByPersonAndMode = new HashMap<>(600000);
-
-		private boolean initialized = false;
-
-		public ParkingEventHandler(ParkingInitializerEventsHandler initializer, Set<String> parkingModes) {
-			this.parkingModes = parkingModes;
-			this.initializer = initializer;
-		}
-
-		@Override
-		public void handleEvent(VehicleEntersTrafficEvent event) {
-			if (isPt(event.getLinkId())) {
-				// Ignore pt links
-				return;
-			}
-
-			if (!parkingModes.contains(event.getNetworkMode())) {
-				// Other mode than parking mode => ignore
-				return;
-			}
-
-			occupancyChangesByLink.putIfAbsent(event.getLinkId(), new LinkedList<>());
-			var list = occupancyChangesByLink.get(event.getLinkId());
-			list.add(new OccupancyChange(event.getTime(), -1.));
-
-			// We need to check mass conservation here. If a person leaves a link where he/she never parked, we need to remove the parking count at the last link.
-			// This might happen if the activity locations are very close and the coord Distance in subtour mode choice is > 0.
-			lastParkingLinkByPersonAndMode.putIfAbsent(event.getNetworkMode(), new HashMap<>());
-			var linkByPerson = lastParkingLinkByPersonAndMode.get(event.getNetworkMode());
-			Id<Link> lastLink = linkByPerson.get(event.getPersonId());
-
-			if (lastLink != null && !lastLink.equals(event.getLinkId())) {
-				// remove the parking at the last link
-				List<OccupancyChange> occupancyChanges = occupancyChangesByLink.get(lastLink);
-				if (occupancyChanges == null) {
-					throw new RuntimeException("No occupancy changes found for link " + lastLink + " while trying to remove a parking event.");
-				}
-				occupancyChanges.add(new OccupancyChange(event.getTime(), -1.));
-				linkByPerson.remove(lastLink);
-			}
-		}
-
-		@Override
-		public void handleEvent(VehicleLeavesTrafficEvent event) {
-			if (isPt(event.getLinkId())) {
-				// Ignore pt links
-				return;
-			}
-
-			if (!parkingModes.contains(event.getNetworkMode())) {
-				// Other mode than parking mode => ignore
-				return;
-			}
-
-			// update history with initial occupancy if needed
-			occupancyChangesByLink.putIfAbsent(event.getLinkId(), new ArrayList<>());
-			var list = occupancyChangesByLink.get(event.getLinkId());
-			list.add(new OccupancyChange(event.getTime(), 1.));
-
-			// track where this person last parked
-			lastParkingLinkByPersonAndMode.putIfAbsent(event.getNetworkMode(), new HashMap<>());
-			var linkByPerson = lastParkingLinkByPersonAndMode.get(event.getNetworkMode());
-			linkByPerson.put(event.getPersonId(), event.getLinkId());
-		}
-
-		// This function is called at the beginning of each iteration before any other controller listener is called (i.e. before mobsim starts listener).
-		@Override
-		public void reset(int iteration) {
-			occupancyChangesByLink.clear();
-			lastParkingLinkByPersonAndMode.clear();
-			occupancyEntriesByLinkCache = null;
-			initialized = false;
-		}
-
-		/// This function can only be called after all events have been read. If called before, the behavior is undefined.
-		Map<Id<Link>, List<OccupancyChange>> getOccupancyChangesByLink() {
-			if (!initialized) {
-				applyInitials();
-				initialized = true;
-			}
-			return occupancyChangesByLink;
-		}
-
-		/// This function can only be called after all events have been read. If called before, the behavior is undefined.
-		public Map<Id<Link>, List<OccupancyEntry>> getOccupancyEntriesByLink() {
-			if (!initialized) {
-				applyInitials();
-				initialized = true;
-			}
-
-			if (occupancyEntriesByLinkCache == null) {
-				//fill cache if needed
-				occupancyEntriesByLinkCache = new HashMap<>();
-				for (var entry : occupancyChangesByLink.entrySet()) {
-					occupancyEntriesByLinkCache.put(entry.getKey(), convert(entry.getValue()));
-				}
-			}
-			return this.occupancyEntriesByLinkCache;
-		}
-
-		private void applyInitials() {
-			initializer.getCountByLink().forEach((linkId, change) -> {
-				occupancyChangesByLink.putIfAbsent(linkId, new LinkedList<>());
-				var list = occupancyChangesByLink.get(linkId);
-				list.addFirst(new OccupancyChange(0, change));
-			});
-		}
-
-		static List<OccupancyEntry> convert(List<OccupancyChange> occupancyChanges) {
-			List<OccupancyEntry> entries = new ArrayList<>();
-			occupancyChanges.sort(Comparator.comparingDouble(OccupancyChange::time));
-			double currentOccupancy = 0.;
-			double lastTime = 0.;
-
-			for (OccupancyChange change : occupancyChanges) {
-				// in case of time 0, only the occupancy is added and no entry is created
-				if (change.time() > lastTime) {
-					entries.add(new OccupancyEntry(lastTime, change.time(), currentOccupancy));
-					lastTime = change.time();
-				}
-				currentOccupancy += change.change();
-			}
-			entries.add(new OccupancyEntry(lastTime, Double.POSITIVE_INFINITY, currentOccupancy));
-			return entries;
-		}
-
-		public static class Factory implements Provider<ParkingEventHandler> {
-			@Inject
-			private ParkingInitializerEventsHandler initializer;
-
-			private Set<String> parkingModes;
-
-			public Factory(Set<String> parkingModes) {
-				this.parkingModes = parkingModes;
-			}
-
-			@Override
-			public ParkingEventHandler get() {
-				return new ParkingEventHandler(initializer, parkingModes);
-			}
-		}
-	}
-
-	// This class is needed because we need to first determine the initial parking counts before we can track the parking events properly.
-	public static class ParkingInitializerEventsHandler implements VehicleEntersTrafficEventHandler, VehicleLeavesTrafficEventHandler {
-		private final Map<Id<Link>, Double> countByLink = new HashMap<>(600000);
-		private final Map<String, Set<Id<Person>>> personsAlreadyTravelledByMode = new HashMap<>(600000);
-		private final Set<String> parkingModes;
-
-		public ParkingInitializerEventsHandler(Set<String> parkingModes) {
-			this.parkingModes = parkingModes;
-		}
-
-		@Override
-		public void handleEvent(VehicleEntersTrafficEvent event) {
-			if (isPt(event.getLinkId())) {
-				// Ignore pt links
-				return;
-			}
-
-			if (!parkingModes.contains(event.getNetworkMode())) {
-				// Other mode than parking mode => ignore
-				return;
-			}
-
-			// No mass conservation needs to be taken into account because we only track whether an agent is already travelled with a mode or not.
-			// We don't care if the last trip ended at the same link where the new trip starts.
-			personsAlreadyTravelledByMode.putIfAbsent(event.getNetworkMode(), new HashSet<>());
-			Set<Id<Person>> persons = personsAlreadyTravelledByMode.get(event.getNetworkMode());
-			boolean alreadyTravelled = persons.remove(event.getPersonId());
-
-			if (!alreadyTravelled) {
-				// Vehicle entered traffic without having left before => A car was already parked.
-				countByLink.putIfAbsent(event.getLinkId(), 0.);
-				double count = countByLink.get(event.getLinkId());
-				count++;
-				countByLink.put(event.getLinkId(), count);
-			}
-			// Nothing else to do: A vehicle already registered as traveled is now entering traffic.
-		}
-
-		@Override
-		public void handleEvent(VehicleLeavesTrafficEvent event) {
-			if (isPt(event.getLinkId())) {
-				// Ignore pt links
-				return;
-			}
-
-			if (!parkingModes.contains(event.getNetworkMode())) {
-				// Other mode than parking mode => ignore
-				return;
-			}
-
-			personsAlreadyTravelledByMode.putIfAbsent(event.getNetworkMode(), new HashSet<>());
-			Set<Id<Person>> ids = personsAlreadyTravelledByMode.get(event.getNetworkMode());
-			boolean added = ids.add(event.getPersonId());
-
-			if (!added) {
-				throw new RuntimeException("Person " + event.getPersonId() + " is already en route with mode " + event.getNetworkMode());
-			}
-		}
-
-		@Override
-		public void reset(int iteration) {
-			countByLink.clear();
-			personsAlreadyTravelledByMode.clear();
-		}
-
-		public Map<Id<Link>, Double> getCountByLink() {
-			return countByLink;
-		}
-	}
-
 	public record OccupancyEntry(double fromTime, double toTime, double occupancy) {
 	}
 
 	public record OccupancyChange(double time, double change) {
 	}
 
-	public static class ParkingAnalyzerFactory implements Provider<ParkingAnalyzer> {
-
-
-		@Override
-		public ParkingAnalyzer get() {
-			return null;
-		}
-	}
 }
 

@@ -59,16 +59,16 @@ public class DeParkingModule extends AbstractModule {
 		// Add parking analyzer and its event handlers
 		ParkingAnalyzer analyzer = new ParkingAnalyzer(writeInterval);
 		bind(ParkingAnalyzer.class).toInstance(analyzer);
-		bind(ParkingAnalyzer.ParkingInitializerEventsHandler.class).toInstance(new ParkingAnalyzer.ParkingInitializerEventsHandler(mainModes));
-		addControlerListenerBinding().to(ParkingAnalyzer.class);
-		addEventHandlerBinding().to(ParkingAnalyzer.ParkingInitializerEventsHandler.class);
+		bind(ParkingInitializerEventsHandler.class).toInstance(new ParkingInitializerEventsHandler(mainModes));
+		addControllerListenerBinding().to(ParkingAnalyzer.class);
+		addEventHandlerBinding().to(ParkingInitializerEventsHandler.class);
 
-		bind(ParkingAnalyzer.ParkingEventHandler.class).toProvider(new ParkingAnalyzer.ParkingEventHandler.Factory(mainModes)).asEagerSingleton();
-		addEventHandlerBinding().to(ParkingAnalyzer.ParkingEventHandler.class);
+		bind(ParkingEventHandler.class).toProvider(new ParkingEventHandler.Factory(mainModes)).asEagerSingleton();
+		addEventHandlerBinding().to(ParkingEventHandler.class);
 
 		// Bind cost and approach
 		bind(ParkingCostTracker.class).toProvider(new ParkingCostTracker.Factory(Map.of(), 2 * 3600, writeInterval)).asEagerSingleton();
-		addControlerListenerBinding().to(ParkingCostTracker.class);
+		addControllerListenerBinding().to(ParkingCostTracker.class);
 		bind(DeParkingApproach.class).to(InverseLinearDeParkingApproach.class);
 	}
 }

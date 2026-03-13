@@ -34,7 +34,7 @@ class ParkingAnalyzerTest {
 		VehicleEntersTrafficEvent ve = new VehicleEntersTrafficEvent(1., Id.createPersonId("p"), Id.createLinkId("1"), Id.createVehicleId("p"), "car", 1.0);
 		VehicleLeavesTrafficEvent vl = new VehicleLeavesTrafficEvent(1., Id.createPersonId("p"), Id.createLinkId("2"), Id.createVehicleId("p"), "car", 1.0);
 
-		ParkingAnalyzer.ParkingEventHandler peh = ParkingAnalyzer.run((em) -> {
+		ParkingEventHandler peh = ParkingAnalyzer.run((em) -> {
 			em.processEvent(ve);
 			em.processEvent(vl);
 		});
@@ -71,7 +71,7 @@ class ParkingAnalyzerTest {
 		VehicleEntersTrafficEvent ve2 = new VehicleEntersTrafficEvent(3., Id.createPersonId("p2"), Id.createLinkId("1"), Id.createVehicleId("p2"), "car", 1.0);
 		VehicleLeavesTrafficEvent vl2 = new VehicleLeavesTrafficEvent(4., Id.createPersonId("p2"), Id.createLinkId("2"), Id.createVehicleId("p2"), "car", 1.0);
 
-		ParkingAnalyzer.ParkingEventHandler peh = ParkingAnalyzer.run((em) -> {
+		ParkingEventHandler peh = ParkingAnalyzer.run((em) -> {
 			em.processEvent(ve1);
 			em.processEvent(vl1);
 			em.processEvent(ve2);
@@ -131,7 +131,7 @@ class ParkingAnalyzerTest {
 		// person3 arrives at link3 at t=6
 		VehicleLeavesTrafficEvent vl3 = new VehicleLeavesTrafficEvent(6., Id.createPersonId("p3"), Id.createLinkId("3"), Id.createVehicleId("p3"), "car", 1.0);
 
-		ParkingAnalyzer.ParkingEventHandler peh = ParkingAnalyzer.run((em) -> {
+		ParkingEventHandler peh = ParkingAnalyzer.run((em) -> {
 			em.processEvent(ve1);
 			em.processEvent(vl1);
 			em.processEvent(ve2);
@@ -202,7 +202,7 @@ class ParkingAnalyzerTest {
 		VehicleEntersTrafficEvent ve2 = new VehicleEntersTrafficEvent(3., Id.createPersonId("p2"), Id.createLinkId("1"), Id.createVehicleId("p2"), "truck", 1.0);
 		VehicleLeavesTrafficEvent vl2 = new VehicleLeavesTrafficEvent(4., Id.createPersonId("p2"), Id.createLinkId("2"), Id.createVehicleId("p2"), "truck", 1.0);
 
-		ParkingAnalyzer.ParkingEventHandler peh = ParkingAnalyzer.run((em) -> {
+		ParkingEventHandler peh = ParkingAnalyzer.run((em) -> {
 			em.processEvent(ve1);
 			em.processEvent(vl1);
 			em.processEvent(ve2);
@@ -257,7 +257,7 @@ class ParkingAnalyzerTest {
 		// p2 leaves l3 at t=3
 		VehicleLeavesTrafficEvent vl2 = new VehicleLeavesTrafficEvent(3., Id.createPersonId("p2"), Id.createLinkId("3"), Id.createVehicleId("p2"), "car", 1.0);
 
-		ParkingAnalyzer.ParkingEventHandler peh = ParkingAnalyzer.run((em) -> {
+		ParkingEventHandler peh = ParkingAnalyzer.run((em) -> {
 			em.processEvent(ve1);
 			em.processEvent(vl1);
 			em.processEvent(ve2);
