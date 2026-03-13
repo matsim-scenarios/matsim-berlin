@@ -34,6 +34,7 @@ public class RunAutofreiPolicyDeparking extends RunAutofreiPolicy {
 
 	@Override
 	protected Config prepareConfig(Config config) {
+		super.prepareConfig(config);
 		DeparkingConfigGroup deparkingConfigGroup = ConfigUtils.addOrGetModule(config, DeparkingConfigGroup.class);
 		return config;
 	}
