@@ -81,6 +81,42 @@ class PdiDeparkingApproachTest {
 	}
 
 	@Test
+	void newParkingCost_resetOnZeroClearsIntegralNearTarget() {
+		Config config = createConfig(0.0, 1.0, 0.0, 20.0);
+		DeparkingConfigGroup deparkingConfigGroup = ConfigUtils.addOrGetModule(config, DeparkingConfigGroup.class);
+		deparkingConfigGroup.setIntegralApproach(DeparkingConfigGroup.IntegralApproach.RESET_ON_ZERO);
+		deparkingConfigGroup.setResetOnZeroThreshold(0.1);
+		Network network = createNetworkWithSpots(Map.of("1", 10.0));
+		PdiDeparkingApproach approach = new PdiDeparkingApproach(config, network);
+		Id<Link> linkId = Id.createLinkId("1");
+
+		double firstCost = approach.newParkingCost(fullBinAnalyzer(15.0), linkId, 0, 0.0, 3600.0);
+		double resetCost = approach.newParkingCost(fullBinAnalyzer(10.5), linkId, 1, 0.0, 3600.0);
+
+		Assertions.assertEquals(0.5, firstCost, 1e-9);
+		Assertions.assertEquals(0.0, resetCost, 1e-9);
+	}
+
+	@Test
+	void newParkingCost_smoothingDecayShortensIntegralMemory() {
+		Config config = createConfig(0.0, 1.0, 0.0, 20.0);
+		DeparkingConfigGroup deparkingConfigGroup = ConfigUtils.addOrGetModule(config, DeparkingConfigGroup.class);
+		deparkingConfigGroup.setIntegralApproach(DeparkingConfigGroup.IntegralApproach.SMOOTHING);
+		deparkingConfigGroup.setSmoothAlpha(0.5);
+		Network network = createNetworkWithSpots(Map.of("1", 10.0));
+		PdiDeparkingApproach approach = new PdiDeparkingApproach(config, network);
+		Id<Link> linkId = Id.createLinkId("1");
+
+		double firstCost = approach.newParkingCost(fullBinAnalyzer(15.0), linkId, 0, 0.0, 3600.0);
+		double secondCost = approach.newParkingCost(fullBinAnalyzer(15.0), linkId, 1, 0.0, 3600.0);
+		double thirdCost = approach.newParkingCost(fullBinAnalyzer(10.0), linkId, 2, 0.0, 3600.0);
+
+		Assertions.assertEquals(0.5, firstCost, 1e-9);
+		Assertions.assertEquals(0.75, secondCost, 1e-9);
+		Assertions.assertEquals(0.375, thirdCost, 1e-9);
+	}
+
+	@Test
 	void newParkingCost_usesDerivativeWhenOccupancyChanges() {
 		Config config = createConfig(0.0, 0.0, 1.0, 20.0);
 		Network network = createNetworkWithSpots(Map.of("1", 10.0));
@@ -136,6 +172,9 @@ class PdiDeparkingApproachTest {
 		deparkingConfigGroup.setK_d(kD);
 		deparkingConfigGroup.setMaxCost(maxCost);
 		deparkingConfigGroup.setTargetRelativeOccupancy(1.0);
+		deparkingConfigGroup.setIntegralApproach(DeparkingConfigGroup.IntegralApproach.ALL);
+		deparkingConfigGroup.setSmoothAlpha(0.5);
+		deparkingConfigGroup.setResetOnZeroThreshold(0.1);
 		return config;
 	}
 

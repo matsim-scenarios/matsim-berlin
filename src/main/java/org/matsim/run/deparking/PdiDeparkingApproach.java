@@ -36,24 +36,37 @@ public class PdiDeparkingApproach implements DeParkingApproach {
 	public double newParkingCost(ParkingAnalyzer analyzer, Id<Link> linkId, int iteration, double from, double to) {
 		int bin = DeparkingApproachUtils.bin(from, to);
 		double relativeOccupancy = DeparkingApproachUtils.weightedRelativeOccupancy(analyzer, linkId, iteration, from, to, getParkingSpots(linkId));
+		DeparkingConfigGroup configGroup = ConfigUtils.addOrGetModule(config, DeparkingConfigGroup.class);
 		double targetRelativeOccupancy = DeparkingApproachUtils.targetRelativeOccupancy(config);
 		// Error is measured against the configured target relative occupancy:
 		// error = relativeOccupancy - targetRelativeOccupancy.
 		double error = relativeOccupancy - targetRelativeOccupancy;
 		// Integral term:
-		// cumulativeError_t = cumulativeError_(t-1) + error_t
+		// The exact update depends on the configured integral approach:
+		// ALL: cumulativeError_t = cumulativeError_(t-1) + error_t
+		// RESET_ON_ZERO: cumulativeError_t = 0 if |error_t| <= threshold, else cumulativeError_(t-1) + error_t
+		// SMOOTHING: cumulativeError_t = alpha * cumulativeError_(t-1) + error_t
 		// For the first observation of a link/bin, the previous cumulative error is 0.
-		double cumulativeError = cumulativeErrorCache.getOrDefault(linkId, Map.of()).getOrDefault(bin, 0.0) + error;
+		double previousCumulativeError = cumulativeErrorCache.getOrDefault(linkId, Map.of()).getOrDefault(bin, 0.0);
+		double cumulativeError = updateCumulativeError(configGroup, previousCumulativeError, error);
 		// Derivative term input:
 		// previousError = error_(t-1)
 		// For the first observation of a link/bin, the previous error is 0.
 		double previousError = previousErrorCache.getOrDefault(linkId, Map.of()).getOrDefault(bin, 0.0);
-		double newCost = calcCost(error, cumulativeError, previousError);
+		double newCost = calcCost(configGroup, error, cumulativeError, previousError);
 
 		cumulativeErrorCache.computeIfAbsent(linkId, id -> new HashMap<>()).put(bin, cumulativeError);
 		previousErrorCache.computeIfAbsent(linkId, id -> new HashMap<>()).put(bin, error);
 
 		return newCost;
+	}
+
+	double updateCumulativeError(DeparkingConfigGroup configGroup, double previousCumulativeError, double error) {
+		return switch (configGroup.getIntegralApproach()) {
+			case ALL -> previousCumulativeError + error;
+			case RESET_ON_ZERO -> Math.abs(error) <= configGroup.getResetOnZeroThreshold() ? 0.0 : previousCumulativeError + error;
+			case SMOOTHING -> configGroup.getSmoothAlpha() * previousCumulativeError + error;
+		};
 	}
 
 	// Direct PDI control law:
@@ -65,8 +78,7 @@ public class PdiDeparkingApproach implements DeParkingApproach {
 	//   maxCost
 	// )
 	// The controller output is the full next parking cost, not an increment on the previous cost.
-	double calcCost(double error, double cumulativeError, double previousError) {
-		DeparkingConfigGroup configGroup = ConfigUtils.addOrGetModule(config, DeparkingConfigGroup.class);
+	double calcCost(DeparkingConfigGroup configGroup, double error, double cumulativeError, double previousError) {
 		double rawCost = configGroup.getK_p() * error
 			+ configGroup.getK_i() * cumulativeError
 			+ configGroup.getK_d() * (error - previousError);
