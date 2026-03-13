@@ -9,6 +9,8 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.api.experimental.events.EventsManager;
+import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.events.AfterMobsimEvent;
 import org.matsim.core.controler.events.IterationStartsEvent;
 import org.matsim.core.controler.listener.AfterMobsimListener;
@@ -26,8 +28,6 @@ import java.util.function.Consumer;
 public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimListener {
 	private static final Logger log = LogManager.getLogger(ParkingAnalyzer.class);
 
-	private int writeInterval = 50;
-
 	private int iteration = -1;
 
 	// This lock is unlocked after the mobsim has run and all events have been processed. This is because the event handlers need to finish to get correct results.
@@ -42,11 +42,10 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 	@Inject
 	private ParkingEventHandler parkingEventHandler;
 
-	private Map<Integer, Map<Id<Link>, List<OccupancyEntry>>> occupancyEntriesByIteration = new HashMap<>();
+	@Inject
+	private Config config;
 
-	public ParkingAnalyzer(int writeInterval) {
-		this.writeInterval = writeInterval;
-	}
+	private Map<Integer, Map<Id<Link>, List<OccupancyEntry>>> occupancyEntriesByIteration = new HashMap<>();
 
 	public ParkingAnalyzer() {
 	}
@@ -149,7 +148,7 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 
 	@Override
 	public void notifyAfterMobsim(AfterMobsimEvent event) {
-		if (event.getIteration() % writeInterval == 0 || event.isLastIteration()) {
+		if (event.getIteration() % ConfigUtils.addOrGetModule(config, DeparkingConfigGroup.class).getWriteInterval() == 0 || event.isLastIteration()) {
 			log.info("Writing parking occupancy for iteration {}.", event.getIteration());
 			Path file = Path.of(event.getServices().getControllerIO().getIterationFilename(event.getIteration(), "parking_occupancy.csv.zst"));
 			writeAllRows(file, event.getServices().getScenario().getNetwork(), parkingEventHandler.getOccupancyEntriesByLink());

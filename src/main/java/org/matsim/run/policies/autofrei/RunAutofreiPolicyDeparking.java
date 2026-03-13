@@ -8,8 +8,11 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.application.MATSimApplication;
+import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
 import org.matsim.run.deparking.DeParkingModule;
+import org.matsim.run.deparking.DeparkingConfigGroup;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -33,6 +36,13 @@ public class RunAutofreiPolicyDeparking extends RunAutofreiPolicy {
 	}
 
 	@Override
+	protected Config prepareConfig(Config config) {
+		DeparkingConfigGroup deparkingConfigGroup = ConfigUtils.addOrGetModule(config, DeparkingConfigGroup.class);
+		deparkingConfigGroup.setWriteInterval(writeInterval);
+		return config;
+	}
+
+	@Override
 	protected void prepareScenario(Scenario scenario) {
 		super.prepareScenario(scenario);
 		addParkingSpots(scenario);
@@ -43,11 +53,7 @@ public class RunAutofreiPolicyDeparking extends RunAutofreiPolicy {
 	@Override
 	protected void prepareControler(Controler controler) {
 		super.prepareControler(controler);
-		if (writeInterval > 0) {
-			controler.addOverridingModule(new DeParkingModule(writeInterval));
-		} else {
-			controler.addOverridingModule(new DeParkingModule());
-		}
+		controler.addOverridingModule(new DeParkingModule());
 	}
 
 	private void addParkingSpots(Scenario scenario) {

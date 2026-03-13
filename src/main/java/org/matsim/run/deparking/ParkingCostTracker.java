@@ -9,6 +9,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.events.IterationEndsEvent;
 import org.matsim.core.controler.listener.IterationEndsListener;
 import org.matsim.run.policies.autofrei.RunAutofreiPolicyDeparking;
@@ -33,10 +34,10 @@ public class ParkingCostTracker implements IterationEndsListener {
 	private final DeParkingApproach deParkingApproach;
 	private final Network network;
 	private final Map<Id<Link>, Double> parkingSpotCache = new HashMap<>();
-	private final int writeInterval;
+	private final Config config;
 
 	// package-private for testing
-	ParkingCostTracker(Map<Id<Link>, Integer> linkIndexMap, double[][] costs, ParkingAnalyzer parkingAnalyzer, int binSizeInSeconds, DeParkingApproach deParkingApproach, Network network, int writeInterval) {
+	ParkingCostTracker(Map<Id<Link>, Integer> linkIndexMap, double[][] costs, ParkingAnalyzer parkingAnalyzer, int binSizeInSeconds, DeParkingApproach deParkingApproach, Network network, Config config) {
 		this.linkIndexMap.putAll(linkIndexMap);
 		this.costs = costs;
 		this.binSizeInSeconds = binSizeInSeconds;
@@ -44,13 +45,13 @@ public class ParkingCostTracker implements IterationEndsListener {
 		this.parkingAnalyzer = parkingAnalyzer;
 		this.deParkingApproach = deParkingApproach;
 		this.network = network;
-		this.writeInterval = writeInterval;
+		this.config = config;
 	}
 
 	/// Returns the cost of parking at a given link at a given time in a given iteration.
 	public double cost(Id<Link> link, double time) {
 		int bin = ((int) time) / binSizeInSeconds;
-		return costs[linkIndexMap.get(link)][bin];
+		return costs[linkIndexMap.get(link)][bin]; // €/h
 	}
 
 	@Override
@@ -61,11 +62,7 @@ public class ParkingCostTracker implements IterationEndsListener {
 		// go through all links and calculate new parking costs
 		linkIndexMap.forEach((id, linkIndex) -> {
 			for (int bin = 0; bin < binCount; bin++) {
-				List<ParkingAnalyzer.OccupancyEntry> occupancies = parkingAnalyzer.occupancy(event.getIteration(), id, bin * binSizeInSeconds, (bin + 1) * binSizeInSeconds);
-				double weightedOccupancy = occupancies.stream().mapToDouble(o -> (o.toTime() - o.fromTime()) * o.occupancy()).sum() / binSizeInSeconds;
-				double availableSpots = getParkingSpots(id);
-				double weightedRelativeOccupancy = weightedOccupancy / availableSpots;
-				newCosts[linkIndex][bin] = deParkingApproach.newParkingCost(weightedRelativeOccupancy, costs[linkIndex][bin]);
+				newCosts[linkIndex][bin] = deParkingApproach.newParkingCost(parkingAnalyzer, id, event.getIteration(), bin * binSizeInSeconds, (bin + 1) * binSizeInSeconds);
 			}
 		});
 
@@ -76,17 +73,13 @@ public class ParkingCostTracker implements IterationEndsListener {
 			throw new RuntimeException(e);
 		}
 
-		if (event.isLastIteration() || event.getIteration() % writeInterval == 0) {
+		if (event.isLastIteration() || event.getIteration() % ConfigUtils.addOrGetModule(config, DeparkingConfigGroup.class).getWriteInterval() == 0) {
 			log.info("Writing parking costs for iteration {} to file {}.", event.getIteration(), file);
 			writeCsv(file);
 		}
 
 		// replace old costs with new costs
 		costs = newCosts;
-	}
-
-	private double getParkingSpots(Id<Link> linkId) {
-		return parkingSpotCache.computeIfAbsent(linkId, id -> (Double) network.getLinks().get(id).getAttributes().getAttribute(RunAutofreiPolicyDeparking.PARKING_SPOTS_ATTR));
 	}
 
 	private void writeCsv(Path file) {
@@ -120,10 +113,13 @@ public class ParkingCostTracker implements IterationEndsListener {
 		}
 	}
 
+	private double getParkingSpots(Id<Link> linkId) {
+		return parkingSpotCache.computeIfAbsent(linkId, id -> (Double) network.getLinks().get(id).getAttributes().getAttribute(RunAutofreiPolicyDeparking.PARKING_SPOTS_ATTR));
+	}
+
 	public static class Factory implements Provider<ParkingCostTracker> {
 		private Map<Id<Link>, double[]> initialCosts = new HashMap<>();
 		private int binSizeInSeconds = 3600;
-		private int writeInterval = 50;
 
 		@Inject
 		private Network network;
@@ -137,10 +133,9 @@ public class ParkingCostTracker implements IterationEndsListener {
 		@Inject
 		private DeParkingApproach deParkingApproach;
 
-		public Factory(Map<Id<Link>, double[]> initialCosts, int binSizeInSeconds, int writeInterval) {
+		public Factory(Map<Id<Link>, double[]> initialCosts, int binSizeInSeconds) {
 			this.initialCosts = initialCosts;
 			this.binSizeInSeconds = binSizeInSeconds;
-			this.writeInterval = writeInterval;
 		}
 
 		@Override
@@ -179,7 +174,7 @@ public class ParkingCostTracker implements IterationEndsListener {
 
 			log.info("Created a ParkingCostHistory with {} links and {} time bins.", network.getLinks().size(), binCount);
 
-			return new ParkingCostTracker(linkIndexMap, costs, parkingAnalyzer, binSizeInSeconds, deParkingApproach, network, writeInterval);
+			return new ParkingCostTracker(linkIndexMap, costs, parkingAnalyzer, binSizeInSeconds, deParkingApproach, network, config);
 		}
 	}
 }

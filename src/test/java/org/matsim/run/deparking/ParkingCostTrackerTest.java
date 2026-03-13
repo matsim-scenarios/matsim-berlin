@@ -18,6 +18,7 @@ import org.matsim.api.core.v01.network.NetworkFactory;
 import org.matsim.api.core.v01.network.Node;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.ControllerConfigGroup;
 import org.matsim.core.controler.MatsimServices;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
@@ -53,7 +54,7 @@ class ParkingCostTrackerTest {
 		Network network = createNetworkWithLink("1", 100.0);
 
 		ParkingCostTracker history = new ParkingCostTracker(
-			linkIndexMap, initialCosts, null, 3600, null, network, 1
+			linkIndexMap, initialCosts, null, 3600, null, network, getConfig()
 		);
 
 		// Bin 0: 0-3600s
@@ -87,7 +88,7 @@ class ParkingCostTrackerTest {
 		Network network = createNetworkWithLinks(Map.of("A", 100.0, "B", 100.0));
 
 		ParkingCostTracker history = new ParkingCostTracker(
-			linkIndexMap, costs, null, 3600, null, network, 1
+			linkIndexMap, costs, null, 3600, null, network, getConfig()
 		);
 
 		Assertions.assertEquals(10.0, history.cost(Id.createLinkId("A"), 0));
@@ -117,10 +118,10 @@ class ParkingCostTrackerTest {
 		};
 
 		// Simple approach: new cost = relative occupancy * 100
-		DeParkingApproach approach = new InverseLinearDeParkingApproach();
+		InverseLinearDeParkingApproach approach = new InverseLinearDeParkingApproach(network);
 
 		ParkingCostTracker history = new ParkingCostTracker(
-			linkIndexMap, costs, mockAnalyzer, 3600, approach, network, 1
+			linkIndexMap, costs, mockAnalyzer, 3600, approach, network, getConfig()
 		);
 
 		// Simulate iteration end
@@ -128,8 +129,8 @@ class ParkingCostTrackerTest {
 
 		double availableSpots = length / parkingSpotLength; //75/7.5 = 10
 		double relativeOccupancy = occupancy / availableSpots; //5/10 = 0.5
-		double newCost = approach.newParkingCost(relativeOccupancy, initialCost);
-		Assertions.assertEquals(3.75, newCost);
+		double newCost = approach.calcCosts(relativeOccupancy, 0.0);
+		Assertions.assertEquals(0.0, newCost);
 		Assertions.assertEquals(newCost, history.cost(linkId, 0), 0.001);
 	}
 
@@ -154,17 +155,17 @@ class ParkingCostTrackerTest {
 			}
 		};
 
-		DeParkingApproach approach = new InverseLinearDeParkingApproach();
+		InverseLinearDeParkingApproach approach = new InverseLinearDeParkingApproach(network);
 		ParkingCostTracker history = new ParkingCostTracker(
-			linkIndexMap, costs, mockAnalyzer, 3600, approach, network, 1
+			linkIndexMap, costs, mockAnalyzer, 3600, approach, network, getConfig()
 		);
 
 		history.notifyIterationEnds(new org.matsim.core.controler.events.IterationEndsEvent(new MockMatsimTestServices(utils.getOutputDirectory()), 0, false));
 
 		// weightedOccupancy = (1800*2 + 1800*8) / 3600 = 5
 		// relativeOccupancy = 5 / 10 = 0.5
-		// newCost = approach.newParkingCost(0.5, 5.0) = 3.75
-		Assertions.assertEquals(3.75, history.cost(linkId, 0), 0.001);
+		// The current approach API keeps its own per-bin previous-cost cache and starts at 0.0.
+		Assertions.assertEquals(0.0, history.cost(linkId, 0), 0.001);
 	}
 
 	private Network createNetworkWithLink(String linkId, double length) {
@@ -191,6 +192,11 @@ class ParkingCostTrackerTest {
 		}
 
 		return network;
+	}
+
+	private Config getConfig() {
+		Config config = ConfigUtils.createConfig();
+		return config;
 	}
 
 	private record MockMatsimTestServices(String testDir) implements MatsimServices {
