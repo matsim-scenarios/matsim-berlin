@@ -140,7 +140,7 @@ public class OpenBerlinSharingScenario extends OpenBerlinScenario {
 //			here we need to use geServiceMode(), because this builds a string prexix_serviceId and adds it to SMC in a subsequent step.
 //			if we just add E_SCOOTER, agents will be able to use eScooter as a separate mode without sharing!!!
 //			I do not like this, but for this matsim version we have to accept it. -sm0226
-			modes.add(SharingUtils.getServiceMode(serviceConfig));
+			modes.add(E_SCOOTER);
 			config.subtourModeChoice().setModes(modes.toArray(new String[0]));
 		}
 
