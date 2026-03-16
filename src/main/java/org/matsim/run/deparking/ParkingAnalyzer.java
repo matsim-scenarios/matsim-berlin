@@ -55,13 +55,13 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 	 * It tracks when vehicles enter and leave traffic to determine when they are parked.
 	 */
 	public static void main(String[] args) {
-//		String events = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-baseCaseCtdExtended/berlin-v6.4.output_events.xml.zst";
-//		String networkPath = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-baseCaseCtdExtended/berlin-v6.4.output_network.xml.zst";
-//		String output = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-baseCaseCtdExtended/parking_occupancy_autofrei-1pct.csv.zst";
+		String events = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-policy/berlin-v6.4.output_events.xml.zst";
+		String networkPath = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-policy/berlin-v6.4.output_network.xml.zst";
+		String output = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-policy/parking_occupancy_autofrei-1pct.csv.zst";
 
-		String events = "output/deparking-debug/ITERS/it.9/berlin-v6.4.9.events.xml.zst";
-		String networkPath = "output/deparking-debug/berlin-v6.4.output_network.xml.zst";
-		String output = "output/deparking-debug/parking_occupancy_it9.csv.zst";
+//		String events = "output/deparking-debug/ITERS/it.9/berlin-v6.4.9.events.xml.zst";
+//		String networkPath = "output/deparking-debug/berlin-v6.4.output_network.xml.zst";
+//		String output = "output/deparking-debug/parking_occupancy_it9.csv.zst";
 
 		// -1002247009
 

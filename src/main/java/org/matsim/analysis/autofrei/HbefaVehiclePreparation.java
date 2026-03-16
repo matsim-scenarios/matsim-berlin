@@ -6,6 +6,12 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.vehicles.*;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+
 import static org.matsim.run.policies.autofrei.RunAutofreiPolicy.NEW_MODE_SMALL_SCALE_COMMERCIAL_AND_GOODS_TRAFFIC;
 
 public class HbefaVehiclePreparation {
@@ -13,7 +19,19 @@ public class HbefaVehiclePreparation {
 	private static final Logger log = LogManager.getLogger(HbefaVehiclePreparation.class);
 
 	public static void main(String[] args) {
-		String file = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-baseCaseCtdExtended/berlin-v6.4.output_vehicles.xml.zst";
+		{
+			String file = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-baseCaseCtdExtended/berlin-v6.4.output_vehicles.xml.zst";
+			runForFile(file);
+		}
+		{
+			String file = "/Users/paulh/runs-svn/matsim-berlin/autofrei/1pct-v6.4/berlin-autofrei-v6.4-policy/berlin-v6.4.output_vehicles.xml.zst";
+			runForFile(file);
+		}
+
+	}
+
+	private static void runForFile(String file) {
+		copyFile(file);
 
 		Vehicles vehiclesContainer = VehicleUtils.createVehiclesContainer();
 		new MatsimVehicleReader.VehicleReader(vehiclesContainer).readFile(file);
@@ -43,6 +61,17 @@ public class HbefaVehiclePreparation {
 			VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
 		}
 
-		VehicleUtils.writeVehicles(vehiclesContainer, file.replace("output_vehicles.xml.zst", "output_vehicles_hbefa.xml.zst"));
+		VehicleUtils.writeVehicles(vehiclesContainer, file);
+	}
+
+	private static void copyFile(String file) {
+		Path source = Paths.get(file);
+		String copiedFileName = file.replace("output_vehicles.xml.zst", "output_vehicles_original.xml.zst");
+		Path target = source.resolveSibling(copiedFileName);
+		try {
+			Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }
