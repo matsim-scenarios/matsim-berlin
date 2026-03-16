@@ -19,8 +19,18 @@
 
 package org.matsim.prepare.drt;
 
-import com.opencsv.CSVWriter;
-import me.tongfei.progressbar.ProgressBar;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SplittableRandom;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.locationtech.jts.geom.Geometry;
@@ -36,20 +46,17 @@ import org.matsim.contrib.dvrp.fleet.DvrpVehicle;
 import org.matsim.contrib.dvrp.fleet.DvrpVehicleSpecification;
 import org.matsim.contrib.dvrp.fleet.FleetWriter;
 import org.matsim.contrib.dvrp.fleet.ImmutableDvrpVehicleSpecification;
+import org.matsim.contrib.dvrp.load.IntegerLoadType;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.scenario.ProjectionUtils;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.run.OpenBerlinScenario;
-import picocli.CommandLine;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import com.opencsv.CSVWriter;
+
+import me.tongfei.progressbar.ProgressBar;
+import picocli.CommandLine;
 
 
 @CommandLine.Command(name = "create-drt-vehicles", description = "Create DRT vehicles for a scenario")
@@ -135,7 +142,7 @@ public class CreateDrtVehicles implements MATSimAppCommand {
 
 		}
 		String fileNameBase = output + "drt-by-rndLocations-%dvehicles-%dseats".formatted(amount, seats);
-		new FleetWriter(vehicles.stream()).write(fileNameBase + ".xml.gz");
+		new FleetWriter(vehicles.stream(), new IntegerLoadType("passengers")).write(fileNameBase + ".xml.gz");
 
 		writeVehStartPositionsCSV(network, vehicles, fileNameBase);
 
