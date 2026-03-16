@@ -28,6 +28,7 @@ import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutilityF
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
+import org.matsim.run.policies.MobilityToGridScenariosUtils;
 import org.matsim.run.scoring.AdvancedScoringConfigGroup;
 import org.matsim.run.scoring.AdvancedScoringModule;
 import org.matsim.run.scoring.BerlinPersonScoringParametersFromPersonAttributes;
@@ -168,6 +169,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 		// add hbefa link attributes.
 		HbefaRoadTypeMapping roadTypeMapping = OsmHbefaMapping.build();
 		roadTypeMapping.addHbefaMappings(scenario.getNetwork());
+
+		MobilityToGridScenariosUtils.addEngineInformationToVehicleTypes(scenario, "petrol (4S)");
 	}
 
 	@Override

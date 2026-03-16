@@ -145,7 +145,7 @@ public class RunAirpollutionAnalysisWithDifferentHbefaVehicleTypes implements MA
 			Files.delete(beforeEmissionsConfigPath);
 			Files.delete(beforeEmissionsNetworkPath);
 			Files.delete(beforeEmissionsVehiclesPath);
-			Files.delete(beforeEmissionsConfigPath);
+			Files.delete(beforeEmissionsTransitVehiclesPath);
 		}
 
 		return 0;
