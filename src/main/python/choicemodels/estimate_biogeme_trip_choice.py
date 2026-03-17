@@ -4,6 +4,8 @@
 import argparse
 import biogeme.biogeme as bio
 import biogeme.database as db
+import pandas as pd
+import numpy as np
 import biogeme.models as models
 from biogeme.expressions import Beta, Derive, bioDraws, PanelLikelihoodTrajectory, log, MonteCarlo
 
@@ -207,3 +209,19 @@ if __name__ == "__main__":
 
         aggr = ((prob_weighted * p[f"Direct elasticity {mode} km costs"]) / denom).sum()
         print("Aggregated direct elasticity of %s wrt to km costs: %.3f" % (mode, aggr))
+
+
+    preds = p[[f"Prob {ds.modes[i]}" for i in range(len(ds.modes))]]
+
+    # Rename columns
+    preds.columns = ds.modes
+    # Results includes weighting
+    preds = preds.mul(df["weight"], axis=0)
+
+    result = pd.concat([df[["person", "trip_n", "choice"]], preds], axis=1)
+    result["chosen"] = preds.to_numpy()[np.arange(len(df)), df["choice"].to_numpy() - 1]
+
+    with open("output_preds.csv", "w") as f:
+        f.write(f"# input={args.input}\n")
+
+    result.to_csv("output_preds.csv", index=False, mode='a')
