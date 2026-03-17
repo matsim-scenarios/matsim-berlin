@@ -41,7 +41,7 @@ import java.util.*;
  * E.g. for pt or car.
  * All necessary configs will be made in this class.
  */
-public class OpenBerlinSharingScenario extends OpenBerlinScenario {
+public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 	static final String E_SCOOTER = "eScooter";
 	private static final String STOP_FILTER = "eScooterStopFilter";
 	private static final String STOP_FILTER_VALUE = "station_S/U/RE/RB_eScooter";
@@ -109,7 +109,7 @@ public class OpenBerlinSharingScenario extends OpenBerlinScenario {
 		SharingServiceConfigGroup serviceConfig = new SharingServiceConfigGroup();
 		serviceConfig.setId(E_SCOOTER);
 		serviceConfig.setServiceScheme(SharingServiceConfigGroup.ServiceScheme.StationBased);
-		serviceConfig.setMaximumAccessEgressDistance(2000);
+		serviceConfig.setMaximumAccessEgressDistance(10000);
 		serviceConfig.setServiceInputFile(serviceFile);
 		serviceConfig.setServiceAreaShapeFile(BERLIN_SHP_STRING);
 		serviceConfig.setMode(E_SCOOTER);
@@ -140,7 +140,7 @@ public class OpenBerlinSharingScenario extends OpenBerlinScenario {
 //			here we need to use geServiceMode(), because this builds a string prexix_serviceId and adds it to SMC in a subsequent step.
 //			if we just add E_SCOOTER, agents will be able to use eScooter as a separate mode without sharing!!!
 //			I do not like this, but for this matsim version we have to accept it. -sm0226
-			modes.add(E_SCOOTER);
+			modes.add(SharingUtils.getServiceMode(serviceConfig));
 			config.subtourModeChoice().setModes(modes.toArray(new String[0]));
 		}
 

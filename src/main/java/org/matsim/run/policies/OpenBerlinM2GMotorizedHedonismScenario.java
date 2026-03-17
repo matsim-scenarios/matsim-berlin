@@ -41,7 +41,7 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 	private static final double SHARING_BASE_FARE = 1.0;
 	private static final double SHARING_DISTANCE_FARE = 0.0;
 	private static final double SHARING_TIME_FARE = 0.0045;
-	private static final OpenBerlinSharingScenario.EScooterIntermodalityHandling SHARING_INTERMODALITY_HANDLING = OpenBerlinSharingScenario.EScooterIntermodalityHandling.E_SCOOTER_REGULAR_AND_INTERMODAL;
+	private static final OpenBerlinScooterSharingScenario.EScooterIntermodalityHandling SHARING_INTERMODALITY_HANDLING = OpenBerlinScooterSharingScenario.EScooterIntermodalityHandling.E_SCOOTER_REGULAR_AND_INTERMODAL;
 //	private static final double ADDITIONAL_HOME_OFFICE_PCT = 0.1;
 	private static final double REL_ROAD_CAPACITY_CHANGE = 0.75;
 	private static final String BERLIN_SHP = "input/v" + OpenBerlinScenario.VERSION + "/Berlin_25832.shp";
@@ -68,7 +68,7 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 //		6) sharing
 //		intermodal sharing + as own mode, base fare 1Eu, time fare 0.0045Eu/s, no distance fare
 //		sharing stations with 1000 veh capacity and 10 scooters each
-		OpenBerlinSharingScenario.addSharingServiceInConfig(config,
+		OpenBerlinScooterSharingScenario.addSharingServiceInConfig(config,
 			SHARING_SERVICE_FILE,
 			SHARING_BASE_FARE,
 			SHARING_DISTANCE_FARE,
@@ -103,7 +103,7 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 		OpenBerlinBikeSpeedScenario.setMaxBikeSpeedInScenario(scenario, MAX_BIKE_SPEED);
 //		6) sharing
 //		copy mode constants := tase preferences from bike to eScooter if available
-		OpenBerlinSharingScenario.copyBikeModeConstantsForSharingInScenario(scenario);
+		OpenBerlinScooterSharingScenario.copyBikeModeConstantsForSharingInScenario(scenario);
 //		7) home office
 //		no changes in scenario compared to base case
 //		8) road capacity
@@ -132,7 +132,7 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 //		no changes in controller compared to base case
 //		6) sharing
 //		TODO: the bindings here will fail because we have bindings to the same classes with drt.
-		OpenBerlinSharingScenario.addSharingModuleAndIntermodalFareCompensationInController(controler);
+		OpenBerlinScooterSharingScenario.addSharingModuleAndIntermodalFareCompensationInController(controler);
 //		7) home office
 //		no changes in controller compared to base case
 //		8) road capacity

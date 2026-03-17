@@ -3,21 +3,16 @@ package org.matsim.run.policies;
 import com.google.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.matsim.api.core.v01.Coord;
-import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.*;
 import org.matsim.contrib.emissions.HbefaVehicleCategory;
-import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
-import org.matsim.core.router.TripStructureUtils;
 import org.matsim.vehicles.EngineInformation;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Utils class for plugging together different policies in the same scenario.
@@ -93,7 +88,7 @@ public final class MobilityToGridScenariosUtils {
 
 		@Inject
 		OpenBerlinIntermodalPtSharingRouterAnalysisModeIdentifier() {
-			sharingModes = Arrays.asList(OpenBerlinSharingScenario.E_SCOOTER);
+			sharingModes = Arrays.asList(OpenBerlinScooterSharingScenario.E_SCOOTER, "sharing_" + OpenBerlinScooterSharingScenario.E_SCOOTER);
 
 			modeHierarchy.add( TransportMode.walk ) ;
 			// TransportMode.bike is not registered as main mode, only "bicycle" ;
@@ -184,7 +179,7 @@ public final class MobilityToGridScenariosUtils {
 
 		@Inject
 		OpenBerlinIntermodalPtSharingRouterModeIdentifier() {
-			sharingModes = Arrays.asList(OpenBerlinSharingScenario.E_SCOOTER);
+			sharingModes = Arrays.asList(OpenBerlinScooterSharingScenario.E_SCOOTER, "sharing_" + OpenBerlinScooterSharingScenario.E_SCOOTER);
 
 			modeHierarchy.add( TransportMode.walk ) ;
 			modeHierarchy.add( TransportMode.bike );
