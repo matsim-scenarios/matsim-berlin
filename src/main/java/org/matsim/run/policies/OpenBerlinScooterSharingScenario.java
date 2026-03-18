@@ -220,7 +220,7 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 	 */
 	enum EScooterIntermodalityHandling {INTERMODAL_E_SCOOTER_ONLY, E_SCOOTER_REGULAR_AND_INTERMODAL}
 
-	private static final class SharingRefundHandler implements PersonDepartureEventHandler, PersonMoneyEventHandler, AfterMobsimListener {
+	static final class SharingRefundHandler implements PersonDepartureEventHandler, PersonMoneyEventHandler, AfterMobsimListener {
 		@Inject
 		private EventsManager events;
 		@Inject
@@ -231,7 +231,7 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 		private final Set<Id<Person>> ptUsers = new HashSet<>();
 		private final Map<Id<Person>, List<Double>> eScooterFaresPerPerson = new HashMap<>();
 
-		private SharingRefundHandler(String ptMode) {
+		SharingRefundHandler(String ptMode) {
 			this.ptMode = ptMode;
 		}
 

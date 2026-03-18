@@ -35,9 +35,8 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 	private static final OpenBerlinDrtEstimatorScenario.DrtIntermodalityHandling DRT_INTERMODALITY_HANDLING = OpenBerlinDrtEstimatorScenario.DrtIntermodalityHandling.INTERMODAL_DRT_ONLY;
 	private static final double BETA_MONEY = 0.5;
 //	this is the "scaled" bike speed after analyzing elasticities of bike speed and bike modal share
-	private static final double MAX_BIKE_SPEED = 16.;
-//	TODO: which station capacity and number of scooter should we use?
-	private static final String SHARING_SERVICE_FILE = "input/v" + OpenBerlinScenario.VERSION + "/berlin-v" + OpenBerlinScenario.VERSION + ".sharing-service-1000-capacity-10-vehicles.xml";
+	private static final double MAX_BIKE_SPEED = 20.;
+	private static final String SHARING_SERVICE_FILE = "input/v" + OpenBerlinScenario.VERSION + "/berlin-v" + OpenBerlinScenario.VERSION + ".sharing-service-1000-capacity-100-vehicles.xml";
 	private static final double SHARING_BASE_FARE = 1.0;
 	private static final double SHARING_DISTANCE_FARE = 0.0;
 	private static final double SHARING_TIME_FARE = 0.0045;
@@ -83,6 +82,12 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 //		no changes in config compared to base case
 
 		return config;
+	}
+
+	//	method createScenario needed for DRT simulation only
+	@Override
+	protected Scenario createScenario(Config config) {
+		return OpenBerlinDrtEstimatorScenario.configureDrtInCreateScenario(config);
 	}
 
 	@Override

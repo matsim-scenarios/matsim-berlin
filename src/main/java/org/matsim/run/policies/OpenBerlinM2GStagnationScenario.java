@@ -67,7 +67,6 @@ public class OpenBerlinM2GStagnationScenario extends OpenBerlinScenario {
 //		no changes in scenario compared to base case
 //		3) drt
 //		no changes in scenario compared to base case
-//		TODO: add createScenario method for drt here (if needed)
 //		4) marginal utility of money
 //		no changes in scenario compared to base case
 //		5) bicycle speed
