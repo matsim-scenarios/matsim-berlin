@@ -77,7 +77,7 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 		//		apply all scenario changes from base scenario class
 		super.prepareScenario(scenario);
 
-		copyBikeModeConstantsForSharingInScenario(scenario);
+//		copyBikeModeConstantsForSharingInScenario(scenario);
 
 //		tag intermodal eScooter-pt-stations
 		OpenBerlinDrtScenario.tagTransitStopsInServiceArea(scenario.getTransitSchedule(),
