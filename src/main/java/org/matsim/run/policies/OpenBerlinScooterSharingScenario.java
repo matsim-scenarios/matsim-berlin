@@ -155,10 +155,10 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 		ScoringConfigGroup.ModeParams bikeParams = config.scoring().getModes().get(TransportMode.bike);
 
 		ScoringConfigGroup.ModeParams modeParams = new ScoringConfigGroup.ModeParams(E_SCOOTER);
-		modeParams.setConstant(bikeParams.getConstant());
-		modeParams.setMarginalUtilityOfDistance(bikeParams.getMarginalUtilityOfDistance());
-		modeParams.setMarginalUtilityOfTraveling(bikeParams.getMarginalUtilityOfTraveling());
-		modeParams.setDailyUtilityConstant(bikeParams.getDailyUtilityConstant());
+		modeParams.setConstant(0.);
+		modeParams.setMarginalUtilityOfDistance(0.);
+		modeParams.setMarginalUtilityOfTraveling(0.);
+		modeParams.setDailyUtilityConstant(0.);
 
 		config.scoring().addModeParams(modeParams);
 
