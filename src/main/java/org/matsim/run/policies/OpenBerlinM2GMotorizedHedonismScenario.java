@@ -24,9 +24,8 @@ import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.extensions.pt.routing.EnhancedRaptorIntermodalAccessEgress;
 import org.matsim.extensions.pt.routing.ptRoutingModes.PtIntermodalRoutingModesModule;
-import org.matsim.legacy.run.drt.OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier;
-import org.matsim.legacy.run.drt.OpenBerlinIntermodalPtDrtRouterModeIdentifier;
 import org.matsim.run.OpenBerlinScenario;
+import picocli.CommandLine;
 
 import javax.annotation.Nullable;
 
@@ -47,7 +46,6 @@ import javax.annotation.Nullable;
  * All necessary configurations will be made in this class.
  */
 public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
-	private static final String DRT_CONFIG = "input/v" + OpenBerlinScenario.VERSION + "/berlin-v" + OpenBerlinScenario.VERSION + ".drt-config.xml";
 	private static final double DRT_FARE = -3.0;
 //	private static final double REL_ROAD_SPEED_CHANGE = 0.6;
 	private static final double DRT_TYP_WAIT_TIME = 300.;
@@ -58,15 +56,22 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 	private static final OpenBerlinDrtEstimatorScenario.DrtIntermodalityHandling DRT_INTERMODALITY_HANDLING = OpenBerlinDrtEstimatorScenario.DrtIntermodalityHandling.DRT_REGULAR_AND_INTERMODAL;
 //	private static final double BETA_MONEY = 0.5;
 	private static final double MAX_BIKE_SPEED = 20.;
-	private static final String SHARING_SERVICE_FILE = "input/v" + OpenBerlinScenario.VERSION + "/berlin-v" + OpenBerlinScenario.VERSION + ".sharing-service-1000-capacity-100-vehicles.xml";
 	private static final double SHARING_BASE_FARE = 1.0;
 	private static final double SHARING_DISTANCE_FARE = 0.0;
 	private static final double SHARING_TIME_FARE = 0.0045;
 	private static final OpenBerlinScooterSharingScenario.EScooterIntermodalityHandling SHARING_INTERMODALITY_HANDLING = OpenBerlinScooterSharingScenario.EScooterIntermodalityHandling.E_SCOOTER_REGULAR_AND_INTERMODAL;
 //	private static final double ADDITIONAL_HOME_OFFICE_PCT = 0.1;
 	private static final double REL_ROAD_CAPACITY_CHANGE = 0.75;
-	private static final String BERLIN_SHP = "input/v" + OpenBerlinScenario.VERSION + "/Berlin_25832.shp";
 	private static final double DAILY_MONETARY_CONSTANT_PT = -4.5;
+
+//	necessary input files have to be provided via cmd line option to avoid relative path problems by defining the paths in this class.
+	@CommandLine.Option(names = "--drt-config",
+		description = "Path to drt (only) config. Should contain only additional stuff to base config. Otherwise overrides.", required = true)
+	private String drtConfig;
+	@CommandLine.Option(names = "--sharing-service", description = "Path to sharing service xml file with stations and vehicles.", required = true)
+	private String serviceFile;
+	@CommandLine.Option(names = "--berlin-shp", description = "Path to shp file for adaption of link capacities. Should be shape of berlin or related.", required = true)
+	private String berlinShp;
 
 	@Nullable
 	@Override
@@ -80,7 +85,7 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 		OpenBerlinPtPricingScenario.setDailyMonetaryConstantPtInConfig(config, DAILY_MONETARY_CONSTANT_PT);
 //		3) drt
 //		drt fare = pt fare = -3; drt intermodal + as own mode
-		OpenBerlinDrtEstimatorScenario.configureDrtInConfig(config, DRT_CONFIG, DRT_FARE, DRT_INTERMODALITY_HANDLING);
+		OpenBerlinDrtEstimatorScenario.configureDrtInConfig(config, drtConfig, DRT_FARE, DRT_INTERMODALITY_HANDLING);
 //		4) marginal utility of money
 //		no changes in config compared to base case
 //		5) bicycle speed
@@ -90,7 +95,7 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 //		intermodal sharing + as own mode, base fare 1Eu, time fare 0.0045Eu/s, no distance fare
 //		sharing stations with 1000 veh capacity and 10 scooters each
 		OpenBerlinScooterSharingScenario.addSharingServiceInConfig(config,
-			SHARING_SERVICE_FILE,
+			serviceFile,
 			SHARING_BASE_FARE,
 			SHARING_DISTANCE_FARE,
 			SHARING_TIME_FARE,
@@ -135,7 +140,7 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 //		no changes in scenario compared to base case
 //		8) road capacity
 //		reduced capacity to 0.075 := more inhabitants in Berlin, so road are more congested
-		OpenBerlinRoadCapacitiesScenario.changeLinkCapacitiesInScenario(scenario, REL_ROAD_CAPACITY_CHANGE, BERLIN_SHP);
+		OpenBerlinRoadCapacitiesScenario.changeLinkCapacitiesInScenario(scenario, REL_ROAD_CAPACITY_CHANGE, berlinShp);
 //		9) changes in maximum allowed speed for motorized vehicles
 //		no changes in scenario compared to base case
 	}
@@ -187,8 +192,7 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 //		5) bicycle speed
 //		no changes in controller compared to base case
 //		6) sharing
-//		TODO: the bindings here will fail because we have bindings to the same classes with drt.
-		OpenBerlinScooterSharingScenario.addSharingModuleAndIntermodalFareCompensationInController(controler);
+//		OpenBerlinScooterSharingScenario.addSharingModuleAndIntermodalFareCompensationInController(controler);
 
 //		do sharing controller changes here because we would be binding classes twice for drt and sharing when calling OpenBerlinDrtEstimatorScenario.configureDrtInController as well as OpenBerlinScooterSharingScenario.addSharingModuleAndIntermodalFareCompensationInController
 		controler.addOverridingModule(new SharingModule());
@@ -201,14 +205,9 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 			public void install() {
 				addEventHandlerBinding().toInstance(refundHandler);
 				addControlerListenerBinding().toInstance(refundHandler);
+				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtAndSharingRouterAnalysisModeIdentifier.class);
+				bind(MainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtAndSharingRouterModeIdentifier.class);
 //				this is bound in drt and sharing run class separately, we need it only once, so we bind it here once
-				//		TODO: integrated drt + sharing binding for:
-//		AnalysisMainModeIdentifier
-//		MainModeIdentifier
-//				TODO: copy each of the 2 above classes for sharing and add drt modes to new class => integrated MainModeIdentifiers
-//				TODO: configure everything here and test. Then copy to OpenBerlinM2GMultimodalMassScenario
-				bind(AnalysisMainModeIdentifier.class).to();
-				bind(MainModeIdentifier.class).to();
 				bind(RaptorIntermodalAccessEgress.class).to(EnhancedRaptorIntermodalAccessEgress.class);
 			}
 		});
