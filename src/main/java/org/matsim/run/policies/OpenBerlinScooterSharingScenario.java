@@ -208,8 +208,8 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 			public void install() {
 				addEventHandlerBinding().toInstance(refundHandler);
 				addControlerListenerBinding().toInstance(refundHandler);
-				bind(AnalysisMainModeIdentifier.class).to(MobilityToGridScenariosUtils.OpenBerlinIntermodalPtSharingRouterAnalysisModeIdentifier.class);
-				bind(MainModeIdentifier.class).to(MobilityToGridScenariosUtils.OpenBerlinIntermodalPtSharingRouterModeIdentifier.class);
+				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtSharingRouterAnalysisModeIdentifier.class);
+				bind(MainModeIdentifier.class).to(OpenBerlinIntermodalPtSharingRouterModeIdentifier.class);
 				bind(RaptorIntermodalAccessEgress.class).to(EnhancedRaptorIntermodalAccessEgress.class);
 			}
 		});
