@@ -13,6 +13,7 @@ import org.matsim.contrib.bicycle.BicycleLinkSpeedCalculator;
 import org.matsim.contrib.bicycle.BicycleLinkSpeedCalculatorDefaultImpl;
 import org.matsim.contrib.bicycle.BicycleTravelTime;
 import org.matsim.contrib.emissions.HbefaRoadTypeMapping;
+import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.vsp.scoring.RideScoringParamsFromCarParams;
@@ -31,6 +32,9 @@ import org.matsim.run.scoring.AdvancedScoringConfigGroup;
 import org.matsim.run.scoring.AdvancedScoringModule;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
+import org.matsim.vehicles.EngineInformation;
+import org.matsim.vehicles.VehicleType;
+import org.matsim.vehicles.VehicleUtils;
 import picocli.CommandLine;
 import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
@@ -41,6 +45,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 	public static final String VERSION = "6.4";
 	public static final String CRS = "EPSG:25832";
+	private static final String AVERAGE = "average";
+	private static final String CAR_FUEL_TYPE = "petrol (4S)";
 
 	//	To decrypt hbefa input files set MATSIM_DECRYPTION_PASSWORD as environment variable. ask VSP for access.
 	private static final String HBEFA_2020_PATH = "https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/0e73947443d68f95202b71a156b337f7f71604ae/";
@@ -122,6 +128,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 				.setSubpopulation("person")
 		);
 
+		config.scoring().setWriteExperiencedPlans(true);
+
 		// Need to switch to warning for best score
 		if (planSelector.equals(DefaultPlanStrategiesModule.DefaultSelector.BestScore)) {
 			config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
@@ -149,6 +157,54 @@ public class OpenBerlinScenario extends MATSimApplication {
 		// add hbefa link attributes.
 		HbefaRoadTypeMapping roadTypeMapping = OsmHbefaMapping.build();
 		roadTypeMapping.addHbefaMappings(scenario.getNetwork());
+
+
+//		add necessary information for air pollution analysis to vehicle types
+		for (VehicleType type : scenario.getVehicles().getVehicleTypes().values()) {
+			EngineInformation engineInformation = type.getEngineInformation();
+
+//				only set engine information if none are present
+			if (engineInformation.getAttributes().isEmpty()) {
+				switch (type.getId().toString()) {
+//						all other vehicle types (which are not listed here) already have engine information assigned in the input vehicle types file
+//						berlin-v6.4.vehicleTypes.xml in same dir as config.
+//						for hbefa 4.1 (which we are using here) diesel, petrol etc. is saved as "EmissionConcept" whereas it HBEFA 4.2 it is saved as technology???
+					case TransportMode.car -> {
+						VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.PASSENGER_CAR.toString());
+						VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
+						VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
+//							based on Kraftfahrzeugbestand germany 1.1.2025 ~60% petrol and 28% diesel, so we take petrol here.
+//							source: https://www.kba.de/DE/Presse/Pressemitteilungen/Fahrzeugbestand/2025/pm10_fz_bestand_pm_komplett.html
+						VehicleUtils.setHbefaEmissionsConcept(engineInformation, CAR_FUEL_TYPE);
+					}
+					case TransportMode.ride -> {
+//							ignore ride, the mode is routed on network, but then teleported
+						VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
+						VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
+						VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
+						VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
+					}
+					case TransportMode.bike -> {
+//							ignore bikes
+						VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
+						VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
+						VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
+						VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
+					}
+					case "freight", TransportMode.truck -> {
+						VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.HEAVY_GOODS_VEHICLE.toString());
+						VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
+						VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
+						VehicleUtils.setHbefaEmissionsConcept(engineInformation, "diesel");
+					}
+					default -> throw new IllegalArgumentException("does not know how to handle vehicleType " + type.getId().toString());
+				}
+			}
+		}
+//			ignore all pt veh types
+		scenario.getTransitVehicles()
+			.getVehicleTypes()
+			.values().forEach(type -> VehicleUtils.setHbefaVehicleCategory(type.getEngineInformation(), HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString()));
 	}
 
 	@Override
