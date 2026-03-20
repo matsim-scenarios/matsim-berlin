@@ -7,7 +7,7 @@ import org.matsim.core.config.ConfigUtils;
 
 final class DeparkingApproachUtils {
 	static final double DEFAULT_TARGET_RELATIVE_OCCUPANCY = 1.0;
-	static final double MAX_RELATIVE_OCCUPANCY = 4.0;
+	static final double MAX_RELATIVE_OCCUPANCY = 10_000;
 
 	private DeparkingApproachUtils() {
 	}
@@ -36,8 +36,8 @@ final class DeparkingApproachUtils {
 			return 0.0;
 		}
 		if (Double.isInfinite(relativeOccupancy)) {
-			return Double.MAX_VALUE;
+			return MAX_RELATIVE_OCCUPANCY;
 		}
-		return Math.min(relativeOccupancy, Double.MAX_VALUE);
+		return Math.min(relativeOccupancy, MAX_RELATIVE_OCCUPANCY);
 	}
 }
