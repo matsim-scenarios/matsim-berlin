@@ -23,7 +23,7 @@ public class DeparkingConfigGroup extends ReflectiveConfigGroup {
 	private double targetRelativeOccupancy = 1.0;
 
 	@Parameter
-	private int writeInterval = 50;
+	private int writeInterval = 1;
 
 	@Parameter
 	private DeParkingApproachType deParkingApproachType = DeParkingApproachType.PDI;

@@ -36,8 +36,8 @@ final class DeparkingApproachUtils {
 			return 0.0;
 		}
 		if (Double.isInfinite(relativeOccupancy)) {
-			return MAX_RELATIVE_OCCUPANCY;
+			return Double.MAX_VALUE;
 		}
-		return Math.min(relativeOccupancy, MAX_RELATIVE_OCCUPANCY);
+		return Math.min(relativeOccupancy, Double.MAX_VALUE);
 	}
 }
