@@ -138,6 +138,9 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 //		6) sharing
 //		copy mode constants := tase preferences from bike to eScooter if available
 		OpenBerlinScooterSharingScenario.copyBikeModeConstantsForSharingInScenario(scenario);
+//		add tags to transit stops for intermodality between pt and eScooter sharing
+		OpenBerlinScooterSharingScenario.tagIntermodalPtSharingTransitStopsInScenario(scenario, OpenBerlinScooterSharingScenario.STOP_FILTER,
+			OpenBerlinScooterSharingScenario.STOP_FILTER_VALUE, berlinShp);
 //		7) home office
 //		+10% more home office agents in Berlin aka stay home agents
 		OpenBerlinHomeOfficeScenario.addHomeOfficeWorkersInScenario(scenario, ADDITIONAL_HOME_OFFICE_PCT);

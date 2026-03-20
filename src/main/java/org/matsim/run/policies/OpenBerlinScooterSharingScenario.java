@@ -43,8 +43,8 @@ import java.util.*;
  */
 public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 	static final String E_SCOOTER = "eScooter";
-	private static final String STOP_FILTER = "eScooterStopFilter";
-	private static final String STOP_FILTER_VALUE = "station_S/U/RE/RB_eScooter";
+	static final String STOP_FILTER = "eScooterStopFilter";
+	static final String STOP_FILTER_VALUE = "station_S/U/RE/RB_eScooter";
 	private static final String BERLIN_SHP_STRING = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.4/input/shp/Berlin_25832.shp";
 
 	@CommandLine.Option(names = "--sharing-service", description = "Path to sharing service xml file with stations and vehicles.", required = true)
@@ -80,16 +80,7 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 		copyBikeModeConstantsForSharingInScenario(scenario);
 
 //		tag intermodal eScooter-pt-stations
-		OpenBerlinDrtScenario.tagTransitStopsInServiceArea(scenario.getTransitSchedule(),
-			STOP_FILTER, STOP_FILTER_VALUE,
-			BERLIN_SHP_STRING,
-			"stopFilter", "station_S/U/RE/RB",
-			// some S+U stations are located slightly outside the shp File, e.g. U7 Neukoelln, U8
-			// Hermannstr., so allow buffer around the shape.
-			// This does not mean that a drt vehicle can pick the passenger up outside the service area,
-			// rather the passenger has to walk the last few meters from the drt drop off to the station.
-//			we now use whole of berlin instead of Hundekopf, but will keep using the buffer, assuming that the same issues might occur for other stations -sm0126
-			200.0);
+		tagIntermodalPtSharingTransitStopsInScenario(scenario, STOP_FILTER, STOP_FILTER_VALUE, BERLIN_SHP_STRING);
 	}
 
 	@Override
@@ -192,6 +183,22 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 				PersonUtils.setModeConstants(person, modeConstants);
 			}
 		}
+	}
+
+	/**
+	 * tag intermodal transit stops for intermodal access/egress between pt and eScooter sharing.
+	 */
+	static void tagIntermodalPtSharingTransitStopsInScenario(Scenario scenario, String stopFilter, String stopFilterValue, String berlinShpFile) {
+		OpenBerlinDrtScenario.tagTransitStopsInServiceArea(scenario.getTransitSchedule(),
+			stopFilter, stopFilterValue,
+			berlinShpFile,
+			"stopFilter", "station_S/U/RE/RB",
+			// some S+U stations are located slightly outside the shp File, e.g. U7 Neukoelln, U8
+			// Hermannstr., so allow buffer around the shape.
+			// This does not mean that a drt vehicle can pick the passenger up outside the service area,
+			// rather the passenger has to walk the last few meters from the drt drop off to the station.
+//			we now use whole of berlin instead of Hundekopf, but will keep using the buffer, assuming that the same issues might occur for other stations -sm0126
+			200.0);
 	}
 
 	/**
