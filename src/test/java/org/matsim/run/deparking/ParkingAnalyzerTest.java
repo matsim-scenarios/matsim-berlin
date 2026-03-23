@@ -400,7 +400,7 @@ class ParkingAnalyzerTest {
 
 		@Test
 		void occupancyCalculation() {
-			Config config = ConfigUtils.loadConfig("input/v6.4/berlin-v6.4.config.xml");
+			Config config = ConfigUtils.loadConfig("input/v6.4/berlin-v6.4-10pct.config.xml");
 			config.controller().setOutputDirectory(matsim.getOutputDirectory());
 			config.controller().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
 

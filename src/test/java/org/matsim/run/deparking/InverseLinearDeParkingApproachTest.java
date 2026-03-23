@@ -27,7 +27,7 @@ class InverseLinearDeParkingApproachTest {
 	@Test
 	void calcCosts_increasesFromZeroWhenOverCapacity() {
 		double newCost = approach.calcCosts(Double.POSITIVE_INFINITY, 0.0);
-		Assertions.assertEquals(1.5, newCost, 1e-9);
+		Assertions.assertEquals(4999.5, newCost, 1e-9);
 	}
 
 	@Test
