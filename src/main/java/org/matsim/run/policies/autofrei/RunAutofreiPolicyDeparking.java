@@ -71,13 +71,19 @@ public class RunAutofreiPolicyDeparking extends RunAutofreiPolicy {
 			for (CSVRecord record : CSVFormat.Builder.create().setHeader("linkId", "from_time", "to_time", "length", "occupancy", "initial")
 				.setSkipHeaderRecord(true).build().parse(r)) {
 				Id<Link> linkId = Id.createLinkId(record.get("linkId"));
-				links.remove(linkId);
 
 				Link link = network.getLinks().get(linkId);
 				if (link == null) {
 					throw new RuntimeException("Unable to find link with id " + linkId);
 				}
-				link.getAttributes().putAttribute(PARKING_SPOTS_ATTR, Double.parseDouble(record.get("occupancy")));
+				double occupancy = Double.parseDouble(record.get("occupancy"));
+
+				if(occupancy <= 0) {
+					throw new RuntimeException("Occupancy for link with id " + linkId + " is <= " +  occupancy + " This strongly suggests that there is an error in your parking spot file.");
+				}
+
+				links.remove(linkId);
+				link.getAttributes().putAttribute(PARKING_SPOTS_ATTR, occupancy);
 			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);

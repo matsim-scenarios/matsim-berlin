@@ -39,15 +39,11 @@ public class ParkingEventHandler implements VehicleEntersTrafficEventHandler, Ve
 			return;
 		}
 
-		occupancyChangesByLink.putIfAbsent(event.getLinkId(), new LinkedList<>());
-		var list = occupancyChangesByLink.get(event.getLinkId());
-		list.add(new ParkingAnalyzer.OccupancyChange(event.getTime(), -1.));
-
 		// We need to check mass conservation here. If a person leaves a link where he/she never parked, we need to remove the parking count at the last link.
 		// This might happen if the activity locations are very close and the coord Distance in subtour mode choice is > 0.
 		lastParkingLinkByPersonAndMode.putIfAbsent(event.getNetworkMode(), new HashMap<>());
-		var linkByPerson = lastParkingLinkByPersonAndMode.get(event.getNetworkMode());
-		Id<Link> lastLink = linkByPerson.get(event.getPersonId());
+		Map<Id<Person>, Id<Link>> lastParkingLinkByPerson = lastParkingLinkByPersonAndMode.get(event.getNetworkMode());
+		Id<Link> lastLink = lastParkingLinkByPerson.get(event.getPersonId());
 
 		if (lastLink != null && !lastLink.equals(event.getLinkId())) {
 			// remove the parking at the last link
@@ -56,8 +52,13 @@ public class ParkingEventHandler implements VehicleEntersTrafficEventHandler, Ve
 				throw new RuntimeException("No occupancy changes found for link " + lastLink + " while trying to remove a parking event.");
 			}
 			occupancyChanges.add(new ParkingAnalyzer.OccupancyChange(event.getTime(), -1.));
-			linkByPerson.remove(lastLink);
+		} else {
+			occupancyChangesByLink.putIfAbsent(event.getLinkId(), new LinkedList<>());
+			var list = occupancyChangesByLink.get(event.getLinkId());
+			list.add(new ParkingAnalyzer.OccupancyChange(event.getTime(), -1.));
 		}
+
+		lastParkingLinkByPerson.remove(event.getPersonId());
 	}
 
 	@Override

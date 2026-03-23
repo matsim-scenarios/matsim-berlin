@@ -55,10 +55,10 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 	 * It tracks when vehicles enter and leave traffic to determine when they are parked.
 	 */
 	public static void main(String[] args) {
-		String folder = "/Users/paulh/math-cluster/heinrich/matsim-berlin-v6.4/autofrei/berlin-autofrei-v6.4-policy/";
+		String folder = "/Users/paulh/runs-svn/matsim-berlin/autofrei/10pct-v6.4/berlin-autofrei-v6.4-policy-10pct/";
 		String events = folder + "berlin-v6.4.output_events.xml.zst";
 		String networkPath = folder + "berlin-v6.4.output_network.xml.zst";
-		String output = folder + "parking_occupancy_autofrei-1pct.csv.zst";
+		String output = folder + "parking_occupancy.csv.zst";
 
 //		String events = "output/deparking-debug/ITERS/it.9/berlin-v6.4.9.events.xml.zst";
 //		String networkPath = "output/deparking-debug/berlin-v6.4.output_network.xml.zst";
