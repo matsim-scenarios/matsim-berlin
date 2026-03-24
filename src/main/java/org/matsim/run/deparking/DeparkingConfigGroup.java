@@ -37,6 +37,13 @@ public class DeparkingConfigGroup extends ReflectiveConfigGroup {
 	@Parameter
 	private double resetOnZeroThreshold = 0.1; // only used if integralApproach is set to RESET_ON_ZERO, otherwise ignored
 
+	@Parameter
+	private FirstAndLastParkingCharging firstAndLastParkingCharging = FirstAndLastParkingCharging.CHARGE_BOTH;
+
+	public enum FirstAndLastParkingCharging {
+		IGNORE, CHARGE_BOTH
+	}
+
 	public enum DeParkingApproachType {
 		INVERSE_LINEAR,
 		PDI
@@ -124,5 +131,13 @@ public class DeparkingConfigGroup extends ReflectiveConfigGroup {
 
 	public void setWriteInterval(int writeInterval) {
 		this.writeInterval = writeInterval;
+	}
+
+	public FirstAndLastParkingCharging getFirstAndLastParkingCharging() {
+		return firstAndLastParkingCharging;
+	}
+
+	public void setFirstAndLastParkingCharging(FirstAndLastParkingCharging firstAndLastParkingCharging) {
+		this.firstAndLastParkingCharging = firstAndLastParkingCharging;
 	}
 }
