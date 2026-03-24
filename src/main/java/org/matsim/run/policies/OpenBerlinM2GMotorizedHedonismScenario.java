@@ -11,11 +11,9 @@ import org.matsim.contrib.drt.estimator.impl.waiting_time_estimation.ConstantWai
 import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.contrib.drt.run.MultiModeDrtModule;
-import org.matsim.contrib.dvrp.run.DvrpModule;
-import org.matsim.contrib.dvrp.run.DvrpQSimComponents;
+import org.matsim.contrib.dvrp.run.*;
 import org.matsim.contrib.shared_mobility.run.SharingConfigGroup;
 import org.matsim.contrib.shared_mobility.run.SharingModule;
-import org.matsim.contrib.shared_mobility.service.SharingUtils;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
@@ -166,7 +164,8 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 		// drt + dvrp modules
 		controler.addOverridingModule(new MultiModeDrtModule());
 		controler.addOverridingModule(new DvrpModule());
-		controler.configureQSimComponents(DvrpQSimComponents.activateAllModes(MultiModeDrtConfigGroup.get(controler.getConfig())));
+//		we have to configure the qsim components of drt and sharing at the same time. see below.
+//		controler.configureQSimComponents(DvrpQSimComponents.activateAllModes(MultiModeDrtConfigGroup.get(controler.getConfig())));
 
 		// yyyy there is fareSModule (with S) in config. ?!?!  kai, jul'19
 		OpenBerlinDrtEstimatorScenario.addIntermodalTripFareCompensatorsModule(controler, DRT_FARE);
@@ -199,7 +198,12 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 
 //		do sharing controller changes here because we would be binding classes twice for drt and sharing when calling OpenBerlinDrtEstimatorScenario.configureDrtInController as well as OpenBerlinScooterSharingScenario.addSharingModuleAndIntermodalFareCompensationInController
 		controler.addOverridingModule(new SharingModule());
-		controler.configureQSimComponents(SharingUtils.configureQSim(ConfigUtils.addOrGetModule(controler.getConfig(), SharingConfigGroup.class)));
+//		we have to configure the qsim components of drt and sharing at the same time. see below.
+//		controler.configureQSimComponents(SharingUtils.configureQSim(ConfigUtils.addOrGetModule(controler.getConfig(), SharingConfigGroup.class)));
+
+//		we configure drt _and_ sharing qsim components here.
+		controler.configureQSimComponents(MobilityToGridScenariosUtils.drtAndSharingQSimComponentsConfigurator(ConfigUtils.addOrGetModule(controler.getConfig(),
+				SharingConfigGroup.class), MultiModeDrtConfigGroup.get(controler.getConfig())));
 
 //		add intermodal trip compensation when pt is used once in a day for eScooter trips
 		OpenBerlinScooterSharingScenario.SharingRefundHandler refundHandler = new OpenBerlinScooterSharingScenario.SharingRefundHandler(TransportMode.pt);

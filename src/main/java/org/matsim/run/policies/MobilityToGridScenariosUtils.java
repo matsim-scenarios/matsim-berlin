@@ -1,13 +1,21 @@
 package org.matsim.run.policies;
 
-import com.google.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.*;
+import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
+import org.matsim.contrib.dvrp.run.DvrpModes;
+import org.matsim.contrib.dvrp.run.MultiModals;
+import org.matsim.contrib.dynagent.run.DynActivityEngine;
 import org.matsim.contrib.emissions.HbefaVehicleCategory;
-import org.matsim.core.router.AnalysisMainModeIdentifier;
+import org.matsim.contrib.shared_mobility.run.SharingConfigGroup;
+import org.matsim.contrib.shared_mobility.run.SharingModes;
+import org.matsim.contrib.shared_mobility.run.SharingServiceConfigGroup;
+import org.matsim.contrib.shared_mobility.service.SharingUtils;
+import org.matsim.core.mobsim.qsim.PreplanningEngineQSimModule;
+import org.matsim.core.mobsim.qsim.components.QSimComponentsConfigurator;
 import org.matsim.vehicles.EngineInformation;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
@@ -70,6 +78,32 @@ public final class MobilityToGridScenariosUtils {
 		scenario.getTransitVehicles()
 			.getVehicleTypes()
 			.values().forEach(type -> VehicleUtils.setHbefaVehicleCategory(type.getEngineInformation(), HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString()));
+	}
+
+	/**
+	 * configure qsim components for drt and sharing at the same time.
+	 * If done separately, simulation fails.
+	 */
+	public static QSimComponentsConfigurator drtAndSharingQSimComponentsConfigurator(SharingConfigGroup sharingConfig, MultiModeDrtConfigGroup multiModeDrtConfigGroup) {
+		return components -> {
+			components.addNamedComponent(DynActivityEngine.COMPONENT_NAME);
+			components.addNamedComponent(PreplanningEngineQSimModule.COMPONENT_NAME);
+
+			//activate additional named components
+//			additionalNamedComponents.forEach(components::addNamedComponent);
+
+			List<String> dvrpModes = multiModeDrtConfigGroup.modes().toList();
+
+			//activate all DvrpMode components
+			MultiModals.requireAllModesUnique(dvrpModes);
+			for (String m : dvrpModes) {
+				components.addComponent(DvrpModes.mode(m));
+			}
+
+			for (SharingServiceConfigGroup serviceConfig : sharingConfig.getServices()) {
+				components.addComponent(SharingModes.mode(SharingUtils.getServiceMode(serviceConfig)));
+			}
+		};
 	}
 
 	/**

@@ -9,15 +9,14 @@ import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.legacy.run.drt.OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * This is an adapted version of class OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier for sharing modes.
  */
 final class OpenBerlinIntermodalPtDrtAndSharingRouterAnalysisModeIdentifier implements AnalysisMainModeIdentifier {
 	public static final String ANALYSIS_MAIN_MODE_PT_WITH_SHARING_USED_FOR_ACCESS_OR_EGRESS = "pt_w_sharing_used";
+	public static final String ANALYSIS_MAIN_MODE_PT_WITH_DRT_AND_SHARING_USED_FOR_ACCESS_OR_EGRESS = "pt_w_drt_and_sharing_used";
 	private static final Logger log = LogManager.getLogger(OpenBerlinIntermodalPtDrtAndSharingRouterAnalysisModeIdentifier.class);
 	private final List<String> modeHierarchy = new ArrayList<>() ;
 	private final List<String> sharingModes;
@@ -102,12 +101,9 @@ final class OpenBerlinIntermodalPtDrtAndSharingRouterAnalysisModeIdentifier impl
 			}
 
 			if (isDrtPt && isSharingPt) {
-				log.error("Trip is a {} and {} trip. This is not possible. Aborting!", OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier.ANALYSIS_MAIN_MODE_PT_WITH_DRT_USED_FOR_ACCESS_OR_EGRESS,
-					ANALYSIS_MAIN_MODE_PT_WITH_SHARING_USED_FOR_ACCESS_OR_EGRESS);
-				throw new IllegalStateException("");
-			}
-
-			if (isSharingPt) {
+//				apparently there are agents using e.g. drt for access to and sharing for egress from pt, wow!
+				return ANALYSIS_MAIN_MODE_PT_WITH_DRT_AND_SHARING_USED_FOR_ACCESS_OR_EGRESS;
+			} else if (isSharingPt) {
 				return ANALYSIS_MAIN_MODE_PT_WITH_SHARING_USED_FOR_ACCESS_OR_EGRESS;
 			} else if (isDrtPt) {
 				return OpenBerlinIntermodalPtDrtRouterAnalysisModeIdentifier.ANALYSIS_MAIN_MODE_PT_WITH_DRT_USED_FOR_ACCESS_OR_EGRESS;
