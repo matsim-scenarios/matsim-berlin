@@ -156,7 +156,8 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 //		configure intermodal access/egress to pt
 		SwissRailRaptorConfigGroup raptorConfigGroup = ConfigUtils.addOrGetModule(config, SwissRailRaptorConfigGroup.class);
 		SwissRailRaptorConfigGroup.IntermodalAccessEgressParameterSet intermodalParams = new SwissRailRaptorConfigGroup.IntermodalAccessEgressParameterSet();
-		intermodalParams.setMode(E_SCOOTER);
+//		intermodalParams.setMode(E_SCOOTER);
+		intermodalParams.setMode(SharingUtils.getServiceMode(serviceConfig));
 		intermodalParams.setSearchExtensionRadius(1000.);
 //		in this DLR report (p. 7), multiple sources about avg. eScooter trip length are cited https://elib.dlr.de/141837/1/ArbeitsberichteVF_Nr4_2021.pdf
 //		avg. eScooter trip length seems to ~2km
