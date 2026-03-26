@@ -4,6 +4,7 @@ import ch.sbb.matsim.routing.pt.raptor.RaptorIntermodalAccessEgress;
 import com.google.common.collect.ImmutableSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -105,15 +106,7 @@ public class OpenBerlinDrtEstimatorScenario extends OpenBerlinScenario {
 
 	@Override
 	protected Scenario createScenario(Config config) {
-		Scenario scenario = ScenarioUtils.createScenario(config);
-
-		//if the input plans contain DrtRoutes, this will cause problems later in the DrtRouteFactory
-		//to avoid this, the DrtRouteFactory would have to get set before loading the scenario, just like in Open Berlin v5.x
-		RouteFactories routeFactories = scenario.getPopulation().getFactory().getRouteFactories();
-		routeFactories.setRouteFactory(DrtRoute.class, new DrtRouteFactory());
-
-		ScenarioUtils.loadScenario(scenario);
-		return scenario;
+		return configureDrtInCreateScenario(config);
 	}
 
 	@Override
@@ -208,6 +201,22 @@ public class OpenBerlinDrtEstimatorScenario extends OpenBerlinScenario {
 		config.removeModule("");
 	}
 
+	@NotNull
+	/**
+	 * create scenario for drt sim with DrtRouteFactory
+	 */
+	static Scenario configureDrtInCreateScenario(Config config) {
+		Scenario scenario = ScenarioUtils.createScenario(config);
+
+		//if the input plans contain DrtRoutes, this will cause problems later in the DrtRouteFactory
+		//to avoid this, the DrtRouteFactory would have to get set before loading the scenario, just like in Open Berlin v5.x
+		RouteFactories routeFactories = scenario.getPopulation().getFactory().getRouteFactories();
+		routeFactories.setRouteFactory(DrtRoute.class, new DrtRouteFactory());
+
+		ScenarioUtils.loadScenario(scenario);
+		return scenario;
+	}
+
 	/**
 	 * make all necessary scenario changes to simulate drt from OpenBerlinDrtScenario (see comment) and OpenBerlinDrtEstimatorScenario.
 	 */
@@ -300,7 +309,7 @@ public class OpenBerlinDrtEstimatorScenario extends OpenBerlinScenario {
 		}
 	}
 
-	private static void addIntermodalTripFareCompensatorsModule(Controler controler, double drtFare) {
+	static void addIntermodalTripFareCompensatorsModule(Controler controler, double drtFare) {
 //		we do not need intermodal trip fare compensation when drt has no fare
 		if (drtFare != 0.) {
 			controler.addOverridingModule(new IntermodalTripFareCompensatorsModule());
