@@ -73,8 +73,8 @@ public class AddPersonSpecifcAscsStreamReading implements MATSimAppCommand {
 
 		StreamingPopulationReader spr = new StreamingPopulationReader(inputScenario);
 		spr.addAlgorithm(person -> {
-				Map<String, String> modeConstants = PersonUtils.getModeConstants(person);
-				if (modeConstants == null) {
+				Map<String, String> modeConstants = new HashMap<>(PersonUtils.getModeConstants(person));
+				if (modeConstants.isEmpty()) {
 					modeConstants = new HashMap<>();
 				}
 				for (String mode: modes) {
