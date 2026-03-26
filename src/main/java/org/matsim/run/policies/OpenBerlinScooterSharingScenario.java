@@ -77,7 +77,7 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 		//		apply all scenario changes from base scenario class
 		super.prepareScenario(scenario);
 
-//		copyBikeModeConstantsForSharingInScenario(scenario);
+		copyBikeModeConstantsForSharingInScenario(scenario);
 
 //		tag intermodal eScooter-pt-stations
 		tagIntermodalPtSharingTransitStopsInScenario(scenario, STOP_FILTER, STOP_FILTER_VALUE, BERLIN_SHP_STRING);
@@ -161,8 +161,9 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 //		in this DLR report (p. 7), multiple sources about avg. eScooter trip length are cited https://elib.dlr.de/141837/1/ArbeitsberichteVF_Nr4_2021.pdf
 //		avg. eScooter trip length seems to ~2km
 //		thus, we set initialSearchRadius to 2km and maxRadius to 2 * initialRadius. -sm0126
-		intermodalParams.setInitialSearchRadius(2000.);
-		intermodalParams.setMaxRadius(4000.);
+//		I want to test if this influences intermodal usage of eScooter, so increasing initial and max radius here. -sm0326
+		intermodalParams.setInitialSearchRadius(4000.);
+		intermodalParams.setMaxRadius(20000.);
 		intermodalParams.setStopFilterAttribute(STOP_FILTER);
 //		we assume that -- similar to DRT -- access/egress to PT is not done to bus/tram
 		intermodalParams.setStopFilterValue(STOP_FILTER_VALUE);
