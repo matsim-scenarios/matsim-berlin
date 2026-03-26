@@ -427,7 +427,7 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MA
 		 --sample-size 0.25\
 		 --samples 0.1 0.03 0.01 0.001\
 
-#  According to a discussion with CR: The following step is based on the output of the constant-calibration and is executed 
+#  According to a discussion with CR: The following step is based on the output of the constant-calibration which is executed 
 # manually with src/main/sh/runCalib.sh and src/main/python/calibrate.py. In the following step only the first two sub-steps 
 # are necessary and should be repeated for every sample you are interested in. The both input-files in the original-version 
 # are the output of the constant- calibration. 
