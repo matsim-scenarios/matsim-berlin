@@ -2,16 +2,26 @@ package org.matsim.run.policies;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.groups.QSimConfigGroup;
+import org.matsim.core.config.groups.RoutingConfigGroup;
 import org.matsim.core.controler.Controler;
 import org.matsim.run.OpenBerlinScenario;
+import org.matsim.vehicles.VehicleType;
 import picocli.CommandLine;
 
 import javax.annotation.Nullable;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * Berlin scenario including the possibility to change the handling of bike (on network, in qsim, teleported...).
+ * Berlin scenario including the possibility to change the handling of bike (routed on network, in qsim, teleported...).
  * All necessary configs will be made in this class.
  */
 public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
@@ -19,6 +29,8 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 
 	@CommandLine.Option(names = "--bike-handling", description = "Defines how transport mode bike is simulated in the berlin scenario.", required = true)
 	private BikeHandling bikeHandling = BikeHandling.ROUTED_ON_NETWORK_NOT_IN_QSIM;
+	@CommandLine.Option(names = "--bike-pce", description = "PCE (passenger car equivalents) for bike. Default seems to 0.2")
+	private double bikePce = 0.2;
 
 	@Nullable
 	@Override
@@ -29,14 +41,35 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 		if (bikeHandling == BikeHandling.ROUTED_ON_NETWORK_NOT_IN_QSIM) {
 //			default
 		} else if (bikeHandling == BikeHandling.ROUTED_ON_NETWORK_IN_QSIM) {
-//			TODO: add bike to qsim mainModes. What else? Have a look at dresden/lausitz for that.
+			QSimConfigGroup qSimConfigGroup = ConfigUtils.addOrGetModule(config, QSimConfigGroup.class);
+
+//			add bike to qsim main modes =: to congested modes
+			Set<String> mainModes = new HashSet<>(qSimConfigGroup.getMainModes());
+			mainModes.add(TransportMode.bike);
+			qSimConfigGroup.setMainModes(mainModes);
+			log.info("Added bike as a qsim main mode. Hence, it will be simulated as congested mode.");
 
 		} else if (bikeHandling == BikeHandling.TELEPORTED) {
-//			TODO: remove bike as routed mode. Add teleportation params for bike??
+			RoutingConfigGroup routingConfigGroup = ConfigUtils.addOrGetModule(config, RoutingConfigGroup.class);
 
+//			remove bike as routed (on network) mode
+			Set<String> networkModes = new HashSet<>(routingConfigGroup.getNetworkModes());
+			networkModes.remove(TransportMode.bike);
+			routingConfigGroup.setNetworkModes(networkModes);
+			log.info("Removed bike as network mode. Bike is not routed on the network.");
+
+//			add teleported mode params for bike
+			RoutingConfigGroup.TeleportedModeParams bikeParams = new RoutingConfigGroup.TeleportedModeParams(TransportMode.bike);
+			bikeParams.setBeelineDistanceFactor(1.3);
+//			according to v6.4 vehicle types file the reported bike speed in SrV is 10.29km/h
+			double bikeTeleportedSpeed = BigDecimal
+				.valueOf(10.29 / 3.6)
+				.setScale(2, RoundingMode.HALF_UP)
+				.doubleValue();
+			bikeParams.setTeleportedModeSpeed(bikeTeleportedSpeed);
+			routingConfigGroup.addTeleportedModeParams(bikeParams);
+			log.info("Added teleported mode params for bike with teleportedModeSpeed {}.", bikeTeleportedSpeed);
 		}
-
-
 		return config;
 	}
 
@@ -48,12 +81,20 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 		if (bikeHandling == BikeHandling.ROUTED_ON_NETWORK_NOT_IN_QSIM) {
 //			default
 		} else if (bikeHandling == BikeHandling.ROUTED_ON_NETWORK_IN_QSIM) {
-//			TODO: tag network modes with bike?. What else? Have a look at dresden/lausitz for that.
-//			TODO: implement different PCE values here? Or in config?
-
+//			set pce if different to default
+			if (bikePce != 0.2) {
+				scenario.getVehicles()
+					.getVehicleTypes()
+					.get(Id.create(TransportMode.bike, VehicleType.class))
+					.setPcuEquivalents(bikePce);
+				log.info("PCE (passenger car equivalents) for bike was set to {}. Default is {}.", bikePce, 0.2);
+			}
 		} else if (bikeHandling == BikeHandling.TELEPORTED) {
-//			TODO: remove bike as routed mode. Add teleportation params for bike??
-
+//			remove bike veh type
+			scenario.getVehicles()
+				.getVehicleTypes()
+				.remove(Id.create(TransportMode.bike, VehicleType.class));
+			log.info("Removed vehicle type for bike.");
 		}
 	}
 
