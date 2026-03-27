@@ -44,4 +44,9 @@ public class ParkingEventHandler implements VehicleStartsParkingSearchEventHandl
 				e -> e.getValue() / (double) total
 			));
 	}
+
+	public ArrayList<Double> parkingSearchTimesList() {
+		return new ArrayList<>(searchTimes);
+	}
+
 }

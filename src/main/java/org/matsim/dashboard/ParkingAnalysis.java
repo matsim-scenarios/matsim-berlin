@@ -14,6 +14,7 @@ import picocli.CommandLine;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
 
 @CommandLine.Command(
@@ -21,7 +22,7 @@ import java.util.Map;
 )
 @CommandSpec(
 	requireEvents = true,
-	produces = {"parking_search_times.csv"},
+	produces = {"parking_search_times_density.csv", "parking_search_times.csv"},
 	group = "parking"
 )
 public class ParkingAnalysis implements MATSimAppCommand {
@@ -52,11 +53,36 @@ public class ParkingAnalysis implements MATSimAppCommand {
 		return 0;
 	}
 
+	public static void main(String[] args) {
+		new ParkingAnalysis().execute(args);
+	}
+
 	private void writeCsv(ParkingEventHandler handler) {
+
+
+		//write CSV with header search_time
+		ArrayList<Double> searchTimes = handler.parkingSearchTimesList();
+		try {
+			BufferedWriter bufferedWriter = IOUtils.getBufferedWriter(
+				output.getPath().resolve("parking_search_times.csv").toString()
+			);
+			CSVPrinter csvPrinter = new CSVPrinter(bufferedWriter, CSVFormat.Builder.create()
+				.setDelimiter(";")
+				.setHeader(new String[]{"search_time"}).build());
+			for (Double searchTime : searchTimes) {
+				csvPrinter.printRecord(searchTime);
+			}
+			csvPrinter.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
 		Map<Double, Double> density = handler.parkingSearchTimesDensity();
 		// write CSV with header search_time, density
 		try {
-			BufferedWriter bufferedWriter = IOUtils.getBufferedWriter(output.getPath("parking_search_times.csv").toUri().toURL());
+			BufferedWriter bufferedWriter = IOUtils.getBufferedWriter(
+				output.getPath().resolve("parking_search_times_density.csv").toString()
+			);
 			CSVPrinter csvPrinter = new CSVPrinter(bufferedWriter, CSVFormat.Builder.create()
 				.setDelimiter(";")
 				.setHeader(new String[]{"search_time", "density"}).build());
