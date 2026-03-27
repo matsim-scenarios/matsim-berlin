@@ -1,8 +1,12 @@
 package org.matsim.dashboard;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.logging.log4j.Logger;
+import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Person;
 import org.matsim.application.CommandSpec;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.options.InputOptions;
@@ -15,6 +19,7 @@ import picocli.CommandLine;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 @CommandLine.Command(
@@ -58,6 +63,38 @@ public class ParkingAnalysis implements MATSimAppCommand {
 	}
 
 	private void writeCsv(ParkingEventHandler handler) {
+
+		Map<Id<Person>, Double> totalParkingSearchTimePerPerson = new HashMap<>();
+		try {
+			BufferedWriter bufferedWriter = IOUtils.getBufferedWriter(
+				output.getPath().resolve("total_parking_search_time_per_person.csv").toString()
+			);
+			CSVPrinter csvPrinter = new CSVPrinter(bufferedWriter, CSVFormat.Builder.create()
+				.setDelimiter(";")
+				.setHeader(new String[]{"person_id", "total_parking_search_time"}).build());
+			for (Map.Entry<Id<Person>, Double> entry : handler.totalParkingSearchTimePerPerson.entrySet()) {
+				csvPrinter.printRecord(entry.getKey(), entry.getValue());
+			}
+			csvPrinter.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		Map<Id<Link>, Double> parkingSearchTimePerLink = new HashMap<>();
+		try {
+			BufferedWriter bufferedWriter = IOUtils.getBufferedWriter(
+				output.getPath().resolve("parking_search_time_per_link.csv").toString()
+			);
+			CSVPrinter csvPrinter = new CSVPrinter(bufferedWriter, CSVFormat.Builder.create()
+				.setDelimiter(";")
+				.setHeader(new String[]{"link_id", "total_parking_search_time"}).build());
+			for (Map.Entry<Id<Link>, Double> entry : handler.parkingSearchTimePerLink.entrySet()) {
+				csvPrinter.printRecord(entry.getKey(), entry.getValue());
+			}
+			csvPrinter.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 
 
 		//write CSV with header search_time

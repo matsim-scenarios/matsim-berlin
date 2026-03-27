@@ -45,7 +45,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
 	@CommandLine.Option(names = "--alpha", description = "Alpha parameter for Belloche parking search time function", defaultValue = "0.11")
 	private double alpha;
 
-	@CommandLine.Option(names = "--beta", description = "Beta parameter for Belloche parking search time function", defaultValue = "8.586")
+	@CommandLine.Option(names = "--beta", description = "Beta parameter for Belloche parking search time function", defaultValue = "-8.586")
 	private double beta;
 
 	@CommandLine.Option(names = "--noModeChoice", defaultValue = "true")
