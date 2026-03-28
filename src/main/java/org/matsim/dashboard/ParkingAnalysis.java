@@ -72,7 +72,7 @@ public class ParkingAnalysis implements MATSimAppCommand {
 			CSVPrinter csvPrinter = new CSVPrinter(bufferedWriter, CSVFormat.Builder.create()
 				.setDelimiter(";")
 				.setHeader(new String[]{"person_id", "total_parking_search_time"}).build());
-			for (Map.Entry<Id<Person>, Double> entry : handler.totalParkingSearchTimePerPerson.entrySet()) {
+			for (Map.Entry<Id<Person>, Double> entry : handler.totalParkingSearchTimePerPerson().entrySet()) {
 				csvPrinter.printRecord(entry.getKey(), entry.getValue());
 			}
 			csvPrinter.close();
