@@ -29,7 +29,7 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 
 	@CommandLine.Option(names = "--bike-handling", description = "Defines how transport mode bike is simulated in the berlin scenario.", required = true)
 	private BikeHandling bikeHandling = BikeHandling.ROUTED_ON_NETWORK_NOT_IN_QSIM;
-	@CommandLine.Option(names = "--bike-pce", description = "PCE (passenger car equivalents) for bike. Default seems to 0.2")
+	@CommandLine.Option(names = "--bike-pce", description = "PCE (passenger car equivalents) for bike, if simulated in qsim. Default seems to be 0.2.")
 	private double bikePce = 0.2;
 
 	@Nullable
@@ -91,9 +91,7 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 			}
 		} else if (bikeHandling == BikeHandling.TELEPORTED) {
 //			remove bike veh type
-			scenario.getVehicles()
-				.getVehicleTypes()
-				.remove(Id.create(TransportMode.bike, VehicleType.class));
+			scenario.getVehicles().removeVehicleType(Id.create(TransportMode.bike, VehicleType.class));
 			log.info("Removed vehicle type for bike.");
 		}
 	}
