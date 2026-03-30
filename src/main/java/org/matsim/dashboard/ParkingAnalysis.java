@@ -1,6 +1,5 @@
 package org.matsim.dashboard;
 
-import com.google.common.collect.Maps;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.logging.log4j.Logger;
@@ -20,6 +19,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @CommandLine.Command(
@@ -80,15 +80,38 @@ public class ParkingAnalysis implements MATSimAppCommand {
 			throw new RuntimeException(e);
 		}
 
-		Map<Id<Link>, Double> parkingSearchTimePerLink = new HashMap<>();
 		try {
 			BufferedWriter bufferedWriter = IOUtils.getBufferedWriter(
-				output.getPath().resolve("parking_search_time_per_link.csv").toString()
+				output.getPath().resolve("parking_search_times_per_link.csv").toString()
+			);
+
+			CSVPrinter csvPrinter = new CSVPrinter(bufferedWriter, CSVFormat.Builder.create()
+				.setDelimiter(";")
+				.setHeader("link_id", "search_time")
+				.build()
+			);
+
+			for (Map.Entry<Id<Link>, List<Double>> entry : handler.parkingSearchTimesPerLink().entrySet()) {
+				Id<Link> linkId = entry.getKey();
+				for (Double searchTime : entry.getValue()) {
+					csvPrinter.printRecord(linkId, searchTime);
+				}
+			}
+			csvPrinter.close();
+
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+
+		try {
+			BufferedWriter bufferedWriter = IOUtils.getBufferedWriter(
+				output.getPath().resolve("total_parking_search_time_per_link.csv").toString()
 			);
 			CSVPrinter csvPrinter = new CSVPrinter(bufferedWriter, CSVFormat.Builder.create()
 				.setDelimiter(";")
 				.setHeader(new String[]{"link_id", "total_parking_search_time"}).build());
-			for (Map.Entry<Id<Link>, Double> entry : handler.parkingSearchTimePerLink.entrySet()) {
+			for (Map.Entry<Id<Link>, Double> entry : handler.totalParkingSearchTimePerLink.entrySet()) {
 				csvPrinter.printRecord(entry.getKey(), entry.getValue());
 			}
 			csvPrinter.close();
@@ -108,6 +131,24 @@ public class ParkingAnalysis implements MATSimAppCommand {
 				.setHeader(new String[]{"search_time"}).build());
 			for (Double searchTime : searchTimes) {
 				csvPrinter.printRecord(searchTime);
+			}
+			csvPrinter.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		Map<Id<Person>, List<Double>> parkingSearchTimePerPerson = handler.parkingSearchTimesPerPerson();
+		try	{
+			BufferedWriter bufferedWriter = IOUtils.getBufferedWriter(
+				output.getPath().resolve("parking_search_times_per_person.csv").toString()
+			);
+			CSVPrinter csvPrinter = new CSVPrinter(bufferedWriter, CSVFormat.Builder.create()
+				.setDelimiter(";")
+				.setHeader(new String[]{"person_id", "search_time"}).build());
+			for (Map.Entry<Id<Person>, List<Double>> entry : parkingSearchTimePerPerson.entrySet()) {
+				for (Double searchTime : entry.getValue()) {
+					csvPrinter.printRecord(entry.getKey(), searchTime);
+				}
 			}
 			csvPrinter.close();
 		} catch (IOException e) {

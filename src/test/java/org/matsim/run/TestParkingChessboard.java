@@ -52,7 +52,7 @@ public class TestParkingChessboard {
 
 		config.controller().setLastIteration(0);
 		config.controller().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
-		config.controller().setOutputDirectory("./parkingChessboardOutput");
+		config.controller().setOutputDirectory("./parkingChessboardOutput5ParkingSpotsPerLink");
 		config.routing().setAccessEgressType(RoutingConfigGroup.AccessEgressType.accessEgressModeToLink);
 		config.scoring().setWriteExperiencedPlans(true);
 
@@ -63,7 +63,7 @@ public class TestParkingChessboard {
 			if (link.getAllowedModes().contains(TransportMode.car)) {
 				//log.info("Parking spots for " + link.getId() + ": on-street=" + parkingSpotsPerLink.get(link.getId()).onstreetSpots + ", off-street=" + parkingSpotsPerLink.get(link.getId()).offstreetSpots);
 				//log.info("Scaled parking spots for " + link.getId() + ": on-street=" + onStreetParkingSpots + ", off-street=" + offStreetParkingSpots);
-				link.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, (int) Math.round(10 * sampleSize));
+				link.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, (int) Math.round(5 * sampleSize));
 				//link.getAttributes().putAttribute(LINK_OFF_STREET_SPOTS, (int) Math.round(5 * sampleSize));
 			}
 		}

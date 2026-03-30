@@ -18,8 +18,10 @@ import java.util.stream.Collectors;
 public class ParkingEventHandler implements VehicleStartsParkingSearchEventHandler, VehicleEndsParkingSearchEventHandler {
 	Map<Id<Vehicle>, Double> startTimeByVehicle = new HashMap<>();
 	List<Double> searchTimes = new ArrayList<>();
-	Map<Id<Link>, Double> parkingSearchTimePerLink = new HashMap<>();
+	Map<Id<Link>, Double> totalParkingSearchTimePerLink = new HashMap<>();
 	Map<Id<Person>, Double> totalParkingSearchTimePerPerson = new HashMap<>();
+	private final Map<Id<Person>, List<Double>> parkingSearchTimesPerPerson = new HashMap<>();
+	private final Map<Id<Link>, List<Double>> parkingSearchTimesPerLink = new HashMap<>();
 
 	@Override
 	public void handleEvent(VehicleStartsParkingSearch event) {
@@ -38,11 +40,21 @@ public class ParkingEventHandler implements VehicleStartsParkingSearchEventHandl
 		searchTimes.add(event.getTime() - startTime);
 
 		if(event.getLinkId() != null) {
-			parkingSearchTimePerLink.merge(event.getLinkId(), event.getTime() - startTime, Double::sum);
+			totalParkingSearchTimePerLink.merge(event.getLinkId(), event.getTime() - startTime, Double::sum);
+			parkingSearchTimesPerLink
+				.computeIfAbsent(event.getLinkId(), k -> new ArrayList<>())
+				.add(event.getTime() - startTime);
 		}
+
 		if(event.getPersonId() != null) {
 			totalParkingSearchTimePerPerson.merge(event.getPersonId(), event.getTime() - startTime, Double::sum);
 		}
+		if (event.getPersonId() != null) {
+			parkingSearchTimesPerPerson
+				.computeIfAbsent(event.getPersonId(), k -> new ArrayList<>())
+				.add(event.getTime() - startTime);
+		}
+
 	}
 
 	public Map<Double, Double> parkingSearchTimesDensity() {
@@ -60,12 +72,16 @@ public class ParkingEventHandler implements VehicleStartsParkingSearchEventHandl
 		return new ArrayList<>(searchTimes);
 	}
 
-	public Map<Id<Link>, Double> parkingSearchTimePerLink() {
-		return parkingSearchTimePerLink;
+	public Map<Id<Link>, List<Double>> parkingSearchTimesPerLink() {
+		return parkingSearchTimesPerLink;
 	}
 
 	public Map<Id<Person>, Double> totalParkingSearchTimePerPerson() {
 		return totalParkingSearchTimePerPerson;
+	}
+
+	public Map<Id<Person>, List<Double>> parkingSearchTimesPerPerson() {
+		return parkingSearchTimesPerPerson;
 	}
 
 }
