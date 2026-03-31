@@ -170,6 +170,7 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 		intermodalParams.setStopFilterValue(STOP_FILTER_VALUE);
 
 		raptorConfigGroup.addIntermodalAccessEgress(intermodalParams);
+		raptorConfigGroup.setUseIntermodalAccessEgress(true);
 	}
 
 	/**
