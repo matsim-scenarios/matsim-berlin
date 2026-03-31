@@ -430,7 +430,10 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MA
 #  According to a discussion with CR: The following step is based on the output of the constant-calibration which is executed 
 # manually with src/main/sh/runCalib.sh and src/main/python/calibrate.py. In the following step only the first two sub-steps 
 # are necessary and should be repeated for every sample you are interested in. The both input-files in the original-version 
-# are the output of the constant- calibration. 
+# are the output of the constant- calibration.
+# Update 2026-03-31 To be discussed if this is really necessary. prepare taste-variations only removes the tastes for bus
+# which actually should not be there?! Further it is not clear if we really want to remove unselected plans, I think dresden
+# is different here.
 #$(BERLIN_10PCT_AFTER_CHOICE_EXPERIMENTS): $(MODECHOICE_10PCT_BASELINE_PLANS) $(CHOICE_EXPERIMENTS_10PCT_BASELINE_PLANS)
 $(BERLIN_10PCT_AFTER_CHOICE_EXPERIMENTS): $(MODECHOICE_10PCT_BASELINE_PLANS) 
 	$(JAVA_APP) prepare clean-population\
