@@ -27,6 +27,7 @@ FIXED = 1
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate the trip choice model")
     parser.add_argument("--input", help="Path to the input file", type=str, default="../../../../trip-choices.csv")
+    parser.add_argument("--test-input", help="Path to the test split (if not given, input is used)", type=str, default=None)
     parser.add_argument("--mxl-modes", help="Modes to use mixed logit for", nargs="*", type=set,
                         default=["pt", "bike", "ride", "car"])
     parser.add_argument("--est-performing", help="Estimate the beta for performing", action="store_true")
@@ -189,6 +190,16 @@ if __name__ == "__main__":
         probs[f"Direct elasticity {mode} daily costs"] = direct_elas_cost
         probs[f"Direct elasticity {mode} km costs"] = direct_elas_km_costs
 
+    # Read database again with test data only for predictions
+    if args.test_input:
+        # Same read logic as above
+        ds = read_trip_choices(args.test_input)
+        df = ds.df * 1
+        for mode in ds.modes:
+            df[f"{mode}_daily_costs"] = daily_costs[mode]
+            df[f"{mode}_km_costs"] = km_costs[mode]
+
+        database = db.Database("data/choices", df)
 
     simulation = bio.BIOGEME(database, probs)
 
