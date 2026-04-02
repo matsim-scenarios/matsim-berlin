@@ -31,6 +31,7 @@ import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.extensions.pt.routing.EnhancedRaptorIntermodalAccessEgress;
 import org.matsim.run.OpenBerlinDrtScenario;
 import org.matsim.run.OpenBerlinScenario;
+import org.matsim.vehicles.VehicleType;
 import picocli.CommandLine;
 
 import javax.annotation.Nullable;
@@ -46,6 +47,8 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 	static final String STOP_FILTER = "eScooterStopFilter";
 	static final String STOP_FILTER_VALUE = "station_S/U/RE/RB_eScooter";
 	private static final String BERLIN_SHP_STRING = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.4/input/shp/Berlin_25832.shp";
+//	this is the default bike speed value from inout vehicle types
+	private static final double DEFAULT_E_SCOOTER_SPEED = 2.98;
 
 	@CommandLine.Option(names = "--sharing-service", description = "Path to sharing service xml file with stations and vehicles.", required = true)
 	private String serviceFile;
@@ -77,7 +80,7 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 		//		apply all scenario changes from base scenario class
 		super.prepareScenario(scenario);
 
-		copyBikeModeConstantsForSharingInScenario(scenario);
+		copyBikeValuesForSharingInScenario(scenario);
 
 //		tag intermodal eScooter-pt-stations
 		tagIntermodalPtSharingTransitStopsInScenario(scenario, STOP_FILTER, STOP_FILTER_VALUE, BERLIN_SHP_STRING);
@@ -120,7 +123,8 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 		// Register the shared mode as a teleportation mode
 		RoutingConfigGroup.TeleportedModeParams eScooterParams = new RoutingConfigGroup.TeleportedModeParams(E_SCOOTER);
 //		2.98 is the speed of veh type bike in the veh type file
-		eScooterParams.setTeleportedModeSpeed(2.98);
+//		the speed of eScooters is adapted if bike speed is adapted later on!
+		eScooterParams.setTeleportedModeSpeed(DEFAULT_E_SCOOTER_SPEED);
 		eScooterParams.setBeelineDistanceFactor(1.3);
 		config.routing().addTeleportedModeParams(eScooterParams);
 
@@ -176,7 +180,7 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 	/**
 	 * copy bike mode constants for eScooter if available.
 	 */
-	static void copyBikeModeConstantsForSharingInScenario(Scenario scenario) {
+	static void copyBikeValuesForSharingInScenario(Scenario scenario) {
 		for (Person person : scenario.getPopulation().getPersons().values()) {
 			if (PersonUtils.getModeConstants(person) != null && PersonUtils.getModeConstants(person).containsKey(TransportMode.bike)) {
 //				assume that preference for bike is similar for eScooter
@@ -185,6 +189,12 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 				modeConstants.put(E_SCOOTER, modeConstants.get(TransportMode.bike));
 				PersonUtils.setModeConstants(person, modeConstants);
 			}
+		}
+
+//		if bike speed changes, we want to apply the same speed to e scooters. Only relevant for combined scenarios.
+		if (scenario.getVehicles().getVehicleTypes().get(Id.create(TransportMode.bike, VehicleType.class)).getMaximumVelocity() != DEFAULT_E_SCOOTER_SPEED) {
+			scenario.getConfig().routing().getTeleportedModeParams().get(E_SCOOTER)
+				.setTeleportedModeSpeed(scenario.getVehicles().getVehicleTypes().get(Id.create(TransportMode.bike, VehicleType.class)).getMaximumVelocity());
 		}
 	}
 

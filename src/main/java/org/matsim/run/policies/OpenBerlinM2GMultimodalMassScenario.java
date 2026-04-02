@@ -12,10 +12,8 @@ import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.contrib.drt.run.MultiModeDrtModule;
 import org.matsim.contrib.dvrp.run.DvrpModule;
-import org.matsim.contrib.dvrp.run.DvrpQSimComponents;
 import org.matsim.contrib.shared_mobility.run.SharingConfigGroup;
 import org.matsim.contrib.shared_mobility.run.SharingModule;
-import org.matsim.contrib.shared_mobility.service.SharingUtils;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
@@ -137,7 +135,7 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 		OpenBerlinBikeSpeedScenario.setMaxBikeSpeedInScenario(scenario, MAX_BIKE_SPEED);
 //		6) sharing
 //		copy mode constants := tase preferences from bike to eScooter if available
-		OpenBerlinScooterSharingScenario.copyBikeModeConstantsForSharingInScenario(scenario);
+		OpenBerlinScooterSharingScenario.copyBikeValuesForSharingInScenario(scenario);
 //		add tags to transit stops for intermodality between pt and eScooter sharing
 		OpenBerlinScooterSharingScenario.tagIntermodalPtSharingTransitStopsInScenario(scenario, OpenBerlinScooterSharingScenario.STOP_FILTER,
 			OpenBerlinScooterSharingScenario.STOP_FILTER_VALUE, berlinShp);

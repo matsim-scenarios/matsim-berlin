@@ -133,7 +133,7 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 		OpenBerlinBikeSpeedScenario.setMaxBikeSpeedInScenario(scenario, MAX_BIKE_SPEED);
 //		6) sharing
 //		copy mode constants := tase preferences from bike to eScooter if available
-		OpenBerlinScooterSharingScenario.copyBikeModeConstantsForSharingInScenario(scenario);
+		OpenBerlinScooterSharingScenario.copyBikeValuesForSharingInScenario(scenario);
 //		add tags to transit stops for intermodality between pt and eScooter sharing
 		OpenBerlinScooterSharingScenario.tagIntermodalPtSharingTransitStopsInScenario(scenario, OpenBerlinScooterSharingScenario.STOP_FILTER,
 			OpenBerlinScooterSharingScenario.STOP_FILTER_VALUE, berlinShp);
