@@ -32,12 +32,10 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 	@CommandLine.Option(names = "--bike-pce", description = "PCE (passenger car equivalents) for bike, if simulated in qsim. Default seems to be 0.2.")
 	private double bikePce = 0.2;
 
-	@Nullable
-	@Override
-	public Config prepareConfig(Config config) {
-		//		apply all config changes from base scenario class
-		super.prepareConfig(config);
-
+	/**
+	 * make all necessary config changes for different simulation scenarios of bike.
+	 */
+	public static void configChangesForBikeNetworkScenario(Config config, BikeHandling bikeHandling) {
 		if (bikeHandling == BikeHandling.ROUTED_ON_NETWORK_NOT_IN_QSIM) {
 //			default
 		} else if (bikeHandling == BikeHandling.ROUTED_ON_NETWORK_IN_QSIM) {
@@ -70,14 +68,12 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 			routingConfigGroup.addTeleportedModeParams(bikeParams);
 			log.info("Added teleported mode params for bike with teleportedModeSpeed {}.", bikeTeleportedSpeed);
 		}
-		return config;
 	}
 
-	@Override
-	public void prepareScenario(Scenario scenario) {
-		//		apply all scenario changes from base scenario class
-		super.prepareScenario(scenario);
-
+	/**
+	 * make all necessary scenario changes for different simulation scenarios of bike.
+	 */
+	public static void scenarioChangesForBikeNetworkScenario(Scenario scenario, BikeHandling bikeHandling, double bikePce) {
 		if (bikeHandling == BikeHandling.ROUTED_ON_NETWORK_NOT_IN_QSIM) {
 //			default
 		} else if (bikeHandling == BikeHandling.ROUTED_ON_NETWORK_IN_QSIM) {
@@ -96,6 +92,24 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 		}
 	}
 
+	@Nullable
+	@Override
+	public Config prepareConfig(Config config) {
+		//		apply all config changes from base scenario class
+		super.prepareConfig(config);
+
+		configChangesForBikeNetworkScenario(config, bikeHandling);
+		return config;
+	}
+
+	@Override
+	public void prepareScenario(Scenario scenario) {
+		//		apply all scenario changes from base scenario class
+		super.prepareScenario(scenario);
+
+		scenarioChangesForBikeNetworkScenario(scenario, bikeHandling, bikePce);
+	}
+
 	@Override
 	public void prepareControler(Controler controler) {
 		//		apply all controller changes from base scenario class
@@ -105,5 +119,5 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 	/**
 	 * Helper Enum to configure how bikes are simulated.
 	 */
-	private enum BikeHandling {ROUTED_ON_NETWORK_NOT_IN_QSIM, ROUTED_ON_NETWORK_IN_QSIM, TELEPORTED}
+	public enum BikeHandling {ROUTED_ON_NETWORK_NOT_IN_QSIM, ROUTED_ON_NETWORK_IN_QSIM, TELEPORTED}
 }

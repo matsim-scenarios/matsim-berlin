@@ -28,6 +28,7 @@ import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutilityF
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
+import org.matsim.run.policies.OpenBerlinBikeNetworkScenario;
 import org.matsim.run.scoring.AdvancedScoringConfigGroup;
 import org.matsim.run.scoring.AdvancedScoringModule;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
@@ -62,6 +63,13 @@ public class OpenBerlinScenario extends MATSimApplication {
 		description = "Plan selector to use.",
 		defaultValue = DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta)
 	private String planSelector;
+
+//	bike run params copied from OpenBerlinBikeNetworkScenario because we need to use this class for calibration.
+//	One cannot give the auto calib by CR a different run class. -sm0426
+	@CommandLine.Option(names = "--bike-handling", description = "Defines how transport mode bike is simulated in the berlin scenario.")
+	private OpenBerlinBikeNetworkScenario.BikeHandling bikeHandling = OpenBerlinBikeNetworkScenario.BikeHandling.ROUTED_ON_NETWORK_NOT_IN_QSIM;
+	@CommandLine.Option(names = "--bike-pce", description = "PCE (passenger car equivalents) for bike, if simulated in qsim. Default seems to be 0.2.")
+	private double bikePce = 0.2;
 
 	public OpenBerlinScenario() {
 		super(String.format("input/v%s/berlin-v%s.config.xml", VERSION, VERSION));
@@ -148,6 +156,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 		eConfig.setDetailedVsAverageLookupBehavior(EmissionsConfigGroup.DetailedVsAverageLookupBehavior.tryDetailedThenTechnologyAverageThenAverageTable);
 		eConfig.setEmissionsComputationMethod(EmissionsConfigGroup.EmissionsComputationMethod.StopAndGoFraction);
 
+//		apply config changes for different bike scenarios. If default (bike routed on network, but not simulated in qsim), nothing changes.
+		OpenBerlinBikeNetworkScenario.configChangesForBikeNetworkScenario(config, bikeHandling);
+
 		return config;
 	}
 
@@ -205,6 +216,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 		scenario.getTransitVehicles()
 			.getVehicleTypes()
 			.values().forEach(type -> VehicleUtils.setHbefaVehicleCategory(type.getEngineInformation(), HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString()));
+
+//		apply scenario changes for different bike scenarios. If default (bike routed on network, but not simulated in qsim), nothing changes.
+		OpenBerlinBikeNetworkScenario.scenarioChangesForBikeNetworkScenario(scenario, bikeHandling, bikePce);
 	}
 
 	@Override
