@@ -3,10 +3,14 @@ package org.matsim.run.policies;
 import com.google.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.network.Network;
 import org.matsim.application.MATSimApplication;
+import org.matsim.application.options.ShpOptions;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.groups.ReplanningConfigGroup;
 import org.matsim.core.controler.AbstractModule;
@@ -20,14 +24,19 @@ import org.matsim.core.network.kernel.DefaultKernelFunction;
 import org.matsim.core.network.kernel.KernelDistance;
 import org.matsim.core.network.kernel.NetworkKernelFunction;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
+import org.matsim.core.utils.io.IOUtils;
 import org.matsim.run.OpenBerlinScenario;
+import org.matsim.utils.gis.shp2matsim.ShpGeometryUtils;
 import picocli.CommandLine;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.matsim.core.mobsim.qsim.qnetsimengine.parking.ParkingUtils.LINK_OFF_STREET_SPOTS;
 import static org.matsim.core.mobsim.qsim.qnetsimengine.parking.ParkingUtils.LINK_ON_STREET_SPOTS;
@@ -50,6 +59,9 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
 
 	@CommandLine.Option(names = "--noModeChoice", defaultValue = "true")
 	private boolean noModeChoice;
+
+	@CommandLine.Option(names = "--shp-hundekopf", description = "Shapefile of hundekop area")
+	private String shpHundekopf;
 
 	private static final Logger log = LogManager.getLogger(OpenBerlinWithParking.class );
 
@@ -83,14 +95,39 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
 		//get the sample size to scale parking capacities accordingly
 		double sampleSize = scenario.getConfig().qsim().getFlowCapFactor();
 		log.info("Using sample size of " + sampleSize + " to scale parking capacities.");
-		// Read parking supply data from CSV and add to link attributes
+		// Read parking supply data for off street parking from CSV
 		Map<Id<Link>, ParkingSpots> parkingSpotsPerLink = readCSV(parkingSupply);
 		for (Link link : scenario.getNetwork().getLinks().values()) {
 			if (parkingSpotsPerLink.containsKey(link.getId())) {
 				//log.info("Parking spots for " + link.getId() + ": on-street=" + parkingSpotsPerLink.get(link.getId()).onstreetSpots + ", off-street=" + parkingSpotsPerLink.get(link.getId()).offstreetSpots);
 				//log.info("Scaled parking spots for " + link.getId() + ": on-street=" + onStreetParkingSpots + ", off-street=" + offStreetParkingSpots);
-				link.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, (int) Math.round(parkingSpotsPerLink.get(link.getId()).onstreetSpots * sampleSize));
+				//link.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, (int) Math.round(parkingSpotsPerLink.get(link.getId()).onstreetSpots * sampleSize));
 				link.getAttributes().putAttribute(LINK_OFF_STREET_SPOTS, (int) Math.round(parkingSpotsPerLink.get(link.getId()).offstreetSpots * sampleSize));
+			}
+		}
+
+		List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(
+			IOUtils.resolveFileOrResource(String.valueOf(shpHundekopf))
+		);
+
+		for (Link link : scenario.getNetwork().getLinks().values()) {
+
+			// only consider car links
+			if (!link.getAllowedModes().contains(TransportMode.car)) {
+				continue;
+			}
+
+			boolean isInArea = ShpGeometryUtils.isCoordInPreparedGeometries(
+				link.getCoord(), geometries
+			);
+
+			if (isInArea) {
+				//link IS inside shapefile, so in the hundekopf area.
+				link.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, Math.round(link.getLength() *  0.191));
+
+			} else {
+				// link is OUTSIDE shapefile, so in the rest of berlin or brandenburg.
+				link.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, Math.round(link.getLength() * 0.145));
 			}
 		}
 
