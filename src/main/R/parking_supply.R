@@ -150,7 +150,8 @@ points_clean <- amenity_points %>%
 st_write(
   points_clean,
   "/Users/gregorr/Documents/work/Paper/heartParking/data/amenity.gpkg",
-  layer = "points"
+  layer = "points",
+  delete_dsn = TRUE
 )
 
 # --- POLYGONS ---
@@ -173,9 +174,15 @@ st_write(
 # Buildings = parking
 # ----------------------------------------------------------
 
-building <- opq(bbox = "Berlin, Germany") %>%
-  add_osm_feature(key = "building", value = c("garages", "parking")) %>%
-  osmdata_sf()
+## load buildings
+#building <- opq(bbox = "Berlin, Germany") %>%
+#  add_osm_feature(key = "building", value = c("garages", "parking")) %>%
+#  osmdata_sf()
+
+##save raw data set extracted above
+#saveRDS(building, "/Users/gregorr/Documents/work/Paper/heartParking/data/buildings_parking_berlin.rds")
+
+building <- readRDS("/Users/gregorr/Documents/work/Paper/heartParking/data/buildings_parking_berlin.rds")
 
 buildings_polygons <- bind_rows(building$osm_polygons, building$osm_multipolygons) %>%
   st_transform(25832) %>%
@@ -188,6 +195,30 @@ buildings_points <- building$osm_points %>%
   st_filter(berlin_districts_shp)
 
 buildings_filt <- buildings_polygons %>% st_filter(amenity_polygon_filtered)
+
+# --- Buildings polygons ---
+st_write(
+  buildings_polygons,
+  "/Users/gregorr/Documents/work/Paper/heartParking/data/buildings.gpkg",
+  layer = "buildings_polygons"
+)
+
+# --- Buildings points ---
+st_write(
+  buildings_points,
+  "/Users/gregorr/Documents/work/Paper/heartParking/data/buildings.gpkg",
+  layer = "buildings_points",
+  append = TRUE
+)
+
+# --- Filtered buildings (intersecting parking areas) ---
+st_write(
+  buildings_filt,
+  "/Users/gregorr/Documents/work/Paper/heartParking/data/buildings.gpkg",
+  layer = "buildings_filtered",
+  append = TRUE
+)
+
 
 # ----------------------------------------------------------
 # Capacity model for OSM amenities
@@ -238,7 +269,7 @@ label_text <- paste0(
   "\nR² = ", round(r2, 3)
 )
 
-ggplot(df_model, aes(x = area_mod, y = capacity)) +
+ggplot(linear_model, aes(x = area_mod, y = capacity)) +
   geom_point(alpha = 0.4) +
   geom_smooth(method = "lm", se = FALSE) +
   annotate(

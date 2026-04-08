@@ -111,7 +111,6 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
 		);
 
 		for (Link link : scenario.getNetwork().getLinks().values()) {
-
 			// only consider car links
 			if (!link.getAllowedModes().contains(TransportMode.car)) {
 				continue;
@@ -123,11 +122,11 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
 
 			if (isInArea) {
 				//link IS inside shapefile, so in the hundekopf area.
-				link.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, (int) Math.round(link.getLength() *  0.191));
+				link.getAttributes().putAttribute(LINK_ON_STREET_SPOTS,  (int) Math.round(link.getLength() *  0.191 * sampleSize));
 
 			} else {
 				// link is OUTSIDE shapefile, so in the rest of berlin or brandenburg.
-				link.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, (int) Math.round(link.getLength() * 0.145));
+				link.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, (int) Math.round(link.getLength() * 0.145 * sampleSize));
 			}
 		}
 
