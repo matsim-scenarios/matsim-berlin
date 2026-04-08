@@ -21,7 +21,7 @@ public class RunOpenBerlinDrtScenarioTest {
 	public void pct1() throws IOException {
 
 		int code = MATSimApplication.execute(OpenBerlinDrtScenario.class,
-			"--1pct",
+			"--config", String.format("input/v%s/berlin-v%s-1pct.config.xml", OpenBerlinScenario.VERSION, OpenBerlinScenario.VERSION),
 			"--output", utils.getOutputDirectory(),
 			"--iterations", "2",
 			"--config:qsim.numberOfThreads", "2",
