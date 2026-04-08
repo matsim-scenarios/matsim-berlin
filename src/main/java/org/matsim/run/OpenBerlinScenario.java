@@ -39,7 +39,7 @@ import java.util.List;
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true, showDefaultValues = true)
 public class OpenBerlinScenario extends MATSimApplication {
 
-	public static final String VERSION = "6.4";
+	public static final String VERSION = "6.5";
 	public static final String CRS = "EPSG:25832";
 
 	//	To decrypt hbefa input files set MATSIM_DECRYPTION_PASSWORD as environment variable. ask VSP for access.

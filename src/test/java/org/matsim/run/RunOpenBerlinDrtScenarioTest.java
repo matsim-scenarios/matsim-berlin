@@ -4,6 +4,7 @@ package org.matsim.run;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.matsim.application.MATSimApplication;
+import org.matsim.run.policies.OpenBerlinDrtScenario;
 import org.matsim.testcases.MatsimTestUtils;
 
 import java.io.IOException;

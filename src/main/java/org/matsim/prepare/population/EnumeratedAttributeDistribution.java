@@ -1,7 +1,7 @@
 package org.matsim.prepare.population;
 
 import org.apache.commons.math3.distribution.EnumeratedDistribution;
-import org.apache.commons.math3.random.MersenneTwister;
+import org.apache.commons.math3.random.Well19937c;
 import org.apache.commons.math3.util.Pair;
 
 import java.util.List;
@@ -22,12 +22,12 @@ public class EnumeratedAttributeDistribution<T> implements AttributeDistribution
 	 *
 	 * @param probabilities map of attributes to their probabilities.
 	 */
-	public EnumeratedAttributeDistribution(Map<T, Double> probabilities) {
+	public EnumeratedAttributeDistribution(Map<T, Double> probabilities, long seed) {
 		List<Pair<T, Double>> pairs = probabilities.entrySet().stream().map(
 				e -> new Pair<>(e.getKey(), e.getValue())
 		).collect(Collectors.toList());
 
-		dist = new EnumeratedDistribution<T>(new MersenneTwister(0), pairs);
+		dist = new EnumeratedDistribution<>(new Well19937c(seed), pairs);
 	}
 
 	@Override

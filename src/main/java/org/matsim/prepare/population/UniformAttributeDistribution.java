@@ -8,15 +8,11 @@ import java.util.*;
 public class UniformAttributeDistribution<T> implements AttributeDistribution<T> {
 
 	private final List<T> attributes;
-	private final Random rnd;
+	private final SplittableRandom rnd;
 
-	public UniformAttributeDistribution(T... attributes) {
-		this(Arrays.stream(attributes).toList());
-	}
-
-	public UniformAttributeDistribution(Collection<T> attributes) {
+	public UniformAttributeDistribution(Collection<T> attributes, long seed) {
 		this.attributes = new ArrayList<>(attributes);
-		this.rnd = new Random(0);
+		this.rnd = new SplittableRandom(seed);
 	}
 
 	@Override

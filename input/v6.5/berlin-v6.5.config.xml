@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "http://www.matsim.org/files/dtd/config_v2.dtd">
+<config>
+	<module name="timeAllocationMutator">
+		<param name="mutationRange" value="1800.0"/>
+		<param name="mutateAroundInitialEndTimeOnly" value="true"/>
+	</module>
+	<module name="controller">
+		<param name="lastIteration" value="500"/>
+		<param name="overwriteFiles" value="failIfDirectoryExists"/>
+		<param name="runId" value="berlin-v6.5"/>
+		<param name="outputDirectory" value="./output/berlin-v6.5-10pct"/>
+		<param name="writeEventsInterval" value="100"/>
+		<param name="writePlansInterval" value="100"/>
+		<param name="routingAlgorithmType" value="SpeedyALT"/>
+	</module>
+	<module name="global">
+		<param name="coordinateSystem" value="EPSG:25832"/>
+		<param name="insistingOnDeprecatedConfigVersion" value="false"/>
+		<param name="numberOfThreads" value="16"/>
+	</module>
+	<module name="network">
+		<param name="inputNetworkFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.5/input/berlin-v6.5-network-with-pt.xml.gz"/>
+	</module>
+	<module name="plans">
+		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.5/input/berlin-v6.5-10pct.plans.xml.gz"/>
+		<param name="removingUnnecessaryPlanAttributes" value="true"/>
+	</module>
+	<module name="vehicles">
+		<param name="vehiclesFile" value="./berlin-v6.5-vehicleTypes.xml"/>
+	</module>
+	<module name="transit">
+		<param name="transitScheduleFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.5/input/berlin-v6.5-transitSchedule.xml.gz"/>
+		<param name="useTransit" value="true"/>
+		<param name="vehiclesFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.5/input/berlin-v6.5-transitVehicles.xml.gz"/>
+	</module>
+	<module name="facilities">
+		<param name="facilitiesSource" value="fromFile"/>
+		<param name="inputFacilitiesFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.5/input/berlin-v6.5-facilities.xml.gz"/>
+	</module>
+	<module name="routing">
+		<param name="networkModes" value="car,truck,freight,ride,bike"/>
+		<param name="accessEgressType" value="accessEgressModeToLink"/>
+		<param name="clearDefaultTeleportedModeParams" value="true"/>
+		<parameterset type="teleportedModeParameters">
+			<param name="beelineDistanceFactor" value="1.3"/>
+			<param name="mode" value="walk"/>
+			<!-- Determined from SrV data and also consistent with other studies -->
+			<param name="teleportedModeSpeed" value="1.23"/>
+		</parameterset>
+	</module>
+	<module name="qsim">
+		<param name="mainMode" value="car,truck,freight"/>
+		<param name="flowCapacityFactor" value="0.1"/>
+		<param name="storageCapacityFactor" value="0.1"/>
+		<param name="numberOfThreads" value="12"/>
+		<param name="startTime" value="00:00:00"/>
+		<param name="endTime" value="36:00:00"/>
+		<param name="stuckTime" value="30.0"/>
+		<param name="trafficDynamics" value="kinematicWaves"/>
+		<param name="linkDynamics" value="PassingQ"/>
+		<param name="vehiclesSource" value="modeVehicleTypesFromVehiclesData"/>
+		<param name="insertingWaitingVehiclesBeforeDrivingVehicles" value="true"/>
+		<param name="usePersonIdForMissingVehicleId" value="false"/>
+	</module>
+
+	<module name="subtourModeChoice">
+		<param name="modes" value="car,pt,bike,walk,ride"/>
+		<param name="chainBasedModes" value="car,bike"/>
+		<param name="considerCarAvailability" value="true"/>
+		<param name="behavior" value="betweenAllAndFewerConstraints"/>
+		<param name="probaForRandomSingleTripMode" value="0.5"/>
+		<param name="coordDistance" value="100"/>
+	</module>
+	<!--
+	<module name="informedModeChoice">
+		<param name="modes" value="car,pt,bike,walk"/>
+		<param name="topK" value="5"/>
+	</module>
+	-->
+
+	<module name="simwrapper" >
+		<param name="sampleSize" value="0.1" />
+
+		<parameterset type="params" >
+			<param name="context" value="" />
+			<param name="mapCenter" value="13.39,52.51" />
+			<param name="mapZoomLevel" value="9.1" />
+			<param name="shp" value="./area/area.shp" />
+		</parameterset>
+	</module>
+
+	<module name="transitRouter">
+		<param name="directWalkFactor" value="1.0"/>
+		<param name="maxBeelineWalkConnectionDistance" value="300.0"/>
+	</module>
+	<module name="travelTimeCalculator">
+		<param name="analyzedModes" value="car,truck"/>
+		<param name="separateModes" value="true"/>
+	</module>
+	<module name="vspExperimental">
+		<param name="vspDefaultsCheckingLevel" value="abort"/>
+	</module>
+
+	<module name="scoring">
+		<param name="fractionOfIterationsToStartScoreMSA" value="0.9"/>
+		<param name="pathSizeLogitBeta" value="0"/>
+
+		<parameterset type="scoringParameters">
+			<param name="marginalUtilityOfMoney" value="1.0"/>
+			<!-- car prices 2012->2022: inflation (110.2-91.7)/91.7 = 0.2017448
+			Euro/m: 0.000124*(1+0.2017448) = 0.00014901635 -->
+			<!-- 6.0 -> inflation adjusted (2017->2022) -->
+			<param name="performing" value="6.88"/>
+
+			<parameterset type="modeParams">
+				<param name="constant" value="-0.487593225702316" />
+				<!-- result of the calibration, lower than full vehicle ownership cost which gave too unattractive car mode in calibration -->
+				<param name="dailyMonetaryConstant" value="-5.0" />
+				<param name="dailyUtilityConstant" value="0" />
+				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<!-- only petrol price 2022, other cost components were excluded -->
+				<param name="monetaryDistanceRate" value="-1.49E-4" />
+				<param name="mode" value="car" />
+			</parameterset>
+			<parameterset type="modeParams">
+				<param name="constant" value="-1.153972863285258" />
+				<param name="dailyMonetaryConstant" value="0.0" />
+				<param name="dailyUtilityConstant" value="0.0" />
+				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<!-- alpha=1 -->
+				<!-- (alpha)*beta_performing+(alpha+1)*car_marginalUtilityOfDistance_util_m -->
+				<param name="marginalUtilityOfTraveling_util_hr" value="-6.88" />
+				<!-- alpha*car_monetaryDistanceRate -->
+				<param name="monetaryDistanceRate" value="-1.49E-4" />
+				<param name="mode" value="ride" />
+			</parameterset>
+			<parameterset type="modeParams">
+				<param name="constant" value="0.43220302370275404" />
+				<!-- 2022: 4-trips AB 10Euro -> 2.5 Eu/trip. yearly 761 Eu / 250 days = 3.04 Eu/day -->
+				<param name="dailyMonetaryConstant" value="-3.0" />
+				<param name="dailyUtilityConstant" value="0.0" />
+				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="monetaryDistanceRate" value="0.0" />
+				<param name="mode" value="pt" />
+			</parameterset>
+			<parameterset type="modeParams">
+				<param name="constant" value="-0.8720995248245994" />
+				<param name="dailyMonetaryConstant" value="0.0" />
+				<param name="dailyUtilityConstant" value="0.0" />
+				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="monetaryDistanceRate" value="0.0" />
+				<param name="mode" value="bike" />
+			</parameterset>
+			<parameterset type="modeParams">
+				<param name="constant" value="0.0" />
+				<param name="dailyMonetaryConstant" value="0.0" />
+				<param name="dailyUtilityConstant" value="0.0" />
+				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="monetaryDistanceRate" value="0.0" />
+				<param name="mode" value="walk" />
+			</parameterset>
+			<parameterset type="modeParams" >
+				<param name="constant" value="0.0" />
+				<param name="dailyMonetaryConstant" value="0.0" />
+				<param name="dailyUtilityConstant" value="0.0" />
+				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="monetaryDistanceRate" value="-4.0E-4" />
+				<param name="mode" value="freight" />
+			</parameterset>
+			<parameterset type="modeParams" >
+				<param name="constant" value="0.0" />
+				<param name="dailyMonetaryConstant" value="0.0" />
+				<param name="dailyUtilityConstant" value="0.0" />
+				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="monetaryDistanceRate" value="-4.0E-4" />
+				<param name="mode" value="truck" />
+			</parameterset>
+		</parameterset>
+	</module>
+
+	<!--
+	<module name="advancedScoring">
+	</module>
+	-->
+
+	<module name="counts">
+		<param name="inputCountsFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.5/input/berlin-v6.5-counts-vmz.xml.gz"/>
+		<param name="countsScaleFactor" value="0.1"/>
+	</module>
+
+	<module name="replanningAnnealer">
+		<param name="activateAnnealingModule" value="true" />
+		<parameterset type="AnnealingVariable" >
+			<param name="annealParameter" value="globalInnovationRate" />
+			<param name="annealType" value="sigmoid" />
+			<param name="subpopulation" value="person" />
+			<!-- this parameter enters the exponential and sigmoid formulas. May be an iteration or a share, i.e. 0.5 for halfLife at 50% of iterations. Exponential: startValue / exp(it/halfLife) -->
+			<param name="halfLife" value="0.5" />
+			<!-- sigmoid: 1/(1+e^(shapeFactor*(it - halfLife))); geometric: startValue * shapeFactor^it; msa: startValue / it^shapeFactor -->
+			<param name="shapeFactor" value="0.01" />
+			<param name="startValue" value="0.45" />
+			<param name="endValue" value="0.01" />
+		</parameterset>
+	</module>
+
+	<module name="replanning">
+		<param name="fractionOfIterationsToDisableInnovation" value="0.9"/>
+		<!-- Strategies are added in code -->
+	</module>
+
+</config>

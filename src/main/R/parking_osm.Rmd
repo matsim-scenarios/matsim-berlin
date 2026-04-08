@@ -1,0 +1,372 @@
+---
+title: "parking_osm"
+output: html_document
+---
+
+Set your working directory
+
+```{r setup, include=FALSE}
+setwd("~/git/matsim-berlin")
+```
+
+```{r,include=FALSE}
+#install.packages("osmdata")
+
+library(tidyverse)
+library(sf)
+library(osmdata)
+library(tmap)
+library(matsim)
+library(units)
+
+```
+
+# Reading Inputs
+
+Read in MATSim network
+
+```{r, include=FALSE}
+getwd()
+input_network_filename <- "berlin-v6.3-network-with-pt.xml.gz"
+
+if(!file.exists(input_network_filename)){
+  download.file("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.3/input/berlin-v6.3-network-with-pt.xml.gz", input_network_filename)
+}
+network_berlin <- matsim::read_network(input_network_filename)
+
+
+```
+
+Read in boundaries of Berlin:
+
+```{r, include=FALSE}
+
+berlin_districts_shp_filename <- "bezirksgrenzen.shp.zip"
+if(!file.exists(berlin_districts_shp_filename)){
+  download.file("https://tsb-opendata.s3.eu-central-1.amazonaws.com/bezirksgrenzen/bezirksgrenzen.shp.zip", berlin_districts_shp_filename)
+}
+
+berlin_districts_shp <- st_read(berlin_districts_shp_filename) %>% st_transform(25832)
+```
+
+Read in area within S-Bahn Ring (Hundekopf)
+
+```{r, include=FALSE}
+hundekopf <- st_read("input/v6.3/hundekopf-shp/hundekopf-carBanArea-25832.shp")
+```
+
+# Question 1: How many public parking spots are there per meter of MATSim link.
+
+## All Links in Berlin 
+
+If we examine all links in Berlin
+
+```{r}
+# turn matsim nodes into sf objects
+nodes <- network_berlin$nodes %>%  st_as_sf(coords = c("x","y"), crs = 25832)
+
+# gather nodes that are within berlin shp file
+nodes_in_berlin <- nodes %>% st_filter(berlin_districts_shp) 
+
+# do a quick plausibility check
+# tmap_mode("view")
+# tm_shape(nodes_in_berlin) + tm_dots()
+
+# gather all links that either have from node or to node within berlin, or both. 
+nodes_in_berlin_ids <- nodes_in_berlin %>% pull(id)
+links_in_berlin <- network_berlin$links %>% 
+  filter(from %in% nodes_in_berlin_ids | to %in% nodes_in_berlin_ids)
+
+# find sum of link lengths:
+total_link_length_berlin <- sum(links_in_berlin$length)
+
+# total parking spots from https://www.berlin.de/aktuelles/9275007-958090-12-millionen-parkplaetze-neue-karte-zeig.html#:~:text=In%20ganz%20Berlin%20gibt%20es,wurden%2C%20wie%20die%20Senatsverkehrsverwaltung%20mitteilte
+total_parking_spots_berlin <- 1276312
+
+total_parking_spots_berlin / total_link_length_berlin
+
+total_link_length_berlin / total_parking_spots_berlin
+
+```
+
+Result = 0.07 parking spots per meter of links. Or, in reverse, there is a parking spot every 14 meters on average. This seems reasonable, since there are many roads where parking is not possible (i.e. all the highways)
+
+## Links ≤50kmh
+
+Do calculation again w/o highways.
+
+We assume everything with allowed speed LOWER than 50kmh (13.89 m/s) has parking
+
+```{r}
+
+13.89 * 60 * 60 / 1000
+
+links_in_berlin %>% mutate(type2 = str_replace(type,"highway.","")) %>%
+  ggplot() + 
+  geom_histogram(aes(allowed_speed))+
+  geom_vline(xintercept = 13.89, col = "red") +
+  facet_wrap(~type2,scales = "free_y")
+
+paste0("Share of Link < 50kmh in Berlin:", 100 * (links_in_berlin %>% filter(allowed_speed < 13.89) %>% count()) / (links_in_berlin %>% count()), "%")
+
+links_in_berlin_filtered <- links_in_berlin %>% 
+  filter(allowed_speed < 13.89) 
+
+links_in_berlin_filtered %>%  
+  summarise(sum_link_distlink_length = sum(length)) %>% 
+  mutate(total_parking_spots = 1276312) %>% 
+  mutate(spots_per_meter = total_parking_spots/sum_link_distlink_length) %>% 
+  mutate(meters_per_spot = sum_link_distlink_length/total_parking_spots)
+
+
+```
+
+Result = 0.17 parking spots per meter of residential street. Or, in reverse, 1 parking spot every 6 meters.
+
+This is too many, assuming that there are actually no parking spots around intersections or bus stops etc. The assumption that only roads w/ ≤50kmh have parking spots is not correct in Berlin. Many 50kmh roads also have parking spots.
+
+## ≤50kmh and Differentiate inside/outside of hundekopf 
+
+Now let's do the same analysis but split within and outside of s-bahn ring:
+
+```{r}
+# gather nodes that are within hundekopf shp file
+nodes_in_hundekopf_ids <- nodes %>%
+  st_filter(hundekopf) %>% pull(id)
+
+links_in_hundekopf_filtered <- links_in_berlin_filtered %>% 
+  filter(from %in% nodes_in_hundekopf_ids | to %in% nodes_in_hundekopf_ids)
+
+
+links_outside_hundekopf_filtered <- links_in_berlin_filtered %>% filter(!id %in% links_in_hundekopf_filtered$id)
+
+
+inside_hundekopf_stats <- links_in_hundekopf_filtered %>% 
+  summarise(sum_link_distlink_length = sum(length)) %>% 
+  mutate(total_parking_spots = 230000) %>% 
+  mutate(spots_per_meter = total_parking_spots/sum_link_distlink_length) %>% 
+  mutate(meters_per_spot = sum_link_distlink_length/total_parking_spots)
+inside_hundekopf_stats
+
+outside_hundekopf_stats <- links_outside_hundekopf_filtered %>%
+  summarise(sum_link_distlink_length = sum(length)) %>% 
+  mutate(total_parking_spots = 1276312 - 230000) %>% 
+  mutate(spots_per_meter = total_parking_spots/sum_link_distlink_length) %>% 
+  mutate(meters_per_spot = sum_link_distlink_length/total_parking_spots)
+outside_hundekopf_stats
+
+onstreet_parking <- links_in_berlin_filtered %>% mutate(spots_per_meter = case_when(
+  id %in% links_in_hundekopf_filtered$id ~ inside_hundekopf_stats$spots_per_meter, 
+  id %in% links_outside_hundekopf_filtered$id ~ outside_hundekopf_stats$spots_per_meter,
+  .default = NA)) %>% transmute(id = id, onstreet_spots = round(spots_per_meter * length,0))
+
+```
+
+Inside Ring: 4.9 meters for each spot (on roads \<50kmh)
+
+Outside Ring: 6.2 meters for each spot (on roads \<50kmh)
+
+--\> This is what we've using for now.
+
+# Question 2: Parking Houses from OSM
+
+## Amenity
+
+Download OSM data for Amenity "parking", and do basic preprocessing.
+
+```{r, include=FALSE}
+
+amenity <- opq(bbox = 'Berlin, Germany')  %>%
+  add_osm_feature(key = "amenity", value = "parking") %>% 
+  osmdata_sf() 
+
+
+tmap_options(check.and.fix = TRUE)
+
+# POLYGONS & MULTIPOLYGONS
+amenity_polygon <- amenity$osm_polygons %>% bind_rows(amenity$osm_multipolygons) %>% 
+  st_transform(25832) %>% 
+  filter(st_is_valid(.)) %>% 
+  st_filter(berlin_districts_shp)
+
+# LINES & MULTILINES
+amenity_lines <- amenity$osm_lines %>% 
+  bind_rows(amenity$osm_multilines) %>% 
+  st_transform(25832) %>% 
+  filter(st_is_valid(.))%>% 
+  st_filter(berlin_districts_shp)
+
+# POINTS
+amenity_points <- amenity$osm_points %>% 
+  st_transform(25832) %>% 
+  filter(st_is_valid(.)) %>% 
+  st_filter(berlin_districts_shp)
+
+```
+
+We decided to ignore points and lines: - Points revealed that there are mostly just the edges of the polygons. We found a few points that are outside the polygons but ignored them and continued because there is nothing we can do anyways. - Lines are just a few cases 44 in total → ignore
+
+Filter amenities polygons to ignore most on-street parking:
+
+```{r}
+amenity_polygon_filtered <- amenity_polygon %>%  
+  filter(!parking %in% c("street_side", "lane","on_kerb","half_on_kerb"))
+
+# tmap_mode("view")
+# tm_shape(amenity_polygon_filtered) +
+#   tm_polygons()
+
+# amenity_polygon_filtered %>% group_by(location) %>% count() %>% arrange(-n)
+
+```
+
+## Building
+
+And now, Searching for Building = "garages","parking" (ignore "carport","garage" because for single households)
+
+```{r}
+
+building <- opq(bbox = 'Berlin, Germany')  %>%
+  add_osm_feature(key = "building", value = c("garages","parking")) %>% 
+  osmdata_sf() 
+
+# POLYGONS
+buildings_polygons <- bind_rows(building$osm_polygons, building$osm_multipolygons) %>% 
+  st_transform(25832) %>% 
+  filter(st_is_valid(.)) %>% 
+  st_filter(berlin_districts_shp) 
+
+
+# POINTS
+buildings_points <- building$osm_points %>% 
+  st_transform(25832) %>% 
+  filter(st_is_valid(.)) %>% 
+  st_filter(berlin_districts_shp) 
+
+tm_shape(buildings_polygons)+
+  tm_polygons(col = "blue") +
+  tm_shape(buildings_points)+
+  tm_dots(size = 0.01, col = "red")
+
+```
+
+We can once again discount the Building Points.
+
+So let's look at the building polygons in relation to amenities
+
+```{r}
+tmap_mode("view")
+tm_shape(amenity_polygon_filtered) + 
+  tm_polygons(col = "black", alpha = 0.5) + 
+  tm_shape(buildings_polygons)+
+  tm_polygons(col = "building", alpha = 0.5)
+
+
+buildings_filt <- buildings_polygons %>% st_filter(amenity_polygon_filtered)
+
+# +
+#   tm_shape(amenity_polygon) +
+#   tm_polygons(col = "red", alpha = 0.5)
+
+```
+
+for now, we are skipping the buildings...
+
+## Capacities of Parking Amenities
+
+Now, we want to make a linear regression of capacity \~ area, to estimate the capacity of every parking amenity (which doesn't Try an linear regression: function
+
+```{r}
+
+max_area <- 1500
+max_capacity <- 100
+
+amenity_polygon_filtered_area <- amenity_polygon_filtered %>%
+  select(osm_id,parking,capacity,levels = "building:levels") %>%
+  mutate(area = st_area(amenity_polygon_filtered)) %>% 
+  mutate(capacity = as.numeric(capacity)) %>%
+  mutate(levels = as.numeric(levels)) %>%
+  mutate(area_mod = as.numeric(case_when(is.na(levels) ~ area,
+                               .default = area * levels)))
+
+linear_model <- amenity_polygon_filtered_area %>%
+  st_drop_geometry() %>%
+  filter(area_mod < max_area & capacity < max_capacity) %>% 
+  lm(formula = capacity ~ area_mod)
+
+amenity_polygon_filtered_area$capacity_fitted <- predict(linear_model, newdata = amenity_polygon_filtered_area)
+
+lm_eqn <- function(m){
+    eq <- substitute(italic(cap) == a + b %.% italic(area)*","~~italic(r)^2~"="~r2, 
+         list(a = format(unname(coef(m)[1]), digits = 2),
+              b = format(unname(coef(m)[2]), digits = 2),
+             r2 = format(summary(m)$r.squared, digits = 3)))
+    as.character(as.expression(eq));
+}
+
+
+
+ggplot(amenity_polygon_filtered_area) +
+  geom_point(aes(area_mod, capacity, col = parking), size = 0.5, alpha = 0.5) +
+  geom_line(aes(area_mod, capacity_fitted), color = "blue") +  # Fitted exponential curve
+  # geom_smooth(method = "nls", formula = y ~ a * exp(b * x), se = FALSE)+
+  geom_text(x = 0.5*max_area, y = max_capacity, label = lm_eqn(linear_model), parse = TRUE) +
+  coord_cartesian(xlim = c(0,max_area), ylim = c(0,max_capacity)) +
+  labs(title = "Capacity vs. Area in OSM's feature amenity:parking, for Berlin", 
+       subtitle = "most street parking filtered out; area of multi-storey parking houses scaled up if # of floors known",
+       x = "Area (m2)", y = "Capacity (# Vehicles)") 
+
+
+amenity_polygon_filtered_area <- amenity_polygon_filtered_area %>%
+  mutate(capacity_final = case_when(is.na(capacity) ~ capacity_fitted, 
+                                                   .default = capacity))
+
+```
+
+## Attach to Links
+
+Now lets create a network of lines. Filter out pt links
+
+```{r}
+from_nodes <- network_berlin$links %>% 
+  select(id,x = x.from, y = y.from) %>% 
+  filter(!str_starts(id,"pt_")) %>% 
+  st_as_sf(coords = c("x","y"), crs = 25832)
+
+to_nodes <- network_berlin$links %>% 
+  select(id,x = x.to, y = y.to) %>% 
+  filter(!str_starts(id,"pt_")) %>% 
+  st_as_sf(coords = c("x","y"), crs = 25832)
+
+links <- rbind(from_nodes,to_nodes) %>% 
+  group_by(id) %>% 
+  summarise(geometry = st_combine(geometry)) %>%
+  st_cast("LINESTRING")
+
+```
+
+And now let's find the closest link to each parking amenity:
+
+```{r}
+
+offstreet_parking <- amenity_polygon_filtered_area %>% 
+  mutate(closest_link = links[st_nearest_feature(amenity_polygon_filtered_area,links),] %>% pull(id)) %>% 
+  st_drop_geometry() %>% 
+  group_by(closest_link) %>% 
+  summarise(offstreet_spots = round(sum(capacity_final),0)) %>% 
+  rename(id = closest_link)
+
+```
+
+# Write CSV
+
+```{r}
+on_and_offstreet_parking_per_link <- full_join(onstreet_parking,offstreet_parking) 
+
+paste0("Onstreet: ", sum(on_and_offstreet_parking_per_link$onstreet_spots,na.rm=T), " | ",
+       "Offstreet: ", sum(on_and_offstreet_parking_per_link$offstreet_spots,na.rm=T))
+write_csv(on_and_offstreet_parking_per_link, file = "input/v6.3/parking/parking_per_link_wip_2025_02_06.csv")
+
+
+on_and_offstreet_parking_per_link %>% view()
+```

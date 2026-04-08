@@ -34,7 +34,8 @@ import java.nio.file.Path;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.*;
-import java.util.stream.IntStream;
+
+import static org.matsim.prepare.population.AgeDistribution.Gender.*;
 
 @CommandLine.Command(
 	name = "berlin-population",
@@ -46,21 +47,32 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 
 	private static final Logger log = LogManager.getLogger(CreateBerlinPopulation.class);
 	private final CoordinateTransformation ct = new GeotoolsTransformation("EPSG:25833", "EPSG:25832");
+
 	@CommandLine.Option(names = "--input", description = "Path to input csv data", required = true)
 	private Path input;
+
 	@CommandLine.Mixin
 	private FacilityOptions facilities = new FacilityOptions();
+
 	@CommandLine.Mixin
 	private ShpOptions shp = new ShpOptions();
+
 	@CommandLine.Option(names = "--output", description = "Path to output population", required = true)
 	private Path output;
+
 	@CommandLine.Option(names = "--year", description = "Year to use statistics from", defaultValue = "2019")
 	private int year;
+
 	@CommandLine.Option(names = "--sample", description = "Sample size to generate", defaultValue = "0.25")
 	private double sample;
+
 	private Map<String, MultiPolygon> lors;
+
 	private SplittableRandom rnd;
+
 	private Population population;
+
+	private Map<AgeGroup, Map<AgeDistribution.Gender, AgeDistribution>> ageDistributions;
 
 	public static void main(String[] args) {
 		new CreateBerlinPopulation().execute(args);
@@ -122,6 +134,12 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 		lors = new HashMap<>();
 		population = PopulationUtils.createPopulation(ConfigUtils.createConfig());
 
+		ageDistributions = Map.of(
+			AgeGroup.YOUNG, Map.of(MALE, new AgeDistribution(0, 18, MALE, 0), FEMALE, new AgeDistribution(0, 18, FEMALE, 0)),
+			AgeGroup.MIDDLE, Map.of(MALE, new AgeDistribution(18, 65, MALE, 0), FEMALE, new AgeDistribution(18, 65, FEMALE, 0)),
+			AgeGroup.OLD, Map.of(MALE, new AgeDistribution(65, 100, MALE, 0), FEMALE, new AgeDistribution(65, 100, FEMALE, 0))
+		);
+
 		// Collect all LORs
 		for (SimpleFeature ft : fts) {
 			// Support both old and new key for different shape files
@@ -182,13 +200,15 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 			log.warn("LOR {} {} has no unemployment", raumID, row.get(1));
 		}
 
-		var sex = new EnumeratedAttributeDistribution<>(Map.of("f", quota, "m", 1 - quota));
-		var employment = new EnumeratedAttributeDistribution<>(Map.of(true, 1 - unemployed, false, unemployed));
+		long lor = Integer.parseInt(raumID);
+
+		var sex = new EnumeratedAttributeDistribution<>(Map.of("f", quota, "m", 1 - quota), lor);
+		var employment = new EnumeratedAttributeDistribution<>(Map.of(true, 1 - unemployed, false, unemployed), lor * 2);
 		var ageGroup = new EnumeratedAttributeDistribution<>(Map.of(
 			AgeGroup.YOUNG, young,
 			AgeGroup.MIDDLE, 1.0 - young - old,
 			AgeGroup.OLD, old
-		));
+		), lor * 3);
 
 		if (!lors.containsKey(raumID)) {
 			log.warn("LOR {} not found", raumID);
@@ -199,26 +219,22 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 
 		PopulationFactory f = population.getFactory();
 
-		var youngDist = new UniformAttributeDistribution<>(IntStream.range(1, 18).boxed().toList());
-		var middleDist = new UniformAttributeDistribution<>(IntStream.range(18, 65).boxed().toList());
-		var oldDist = new UniformAttributeDistribution<>(IntStream.range(65, 100).boxed().toList());
-
 		for (int i = 0; i < n * sample; i++) {
 
+			String gender = sex.sample();
+
 			Person person = f.createPerson(generateId(population, "berlin", rnd));
-			PersonUtils.setSex(person, sex.sample());
+			PersonUtils.setSex(person, gender);
 			PopulationUtils.putSubpopulation(person, "person");
 
+			AgeDistribution.Gender g = gender.equals("f") ? FEMALE : MALE;
+
 			AgeGroup group = ageGroup.sample();
+			PersonUtils.setAge(person, ageDistributions.get(group).get(g).sample());
 
 			if (group == AgeGroup.MIDDLE) {
-				PersonUtils.setAge(person, middleDist.sample());
 				PersonUtils.setEmployed(person, employment.sample());
-			} else if (group == AgeGroup.YOUNG) {
-				PersonUtils.setAge(person, youngDist.sample());
-				PersonUtils.setEmployed(person, false);
-			} else if (group == AgeGroup.OLD) {
-				PersonUtils.setAge(person, oldDist.sample());
+			} else if (group == AgeGroup.YOUNG || group == AgeGroup.OLD) {
 				PersonUtils.setEmployed(person, false);
 			}
 
@@ -229,7 +245,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 
 			person.getAttributes().putAttribute(Attributes.GEM, 11000000);
 			person.getAttributes().putAttribute(Attributes.ARS, 110000000000L);
-			person.getAttributes().putAttribute(Attributes.LOR, Integer.parseInt(raumID));
+			person.getAttributes().putAttribute(Attributes.LOR, (int) lor);
 			person.getAttributes().putAttribute(Attributes.ZONE, raumID.substring(0, 2));
 
 			Plan plan = f.createPlan();

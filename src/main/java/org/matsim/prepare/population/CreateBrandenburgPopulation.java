@@ -8,6 +8,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.geotools.api.feature.simple.SimpleFeature;
 import org.locationtech.jts.geom.MultiPolygon;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.population.Person;
@@ -22,7 +23,6 @@ import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.scenario.ProjectionUtils;
 import org.matsim.run.OpenBerlinScenario;
-import org.geotools.api.feature.simple.SimpleFeature;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SplittableRandom;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static org.matsim.prepare.download.CalculateEmployedPopulation.Employment;
 import static org.matsim.prepare.download.CalculateEmployedPopulation.Entry;
@@ -145,7 +144,8 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 		int low = Integer.parseInt(group[0]);
 		int high = group[1].equals("inf") ? MAX_AGE : Integer.parseInt(group[1]);
 
-		UniformAttributeDistribution<Integer> ageDist = new UniformAttributeDistribution<>(IntStream.range(low, high).boxed().toList());
+		AgeDistribution ageDist = new AgeDistribution(low, high, gender.equals("m") ? AgeDistribution.Gender.MALE : AgeDistribution.Gender.FEMALE,
+			Long.parseLong(ars) * 31 + gender.hashCode());
 
 		// Landkreis
 		int lk = Integer.parseInt(code.substring(0, code.length() - 3));

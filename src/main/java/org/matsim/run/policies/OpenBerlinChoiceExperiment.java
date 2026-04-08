@@ -14,6 +14,7 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.ReplanningConfigGroup;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.replanning.annealing.ReplanningAnnealerConfigGroup;
 import org.matsim.core.replanning.choosers.BalancedInnovationStrategyChooser;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import org.matsim.core.router.TripStructureUtils;
@@ -24,6 +25,7 @@ import org.matsim.modechoice.constraints.RelaxedMassConservationConstraint;
 import org.matsim.modechoice.estimators.DefaultActivityEstimator;
 import org.matsim.modechoice.estimators.DefaultLegScoreEstimator;
 import org.matsim.modechoice.estimators.FixedCostsEstimator;
+import org.matsim.modechoice.estimators.PtTripEstimator;
 import org.matsim.modechoice.pruning.PlanScoreThresholdPruner;
 import org.matsim.run.OpenBerlinScenario;
 import org.matsim.run.scoring.AdvancedScoringConfigGroup;
@@ -67,6 +69,15 @@ public class OpenBerlinChoiceExperiment extends OpenBerlinScenario {
 		defaultValue = InformedModeChoiceModule.SELECT_SUBTOUR_MODE_STRATEGY)
 	private String strategy;
 
+	@CommandLine.Option(names = "--innovation-rate", description = "Overwrite the innovation rate for annealing", defaultValue = "0.3")
+	private double innovationRate;
+
+	@CommandLine.Option(names = "--est-rate", description = "Probability how often estimates are re-computed", defaultValue = "0.1")
+	private double estRate;
+
+	@CommandLine.Option(names = "--mode-choice-weight", description = "Weight for mode choice (re-route is 0.15).", defaultValue = "0.15")
+	private double mcWeight;
+
 	public static void main(String[] args) {
 		MATSimApplication.execute(OpenBerlinChoiceExperiment.class, args);
 	}
@@ -89,20 +100,43 @@ public class OpenBerlinChoiceExperiment extends OpenBerlinScenario {
 
 		config = super.prepareConfig(config);
 
+		if (innovationRate >= 0) {
+
+			// Set start value for innovation rate
+			for (ReplanningAnnealerConfigGroup.AnnealingVariable v : config.replanningAnnealer().getAllAnnealingVariables()) {
+
+				v.setStartValue(innovationRate);
+
+				// Note that this adjusts the shape of the annealing
+				if (iterations > 0)
+					v.setShapeFactor(10.0/iterations);
+				else if (iterations < 0)
+					v.setShapeFactor(10.0/config.controller().getLastIteration());
+
+				v.setHalfLife(2d/3d);
+
+				log.info("Setting innovation rate for {} to {}", v.getSubpopulation(), innovationRate);
+			}
+		}
+
 		if (imc) {
+			// Add score information
+			config.scoring().setExplainScores(true);
 
 			InformedModeChoiceConfigGroup imcConfig = ConfigUtils.addOrGetModule(config, InformedModeChoiceConfigGroup.class);
 
 			imcConfig.setTopK(topK);
 			imcConfig.setModes(List.of(config.subtourModeChoice().getModes()));
 			imcConfig.setConstraintCheck(InformedModeChoiceConfigGroup.ConstraintCheck.repair);
+			imcConfig.setProbaEstimate(estRate);
 
 			if (invBeta >= 0)
 				imcConfig.setInvBeta(invBeta);
 
 			InformedModeChoiceModule.replaceReplanningStrategy(config, "person",
 				DefaultPlanStrategiesModule.DefaultStrategy.SubtourModeChoice,
-				strategy
+				strategy,
+				mcWeight
 			);
 
 			// All imc strategies are run with best score selector
@@ -119,6 +153,7 @@ public class OpenBerlinChoiceExperiment extends OpenBerlinScenario {
 
 			if (pruning > 0)
 				imcConfig.setPruning("p" + pruning);
+
 
 		} else if (pruning > 0) {
 			throw new IllegalArgumentException("Pruning is only available with informed-mode-choice enabled");
@@ -168,9 +203,9 @@ public class OpenBerlinChoiceExperiment extends OpenBerlinScenario {
 
 			InformedModeChoiceModule.Builder builder = InformedModeChoiceModule.newBuilder()
 				.withFixedCosts(FixedCostsEstimator.DailyConstant.class, "car", "pt")
-				.withLegEstimator(DefaultLegScoreEstimator.class, ModeOptions.ConsiderIfCarAvailable.class, "car")
 				// Modes with fixed costs need to be considered separately
-				.withLegEstimator(DefaultLegScoreEstimator.class, ModeOptions.ConsiderYesAndNo.class, "pt")
+				.withLegEstimator(DefaultLegScoreEstimator.class, ModeOptions.ConsiderIfCarAvailable.class, "car")
+				.withTripEstimator(PtTripEstimator.class, ModeOptions.ConsiderYesAndNo.class, "pt")
 				.withLegEstimator(DefaultLegScoreEstimator.class, ModeOptions.AlwaysAvailable.class, "walk", "bike", "ride")
 				.withPruner("p" + pruning, new PlanScoreThresholdPruner(pruning))
 				.withConstraint(RelaxedMassConservationConstraint.class);

@@ -1,7 +1,7 @@
 
 
 JAR := matsim-berlin-*.jar
-V := v6.4
+V := v6.5
 CRS := EPSG:25832
 
 p := input/$V
@@ -342,6 +342,19 @@ $p/berlin-$V-10pct.plans.xml.gz:
 	 	--remove-unselected-plans\
 	 	--output $(subst 10pct,3pct,$@)
 
+$p/inner-city/berlin-downtown-$V-3pct.xml.gz:
+
+	mkdir -p $p/inner-city
+
+	$(sc) prepare scenario-cutout\
+	 --population $p/berlin-$V-3pct.plans.xml.gz\
+	 --facilities $p/berlin-$V-facilities.xml.gz\
+	 --network $p/berlin-$V-network.xml.gz\
+	 --output-population $@\
+	 --output-network $p/inner-city/berlin-downtown-$V-network.xml.gz\
+	 --output-facilities $p/inner-city/berlin-downtown-$V-facilities.xml.gz\
+	 --input-crs $(CRS)\
+	 --shp "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.4/input/shp/berlin_inner_city.gpkg"
 
 $p/berlin-$V.drt-by-rndLocations-10000vehicles-4seats.xml.gz: $p/berlin-$V-network.xml.gz
 	$(sc) prepare create-drt-vehicles\
@@ -359,7 +372,7 @@ $p/berlin-$V.drt-by-rndLocations-10000vehicles-4seats.xml.gz: $p/berlin-$V-netwo
 	 --seats 4
 
 
-prepare-calibration: $p/berlin-cadyts-input-$V-25pct.plans.xml.gz $p/berlin-$V-network-with-pt.xml.gz $p/berlin-$V-counts-vmz.xml.gz
+prepare-calibration: $p/berlin-activities-$V-25pct.plans.xml.gz $p/berlin-$V-network-with-pt.xml.gz $p/berlin-$V-counts-vmz.xml.gz
 	echo "Done"
 
 prepare-initial: $p/berlin-$V-25pct.plans-initial.xml.gz $p/berlin-$V-network-with-pt.xml.gz

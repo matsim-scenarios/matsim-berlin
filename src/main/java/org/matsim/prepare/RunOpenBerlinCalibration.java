@@ -58,7 +58,9 @@ import org.matsim.prepare.download.DownloadCommuterStatistic;
 import org.matsim.prepare.drt.CreateDrtVehicles;
 import org.matsim.prepare.facilities.CreateMATSimFacilities;
 import org.matsim.prepare.facilities.ExtractFacilityGeoPkg;
+import org.matsim.prepare.network.NetworkAddParkingSpots;
 import org.matsim.prepare.opt.ExtractPlanIndexFromType;
+import org.matsim.prepare.network.NetworkAddParkingSpots;
 import org.matsim.prepare.opt.RunCountOptimization;
 import org.matsim.prepare.opt.SelectPlansFromIndex;
 import org.matsim.prepare.population.*;
@@ -95,7 +97,7 @@ import java.util.stream.Collectors;
 	GenerateSmallScaleCommercialTrafficDemand.class, CreateDataDistributionOfStructureData.class,
 	RunCountOptimization.class, SelectPlansFromIndex.class, ExtractPlanIndexFromType.class, AssignReferencePopulation.class,
 	ExtractRelevantFreightTrips.class, CheckCarAvailability.class, FixSubtourModes.class, ComputeTripChoices.class, ComputePlanChoices.class,
-	ApplyNetworkParams.class, SetCarAvailabilityByAge.class, CreateDrtVehicles.class, EndlessCircleLineScheduleModifier.class
+	ApplyNetworkParams.class, SetCarAvailabilityByAge.class, CreateDrtVehicles.class, EndlessCircleLineScheduleModifier.class, NetworkAddParkingSpots.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
 

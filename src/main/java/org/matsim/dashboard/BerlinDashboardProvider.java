@@ -25,8 +25,14 @@ public class BerlinDashboardProvider implements DashboardProvider {
 			.withDistanceDistribution("mode_share_distance_distribution.csv")
 			.withGroupedRefData("mode_share_per_group_dist_ref.csv", "age", "income", "employment", "economic_status");
 
+		ActivityDashboard activities = new ActivityDashboard("berlin_inspire_grid_1km.gpkg")
+			.addActivityType("work", List.of("work"), List.of(ActivityDashboard.Indicator.COUNTS), false, null)
+			.addActivityType("leisure", List.of("leisure"), List.of(ActivityDashboard.Indicator.COUNTS), true, null)
+			.addActivityType("shopping", List.of("shop", "shop_daily"), List.of(ActivityDashboard.Indicator.COUNTS), true, null);
+
 		return List.of(
 			trips,
+			activities,
 			new TravelTimeComparisonDashboard(ApplicationUtils.resolve(config.getContext(), "berlin-v" + OpenBerlinScenario.VERSION + "-routes-ref.csv.gz")),
 			new EmissionsDashboard(config.global().getCoordinateSystem()),
 			new NoiseDashboard(config.global().getCoordinateSystem()),
