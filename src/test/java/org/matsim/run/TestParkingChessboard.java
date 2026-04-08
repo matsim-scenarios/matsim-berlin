@@ -57,12 +57,15 @@ public class TestParkingChessboard {
 		config.scoring().setWriteExperiencedPlans(true);
 
 		Scenario scenario = ScenarioUtils.loadScenario(config);
-		double sampleSize = scenario.getConfig().qsim().getFlowCapFactor();
+		//double sampleSize = scenario.getConfig().qsim().getFlowCapFactor();
 
-		int count = 0;
+		for (Link link: scenario.getNetwork().getLinks().values()) {
+			if (link.getAllowedModes().contains(TransportMode.car)) {
+				link.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, 5);
+			}
+		}
 
-/*
-		for (Link link : scenario.getNetwork().getLinks().values()) {
+/*		for (Link link : scenario.getNetwork().getLinks().values()) {
 			if (link.getAllowedModes().contains(TransportMode.car)) {
 				if (count < 15) {
 					link.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, (int) 5);
