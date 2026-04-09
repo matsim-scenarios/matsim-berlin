@@ -46,19 +46,20 @@ berlin_districts_shp <- st_read(berlin_districts_shp_filename) %>% st_transform(
 nodes <- network_berlin$nodes %>%
   st_as_sf(coords = c("x", "y"), crs = 25832)
 
+##filter only for links in Berlin
 nodes_in_berlin <- nodes %>% st_filter(berlin_districts_shp)
 nodes_in_berlin_ids <- nodes_in_berlin %>% pull(id)
 
 links_in_berlin <- network_berlin$links %>%
   filter(from %in% nodes_in_berlin_ids | to %in% nodes_in_berlin_ids)
 
+##total link length of berlin
 total_link_length_berlin <- sum(links_in_berlin$length)
 total_parking_spots_berlin <- 1276312  # from Berlin official estimate
 
 # ----------------------------------------------------------
 # Links < 50 km/h
 # ----------------------------------------------------------
-
 links_in_berlin_filtered <- links_in_berlin %>%
   filter(allowed_speed < 13.89)
 
@@ -69,6 +70,7 @@ links_in_berlin_filtered <- links_in_berlin %>%
 # IMPORTANT: Add or load your "hundekopf" geometry here
 hundekopf <- st_read("/Users/gregorr/Documents/work/respos/git/matsim-berlin/input/v6.4/hundekopf-shp/hundekopf-carBanArea-25832.shp") %>% st_transform(25832)
 
+##filter out links in hundekopf
 nodes_in_hundekopf_ids <- nodes %>% st_filter(hundekopf) %>% pull(id)
 
 links_in_hundekopf_filtered <- links_in_berlin_filtered %>%
@@ -196,11 +198,12 @@ buildings_points <- building$osm_points %>%
 
 buildings_filt <- buildings_polygons %>% st_filter(amenity_polygon_filtered)
 
-# --- Buildings polygons ---
+{{# --- Buildings polygons ---
 st_write(
   buildings_polygons,
-  "/Users/gregorr/Documents/work/Paper/heartParking/data/buildings.gpkg",
-  layer = "buildings_polygons"
+  "/Users/gregorr/Documents/work/Paper/heartParking/data/buildings_polygons.gpkg",
+  layer = "buildings_polygons",
+  append = TRUE
 )
 
 # --- Buildings points ---
@@ -209,12 +212,12 @@ st_write(
   "/Users/gregorr/Documents/work/Paper/heartParking/data/buildings.gpkg",
   layer = "buildings_points",
   append = TRUE
-)
+)}}
 
 # --- Filtered buildings (intersecting parking areas) ---
 st_write(
   buildings_filt,
-  "/Users/gregorr/Documents/work/Paper/heartParking/data/buildings.gpkg",
+  "/Users/gregorr/Documents/work/Paper/heartParking/data/buildings_filt.gpkg",
   layer = "buildings_filtered",
   append = TRUE
 )
@@ -285,6 +288,11 @@ ggplot(linear_model, aes(x = area_mod, y = capacity)) +
     y = "Capacity"
   ) +
   theme_minimal()
+
+
+
+
+
 
 # ----------------------------------------------------------
 # Write output CSV
