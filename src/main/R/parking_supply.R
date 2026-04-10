@@ -345,8 +345,7 @@ print(paste0(
 ))
 
 write_csv(
-  on_and_offstreet_parking_per_link,
+  offstreet_parking,
   file = "/Users/gregorr/Documents/work/Paper/heartParking/data/offStreet_parking_per_link.csv"
 )
 
-View(offstreet_parking)
