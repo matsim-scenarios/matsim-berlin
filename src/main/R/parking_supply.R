@@ -58,7 +58,7 @@ total_link_length_berlin <- sum(links_in_berlin$length)
 total_parking_spots_berlin <- 1276312  # from Berlin official estimate
 
 # ----------------------------------------------------------
-# Links < 50 km/h
+# Links < 50 km/h --> filter out motorways
 # ----------------------------------------------------------
 links_in_berlin_filtered <- links_in_berlin %>%
   filter(allowed_speed < 13.89)
@@ -79,7 +79,7 @@ links_in_hundekopf_filtered <- links_in_berlin_filtered %>%
 links_outside_hundekopf_filtered <- links_in_berlin_filtered %>%
   filter(!id %in% links_in_hundekopf_filtered$id)
 
-##where does the 230000 come from?
+##where does the 230000 come from? --> 
 inside_hundekopf_stats <- links_in_hundekopf_filtered %>%
   summarise(sum_link_distlink_length = sum(length)) %>%
   mutate(
@@ -106,6 +106,17 @@ onstreet_parking <- links_in_berlin_filtered %>%
   ) %>%
   transmute(id = id, onstreet_spots = round(spots_per_meter * length, 0))
 
+onstreet_summary <- onstreet_parking %>%
+  mutate(area = case_when(
+    id %in% links_in_hundekopf_filtered$id ~ "inside_hundekopf",
+    id %in% links_outside_hundekopf_filtered$id ~ "outside_hundekopf",
+    TRUE ~ "unknown"
+  )) %>%
+  group_by(area) %>%
+  summarise(total_spots = sum(onstreet_spots, na.rm = TRUE))
+
+
+sum(links_in_hundekopf_filtered$length)
 # ----------------------------------------------------------
 # Question 2: Off-street parking (OSM)
 # ----------------------------------------------------------
@@ -145,30 +156,31 @@ amenity_points <- amenity$osm_points %>%
 amenity_polygon_filtered <- amenity_polygon %>%
   filter(!parking %in% c("street_side", "lane", "on_kerb", "half_on_kerb"))
 
-# --- POINTS ---
-points_clean <- amenity_points %>%
-  select(-any_of("fid"))
 
-st_write(
-  points_clean,
-  "/Users/gregorr/Documents/work/Paper/heartParking/data/amenity.gpkg",
-  layer = "points",
-  delete_dsn = TRUE
-)
-
-# --- POLYGONS ---
-polygons_clean <- bind_rows(
-  amenity_lines,
-  amenity_polygon_filtered
-) %>%
-  select(-any_of("fid"))
-
-st_write(
-  polygons_clean,
-  "/Users/gregorr/Documents/work/Paper/heartParking/data/amenity.gpkg",
-  layer = "polygons",
-  append = TRUE
-)
+# # --- POINTS ---
+# points_clean <- amenity_points %>%
+#   select(-any_of("fid"))
+# 
+# st_write(
+#   points_clean,
+#   "/Users/gregorr/Documents/work/Paper/heartParking/data/amenity.gpkg",
+#   layer = "points",
+#   delete_dsn = TRUE
+# )
+# 
+# # --- POLYGONS ---
+# polygons_clean <- bind_rows(
+#   amenity_lines,
+#   amenity_polygon_filtered
+# ) %>%
+#   select(-any_of("fid"))
+# 
+# st_write(
+#   polygons_clean,
+#   "/Users/gregorr/Documents/work/Paper/heartParking/data/amenity.gpkg",
+#   layer = "polygons",
+#   append = TRUE
+# )
 
 
 
@@ -291,6 +303,32 @@ ggplot(linear_model, aes(x = area_mod, y = capacity)) +
 
 
 
+#Attach off-street parking
+
+from_nodes <- network_berlin$links %>%
+  select(id, x = x.from, y = y.from) %>%
+  filter(!str_starts(id, "pt_")) %>%
+  st_as_sf(coords = c("x", "y"), crs = 25832)
+
+to_nodes <- network_berlin$links %>%
+  select(id, x = x.to, y = y.to) %>%
+  filter(!str_starts(id, "pt_")) %>%
+  st_as_sf(coords = c("x", "y"), crs = 25832)
+
+links <- rbind(from_nodes, to_nodes) %>%
+  group_by(id) %>%
+  summarise(geometry = st_combine(geometry)) %>%
+  st_cast("LINESTRING")
+
+
+##find closest links
+
+offstreet_parking <- amenity_polygon_filtered_area %>%
+  mutate(closest_link = links[st_nearest_feature(amenity_polygon_filtered_area, links),] %>% pull(id)) %>%
+  st_drop_geometry() %>%
+  group_by(closest_link) %>%
+  summarise(offstreet_spots = round(sum(capacity_final), 0)) %>%
+  rename(id = closest_link)
 
 
 
@@ -298,16 +336,17 @@ ggplot(linear_model, aes(x = area_mod, y = capacity)) +
 # Write output CSV
 # ----------------------------------------------------------
 
+#we only use the offstreet parking 
 on_and_offstreet_parking_per_link <- full_join(onstreet_parking, offstreet_parking)
 
 print(paste0(
-  "Onstreet: ", sum(on_and_offstreet_parking_per_link$onstreet_spots, na.rm = TRUE),
-  " | Offstreet: ", sum(on_and_offstreet_parking_per_link$offstreet_spots, na.rm = TRUE)
+  "Onstreet: ", sum(onstreet_parking$onstreet_spots, na.rm = TRUE),
+  " | Offstreet: ", sum(offstreet_parking$offstreet_spots, na.rm = TRUE)
 ))
 
 write_csv(
   on_and_offstreet_parking_per_link,
-  file = "input/v6.4/parking/parking_per_link_test.csv"
+  file = "/Users/gregorr/Documents/work/Paper/heartParking/data/offStreet_parking_per_link.csv"
 )
 
-View(on_and_offstreet_parking_per_link)
+View(offstreet_parking)
