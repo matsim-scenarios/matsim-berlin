@@ -252,7 +252,6 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
         int totalNrOfParkingSpotsInBerlin = 1276312;
         int parkingSpotsToAssingRestOfBerlin = totalNrOfParkingSpotsInBerlin - totalNrOfParkingSpotsInHundekopf;
 
-
         //calculate total network length in berlin excluding hundekopf
         double totalNetworkLengthBerlinWithoutHundekopf = 0;
         for (Link l : scenario.getNetwork().getLinks().values()) {
@@ -269,7 +268,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
 
         log.info("Total network length in Berlin excluding Hundekopf: " + totalNetworkLengthBerlinWithoutHundekopf);
         log.info("Parking spots per meter in Berlin excluding Hundekopf: " + (parkingSpotsToAssingRestOfBerlin / totalNetworkLengthBerlinWithoutHundekopf));
-        log.info("Meters per parking spot in Berlin excluding Hundekopf: " + (totalNetworkLengthInsideHundekopf / parkingSpotsToAssingRestOfBerlin));
+        log.info("Meters per parking spot in Berlin excluding Hundekopf: " + (totalNetworkLengthBerlinWithoutHundekopf / parkingSpotsToAssingRestOfBerlin));
 
         //Assign parking spots to the rest of berlin based on the density of parking spots in berlin excluding hundekopf
         int totalNumberOfParkingSpotsRestOfBerlin = 0;
@@ -288,7 +287,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
             }
         }
 
-        log.info("Assigned " + totalNumberOfParkingSpotsRestOfBerlin + " on street parking spots to the rest of Berlin based on a density of " + (parkingSpotsToAssingRestOfBerlin / totalNetworkLengthInsideHundekopf) + " spots per meter and a sample size of " + sampleSize);
+        log.info("Assigned " + totalNumberOfParkingSpotsRestOfBerlin + " on street parking spots to the rest of Berlin based on a density of " + (parkingSpotsToAssingRestOfBerlin / totalNetworkLengthBerlinWithoutHundekopf) + " spots per meter and a sample size of " + sampleSize);
 
         log.info("Using the share for the links outside of berlin");
         int totalNumberOfParkingSpotsOutsideBerlin = 0;
@@ -306,8 +305,6 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
             }
         }
         log.info("Asssigned a total of " + totalNumberOfParkingSpotsOutsideBerlin + " on street parking spots to links outside of Berlin based on the same density as in the rest of Berlin. The density is:" + (parkingSpotsToAssingRestOfBerlin / totalNetworkLengthBerlinWithoutHundekopf) + " spots per meter and a sample size of " + sampleSize);
-
-
     }
 
 
