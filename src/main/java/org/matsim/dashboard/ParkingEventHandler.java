@@ -9,10 +9,7 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.vehicles.Vehicle;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ParkingEventHandler implements VehicleStartsParkingSearchEventHandler, VehicleEndsParkingSearchEventHandler {
@@ -22,6 +19,7 @@ public class ParkingEventHandler implements VehicleStartsParkingSearchEventHandl
 	Map<Id<Person>, Double> totalParkingSearchTimePerPerson = new HashMap<>();
 	private final Map<Id<Person>, List<Double>> parkingSearchTimesPerPerson = new HashMap<>();
 	private final Map<Id<Link>, List<Double>> parkingSearchTimesPerLink = new HashMap<>();
+	private final List<ParkingEvent> parkingEvents = new ArrayList<>();
 
 	@Override
 	public void handleEvent(VehicleStartsParkingSearch event) {
@@ -55,6 +53,16 @@ public class ParkingEventHandler implements VehicleStartsParkingSearchEventHandl
 				.add(event.getTime() - startTime);
 		}
 
+		if (event.getPersonId() != null) {
+			parkingEvents.add(
+					new ParkingEvent(
+							event.getPersonId(),
+							event.getTime(),
+							event.getTime() - startTime
+					)
+			);
+		}
+
 	}
 
 	public Map<Double, Double> parkingSearchTimesDensity() {
@@ -82,6 +90,23 @@ public class ParkingEventHandler implements VehicleStartsParkingSearchEventHandl
 
 	public Map<Id<Person>, List<Double>> parkingSearchTimesPerPerson() {
 		return parkingSearchTimesPerPerson;
+	}
+
+	public Collection<ParkingEvent> parkingSearchAtTimeOfDay() {
+		return parkingEvents;
+	}
+
+
+	class ParkingEvent {
+		Id<Person> personId;
+		double time;
+		double searchTime;
+
+		public ParkingEvent(Id<Person> personId, double time, double searchTime) {
+			this.personId = personId;
+			this.time = time;
+			this.searchTime = searchTime;
+		}
 	}
 
 }
