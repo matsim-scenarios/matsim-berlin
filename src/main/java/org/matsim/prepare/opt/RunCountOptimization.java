@@ -30,6 +30,11 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * This class optimized assignment of plans (with different locations) to agents by minimizing the error of observed and simulated counts.
+ * The assigment is static, as the class does not run during MATSim. In recent models (v7) this class is not used and Cadyts used instead.
+ */
+@Deprecated
 @CommandLine.Command(name = "run-count-opt", description = "Select plans to match counts data")
 public class RunCountOptimization implements MATSimAppCommand {
 

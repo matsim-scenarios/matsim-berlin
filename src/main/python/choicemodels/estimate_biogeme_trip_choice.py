@@ -4,6 +4,8 @@
 import argparse
 import biogeme.biogeme as bio
 import biogeme.database as db
+import pandas as pd
+import numpy as np
 import biogeme.models as models
 from biogeme.expressions import Beta, Derive, bioDraws, PanelLikelihoodTrajectory, log, MonteCarlo
 
@@ -12,9 +14,20 @@ from prepare import read_trip_choices, daily_costs, km_costs
 ESTIMATE = 0
 FIXED = 1
 
+# This runs the trip based choice model
+# For the thesis this script was run with:
+# --mxl-modes
+# --est-performing
+# --est-exp-income
+# --est-util-money
+# --est-price-perception-car
+# --est-price-perception-pt
+# --same-price-perception
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate the trip choice model")
     parser.add_argument("--input", help="Path to the input file", type=str, default="../../../../trip-choices.csv")
+    parser.add_argument("--test-input", help="Path to the test split (if not given, input is used)", type=str, default=None)
     parser.add_argument("--mxl-modes", help="Modes to use mixed logit for", nargs="*", type=set,
                         default=["pt", "bike", "ride", "car"])
     parser.add_argument("--est-performing", help="Estimate the beta for performing", action="store_true")
@@ -177,6 +190,16 @@ if __name__ == "__main__":
         probs[f"Direct elasticity {mode} daily costs"] = direct_elas_cost
         probs[f"Direct elasticity {mode} km costs"] = direct_elas_km_costs
 
+    # Read database again with test data only for predictions
+    if args.test_input:
+        # Same read logic as above
+        ds = read_trip_choices(args.test_input)
+        df = ds.df * 1
+        for mode in ds.modes:
+            df[f"{mode}_daily_costs"] = daily_costs[mode]
+            df[f"{mode}_km_costs"] = km_costs[mode]
+
+        database = db.Database("data/choices", df)
 
     simulation = bio.BIOGEME(database, probs)
 
@@ -197,3 +220,19 @@ if __name__ == "__main__":
 
         aggr = ((prob_weighted * p[f"Direct elasticity {mode} km costs"]) / denom).sum()
         print("Aggregated direct elasticity of %s wrt to km costs: %.3f" % (mode, aggr))
+
+
+    preds = p[[f"Prob {ds.modes[i]}" for i in range(len(ds.modes))]]
+
+    # Rename columns
+    preds.columns = ds.modes
+    # Results includes weighting
+    preds = preds.mul(df["weight"], axis=0)
+
+    result = pd.concat([df[["person", "trip_n", "choice"]], preds], axis=1)
+    result["chosen"] = preds.to_numpy()[np.arange(len(df)), df["choice"].to_numpy() - 1]
+
+    with open("output_preds.csv", "w") as f:
+        f.write(f"# input={args.input}\n")
+
+    result.to_csv("output_preds.csv", index=False, mode='a')

@@ -25,6 +25,9 @@ target = {
     "ride": 0.059607
 }
 
+# Path to additional (mode choice) parameters, usually contains the estimated parameters from choice model
+# E.g see input/v7.0/mode_params_estimated.yaml
+base_params = "./mode_params_estimated.yaml"
 
 def filter_persons(persons):
     df = persons[persons.person.str.startswith("berlin")]
@@ -45,7 +48,7 @@ study, obj = create_calibration(
     jvm_args="-Xmx60G -Xms60G -XX:+AlwaysPreTouch -XX:+UseParallelGC",
     transform_persons=filter_persons,
     transform_trips=filter_modes,
-    base_params="./mode_params_estimated.yaml",
+    base_params=base_params,
     chain_runs=utils.default_chain_scheduler, debug=False
 )
 

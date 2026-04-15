@@ -1,6 +1,7 @@
 [![Build Status](https://github.com/matsim-scenarios/matsim-berlin/actions/workflows/build.yaml/badge.svg?branch=main)](https://github.com/matsim-scenarios/matsim-berlin/actions/workflows/build.yaml)
 ![license](https://img.shields.io/github/license/matsim-scenarios/matsim-berlin.svg)
 ![JDK](https://img.shields.io/badge/JDK-21+-green.svg)
+[![DOI](https://zenodo.org/badge/134566573.svg)](https://doi.org/10.5281/zenodo.8319021)
 
 # The MATSim Open Berlin Scenario
 
@@ -21,7 +22,9 @@ This scenario contains a 10pct, 3pct and 1pct sample of the Greater Berlin popul
 
 ## Citation
 
-If you use the MATSim Open Berlin Scenario in your work, please cite the following paper:
+If you use the MATSim Open Berlin Scenario in your work, please cite the following:
+
+> Rakow, C. (2026). *From Data to Simulation: Advanced Methods for Agent-based Transport Modeling and Mode Choice Calibration*. PhD thesis, Technische Universität Berlin. https://doi.org/10.14279/depositonce-25155
 
 > Rakow, C., Kreuschner, M., & Nagel, K. (2025). Advancing the MATSim Open Berlin Scenario: Improvements in Transport Scenario Generation and Calibration Methods. *Transportation Research Procedia*, 86, 732–739. https://doi.org/10.1016/j.trpro.2025.04.091
 
