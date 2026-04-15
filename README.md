@@ -1,6 +1,7 @@
 [![Build Status](https://github.com/matsim-scenarios/matsim-berlin/actions/workflows/build.yaml/badge.svg?branch=main)](https://github.com/matsim-scenarios/matsim-berlin/actions/workflows/build.yaml)
 ![license](https://img.shields.io/github/license/matsim-scenarios/matsim-berlin.svg)
 ![JDK](https://img.shields.io/badge/JDK-21+-green.svg)
+[![DOI](https://zenodo.org/badge/134566573.svg)](https://doi.org/10.5281/zenodo.8319021)
 
 # The MATSim Open Berlin Scenario
 
