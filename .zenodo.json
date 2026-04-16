@@ -1,6 +1,6 @@
 {
     "title": "The MATSim Open Berlin Scenario",
-    "description": "The MATSim Open Berlin Scenario provides a transport simulation model for the Dresden region using the Multi-Agent Transport Simulation (MATSim) framework.",
+    "description": "The MATSim Open Berlin Scenario provides a transport simulation model for the Berlin region using the Multi-Agent Transport Simulation (MATSim) framework.",
     "upload_type": "software",
     "access_right": "open",
     "license": "GPL-2.0",
