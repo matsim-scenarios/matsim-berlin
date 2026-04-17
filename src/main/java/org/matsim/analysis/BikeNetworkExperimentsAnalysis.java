@@ -1,5 +1,6 @@
 package org.matsim.analysis;
 
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -9,6 +10,7 @@ import org.matsim.api.core.v01.events.handler.*;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.application.MATSimAppCommand;
+import org.matsim.application.options.CsvOptions;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.api.experimental.events.TeleportationArrivalEvent;
 import org.matsim.core.api.experimental.events.handler.TeleportationArrivalEventHandler;
@@ -31,9 +33,16 @@ import static org.matsim.application.ApplicationUtils.globFile;
 )
 public class BikeNetworkExperimentsAnalysis implements MATSimAppCommand {
 	private static final Logger log = LogManager.getLogger(BikeNetworkExperimentsAnalysis.class);
+	private static final String LOG_MESSAGE = "This is not possible, as each leg should have a travel time and travel distance. Aborting!";
 
 	@CommandLine.Parameters(arity = "1..*", description = "Path to run output directories for which analysis should be performed.")
 	private List<Path> inputPaths;
+	@CommandLine.Mixin
+	private CsvOptions csv;
+
+	public static void main(String[] args) {
+		new BikeNetworkExperimentsAnalysis().execute(args);
+	}
 
 	@Override
 	public Integer call() throws Exception {
@@ -75,14 +84,13 @@ public class BikeNetworkExperimentsAnalysis implements MATSimAppCommand {
 			for (NetworkExperimentsHandler.SimulationData data : simulationDataMap.values()) {
 //				first: check if there are any not logical things.
 //				filter maps for bike
-//				Map<String, List<Double>> bikeNetworkTravelTimes = filterForModalValuesInMap(TransportMode.bike, data.networkTravelTimesPerMode);
-				List<Double> bikeNetworkTravelTimes = data.networkTravelTimesPerMode.get(TransportMode.bike);
-				List<Double> bikeNetworkTravelDistances = data.networkTravelDistancesPerMode.get(TransportMode.bike);
-				List<Double> bikeTeleportedTravelTimes = data.teleportedTravelTimesPerMode.get(TransportMode.bike);
-				List<Double> bikeTeleportedTravelDistances = data.teleportedTravelDistancesPerMode.get(TransportMode.bike);
+				List<Double> bikeNetworkTravelTimes = data.networkTravelTimesPerMode.getOrDefault(TransportMode.bike, new ArrayList<>());
+				List<Double> bikeNetworkTravelDistances = data.networkTravelDistancesPerMode.getOrDefault(TransportMode.bike, new ArrayList<>());
+				List<Double> bikeTeleportedTravelTimes = data.teleportedTravelTimesPerMode.getOrDefault(TransportMode.bike, new ArrayList<>());
+				List<Double> bikeTeleportedTravelDistances = data.teleportedTravelDistancesPerMode.getOrDefault(TransportMode.bike, new ArrayList<>());
 
-				List<Double> carNetworkTravelTimes = data.networkTravelTimesPerMode.get(TransportMode.car);
-				List<Double> carNetworkTravelDistances = data.networkTravelDistancesPerMode.get(TransportMode.car);
+				List<Double> carNetworkTravelTimes = data.networkTravelTimesPerMode.getOrDefault(TransportMode.car, new ArrayList<>());
+				List<Double> carNetworkTravelDistances = data.networkTravelDistancesPerMode.getOrDefault(TransportMode.car, new ArrayList<>());
 
 //				there should be only teleported or only qsim legs for bike.
 				if (!bikeNetworkTravelTimes.isEmpty() && !bikeTeleportedTravelTimes.isEmpty()) {
@@ -102,19 +110,19 @@ public class BikeNetworkExperimentsAnalysis implements MATSimAppCommand {
 //				number of travel distances and travel times has to be the same
 				if (bikeNetworkTravelTimes.size() != bikeNetworkTravelDistances.size()) {
 					log.fatal("Person {} travelling by bike has {} recorded network travel times and {} recorded network travel distances. " +
-						"This is not possible, as each leg should have a travel time and travel distance. Aborting!",
+							LOG_MESSAGE,
 						data.personId, bikeNetworkTravelTimes.size(), bikeNetworkTravelDistances.size());
 				}
 
 				if (bikeTeleportedTravelTimes.size() != bikeTeleportedTravelDistances.size()) {
 					log.fatal("Person {} travelling by bike has {} recorded teleported travel times and {} recorded teleported travel distances. " +
-							"This is not possible, as each leg should have a travel time and travel distance. Aborting!",
+							LOG_MESSAGE,
 						data.personId, bikeTeleportedTravelTimes.size(), bikeTeleportedTravelDistances.size());
 				}
 
 				if (carNetworkTravelTimes.size() != carNetworkTravelDistances.size()) {
 					log.fatal("Person {} travelling by car has {} recorded network travel times and {} recorded network travel distances. " +
-							"This is not possible, as each leg should have a travel time and travel distance. Aborting!",
+							LOG_MESSAGE,
 						data.personId, carNetworkTravelTimes.size(), carNetworkTravelDistances.size());
 				}
 
@@ -128,10 +136,7 @@ public class BikeNetworkExperimentsAnalysis implements MATSimAppCommand {
 					bikeTravelDistances = bikeTeleportedTravelDistances;
 				}
 
-//				TODO: how to assign distance bins to legs?
-//				there needs to be some kind of Map distance bin -> tt after assigning the distance bins
-//				TODO: calc mean tt per dist group
-
+//				calc mean tt per dist group
 				for (double tt : bikeTravelTimes) {
 					sumBikeTravelTime += tt;
 					bikeLegCount++;
@@ -160,6 +165,8 @@ public class BikeNetworkExperimentsAnalysis implements MATSimAppCommand {
 			}
 
 //			calc general mean values
+			assert bikeLegCount != 0;
+			assert carLegCount != 0;
 			double meanBikeTravelTime = sumBikeTravelTime / bikeLegCount;
 			double meanBikeTravelDistance = sumBikeTravelDistance / bikeLegCount;
 			double meanCarTravelTime = sumCarTravelTime / carLegCount;
@@ -180,8 +187,11 @@ public class BikeNetworkExperimentsAnalysis implements MATSimAppCommand {
 					sum += tt;
 					count++;
 				}
-				assert count != 0;
-				bikeMeanTravelTimesPerDistanceBin.get(e.getKey()).add(sum / count);
+				if (count == 0) {
+					bikeMeanTravelTimesPerDistanceBin.get(e.getKey()).add(0.);
+				} else {
+					bikeMeanTravelTimesPerDistanceBin.get(e.getKey()).add(sum / count);
+				}
 			}
 
 			for (Map.Entry<DistanceBin, List<Double>> e : carDistanceBinsToTravelTimes.entrySet()) {
@@ -192,12 +202,38 @@ public class BikeNetworkExperimentsAnalysis implements MATSimAppCommand {
 					sum += tt;
 					count++;
 				}
-				assert count != 0;
-				carMeanTravelTimesPerDistanceBin.get(e.getKey()).add(sum / count);
+
+				if (count == 0) {
+					carMeanTravelTimesPerDistanceBin.get(e.getKey()).add(0.);
+				} else {
+					carMeanTravelTimesPerDistanceBin.get(e.getKey()).add(sum / count);
+				}
 			}
 
-//			TODO: write general mean stats and mean stats per distance bin to csv.
-//			have a look at trips dashboard output for structure
+
+//			write stats to csv
+			try (CSVPrinter printer = csv.createPrinter(runDir.resolve("mean_tt_per_distance_bin.csv"))) {
+				printer.printRecord("dist_group", "mode", "mean_tt_s");
+				for (Map.Entry<DistanceBin, List<Double>> e : bikeMeanTravelTimesPerDistanceBin.entrySet()) {
+					DistanceBin bin = e.getKey();
+
+					List<Double> carMeanTTList = carMeanTravelTimesPerDistanceBin.get(e.getKey());
+
+					if (e.getValue().size() != 1 || carMeanTTList.size() != 1) {
+						log.error("Expecting 1 mean tt per distance bin, but there are {} for distance bin {} and bike and {} for car in the same distance bin. Aborting!",
+							e.getValue().size(), bin, carMeanTTList.size());
+						throw new IllegalStateException("Only one mean tt per distance bin and mode allowed!");
+					}
+					printer.printRecord(bin.minIncl + " - " + bin.maxExcl, TransportMode.bike, e.getValue().getFirst());
+					printer.printRecord(bin.minIncl + " - " + bin.maxExcl, TransportMode.car, carMeanTTList.getFirst());
+				}
+			}
+
+			try (CSVPrinter printer = csv.createPrinter(runDir.resolve("general_stats_bike_analysis.csv"))) {
+				printer.printRecord("mode", "mean_tt_s", "sum_tt_s", "mean_trav_dist_m", "sum_trav_dist_m");
+				printer.printRecord(TransportMode.bike, meanBikeTravelTime, sumBikeTravelTime, meanBikeTravelDistance, sumBikeTravelDistance);
+				printer.printRecord(TransportMode.car, meanCarTravelTime, sumCarTravelTime, meanCarTravelDistance, sumCarTravelDistance);
+			}
 		}
 
 
@@ -205,11 +241,11 @@ public class BikeNetworkExperimentsAnalysis implements MATSimAppCommand {
 	}
 
 	private void fillMapWithDistanceBins(Map<DistanceBin, List<Double>> modalDistanceBinMap) {
-		modalDistanceBinMap.put(new DistanceBin(0., 999.), new ArrayList<>());
-		modalDistanceBinMap.put(new DistanceBin(1000., 1999.), new ArrayList<>());
-		modalDistanceBinMap.put(new DistanceBin(2000., 4999.), new ArrayList<>());
-		modalDistanceBinMap.put(new DistanceBin(5000., 9999.), new ArrayList<>());
-		modalDistanceBinMap.put(new DistanceBin(10000., 19999.), new ArrayList<>());
+		modalDistanceBinMap.put(new DistanceBin(0., 999.99), new ArrayList<>());
+		modalDistanceBinMap.put(new DistanceBin(1000., 1999.99), new ArrayList<>());
+		modalDistanceBinMap.put(new DistanceBin(2000., 4999.99), new ArrayList<>());
+		modalDistanceBinMap.put(new DistanceBin(5000., 9999.99), new ArrayList<>());
+		modalDistanceBinMap.put(new DistanceBin(10000., 19999.99), new ArrayList<>());
 		modalDistanceBinMap.put(new DistanceBin(20000., Double.MAX_VALUE), new ArrayList<>());
 	}
 
@@ -253,7 +289,7 @@ public class BikeNetworkExperimentsAnalysis implements MATSimAppCommand {
 		@Override
 		public void handleEvent(VehicleEntersTrafficEvent event) {
 //			register person and vehicle if bike or car
-			if (event.getNetworkMode().equals(TransportMode.bike) || event.getNetworkMode().equals(TransportMode.car)) {
+			if (!event.getPersonId().toString().contains("pt_") && (event.getNetworkMode().equals(TransportMode.bike) || event.getNetworkMode().equals(TransportMode.car))) {
 //				remove bike person from map for teleported agents as this is a qsim route; add agent to vehicle2Person map
 				personsInTraffic.remove(event.getPersonId());
 				vehiclesToPersonsInTraffic.put(event.getVehicleId(), event.getPersonId());
