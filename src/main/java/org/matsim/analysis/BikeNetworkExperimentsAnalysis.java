@@ -22,6 +22,8 @@ import org.matsim.core.network.NetworkUtils;
 import org.matsim.vehicles.Vehicle;
 import picocli.CommandLine;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -146,7 +148,7 @@ public class BikeNetworkExperimentsAnalysis implements MATSimAppCommand {
 					sumBikeTravelDistance += dist;
 //					leg count is already done for tt, so we do not do it here.
 //					determine distance bin and save respective tt to distance bin map.
-					bikeDistanceBinsToTravelTimes.get(determineDistanceBin(dist, bikeDistanceBinsToTravelTimes.keySet()))
+					bikeDistanceBinsToTravelTimes.get(determineDistanceBin(new BigDecimal(Double.toString(dist)).setScale(2, RoundingMode.HALF_UP).doubleValue(), bikeDistanceBinsToTravelTimes.keySet()))
 						.add(bikeTravelTimes.get(bikeTravelDistances.indexOf(dist)));
 				}
 
@@ -159,7 +161,7 @@ public class BikeNetworkExperimentsAnalysis implements MATSimAppCommand {
 					sumCarTravelDistance += dist;
 //					leg count is already done for tt, so we do not do it here.
 //					determine distance bin and save respective tt to distance bin map.
-					carDistanceBinsToTravelTimes.get(determineDistanceBin(dist, carDistanceBinsToTravelTimes.keySet()))
+					carDistanceBinsToTravelTimes.get(determineDistanceBin(new BigDecimal(Double.toString(dist)).setScale(2, RoundingMode.HALF_UP).doubleValue(), carDistanceBinsToTravelTimes.keySet()))
 						.add(carNetworkTravelTimes.get(carNetworkTravelDistances.indexOf(dist)));
 				}
 			}
