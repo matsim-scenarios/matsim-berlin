@@ -148,6 +148,12 @@ public class BikeNetworkExperimentsAnalysis implements MATSimAppCommand {
 					sumBikeTravelDistance += dist;
 //					leg count is already done for tt, so we do not do it here.
 //					determine distance bin and save respective tt to distance bin map.
+//					if (bikeDistanceBinsToTravelTimes.get(determineDistanceBin(new BigDecimal(Double.toString(dist)).setScale(2, RoundingMode.HALF_UP).doubleValue(), bikeDistanceBinsToTravelTimes.keySet())) == null) {
+//						log.info(data.personId);
+//						log.info(dist);
+//						log.info(new BigDecimal(Double.toString(dist)).setScale(2, RoundingMode.HALF_UP).doubleValue());
+//					}
+
 					bikeDistanceBinsToTravelTimes.get(determineDistanceBin(new BigDecimal(Double.toString(dist)).setScale(2, RoundingMode.HALF_UP).doubleValue(), bikeDistanceBinsToTravelTimes.keySet()))
 						.add(bikeTravelTimes.get(bikeTravelDistances.indexOf(dist)));
 				}
@@ -243,11 +249,11 @@ public class BikeNetworkExperimentsAnalysis implements MATSimAppCommand {
 	}
 
 	private void fillMapWithDistanceBins(Map<DistanceBin, List<Double>> modalDistanceBinMap) {
-		modalDistanceBinMap.put(new DistanceBin(0., 999.99), new ArrayList<>());
-		modalDistanceBinMap.put(new DistanceBin(1000., 1999.99), new ArrayList<>());
-		modalDistanceBinMap.put(new DistanceBin(2000., 4999.99), new ArrayList<>());
-		modalDistanceBinMap.put(new DistanceBin(5000., 9999.99), new ArrayList<>());
-		modalDistanceBinMap.put(new DistanceBin(10000., 19999.99), new ArrayList<>());
+		modalDistanceBinMap.put(new DistanceBin(0., 999.999999999999), new ArrayList<>());
+		modalDistanceBinMap.put(new DistanceBin(1000., 1999.999999999999), new ArrayList<>());
+		modalDistanceBinMap.put(new DistanceBin(2000., 4999.999999999999), new ArrayList<>());
+		modalDistanceBinMap.put(new DistanceBin(5000., 9999.999999999999), new ArrayList<>());
+		modalDistanceBinMap.put(new DistanceBin(10000., 19999.999999999999), new ArrayList<>());
 		modalDistanceBinMap.put(new DistanceBin(20000., Double.MAX_VALUE), new ArrayList<>());
 	}
 
