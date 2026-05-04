@@ -114,12 +114,12 @@ BERLIN_CADYTS_INPUT_25PCT := $(OUTPUT)/berlin-cadyts-input-$(VERSION)-25pct.plan
 BERLIN_CADYTS_OUTPUT_25PCT := $(OUTPUT)/cadyts/cadyts.output_plans.xml.gz
 BERLIN_CADYTS_FINAL_25PCT := $(OUTPUT)/berlin-$(VERSION)-25pct.plans_cadyts.xml.gz
 BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS := $(OUTPUT)/berlin-$(VERSION)-25pct.plans-initial.xml.gz
-BERLIN_10PCT_AFTER_CHOICE_EXPERIMENTS := $(OUTPUT)/berlin-$(VERSION)-10pct.plans.xml.gz
+BERLIN_AFTER_CHOICE_EXPERIMENTS := $(OUTPUT)/berlin-$(VERSION).plans.xml.gz
 BERLIN_DOWNTOWN_3PCT_PLANS := $(OUTPUT)/inner-city/berlin-downtown-$(VERSION)-3pct.xml.gz
 BERLIN_3PCT_PLANS := $(OUTPUT)/berlin-$(VERSION)-3pct.plans.xml.gz
 # this is coming from an external process. You can set it via environment-variable. For more info see comment 
 ## below where this file is used. 
-MODECHOICE_10PCT_BASELINE_PLANS := ""
+MODECHOICE_BASELINE_PLANS := ""
 
 ## this currrently does not work. Should probably move to a separate makefile
 #BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT := $(OUTPUT)/berlin-longHaulFreight-$(VERSION)-25pct.plans.xml.gz
@@ -434,10 +434,10 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS): setup $(FACILITIES_XML) $(NETW
 # Update 2026-03-31 To be discussed if this is really necessary. prepare taste-variations only removes the tastes for bus
 # which actually should not be there?! Further it is not clear if we really want to remove unselected plans, I think dresden
 # is different here.
-#$(BERLIN_10PCT_AFTER_CHOICE_EXPERIMENTS): $(MODECHOICE_10PCT_BASELINE_PLANS) $(CHOICE_EXPERIMENTS_10PCT_BASELINE_PLANS)
-$(BERLIN_10PCT_AFTER_CHOICE_EXPERIMENTS): setup $(MODECHOICE_10PCT_BASELINE_PLANS)
+#$(BERLIN_AFTER_CHOICE_EXPERIMENTS): $(MODECHOICE_BASELINE_PLANS) $(CHOICE_EXPERIMENTS_10PCT_BASELINE_PLANS)
+$(BERLIN_AFTER_CHOICE_EXPERIMENTS): setup $(MODECHOICE_BASELINE_PLANS)
 	$(JAVA_APP) prepare clean-population\
-	 --plans $<\
+	 --plans $(word 2,$^)\
 	 --remove-unselected-plans\
 	 --output $@
 	 
@@ -459,26 +459,26 @@ $(BERLIN_DOWNTOWN_3PCT_PLANS): setup $(BERLIN_INNER_CITY_GPKG) $(BERLIN_3PCT_PLA
 	mkdir -p $(OUTPUT)/inner-city
 
 	$(JAVA_APP) prepare scenario-cutout\
-	 --population $(word 2,$^)\
-	 --facilities $(word 3,$^)\
-	 --network $(word 4,$^)\
+	 --population $(word 3,$^)\
+	 --facilities $(word 4,$^)\
+	 --network $(word 5,$^)\
 	 --output-population $@\
 	 --output-network $(OUTPUT)/inner-city/berlin-downtown-$(VERSION)-network.xml.gz\
 	 --output-facilities $(OUTPUT)/inner-city/berlin-downtown-$(VERSION)-facilities.xml.gz\
 	 --input-crs $(CRS)\
-	 --shp "$<"
+	 --shp "$(word 2,$^)"
 
 $(RANDOM_DRT_FLEET_10K): setup $(NETWORK_MATSIM) $(BERLIN_SHP_25832) $(BERLIN_INNER_CITY_GPKG)
 	$(JAVA_APP) prepare create-drt-vehicles\
-	 --network $<\
-	 --shp "$(word 2,$^)"\
+	 --network $(word 2,$^)\
+	 --shp "$(word 3,$^)"\
 	 --output $(OUTPUT)/berlin-$(VERSION).\
 	 --vehicles 10000\
 	 --seats 4
 
 	$(JAVA_APP) prepare create-drt-vehicles\
 	 --network $<\
-	 --shp "$(word 3,$^)"\
+	 --shp "$(word 4,$^)"\
 	 --output $(OUTPUT)/berlin-$(VERSION).\
 	 --vehicles 500\
 	 --seats 4
@@ -506,6 +506,6 @@ prepare-drt: $(RANDOM_DRT_FLEET_10K)
 	#make -Bndri prepare-drt | make2graph | gv2gml -o prepare-drt_graph.gml
 	echo "Done"
 
-prepare: $(BERLIN_10PCT_AFTER_CHOICE_EXPERIMENTS)
+prepare: $(BERLIN_AFTER_CHOICE_EXPERIMENTS)
 	#make -Bndri prepare | make2graph | gv2gml -o prepare_graph.gml
 	echo "Done"
