@@ -31,6 +31,7 @@ import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.extensions.pt.routing.EnhancedRaptorIntermodalAccessEgress;
 import org.matsim.run.OpenBerlinDrtScenario;
 import org.matsim.run.OpenBerlinScenario;
+import org.matsim.vehicles.VehicleType;
 import picocli.CommandLine;
 
 import javax.annotation.Nullable;
@@ -46,6 +47,8 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 	static final String STOP_FILTER = "eScooterStopFilter";
 	static final String STOP_FILTER_VALUE = "station_S/U/RE/RB_eScooter";
 	private static final String BERLIN_SHP_STRING = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.4/input/shp/Berlin_25832.shp";
+//	this is the default bike speed value from inout vehicle types
+	private static final double DEFAULT_E_SCOOTER_SPEED = 2.98;
 
 	@CommandLine.Option(names = "--sharing-service", description = "Path to sharing service xml file with stations and vehicles.", required = true)
 	private String serviceFile;
@@ -77,7 +80,7 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 		//		apply all scenario changes from base scenario class
 		super.prepareScenario(scenario);
 
-		copyBikeModeConstantsForSharingInScenario(scenario);
+		copyBikeValuesForSharingInScenario(scenario);
 
 //		tag intermodal eScooter-pt-stations
 		tagIntermodalPtSharingTransitStopsInScenario(scenario, STOP_FILTER, STOP_FILTER_VALUE, BERLIN_SHP_STRING);
@@ -120,7 +123,8 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 		// Register the shared mode as a teleportation mode
 		RoutingConfigGroup.TeleportedModeParams eScooterParams = new RoutingConfigGroup.TeleportedModeParams(E_SCOOTER);
 //		2.98 is the speed of veh type bike in the veh type file
-		eScooterParams.setTeleportedModeSpeed(2.98);
+//		the speed of eScooters is adapted if bike speed is adapted later on!
+		eScooterParams.setTeleportedModeSpeed(DEFAULT_E_SCOOTER_SPEED);
 		eScooterParams.setBeelineDistanceFactor(1.3);
 		config.routing().addTeleportedModeParams(eScooterParams);
 
@@ -146,34 +150,37 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 		ScoringConfigGroup.ModeParams bikeParams = config.scoring().getModes().get(TransportMode.bike);
 
 		ScoringConfigGroup.ModeParams modeParams = new ScoringConfigGroup.ModeParams(E_SCOOTER);
-		modeParams.setConstant(bikeParams.getConstant());
-		modeParams.setMarginalUtilityOfDistance(bikeParams.getMarginalUtilityOfDistance());
-		modeParams.setMarginalUtilityOfTraveling(bikeParams.getMarginalUtilityOfTraveling());
-		modeParams.setDailyUtilityConstant(bikeParams.getDailyUtilityConstant());
+		modeParams.setConstant(0.);
+		modeParams.setMarginalUtilityOfDistance(0.);
+		modeParams.setMarginalUtilityOfTraveling(0.);
+		modeParams.setDailyUtilityConstant(0.);
 
 		config.scoring().addModeParams(modeParams);
 
 //		configure intermodal access/egress to pt
 		SwissRailRaptorConfigGroup raptorConfigGroup = ConfigUtils.addOrGetModule(config, SwissRailRaptorConfigGroup.class);
 		SwissRailRaptorConfigGroup.IntermodalAccessEgressParameterSet intermodalParams = new SwissRailRaptorConfigGroup.IntermodalAccessEgressParameterSet();
-		intermodalParams.setMode(E_SCOOTER);
+//		intermodalParams.setMode(E_SCOOTER);
+		intermodalParams.setMode(SharingUtils.getServiceMode(serviceConfig));
 		intermodalParams.setSearchExtensionRadius(1000.);
 //		in this DLR report (p. 7), multiple sources about avg. eScooter trip length are cited https://elib.dlr.de/141837/1/ArbeitsberichteVF_Nr4_2021.pdf
 //		avg. eScooter trip length seems to ~2km
 //		thus, we set initialSearchRadius to 2km and maxRadius to 2 * initialRadius. -sm0126
-		intermodalParams.setInitialSearchRadius(2000.);
-		intermodalParams.setMaxRadius(4000.);
+//		I want to test if this influences intermodal usage of eScooter, so increasing initial and max radius here. -sm0326
+		intermodalParams.setInitialSearchRadius(4000.);
+		intermodalParams.setMaxRadius(20000.);
 		intermodalParams.setStopFilterAttribute(STOP_FILTER);
 //		we assume that -- similar to DRT -- access/egress to PT is not done to bus/tram
 		intermodalParams.setStopFilterValue(STOP_FILTER_VALUE);
 
 		raptorConfigGroup.addIntermodalAccessEgress(intermodalParams);
+		raptorConfigGroup.setUseIntermodalAccessEgress(true);
 	}
 
 	/**
 	 * copy bike mode constants for eScooter if available.
 	 */
-	static void copyBikeModeConstantsForSharingInScenario(Scenario scenario) {
+	static void copyBikeValuesForSharingInScenario(Scenario scenario) {
 		for (Person person : scenario.getPopulation().getPersons().values()) {
 			if (PersonUtils.getModeConstants(person) != null && PersonUtils.getModeConstants(person).containsKey(TransportMode.bike)) {
 //				assume that preference for bike is similar for eScooter
@@ -182,6 +189,12 @@ public class OpenBerlinScooterSharingScenario extends OpenBerlinScenario {
 				modeConstants.put(E_SCOOTER, modeConstants.get(TransportMode.bike));
 				PersonUtils.setModeConstants(person, modeConstants);
 			}
+		}
+
+//		if bike speed changes, we want to apply the same speed to e scooters. Only relevant for combined scenarios.
+		if (scenario.getVehicles().getVehicleTypes().get(Id.create(TransportMode.bike, VehicleType.class)).getMaximumVelocity() != DEFAULT_E_SCOOTER_SPEED) {
+			scenario.getConfig().routing().getTeleportedModeParams().get(E_SCOOTER)
+				.setTeleportedModeSpeed(scenario.getVehicles().getVehicleTypes().get(Id.create(TransportMode.bike, VehicleType.class)).getMaximumVelocity());
 		}
 	}
 
