@@ -52,30 +52,8 @@ public class RunAutofreiPolicyDeparking extends RunAutofreiPolicy {
 	protected void prepareScenario(Scenario scenario) {
 		super.prepareScenario(scenario);
 		addParkingSpots(scenario);
-		replaceLowestScorePlanByWalkPlan(scenario);
 //		scenario.getPopulation().getPersons().entrySet().removeIf(p -> !p.getKey().equals(Id.createPersonId("goodsTraffic_re_vkz.0053_4_80")) &&
 //			!p.getKey().equals(Id.createPersonId("berlin_12c8d407")));
-	}
-
-	private static void replaceLowestScorePlanByWalkPlan(Scenario scenario) {
-		for (Person person : scenario.getPopulation().getPersons().values()) {
-			// remove plan with lowest score from unselected plans
-			Plan selectedPlan = person.getSelectedPlan();
-			List<? extends Plan> unselectedPlans = person.getPlans().stream().filter(p -> p != selectedPlan).toList();
-			Plan min = Collections.min(unselectedPlans, Comparator.comparing(Plan::getScore));
-			person.removePlan(min);
-
-			// create a new walk plan based on the selected plan
-			Plan newPlan = PopulationUtils.createPlan(person);
-			List<Activity> activities = TripStructureUtils.getActivities(selectedPlan, TripStructureUtils.StageActivityHandling.ExcludeStageActivities);
-			for (int i = 0; i < activities.size()-1; i++) {
-				newPlan.addActivity(activities.get(i));
-				newPlan.addLeg(PopulationUtils.createLeg(TransportMode.walk));
-			}
-			newPlan.addActivity(activities.getLast());
-
-			person.addPlan(newPlan);
-		}
 	}
 
 	@Override
