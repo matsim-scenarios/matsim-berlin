@@ -43,7 +43,7 @@ study, obj = create_calibration(
     "calib",
     ASCCalibrator(modes, initial, target, lr=utils.linear_scheduler(start=0.8, end=1.4, interval=15)),
     "matsim-berlin-7.0-SNAPSHOT-v6.4-59-g22f4db6.jar",
-    "../input/v7.0/berlin-v7.0.config.xml",
+    "../input/v6.5/berlin-v6.5.config.xml",
     args="--10pct --iterations 500 --plan-selector BestScore --config:simwrapper.exclude=NoiseDashboard --config:vehicles.vehiclesFile=../v7.0/berlin-v7.0-vehicleTypes.xml",
     jvm_args="-Xmx60G -Xms60G -XX:+AlwaysPreTouch -XX:+UseParallelGC",
     transform_persons=filter_persons,
