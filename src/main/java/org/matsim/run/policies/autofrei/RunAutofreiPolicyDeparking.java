@@ -5,12 +5,18 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
+import org.matsim.api.core.v01.population.Activity;
+import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Plan;
 import org.matsim.application.MATSimApplication;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.population.PopulationUtils;
+import org.matsim.core.router.TripStructureUtils;
 import org.matsim.run.deparking.DeParkingModule;
 import org.matsim.run.deparking.DeparkingConfigGroup;
 import picocli.CommandLine;
@@ -20,7 +26,10 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 
 public class RunAutofreiPolicyDeparking extends RunAutofreiPolicy {
 	public static final String PARKING_SPOTS_ATTR = "parkingSpots";
@@ -43,8 +52,30 @@ public class RunAutofreiPolicyDeparking extends RunAutofreiPolicy {
 	protected void prepareScenario(Scenario scenario) {
 		super.prepareScenario(scenario);
 		addParkingSpots(scenario);
+		replaceLowestScorePlanByWalkPlan(scenario);
 //		scenario.getPopulation().getPersons().entrySet().removeIf(p -> !p.getKey().equals(Id.createPersonId("goodsTraffic_re_vkz.0053_4_80")) &&
 //			!p.getKey().equals(Id.createPersonId("berlin_12c8d407")));
+	}
+
+	private static void replaceLowestScorePlanByWalkPlan(Scenario scenario) {
+		for (Person person : scenario.getPopulation().getPersons().values()) {
+			// remove plan with lowest score from unselected plans
+			Plan selectedPlan = person.getSelectedPlan();
+			List<? extends Plan> unselectedPlans = person.getPlans().stream().filter(p -> p != selectedPlan).toList();
+			Plan min = Collections.min(unselectedPlans, Comparator.comparing(Plan::getScore));
+			person.removePlan(min);
+
+			// create a new walk plan based on the selected plan
+			Plan newPlan = PopulationUtils.createPlan(person);
+			List<Activity> activities = TripStructureUtils.getActivities(selectedPlan, TripStructureUtils.StageActivityHandling.ExcludeStageActivities);
+			for (int i = 0; i < activities.size()-1; i++) {
+				newPlan.addActivity(activities.get(i));
+				newPlan.addLeg(PopulationUtils.createLeg(TransportMode.walk));
+			}
+			newPlan.addActivity(activities.getLast());
+
+			person.addPlan(newPlan);
+		}
 	}
 
 	@Override
