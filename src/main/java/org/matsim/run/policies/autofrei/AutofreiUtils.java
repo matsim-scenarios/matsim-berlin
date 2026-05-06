@@ -17,11 +17,13 @@ import org.matsim.api.core.v01.network.Node;
 import org.matsim.api.core.v01.population.*;
 import org.matsim.application.options.ShpOptions;
 import org.matsim.application.prepare.population.CleanPopulation;
+import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.groups.ScoringConfigGroup;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.algorithms.MultimodalNetworkCleaner;
 import org.matsim.core.utils.geometry.geotools.MGC;
+import org.matsim.vehicles.EngineInformation;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
@@ -32,7 +34,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static org.matsim.run.policies.autofrei.RunAutofreiPolicy.NEW_MODE_SMALL_SCALE_COMMERCIAL_AND_GOODS_TRAFFIC;
+
 public class AutofreiUtils {
+	public static final String AVERAGE = "average";
+
 	private static final Logger log = LogManager.getLogger(AutofreiUtils.class);
 
 	/**
@@ -320,5 +326,32 @@ public class AutofreiUtils {
 	}
 
 	public record Corrections(Set<Id<Link>> removeLinks, Set<Id<Link>> addLink, Set<String> removeStreet, Set<String> addStreet) {
+	}
+
+	public static void addHbefaCategories(Scenario scenario) {
+		for (VehicleType type : scenario.getVehicles().getVehicleTypes().values()) {
+			EngineInformation engineInformation = type.getEngineInformation();
+
+			if (engineInformation.getAttributes().isEmpty()) {
+				switch (type.getId().toString()) {
+					case TransportMode.car -> {
+						VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.PASSENGER_CAR.toString());
+					}
+					case NEW_MODE_SMALL_SCALE_COMMERCIAL_AND_GOODS_TRAFFIC -> {
+						VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.PASSENGER_CAR.toString());
+					}
+					case TransportMode.ride, TransportMode.bike -> {
+						VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
+					}
+					case "freight", TransportMode.truck -> {
+						VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.HEAVY_GOODS_VEHICLE.toString());
+					}
+					default -> log.warn("Skipping unknown vehicle type: {}", type.getId());
+				}
+			}
+			VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
+			VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
+			VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
+		}
 	}
 }

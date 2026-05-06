@@ -40,6 +40,9 @@ public class RunAutofreiBaseCaseCtdExtended extends RunAutofreiBaseCaseCtd {
 
 		// change the mode in the plans for commercial traffic to the new mode
 		AutofreiUtils.replaceCarTripsByNewMode(scenario, NEW_MODE_SMALL_SCALE_COMMERCIAL_AND_GOODS_TRAFFIC, Set.of("commercialPersonTraffic", "commercialPersonTraffic_service", "goodsTraffic"));
+
+		// add hbefa information for emissions dashboard
+		AutofreiUtils.addHbefaCategories(scenario);
 	}
 
 	@Override
