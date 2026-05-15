@@ -153,6 +153,13 @@ public class DeParkingTracker implements ActivityStartEventHandler, VehicleEnter
 			return;
 		}
 
+		String purpose = this.purpose;
+		if (pi.startParkingTime == 0) {
+			purpose = purpose + " first";
+		} else if (now == config.qsim().getEndTime().seconds()) {
+			purpose = purpose + " last";
+		}
+
 		double hourlyParkingCost = parkingCostTracker.cost(link.getId(), pi.startParkingTime);
 		double parkingCost = hourlyParkingCost * (parkDuration / 3600.0);
 
