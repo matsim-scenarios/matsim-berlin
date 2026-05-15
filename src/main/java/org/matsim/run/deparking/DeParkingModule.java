@@ -36,7 +36,9 @@ public class DeParkingModule extends AbstractModule {
 	@Override
 	public void install() {
 		// Add DeParkingTracker only for car, but track all parking modes
-		addEventHandlerBinding().toInstance(new DeParkingTracker(TransportMode.car, Set.of()));
+		DeParkingTracker tracker = new DeParkingTracker(TransportMode.car, Set.of());
+		addEventHandlerBinding().toInstance(tracker);
+		addMobsimListenerBinding().toInstance(tracker);
 
 		Set<String> mainModes = new HashSet<>(this.getConfig().qsim().getMainModes());
 

@@ -20,6 +20,7 @@ package org.matsim.run.deparking;
 
 
 import com.google.inject.Inject;
+import org.apache.commons.math3.util.Precision;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -132,7 +133,7 @@ public class DeParkingTracker implements ActivityStartEventHandler, VehicleEnter
 			return;
 		}
 
-		if (config.qsim().getEndTime().seconds() == e.getSimulationTime()) {
+		if (Precision.equals(config.qsim().getEndTime().seconds(), e.getSimulationTime(), 0.001)) {
 			for (ParkingInfo info : this.parkingPerVehicle.values()) {
 				chargeParking(e.getSimulationTime(), info);
 			}
