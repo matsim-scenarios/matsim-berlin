@@ -147,6 +147,12 @@ public class DeParkingTracker implements ActivityStartEventHandler, VehicleEnter
 
 		Link link = network.getLinks().get(pi.parkingLinkId);
 		double parkDuration = now - pi.startParkingTime;
+
+		if (parkDuration == 0) {
+			// this in particular the case if a parking start time happens in the last step
+			return;
+		}
+
 		double hourlyParkingCost = parkingCostTracker.cost(link.getId(), pi.startParkingTime);
 		double parkingCost = hourlyParkingCost * (parkDuration / 3600.0);
 
