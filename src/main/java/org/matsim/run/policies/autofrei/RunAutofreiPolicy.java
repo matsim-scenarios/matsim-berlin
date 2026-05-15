@@ -33,6 +33,11 @@ public class RunAutofreiPolicy extends RunAutofreiBaseCaseCtdExtended {
 
 	public static void replaceLowestScorePlanByWalkPlan(Scenario scenario) {
 		for (Person person : scenario.getPopulation().getPersons().values()) {
+			if(!(person.getId().toString().startsWith("berlin_") || person.getId().toString().startsWith("bb_"))){
+				// skip freight agents.
+				continue;
+			}
+
 			// remove plan with lowest score from unselected plans
 			Plan selectedPlan = person.getSelectedPlan();
 			List<? extends Plan> unselectedPlans = person.getPlans().stream().filter(p -> p != selectedPlan).toList();
