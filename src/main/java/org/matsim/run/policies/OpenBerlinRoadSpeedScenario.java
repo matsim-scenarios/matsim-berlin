@@ -65,6 +65,11 @@ public class OpenBerlinRoadSpeedScenario extends OpenBerlinScenario {
 			throw new IllegalStateException("");
 		}
 
+		if (relativeSpeedChange == 1.0) {
+			log.info("Relative freespeed change set to 1.0. This means the freespeed won't be changed.");
+			return;
+		}
+
 		List<PreparedGeometry> geometries = ShpGeometryUtils.loadPreparedGeometries(IOUtils.extendUrl(scenario.getConfig().getContext(), speedAreaShp));
 
 		Set<? extends Link> carLinksInArea = scenario.getNetwork().getLinks().values().stream()

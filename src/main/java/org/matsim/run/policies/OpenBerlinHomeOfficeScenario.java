@@ -57,6 +57,11 @@ public class OpenBerlinHomeOfficeScenario extends OpenBerlinScenario {
 	 * this method transforms berlin residents with a working activity to home office workers.
 	 */
 	static void addHomeOfficeWorkersInScenario(Scenario scenario, double additionalHomeOfficePct) {
+		if (additionalHomeOfficePct == 0.0) {
+			log.info("additionalHomeOfficePct is set to {}. Not adding home office workers.", additionalHomeOfficePct);
+			return;
+		}
+
 		AtomicInteger stayHomeCount = new AtomicInteger(0);
 		AtomicInteger workCount = new AtomicInteger(0);
 
