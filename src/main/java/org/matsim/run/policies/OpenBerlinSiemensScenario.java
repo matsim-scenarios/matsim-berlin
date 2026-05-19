@@ -22,6 +22,7 @@ import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.router.MainModeIdentifier;
+import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.extensions.pt.routing.EnhancedRaptorIntermodalAccessEgress;
 import org.matsim.extensions.pt.routing.ptRoutingModes.PtIntermodalRoutingModesModule;
 import org.matsim.run.OpenBerlinScenario;
@@ -106,17 +107,20 @@ public class OpenBerlinSiemensScenario extends OpenBerlinScenario {
 //		M1: engine type (post-processing only); car cost changes
 		OpenBerlinCarCostScenario.setCarCostInConfig(config, carFixCost, carDistanceCost);
 //		M2: car cost changes; max. allowed speed changes
-//		TODO: conflict with M1
-		OpenBerlinCarCostScenario.setCarCostInConfig(config, carFixCost, carDistanceCost);
+//		conflict with M1; we only need to set it once; this is done in run script, so commented out here
+//		OpenBerlinCarCostScenario.setCarCostInConfig(config, carFixCost, carDistanceCost);
 //		M3: pt fare changes; drt
 		OpenBerlinPtPricingScenario.setDailyMonetaryConstantPtInConfig(config, dailyMonetaryConstantPt);
 		OpenBerlinDrtEstimatorScenario.configureDrtInConfig(config, drtConfig, drtFare, drtIntermodal);
 //		M4: bike speed changes; sharing
 		OpenBerlinBikeSpeedScenario.assertNoTeleportedBikeParamsInConfig(config, maxBikeSpeedKmH);
-		OpenBerlinScooterSharingScenario.addSharingServiceInConfig(config, sharingServiceFile, baseFare, distanceFare, timeFare, eScooterIntermodal);
+
+		if (sharingHandling == SharingHandling.SHARING_ACTIVE) {
+			OpenBerlinScooterSharingScenario.addSharingServiceInConfig(config, sharingServiceFile, baseFare, distanceFare, timeFare, eScooterIntermodal);
+		}
 //		M5: home office changes; drt
-//		TODO: conflict with M3
-		OpenBerlinDrtEstimatorScenario.configureDrtInConfig(config, drtConfig, drtFare, drtIntermodal);
+//		conflict with M3; we only need to set it once; this is done in run script, so commented out here
+//		OpenBerlinDrtEstimatorScenario.configureDrtInConfig(config, drtConfig, drtFare, drtIntermodal);
 
 		return config;
 	}
@@ -124,7 +128,11 @@ public class OpenBerlinSiemensScenario extends OpenBerlinScenario {
 //	method necessary for drt simulation.
 	@Override
 	protected Scenario createScenario(Config config) {
-		return OpenBerlinDrtEstimatorScenario.configureDrtInCreateScenario(config);
+		if (drtHandling == DrtHandling.DRT_ACTIVE) {
+			return OpenBerlinDrtEstimatorScenario.configureDrtInCreateScenario(config);
+		} else {
+			return ScenarioUtils.loadScenario(config);
+		}
 	}
 
 	@Override
@@ -137,16 +145,21 @@ public class OpenBerlinSiemensScenario extends OpenBerlinScenario {
 		//		M2: car cost changes; max. allowed speed changes
 		OpenBerlinRoadSpeedScenario.applyRelativeSpeedChangeToLinksInScenario(scenario, relativeSpeedChange, berlinShp);
 		//		M3: pt fare changes; drt
-		OpenBerlinDrtEstimatorScenario.configureDrtInScenario(scenario);
+		if (drtHandling == DrtHandling.DRT_ACTIVE) {
+			OpenBerlinDrtEstimatorScenario.configureDrtInScenario(scenario);
+		}
 		//		M4: bike speed changes; sharing
 		OpenBerlinBikeSpeedScenario.setMaxBikeSpeedInScenario(scenario, maxBikeSpeedKmH);
-		OpenBerlinScooterSharingScenario.copyBikeValuesForSharingInScenario(scenario);
+
+		if (sharingHandling == SharingHandling.SHARING_ACTIVE) {
+			OpenBerlinScooterSharingScenario.copyBikeValuesForSharingInScenario(scenario);
+		}
 //		tag intermodal eScooter-pt-stations
 		OpenBerlinScooterSharingScenario.tagIntermodalPtSharingTransitStopsInScenario(scenario, STOP_FILTER, STOP_FILTER_VALUE, berlinShp);
 		//		M5: home office changes; drt
 		OpenBerlinHomeOfficeScenario.addHomeOfficeWorkersInScenario(scenario, additionalHomeOfficePct);
-//		TODO: conflict with M3
-		OpenBerlinDrtEstimatorScenario.configureDrtInScenario(scenario);
+//		conflict with M3; we only need to set it once; this is done in run script, so commented out here
+//		OpenBerlinDrtEstimatorScenario.configureDrtInScenario(scenario);
 	}
 
 	@Override
@@ -159,89 +172,82 @@ public class OpenBerlinSiemensScenario extends OpenBerlinScenario {
 		//		M2: car cost changes; max. allowed speed changes
 //		no changes in controller
 		//		M3: pt fare changes; drt
-//		TODO: fiugre out logic for drt and sharing. for some cases they will be switched on both for some not.
-//		TODO: if only one of both: we can use the methods from the single policies.
-		//		do drt controller changes here because we would be binding classes twice for drt and sharing when calling OpenBerlinDrtEstimatorScenario.configureDrtInController as well as OpenBerlinScooterSharingScenario.addSharingModuleAndIntermodalFareCompensationInController
-		// drt + dvrp modules
-		controler.addOverridingModule(new MultiModeDrtModule());
-		controler.addOverridingModule(new DvrpModule());
-//		we have to configure the qsim components of drt and sharing at the same time. see below.
-//		controler.configureQSimComponents(DvrpQSimComponents.activateAllModes(MultiModeDrtConfigGroup.get(controler.getConfig())));
-
-		// yyyy there is fareSModule (with S) in config. ?!?!  kai, jul'19
-		OpenBerlinDrtEstimatorScenario.addIntermodalTripFareCompensatorsModule(controler, drtFare);
-		controler.addOverridingModule(new PtIntermodalRoutingModesModule());
-
-
-		for (DrtConfigGroup drtConfigGroup : MultiModeDrtConfigGroup.get(controler.getConfig()).getModalElements()) {
-			controler.addOverridingModule(new AbstractModule() {
-				@Override
-				public void install() {
-					DrtEstimatorModule.bindEstimator(binder(), drtConfigGroup.mode).toInstance(
-						new DirectTripBasedDrtEstimator.Builder()
-//							typical waiting time is set as minimal waiting time. it will only be applied if the typical waiting time of a service area is >= minimal waiting time.
-							.setWaitingTimeEstimator(new ConstantWaitingTimeEstimator(drtTypicalWaitTime))
-							.setWaitingTimeDistributionGenerator(new NormalDistributionGenerator(1, drtWaitTimeStd))
-							.setRideDurationEstimator(new ConstantRideDurationEstimator(drtRideTimeAlpha, drtRideTimeBeta))
-							.setRideDurationDistributionGenerator(new NormalDistributionGenerator(2, drtRideTimeStd))
-							.build()
-					);
-				}
-			});
+//		configure cotroller for drt and sharing.
+		if (drtHandling == DrtHandling.DRT_ACTIVE || sharingHandling == SharingHandling.SHARING_ACTIVE) {
+			configureControllerForDrtAndOrSharing(drtHandling, sharingHandling, controler);
 		}
-
 		//		M4: bike speed changes; sharing
-		//		do sharing controller changes here because we would be binding classes twice for drt and sharing when calling OpenBerlinDrtEstimatorScenario.configureDrtInController as well as OpenBerlinScooterSharingScenario.addSharingModuleAndIntermodalFareCompensationInController
-		controler.addOverridingModule(new SharingModule());
-//		we have to configure the qsim components of drt and sharing at the same time. see below.
-//		controler.configureQSimComponents(SharingUtils.configureQSim(ConfigUtils.addOrGetModule(controler.getConfig(), SharingConfigGroup.class)));
-
-//		we configure drt _and_ sharing qsim components here.
-		controler.configureQSimComponents(MobilityToGridScenariosUtils.drtAndSharingQSimComponentsConfigurator(ConfigUtils.addOrGetModule(controler.getConfig(),
-			SharingConfigGroup.class), MultiModeDrtConfigGroup.get(controler.getConfig())));
-
-//		add intermodal trip compensation when pt is used once in a day for eScooter trips
-		OpenBerlinScooterSharingScenario.SharingRefundHandler refundHandler = new OpenBerlinScooterSharingScenario.SharingRefundHandler(TransportMode.pt);
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				addEventHandlerBinding().toInstance(refundHandler);
-				addControlerListenerBinding().toInstance(refundHandler);
-				bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtAndSharingRouterAnalysisModeIdentifier.class);
-				bind(MainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtAndSharingRouterModeIdentifier.class);
-//				this is bound in drt and sharing run class separately, we need it only once, so we bind it here once
-				bind(RaptorIntermodalAccessEgress.class).to(EnhancedRaptorIntermodalAccessEgress.class);
-			}
-		});
+//		see above / method configureControllerForDrtAndOrSharing for sharing controller setup
 		//		M5: home office changes; drt
-//		TODO: conflict with M3
-		//		do drt controller changes here because we would be binding classes twice for drt and sharing when calling OpenBerlinDrtEstimatorScenario.configureDrtInController as well as OpenBerlinScooterSharingScenario.addSharingModuleAndIntermodalFareCompensationInController
-		// drt + dvrp modules
-		controler.addOverridingModule(new MultiModeDrtModule());
-		controler.addOverridingModule(new DvrpModule());
+//		conflict with M3 because of drt; we only need to set it once; this is done in run script, so we do not configure drt here (again)
+	}
+
+	private void configureControllerForDrtAndOrSharing(DrtHandling drtHandling, SharingHandling sharingHandling, Controler controler) {
+		if (drtHandling == DrtHandling.DRT_ACTIVE && sharingHandling == SharingHandling.SHARING_NOT_ACTIVE) {
+//			drt only
+//			here we can use the method from OpenBerlinDrtEstimatorScenario
+			OpenBerlinDrtEstimatorScenario.configureDrtInController(controler, drtTypicalWaitTime, drtWaitTimeStd, drtRideTimeAlpha, drtRideTimeBeta, drtRideTimeStd, drtFare);
+		} else if (drtHandling == DrtHandling.DRT_NOT_ACTIVE && sharingHandling == SharingHandling.SHARING_ACTIVE) {
+//			sharing only
+//			here we can use the method from OpenBerlinScooterSharingScenario
+			OpenBerlinScooterSharingScenario.addSharingModuleAndIntermodalFareCompensationInController(controler);
+
+		} else if (drtHandling == DrtHandling.DRT_ACTIVE && sharingHandling == SharingHandling.SHARING_ACTIVE) {
+//			drt and sharing
+			//		do drt controller changes here because we would be binding classes twice for drt and sharing when calling OpenBerlinDrtEstimatorScenario.configureDrtInController as well as OpenBerlinScooterSharingScenario.addSharingModuleAndIntermodalFareCompensationInController
+			// drt + dvrp modules
+			controler.addOverridingModule(new MultiModeDrtModule());
+			controler.addOverridingModule(new DvrpModule());
 //		we have to configure the qsim components of drt and sharing at the same time. see below.
 //		controler.configureQSimComponents(DvrpQSimComponents.activateAllModes(MultiModeDrtConfigGroup.get(controler.getConfig())));
 
-		// yyyy there is fareSModule (with S) in config. ?!?!  kai, jul'19
-		OpenBerlinDrtEstimatorScenario.addIntermodalTripFareCompensatorsModule(controler, drtFare);
-		controler.addOverridingModule(new PtIntermodalRoutingModesModule());
+			// yyyy there is fareSModule (with S) in config. ?!?!  kai, jul'19
+			OpenBerlinDrtEstimatorScenario.addIntermodalTripFareCompensatorsModule(controler, drtFare);
+			controler.addOverridingModule(new PtIntermodalRoutingModesModule());
 
 
-		for (DrtConfigGroup drtConfigGroup : MultiModeDrtConfigGroup.get(controler.getConfig()).getModalElements()) {
+			for (DrtConfigGroup drtConfigGroup : MultiModeDrtConfigGroup.get(controler.getConfig()).getModalElements()) {
+				controler.addOverridingModule(new AbstractModule() {
+					@Override
+					public void install() {
+						DrtEstimatorModule.bindEstimator(binder(), drtConfigGroup.mode).toInstance(
+							new DirectTripBasedDrtEstimator.Builder()
+//							typical waiting time is set as minimal waiting time. it will only be applied if the typical waiting time of a service area is >= minimal waiting time.
+								.setWaitingTimeEstimator(new ConstantWaitingTimeEstimator(drtTypicalWaitTime))
+								.setWaitingTimeDistributionGenerator(new NormalDistributionGenerator(1, drtWaitTimeStd))
+								.setRideDurationEstimator(new ConstantRideDurationEstimator(drtRideTimeAlpha, drtRideTimeBeta))
+								.setRideDurationDistributionGenerator(new NormalDistributionGenerator(2, drtRideTimeStd))
+								.build()
+						);
+					}
+				});
+			}
+
+			//		do sharing controller changes here because we would be binding classes twice for drt and sharing when calling OpenBerlinDrtEstimatorScenario.configureDrtInController as well as OpenBerlinScooterSharingScenario.addSharingModuleAndIntermodalFareCompensationInController
+			controler.addOverridingModule(new SharingModule());
+//			we have to configure the qsim components of drt and sharing at the same time. see below.
+//			controler.configureQSimComponents(SharingUtils.configureQSim(ConfigUtils.addOrGetModule(controler.getConfig(), SharingConfigGroup.class)));
+
+//			we configure drt _and_ sharing qsim components here.
+			controler.configureQSimComponents(MobilityToGridScenariosUtils.drtAndSharingQSimComponentsConfigurator(ConfigUtils.addOrGetModule(controler.getConfig(),
+				SharingConfigGroup.class), MultiModeDrtConfigGroup.get(controler.getConfig())));
+
+//			add intermodal trip compensation when pt is used once in a day for eScooter trips
+			OpenBerlinScooterSharingScenario.SharingRefundHandler refundHandler = new OpenBerlinScooterSharingScenario.SharingRefundHandler(TransportMode.pt);
 			controler.addOverridingModule(new AbstractModule() {
 				@Override
 				public void install() {
-					DrtEstimatorModule.bindEstimator(binder(), drtConfigGroup.mode).toInstance(
-						new DirectTripBasedDrtEstimator.Builder()
-//							typical waiting time is set as minimal waiting time. it will only be applied if the typical waiting time of a service area is >= minimal waiting time.
-							.setWaitingTimeEstimator(new ConstantWaitingTimeEstimator(drtTypicalWaitTime))
-							.setWaitingTimeDistributionGenerator(new NormalDistributionGenerator(1, drtWaitTimeStd))
-							.setRideDurationEstimator(new ConstantRideDurationEstimator(drtRideTimeAlpha, drtRideTimeBeta))
-							.setRideDurationDistributionGenerator(new NormalDistributionGenerator(2, drtRideTimeStd))
-							.build()
-					);
+					addEventHandlerBinding().toInstance(refundHandler);
+					addControlerListenerBinding().toInstance(refundHandler);
+					bind(AnalysisMainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtAndSharingRouterAnalysisModeIdentifier.class);
+					bind(MainModeIdentifier.class).to(OpenBerlinIntermodalPtDrtAndSharingRouterModeIdentifier.class);
+//					this is bound in drt and sharing run class separately, we need it only once, so we bind it here once
+					bind(RaptorIntermodalAccessEgress.class).to(EnhancedRaptorIntermodalAccessEgress.class);
 				}
 			});
+		} else {
+			log.fatal("Drt and Sharing are both not activated for this run. The code should not end up in this method. Aborting!");
+			throw new IllegalStateException("");
 		}
 	}
 
