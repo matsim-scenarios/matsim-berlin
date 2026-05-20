@@ -111,7 +111,9 @@ public class OpenBerlinSiemensScenario extends OpenBerlinScenario {
 //		OpenBerlinCarCostScenario.setCarCostInConfig(config, carFixCost, carDistanceCost);
 //		M3: pt fare changes; drt
 		OpenBerlinPtPricingScenario.setDailyMonetaryConstantPtInConfig(config, dailyMonetaryConstantPt);
-		OpenBerlinDrtEstimatorScenario.configureDrtInConfig(config, drtConfig, drtFare, drtIntermodal);
+		if (drtHandling == DrtHandling.DRT_ACTIVE) {
+			OpenBerlinDrtEstimatorScenario.configureDrtInConfig(config, drtConfig, drtFare, drtIntermodal);
+		}
 //		M4: bike speed changes; sharing
 		OpenBerlinBikeSpeedScenario.assertNoTeleportedBikeParamsInConfig(config, maxBikeSpeedKmH);
 
