@@ -21,6 +21,7 @@ import org.matsim.run.policies.autofrei.RunAutofreiPolicy;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Consumer;
@@ -54,11 +55,11 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 	 * Main method to let this class be run on as standalone. It analyzes the parking occupancy of links based on the events of a MATSim run.
 	 * It tracks when vehicles enter and leave traffic to determine when they are parked.
 	 */
-	public static void main(String[] args) {
-		String folder = "/Users/paulh/runs-svn/matsim-berlin/autofrei/10pct-v6.4/berlin-autofrei-v6.4-policy-10pct/";
+	public static void main(String[] args) throws IOException {
+		String folder = "/Users/paulh/runs-svn/matsim-berlin/autofrei/10pct-v6.4/berlin-autofrei-v6.4-policy-10pct_walkPlanFix/";
 		String events = folder + "berlin-v6.4.output_events.xml.zst";
 		String networkPath = folder + "berlin-v6.4.output_network.xml.zst";
-		String output = folder + "parking_occupancy.csv.zst";
+		String output = folder + "ITERS/it.500/berlin-v6.4.500.parking_occupancy.csv.zst";
 
 //		String events = "output/deparking-debug/ITERS/it.9/berlin-v6.4.9.events.xml.zst";
 //		String networkPath = "output/deparking-debug/berlin-v6.4.output_network.xml.zst";
@@ -66,6 +67,7 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 
 		// -1002247009
 
+//		Files.createDirectories(Path.of(output));
 
 		ParkingEventHandler peh = run(events);
 		ParkingAnalyzer.writeMaxRows(Path.of(output), NetworkUtils.readNetwork(networkPath), peh.getOccupancyEntriesByLink());
