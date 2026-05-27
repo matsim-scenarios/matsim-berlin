@@ -70,7 +70,7 @@ public class ParkingAnalyzer implements IterationStartsListener, AfterMobsimList
 //		Files.createDirectories(Path.of(output));
 
 		ParkingEventHandler peh = run(events);
-		ParkingAnalyzer.writeMaxRows(Path.of(output), NetworkUtils.readNetwork(networkPath), peh.getOccupancyEntriesByLink());
+		ParkingAnalyzer.writeAllRows(Path.of(output), NetworkUtils.readNetwork(networkPath), peh.getOccupancyEntriesByLink());
 	}
 
 	// convenience method to run the parking analyzer standalone

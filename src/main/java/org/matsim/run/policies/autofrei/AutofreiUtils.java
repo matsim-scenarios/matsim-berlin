@@ -243,7 +243,7 @@ public class AutofreiUtils {
 		multimodalNetworkCleaner.run(restrictedModes);
 	}
 
-	private static boolean notContainsNode(Node node, ShpOptions.Index index, MathTransform transform) {
+	public static boolean notContainsNode(Node node, ShpOptions.Index index, MathTransform transform) {
 		Coordinate point = MGC.coord2Coordinate(node.getCoord());
 		Coordinate transformedCoordinate = null;
 		try {
