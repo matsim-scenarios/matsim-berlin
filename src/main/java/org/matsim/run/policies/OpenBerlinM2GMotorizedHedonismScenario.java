@@ -40,7 +40,7 @@ import javax.annotation.Nullable;
  * 6) sharing
  * 7) home office
  * 8) road capacity
- * 9) changes in maximum allowed speed for motorized vehicles
+ * 9) price changes in car mode params
  * All necessary configurations will be made in this class.
  */
 public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
@@ -48,10 +48,10 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 //	private static final double REL_ROAD_SPEED_CHANGE = 0.6;
 	private static final double DRT_TYP_WAIT_TIME = 300.;
 	private static final double DRT_WAIT_TIME_STD = 0.3;
-	private static final double DRT_RIDE_TIME_ALPHA = 1.;
+	private static final double DRT_RIDE_TIME_ALPHA = 1.5;
 	private static final double DRT_RIDE_TIME_BETA = 0.;
 	private static final double DRT_RIDE_TIME_STD = 0.3;
-	private static final OpenBerlinDrtEstimatorScenario.DrtIntermodalityHandling DRT_INTERMODALITY_HANDLING = OpenBerlinDrtEstimatorScenario.DrtIntermodalityHandling.DRT_REGULAR_AND_INTERMODAL;
+	private static final OpenBerlinDrtEstimatorScenario.DrtIntermodalityHandling DRT_INTERMODALITY_HANDLING = OpenBerlinDrtEstimatorScenario.DrtIntermodalityHandling.INTERMODAL_DRT_ONLY;
 //	private static final double BETA_MONEY = 0.5;
 	private static final double MAX_BIKE_SPEED = 20.;
 	private static final double SHARING_BASE_FARE = 1.0;
@@ -59,7 +59,7 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 	private static final double SHARING_TIME_FARE = 0.0045;
 	private static final OpenBerlinScooterSharingScenario.EScooterIntermodalityHandling SHARING_INTERMODALITY_HANDLING = OpenBerlinScooterSharingScenario.EScooterIntermodalityHandling.E_SCOOTER_REGULAR_AND_INTERMODAL;
 //	private static final double ADDITIONAL_HOME_OFFICE_PCT = 0.1;
-	private static final double REL_ROAD_CAPACITY_CHANGE = 0.75;
+	private static final double REL_ROAD_CAPACITY_CHANGE = 1.25;
 	private static final double DAILY_MONETARY_CONSTANT_PT = -4.5;
 
 //	necessary input files have to be provided via cmd line option to avoid relative path problems by defining the paths in this class.
@@ -102,7 +102,7 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 //		no changes in config compared to base case
 //		8) road capacity
 //		no changes in config compared to base case
-//		9) changes in maximum allowed speed for motorized vehicles
+//		9) price changes in car mode params
 //		no changes in config compared to base case
 
 		return config;
@@ -142,7 +142,7 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 //		8) road capacity
 //		reduced capacity to 0.075 := more inhabitants in Berlin, so road are more congested
 		OpenBerlinRoadCapacitiesScenario.changeLinkCapacitiesInScenario(scenario, REL_ROAD_CAPACITY_CHANGE, berlinShp);
-//		9) changes in maximum allowed speed for motorized vehicles
+//		9) price changes in car mode params
 //		no changes in scenario compared to base case
 	}
 
@@ -222,7 +222,7 @@ public class OpenBerlinM2GMotorizedHedonismScenario extends OpenBerlinScenario {
 //		no changes in controller compared to base case
 //		8) road capacity
 //		no changes in controller compared to base case
-//		9) changes in maximum allowed speed for motorized vehicles
+//		9) price changes in car mode params
 //		no changes in controller compared to base case
 	}
 }

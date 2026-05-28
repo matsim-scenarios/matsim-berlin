@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
  * 6) sharing
  * 7) home office
  * 8) road capacity
- * 9) changes in maximum allowed speed for motorized vehicles
+ * 9) price changes in car mode params
  * All necessary configurations will be made in this class.
  */
 public class OpenBerlinM2GStagnationScenario extends OpenBerlinScenario {
@@ -49,7 +49,7 @@ public class OpenBerlinM2GStagnationScenario extends OpenBerlinScenario {
 //		no changes in config compared to base case
 //		8) road capacity
 //		no changes in config compared to base case
-//		9) changes in maximum allowed speed for motorized vehicles
+//		9) price changes in car mode params
 //		no changes in config compared to base case
 
 		return config;
@@ -76,7 +76,7 @@ public class OpenBerlinM2GStagnationScenario extends OpenBerlinScenario {
 //		no changes in scenario compared to base case
 //		8) road capacity
 //		no changes in scenario compared to base case
-//		9) changes in maximum allowed speed for motorized vehicles
+//		9) price changes in car mode params
 //		no changes in scenario compared to base case
 	}
 
@@ -101,7 +101,7 @@ public class OpenBerlinM2GStagnationScenario extends OpenBerlinScenario {
 //		no changes in controller compared to base case
 //		8) road capacity
 //		no changes in controller compared to base case
-//		9) changes in maximum allowed speed for motorized vehicles
+//		9) price changes in car mode params
 //		no changes in controller compared to base case
 	}
 }

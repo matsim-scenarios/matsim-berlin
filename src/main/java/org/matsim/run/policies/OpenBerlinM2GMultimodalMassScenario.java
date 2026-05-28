@@ -40,28 +40,30 @@ import javax.annotation.Nullable;
  * 6) sharing
  * 7) home office
  * 8) road capacity
- * 9) changes in maximum allowed speed for motorized vehicles
+ * 9) price changes in car mode params
  * All necessary configurations will be made in this class.
  */
 public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 	private static final double DRT_FARE = -3.0;
-	private static final double REL_ROAD_SPEED_CHANGE = 0.6;
+//	private static final double REL_ROAD_SPEED_CHANGE = 0.6;
 	private static final double DRT_TYP_WAIT_TIME = 300.;
 	private static final double DRT_WAIT_TIME_STD = 0.3;
 	private static final double DRT_RIDE_TIME_ALPHA = 1.5;
 	private static final double DRT_RIDE_TIME_BETA = 360.;
 	private static final double DRT_RIDE_TIME_STD = 0.3;
 	private static final OpenBerlinDrtEstimatorScenario.DrtIntermodalityHandling DRT_INTERMODALITY_HANDLING = OpenBerlinDrtEstimatorScenario.DrtIntermodalityHandling.INTERMODAL_DRT_ONLY;
-	private static final double BETA_MONEY = 0.5;
+//	private static final double BETA_MONEY = 1.0;
 //	this is the "scaled" bike speed after analyzing elasticities of bike speed and bike modal share
-	private static final double MAX_BIKE_SPEED = 20.;
+	private static final double MAX_BIKE_SPEED = 15.;
 	private static final double SHARING_BASE_FARE = 1.0;
 	private static final double SHARING_DISTANCE_FARE = 0.0;
 	private static final double SHARING_TIME_FARE = 0.0045;
 	private static final OpenBerlinScooterSharingScenario.EScooterIntermodalityHandling SHARING_INTERMODALITY_HANDLING = OpenBerlinScooterSharingScenario.EScooterIntermodalityHandling.INTERMODAL_E_SCOOTER_ONLY;
 	private static final double ADDITIONAL_HOME_OFFICE_PCT = 0.1;
-	private static final double REL_ROAD_CAPACITY_CHANGE = 0.75;
+//	private static final double REL_ROAD_CAPACITY_CHANGE = 1.0;
 	private static final double DAILY_MONETARY_CONSTANT_PT = 0.;
+	private static final double CAR_FIX_COST = -5.0;
+	private static final double CAR_DISTANCE_COST = -0.000149 * 1.5;
 
 	//	necessary input files have to be provided via cmd line option to avoid relative path problems by defining the paths in this class.
 	@CommandLine.Option(names = "--drt-config",
@@ -87,7 +89,7 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 		OpenBerlinDrtEstimatorScenario.configureDrtInConfig(config, drtConfig, DRT_FARE, DRT_INTERMODALITY_HANDLING);
 //		4) marginal utility of money
 //		set marginal utility of money to 0.5: everything is/feels less expensive now (default 1.0)
-		OpenBerlinBetaMoneyScenario.setBetaMoneyInConfig(config, BETA_MONEY);
+//		OpenBerlinBetaMoneyScenario.setBetaMoneyInConfig(config, BETA_MONEY);
 //		5) bicycle speed
 //		max bike speed 20km/h due to improved infrastructure
 		OpenBerlinBikeSpeedScenario.assertNoTeleportedBikeParamsInConfig(config, MAX_BIKE_SPEED);
@@ -104,8 +106,8 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 //		no changes in config compared to base case
 //		8) road capacity
 //		no changes in config compared to base case
-//		9) changes in maximum allowed speed for motorized vehicles
-//		no changes in config compared to base case
+//		9) price changes in car mode params
+		OpenBerlinCarCostScenario.setCarCostInConfig(config, CAR_FIX_COST, CAR_DISTANCE_COST);
 
 		return config;
 	}
@@ -124,7 +126,7 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 //		1) vehicle composition
 //		TODO: do this here or completely in post-processing?
 //		2) price change in pt
-//		no changes in controller compared to base case
+//		no changes in scenario compared to base case
 //		3) drt
 //		prepare transit schedule for drt and add dummy drt vehicle
 		OpenBerlinDrtEstimatorScenario.configureDrtInScenario(scenario);
@@ -143,11 +145,9 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 //		+10% more home office agents in Berlin aka stay home agents
 		OpenBerlinHomeOfficeScenario.addHomeOfficeWorkersInScenario(scenario, ADDITIONAL_HOME_OFFICE_PCT);
 //		8) road capacity
-//		reduced capacity to 0.075 := more inhabitants in Berlin, so road are more congested
-		OpenBerlinRoadCapacitiesScenario.changeLinkCapacitiesInScenario(scenario, REL_ROAD_CAPACITY_CHANGE, berlinShp);
-//		9) changes in maximum allowed speed for motorized vehicles
-//		appy relative freespeed change of 0.6 to all Berlin links except motorways
-		OpenBerlinRoadSpeedScenario.applyRelativeSpeedChangeToLinksInScenario(scenario, REL_ROAD_SPEED_CHANGE, berlinShp);
+//		no changes in scenario compared to base case
+//		9) price changes in car mode params
+//		no changes in scenario compared to base case
 	}
 
 	@Override
@@ -225,7 +225,7 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 //		no changes in controller compared to base case
 //		8) road capacity
 //		no changes in controller compared to base case
-//		9) changes in maximum allowed speed for motorized vehicles
+//		9) price changes in car mode params
 //		no changes in controller compared to base case
 	}
 }
