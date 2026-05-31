@@ -1,0 +1,31 @@
+{
+  "title": "MATSim Berlin v6.4 Autofrei",
+  "description": "The MATSim Berlin autofrei scenario provides a transport simulation model for a car-restricted inner ring of Berlin using the Multi-Agent Transport Simulation (MATSim) framework.",
+  "upload_type": "software",
+  "access_right": "open",
+  "license": "AGPL-3.0-only",
+  "creators": [
+    {
+      "name": "Heinrich, Paul",
+      "affiliation": "Technische Universität Berlin",
+      "orcid": "0000-0001-9068-3260"
+    },
+    {
+      "name": "Rybczak, Gregor",
+      "affiliation": "Technische Universität Berlin",
+      "orcid": "0009-0007-6486-6224"
+    },
+    {
+      "name": "Nagel, Kai",
+      "affiliation": "Technische Universität Berlin",
+      "orcid": "0000-0003-2775-6898"
+    }
+  ],
+  "communities": [
+    {
+      "identifier": ""
+    }
+  ],
+  "related_identifiers": [
+  ]
+}
