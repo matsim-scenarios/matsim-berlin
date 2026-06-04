@@ -2,9 +2,9 @@ package org.matsim.run.policies;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.population.*;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.contrib.dvrp.run.DvrpModes;
 import org.matsim.contrib.dvrp.run.MultiModals;
@@ -32,23 +32,23 @@ public final class MobilityToGridScenariosUtils {
 
 	private MobilityToGridScenariosUtils() {}
 
-	public static void addEngineInformationToVehicleTypes(Scenario scenario, String carFuelType) {
+	public static void addEngineInformationToVehicleTypes(Scenario scenario, String carFuelType, HbefaVehicleCategory carVehicleCategory, Map<String, HbefaVehicleCategory> commercialVehicleCategories) {
 		for (VehicleType type : scenario.getVehicles().getVehicleTypes().values()) {
 			EngineInformation engineInformation = type.getEngineInformation();
 
-//				only set engine information if none are present
+//			set engine information if none are present
 			if (engineInformation.getAttributes().isEmpty()) {
 				switch (type.getId().toString()) {
 //						all other vehicle types (which are not listed here) already have engine information assigned in the input vehicle types file
 //						berlin-v6.4.vehicleTypes.xml in same dir as config.
-//						for hbefa 4.1 (which we are using here) diesel, petrol etc. is saved as "EmissionConcept" whereas it HBEFA 4.2 it is saved as technology???
+//						for hbefa 4.1 (which we are using here) diesel, petrol etc. is saved as "HbefaTechnology"
 					case TransportMode.car -> {
-						VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.PASSENGER_CAR.toString());
-						VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
+						VehicleUtils.setHbefaVehicleCategory(engineInformation, carVehicleCategory.toString());
+						VehicleUtils.setHbefaTechnology(engineInformation, carFuelType);
 						VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
 //							based on Kraftfahrzeugbestand germany 1.1.2025 ~60% petrol and 28% diesel, so we take petrol here.
 //							source: https://www.kba.de/DE/Presse/Pressemitteilungen/Fahrzeugbestand/2025/pm10_fz_bestand_pm_komplett.html
-						VehicleUtils.setHbefaEmissionsConcept(engineInformation, carFuelType);
+						VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
 					}
 					case TransportMode.ride -> {
 //							ignore ride, the mode is routed on network, but then teleported
@@ -65,13 +65,34 @@ public final class MobilityToGridScenariosUtils {
 						VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
 					}
 					case "freight", TransportMode.truck -> {
-						VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.HEAVY_GOODS_VEHICLE.toString());
+						VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
 						VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
 						VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
 						VehicleUtils.setHbefaEmissionsConcept(engineInformation, "diesel");
 					}
 					default -> throw new IllegalArgumentException("does not know how to handle vehicleType " + type.getId().toString());
 				}
+			} else {
+//				for all veh types with engine info already present, we need to switch emissionConcept and technology.
+//				The emission analysis relies on technology and not emission concept!!!
+				if (!VehicleUtils.getHbefaEmissionsConcept(engineInformation).equals(AVERAGE) &&
+					VehicleUtils.getHbefaTechnology(engineInformation).equals(AVERAGE)) {
+					String isEmissionConceptButShouldBeTechnology = VehicleUtils.getHbefaEmissionsConcept(engineInformation);
+					String isTechnologyButShouldBeEmissionConcept = VehicleUtils.getHbefaTechnology(engineInformation);
+
+					VehicleUtils.setHbefaEmissionsConcept(engineInformation, isTechnologyButShouldBeEmissionConcept);
+					VehicleUtils.setHbefaTechnology(engineInformation, isEmissionConceptButShouldBeTechnology);
+				}
+			}
+		}
+
+		//			this is necessary to switch off emissions for commercial vehicle types
+		for (Map.Entry<String, HbefaVehicleCategory> entry : commercialVehicleCategories.entrySet()) {
+			Id<VehicleType> vehTypeId = Id.create(entry.getKey(), VehicleType.class);
+
+			if (scenario.getVehicles().getVehicleTypes().containsKey(vehTypeId)) {
+				VehicleType vehicleType = scenario.getVehicles().getVehicleTypes().get(vehTypeId);
+				VehicleUtils.setHbefaVehicleCategory(vehicleType.getEngineInformation(), entry.getValue().toString());
 			}
 		}
 //			ignore all pt veh types
@@ -107,7 +128,7 @@ public final class MobilityToGridScenariosUtils {
 	}
 
 	/**
-	 * Enum for setting HBEFA 4.1 emission concept = fuel type for a vehicle type.
+	 * Enum for setting HBEFA 4.1 technology = fuel type for a vehicle type.
 	 */
-	public enum Hbefa41EmissionConcept {PETROL_4S, DIESEL, ELECTRICITY}
+	public enum Hbefa41Technology {PETROL_4S, DIESEL, ELECTRICITY}
 }

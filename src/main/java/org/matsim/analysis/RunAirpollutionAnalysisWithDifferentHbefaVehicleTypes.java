@@ -8,6 +8,7 @@ import org.matsim.application.ApplicationUtils;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.options.ShpOptions;
 import org.matsim.contrib.emissions.HbefaRoadTypeMapping;
+import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -27,8 +28,11 @@ import java.io.InterruptedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import static org.matsim.contrib.emissions.HbefaVehicleCategory.PASSENGER_CAR;
 import static org.matsim.run.policies.MobilityToGridScenariosUtils.addEngineInformationToVehicleTypes;
 
 @CommandLine.Command(name = "air-pollution-hbefa-types", description = "Run AirPollutionAnalysis with different combinations of HBEFA vehicle types.")
@@ -41,10 +45,17 @@ public class RunAirpollutionAnalysisWithDifferentHbefaVehicleTypes implements MA
 
 	@CommandLine.Parameters(arity = "1..*", description = "Path to run output directories for which air pollution analysis should be run.")
 	private List<Path> inputPaths;
-	@CommandLine.Option(names = "--private-car-emission-concept", description = "Set HBEFA 4.1 emission concept aka fuel type for car vehicle type.")
-	MobilityToGridScenariosUtils.Hbefa41EmissionConcept carEmissionConcept = MobilityToGridScenariosUtils.Hbefa41EmissionConcept.PETROL_4S;
+	@CommandLine.Option(names = "--private-car-technology", description = "Set HBEFA 4.1 technology aka fuel type for car vehicle type.")
+	MobilityToGridScenariosUtils.Hbefa41Technology carTechnology = MobilityToGridScenariosUtils.Hbefa41Technology.PETROL_4S;
+	@CommandLine.Option(names = "--private-car-vehicle-category", description = "Set HBEFA 4.1 vehicle category aka fuel type for car vehicle type." +
+		"Can be used to switch off emission calc for car by using NON_HBEFA_VEHICLE.")
+	HbefaVehicleCategory carVehicleCategory = PASSENGER_CAR;
 	@CommandLine.Mixin
 	private final ShpOptions shp = new ShpOptions();
+	@CommandLine.Option(names = "--commercial-hbefa-vehicle-categories", split = ",", description = "hbefa vehicle categories for commercial vehicles.")
+	Map<String, HbefaVehicleCategory> commercialVehicleCategories = new HashMap<>();
+	@CommandLine.Option(names = "--context", description = "Set dashboard/analysis context to avoid overwriting analysis files.")
+	private String context = "emissions";
 
 	public static void main(String[] args) {
 		new RunAirpollutionAnalysisWithDifferentHbefaVehicleTypes().execute(args);
@@ -52,10 +63,12 @@ public class RunAirpollutionAnalysisWithDifferentHbefaVehicleTypes implements MA
 
 	@Override
 	public Integer call() throws Exception {
-//		we only need to run 100% BEV and then have to interpolate between that and the required
+//		for the m2g combined scenarios we only need to run 100% BEV / 100% H2 and then have to interpolate between that and the required
 //		we need:
-//		1) 90% BEV, "normal", 5% H2
-//		2) 60% BEV, 1% "normal", 20% synthetische Kraftstoffe, 19% H2
+//		1) base case: 10% BEV, 90% petrol
+//		2) multimodal mass 90% BEV, 5% petrol, 5% H2
+//		3) motorized hedonism 60% BEV, 1% petrol, 20% synthetic, 19% H2
+//		4) stagnation 10% BEV, 90% petrol
 
 		for (Path runDirectory : inputPaths) {
 			log.info("Running on {}", runDirectory);
@@ -72,7 +85,7 @@ public class RunAirpollutionAnalysisWithDifferentHbefaVehicleTypes implements MA
 			//skip default dashboards (we only want to run AirPollutionAnalysis and create the corresponding dashboard).
 			simwrapperCfg.defaultDashboards = SimWrapperConfigGroup.Mode.disabled;
 
-			sw.addDashboard(Dashboard.customize(new EmissionsDashboard(config.global().getCoordinateSystem())).context("emissions"));
+			sw.addDashboard(Dashboard.customize(new EmissionsDashboard(config.global().getCoordinateSystem())).context(context));
 
 //			configure emissions config group
 			OpenBerlinScenario.configureEmissionsConfigGroup(config);
@@ -96,7 +109,7 @@ public class RunAirpollutionAnalysisWithDifferentHbefaVehicleTypes implements MA
 
 			String carFuelType = getCarFuelType();
 
-			addEngineInformationToVehicleTypes(scenario, carFuelType);
+			addEngineInformationToVehicleTypes(scenario, carFuelType, carVehicleCategory, commercialVehicleCategories);
 
 //			write outputs with adapted files.
 //			original output files need to be overwritten as AirPollutionAnalysis searches for "config.xml".
@@ -154,14 +167,14 @@ public class RunAirpollutionAnalysisWithDifferentHbefaVehicleTypes implements MA
 	@NotNull
 	private String getCarFuelType() {
 		String carFuelType;
-		if (carEmissionConcept == MobilityToGridScenariosUtils.Hbefa41EmissionConcept.PETROL_4S) {
+		if (carTechnology == MobilityToGridScenariosUtils.Hbefa41Technology.PETROL_4S) {
 			carFuelType = "petrol (4S)";
-		} else if (carEmissionConcept == MobilityToGridScenariosUtils.Hbefa41EmissionConcept.DIESEL) {
+		} else if (carTechnology == MobilityToGridScenariosUtils.Hbefa41Technology.DIESEL) {
 			carFuelType = "diesel";
-		} else if (carEmissionConcept == MobilityToGridScenariosUtils.Hbefa41EmissionConcept.ELECTRICITY) {
+		} else if (carTechnology == MobilityToGridScenariosUtils.Hbefa41Technology.ELECTRICITY) {
 			carFuelType = "electricity";
 		} else {
-			log.error("Invalid HBEFA 4.1 emission concept: {}.", carEmissionConcept);
+			log.error("Invalid HBEFA 4.1 emission concept: {}.", carTechnology);
 			throw new IllegalStateException("");
 		}
 		return carFuelType;

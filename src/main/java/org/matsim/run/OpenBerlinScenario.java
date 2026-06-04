@@ -14,6 +14,7 @@ import org.matsim.contrib.bicycle.BicycleLinkSpeedCalculator;
 import org.matsim.contrib.bicycle.BicycleLinkSpeedCalculatorDefaultImpl;
 import org.matsim.contrib.bicycle.BicycleTravelTime;
 import org.matsim.contrib.emissions.HbefaRoadTypeMapping;
+import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.vsp.scoring.RideScoringParamsFromCarParams;
@@ -37,6 +38,7 @@ import org.matsim.simwrapper.SimWrapperModule;
 import picocli.CommandLine;
 import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
+import java.util.HashMap;
 import java.util.List;
 
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true, showDefaultValues = true)
@@ -170,7 +172,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 		HbefaRoadTypeMapping roadTypeMapping = OsmHbefaMapping.build();
 		roadTypeMapping.addHbefaMappings(scenario.getNetwork());
 
-		MobilityToGridScenariosUtils.addEngineInformationToVehicleTypes(scenario, "petrol (4S)");
+		MobilityToGridScenariosUtils.addEngineInformationToVehicleTypes(scenario, "petrol (4S)", HbefaVehicleCategory.PASSENGER_CAR, new HashMap<>());
 	}
 
 	@Override
