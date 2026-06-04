@@ -56,11 +56,11 @@ public class MergePlans {
 
 		for (Person person: scenario1.getPopulation().getPersons().values()) {
 			population.addPerson(person);
-			population.getPersons().get(person.getId()).getAttributes().putAttribute(scenario3.getConfig().plans().getSubpopulationAttributeName(), "person");
+			population.getPersons().get(person.getId()).getAttributes().putAttribute("subpopulation", "person");
 		}
 		for (Person person : scenario2.getPopulation().getPersons().values()) {
 			population.addPerson(person);
-			population.getPersons().get(person.getId()).getAttributes().putAttribute(scenario3.getConfig().plans().getSubpopulationAttributeName(), "freight");
+			population.getPersons().get(person.getId()).getAttributes().putAttribute("subpopulation", "freight");
 		}
 
 		PopulationWriter writer = new PopulationWriter(population);

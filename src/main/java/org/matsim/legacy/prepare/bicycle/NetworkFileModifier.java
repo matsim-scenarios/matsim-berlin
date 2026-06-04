@@ -38,7 +38,7 @@ public class NetworkFileModifier {
         // Add bicycle infrastructure speed factor for all links
         scenario.getNetwork().getLinks().values().parallelStream()
                 .filter(link -> link.getAllowedModes().contains(BICYCLE))
-                .forEach(link -> link.getAttributes().putAttribute(BicycleUtils.BICYCLE_INFRASTRUCTURE_SPEED_FACTOR, 1.0));
+                .forEach(link -> link.getAttributes().putAttribute("bicycleInfrastructureSpeedFactor", 1.0));
 
         NetworkWriter networkWriter = new NetworkWriter(scenario.getNetwork());
         networkWriter.write(outputNetworkFile);

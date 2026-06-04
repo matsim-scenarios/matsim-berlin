@@ -41,7 +41,7 @@ public final class BerlinScoringFunctionFactory implements ScoringFunctionFactor
 
 		SumScoringFunction sumScoringFunction = new SumScoringFunction();
 		sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(parameters));
-		sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(parameters, this.network, config.transit().getTransitModes()));
+		sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(parameters, config.scoring().getMarginalUtilityOfMoney(), config.transit().getTransitModes()));
 		sumScoringFunction.addScoringFunction(new PseudoRandomTripScoring(person.getId(), mmi, pseudoRNG));
 		sumScoringFunction.addScoringFunction(new TransitTripScoring(parameters, ptRouteToMode));
 		sumScoringFunction.addScoringFunction(new CharyparNagelMoneyScoring(parameters));
