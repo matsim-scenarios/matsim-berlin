@@ -207,6 +207,11 @@ public class OpenBerlinScenario extends MATSimApplication {
 					default -> throw new IllegalArgumentException("does not know how to handle vehicleType " + type.getId().toString());
 				}
 			} else {
+				if (type.getId().toString().equals(TransportMode.bike) &&
+					VehicleUtils.getHbefaEmissionsConcept(engineInformation) == null) {
+//					bike has no emission concept!
+					VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
+				}
 //				for all veh types with engine info already present, we need to switch emissionConcept and technology.
 //				The emission analysis relies on technology and not emission concept!!!
 				if (!VehicleUtils.getHbefaEmissionsConcept(engineInformation).equals(AVERAGE) &&
