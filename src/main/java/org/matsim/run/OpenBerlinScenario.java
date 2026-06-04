@@ -14,16 +14,14 @@ import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.application.MATSimApplication;
-import org.matsim.contrib.bicycle.BicycleConfigGroup;
-import org.matsim.contrib.bicycle.BicycleLinkSpeedCalculator;
-import org.matsim.contrib.bicycle.BicycleLinkSpeedCalculatorDefaultImpl;
-import org.matsim.contrib.bicycle.BicycleTravelTime;
+import org.matsim.contrib.bicycle.*;
 import org.matsim.contrib.emissions.HbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.groups.GlobalConfigGroup;
 import org.matsim.core.config.groups.QSimConfigGroup;
 import org.matsim.core.config.groups.ReplanningConfigGroup;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
@@ -144,6 +142,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		bicycleConfigGroup.setBicycleMode(TransportMode.bike);
 
+		GlobalConfigGroup globalConfigGroup = ConfigUtils.addOrGetModule(config, GlobalConfigGroup.class);
+		globalConfigGroup.setRelativeToleranceForSampleSizeFactors(100.);
+
 		return config;
 	}
 
@@ -236,6 +237,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 		controler.addOverridingModule(new SimWrapperModule());
 		controler.addOverridingModule(new TravelTimeBinding());
 		controler.addOverridingModule(new QsimTimingModule());
+		controler.addOverridingModule(new BicycleModule());
 
 		// AdvancedScoring can be used for experiments or calibration, but is not needed to run the calibrated scenario.
 		if (ConfigUtils.hasModule(controler.getConfig(), AdvancedScoringConfigGroup.class)) {
