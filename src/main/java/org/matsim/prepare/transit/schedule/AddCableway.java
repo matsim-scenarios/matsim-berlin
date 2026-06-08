@@ -161,6 +161,7 @@ public class AddCableway {
                 networkRoute,
                 stops,
                 "");
+        transitRoute.setTransportMode("cableway");
 
         for (int i = 0; i * 9 < 30*60*60; i++) {
             Departure departure = scenario.getTransitSchedule().getFactory().createDeparture(Id.create("cableway_2_" + i, Departure.class), i * 9);
@@ -193,7 +194,7 @@ public class AddCableway {
                 scenario.getNetwork().getNodes().get(Id.createNodeId(fromNodeId)),
                 scenario.getNetwork().getNodes().get(Id.createNodeId(toNodeId)));
         link.setLength(length);
-        link.getFreespeed(speed);
+        link.setFreespeed(speed);
         link.setCapacity(100000.0);
         link.setAllowedModes(Set.of("cableway"));
         scenario.getNetwork().addLink(link);
