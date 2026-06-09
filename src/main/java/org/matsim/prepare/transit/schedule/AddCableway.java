@@ -99,7 +99,7 @@ public class AddCableway {
                 Id.create("Cableway1", TransitRoute.class),
                 networkRoute,
                 stops,
-                "");
+                "cableway");
 
         for (int i = 0; i < 30*60*60; i++) {
             Departure departure = scenario.getTransitSchedule().getFactory().createDeparture(Id.create("cableway_1_" + i, Departure.class), i * 9);
@@ -160,8 +160,7 @@ public class AddCableway {
                 Id.create("Cableway2", TransitRoute.class),
                 networkRoute,
                 stops,
-                "");
-        transitRoute.setTransportMode("cableway");
+                "cableway");
 
         for (int i = 0; i * 9 < 30*60*60; i++) {
             Departure departure = scenario.getTransitSchedule().getFactory().createDeparture(Id.create("cableway_2_" + i, Departure.class), i * 9);
