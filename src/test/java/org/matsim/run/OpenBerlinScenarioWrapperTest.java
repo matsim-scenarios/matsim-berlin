@@ -17,7 +17,7 @@ public class OpenBerlinScenarioWrapperTest {
 	public void pct1() {
 
 		int code = MATSimApplication.execute(OpenBerlinScenario.class,
-			"--1pct",
+			"--config", String.format("input/v%s/berlin-v%s-1pct.config.xml", OpenBerlinScenario.VERSION, OpenBerlinScenario.VERSION),
 			"--output", utils.getOutputDirectory(),
 			"--iterations", "2",
 			"--config:qsim.numberOfThreads", "2",

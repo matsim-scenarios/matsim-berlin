@@ -481,6 +481,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 	@Override
 	protected List<MATSimAppCommand> preparePostProcessing(Path outputFolder, String runId) {
+		// this is actually really bad, because we still have the controller and scenario in memory
 		return List.of(
 			new CleanPopulation().withArgs(
 				"--plans", outputFolder.resolve(runId + ".output_plans.xml.gz").toString(),

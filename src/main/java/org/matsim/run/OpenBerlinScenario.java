@@ -1,7 +1,7 @@
 package org.matsim.run;
 
-import com.google.inject.Key;
-import com.google.inject.name.Names;
+import java.util.List;
+
 import org.matsim.analysis.QsimTimingModule;
 import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
 import org.matsim.api.core.v01.Scenario;
@@ -10,7 +10,6 @@ import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.application.MATSimApplication;
-import org.matsim.application.options.SampleOptions;
 import org.matsim.contrib.bicycle.BicycleConfigGroup;
 import org.matsim.contrib.bicycle.BicycleLinkSpeedCalculator;
 import org.matsim.contrib.bicycle.BicycleLinkSpeedCalculatorDefaultImpl;
@@ -34,14 +33,16 @@ import org.matsim.run.scoring.experimental.AdvancedScoringConfigGroup;
 import org.matsim.run.scoring.experimental.AdvancedScoringModule;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
-import picocli.CommandLine;
 
-import java.util.List;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
+
+import picocli.CommandLine;
 
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true, showDefaultValues = true)
 public class OpenBerlinScenario extends MATSimApplication {
 
-	public static final String VERSION = "7.0";
+	public static final String VERSION = "7.1";
 	public static final String CRS = "EPSG:25832";
 
 	//	To decrypt hbefa input files set MATSIM_DECRYPTION_PASSWORD as environment variable. ask VSP for access.
@@ -51,17 +52,10 @@ public class OpenBerlinScenario extends MATSimApplication {
 	private static final String HBEFA_FILE_COLD_AVERAGE = HBEFA_2020_PATH + "r9230ru2n209r30u2fn0c9rn20n2rujkhkjhoewt84202.enc" ;
 	private static final String HBEFA_FILE_WARM_AVERAGE = HBEFA_2020_PATH + "7eff8f308633df1b8ac4d06d05180dd0c5fdf577.enc";
 
-	@CommandLine.Mixin
-	private final SampleOptions sample = new SampleOptions(10, 25, 3, 1);
-
 	@CommandLine.Option(names = "--plan-selector",
 		description = "Plan selector to use.",
 		defaultValue = DefaultPlanStrategiesModule.DefaultSelector.BestScore)
 	private String planSelector;
-
-	public OpenBerlinScenario() {
-		super(String.format("input/v%s/berlin-v%s.config.xml", VERSION, VERSION));
-	}
 
 	public static void main(String[] args) {
 		MATSimApplication.execute(OpenBerlinScenario.class, args);
@@ -71,21 +65,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 	protected Config prepareConfig(Config config) {
 
 		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
-
-		if (sample.isSet()) {
-			double sampleSize = sample.getSample();
-
-			config.qsim().setFlowCapFactor(sampleSize);
-			config.qsim().setStorageCapFactor(sampleSize);
-
-			// Counts can be scaled with sample size
-			config.counts().setCountsScaleFactor(sampleSize);
-			sw.setSampleSize(sampleSize);
-
-			config.controller().setRunId(sample.adjustName(config.controller().getRunId()));
-			config.controller().setOutputDirectory(sample.adjustName(config.controller().getOutputDirectory()));
-			config.plans().setInputFile(sample.adjustName(config.plans().getInputFile()));
-		}
+		sw.setSampleSize(config.qsim().getFlowCapFactor());
 
 		config.qsim().setUsingTravelTimeCheckInTeleportation(true);
 
