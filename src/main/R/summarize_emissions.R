@@ -51,40 +51,44 @@ drt_legs_path <- list.files(path=paste0(run_dir_fixed, "/"), pattern="*output_dr
 # dummy var which always is 1
 freight_pct <- 1
 
-safe_read_pollutants_csv <- function(path) {
+safe_read_pollutants_csv <- function(path, name) {
   if (length(path) == 0 || is.null(path) || is.na(path)) {
-    message(paste("No data found for drive train type with path: ", path, "Will use dummy dataframe with 0 values"))
+    message("")
+    message(paste("No data found for drive train type with path: ", path, "Will use dummy dataframe with 0 values for dataframe", name))
+    message("")
     return(tibble(Pollutant = character(), kg = numeric(), kg_weighted = numeric()))
   }
   read_csv(path) %>%
     mutate(kg = as.numeric(kg))
 }
 
-safe_read_drt_legs_csv <- function(path) {
+safe_read_drt_legs_csv <- function(path, name) {
   if (length(path) == 0 || is.null(path) || is.na(path)) {
-    message(paste("No data found for drt legs with path: ", path, "Will use dummy dataframe with 0 values"))
+    message("")
+    message(paste("No data found for drt legs with path: ", "Will use dummy dataframe with 0 values for dataframe", name))
+    message("")
     return(tibble(requestId = character(), travelDistance_m = numeric()))
   }
   read_csv2(path)
 }
 
 # read data
-car_only_petrol <- safe_read_pollutants_csv(car_only_petrol_path) %>%
+car_only_petrol <- safe_read_pollutants_csv(car_only_petrol_path, "car_only_petrol") %>%
   rowwise() %>% 
   mutate(kg_weighted = kg * petrol_pct)
-car_only_bev <- safe_read_pollutants_csv(car_only_bev_path) %>%
+car_only_bev <- safe_read_pollutants_csv(car_only_bev_path, "car_only_bev") %>%
   mutate(kg = as.numeric(kg)) %>% 
   rowwise() %>% 
   mutate(kg_weighted = kg * bev_pct)
-car_only_h2 <- safe_read_pollutants_csv(car_only_h2_path) %>%
+car_only_h2 <- safe_read_pollutants_csv(car_only_h2_path, "car_only_h2") %>%
   mutate(kg = as.numeric(kg)) %>% 
   rowwise() %>% 
   mutate(kg_weighted = kg * h2_pct)
-freight_only <- safe_read_pollutants_csv(freight_only_path) %>%
+freight_only <- safe_read_pollutants_csv(freight_only_path, "freight_only") %>%
   mutate(kg = as.numeric(kg)) %>%
   rowwise() %>% 
   mutate(kg_weighted = kg * freight_pct)
-drt_legs <- safe_read_drt_legs_csv(drt_legs_path)
+drt_legs <- safe_read_drt_legs_csv(drt_legs_path, "drt_legs")
 
 # synthetic is same as petrol
 car_only_synthetic <- car_only_petrol %>%
