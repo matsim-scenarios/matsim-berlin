@@ -43,7 +43,6 @@ print(paste("Running analysis on run dir", getwd()))
 
 car_only_petrol_path <- list.files(path=paste0(run_dir_fixed, "/analysis/emissions-emissions-private-car-petrol-else-none/"), pattern="*emissions_total.csv", full.names = TRUE)
 car_only_bev_path <- list.files(path=paste0(run_dir_fixed, "/analysis/emissions-emissions-private-car-bev-else-none/"), pattern="*emissions_total.csv", full.names = TRUE)
-car_only_h2_path <- list.files(path=paste0(run_dir_fixed, "/analysis/emissions-emissions-private-car-h2-else-none/"), pattern="*emissions_total.csv", full.names = TRUE)
 freight_only_path <- list.files(path=paste0(run_dir_fixed, "/analysis/emissions-emissions-freight-only/"), pattern="*emissions_total.csv", full.names = TRUE)
 drt_legs_path <- list.files(path=paste0(run_dir_fixed, "/"), pattern="*output_drt_legs_drt.csv", full.names = TRUE)
 
@@ -80,10 +79,6 @@ car_only_bev <- safe_read_pollutants_csv(car_only_bev_path, "car_only_bev") %>%
   mutate(kg = as.numeric(kg)) %>% 
   rowwise() %>% 
   mutate(kg_weighted = kg * bev_pct)
-car_only_h2 <- safe_read_pollutants_csv(car_only_h2_path, "car_only_h2") %>%
-  mutate(kg = as.numeric(kg)) %>% 
-  rowwise() %>% 
-  mutate(kg_weighted = kg * h2_pct)
 freight_only <- safe_read_pollutants_csv(freight_only_path, "freight_only") %>%
   mutate(kg = as.numeric(kg)) %>%
   rowwise() %>% 
@@ -94,6 +89,11 @@ drt_legs <- safe_read_drt_legs_csv(drt_legs_path, "drt_legs")
 car_only_synthetic <- car_only_petrol %>%
   rowwise() %>% 
   mutate(kg_weighted = kg * synthetic_pct)
+
+# h2 is same as bev
+car_only_h2 <- car_only_bev %>%
+  rowwise() %>%
+  mutate(kg_weighted = kg * h2_pct)
   
 
 sum_pct <- petrol_pct + bev_pct + synthetic_pct + h2_pct
