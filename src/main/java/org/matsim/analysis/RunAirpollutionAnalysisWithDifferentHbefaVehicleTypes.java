@@ -74,6 +74,40 @@ public class RunAirpollutionAnalysisWithDifferentHbefaVehicleTypes implements MA
 			log.info("Running on {}", runDirectory);
 
 			String configPath = ApplicationUtils.matchInput("config.xml", runDirectory).toString();
+			String networkPath = ApplicationUtils.matchInput("output_network.xml.gz", runDirectory).toString();
+			String vehiclesPath = ApplicationUtils.matchInput("output_vehicles.xml.gz", runDirectory).toString();
+			String transitVehiclesPath = ApplicationUtils.matchInput("output_transitVehicles.xml.gz", runDirectory).toString();
+			String populationPath = ApplicationUtils.matchInput("output_plans.xml.gz", runDirectory).toString();
+
+			Path tmp = null;
+			Path drtVehiclesPath = null;
+			Path tmpDrtVehiclesPath = null;
+
+			try {
+				tmp = Path.of(runDirectory + "/emissions-tmp");
+				if (!Files.exists(tmp)) {
+					Files.createDirectory(tmp);
+				}
+
+				drtVehiclesPath = ApplicationUtils.matchInput("drt_vehicles.xml", runDirectory);
+				tmpDrtVehiclesPath = Path.of(tmp + "/drt_vehicles.xml.gz");
+				Files.move(drtVehiclesPath, tmpDrtVehiclesPath);
+			} catch (IllegalArgumentException e) {
+				log.warn("No file with pattern drt_vehicles.xml found. Catched IllegalArgumentException.");
+			}
+
+			//			original output files need to be overwritten as AirPollutionAnalysis searches for "config.xml".
+//			We will copy the original output files back to their old file names later. very clunky, but I see no alternative, if we want to keep our run output consistent.
+//			copy old files to separate files
+			Path beforeEmissionsConfigPath = getUniqueTargetPath(Path.of(configPath.split(XML)[0] + BEFORE));
+			Path beforeEmissionsNetworkPath = getUniqueTargetPath(Path.of(networkPath.split(XML)[0] + BEFORE + ".gz"));
+			Path beforeEmissionsVehiclesPath = getUniqueTargetPath(Path.of(vehiclesPath.split(XML)[0] + BEFORE + ".gz"));
+			Path beforeEmissionsTransitVehiclesPath = getUniqueTargetPath(Path.of(transitVehiclesPath.split(XML)[0] + BEFORE + ".gz"));
+			Files.copy(Path.of(configPath), beforeEmissionsConfigPath);
+			Files.copy(Path.of(networkPath), beforeEmissionsNetworkPath);
+			Files.copy(Path.of(vehiclesPath), beforeEmissionsVehiclesPath);
+			Files.copy(Path.of(transitVehiclesPath), beforeEmissionsTransitVehiclesPath);
+
 			Config config = ConfigUtils.loadConfig(configPath);
 			SimWrapper sw = SimWrapper.create(config);
 
@@ -89,11 +123,6 @@ public class RunAirpollutionAnalysisWithDifferentHbefaVehicleTypes implements MA
 
 //			configure emissions config group
 			OpenBerlinScenario.configureEmissionsConfigGroup(config);
-
-			String networkPath = ApplicationUtils.matchInput("output_network.xml.gz", runDirectory).toString();
-			String vehiclesPath = ApplicationUtils.matchInput("output_vehicles.xml.gz", runDirectory).toString();
-			String transitVehiclesPath = ApplicationUtils.matchInput("output_transitVehicles.xml.gz", runDirectory).toString();
-			String populationPath = ApplicationUtils.matchInput("output_plans.xml.gz", runDirectory).toString();
 
 			config.network().setInputFile(networkPath);
 			config.vehicles().setVehiclesFile(vehiclesPath);
@@ -112,18 +141,6 @@ public class RunAirpollutionAnalysisWithDifferentHbefaVehicleTypes implements MA
 			addEngineInformationToVehicleTypes(scenario, carFuelType, carVehicleCategory, commercialVehicleCategories);
 
 //			write outputs with adapted files.
-//			original output files need to be overwritten as AirPollutionAnalysis searches for "config.xml".
-//			We will copy the original output files back to their old file names later. very clunky, but I see no alternative, if we want to keep our run output consistent.
-//			copy old files to separate files
-			Path beforeEmissionsConfigPath = getUniqueTargetPath(Path.of(configPath.split(XML)[0] + BEFORE));
-			Path beforeEmissionsNetworkPath = getUniqueTargetPath(Path.of(networkPath.split(XML)[0] + BEFORE + ".gz"));
-			Path beforeEmissionsVehiclesPath = getUniqueTargetPath(Path.of(vehiclesPath.split(XML)[0] + BEFORE + ".gz"));
-			Path beforeEmissionsTransitVehiclesPath = getUniqueTargetPath(Path.of(transitVehiclesPath.split(XML)[0] + BEFORE + ".gz"));
-			Files.copy(Path.of(configPath), beforeEmissionsConfigPath);
-			Files.copy(Path.of(networkPath), beforeEmissionsNetworkPath);
-			Files.copy(Path.of(vehiclesPath), beforeEmissionsVehiclesPath);
-			Files.copy(Path.of(transitVehiclesPath), beforeEmissionsTransitVehiclesPath);
-
 //			now we can write the prepared output to the usual output file paths.
 			ConfigUtils.writeConfig(config, configPath);
 			NetworkUtils.writeNetwork(scenario.getNetwork(), networkPath);
@@ -159,6 +176,13 @@ public class RunAirpollutionAnalysisWithDifferentHbefaVehicleTypes implements MA
 			Files.delete(beforeEmissionsNetworkPath);
 			Files.delete(beforeEmissionsVehiclesPath);
 			Files.delete(beforeEmissionsTransitVehiclesPath);
+
+//			also move the drt vehicles file back to its original place if available
+//			delete tmp dir
+			if (tmp != null && drtVehiclesPath != null && tmpDrtVehiclesPath != null) {
+				Files.move(tmpDrtVehiclesPath, drtVehiclesPath);
+				Files.delete(tmp);
+			}
 		}
 
 		return 0;
