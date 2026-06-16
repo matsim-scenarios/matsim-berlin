@@ -192,18 +192,19 @@ public class OpenBerlinDrtScenario extends OpenBerlinScenario {
 		new MultimodalNetworkCleaner(scenario.getNetwork()).run(modes);
 	}
 
-	@Override
-	protected List<ConfigGroup> getCustomModules() {
-		List<ConfigGroup> customModules = super.getCustomModules();
-		customModules.addAll(Lists.newArrayList(
-			new BerlinExperimentalConfigGroup(),
-			new DvrpConfigGroup(),
-			new MultiModeDrtConfigGroup(),
-			new SwissRailRaptorConfigGroup(),
-			new IntermodalTripFareCompensatorsConfigGroup(),
-			new PtIntermodalRoutingModesConfigGroup()));
-		return customModules;
-	}
+	// this no longer exists. Not sure how to fix this here, probably in prepareConfig?? //DR20260616
+//	@Override
+//	protected List<ConfigGroup> getCustomModules() {
+//		List<ConfigGroup> customModules = super.getCustomModules();
+//		customModules.addAll(Lists.newArrayList(
+//			new BerlinExperimentalConfigGroup(),
+//			new DvrpConfigGroup(),
+//			new MultiModeDrtConfigGroup(),
+//			new SwissRailRaptorConfigGroup(),
+//			new IntermodalTripFareCompensatorsConfigGroup(),
+//			new PtIntermodalRoutingModesConfigGroup()));
+//		return customModules;
+//	}
 
 	@Override
 	protected Config prepareConfig(Config config) {

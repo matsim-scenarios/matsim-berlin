@@ -116,7 +116,7 @@ public class ComputePlanChoices implements MATSimAppCommand, PersonAlgorithm {
 		config.controller().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
 
 		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
-		sw.setDefaultDashboards(SimWrapperConfigGroup.Mode.disabled);
+		sw.setDefaultDashboards(SimWrapperConfigGroup.DefaultDashboardsMode.disabled);
 
 		if (timeUtil) {
 			// All utilities except travel time become zero

@@ -58,7 +58,7 @@ public class DTVAnalysis implements MATSimAppCommand {
 		Table dtv;
 		try (BufferedReader reader = IOUtils.getBufferedReader(dtvPath)) {
 			dtv = Table.read().csv(CsvReadOptions.builder(reader)
-				.columnTypesPartial(Map.of("from_link", ColumnType.TEXT, "to_link", ColumnType.TEXT))
+				.columnTypesPartial(Map.of("from_link", ColumnType.STRING, "to_link", ColumnType.STRING))
 				.build());
 		}
 
@@ -108,7 +108,7 @@ public class DTVAnalysis implements MATSimAppCommand {
 	private Table createSimDtvTable(Table dtv, Network network, VolumesAnalyzer volume) {
 
 		dtv.addColumns(
-			TextColumn.create("link_id"),
+			StringColumn.create("link_id"),
 			StringColumn.create("road_type"),
 			DoubleColumn.create("simulated_traffic_volume"),
 			DoubleColumn.create("diff"),
@@ -135,8 +135,8 @@ public class DTVAnalysis implements MATSimAppCommand {
 				vol += sum(volume.getVolumesForLink(linkId)) * sample.getUpscaleFactor();
 			}
 
-			row.setText("link_id", linkId.toString());
-			row.setText("road_type", NetworkUtils.getHighwayType(network.getLinks().get(linkId)));
+			row.setString("link_id", linkId.toString());
+			row.setString("road_type", NetworkUtils.getHighwayType(network.getLinks().get(linkId)));
 			row.setDouble("diff", vol - row.getInt("vol"));
 			row.setDouble("simulated_traffic_volume", vol);
 			row.setDouble("abs_error", Math.abs(vol - row.getInt("vol")));
