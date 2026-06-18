@@ -155,7 +155,7 @@ combined_pollutants_w_drt <- add_drt_to_pollutant(combined_pollutants_w_drt, "PM
 combined_pollutants_w_drt <- add_drt_to_pollutant(combined_pollutants_w_drt, "BC_non_exhaust", sum_drt_bc)
 
 # save to csv
-output_path <- paste0(getwd(), "/analysis/emissions-emissions/emissions_total_combined.csv")
+output_path <- paste0(getwd(), "/analysis/emissions_total_combined.csv")
 write.csv(combined_pollutants_w_drt, output_path, quote=FALSE, row.names = FALSE)
 print(paste("combined pollutants with respective shares for drive train types written to", output_path))
 
