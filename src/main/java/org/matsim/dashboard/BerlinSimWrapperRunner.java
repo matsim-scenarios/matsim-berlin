@@ -41,8 +41,7 @@ public class BerlinSimWrapperRunner implements MATSimAppCommand {
 
 	@Override
 	public Integer call() throws Exception {
-		if (outputPath == null) outputPath = inputPath;
-		log.info("Running on {}, writing to {}", inputPath, outputPath);
+		log.info("Running on {}, writing to {}", inputPath);
 
 		Config config;
 		if (configPath != null)
@@ -68,7 +67,7 @@ public class BerlinSimWrapperRunner implements MATSimAppCommand {
 
 		SimWrapperListener listener = new SimWrapperListener(SimWrapper.create(config), config);
 		try {
-			listener.run(outputPath);
+			listener.run(inputPath);
 		} catch (IOException e) {
 			log.error("Error creating dashboards on {}", inputPath, e);
 		}
