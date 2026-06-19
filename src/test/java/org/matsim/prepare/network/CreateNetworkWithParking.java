@@ -2,8 +2,9 @@ package org.matsim.prepare.network;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.*;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.core.network.NetworkUtils;
@@ -24,6 +25,9 @@ public class CreateNetworkWithParking implements MATSimAppCommand {
 	@CommandLine.Option(names = "--parking-inside", required = true)
 	private String parkingInside;
 
+
+	private static final Logger log = LogManager.getLogger(CreateNetworkWithParking.class);
+
 	public static void main(String[] args) {
 		System.exit(new CommandLine(new CreateNetworkWithParking()).execute(args));
 	}
@@ -31,7 +35,7 @@ public class CreateNetworkWithParking implements MATSimAppCommand {
 	@Override
 	public Integer call() throws Exception {
 
-		System.out.println("Creating network with parking");
+		log.info("Creating network with parking");
 
 		Network network = NetworkUtils.readNetwork(this.network);
 
@@ -41,17 +45,17 @@ public class CreateNetworkWithParking implements MATSimAppCommand {
 		List<ParkingPolygon> outsideParking =
 			readParkingGeoJson(parkingOutside, "anzahl_parkplaetze");
 
-		System.out.println("Network links: " + network.getLinks().size());
+		log.info("Network links: " + network.getLinks().size());
 
-		System.out.println("Inside polygons: " + insideParking.size());
-		System.out.println("Outside polygons: " + outsideParking.size());
+		log.info("Inside polygons: " + insideParking.size());
+		log.info("Outside polygons: " + outsideParking.size());
 
-		System.out.println(
+		log.info(
 			"Inside capacity: " +
 				insideParking.stream().mapToInt(ParkingPolygon::capacity).sum()
 		);
 
-		System.out.println(
+		log.info(
 			"Outside capacity: " +
 				outsideParking.stream().mapToInt(ParkingPolygon::capacity).sum()
 		);
