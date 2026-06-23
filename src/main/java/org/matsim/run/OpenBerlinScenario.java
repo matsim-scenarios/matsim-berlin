@@ -155,6 +155,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 		if (ConfigUtils.hasModule(controler.getConfig(), AdvancedScoringConfigGroup.class)) {
 			controler.addOverridingModule(new AdvancedScoringModule());
 			controler.getConfig().scoring().setExplainScores(true);
+			// yyyyyy we do not like that this is configured by this being present or not; needs to be fixed in near future.  kai, jun'26
 		} else {
 			controler.addOverridingModule(new BerlinScoringModule());
 		}
