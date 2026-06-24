@@ -47,7 +47,7 @@ public final class OpenBerlinExperiments extends OpenBerlinScenario {
 			tasteVariationsConfig.setIncomeExponent( incomeExponent );
 			log.warn( "incomeExponent after change={}", tasteVariationsConfig.getIncomeExponent() );
 		}
-
+		return config;
 	}
 
 	public static void main(String[] args) {
