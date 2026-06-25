@@ -39,7 +39,7 @@ import java.util.Map.Entry;
 public class ModeChoiceCoverageControlerListener implements StartupListener, IterationEndsListener,
         ShutdownListener {
 
-    private final static Logger log = LogManager.getLogger(org.matsim.analysis.ModeStatsControlerListener.class);
+    private final static Logger log = LogManager.getLogger(ModeChoiceCoverageControlerListener.class);
 
 
     private final Map<Integer, BufferedWriter> modeOutMap = new HashMap<>();

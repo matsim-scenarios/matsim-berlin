@@ -1,7 +1,8 @@
 package org.matsim.run;
 
-import java.util.List;
-
+import com.google.inject.Key;
+import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
 import org.matsim.analysis.QsimTimingModule;
 import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
 import org.matsim.api.core.v01.Scenario;
@@ -10,10 +11,7 @@ import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.application.MATSimApplication;
-import org.matsim.contrib.bicycle.BicycleConfigGroup;
-import org.matsim.contrib.bicycle.BicycleLinkSpeedCalculator;
-import org.matsim.contrib.bicycle.BicycleLinkSpeedCalculatorDefaultImpl;
-import org.matsim.contrib.bicycle.BicycleTravelTime;
+import org.matsim.contrib.bicycle.*;
 import org.matsim.contrib.emissions.HbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
@@ -28,16 +26,16 @@ import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutilityFactory;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
+import org.matsim.dashboard.BerlinDashboardProvider;
 import org.matsim.run.scoring.BerlinScoringModule;
 import org.matsim.run.scoring.experimental.AdvancedScoringConfigGroup;
 import org.matsim.run.scoring.experimental.AdvancedScoringModule;
+import org.matsim.simwrapper.DashboardProvider;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
-
-import com.google.inject.Key;
-import com.google.inject.name.Names;
-
 import picocli.CommandLine;
+
+import java.util.List;
 
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true, showDefaultValues = true)
 public class OpenBerlinScenario extends MATSimApplication {
@@ -148,6 +146,14 @@ public class OpenBerlinScenario extends MATSimApplication {
 	protected void prepareControler(Controler controler) {
 
 		controler.addOverridingModule(new SimWrapperModule());
+		controler.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				BerlinDashboardProvider dashboardProvider = new BerlinDashboardProvider();
+				Multibinder.newSetBinder( binder(), DashboardProvider.class ).addBinding().toInstance( dashboardProvider );
+			}
+		});
+
 		controler.addOverridingModule(new TravelTimeBinding());
 		controler.addOverridingModule(new QsimTimingModule());
 
@@ -187,6 +193,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 				addTravelDisutilityFactoryBinding("freight").to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
 
 				bind(BicycleLinkSpeedCalculator.class).to(BicycleLinkSpeedCalculatorDefaultImpl.class);
+				bind(BicycleParams.class).to(BicycleParamsDefaultImpl.class);
 
 				// Bike should use free speed travel time
 				addTravelTimeBinding(TransportMode.bike).to(BicycleTravelTime.class);
