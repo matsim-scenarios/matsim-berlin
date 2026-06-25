@@ -7,6 +7,7 @@ import org.matsim.application.MATSimApplication;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.groups.TasteVariationsConfigParameterSet;
+import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.gbl.Gbl;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import picocli.CommandLine;
@@ -41,6 +42,8 @@ public final class OpenBerlinExperiments extends OpenBerlinScenario {
 			tasteVariationsConfig.setIncomeExponent( incomeExponent );
 			log.warn( "incomeExponent after change={}", tasteVariationsConfig.getIncomeExponent() );
 		}
+		//somehow it wants You have no strategy configured that uses ChangeExpBeta. vsp default is to use ChangeExpBeta at least in one strategy.
+		config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
 		return config;
 	}
 
