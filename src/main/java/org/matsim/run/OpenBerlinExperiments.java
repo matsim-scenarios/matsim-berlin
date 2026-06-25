@@ -21,17 +21,11 @@ public final class OpenBerlinExperiments extends OpenBerlinScenario {
 		defaultValue = "null" )
 	private String incomeExponentAsString;
 
-
-	private OpenBerlinExperiments() {
-	}
-
 	@Override protected Config prepareConfig( Config config ) {
 
-		Collection<? extends ConfigGroup> tasteVariationsConfigs = config.scoring().getParameterSets( TasteVariationsConfigParameterSet.SET_TYPE );
-		Gbl.assertIf( tasteVariationsConfigs.size()==1 );
-		// (otherwise I have misunderstood something)
-
-		TasteVariationsConfigParameterSet tasteVariationsConfig = (TasteVariationsConfigParameterSet) tasteVariationsConfigs.iterator().next();
+		// I think this will create a problem in the future, since we decided that subpopulation==null is not a valid value...
+		TasteVariationsConfigParameterSet tasteVariationsConfig = config.scoring().getScoringParameters(null).getTasteVariationsParams();
+		Gbl.assertNotNull(tasteVariationsConfig);
 
 		log.warn( "we are excluding the following subpops from taste variations config:" );
 		for( String excludeSubpopulation : tasteVariationsConfig.getExcludeSubpopulations() ){
