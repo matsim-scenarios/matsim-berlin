@@ -22,6 +22,7 @@ public final class OpenBerlinExperiments extends OpenBerlinScenario {
 	private String incomeExponentAsString;
 
 	@Override protected Config prepareConfig( Config config ) {
+		super.prepareConfig(config);
 
 		// I think this will create a problem in the future, since we decided that subpopulation==null is not a valid value...
 		TasteVariationsConfigParameterSet tasteVariationsConfig = config.scoring().getScoringParameters(null).getTasteVariationsParams();
