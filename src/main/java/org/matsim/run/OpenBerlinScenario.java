@@ -161,18 +161,6 @@ public class OpenBerlinScenario extends MATSimApplication {
 		}
 
 		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				BicycleConfigGroup bicycleConfig =
-					ConfigUtils.addOrGetModule(
-						getConfig(),
-						BicycleConfigGroup.class
-					);
-
-				bind(BicycleConfigGroup.class).toInstance(bicycleConfig);
-			}
-		});
 	}
 
 	/**
