@@ -49,6 +49,12 @@ table(household_berlin$car_parking, useNA = "ifany")
 
 household_berlin %>%
   filter(car_parking != "na") %>%
+  mutate(
+    economic_status = factor(
+      economic_status,
+      levels = c("very_low", "low", "medium", "high", "very_high")
+    )
+  ) %>%
   count(economic_status, car_parking, wt = h_weight) %>%
   group_by(economic_status) %>%
   mutate(share = n / sum(n)) %>%
