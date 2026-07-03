@@ -13,7 +13,6 @@ import org.matsim.api.core.v01.population.Plan;
 import org.matsim.application.MATSimApplication;
 import org.matsim.contrib.bicycle.*;
 import org.matsim.contrib.emissions.HbefaRoadTypeMapping;
-import org.matsim.contrib.emissions.HbefaTechnology;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.core.config.Config;
@@ -34,9 +33,6 @@ import org.matsim.run.scoring.experimental.AdvancedScoringModule;
 import org.matsim.simwrapper.DashboardProvider;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
-import org.matsim.vehicles.EngineInformation;
-import org.matsim.vehicles.VehicleType;
-import org.matsim.vehicles.VehicleUtils;
 import picocli.CommandLine;
 
 import java.util.List;
@@ -142,14 +138,6 @@ public class OpenBerlinScenario extends MATSimApplication {
 						leg.setTravelTimeUndefined();
 					}
 				}
-			}
-		}
-
-		for (VehicleType type : scenario.getVehicles().getVehicleTypes().values()) {
-			EngineInformation engineInformation = type.getEngineInformation();
-			if (VehicleUtils.getHbefaTechnology(engineInformation).equals("petrol")) {
-//				some veh types use technology "petrol" which does not exist. it either is petrol (4S) or petrol (2S). going for 4S here
-				VehicleUtils.setHbefaTechnology(engineInformation, HbefaTechnology.PETROL_4S.id);
 			}
 		}
 	}
