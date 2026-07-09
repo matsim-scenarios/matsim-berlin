@@ -1,0 +1,3751 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:y="http://www.yworks.com/xml/graphml"
+         xmlns:yed="http://www.yworks.com/xml/yed/3"
+         xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd">
+  <!-- Data-flow / executed-steps graph derived from the repository Makefile (matsim-berlin scenario generation pipeline). -->
+  <!-- Node types: tool=build artifact, input=external file, temp=intermediate/side file, step=an executed shell/CLI command, target=tracked pipeline output file, goal=phony make target. -->
+  <key for="node" id="d0" yfiles.type="nodegraphics"/>
+  <key for="edge" id="d1" yfiles.type="edgegraphics"/>
+  <key for="node" attr.name="label" attr.type="string" id="d2"/>
+  <key for="node" attr.name="type" attr.type="string" id="d3"/>
+  <key for="node" attr.name="command" attr.type="string" id="d4"/>
+  <key for="node" attr.name="makeVariable" attr.type="string" id="d5"/>
+  <graph edgedefault="directed" id="Makefile">
+    <node id="JAR">
+      <data key="d2">matsim-berlin-*.jar</data>
+      <data key="d3">tool</data>
+      <data key="d4">mvnw clean package -DskipTests=true</data>
+      <data key="d5">JAR</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="34.0" width="160.0" x="0.0" y="1376.0"/>
+          <y:Fill color="#B0B0B0" transparent="false"/>
+          <y:BorderStyle color="#5A5A5A" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#1a1a1a" visible="true">matsim-berlin-*.jar</y:NodeLabel>
+          <y:Shape type="hexagon"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="BRANDENBURG_OSM_LOCAL">
+      <data key="d2">brandenburg-230101.osm.pbf</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">BRANDENBURG_OSM_LOCAL</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="166.0" x="0.0" y="774.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">brandenburg-230101.osm.pbf</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="AREA_POLY">
+      <data key="d2">area.poly</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">AREA_POLY</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="90.0" x="0.0" y="86.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">area.poly</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="AREA_SHP">
+      <data key="d2">area.shp</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">AREA_SHP</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="90.0" x="0.0" y="172.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">area.shp</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="PT_AREA">
+      <data key="d2">pt-area.shp</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">PT_AREA</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="90.0" x="0.0" y="1880.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">pt-area.shp</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="REMOVE_RAILWAY">
+      <data key="d2">remove-railway.xml</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">REMOVE_RAILWAY</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="118.0" x="0.0" y="2396.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">remove-railway.xml</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="COUNTS_UNDERESTIMATED">
+      <data key="d2">counts_underestimated.csv</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">COUNTS_UNDERESTIMATED</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="160.0" x="0.0" y="1118.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">counts_underestimated.csv</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="COUNTS_MAPPING">
+      <data key="d2">counts_mapping.csv</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">COUNTS_MAPPING</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="118.0" x="0.0" y="1032.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">counts_mapping.csv</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="FACILITY_MAPPING">
+      <data key="d2">facility_mapping.json</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">FACILITY_MAPPING</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="136.0" x="0.0" y="1204.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">facility_mapping.json</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="ACTIVITY_MAPPING">
+      <data key="d2">activity_mapping.json</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">ACTIVITY_MAPPING</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="136.0" x="0.0" y="0.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">activity_mapping.json</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="SUMO_OSM_NETCONVERT">
+      <data key="d2">osmNetconvert.typ.xml</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">SUMO_OSM_NETCONVERT</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="136.0" x="0.0" y="2740.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">osmNetconvert.typ.xml</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="SUMO_OSM_NETCONVERT_URBAN_DE">
+      <data key="d2">osmNetconvertUrbanDe.typ.xml</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">SUMO_OSM_NETCONVERT_URBAN_DE</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="178.0" x="0.0" y="2826.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">osmNetconvertUrbanDe.typ.xml</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="PLANUNGSRAUM_25833">
+      <data key="d2">Planungsraum_EPSG_25833.shp</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">PLANUNGSRAUM_25833</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="172.0" x="0.0" y="1708.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">Planungsraum_EPSG_25833.shp</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="REGION_4326">
+      <data key="d2">region_4326.shp</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">REGION_4326</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="100.0" x="0.0" y="2224.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">region_4326.shp</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="COUNTS_BERLIN_2018">
+      <data key="d2">Datenexport_2018_TU_Berlin.xlsx</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">COUNTS_BERLIN_2018</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="196.0" x="0.0" y="946.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">Datenexport_2018_TU_Berlin.xlsx</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="PLR_2013_2020">
+      <data key="d2">PLR_2013_2020.csv</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">PLR_2013_2020</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="112.0" x="0.0" y="1794.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">PLR_2013_2020.csv</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="SRV_PERSONS">
+      <data key="d2">table-persons.csv</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">SRV_PERSONS</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="112.0" x="0.0" y="2568.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">table-persons.csv</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="SRV_ACTS">
+      <data key="d2">table-activities.csv</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">SRV_ACTS</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="130.0" x="0.0" y="2482.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">table-activities.csv</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="BERLIN_COMMUTER">
+      <data key="d2">berlin-work-commuter.csv</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">BERLIN_COMMUTER</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="154.0" x="0.0" y="430.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">berlin-work-commuter.csv</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="SRV_ZONES">
+      <data key="d2">zones.shp</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">SRV_ZONES</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="90.0" x="0.0" y="2654.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">zones.shp</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="GTFS_DATA">
+      <data key="d2">complete-pt-2024-10-27.zip</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">GTFS_DATA</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="166.0" x="0.0" y="1290.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">complete-pt-2024-10-27.zip</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="VG5000_GEM">
+      <data key="d2">VG5000_GEM.shp</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">VG5000_GEM</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="94.0" x="0.0" y="2998.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">VG5000_GEM.shp</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="REGIONALSTAT_POP">
+      <data key="d2">population.csv</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">REGIONALSTAT_POP</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="94.0" x="0.0" y="2138.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">population.csv</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="REGIONALSTAT_EMPL">
+      <data key="d2">employed.json</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">REGIONALSTAT_EMPL</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="90.0" x="0.0" y="2052.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">employed.json</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="REGIONALSTAT_COMMUTER">
+      <data key="d2">commuter.csv</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">REGIONALSTAT_COMMUTER</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="90.0" x="0.0" y="1966.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">commuter.csv</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="REGIOSTAR">
+      <data key="d2">RegioStaR-Referenzdateien.xlsx</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">REGIOSTAR</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="190.0" x="0.0" y="2310.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">RegioStaR-Referenzdateien.xlsx</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="VEHICLESFILE_IN">
+      <data key="d2">berlin-v7.0-vehicleTypes.xml</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">VEHICLESFILE_IN</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="178.0" x="0.0" y="2912.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">berlin-v7.0-vehicleTypes.xml</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="BERLIN_SMALLSCALE_COMMERCIAL_25PCT">
+      <data key="d2">berlin-small-scale-commercialTraffic-v7.0-25pct.plans.xml.gz (external/v7.0)</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">BERLIN_SMALLSCALE_COMMERCIAL_25PCT</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="280.0" x="0.0" y="688.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">berlin-small-scale-commercialTraffic-v7.0-25pct.plans.xml.gz (external/v7.0)</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT">
+      <data key="d2">berlin-longHaulFreight-v7.0-25pct.plans.xml.gz (external/v7.0)</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="280.0" x="0.0" y="344.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">berlin-longHaulFreight-v7.0-25pct.plans.xml.gz (external/v7.0)</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="MODECHOICE_BASELINE_PLANS">
+      <data key="d2">MODECHOICE_BASELINE_PLANS (external, env-var, from choice-experiments run)</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">MODECHOICE_BASELINE_PLANS</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="280.0" x="0.0" y="1536.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">MODECHOICE_BASELINE_PLANS (external, env-var, from choice-experiments run)</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="BERLIN_INNER_CITY_GPKG">
+      <data key="d2">berlin_inner_city.gpkg</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">BERLIN_INNER_CITY_GPKG</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="142.0" x="0.0" y="516.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">berlin_inner_city.gpkg</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="BERLIN_3PCT_PLANS">
+      <data key="d2">berlin-v7.1-3pct.plans.xml.gz (never produced in this Makefile!)</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">BERLIN_3PCT_PLANS</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="280.0" x="0.0" y="258.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">berlin-v7.1-3pct.plans.xml.gz (never produced in this Makefile!)</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="BERLIN_SHP_25832">
+      <data key="d2">Berlin_25832.shp</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">BERLIN_SHP_25832</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="106.0" x="0.0" y="602.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">Berlin_25832.shp</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="NETWORK_FT">
+      <data key="d2">network-ft.csv.gz (TODO: origin unclear)</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">NETWORK_FT</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="250.0" x="0.0" y="1622.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">network-ft.csv.gz (TODO: origin unclear)</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="LINK_GEOMETRIES">
+      <data key="d2">network-linkGeometries.csv (TODO: origin unclear)</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">LINK_GEOMETRIES</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="280.0" x="0.0" y="1450.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">network-linkGeometries.csv (TODO: origin unclear)</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="CADYTS_CONFIG_TEMPLATE">
+      <data key="d2">input/cadyts-config-template.xml</data>
+      <data key="d3">input</data>
+      <data key="d4"></data>
+      <data key="d5">CADYTS_CONFIG_TEMPLATE</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="46.0" width="202.0" x="0.0" y="860.0"/>
+          <y:Fill color="#90C6E7" transparent="false"/>
+          <y:BorderStyle color="#3A7CA5" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0a2a3a" visible="true">input/cadyts-config-template.xml</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="setup">
+      <data key="d2">setup</data>
+      <data key="d3">goal</data>
+      <data key="d4">mkdir -p output/ tmp/</data>
+      <data key="d5">setup</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="34.0" width="160.0" x="420.0" y="0.0"/>
+          <y:Fill color="#F4A261" transparent="false"/>
+          <y:BorderStyle color="#B5651D" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#3a1e00" visible="true">setup</y:NodeLabel>
+          <y:Shape type="roundrectangle"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="prepare-network-and-counts">
+      <data key="d2">prepare-network-and-counts</data>
+      <data key="d3">goal</data>
+      <data key="d4"></data>
+      <data key="d5">prepare-network-and-counts</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="34.0" width="179.0" x="7980.0" y="246.0"/>
+          <y:Fill color="#F4A261" transparent="false"/>
+          <y:BorderStyle color="#B5651D" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#3a1e00" visible="true">prepare-network-and-counts</y:NodeLabel>
+          <y:Shape type="roundrectangle"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="prepare-calibration">
+      <data key="d2">prepare-calibration</data>
+      <data key="d3">goal</data>
+      <data key="d4"></data>
+      <data key="d5">prepare-calibration</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="34.0" width="160.0" x="9240.0" y="0.0"/>
+          <y:Fill color="#F4A261" transparent="false"/>
+          <y:BorderStyle color="#B5651D" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#3a1e00" visible="true">prepare-calibration</y:NodeLabel>
+          <y:Shape type="roundrectangle"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="prepare-run-cadyts">
+      <data key="d2">prepare-run-cadyts</data>
+      <data key="d3">goal</data>
+      <data key="d4"></data>
+      <data key="d5">prepare-run-cadyts</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="34.0" width="160.0" x="10080.0" y="0.0"/>
+          <y:Fill color="#F4A261" transparent="false"/>
+          <y:BorderStyle color="#B5651D" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#3a1e00" visible="true">prepare-run-cadyts</y:NodeLabel>
+          <y:Shape type="roundrectangle"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="prepare-initial">
+      <data key="d2">prepare-initial</data>
+      <data key="d3">goal</data>
+      <data key="d4"></data>
+      <data key="d5">prepare-initial</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="34.0" width="160.0" x="15120.0" y="0.0"/>
+          <y:Fill color="#F4A261" transparent="false"/>
+          <y:BorderStyle color="#B5651D" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#3a1e00" visible="true">prepare-initial</y:NodeLabel>
+          <y:Shape type="roundrectangle"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="prepare-drt">
+      <data key="d2">prepare-drt</data>
+      <data key="d3">goal</data>
+      <data key="d4"></data>
+      <data key="d5">prepare-drt</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="34.0" width="160.0" x="6720.0" y="0.0"/>
+          <y:Fill color="#F4A261" transparent="false"/>
+          <y:BorderStyle color="#B5651D" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#3a1e00" visible="true">prepare-drt</y:NodeLabel>
+          <y:Shape type="roundrectangle"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="prepare">
+      <data key="d2">prepare</data>
+      <data key="d3">goal</data>
+      <data key="d4"></data>
+      <data key="d5">prepare</data>
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry height="34.0" width="160.0" x="2100.0" y="1000.0"/>
+          <y:Fill color="#F4A261" transparent="false"/>
+          <y:BorderStyle color="#B5651D" type="line" width="1.5"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#3a1e00" visible="true">prepare</y:NodeLabel>
+          <y:Shape type="roundrectangle"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="GROUP__BERLIN_AFTER_CHOICE_EXPERIMENTS" yfiles.foldertype="group">
+      <data key="d2">BERLIN_AFTER_CHOICE_EXPERIMENTS — berlin-v7.1.plans.xml.gz</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">BERLIN_AFTER_CHOICE_EXPERIMENTS</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="206.0" width="207.0" x="1680.0" y="0.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">BERLIN_AFTER_CHOICE_EXPERIMENTS
+berlin-v7.1.plans.xml.gz</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__BERLIN_AFTER_CHOICE_EXPERIMENTS:">
+        <node id="STEP__BERLIN_AFTER_CHOICE_EXPERIMENTS__1">
+          <data key="d2">prepare clean-population --remove-unselected-plans</data>
+          <data key="d3">step</data>
+          <data key="d4"></data>
+          <data key="d5">STEP__BERLIN_AFTER_CHOICE_EXPERIMENTS__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="56.0" width="175.0" x="1696.0" y="34.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare clean-population
+--remove-unselected-plans</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__BERLIN_AFTER_CHOICE_EXPERIMENTS__2">
+          <data key="d2">prepare taste-variations</data>
+          <data key="d3">step</data>
+          <data key="d4"></data>
+          <data key="d5">STEP__BERLIN_AFTER_CHOICE_EXPERIMENTS__2</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="170.0" x="1698.5" y="104.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare taste-variations</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="BERLIN_AFTER_CHOICE_EXPERIMENTS">
+          <data key="d2">berlin-v7.1.plans.xml.gz</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">BERLIN_AFTER_CHOICE_EXPERIMENTS</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="166.0" x="1700.5" y="156.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">berlin-v7.1.plans.xml.gz</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__BERLIN_BRANDENBURG_ACTS_25PCT" yfiles.foldertype="group">
+      <data key="d2">BERLIN_BRANDENBURG_ACTS_25PCT — berlin-activities-v7.1-25pct.plans.xml.gz</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">BERLIN_BRANDENBURG_ACTS_25PCT</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="206.0" width="308.5" x="7140.0" y="0.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">BERLIN_BRANDENBURG_ACTS_25PCT
+berlin-activities-v7.1-25pct.plans.xml.gz</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__BERLIN_BRANDENBURG_ACTS_25PCT:">
+        <node id="STEP__BERLIN_BRANDENBURG_ACTS_25PCT__1">
+          <data key="d2">prepare activity-sampling --seed 1</data>
+          <data key="d3">step</data>
+          <data key="d4"></data>
+          <data key="d5">STEP__BERLIN_BRANDENBURG_ACTS_25PCT__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="56.0" width="175.0" x="7206.8" y="34.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare activity-sampling
+--seed 1</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__BERLIN_BRANDENBURG_ACTS_25PCT__2">
+          <data key="d2">prepare assign-reference-population</data>
+          <data key="d3">step</data>
+          <data key="d4">--shp-crs</data>
+          <data key="d5">STEP__BERLIN_BRANDENBURG_ACTS_25PCT__2</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="241.0" x="7173.8" y="104.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare assign-reference-population</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="BERLIN_BRANDENBURG_ACTS_25PCT">
+          <data key="d2">berlin-activities-v7.1-25pct.plans.xml.gz</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">BERLIN_BRANDENBURG_ACTS_25PCT</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="276.5" x="7156.0" y="156.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">berlin-activities-v7.1-25pct.plans.xml.gz</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__BERLIN_BRANDENBURG_INITIAL_25PCT" yfiles.foldertype="group">
+      <data key="d2">BERLIN_BRANDENBURG_INITIAL_25PCT — berlin-initial-v7.1-25pct.plans.xml.gz</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">BERLIN_BRANDENBURG_INITIAL_25PCT</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="206.0" width="289.0" x="7980.0" y="0.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">BERLIN_BRANDENBURG_INITIAL_25PCT
+berlin-initial-v7.1-25pct.plans.xml.gz</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__BERLIN_BRANDENBURG_INITIAL_25PCT:">
+        <node id="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT__1">
+          <data key="d2">prepare init-location-choice</data>
+          <data key="d3">step</data>
+          <data key="d4"></data>
+          <data key="d5">STEP__BERLIN_BRANDENBURG_INITIAL_25PCT__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="194.8" x="8027.1" y="34.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare init-location-choice</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT__2">
+          <data key="d2">prepare downsample-population (0.25; samples 0.1/0.03/0.01)</data>
+          <data key="d3">step</data>
+          <data key="d4">for debugging/visualization only</data>
+          <data key="d5">STEP__BERLIN_BRANDENBURG_INITIAL_25PCT__2</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="56.0" width="201.4" x="8023.8" y="86.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare downsample-population
+(0.25; samples 0.1/0.03/0.01)</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="BERLIN_BRANDENBURG_INITIAL_25PCT">
+          <data key="d2">berlin-initial-v7.1-25pct.plans.xml.gz</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">BERLIN_BRANDENBURG_INITIAL_25PCT</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="257.0" x="7996.0" y="156.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">berlin-initial-v7.1-25pct.plans.xml.gz</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS" yfiles.foldertype="group">
+      <data key="d2">BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS — berlin-v7.1-25pct.plans-initial.xml.gz</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="640.0" width="312.0" x="14700.0" y="0.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS
+berlin-v7.1-25pct.plans-initial.xml.gz</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS:">
+        <node id="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__1">
+          <data key="d2">prepare scenario-cutout</data>
+          <data key="d3">step</data>
+          <data key="d4"></data>
+          <data key="d5">STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="170.0" x="14771.0" y="34.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare scenario-cutout</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__2">
+          <data key="d2">prepare split-activity-types-duration</data>
+          <data key="d3">step</data>
+          <data key="d4">--exclude commercial/freight_start/_end</data>
+          <data key="d5">STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__2</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="254.2" x="14728.9" y="86.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare split-activity-types-duration</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__3">
+          <data key="d2">prepare set-car-avail</data>
+          <data key="d3">step</data>
+          <data key="d4"></data>
+          <data key="d5">STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__3</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="170.0" x="14771.0" y="138.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare set-car-avail</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__4">
+          <data key="d2">prepare check-car-avail --mode walk</data>
+          <data key="d3">step</data>
+          <data key="d4"></data>
+          <data key="d5">STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__4</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="56.0" width="170.0" x="14771.0" y="190.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare check-car-avail
+--mode walk</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__5">
+          <data key="d2">prepare fix-subtour-modes --coord-dist 100</data>
+          <data key="d3">step</data>
+          <data key="d4"></data>
+          <data key="d5">STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__5</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="56.0" width="175.0" x="14768.5" y="260.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare fix-subtour-modes
+--coord-dist 100</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__6">
+          <data key="d2">prepare merge-populations (+ longHaulFreight)</data>
+          <data key="d3">step</data>
+          <data key="d4"></data>
+          <data key="d5">STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__6</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="56.0" width="175.0" x="14768.5" y="330.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare merge-populations
+(+ longHaulFreight)</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__7">
+          <data key="d2">prepare downsample-population (0.25; samples 0.1/0.03/0.01/0.001)</data>
+          <data key="d3">step</data>
+          <data key="d4"></data>
+          <data key="d5">STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__7</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="56.0" width="241.0" x="14735.5" y="400.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare downsample-population
+(0.25; samples 0.1/0.03/0.01/0.001)</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="TMP_NETWORK_CUTOUT">
+          <data key="d2">output/network-cutout.xml.gz (side output)</data>
+          <data key="d3">temp</data>
+          <data key="d4"></data>
+          <data key="d5">TMP_NETWORK_CUTOUT</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="46.0" width="262.0" x="14725.0" y="470.0"/>
+              <y:Fill color="#D9D9D9" transparent="false"/>
+              <y:BorderStyle color="#8C8C8C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#3a3a3a" visible="true">output/network-cutout.xml.gz (side output)</y:NodeLabel>
+              <y:Shape type="ellipse"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="TMP_FACILITIES_CUTOUT">
+          <data key="d2">output/facilities-cutout.xml.gz (side output)</data>
+          <data key="d3">temp</data>
+          <data key="d4"></data>
+          <data key="d5">TMP_FACILITIES_CUTOUT</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="46.0" width="280.0" x="14716.0" y="530.0"/>
+              <y:Fill color="#D9D9D9" transparent="false"/>
+              <y:BorderStyle color="#8C8C8C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#3a3a3a" visible="true">output/facilities-cutout.xml.gz (side output)</y:NodeLabel>
+              <y:Shape type="ellipse"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS">
+          <data key="d2">berlin-v7.1-25pct.plans-initial.xml.gz</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="257.0" x="14727.5" y="590.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">berlin-v7.1-25pct.plans-initial.xml.gz</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__BERLIN_BRANDENBURG_STATIC_25PCT" yfiles.foldertype="group">
+      <data key="d2">BERLIN_BRANDENBURG_STATIC_25PCT — berlin-static-v7.1-25pct.plans.xml.gz</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">BERLIN_BRANDENBURG_STATIC_25PCT</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="188.0" width="282.5" x="3360.0" y="0.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">BERLIN_BRANDENBURG_STATIC_25PCT
+berlin-static-v7.1-25pct.plans.xml.gz</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__BERLIN_BRANDENBURG_STATIC_25PCT:">
+        <node id="STEP__BERLIN_BRANDENBURG_STATIC_25PCT__1">
+          <data key="d2">prepare merge-populations</data>
+          <data key="d3">step</data>
+          <data key="d4"></data>
+          <data key="d5">STEP__BERLIN_BRANDENBURG_STATIC_25PCT__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="175.0" x="3413.8" y="34.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare merge-populations</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__BERLIN_BRANDENBURG_STATIC_25PCT__2">
+          <data key="d2">prepare lookup-regiostar</data>
+          <data key="d3">step</data>
+          <data key="d4">--xls REGIOSTAR</data>
+          <data key="d5">STEP__BERLIN_BRANDENBURG_STATIC_25PCT__2</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="170.0" x="3416.2" y="86.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare lookup-regiostar</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="BERLIN_BRANDENBURG_STATIC_25PCT">
+          <data key="d2">berlin-static-v7.1-25pct.plans.xml.gz</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">BERLIN_BRANDENBURG_STATIC_25PCT</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="250.5" x="3376.0" y="138.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">berlin-static-v7.1-25pct.plans.xml.gz</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__BERLIN_CADYTS_FINAL_25PCT" yfiles.foldertype="group">
+      <data key="d2">BERLIN_CADYTS_FINAL_25PCT — berlin-v7.1-25pct.plans_cadyts.xml.gz</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">BERLIN_CADYTS_FINAL_25PCT</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="236.0" width="328.0" x="11340.0" y="0.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">BERLIN_CADYTS_FINAL_25PCT
+berlin-v7.1-25pct.plans_cadyts.xml.gz</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__BERLIN_CADYTS_FINAL_25PCT:">
+        <node id="STEP__BERLIN_CADYTS_FINAL_25PCT__1">
+          <data key="d2">prepare extract-plans-idx</data>
+          <data key="d3">step</data>
+          <data key="d4"></data>
+          <data key="d5">STEP__BERLIN_CADYTS_FINAL_25PCT__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="175.0" x="11416.5" y="34.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare extract-plans-idx</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__BERLIN_CADYTS_FINAL_25PCT__2">
+          <data key="d2">prepare select-plans-idx</data>
+          <data key="d3">step</data>
+          <data key="d4">--csv BERLIN_CADYTS_SELECTION_25PCT</data>
+          <data key="d5">STEP__BERLIN_CADYTS_FINAL_25PCT__2</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="170.0" x="11419.0" y="86.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare select-plans-idx</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="BERLIN_CADYTS_SELECTION_25PCT">
+          <data key="d2">berlin-v7.1-25pct.plans_selection_cadyts.csv</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">BERLIN_CADYTS_SELECTION_25PCT</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="296.0" x="11356.0" y="138.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">berlin-v7.1-25pct.plans_selection_cadyts.csv</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="BERLIN_CADYTS_FINAL_25PCT">
+          <data key="d2">berlin-v7.1-25pct.plans_cadyts.xml.gz</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">BERLIN_CADYTS_FINAL_25PCT</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="250.5" x="11378.8" y="186.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">berlin-v7.1-25pct.plans_cadyts.xml.gz</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__BERLIN_CADYTS_INPUT_25PCT" yfiles.foldertype="group">
+      <data key="d2">BERLIN_CADYTS_INPUT_25PCT — berlin-cadyts-input-v7.1-25pct.plans.xml.gz</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">BERLIN_CADYTS_INPUT_25PCT</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="136.0" width="321.5" x="8820.0" y="0.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">BERLIN_CADYTS_INPUT_25PCT
+berlin-cadyts-input-v7.1-25pct.plans.xml.gz</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__BERLIN_CADYTS_INPUT_25PCT:">
+        <node id="STEP__BERLIN_CADYTS_INPUT_25PCT__1">
+          <data key="d2">prepare merge-populations</data>
+          <data key="d3">step</data>
+          <data key="d4"></data>
+          <data key="d5">STEP__BERLIN_CADYTS_INPUT_25PCT__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="175.0" x="8893.2" y="34.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare merge-populations</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="BERLIN_CADYTS_INPUT_25PCT">
+          <data key="d2">berlin-cadyts-input-v7.1-25pct.plans.xml.gz</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">BERLIN_CADYTS_INPUT_25PCT</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="289.5" x="8836.0" y="86.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">berlin-cadyts-input-v7.1-25pct.plans.xml.gz</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__BERLIN_CADYTS_OUTPUT_25PCT" yfiles.foldertype="group">
+      <data key="d2">BERLIN_CADYTS_OUTPUT_25PCT — cadyts/cadyts.output_plans.xml.gz</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">BERLIN_CADYTS_OUTPUT_25PCT</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="284.0" width="319.2" x="9660.0" y="0.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">BERLIN_CADYTS_OUTPUT_25PCT
+cadyts/cadyts.output_plans.xml.gz</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__BERLIN_CADYTS_OUTPUT_25PCT:">
+        <node id="STEP__BERLIN_CADYTS_OUTPUT_25PCT__1">
+          <data key="d2">sed: cadyts-config-template.xml -&gt; cadyts.config.xml</data>
+          <data key="d3">step</data>
+          <data key="d4">sed -e s/==VERSION==/.../g</data>
+          <data key="d5">STEP__BERLIN_CADYTS_OUTPUT_25PCT__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="56.0" width="214.6" x="9712.3" y="34.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">sed: cadyts-config-template.xml
+-&gt; cadyts.config.xml</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__BERLIN_CADYTS_OUTPUT_25PCT__2">
+          <data key="d2">src/main/sh/cadyts.sh (external MATSim + cadyts calibration run)</data>
+          <data key="d3">step</data>
+          <data key="d4"></data>
+          <data key="d5">STEP__BERLIN_CADYTS_OUTPUT_25PCT__2</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="56.0" width="287.2" x="9676.0" y="104.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">src/main/sh/cadyts.sh
+(external MATSim + cadyts calibration run)</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="TMP_CADYTS_CONFIG_XML">
+          <data key="d2">output/cadyts.config.xml</data>
+          <data key="d3">temp</data>
+          <data key="d4"></data>
+          <data key="d5">TMP_CADYTS_CONFIG_XML</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="46.0" width="154.0" x="9742.6" y="174.0"/>
+              <y:Fill color="#D9D9D9" transparent="false"/>
+              <y:BorderStyle color="#8C8C8C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#3a3a3a" visible="true">output/cadyts.config.xml</y:NodeLabel>
+              <y:Shape type="ellipse"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="BERLIN_CADYTS_OUTPUT_25PCT">
+          <data key="d2">cadyts/cadyts.output_plans.xml.gz</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">BERLIN_CADYTS_OUTPUT_25PCT</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="224.5" x="9707.4" y="234.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">cadyts/cadyts.output_plans.xml.gz</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__BERLIN_DOWNTOWN_3PCT_PLANS" yfiles.foldertype="group">
+      <data key="d2">BERLIN_DOWNTOWN_3PCT_PLANS — inner-city/berlin-downtown-v7.1-3pct.xml.gz</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">BERLIN_DOWNTOWN_3PCT_PLANS</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="136.0" width="321.5" x="7140.0" y="246.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">BERLIN_DOWNTOWN_3PCT_PLANS
+inner-city/berlin-downtown-v7.1-3pct.xml.gz</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__BERLIN_DOWNTOWN_3PCT_PLANS:">
+        <node id="STEP__BERLIN_DOWNTOWN_3PCT_PLANS__1">
+          <data key="d2">prepare scenario-cutout</data>
+          <data key="d3">step</data>
+          <data key="d4">mkdir -p output/inner-city</data>
+          <data key="d5">STEP__BERLIN_DOWNTOWN_3PCT_PLANS__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="170.0" x="7215.8" y="280.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare scenario-cutout</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="BERLIN_DOWNTOWN_3PCT_PLANS">
+          <data key="d2">inner-city/berlin-downtown-v7.1-3pct.xml.gz</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">BERLIN_DOWNTOWN_3PCT_PLANS</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="289.5" x="7156.0" y="332.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">inner-city/berlin-downtown-v7.1-3pct.xml.gz</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__BERLIN_ONLY_100PCT" yfiles.foldertype="group">
+      <data key="d2">BERLIN_ONLY_100PCT — berlin-only-v7.1-100pct.plans.xml.gz</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">BERLIN_ONLY_100PCT</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="154.0" width="276.0" x="2100.0" y="0.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">BERLIN_ONLY_100PCT
+berlin-only-v7.1-100pct.plans.xml.gz</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__BERLIN_ONLY_100PCT:">
+        <node id="STEP__BERLIN_ONLY_100PCT__1">
+          <data key="d2">prepare berlin-population --sample 1.0</data>
+          <data key="d3">step</data>
+          <data key="d4">--shp-crs EPSG:25833 --facilities-attr resident</data>
+          <data key="d5">STEP__BERLIN_ONLY_100PCT__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="56.0" width="175.0" x="2150.5" y="34.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare berlin-population
+--sample 1.0</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="BERLIN_ONLY_100PCT">
+          <data key="d2">berlin-only-v7.1-100pct.plans.xml.gz</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">BERLIN_ONLY_100PCT</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="244.0" x="2116.0" y="104.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">berlin-only-v7.1-100pct.plans.xml.gz</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__BERLIN_ONLY_25PCT" yfiles.foldertype="group">
+      <data key="d2">BERLIN_ONLY_25PCT — berlin-only-v7.1-25pct.plans.xml.gz</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">BERLIN_ONLY_25PCT</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="136.0" width="269.5" x="2100.0" y="194.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">BERLIN_ONLY_25PCT
+berlin-only-v7.1-25pct.plans.xml.gz</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__BERLIN_ONLY_25PCT:">
+        <node id="STEP__BERLIN_ONLY_25PCT__1">
+          <data key="d2">prepare berlin-population</data>
+          <data key="d3">step</data>
+          <data key="d4">--shp-crs EPSG:25833 --facilities-attr resident</data>
+          <data key="d5">STEP__BERLIN_ONLY_25PCT__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="175.0" x="2147.2" y="228.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare berlin-population</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="BERLIN_ONLY_25PCT">
+          <data key="d2">berlin-only-v7.1-25pct.plans.xml.gz</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">BERLIN_ONLY_25PCT</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="237.5" x="2116.0" y="280.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">berlin-only-v7.1-25pct.plans.xml.gz</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__BRANDENBURG_ONLY_25PCT" yfiles.foldertype="group">
+      <data key="d2">BRANDENBURG_ONLY_25PCT — brandenburg-only-v7.1-25pct.plans.xml.gz</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">BRANDENBURG_ONLY_25PCT</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="136.0" width="302.0" x="2100.0" y="370.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">BRANDENBURG_ONLY_25PCT
+brandenburg-only-v7.1-25pct.plans.xml.gz</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__BRANDENBURG_ONLY_25PCT:">
+        <node id="STEP__BRANDENBURG_ONLY_25PCT__1">
+          <data key="d2">prepare brandenburg-population</data>
+          <data key="d3">step</data>
+          <data key="d4">--facilities-attr resident</data>
+          <data key="d5">STEP__BRANDENBURG_ONLY_25PCT__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="208.0" x="2147.0" y="404.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare brandenburg-population</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="BRANDENBURG_ONLY_25PCT">
+          <data key="d2">brandenburg-only-v7.1-25pct.plans.xml.gz</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">BRANDENBURG_ONLY_25PCT</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="270.0" x="2116.0" y="456.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">brandenburg-only-v7.1-25pct.plans.xml.gz</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__FACILITIES_GPKG" yfiles.foldertype="group">
+      <data key="d2">FACILITIES_GPKG — facilities.gpkg</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">FACILITIES_GPKG</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="136.0" width="202.0" x="1260.0" y="0.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">FACILITIES_GPKG
+facilities.gpkg</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__FACILITIES_GPKG:">
+        <node id="STEP__FACILITIES_GPKG__1">
+          <data key="d2">prepare facility-shp</data>
+          <data key="d3">step</data>
+          <data key="d4">prepare facility-shp --activity-mapping --input --output</data>
+          <data key="d5">STEP__FACILITIES_GPKG__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="170.0" x="1276.0" y="34.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare facility-shp</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="FACILITIES_GPKG">
+          <data key="d2">facilities.gpkg</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">FACILITIES_GPKG</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="160.0" x="1281.0" y="86.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">facilities.gpkg</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__FACILITIES_XML" yfiles.foldertype="group">
+      <data key="d2">FACILITIES_XML — berlin-v7.1-facilities.xml.gz</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">FACILITIES_XML</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="136.0" width="230.5" x="6300.0" y="0.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">FACILITIES_XML
+berlin-v7.1-facilities.xml.gz</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__FACILITIES_XML:">
+        <node id="STEP__FACILITIES_XML__1">
+          <data key="d2">prepare facilities</data>
+          <data key="d3">step</data>
+          <data key="d4">--shp --facility-mapping --zones-shp</data>
+          <data key="d5">STEP__FACILITIES_XML__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="170.0" x="6330.2" y="34.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare facilities</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="FACILITIES_XML">
+          <data key="d2">berlin-v7.1-facilities.xml.gz</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">FACILITIES_XML</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="198.5" x="6316.0" y="86.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">berlin-v7.1-facilities.xml.gz</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__NETWORK_MATSIM" yfiles.foldertype="group">
+      <data key="d2">NETWORK_MATSIM — berlin-v7.1-network.xml.gz</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">NETWORK_MATSIM</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="380.0" width="319.2" x="5460.0" y="0.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">NETWORK_MATSIM
+berlin-v7.1-network.xml.gz</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__NETWORK_MATSIM:">
+        <node id="STEP__NETWORK_MATSIM__1">
+          <data key="d2">prepare network-from-sumo</data>
+          <data key="d3">step</data>
+          <data key="d4">--target-crs --lane-restrictions REDUCE_CAR_LANES</data>
+          <data key="d5">STEP__NETWORK_MATSIM__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="175.0" x="5532.1" y="34.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare network-from-sumo</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__NETWORK_MATSIM__2">
+          <data key="d2">prepare clean-network</data>
+          <data key="d3">step</data>
+          <data key="d4">--modes car,bike,ride,truck --remove-turn-restrictions</data>
+          <data key="d5">STEP__NETWORK_MATSIM__2</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="170.0" x="5534.6" y="86.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare clean-network</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__NETWORK_MATSIM__3">
+          <data key="d2">prepare reproject-network</data>
+          <data key="d3">step</data>
+          <data key="d4">--input-crs --target-crs --mode truck=freight</data>
+          <data key="d5">STEP__NETWORK_MATSIM__3</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="175.0" x="5532.1" y="138.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare reproject-network</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__NETWORK_MATSIM__4">
+          <data key="d2">prepare apply-network-params freespeed+capacity (BerlinNetworkParams)</data>
+          <data key="d3">step</data>
+          <data key="d4">--input-features NETWORK_FT</data>
+          <data key="d5">STEP__NETWORK_MATSIM__4</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="56.0" width="274.0" x="5482.6" y="190.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare apply-network-params
+freespeed+capacity (BerlinNetworkParams)</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__NETWORK_MATSIM__5">
+          <data key="d2">prepare apply-network-params capacity (HBSNetworkParams, decrease-only)</data>
+          <data key="d3">step</data>
+          <data key="d4">--road-types residential,living_street --capacity-bounds 0.3</data>
+          <data key="d5">STEP__NETWORK_MATSIM__5</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="56.0" width="287.2" x="5476.0" y="260.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare apply-network-params
+capacity (HBSNetworkParams, decrease-only)</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="NETWORK_MATSIM">
+          <data key="d2">berlin-v7.1-network.xml.gz</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">NETWORK_MATSIM</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="179.0" x="5530.1" y="330.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">berlin-v7.1-network.xml.gz</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__NETWORK_MATSIM_PT" yfiles.foldertype="group">
+      <data key="d2">NETWORK_MATSIM_PT — berlin-v7.1-network-with-pt.xml.gz</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">NETWORK_MATSIM_PT</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="360.0" width="299.4" x="7560.0" y="0.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">NETWORK_MATSIM_PT
+berlin-v7.1-network-with-pt.xml.gz</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__NETWORK_MATSIM_PT:">
+        <node id="STEP__NETWORK_MATSIM_PT__1">
+          <data key="d2">prepare transit-from-gtfs</data>
+          <data key="d3">step</data>
+          <data key="d4">--date --pseudo-network withLoopLinks --merge-stops --shp</data>
+          <data key="d5">STEP__NETWORK_MATSIM_PT__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="175.0" x="7622.2" y="34.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare transit-from-gtfs</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__NETWORK_MATSIM_PT__2">
+          <data key="d2">prepare endless-circle-line</data>
+          <data key="d3">step</data>
+          <data key="d4">--transit-schedule --transit-vehicles</data>
+          <data key="d5">STEP__NETWORK_MATSIM_PT__2</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="188.2" x="7615.6" y="86.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare endless-circle-line</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__NETWORK_MATSIM_PT__3">
+          <data key="d2">prepare link-capacity-from-measurements</data>
+          <data key="d3">step</data>
+          <data key="d4">--counts --under-estimated</data>
+          <data key="d5">STEP__NETWORK_MATSIM_PT__3</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="267.4" x="7576.0" y="138.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare link-capacity-from-measurements</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="TMP_TRANSIT_SCHEDULE">
+          <data key="d2">output/berlin-v7.1-transitSchedule.xml.gz</data>
+          <data key="d3">temp</data>
+          <data key="d4"></data>
+          <data key="d5">TMP_TRANSIT_SCHEDULE</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="46.0" width="256.0" x="7581.7" y="190.0"/>
+              <y:Fill color="#D9D9D9" transparent="false"/>
+              <y:BorderStyle color="#8C8C8C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#3a3a3a" visible="true">output/berlin-v7.1-transitSchedule.xml.gz</y:NodeLabel>
+              <y:Shape type="ellipse"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="TMP_TRANSIT_VEHICLES">
+          <data key="d2">output/berlin-v7.1-transitVehicles.xml.gz</data>
+          <data key="d3">temp</data>
+          <data key="d4"></data>
+          <data key="d5">TMP_TRANSIT_VEHICLES</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="46.0" width="256.0" x="7581.7" y="250.0"/>
+              <y:Fill color="#D9D9D9" transparent="false"/>
+              <y:BorderStyle color="#8C8C8C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#3a3a3a" visible="true">output/berlin-v7.1-transitVehicles.xml.gz</y:NodeLabel>
+              <y:Shape type="ellipse"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="NETWORK_MATSIM_PT">
+          <data key="d2">berlin-v7.1-network-with-pt.xml.gz</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">NETWORK_MATSIM_PT</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="231.0" x="7594.2" y="310.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">berlin-v7.1-network-with-pt.xml.gz</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__NETWORK_OSM" yfiles.foldertype="group">
+      <data key="d2">NETWORK_OSM — network.osm</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">NETWORK_OSM</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="414.0" width="312.0" x="2100.0" y="546.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">NETWORK_OSM
+network.osm</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__NETWORK_OSM:">
+        <node id="STEP__NETWORK_OSM__1">
+          <data key="d2">osmosis: detailed extract (bicycle+highway ways, bounded)</data>
+          <data key="d3">step</data>
+          <data key="d4">osmosis --tf accept-ways ... --bounding-polygon --used-node --wb</data>
+          <data key="d5">STEP__NETWORK_OSM__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="56.0" width="214.6" x="2148.7" y="580.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">osmosis: detailed extract
+(bicycle+highway ways, bounded)</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__NETWORK_OSM__2">
+          <data key="d2">osmosis: coarse extract (highway only)</data>
+          <data key="d3">step</data>
+          <data key="d4">osmosis --tf accept-ways highway=... --used-node --wb</data>
+          <data key="d5">STEP__NETWORK_OSM__2</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="56.0" width="170.0" x="2171.0" y="650.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">osmosis: coarse extract
+(highway only)</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__NETWORK_OSM__3">
+          <data key="d2">osmosis: merge + tag-transform (then rm temp files)</data>
+          <data key="d3">step</data>
+          <data key="d4">osmosis --rb ... --merge --tag-transform --wx</data>
+          <data key="d5">STEP__NETWORK_OSM__3</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="56.0" width="208.0" x="2152.0" y="720.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">osmosis: merge + tag-transform
+(then rm temp files)</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="TMP_NETWORK_DETAILED_OSM">
+          <data key="d2">input/network-detailed.osm.pbf (deleted after use)</data>
+          <data key="d3">temp</data>
+          <data key="d4"></data>
+          <data key="d5">TMP_NETWORK_DETAILED_OSM</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="46.0" width="280.0" x="2116.0" y="790.0"/>
+              <y:Fill color="#D9D9D9" transparent="false"/>
+              <y:BorderStyle color="#8C8C8C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#3a3a3a" visible="true">input/network-detailed.osm.pbf (deleted after use)</y:NodeLabel>
+              <y:Shape type="ellipse"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="TMP_NETWORK_COARSE_OSM">
+          <data key="d2">input/network-coarse.osm.pbf (deleted after use)</data>
+          <data key="d3">temp</data>
+          <data key="d4"></data>
+          <data key="d5">TMP_NETWORK_COARSE_OSM</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="46.0" width="280.0" x="2116.0" y="850.0"/>
+              <y:Fill color="#D9D9D9" transparent="false"/>
+              <y:BorderStyle color="#8C8C8C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#3a3a3a" visible="true">input/network-coarse.osm.pbf (deleted after use)</y:NodeLabel>
+              <y:Shape type="ellipse"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="NETWORK_OSM">
+          <data key="d2">network.osm</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">NETWORK_OSM</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="160.0" x="2176.0" y="910.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">network.osm</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__NETWORK_SUMO" yfiles.foldertype="group">
+      <data key="d2">NETWORK_SUMO — sumo.net.xml</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">NETWORK_SUMO</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="136.0" width="202.0" x="2940.0" y="0.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">NETWORK_SUMO
+sumo.net.xml</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__NETWORK_SUMO:">
+        <node id="STEP__NETWORK_SUMO__1">
+          <data key="d2">netconvert</data>
+          <data key="d3">step</data>
+          <data key="d4">netconvert --type-files ... --osm-files -o</data>
+          <data key="d5">STEP__NETWORK_SUMO__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="170.0" x="2956.0" y="34.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">netconvert</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="NETWORK_SUMO">
+          <data key="d2">sumo.net.xml</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">NETWORK_SUMO</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="160.0" x="2961.0" y="86.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">sumo.net.xml</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__RANDOM_DRT_FLEET_10K" yfiles.foldertype="group">
+      <data key="d2">RANDOM_DRT_FLEET_10K — berlin-v7.1.drt-by-rndLocations-10000vehicles-4seats.xml.gz</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">RANDOM_DRT_FLEET_10K</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="284.0" width="352.0" x="6300.0" y="176.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">RANDOM_DRT_FLEET_10K
+berlin-v7.1.drt-by-rndLocations-10000vehicles-4seats.xml.gz</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__RANDOM_DRT_FLEET_10K:">
+        <node id="STEP__RANDOM_DRT_FLEET_10K__1">
+          <data key="d2">prepare create-drt-vehicles 10000 vehicles, 4 seats</data>
+          <data key="d3">step</data>
+          <data key="d4"></data>
+          <data key="d5">STEP__RANDOM_DRT_FLEET_10K__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="56.0" width="188.2" x="6381.9" y="210.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare create-drt-vehicles
+10000 vehicles, 4 seats</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="STEP__RANDOM_DRT_FLEET_10K__2">
+          <data key="d2">prepare create-drt-vehicles 500 vehicles, 4 seats</data>
+          <data key="d3">step</data>
+          <data key="d4"></data>
+          <data key="d5">STEP__RANDOM_DRT_FLEET_10K__2</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="56.0" width="188.2" x="6381.9" y="280.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare create-drt-vehicles
+500 vehicles, 4 seats</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="TMP_DRT_500">
+          <data key="d2">output/berlin-v7.1.drt-by-rndLocations-500vehicles-4seats.xml.gz (side output, no Makefile var)</data>
+          <data key="d3">temp</data>
+          <data key="d4"></data>
+          <data key="d5">TMP_DRT_500</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="46.0" width="280.0" x="6336.0" y="350.0"/>
+              <y:Fill color="#D9D9D9" transparent="false"/>
+              <y:BorderStyle color="#8C8C8C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#3a3a3a" visible="true">output/berlin-v7.1.drt-by-rndLocations-500vehicles-4seats.xml.gz (side output, no Makefile var)</y:NodeLabel>
+              <y:Shape type="ellipse"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="RANDOM_DRT_FLEET_10K">
+          <data key="d2">berlin-v7.1.drt-by-rndLocations-10000vehicles-4seats.xml.gz</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">RANDOM_DRT_FLEET_10K</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="320.0" x="6316.0" y="410.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">berlin-v7.1.drt-by-rndLocations-10000vehicles-4seats.xml.gz</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__VEHICLESFILE_OUT" yfiles.foldertype="group">
+      <data key="d2">VEHICLESFILE_OUT — berlin-v7.1-vehicleTypes.xml</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">VEHICLESFILE_OUT</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="136.0" width="224.0" x="1260.0" y="176.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">VEHICLESFILE_OUT
+berlin-v7.1-vehicleTypes.xml</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__VEHICLESFILE_OUT:">
+        <node id="STEP__VEHICLESFILE_OUT__1">
+          <data key="d2">cp</data>
+          <data key="d3">step</data>
+          <data key="d4"></data>
+          <data key="d5">STEP__VEHICLESFILE_OUT__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="170.0" x="1287.0" y="210.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">cp</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="VEHICLESFILE_OUT">
+          <data key="d2">berlin-v7.1-vehicleTypes.xml</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">VEHICLESFILE_OUT</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="192.0" x="1276.0" y="262.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">berlin-v7.1-vehicleTypes.xml</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="GROUP__VMZ_COUNTS" yfiles.foldertype="group">
+      <data key="d2">VMZ_COUNTS — berlin-v7.1-counts-vmz.xml.gz</data>
+      <data key="d3">group</data>
+      <data key="d4">groups the executed steps + intermediate data that produce this artifact</data>
+      <data key="d5">VMZ_COUNTS</data>
+      <data key="d0">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="136.0" width="230.5" x="6300.0" y="500.0"/>
+              <y:Fill color="#F3F1FA" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="dashed" width="1.5"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="11" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" modelName="internal" modelPosition="t" textColor="#3a2a6d" verticalTextPosition="bottom" visible="true">VMZ_COUNTS
+berlin-v7.1-counts-vmz.xml.gz</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="180.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15" left="15" leftF="15" right="15" rightF="15" top="34" topF="34"/>
+              <y:BorderInsets bottom="0" bottomF="0" left="0" leftF="0" right="0" rightF="0" top="0" topF="0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="GROUP__VMZ_COUNTS:">
+        <node id="STEP__VMZ_COUNTS__1">
+          <data key="d2">prepare counts-from-vmz</data>
+          <data key="d3">step</data>
+          <data key="d4">--input-crs EPSG:31468 --target-crs --counts-mapping</data>
+          <data key="d5">STEP__VMZ_COUNTS__1</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="38.0" width="170.0" x="6330.2" y="534.0"/>
+              <y:Fill color="#B39DDB" transparent="false"/>
+              <y:BorderStyle color="#5E35B1" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#241a4d" visible="true">prepare counts-from-vmz</y:NodeLabel>
+              <y:Shape type="parallelogram"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="VMZ_COUNTS">
+          <data key="d2">berlin-v7.1-counts-vmz.xml.gz</data>
+          <data key="d3">target</data>
+          <data key="d4"></data>
+          <data key="d5">VMZ_COUNTS</data>
+          <data key="d0">
+            <y:ShapeNode>
+              <y:Geometry height="34.0" width="198.5" x="6316.0" y="586.0"/>
+              <y:Fill color="#81B29A" transparent="false"/>
+              <y:BorderStyle color="#3B6F5C" type="line" width="1.5"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="10" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" modelName="internal" modelPosition="c" textColor="#0f2a20" visible="true">berlin-v7.1-counts-vmz.xml.gz</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <edge id="e0" source="JAR" target="setup">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e1" source="setup" target="STEP__FACILITIES_GPKG__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e2" source="BRANDENBURG_OSM_LOCAL" target="STEP__FACILITIES_GPKG__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e3" source="ACTIVITY_MAPPING" target="STEP__FACILITIES_GPKG__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e4" source="STEP__FACILITIES_GPKG__1" target="FACILITIES_GPKG">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e5" source="setup" target="STEP__NETWORK_OSM__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e6" source="BRANDENBURG_OSM_LOCAL" target="STEP__NETWORK_OSM__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e7" source="AREA_POLY" target="STEP__NETWORK_OSM__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e8" source="STEP__NETWORK_OSM__1" target="TMP_NETWORK_DETAILED_OSM">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e9" source="setup" target="STEP__NETWORK_OSM__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e10" source="BRANDENBURG_OSM_LOCAL" target="STEP__NETWORK_OSM__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e11" source="STEP__NETWORK_OSM__2" target="TMP_NETWORK_COARSE_OSM">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e12" source="TMP_NETWORK_DETAILED_OSM" target="STEP__NETWORK_OSM__3">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e13" source="TMP_NETWORK_COARSE_OSM" target="STEP__NETWORK_OSM__3">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e14" source="REMOVE_RAILWAY" target="STEP__NETWORK_OSM__3">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e15" source="STEP__NETWORK_OSM__3" target="NETWORK_OSM">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e16" source="setup" target="STEP__NETWORK_SUMO__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e17" source="NETWORK_OSM" target="STEP__NETWORK_SUMO__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e18" source="SUMO_OSM_NETCONVERT" target="STEP__NETWORK_SUMO__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e19" source="SUMO_OSM_NETCONVERT_URBAN_DE" target="STEP__NETWORK_SUMO__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e20" source="STEP__NETWORK_SUMO__1" target="NETWORK_SUMO">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e21" source="setup" target="STEP__NETWORK_MATSIM__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e22" source="NETWORK_SUMO" target="STEP__NETWORK_MATSIM__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e23" source="STEP__NETWORK_MATSIM__1" target="STEP__NETWORK_MATSIM__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e24" source="STEP__NETWORK_MATSIM__2" target="STEP__NETWORK_MATSIM__3">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e25" source="STEP__NETWORK_MATSIM__3" target="STEP__NETWORK_MATSIM__4">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e26" source="NETWORK_FT" target="STEP__NETWORK_MATSIM__4">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e27" source="STEP__NETWORK_MATSIM__4" target="STEP__NETWORK_MATSIM__5">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e28" source="NETWORK_FT" target="STEP__NETWORK_MATSIM__5">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e29" source="STEP__NETWORK_MATSIM__5" target="NETWORK_MATSIM">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e30" source="setup" target="STEP__NETWORK_MATSIM_PT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e31" source="NETWORK_MATSIM" target="STEP__NETWORK_MATSIM_PT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e32" source="GTFS_DATA" target="STEP__NETWORK_MATSIM_PT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e33" source="PT_AREA" target="STEP__NETWORK_MATSIM_PT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e34" source="STEP__NETWORK_MATSIM_PT__1" target="TMP_TRANSIT_SCHEDULE">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e35" source="STEP__NETWORK_MATSIM_PT__1" target="TMP_TRANSIT_VEHICLES">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e36" source="TMP_TRANSIT_SCHEDULE" target="STEP__NETWORK_MATSIM_PT__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e37" source="TMP_TRANSIT_VEHICLES" target="STEP__NETWORK_MATSIM_PT__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e38" source="STEP__NETWORK_MATSIM_PT__2" target="TMP_TRANSIT_SCHEDULE">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e39" source="STEP__NETWORK_MATSIM_PT__2" target="TMP_TRANSIT_VEHICLES">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e40" source="STEP__NETWORK_MATSIM_PT__2" target="STEP__NETWORK_MATSIM_PT__3">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e41" source="VMZ_COUNTS" target="STEP__NETWORK_MATSIM_PT__3">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e42" source="COUNTS_UNDERESTIMATED" target="STEP__NETWORK_MATSIM_PT__3">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e43" source="STEP__NETWORK_MATSIM_PT__3" target="NETWORK_MATSIM_PT">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e44" source="setup" target="STEP__VMZ_COUNTS__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e45" source="NETWORK_MATSIM" target="STEP__VMZ_COUNTS__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e46" source="COUNTS_BERLIN_2018" target="STEP__VMZ_COUNTS__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e47" source="LINK_GEOMETRIES" target="STEP__VMZ_COUNTS__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e48" source="COUNTS_MAPPING" target="STEP__VMZ_COUNTS__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e49" source="STEP__VMZ_COUNTS__1" target="VMZ_COUNTS">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e50" source="setup" target="STEP__FACILITIES_XML__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e51" source="NETWORK_MATSIM" target="STEP__FACILITIES_XML__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e52" source="FACILITIES_GPKG" target="STEP__FACILITIES_XML__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e53" source="FACILITY_MAPPING" target="STEP__FACILITIES_XML__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e54" source="PLANUNGSRAUM_25833" target="STEP__FACILITIES_XML__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e55" source="STEP__FACILITIES_XML__1" target="FACILITIES_XML">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e56" source="setup" target="STEP__BERLIN_ONLY_100PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e57" source="PLR_2013_2020" target="STEP__BERLIN_ONLY_100PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e58" source="PLANUNGSRAUM_25833" target="STEP__BERLIN_ONLY_100PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e59" source="FACILITIES_GPKG" target="STEP__BERLIN_ONLY_100PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e60" source="STEP__BERLIN_ONLY_100PCT__1" target="BERLIN_ONLY_100PCT">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e61" source="setup" target="STEP__BERLIN_ONLY_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e62" source="PLR_2013_2020" target="STEP__BERLIN_ONLY_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e63" source="PLANUNGSRAUM_25833" target="STEP__BERLIN_ONLY_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e64" source="FACILITIES_GPKG" target="STEP__BERLIN_ONLY_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e65" source="STEP__BERLIN_ONLY_25PCT__1" target="BERLIN_ONLY_25PCT">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e66" source="setup" target="STEP__BRANDENBURG_ONLY_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e67" source="FACILITIES_GPKG" target="STEP__BRANDENBURG_ONLY_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e68" source="VG5000_GEM" target="STEP__BRANDENBURG_ONLY_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e69" source="REGIONALSTAT_POP" target="STEP__BRANDENBURG_ONLY_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e70" source="REGIONALSTAT_EMPL" target="STEP__BRANDENBURG_ONLY_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e71" source="STEP__BRANDENBURG_ONLY_25PCT__1" target="BRANDENBURG_ONLY_25PCT">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e72" source="setup" target="STEP__BERLIN_BRANDENBURG_STATIC_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e73" source="BERLIN_ONLY_25PCT" target="STEP__BERLIN_BRANDENBURG_STATIC_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e74" source="BRANDENBURG_ONLY_25PCT" target="STEP__BERLIN_BRANDENBURG_STATIC_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e75" source="STEP__BERLIN_BRANDENBURG_STATIC_25PCT__1" target="STEP__BERLIN_BRANDENBURG_STATIC_25PCT__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e76" source="REGIOSTAR" target="STEP__BERLIN_BRANDENBURG_STATIC_25PCT__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e77" source="STEP__BERLIN_BRANDENBURG_STATIC_25PCT__2" target="BERLIN_BRANDENBURG_STATIC_25PCT">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e78" source="setup" target="STEP__BERLIN_BRANDENBURG_ACTS_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e79" source="BERLIN_BRANDENBURG_STATIC_25PCT" target="STEP__BERLIN_BRANDENBURG_ACTS_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e80" source="SRV_PERSONS" target="STEP__BERLIN_BRANDENBURG_ACTS_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e81" source="SRV_ACTS" target="STEP__BERLIN_BRANDENBURG_ACTS_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e82" source="STEP__BERLIN_BRANDENBURG_ACTS_25PCT__1" target="STEP__BERLIN_BRANDENBURG_ACTS_25PCT__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e83" source="SRV_PERSONS" target="STEP__BERLIN_BRANDENBURG_ACTS_25PCT__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e84" source="SRV_ACTS" target="STEP__BERLIN_BRANDENBURG_ACTS_25PCT__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e85" source="SRV_ZONES" target="STEP__BERLIN_BRANDENBURG_ACTS_25PCT__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e86" source="FACILITIES_XML" target="STEP__BERLIN_BRANDENBURG_ACTS_25PCT__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e87" source="NETWORK_MATSIM" target="STEP__BERLIN_BRANDENBURG_ACTS_25PCT__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e88" source="STEP__BERLIN_BRANDENBURG_ACTS_25PCT__2" target="BERLIN_BRANDENBURG_ACTS_25PCT">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e89" source="setup" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e90" source="BERLIN_BRANDENBURG_ACTS_25PCT" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e91" source="FACILITIES_XML" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e92" source="NETWORK_MATSIM" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e93" source="VG5000_GEM" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e94" source="REGIONALSTAT_COMMUTER" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e95" source="BERLIN_COMMUTER" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e96" source="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT__1" target="BERLIN_BRANDENBURG_INITIAL_25PCT">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e97" source="BERLIN_BRANDENBURG_INITIAL_25PCT" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e98" source="setup" target="STEP__BERLIN_CADYTS_INPUT_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e99" source="BERLIN_BRANDENBURG_INITIAL_25PCT" target="STEP__BERLIN_CADYTS_INPUT_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e100" source="BERLIN_SMALLSCALE_COMMERCIAL_25PCT" target="STEP__BERLIN_CADYTS_INPUT_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e101" source="STEP__BERLIN_CADYTS_INPUT_25PCT__1" target="BERLIN_CADYTS_INPUT_25PCT">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e102" source="setup" target="STEP__VEHICLESFILE_OUT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e103" source="VEHICLESFILE_IN" target="STEP__VEHICLESFILE_OUT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e104" source="STEP__VEHICLESFILE_OUT__1" target="VEHICLESFILE_OUT">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e105" source="setup" target="STEP__BERLIN_CADYTS_OUTPUT_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e106" source="CADYTS_CONFIG_TEMPLATE" target="STEP__BERLIN_CADYTS_OUTPUT_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e107" source="STEP__BERLIN_CADYTS_OUTPUT_25PCT__1" target="TMP_CADYTS_CONFIG_XML">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e108" source="TMP_CADYTS_CONFIG_XML" target="STEP__BERLIN_CADYTS_OUTPUT_25PCT__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e109" source="BERLIN_CADYTS_INPUT_25PCT" target="STEP__BERLIN_CADYTS_OUTPUT_25PCT__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e110" source="VEHICLESFILE_OUT" target="STEP__BERLIN_CADYTS_OUTPUT_25PCT__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e111" source="STEP__BERLIN_CADYTS_OUTPUT_25PCT__2" target="BERLIN_CADYTS_OUTPUT_25PCT">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e112" source="setup" target="STEP__BERLIN_CADYTS_FINAL_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e113" source="BERLIN_CADYTS_OUTPUT_25PCT" target="STEP__BERLIN_CADYTS_FINAL_25PCT__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e114" source="STEP__BERLIN_CADYTS_FINAL_25PCT__1" target="BERLIN_CADYTS_SELECTION_25PCT">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e115" source="BERLIN_CADYTS_SELECTION_25PCT" target="STEP__BERLIN_CADYTS_FINAL_25PCT__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e116" source="BERLIN_CADYTS_INPUT_25PCT" target="STEP__BERLIN_CADYTS_FINAL_25PCT__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e117" source="STEP__BERLIN_CADYTS_FINAL_25PCT__2" target="BERLIN_CADYTS_FINAL_25PCT">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e118" source="setup" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e119" source="FACILITIES_XML" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e120" source="NETWORK_MATSIM" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e121" source="BERLIN_CADYTS_FINAL_25PCT" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e122" source="AREA_SHP" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e123" source="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__1" target="TMP_NETWORK_CUTOUT">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e124" source="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__1" target="TMP_FACILITIES_CUTOUT">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e125" source="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__1" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e126" source="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__2" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__3">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e127" source="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__3" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__4">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e128" source="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__4" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__5">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e129" source="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__5" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__6">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e130" source="BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__6">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e131" source="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__6" target="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__7">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e132" source="STEP__BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS__7" target="BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e133" source="setup" target="STEP__BERLIN_AFTER_CHOICE_EXPERIMENTS__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e134" source="MODECHOICE_BASELINE_PLANS" target="STEP__BERLIN_AFTER_CHOICE_EXPERIMENTS__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e135" source="STEP__BERLIN_AFTER_CHOICE_EXPERIMENTS__1" target="STEP__BERLIN_AFTER_CHOICE_EXPERIMENTS__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e136" source="STEP__BERLIN_AFTER_CHOICE_EXPERIMENTS__2" target="BERLIN_AFTER_CHOICE_EXPERIMENTS">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e137" source="setup" target="STEP__BERLIN_DOWNTOWN_3PCT_PLANS__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e138" source="BERLIN_INNER_CITY_GPKG" target="STEP__BERLIN_DOWNTOWN_3PCT_PLANS__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e139" source="BERLIN_3PCT_PLANS" target="STEP__BERLIN_DOWNTOWN_3PCT_PLANS__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e140" source="FACILITIES_XML" target="STEP__BERLIN_DOWNTOWN_3PCT_PLANS__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e141" source="NETWORK_MATSIM" target="STEP__BERLIN_DOWNTOWN_3PCT_PLANS__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e142" source="STEP__BERLIN_DOWNTOWN_3PCT_PLANS__1" target="BERLIN_DOWNTOWN_3PCT_PLANS">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e143" source="setup" target="STEP__RANDOM_DRT_FLEET_10K__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e144" source="NETWORK_MATSIM" target="STEP__RANDOM_DRT_FLEET_10K__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e145" source="BERLIN_SHP_25832" target="STEP__RANDOM_DRT_FLEET_10K__1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e146" source="STEP__RANDOM_DRT_FLEET_10K__1" target="RANDOM_DRT_FLEET_10K">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e147" source="setup" target="STEP__RANDOM_DRT_FLEET_10K__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e148" source="NETWORK_MATSIM" target="STEP__RANDOM_DRT_FLEET_10K__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e149" source="BERLIN_INNER_CITY_GPKG" target="STEP__RANDOM_DRT_FLEET_10K__2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e150" source="STEP__RANDOM_DRT_FLEET_10K__2" target="TMP_DRT_500">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e151" source="NETWORK_MATSIM_PT" target="prepare-network-and-counts">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e152" source="VMZ_COUNTS" target="prepare-network-and-counts">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e153" source="BERLIN_CADYTS_INPUT_25PCT" target="prepare-calibration">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e154" source="NETWORK_MATSIM_PT" target="prepare-calibration">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e155" source="VMZ_COUNTS" target="prepare-calibration">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e156" source="BERLIN_CADYTS_OUTPUT_25PCT" target="prepare-run-cadyts">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e157" source="NETWORK_MATSIM_PT" target="prepare-run-cadyts">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e158" source="VMZ_COUNTS" target="prepare-run-cadyts">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e159" source="BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS" target="prepare-initial">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e160" source="NETWORK_MATSIM_PT" target="prepare-initial">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e161" source="RANDOM_DRT_FLEET_10K" target="prepare-drt">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e162" source="BERLIN_AFTER_CHOICE_EXPERIMENTS" target="prepare">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#7A7A7A" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+  </graph>
+</graphml>
