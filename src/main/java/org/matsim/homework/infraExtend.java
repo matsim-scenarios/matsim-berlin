@@ -1,5 +1,4 @@
 package org.matsim.homework;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,119 +19,106 @@ import org.matsim.core.utils.misc.OptionalTime;
 import org.matsim.pt.transitSchedule.api.*;
 import org.matsim.utils.gis.matsim2esri.network.Links2ESRIShape;
 
-public class InfrastructureScenarioRunner {
-
+public class infraExtend {
 	private static final String DEFAULT_CONFIG_PATH = "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v7.0/input/berlin-v7.0.config.xml";
 	private static final String OUTPUT_DIR = "output/infrastructure-scenario";
 
 	public static void main(String[] args) {
 
+		//Konfiguration
 		Config config = ConfigUtils.loadConfig(DEFAULT_CONFIG_PATH);
 		config.controller().setOutputDirectory(OUTPUT_DIR);
-
 		config.controller().setLastIteration(0);
-
 		Scenario scenario = ScenarioUtils.loadScenario(config);
-		addTramExtension(scenario);
-		//Controler controler = new Controler(scenario);
-		config.qsim().setUsingTravelTimeCheckInTeleportation(true);
-		//controler.run(); //Auskommentiert, da es nicht läuft mir der Config.
-	}
 
-	private static void addTramExtension(Scenario scenario) {
-
-		double tramFreespeed = 13.02; //CHECK FOR VALUES
-		String tramModes = "tram";
-		double tramCapa = 150;
-		TransitScheduleFactory factory = scenario.getTransitSchedule().getFactory(); //get factory
-		Set<Integer> prepend = Set.of(0, 4, 5, 6, 10, 12, 13, 15); //Routes that start at Warschauer Straße
-		Set<Integer> append = Set.of(1, 2, 3, 7, 8, 11, 18, 25, 28); //Routes that end at Warschauer Straße
-		List<TransitStopFacility> extensionStopsForward = new ArrayList<>();
-		List<TransitStopFacility> extensionStopsBackward = new ArrayList<>(); // Liste, die die Extensionstops speichert
+		//Datenstrukturen anlegen
+		TransitScheduleFactory factory = scenario.getTransitSchedule().getFactory();
+		List<TransitRouteStop> forwardRouteStops  = new ArrayList<>();
+    	List<TransitRouteStop> backwardRouteStops = new ArrayList<>();
 		List<Id<Link>> linkIdsF = new ArrayList<>();
-		List<Id<Link>> linkIdsB = new ArrayList<>();
+  		List<Id<Link>> linkIdsB = new ArrayList<>();
+		List<TransitStopFacility> extensionStopsForward = new ArrayList<>();
+		List<TransitStopFacility> extensionStopsBackward = new ArrayList<>();
 
-		// create new Nodes and Links for the Extension
-		Node[] stopTram = new Node[]{
+		//add Data for Extension: M10
+		Set<Integer> prependM10 = Set.of(0, 4, 5, 6, 10, 12, 13, 15);
+		Set<Integer> appendM10 = Set.of(1, 2, 3, 7, 8, 11, 18, 25, 28);
+		Node[] stopM10 = new Node[]{
 			scenario.getNetwork().getNodes().get(Id.createNodeId("pt_75928_tram")), //H Warschauer straße, end of M10
 			scenario.getNetwork().getFactory().createNode(Id.createNodeId("pt_M10_new1"), new Coord(802648.44, 5828118.063)),  //H Falckenstraße
 			scenario.getNetwork().getFactory().createNode(Id.createNodeId("pt_M10_new2"), new Coord(801369.589, 5825548.911)),  //H Görlitzer park
 			scenario.getNetwork().getFactory().createNode(Id.createNodeId("pt_M10_new3"), new Coord(801173.733, 5825164.820)),  //H Reichenberger Straße
 			scenario.getNetwork().getFactory().createNode(Id.createNodeId("pt_M10_new4"), new Coord(800952.363, 5824717.524)),    //H Framstraße
 			scenario.getNetwork().getFactory().createNode(Id.createNodeId("pt_M10_new5"), new Coord(800770.939, 5824360.132)),    //H Pannierstraße
-			scenario.getNetwork().getFactory().createNode(Id.createNodeId("pt_M10_new6"), new Coord(800418.433, 5824504.268))}; /*H Hermannplatz*/
-		for (Node node : stopTram) {
-				scenario.getNetwork().addNode(node);
-		}
-		String[] stopTramNames = new String[]{
-			"Warschauer_Strasse", "Falckenstrasse", "Goerlitzer_Park", "Reichenberger_Strasse", "Framstrasse", "Pannierstrasse", "Hermannplatz"};
-
-		//Transitline of Tram M10 is in Line 1169283, refid:id="M10---20481" -> 29 Routes.
+			scenario.getNetwork().getFactory().createNode(Id.createNodeId("pt_M10_new6"), new Coord(800418.433, 5824504.268))}; //H Hermannplatz
 		TransitLine m10 = scenario.getTransitSchedule().getTransitLines().get(Id.create("M10---20481", TransitLine.class));
 
-		// for loop iterates over all Nodes to create pt_links in between Stops in  both directions
-		for (int i = 0; i < stopTram.length - 1; i++) {
+		//Ausführen der Netzwerkerweiterung
+		createNetwork(scenario, 13.02,150,"tram",stopM10,extensionStopsForward, extensionStopsBackward, factory, linkIdsF, linkIdsB);
+		extendTransitRoutes(factory, forwardRouteStops, backwardRouteStops,extensionStopsForward,extensionStopsBackward,m10,prependM10,appendM10,linkIdsF,linkIdsB);
+		Export(scenario);
 
-			Link direction1 = scenario.getNetwork().getFactory().createLink(Id.createLinkId("M10LinkStop" + (i + 1) + "comingFromStop" + i), stopTram[i], stopTram[i + 1]); //forward direction
-			Link direction2 = scenario.getNetwork().getFactory().createLink(Id.createLinkId("M10LinkStop" + i + "comingFromStop" + (i + 1)), stopTram[i + 1], stopTram[i]); //backward direction
+		//Simulation starten
+		//Controler controler = new Controler(scenario);
+		//controler.run(); //Auskommentiert, da es nicht läuft mir der Config.
+	}
 
-			direction1.setFreespeed(tramFreespeed);
-			direction2.setFreespeed(tramFreespeed);
-			direction1.setLength(NetworkUtils.getEuclideanDistance(stopTram[i].getCoord(), stopTram[i + 1].getCoord()));
-			direction2.setLength(NetworkUtils.getEuclideanDistance(stopTram[i + 1].getCoord(), stopTram[i].getCoord()));
-			direction1.setCapacity(tramCapa);
-			direction2.setCapacity(tramCapa);
-			direction1.setAllowedModes(Set.of(tramModes));
-			direction2.setAllowedModes(Set.of(tramModes));
+private static void createNetwork(Scenario scenario,double freespeed, double capacity, String mode, Node[] stops, List<TransitStopFacility> extensionStopsForward, List<TransitStopFacility> extensionStopsBackward, TransitScheduleFactory factory,List<Id<Link>> linkIdsF, List<Id<Link>> linkIdsB) {
 
-			scenario.getNetwork().addLink(direction1);
-			scenario.getNetwork().addLink(direction2);
+    // Nodes hinzufügen
+    for (Node node : stops) if (!scenario.getNetwork().getNodes().containsKey(node.getId())) { {scenario.getNetwork().addNode(node);}}
 
-			//add: transitstopfacilities
-			TransitStopFacility stopDir1 = scenario.getTransitSchedule().getFactory().createTransitStopFacility(Id.create("M10Stop" + (i + 1) + "comingFrom" + i, TransitStopFacility.class), stopTram[i + 1].getCoord(), true);
-			TransitStopFacility stopDir2 = scenario.getTransitSchedule().getFactory().createTransitStopFacility(Id.create("M10Stop" + (i) + "comingFrom" + (i + 1), TransitStopFacility.class), stopTram[i + 1].getCoord(), true);
+    // Links in beide Richtungen erzeugen
+    for (int i = 0; i < stops.length - 1; i++) {
+      	Link fw = createDirection(scenario, stops[i], stops[i+1], "M10LinkStop" + (i + 1) + "comingFromStop" + i, freespeed, capacity, mode);
+		Link bw = createDirection(scenario,stops[i + 1],stops[i],"M10LinkStop" + i + "comingFromStop" + (i + 1),freespeed,capacity,mode);
+		createTransitStopFacility(scenario,factory,extensionStopsForward, fw, stops[i+1]);createTransitStopFacility(scenario,factory,extensionStopsBackward, bw, stops[i+1]);
+		linkIdsF.add(fw.getId());linkIdsB.add(bw.getId());
+    }
+}
+private static Link createDirection(Scenario scenario,Node from, Node to, String linkId,  double freespeed, double capacity, String mode) {
+	//Funktion zum Erstellen der Links
+    Link link = scenario.getNetwork().getFactory().createLink(Id.createLinkId(linkId),from, to);
+    link.setFreespeed(freespeed);
+    link.setLength(NetworkUtils.getEuclideanDistance(from.getCoord(), to.getCoord()));
+    link.setCapacity(capacity);
+    link.setAllowedModes(Set.of(mode));
+    scenario.getNetwork().addLink(link);
+    return link;
+}
+private static void createTransitStopFacility(Scenario scenario, TransitScheduleFactory factory, List<TransitStopFacility> extensionStops, Link link, Node node){
+	//Funktion zum Erstellen der TransitStopfacilities
+	TransitStopFacility stop = factory.createTransitStopFacility(Id.create(link.getId()+"_stop", TransitStopFacility.class), node.getCoord(), true);
+		stop.setLinkId(link.getId());
+		scenario.getTransitSchedule().addStopFacility(stop);
+		extensionStops.add(stop);
+}
 
-			stopDir1.setLinkId(direction1.getId());
-			stopDir1.setName(stopTramNames[i + 1]);
-			scenario.getTransitSchedule().addStopFacility(stopDir1);
-			linkIdsF.add(direction1.getId());
-			extensionStopsForward.add(stopDir1);
-
-			stopDir2.setLinkId(direction2.getId());
-			stopDir2.setName(stopTramNames[i]);
-			scenario.getTransitSchedule().addStopFacility(stopDir2);
-			linkIdsB.add(direction2.getId());
-			extensionStopsBackward.add(stopDir2); // add stops to list
-
-		}
-		//System.out.println("Forwardstops: " + extensionStopsForward);
-		//System.out.println("Backwardstops: " + extensionStopsBackward);
-		//make RouteStops
-		double offsetF = 0;
-		List<TransitRouteStop> forwardRouteStops = new ArrayList<>();
+public static void extendTransitRoutes (TransitScheduleFactory factory, List<TransitRouteStop> forwardRouteStops, List<TransitRouteStop> backwardRouteStops, List<TransitStopFacility> extensionStopsForward, List<TransitStopFacility> extensionStopsBackward, TransitLine line, Set<Integer> prependIds, Set<Integer> appendIds,List<Id<Link>> linkIdsF,List<Id<Link>> linkIdsB){
+	//Funktion um die neuen Stops in den bestehenden TransitSchedule einzufügen
+	double offsetF = 0;
 		for (TransitStopFacility facility : extensionStopsForward) {
 			forwardRouteStops.add(factory.createTransitRouteStop(facility, OptionalTime.defined(offsetF), OptionalTime.defined(offsetF)));
-			offsetF += 120; // 2 Minuten wegzeit zwischen halten.
+			offsetF += 120; // 2 Minuten wegzeit zwischen halten als überschlagener Wert.
 		}
 
-		double offsetB = 0;
-		List<TransitRouteStop> backwardRouteStops = new ArrayList<>();
+	double offsetB = 120;
 		for (TransitStopFacility facility : extensionStopsBackward) {
 			backwardRouteStops.add(factory.createTransitRouteStop(facility, OptionalTime.defined(offsetB), OptionalTime.defined(offsetB)));
-			offsetB += 120; // 2 Minuten wegzeit zwischen halten.
+			offsetB += 120; // 2 Minuten wegzeit zwischen halten als überschlagener Wert.
 		}
-		//System.out.println("Offset Backward" + offsetB);
 
-
-
-		for (int i = 0; i < 30; i++) {
-			Id<TransitRoute> routeId = Id.create("M10---20481_" + i, TransitRoute.class);
-			TransitRoute existRoute = m10.getRoutes().get(routeId);
+		// diese Schleife iteriert über die Anzahl der Routen, die die zu erweiternede Linie hat
+		for (int i = 0; i < line.getRoutes().size(); i++) {
+			Id<TransitRoute> routeId = Id.create(line.getId() +"_"+ i, TransitRoute.class);
+			TransitRoute existRoute = line.getRoutes().get(routeId);
 			List<TransitRouteStop> stops = new ArrayList<>(); //Transit stops List
-			if (existRoute == null || !prepend.contains(i) && !append.contains(i) )continue;
+			if (existRoute == null || !prependIds.contains(i) && !appendIds.contains(i) )continue;
+
 			NetworkRoute newRoute = existRoute.getRoute(); //declare new networkroute
-			if (append.contains(i)) {
-				TransitRouteStop lastStop = existRoute.getStops().get(existRoute.getStops().size() - 1);
+
+			if (appendIds.contains(i)) {
+				TransitRouteStop lastStop = existRoute.getStops().getLast();
 				double offset = lastStop.getDepartureOffset().seconds();
 				stops.addAll(existRoute.getStops());
 				for (TransitRouteStop Stop : backwardRouteStops) {
@@ -143,15 +129,13 @@ public class InfrastructureScenarioRunner {
 				List<Id<Link>> newLinkIds = new ArrayList<>();
 				newLinkIds.addAll(oldNetworkRoute.getLinkIds());
 				newLinkIds.addAll(linkIdsB);
-				newRoute = RouteUtils.createLinkNetworkRouteImpl(oldNetworkRoute.getStartLinkId(), newLinkIds, newLinkIds.getLast()); //hierfür Liste mit allen Links -> Dann Networkroute erstellen?
+				newRoute = RouteUtils.createLinkNetworkRouteImpl(oldNetworkRoute.getStartLinkId(), newLinkIds, newLinkIds.getLast());
 			}
-			else if (prepend.contains(i)) {
+			else if (prependIds.contains(i)) {
 				List<TransitRouteStop> shiftedExistingStops = new ArrayList<>();
-				//double extensionTime = forwardRouteStops.get(forwardRouteStops.size() - 1).getDepartureOffset().seconds();
 				stops.addAll(forwardRouteStops);
 				//shift Offset from existing Stops
 				for (TransitRouteStop oldStop : existRoute.getStops()) {
-
 					TransitRouteStop newStop = factory.createTransitRouteStop(oldStop.getStopFacility(), OptionalTime.defined(oldStop.getArrivalOffset().seconds() + offsetF), OptionalTime.defined(oldStop.getDepartureOffset().seconds() + offsetF));
 					shiftedExistingStops.add(newStop);
 				}
@@ -165,27 +149,19 @@ public class InfrastructureScenarioRunner {
 			//make new Transit Route: ersetzen der alten Route
 			TransitRoute newTransitRoute = factory.createTransitRoute(existRoute.getId(), newRoute, stops, existRoute.getTransportMode());
 			existRoute.getDepartures().values().forEach(newTransitRoute::addDeparture);
-			m10.removeRoute(existRoute);
-			m10.addRoute(newTransitRoute);
+			line.removeRoute(existRoute);
+			line.addRoute(newTransitRoute);
 
 		}
+}
 
-		File outputDir = new File("output");
+private static void Export(Scenario scenario){
+	File outputDir = new File("output");
 		if (!outputDir.exists()) {outputDir.mkdirs();}
-
 		NetworkUtils.writeNetwork(scenario.getNetwork(),"output/network.xml.gz");
-
 		new TransitScheduleWriter(scenario.getTransitSchedule()).writeFile("output/transitSchedule.xml.gz");
 		Links2ESRIShape exporter =new Links2ESRIShape(scenario.getNetwork(),"output/m10_network.shp",	scenario.getConfig().global().getCoordinateSystem());
 		exporter.write();
-		//System.out.println("Finished");
-	}
-
+		//System.out.println("Finished Export");
 }
-
-
-
-
-
-
-
+}
