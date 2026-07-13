@@ -159,7 +159,7 @@ public class InfrastructureScenarioRunner {
 			}
 			else if (prepend.contains(i)) {
 				List<TransitRouteStop> shiftedExistingStops = new ArrayList<>();
-				double extensionTime = forwardRouteStops.get(forwardRouteStops.size() - 1).getDepartureOffset().seconds();
+				//double extensionTime = forwardRouteStops.get(forwardRouteStops.size() - 1).getDepartureOffset().seconds();
 				stops.addAll(forwardRouteStops);
 				//shift Offset from existing Stops
 				for (TransitRouteStop oldStop : existRoute.getStops()) {
@@ -185,25 +185,11 @@ public class InfrastructureScenarioRunner {
 		File outputDir = new File("output");
 		if (!outputDir.exists()) {outputDir.mkdirs();}
 
-		NetworkUtils.writeNetwork(
-			scenario.getNetwork(),
-			"output/network.xml.gz"
-		);
+		NetworkUtils.writeNetwork(scenario.getNetwork(),"output/network.xml.gz");
 
-		new TransitScheduleWriter(
-			scenario.getTransitSchedule()
-		).writeFile(
-			"output/transitSchedule.xml.gz"
-		);
-		Links2ESRIShape exporter =
-			new Links2ESRIShape(
-				scenario.getNetwork(),
-				"output/m10_network.shp",
-				scenario.getConfig().global().getCoordinateSystem()
-			);
-
+		new TransitScheduleWriter(scenario.getTransitSchedule()).writeFile("output/transitSchedule.xml.gz");
+		Links2ESRIShape exporter =new Links2ESRIShape(scenario.getNetwork(),"output/m10_network.shp",	scenario.getConfig().global().getCoordinateSystem());
 		exporter.write();
-
 		System.out.println("Finished");
 	}
 
