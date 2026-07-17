@@ -19,11 +19,15 @@ public class BerlinDashboardProvider implements DashboardProvider {
 
 	@Override
 	public List<Dashboard> getDashboards(Config config, SimWrapper simWrapper) {
-		TripDashboard trips = new TripDashboard("mode_share_ref.csv", "mode_share_per_dist_ref.csv", "mode_users_ref.csv")
+
+		Dashboard trips = Dashboard.customize(new TripDashboard(
+			"mode_share_ref.csv",
+			"mode_share_per_dist_ref.csv",
+			"mode_users_ref.csv")
 			.setAnalysisArgs("--match-id", "^berlin.+", "--shp-filter", "none")
 			.withChoiceEvaluation(true)
-			.withDistanceDistribution("mode_share_distance_distribution.csv")
-			.withGroupedRefData("mode_share_per_group_dist_ref.csv", "age", "income", "employment", "economic_status", "zone");
+			.withGroupedRefData("mode_share_per_group_dist_ref.csv", "age", "income", "employment", "economic_status", "zone")
+			.withDistanceDistribution("mode_share_dist")).context("calibration").title("Trips (calibration)");
 
 		ActivityDashboard activities = new ActivityDashboard("berlin_inspire_grid_1km.gpkg")
 			.addActivityType("work", List.of("work"), List.of(ActivityDashboard.Indicator.COUNTS), false, null)
