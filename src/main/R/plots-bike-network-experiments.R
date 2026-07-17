@@ -3,20 +3,20 @@ library(ggokabeito)
 
 ###################################### tt per dist group plots #############################################################################################################
 
-# read data from pt fare cases
-tt_per_dist_group_base <- read_csv(file="//sshfs.r/meinhardt@cluster-a.math.tu-berlin.de/net/ils/meinhardt/berlin-v6.4-bike-network-paper/base-case-ctd/output-berlin-v6.4-3pct-base-case-ctd/mean_tt_per_distance_bin.csv") %>%
+# read data
+tt_per_dist_group_base <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-base-case-ctd/mean_tt_per_distance_bin.csv") %>%
   mutate(case = "base")
-tt_per_dist_group_teleported <- read_csv(file="//sshfs.r/meinhardt@cluster-a.math.tu-berlin.de/net/ils/meinhardt/berlin-v6.4-bike-network-paper/bike-teleported-only/output-berlin-v6.4-3pct-bike-teleported/mean_tt_per_distance_bin.csv") %>%
+tt_per_dist_group_teleported <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-teleported/mean_tt_per_distance_bin.csv") %>%
   mutate(case = "teleported")
-tt_per_dist_group_qsim0.0 <- read_csv(file="//sshfs.r/meinhardt@cluster-a.math.tu-berlin.de/net/ils/meinhardt/berlin-v6.4-bike-network-paper/bike-in-qsim/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.0/mean_tt_per_distance_bin.csv") %>%
+tt_per_dist_group_qsim0.0 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.0/mean_tt_per_distance_bin.csv") %>%
   mutate(case = "qsim0.0")
-tt_per_dist_group_qsim0.01 <- read_csv(file="//sshfs.r/meinhardt@cluster-a.math.tu-berlin.de/net/ils/meinhardt/berlin-v6.4-bike-network-paper/bike-in-qsim/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.01/mean_tt_per_distance_bin.csv") %>%
+tt_per_dist_group_qsim0.01 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.01/mean_tt_per_distance_bin.csv") %>%
   mutate(case = "qsim0.01")
-tt_per_dist_group_qsim0.1 <- read_csv(file="//sshfs.r/meinhardt@cluster-a.math.tu-berlin.de/net/ils/meinhardt/berlin-v6.4-bike-network-paper/bike-in-qsim/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.1/mean_tt_per_distance_bin.csv") %>%
+tt_per_dist_group_qsim0.1 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.1/mean_tt_per_distance_bin.csv") %>%
   mutate(case = "qsim0.1")
-tt_per_dist_group_qsim0.2 <- read_csv(file="//sshfs.r/meinhardt@cluster-a.math.tu-berlin.de/net/ils/meinhardt/berlin-v6.4-bike-network-paper/bike-in-qsim/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.2/mean_tt_per_distance_bin.csv") %>%
+tt_per_dist_group_qsim0.2 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.2/mean_tt_per_distance_bin.csv") %>%
   mutate(case = "qsim0.2")
-tt_per_dist_group_qsim0.3 <- read_csv(file="//sshfs.r/meinhardt@cluster-a.math.tu-berlin.de/net/ils/meinhardt/berlin-v6.4-bike-network-paper/bike-in-qsim/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.3/mean_tt_per_distance_bin.csv") %>%
+tt_per_dist_group_qsim0.3 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.3/mean_tt_per_distance_bin.csv") %>%
   mutate(case = "qsim0.3")
 
 distGroups <- unique(tt_per_dist_group_base$dist_group)
@@ -50,13 +50,13 @@ combined <- bind_rows(tt_per_dist_group_base, tt_per_dist_group_teleported, tt_p
 #   mutate(incomeGroup = factor(incomeGroup, levels = distGroups)) %>%
 #   mutate(case = factor(case, levels = unique(case)))
 
-combined_car <- combined %>%
+combined_bike <- combined %>%
   filter(mode == "bike")
 
 # plot tt per dist group bike
-tt_per_dist_group_car_plot <- ggplot(combined_car, aes(x = dist_group, y = mean_tt_min, fill = case)) +
+tt_per_dist_group_bike_plot <- ggplot(combined_bike, aes(x = dist_group, y = mean_tt_min, fill = case)) +
   geom_col(
-    data = combined_car,
+    data = combined_bike,
     position = position_dodge(width = 0.8), width = 0.7
   ) +
   # geom_col(
@@ -65,7 +65,7 @@ tt_per_dist_group_car_plot <- ggplot(combined_car, aes(x = dist_group, y = mean_
   # ) +
   scale_fill_okabe_ito(order = c(1,2,3,4,5,6,7)) +
   scale_y_continuous(
-    breaks = seq(0, max(combined_car$mean_tt_min, na.rm = TRUE), by = 50)
+    breaks = seq(0, max(combined_bike$mean_tt_min, na.rm = TRUE), by = 50)
   ) +
   labs(x = "distance group [km]", y = "mean travel time [min]") +
   theme_minimal() +
@@ -78,8 +78,8 @@ tt_per_dist_group_car_plot <- ggplot(combined_car, aes(x = dist_group, y = mean_
     legend.text = element_text(size = 19),
     plot.margin = margin(5, 5, 5, 5)
   )
-tt_per_dist_group_car_plot
-ggsave("tt_per_dist_group_bike_plot.pdf", tt_per_dist_group_car_plot, dpi = 500, w = 9, h = 9)
+tt_per_dist_group_bike_plot
+ggsave("tt_per_dist_group_bike_plot.pdf", tt_per_dist_group_bike_plot, dpi = 500, w = 9, h = 9)
 
 combined_car <- combined %>%
   filter(mode == "car")
@@ -112,3 +112,111 @@ tt_per_dist_group_car_plot <- ggplot(combined_car, aes(x = dist_group, y = mean_
   )
 tt_per_dist_group_car_plot
 ggsave("tt_per_dist_group_car_plot.pdf", tt_per_dist_group_car_plot, dpi = 500, w = 9, h = 9)
+
+############################################ dist group distr per case plot ##################################################
+
+# read data
+modal_dist_groups_base <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-base-case-ctd/analysis/population/mode_share_per_dist.csv") %>%
+  mutate(case = "base")
+modal_dist_groups_teleported <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-teleported/analysis/population/mode_share_per_dist.csv") %>%
+  mutate(case = "teleported")
+modal_dist_groups_qsim0.0 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.0/analysis/population/mode_share_per_dist.csv") %>%
+  mutate(case = "qsim0.0")
+modal_dist_groups_qsim0.01 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.01/analysis/population/mode_share_per_dist.csv") %>%
+  mutate(case = "qsim0.01")
+modal_dist_groups_qsim0.1 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.1/analysis/population/mode_share_per_dist.csv") %>%
+  mutate(case = "qsim0.1")
+modal_dist_groups_qsim0.2 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.2/analysis/population/mode_share_per_dist.csv") %>%
+  mutate(case = "qsim0.2")
+modal_dist_groups_qsim0.3 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.3/analysis/population/mode_share_per_dist.csv") %>%
+  mutate(case = "qsim0.3")
+modal_dist_groups_ref <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-base-case-ctd/analysis/resources/mode_share_per_dist_ref.csv") %>%
+  mutate(case = "ref")
+
+dist_levels_modal <- c(
+  "0 - 1000",
+  "1000 - 2000",
+  "2000 - 5000",
+  "5000 - 10000",
+  "10000 - 20000",
+  "20000+"
+)
+
+# Combine datasets
+combined_modal <- bind_rows(modal_dist_groups_base, modal_dist_groups_teleported, modal_dist_groups_qsim0.0, modal_dist_groups_qsim0.01, modal_dist_groups_qsim0.1, modal_dist_groups_qsim0.2, modal_dist_groups_qsim0.3, modal_dist_groups_ref) %>%
+  mutate(dist_group = factor(dist_group, levels = dist_levels_modal)) %>%
+  mutate(case = factor(case, levels = unique(case))) %>%
+  mutate(
+    dist_group = recode(
+      dist_group,
+      "0 - 1000" = "0 - 0.99",
+      "1000 - 2000" = "1.0 - 1.99",
+      "2000 - 5000" = "2.0 - 4.99",
+      "5000 - 10000" = "5.0 - 9.99",
+      "10000 - 20000" = "10.0 - 20.0",
+      "20000+" = "> 20.0"
+    )
+  ) %>% 
+  select(-mean_dist)
+
+combined_modal_bike <- combined_modal %>%
+  filter(main_mode == "bike")
+
+# plot modal distances bike
+modal_dist_group_bike_plot <- ggplot(combined_modal_bike, aes(x = dist_group, y = share, fill = case)) +
+  geom_col(
+    data = combined_modal_bike,
+    position = position_dodge(width = 0.8), width = 0.7
+  ) +
+  # geom_col(
+  #   data = subset(combined_modal_bike, case == "All agents"),
+  #   alpha = 0.4, width = 0.95, show.legend = TRUE
+  # ) +
+  scale_fill_okabe_ito(order = c(1,2,3,4,5,6,7,8)) +
+  # scale_y_continuous(
+  #   breaks = seq(0, max(combined_modal_bike$share, na.rm = TRUE), by = 0.5)
+  # ) +
+  labs(x = "distance group [km]", y = "share") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 20),
+    axis.title = element_text(size = 21),
+    axis.text = element_text(size = 20),
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+    legend.title = element_text(size = 20),
+    legend.text = element_text(size = 19),
+    plot.margin = margin(5, 5, 5, 5)
+  )
+modal_dist_group_bike_plot
+ggsave("modal_dist_group_bike_plot.pdf", modal_dist_group_bike_plot, dpi = 500, w = 9, h = 9)
+
+combined_modal_car <- combined_modal %>%
+  filter(main_mode == "car")
+
+# plot modal distances car
+modal_dist_group_car_plot <- ggplot(combined_modal_car, aes(x = dist_group, y = share, fill = case)) +
+  geom_col(
+    data = combined_modal_car,
+    position = position_dodge(width = 0.8), width = 0.7
+  ) +
+  # geom_col(
+  #   data = subset(combined_modal_car, case == "All agents"),
+  #   alpha = 0.4, width = 0.95, show.legend = TRUE
+  # ) +
+  scale_fill_okabe_ito(order = c(1,2,3,4,5,6,7,8)) +
+  # scale_y_continuous(
+  #   breaks = seq(0, max(combined_modal_car$share, na.rm = TRUE), by = 0.5)
+  # ) +
+  labs(x = "distance group [km]", y = "share") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 20),
+    axis.title = element_text(size = 21),
+    axis.text = element_text(size = 20),
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+    legend.title = element_text(size = 20),
+    legend.text = element_text(size = 19),
+    plot.margin = margin(5, 5, 5, 5)
+  )
+modal_dist_group_car_plot
+ggsave("modal_dist_group_car_plot.pdf", modal_dist_group_car_plot, dpi = 500, w = 9, h = 9)
