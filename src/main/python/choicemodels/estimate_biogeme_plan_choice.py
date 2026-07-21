@@ -32,7 +32,7 @@ FIXED = 1
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Estimate choice model for daily trip usage")
     parser.add_argument("--input", help="Path to the input file", type=str,
-                        default="../../../plan-choices-subtour_70.csv")
+                        default="/Users/gregorr/Downloads/plan-choices-subtour_70.csv")
     parser.add_argument("--name", help="Model name prefix in the output", type=str, default="")
     parser.add_argument("--mxl-modes", help="Modes to use mixed logit for", nargs="*", type=set,
                         default=["pt", "bike", "ride", "car"])
@@ -67,6 +67,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     ds = read_plan_choices(args.input)
+    ds.df.to_csv("plan_choices_debug.csv", index=False)
+    print(ds.df.head())
 
     # Needs to be numeric
     ds.df["choice"] = 1
