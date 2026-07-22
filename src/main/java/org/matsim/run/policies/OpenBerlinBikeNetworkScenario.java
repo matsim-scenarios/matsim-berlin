@@ -31,11 +31,14 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 	private BikeHandling bikeHandling = BikeHandling.ROUTED_ON_NETWORK_NOT_IN_QSIM;
 	@CommandLine.Option(names = "--bike-pce", description = "PCE (passenger car equivalents) for bike, if simulated in qsim. Default seems to be 0.2.")
 	private double bikePce = 0.2;
+	@CommandLine.Option(names = "--bike-speed-factor", description = "Defines to which value in km/h the maximum velocity of bikes is set. " +
+		"For teleported bike this is the mean velocity, for routed on the network bike it is the maximum speed.", defaultValue = "1.0")
+	private double bikeSpeedFactor;
 
 	/**
 	 * make all necessary config changes for different simulation scenarios of bike.
 	 */
-	public static void configChangesForBikeNetworkScenario(Config config, BikeHandling bikeHandling) {
+	public static void configChangesForBikeNetworkScenario(Config config, BikeHandling bikeHandling, double bikeSpeedFactor) {
 		if (bikeHandling == BikeHandling.ROUTED_ON_NETWORK_NOT_IN_QSIM) {
 //			default
 		} else if (bikeHandling == BikeHandling.ROUTED_ON_NETWORK_IN_QSIM) {
@@ -61,7 +64,7 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 			bikeParams.setBeelineDistanceFactor(1.3);
 //			according to v6.4 vehicle types file the reported bike speed in SrV is 10.29km/h
 			double bikeTeleportedSpeed = BigDecimal
-				.valueOf(10.29 / 3.6)
+				.valueOf(bikeSpeedFactor * 10.29 / 3.6)
 				.setScale(2, RoundingMode.HALF_UP)
 				.doubleValue();
 			bikeParams.setTeleportedModeSpeed(bikeTeleportedSpeed);
@@ -73,10 +76,17 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 	/**
 	 * make all necessary scenario changes for different simulation scenarios of bike.
 	 */
-	public static void scenarioChangesForBikeNetworkScenario(Scenario scenario, BikeHandling bikeHandling, double bikePce) {
+	public static void scenarioChangesForBikeNetworkScenario(Scenario scenario, BikeHandling bikeHandling, double bikePce, double bikeSpeedFactor) {
 		if (bikeHandling == BikeHandling.ROUTED_ON_NETWORK_NOT_IN_QSIM) {
 //			default
+			if (bikeSpeedFactor != 1.0) {
+				setBikeSpeedForRoutedBike(scenario, bikeSpeedFactor);
+			}
 		} else if (bikeHandling == BikeHandling.ROUTED_ON_NETWORK_IN_QSIM) {
+			if (bikeSpeedFactor != 1.0) {
+				setBikeSpeedForRoutedBike(scenario, bikeSpeedFactor);
+			}
+
 //			set pce if different to default
 			if (bikePce != 0.2) {
 				scenario.getVehicles()
@@ -92,13 +102,30 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 		}
 	}
 
+	private static void setBikeSpeedForRoutedBike(Scenario scenario, double bikeSpeedFactor) {
+		double oldBikeRoutedSpeed = scenario.getVehicles()
+			.getVehicleTypes()
+			.get(Id.create(TransportMode.bike, VehicleType.class))
+			.getMaximumVelocity();
+
+		double bikeRoutedSpeed = BigDecimal
+			.valueOf(bikeSpeedFactor * oldBikeRoutedSpeed)
+			.setScale(2, RoundingMode.HALF_UP)
+			.doubleValue();
+
+		scenario.getVehicles()
+			.getVehicleTypes()
+			.get(Id.create(TransportMode.bike, VehicleType.class))
+			.setMaximumVelocity(bikeRoutedSpeed);
+	}
+
 	@Nullable
 	@Override
 	public Config prepareConfig(Config config) {
 		//		apply all config changes from base scenario class
 		super.prepareConfig(config);
 
-		configChangesForBikeNetworkScenario(config, bikeHandling);
+		configChangesForBikeNetworkScenario(config, bikeHandling, bikeSpeedFactor);
 		return config;
 	}
 
@@ -107,7 +134,7 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 		//		apply all scenario changes from base scenario class
 		super.prepareScenario(scenario);
 
-		scenarioChangesForBikeNetworkScenario(scenario, bikeHandling, bikePce);
+		scenarioChangesForBikeNetworkScenario(scenario, bikeHandling, bikePce, bikeSpeedFactor);
 	}
 
 	@Override
