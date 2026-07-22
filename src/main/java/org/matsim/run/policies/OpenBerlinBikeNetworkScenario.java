@@ -27,10 +27,6 @@ import java.util.Set;
 public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 	private static final Logger log = LogManager.getLogger(OpenBerlinBikeNetworkScenario.class);
 
-	@CommandLine.Option(names = "--bike-handling", description = "Defines how transport mode bike is simulated in the berlin scenario.", required = true)
-	private BikeHandling bikeHandling = BikeHandling.ROUTED_ON_NETWORK_NOT_IN_QSIM;
-	@CommandLine.Option(names = "--bike-pce", description = "PCE (passenger car equivalents) for bike, if simulated in qsim. Default seems to be 0.2.")
-	private double bikePce = 0.2;
 	@CommandLine.Option(names = "--bike-speed-factor", description = "Defines to which value in km/h the maximum velocity of bikes is set. " +
 		"For teleported bike this is the mean velocity, for routed on the network bike it is the maximum speed.", defaultValue = "1.0")
 	private double bikeSpeedFactor;
@@ -125,7 +121,7 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 		//		apply all config changes from base scenario class
 		super.prepareConfig(config);
 
-		configChangesForBikeNetworkScenario(config, bikeHandling, bikeSpeedFactor);
+		configChangesForBikeNetworkScenario(config, OpenBerlinScenario.getBikeHandling(), bikeSpeedFactor);
 		return config;
 	}
 
@@ -134,7 +130,8 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 		//		apply all scenario changes from base scenario class
 		super.prepareScenario(scenario);
 
-		scenarioChangesForBikeNetworkScenario(scenario, bikeHandling, bikePce, bikeSpeedFactor);
+		scenarioChangesForBikeNetworkScenario(scenario, OpenBerlinScenario.getBikeHandling(),
+			OpenBerlinScenario.getBikePce(), bikeSpeedFactor);
 	}
 
 	@Override

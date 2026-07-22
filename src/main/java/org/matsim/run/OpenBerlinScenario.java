@@ -68,9 +68,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 //	bike run params copied from OpenBerlinBikeNetworkScenario because we need to use this class for calibration.
 //	One cannot give the auto calib by CR a different run class. -sm0426
 	@CommandLine.Option(names = "--bike-handling", description = "Defines how transport mode bike is simulated in the berlin scenario.")
-	private OpenBerlinBikeNetworkScenario.BikeHandling bikeHandling = OpenBerlinBikeNetworkScenario.BikeHandling.ROUTED_ON_NETWORK_NOT_IN_QSIM;
+	private static OpenBerlinBikeNetworkScenario.BikeHandling bikeHandling = OpenBerlinBikeNetworkScenario.BikeHandling.ROUTED_ON_NETWORK_NOT_IN_QSIM;
 	@CommandLine.Option(names = "--bike-pce", description = "PCE (passenger car equivalents) for bike, if simulated in qsim. Default seems to be 0.2.")
-	private double bikePce = 0.2;
+	private static double bikePce = 0.2;
 
 	public OpenBerlinScenario() {
 		super(String.format("input/v%s/berlin-v%s.config.xml", VERSION, VERSION));
@@ -78,6 +78,20 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 	public static void main(String[] args) {
 		MATSimApplication.run(OpenBerlinScenario.class, args);
+	}
+
+	/**
+	 * utility method to get the bikeHandling.
+	 **/
+	public static OpenBerlinBikeNetworkScenario.BikeHandling getBikeHandling() {
+		return bikeHandling;
+	}
+
+	/**
+	 * utility method to get the bikePce.
+	 **/
+	public static double getBikePce() {
+		return bikePce;
 	}
 
 	@Override
@@ -281,5 +295,4 @@ public class OpenBerlinScenario extends MATSimApplication {
 			}
 		}
 	}
-
 }
