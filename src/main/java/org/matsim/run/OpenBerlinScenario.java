@@ -1,6 +1,7 @@
 package org.matsim.run;
 
 import com.google.inject.Key;
+import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 import org.matsim.analysis.QsimTimingModule;
 import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
@@ -31,6 +32,7 @@ import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.run.policies.OpenBerlinBikeNetworkScenario;
 import org.matsim.run.scoring.AdvancedScoringConfigGroup;
 import org.matsim.run.scoring.AdvancedScoringModule;
+import org.matsim.run.scoring.BerlinPersonScoringParametersFromPersonAttributes;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
 import org.matsim.vehicles.EngineInformation;
@@ -65,7 +67,14 @@ public class OpenBerlinScenario extends MATSimApplication {
 		defaultValue = DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta)
 	private String planSelector;
 
-//	bike run params copied from OpenBerlinBikeNetworkScenario because we need to use this class for calibration.
+	@CommandLine.Option(names = "--person-specific-ascs",
+		description = "Configuration whether to use scoring with person specific ascs for transport modes (additionally to income dependent scoring." +
+			"USE_SCORING_WITH_PERSON_SPECIFIC_ASCS := scoring with person specific ascs and income dependent scoring. " +
+			"USE_DEFAULT_BERLIN_SCORING := scoring with income dependent scoring",
+		defaultValue = "USE_DEFAULT_BERLIN_SCORING")
+	private PersonSpecificAscsUsage personSpecificAscsUsage;
+
+	//	bike run params copied from OpenBerlinBikeNetworkScenario because we need to use this class for calibration.
 //	One cannot give the auto calib by CR a different run class. -sm0426
 	@CommandLine.Option(names = "--bike-handling", description = "Defines how transport mode bike is simulated in the berlin scenario.")
 	private static OpenBerlinBikeNetworkScenario.BikeHandling bikeHandling = OpenBerlinBikeNetworkScenario.BikeHandling.ROUTED_ON_NETWORK_NOT_IN_QSIM;
@@ -152,6 +161,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 		);
 
 		config.scoring().setWriteExperiencedPlans(true);
+		config.scoring().setExplainScores(true);
 
 		// Need to switch to warning for best score
 		if (planSelector.equals(DefaultPlanStrategiesModule.DefaultSelector.BestScore)) {
@@ -245,22 +255,38 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		controler.addOverridingModule(new QsimTimingModule());
 
-		// AdvancedScoring is specific to matsim-berlin!
-		if (ConfigUtils.hasModule(controler.getConfig(), AdvancedScoringConfigGroup.class)) {
-			controler.addOverridingModule(new AdvancedScoringModule());
-			controler.getConfig().scoring().setExplainScores(true);
-		} else {
-			// if the above config group is not present we still need income dependent scoring
-			// this implementation also allows for person specific asc
-			controler.addOverridingModule(new AbstractModule() {
+		if (personSpecificAscsUsage == PersonSpecificAscsUsage.USE_SCORING_WITH_PERSON_SPECIFIC_ASCS) {
+			//		use person specific scoring algo, which -- additionally to income dep. scoring -- enables person specific ascs per transport mode
+			controler.addOverridingModule( new AbstractModule() {
 				@Override
 				public void install() {
-					bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class).asEagerSingleton();
+					bind(ScoringParametersForPerson.class).to(BerlinPersonScoringParametersFromPersonAttributes.class).in(Singleton.class);
 				}
 			});
+		} else if (personSpecificAscsUsage == PersonSpecificAscsUsage.USE_DEFAULT_BERLIN_SCORING) {
+			// AdvancedScoring is specific to matsim-berlin!
+//			it is commented out in v6.4 input cfg, so I assume it is not used anymore. -sm0226
+			if (ConfigUtils.hasModule(controler.getConfig(), AdvancedScoringConfigGroup.class)) {
+				controler.addOverridingModule(new AdvancedScoringModule());
+				controler.getConfig().scoring().setExplainScores(true);
+			} else {
+				// if the above config group is not present we still need income dependent scoring
+				// this implementation also allows for person specific asc
+				controler.addOverridingModule(new AbstractModule() {
+					@Override
+					public void install() {
+						bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class).asEagerSingleton();
+					}
+				});
+			}
 		}
 		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
 	}
+
+	/**
+	 * Enum to switch on/off scoring with person specific ascs additionally to income dependent scoring.
+	 */
+	private enum PersonSpecificAscsUsage {USE_SCORING_WITH_PERSON_SPECIFIC_ASCS, USE_DEFAULT_BERLIN_SCORING}
 
 	/**
 	 * Add travel time bindings for ride and freight modes, which are not actually network modes.
