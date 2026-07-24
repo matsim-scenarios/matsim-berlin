@@ -121,7 +121,8 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 		//		apply all config changes from base scenario class
 		super.prepareConfig(config);
 
-		configChangesForBikeNetworkScenario(config, OpenBerlinScenario.getBikeHandling(), bikeSpeedFactor);
+//		config changes are already done in OpenBerlinScenario
+//		configChangesForBikeNetworkScenario(config, OpenBerlinScenario.getBikeHandling(), bikeSpeedFactor);
 		return config;
 	}
 
@@ -130,8 +131,9 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 		//		apply all scenario changes from base scenario class
 		super.prepareScenario(scenario);
 
-		scenarioChangesForBikeNetworkScenario(scenario, OpenBerlinScenario.getBikeHandling(),
-			OpenBerlinScenario.getBikePce(), bikeSpeedFactor);
+//		scenario changes are already done in OpenBerlinScenario
+//		scenarioChangesForBikeNetworkScenario(scenario, OpenBerlinScenario.getBikeHandling(),
+//			OpenBerlinScenario.getBikePce(), bikeSpeedFactor);
 	}
 
 	@Override
