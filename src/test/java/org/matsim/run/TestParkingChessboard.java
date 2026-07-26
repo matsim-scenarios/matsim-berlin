@@ -10,8 +10,6 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.api.core.v01.population.Person;
-import org.matsim.contrib.parking.parkingsearch.ParkingSearchStrategy;
 import org.matsim.contrib.parking.parkingsearch.sim.ParkingSearchConfigGroup;
 import org.matsim.contrib.parking.parkingsearch.sim.SetupParking;
 import org.matsim.core.config.Config;
@@ -26,7 +24,6 @@ import org.matsim.core.network.kernel.ConstantKernelDistance;
 import org.matsim.core.network.kernel.DefaultKernelFunction;
 import org.matsim.core.network.kernel.KernelDistance;
 import org.matsim.core.network.kernel.NetworkKernelFunction;
-import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.examples.ExamplesUtils;
@@ -34,7 +31,6 @@ import org.matsim.facilities.*;
 import org.matsim.run.policies.PlanBasedParkingCapacityInitializerBerlin;
 import org.matsim.testcases.MatsimTestUtils;
 
-import static org.matsim.core.mobsim.qsim.qnetsimengine.parking.ParkingUtils.LINK_OFF_STREET_SPOTS;
 import static org.matsim.core.mobsim.qsim.qnetsimengine.parking.ParkingUtils.LINK_ON_STREET_SPOTS;
 
 public class TestParkingChessboard {
@@ -106,6 +102,54 @@ public class TestParkingChessboard {
 	}
 
 	@Test
+	void explicitParkingSearch() {
+		//Config config = ConfigUtils.loadConfig(IOUtils.extendUrl(ExamplesUtils.getTestScenarioURL("chessboard"), "config.xml"));
+		Config config = ConfigUtils.loadConfig("parkingsearch/config.xml", new ParkingSearchConfigGroup());
+		System.out.println(config.getContext());
+		config.controller().setLastIteration(10);
+		config.controller().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
+		config.controller().setOutputDirectory("./withExplicitParkingSearch");
+		config.routing().setAccessEgressType(RoutingConfigGroup.AccessEgressType.accessEgressModeToLink);
+		config.scoring().setWriteExperiencedPlans(true);
+		config.qsim().setSimStarttimeInterpretation(QSimConfigGroup.StarttimeInterpretation.onlyUseStarttime);
+		config.qsim().setEndTime(50 * 3600);
+
+		ScoringConfigGroup.ActivityParams parkingParams = new ScoringConfigGroup.ActivityParams();
+		parkingParams.setScoringThisActivityAtAll(false);
+		parkingParams.setActivityType("parking");
+		parkingParams.setTypicalDuration(3600.0);
+		config.scoring().addActivityParams(parkingParams);
+
+		//ParkingSearchConfigGroup parkingSearchConfigGroup = new ParkingSearchConfigGroup();
+		//parkingSearchConfigGroup.setParkingSearchStrategy(ParkingSearchStrategy.Benenson);
+		//config.addModule(parkingSearchConfigGroup);
+		Scenario scenario = ScenarioUtils.loadScenario(config);
+
+		//add parking facilities
+		for (Link link: scenario.getNetwork().getLinks().values()) {
+			addParkingFacility(scenario, link.getId().toString() + "_parking", link.getId().toString(), 5, link.getCoord());
+		}
+
+		/*Person personToKeep = null;
+		for (Person person: scenario.getPopulation().getPersons().values()) {
+			if(person.getId().equals(Id.createPersonId("1"))) {
+				personToKeep = person;
+			}
+		}
+
+		scenario.getPopulation().getPersons().clear();
+		PopulationUtils.resetRoutes(personToKeep.getSelectedPlan());
+		PopulationUtils.checkRouteModeAndReset(scenario.getPopulation(), scenario.getNetwork());
+		scenario.getPopulation().addPerson(personToKeep); */
+
+		Controller controller = ControllerUtils.createController(scenario);
+		SetupParking.installParkingModules(controller);
+
+
+		controller.run();
+	}
+
+	@Test
 	void noParking() {
 
 		Config config = ConfigUtils.loadConfig(IOUtils.extendUrl(ExamplesUtils.getTestScenarioURL("chessboard"), "config.xml"));
@@ -122,56 +166,13 @@ public class TestParkingChessboard {
 	}
 
 
-	@Test
-	void explicitParkingSearch() {
-		Config config = ConfigUtils.loadConfig(IOUtils.extendUrl(ExamplesUtils.getTestScenarioURL("chessboard"), "config.xml"));
-		config.controller().setLastIteration(10);
-		config.controller().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
-		config.controller().setOutputDirectory("./withExplicitParkingSearch");
-		config.routing().setAccessEgressType(RoutingConfigGroup.AccessEgressType.accessEgressModeToLink);
-		config.scoring().setWriteExperiencedPlans(true);
-		config.qsim().setSimStarttimeInterpretation(QSimConfigGroup.StarttimeInterpretation.onlyUseStarttime);
-		config.qsim().setEndTime(50 * 3600);
-
-		ScoringConfigGroup.ActivityParams parkingParams = new ScoringConfigGroup.ActivityParams();
-		parkingParams.setScoringThisActivityAtAll(false);
-		parkingParams.setActivityType("parking");
-		parkingParams.setTypicalDuration(3600.0);
-		config.scoring().addActivityParams(parkingParams);
-
-		ParkingSearchConfigGroup parkingSearchConfigGroup = new ParkingSearchConfigGroup();
-		parkingSearchConfigGroup.setParkingSearchStrategy(ParkingSearchStrategy.Benenson);
-		config.addModule(parkingSearchConfigGroup);
-		Scenario scenario = ScenarioUtils.loadScenario(config);
-
-		Person personToKeep = null;
-		for (Person person: scenario.getPopulation().getPersons().values()) {
-			if(person.getId().equals(Id.createPersonId("1"))) {
-				personToKeep = person;
-			}
-		}
-
-		scenario.getPopulation().getPersons().clear();
-		PopulationUtils.resetRoutes(personToKeep.getSelectedPlan());
-		PopulationUtils.checkRouteModeAndReset(scenario.getPopulation(), scenario.getNetwork());
-		scenario.getPopulation().addPerson(personToKeep);
-
-		Controller controller = ControllerUtils.createController(scenario);
-		SetupParking.installParkingModules(controller);
-		for (Link link: scenario.getNetwork().getLinks().values()) {
-			addParkingFacility(scenario, link.getId().toString() + "_parking", link.getId().toString(), 5);
-		}
-
-		controller.run();
-	}
-
 
 	private void addParkingFacility(
 		Scenario scenario,
 		String facilityId,
 		String linkId,
-		double capacity
-	) {
+		double capacity,
+		Coord coord) {
 		ActivityFacilities facilities = scenario.getActivityFacilities();
 
 		ActivityFacilitiesFactory factory = facilities.getFactory();
@@ -182,6 +183,7 @@ public class TestParkingChessboard {
 		ActivityFacility facility = factory.createActivityFacility(facId, Id.createLinkId(linkId));
 
 		((ActivityFacilityImpl) facility).setLinkId(lId);
+		facility.setCoord(coord);
 
 		ActivityOption parking = factory.createActivityOption("parking");
 		parking.setCapacity(capacity);
