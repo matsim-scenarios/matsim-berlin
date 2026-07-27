@@ -5,11 +5,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.events.ActivityEndEvent;
+import org.matsim.api.core.v01.events.ActivityStartEvent;
+import org.matsim.api.core.v01.events.handler.ActivityEndEventHandler;
+import org.matsim.api.core.v01.events.handler.ActivityStartEventHandler;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Person;
+import org.matsim.contrib.parking.parkingsearch.ParkingSearchStrategy;
 import org.matsim.contrib.parking.parkingsearch.sim.ParkingSearchConfigGroup;
 import org.matsim.contrib.parking.parkingsearch.sim.SetupParking;
 import org.matsim.core.config.Config;
@@ -24,6 +29,7 @@ import org.matsim.core.network.kernel.ConstantKernelDistance;
 import org.matsim.core.network.kernel.DefaultKernelFunction;
 import org.matsim.core.network.kernel.KernelDistance;
 import org.matsim.core.network.kernel.NetworkKernelFunction;
+import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.examples.ExamplesUtils;
@@ -31,11 +37,23 @@ import org.matsim.facilities.*;
 import org.matsim.run.policies.PlanBasedParkingCapacityInitializerBerlin;
 import org.matsim.testcases.MatsimTestUtils;
 
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.matsim.core.mobsim.qsim.qnetsimengine.parking.ParkingUtils.LINK_ON_STREET_SPOTS;
 
 public class TestParkingChessboard {
 
 	private static final Logger log = LogManager.getLogger(TestParkingChessboard.class);
+	/**
+	 * Explicit parking search inserts this fixed parking activity into every car trip. The proxy
+	 * models only occupancy-dependent search delay, so this constant is removed when comparing
+	 * the two approaches directly. It is also written into the explicit-search config below.
+	 */
+	private static final double EXPLICIT_PARKING_INTERACTION_TIME = 60;
 
 	@RegisterExtension
 	private MatsimTestUtils utils = new MatsimTestUtils();
@@ -125,10 +143,7 @@ public class TestParkingChessboard {
 		//config.addModule(parkingSearchConfigGroup);
 		Scenario scenario = ScenarioUtils.loadScenario(config);
 
-		//add parking facilities
-		for (Link link: scenario.getNetwork().getLinks().values()) {
-			addParkingFacility(scenario, link.getId().toString() + "_parking", link.getId().toString(), 5, link.getCoord());
-		}
+		addParkingFacilities(scenario, 5);
 
 		/*Person personToKeep = null;
 		for (Person person: scenario.getPopulation().getPersons().values()) {
@@ -150,8 +165,98 @@ public class TestParkingChessboard {
 	}
 
 	@Test
-	void noParking() {
+	void parkingProxyProducesSimilarTravelTimesAsExplicitParkingSearch() {
+		// Run every explicit routing strategy to expose how its behavioral assumptions affect
+		// travel time. NearestParkingSpot is the like-for-like proxy benchmark; the other strategies
+		// explicitly cruise through the network and are therefore expected to produce different values.
+		Map<ParkingSearchStrategy, TripTravelTimeResult> explicitResults =
+			new EnumMap<>(ParkingSearchStrategy.class);
+		for (ParkingSearchStrategy strategy : ParkingSearchStrategy.values()) {
+			explicitResults.put(strategy, runExplicitParkingSearch(
+				utils.getOutputDirectory() + "/" + strategy.name(), strategy, 5));
+		}
+		TripTravelTimeResult proxy = runParkingProxy(
+			utils.getOutputDirectory() + "/proxy", 5);
 
+		explicitResults.forEach((strategy, result) ->
+			log.info("Mean trip travel time with explicit {} parking search: {} s",
+				strategy, result.meanTravelTime()));
+		log.info("Mean trip travel time with parking proxy: {} s", proxy.meanTravelTime());
+
+		explicitResults.forEach((strategy, result) -> {
+			assertEquals(result.completedLegs(), proxy.completedLegs(),
+				"Explicit " + strategy + " search and the proxy should complete the same number of trips.");
+			assertTrue(Double.isFinite(result.meanTravelTime()) && result.meanTravelTime() > 0,
+				"Explicit " + strategy + " search should produce a valid mean trip travel time.");
+		});
+
+		TripTravelTimeResult nearestParkingSpot = explicitResults.get(ParkingSearchStrategy.NearestParkingSpot);
+		// Door-to-door explicit time includes the fixed parking activity. Subtract it before
+		// comparing with the proxy, which represents parking search only as an added car delay.
+		double comparableExplicitTravelTime =
+			nearestParkingSpot.meanTravelTime() - EXPLICIT_PARKING_INTERACTION_TIME;
+		assertEquals(comparableExplicitTravelTime, proxy.meanTravelTime(),
+			comparableExplicitTravelTime * 0.05,
+			"The parking proxy should reproduce nearest-spot travel time within 5% after removing "
+				+ "the explicit module's fixed parking interaction.");
+	}
+
+	@Test
+	void parkingScarcityIncreasesTravelTimes() {
+		Map<ParkingSearchStrategy, TripTravelTimeResult> explicitWithFiveSpots =
+			new EnumMap<>(ParkingSearchStrategy.class);
+		Map<ParkingSearchStrategy, TripTravelTimeResult> explicitWithOneSpot =
+			new EnumMap<>(ParkingSearchStrategy.class);
+		for (ParkingSearchStrategy strategy : ParkingSearchStrategy.values()) {
+			explicitWithFiveSpots.put(strategy, runExplicitParkingSearch(
+				utils.getOutputDirectory() + "/five-spots/" + strategy.name(), strategy, 5));
+			explicitWithOneSpot.put(strategy, runExplicitParkingSearch(
+				utils.getOutputDirectory() + "/one-spot/" + strategy.name(), strategy, 1));
+		}
+		TripTravelTimeResult proxyWithFiveSpots = runParkingProxy(
+			utils.getOutputDirectory() + "/proxy-five-spots", 5);
+		TripTravelTimeResult proxyWithOneSpot = runParkingProxy(
+			utils.getOutputDirectory() + "/proxy-one-spot", 1);
+
+		for (ParkingSearchStrategy strategy : ParkingSearchStrategy.values()) {
+			TripTravelTimeResult fiveSpots = explicitWithFiveSpots.get(strategy);
+			TripTravelTimeResult oneSpot = explicitWithOneSpot.get(strategy);
+			log.info(
+				"Explicit {} with five/one parking spots: {}/{} s ({} / {} completed)",
+				strategy, fiveSpots.meanTravelTime(), oneSpot.meanTravelTime(),
+				fiveSpots.completedLegs(), oneSpot.completedLegs());
+
+			assertTrue(Double.isFinite(fiveSpots.meanTravelTime()) && fiveSpots.meanTravelTime() > 0,
+				"Explicit " + strategy + " should produce a valid baseline travel time.");
+			assertTrue(Double.isFinite(oneSpot.meanTravelTime()) && oneSpot.meanTravelTime() > 0,
+				"Explicit " + strategy + " should produce a valid scarcity travel time.");
+			assertTrue(oneSpot.meanTravelTime() >= fiveSpots.meanTravelTime(),
+				"Scarcity should not reduce mean travel time for explicit " + strategy + " search.");
+			assertTrue(oneSpot.completedLegs() <= fiveSpots.completedLegs(),
+				"Scarcity should not increase completed trips for explicit " + strategy + " search.");
+		}
+
+		log.info(
+			"Parking proxy with five/one parking spots: {}/{} s ({} / {} completed)",
+			proxyWithFiveSpots.meanTravelTime(), proxyWithOneSpot.meanTravelTime(),
+			proxyWithFiveSpots.completedLegs(), proxyWithOneSpot.completedLegs());
+
+		//TODO understand why this is the case
+		// Benenson is the explicit strategy expected to react clearly to occupied facilities by
+		// cruising. Other strategies are still reported above, but their different behavioral
+		// assumptions may make them insensitive to this particular capacity reduction.
+		assertTrue(
+			explicitWithOneSpot.get(ParkingSearchStrategy.Benenson).meanTravelTime()
+				> explicitWithFiveSpots.get(ParkingSearchStrategy.Benenson).meanTravelTime(),
+			"Benenson parking search should take longer when parking is scarce.");
+		assertTrue(proxyWithOneSpot.meanTravelTime() > proxyWithFiveSpots.meanTravelTime(),
+			"The parking proxy should produce longer travel times when parking is scarce.");
+		assertEquals(proxyWithFiveSpots.completedLegs(), proxyWithOneSpot.completedLegs(),
+			"The parking proxy should complete the same number of trips at both supply levels.");
+	}
+
+	@Test
+	void noParking() {
 		Config config = ConfigUtils.loadConfig(IOUtils.extendUrl(ExamplesUtils.getTestScenarioURL("chessboard"), "config.xml"));
 		config.controller().setOutputDirectory("./chessboardNoParkingOutput");
 		//config.global().setRandomSeed(randomSeed);
@@ -165,30 +270,163 @@ public class TestParkingChessboard {
 
 	}
 
+	private TripTravelTimeResult runExplicitParkingSearch(
+		String outputDirectory,
+		ParkingSearchStrategy parkingSearchStrategy,
+		double parkingSpotsPerLink) {
+		Config config = createComparisonConfig(outputDirectory, parkingSearchStrategy);
+		Scenario scenario = ScenarioUtils.loadScenario(config);
+		addParkingFacilities(scenario, parkingSpotsPerLink);
+		Controller controller = ControllerUtils.createController(scenario);
+		//add car travel time comparison
+		TripTravelTimeHandler travelTimes = new TripTravelTimeHandler();
+		controller.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				addEventHandlerBinding().toInstance(travelTimes);
+			}
+		});
+		//from MATSim libs
+		SetupParking.installParkingModules(controller);
 
+		controller.run();
 
-	private void addParkingFacility(
-		Scenario scenario,
-		String facilityId,
-		String linkId,
-		double capacity,
-		Coord coord) {
-		ActivityFacilities facilities = scenario.getActivityFacilities();
-
-		ActivityFacilitiesFactory factory = facilities.getFactory();
-
-		Id<ActivityFacility> facId = Id.create(facilityId, ActivityFacility.class);
-		Id<Link> lId = Id.createLinkId(linkId);
-
-		ActivityFacility facility = factory.createActivityFacility(facId, Id.createLinkId(linkId));
-
-		((ActivityFacilityImpl) facility).setLinkId(lId);
-		facility.setCoord(coord);
-
-		ActivityOption parking = factory.createActivityOption("parking");
-		parking.setCapacity(capacity);
-
-		facility.addActivityOption(parking);
-		facilities.addActivityFacility(facility);
+		return travelTimes.result();
 	}
+
+	private TripTravelTimeResult runParkingProxy(String outputDirectory, int parkingSpotsPerLink) {
+		Config config = createComparisonConfig(outputDirectory, ParkingSearchStrategy.NearestParkingSpot);
+		Scenario scenario = ScenarioUtils.loadScenario(config);
+
+		for (Link link : scenario.getNetwork().getLinks().values()) {
+			if (link.getAllowedModes().contains(TransportMode.car)) {
+				link.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, parkingSpotsPerLink);
+			}
+		}
+
+		Controler controller = new Controler(scenario);
+		TripTravelTimeHandler travelTimes = new TripTravelTimeHandler();
+		controller.addOverridingQSimModule(new AbstractQSimModule() {
+			@Override
+			protected void configureQSim() {
+				addQSimComponentBinding("ParkingOccupancyObserver").to(ParkingOccupancyObserver.class);
+				addMobsimScopeEventHandlerBinding().to(ParkingOccupancyObserver.class);
+				addVehicleHandlerBinding().to(ParkingVehicleHandler.class);
+				bind(ParkingOccupancyObservingSearchTimeCalculator.class).in(Singleton.class);
+				addParkingSearchTimeCalculatorBinding().to(ParkingOccupancyObservingSearchTimeCalculator.class);
+			}
+		});
+		controller.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				addEventHandlerBinding().toInstance(travelTimes);
+				bind(ParkingOccupancyObserver.class).in(Singleton.class);
+				bind(ParkingCapacityInitializer.class).to(PlanBasedParkingCapacityInitializerBerlin.class);
+				bind(NetworkKernelFunction.class).to(DefaultKernelFunction.class);
+				bind(KernelDistance.class).toInstance(new ConstantKernelDistance(500));
+				bind(ParkingSearchTimeFunction.class).toInstance(new BellochePenaltyFunction(0.11, -8.586));
+				addControlerListenerBinding().to(ParkingOccupancyObserver.class);
+				addMobsimListenerBinding().to(ParkingOccupancyObserver.class);
+			}
+		});
+		controller.run();
+
+		return travelTimes.result();
+	}
+
+	private Config createComparisonConfig(
+		String outputDirectory,
+		ParkingSearchStrategy parkingSearchStrategy) {
+		Config config = ConfigUtils.loadConfig("parkingsearch/config.xml", new ParkingSearchConfigGroup());
+		ParkingSearchConfigGroup parkingSearchConfig =
+			ConfigUtils.addOrGetModule(config, ParkingSearchConfigGroup.class);
+		parkingSearchConfig.setParkingSearchStrategy(parkingSearchStrategy);
+		// Without this flag, a vehicle may park on a link after its facility is full. Enforcing
+		// facility-only parking makes the configured capacities meaningful in the scarcity test.
+		parkingSearchConfig.setCanParkOnlyAtFacilities(true);
+		parkingSearchConfig.setParkDuration(EXPLICIT_PARKING_INTERACTION_TIME);
+		config.controller().setLastIteration(0);
+		config.controller().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
+		config.controller().setOutputDirectory(outputDirectory);
+		config.controller().setCreateGraphs(false);
+		config.routing().setAccessEgressType(RoutingConfigGroup.AccessEgressType.accessEgressModeToLink);
+		config.scoring().setWriteExperiencedPlans(true);
+		config.qsim().setSimStarttimeInterpretation(QSimConfigGroup.StarttimeInterpretation.onlyUseStarttime);
+		config.qsim().setEndTime(50 * 3600);
+		ScoringConfigGroup.ActivityParams parkingParams = new ScoringConfigGroup.ActivityParams("parking");
+		parkingParams.setScoringThisActivityAtAll(false);
+		parkingParams.setTypicalDuration(3600.0);
+		config.scoring().addActivityParams(parkingParams);
+		return config;
+	}
+
+	private void addParkingFacilities(Scenario scenario, double capacity) {
+		// The example config already contains four curbside facilities. Replace them so that the
+		// explicit search receives exactly the same supply as the proxy: one capacity value per car link.
+		ActivityFacilities facilities = scenario.getActivityFacilities();
+		ActivityFacilitiesFactory factory = facilities.getFactory();
+		facilities.getFacilities().clear();
+
+		for (Link link : scenario.getNetwork().getLinks().values()) {
+			if (link.getAllowedModes().contains(TransportMode.car)) {
+				Id<ActivityFacility> facilityId = Id.create(link.getId() + "_parking", ActivityFacility.class);
+				ActivityFacility facility = factory.createActivityFacility(facilityId, link.getId());
+				facility.setCoord(link.getCoord());
+
+				ActivityOption parking = factory.createActivityOption("parking");
+				parking.setCapacity(capacity);
+				facility.addActivityOption(parking);
+				facilities.addActivityFacility(facility);
+			}
+		}
+	}
+
+	/**
+	 * Measures complete trips between main activities instead of only the car leg. Explicit
+	 * parking search inserts parking and "car interaction" stage activities, and may add walking
+	 * or cruising outside the original car leg. Ignoring those stage activities as trip boundaries
+	 * ensures that all parking-related time remains part of the measured door-to-door trip.
+	 */
+	private static final class TripTravelTimeHandler
+		implements ActivityEndEventHandler, ActivityStartEventHandler {
+
+		private final Map<Id<Person>, Double> departures = new HashMap<>();
+		private double totalTravelTime;
+		private int arrivals;
+
+		@Override
+		public void handleEvent(ActivityEndEvent event) {
+			if (isMainActivity(event.getActType())) {
+				departures.put(event.getPersonId(), event.getTime());
+			}
+		}
+
+		@Override
+		public void handleEvent(ActivityStartEvent event) {
+			if (!isMainActivity(event.getActType())) {
+				return;
+			}
+			Double departure = departures.remove(event.getPersonId());
+			if (departure != null) {
+				totalTravelTime += event.getTime() - departure;
+				arrivals++;
+			}
+		}
+
+		private boolean isMainActivity(String activityType) {
+			// "parking" is not registered as a standard MATSim stage activity in this setup.
+			return !"parking".equals(activityType) && !TripStructureUtils.isStageActivityType(activityType);
+		}
+
+		TripTravelTimeResult result() {
+			assertTrue(arrivals > 0, "The scenario must contain completed trips.");
+			return new TripTravelTimeResult(totalTravelTime / arrivals, arrivals);
+		}
+	}
+
+	private record TripTravelTimeResult(double meanTravelTime, int completedLegs) {
+	}
+
+
+
 }
