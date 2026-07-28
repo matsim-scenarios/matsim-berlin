@@ -101,20 +101,15 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
     protected void prepareScenario(Scenario scenario) {
         super.prepareScenario(scenario);
 
-        //get the sample size to scale parking capacities accordingly
-        double sampleSize = scenario.getConfig().qsim().getFlowCapFactor();
-        log.info("Using sample size of " + sampleSize + " to scale parking capacities.");
-
-        assignOnStreetParking(scenario, sampleSize);
+        // Store full-population parking supply on the network. The configured
+        // ParkingCapacityInitializer scales it with qsim.storageCapFactor.
+        assignOnStreetParking(scenario);
         // Read parking supply data for off street parking from CSV
         Map<Id<Link>, Integer> parkingSpotsPerLink = readCSV(parkingSupply);
         for (Link link : scenario.getNetwork().getLinks().values()) {
             if (parkingSpotsPerLink.containsKey(link.getId())) {
                 //log.info("Parking spots for " + link.getId() + ": on-street=" + parkingSpotsPerLink.get(link.getId()).onstreetSpots + ", off-street=" + parkingSpotsPerLink.get(link.getId()).offstreetSpots);
-                //log.info("Scaled parking spots for " + link.getId() + ": on-street=" + onStreetParkingSpots + ", off-street=" + offStreetParkingSpots);
-                //link.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, (int) Math.round(parkingSpotsPerLink.get(link.getId()).onstreetSpots * sampleSize));
-                link.getAttributes().putAttribute(LINK_OFF_STREET_SPOTS, (int) Math.round(parkingSpotsPerLink.get(link.getId()) * sampleSize));
-                //		log.info("Assigned " + (int) Math.round(parkingSpotsPerLink.get(link.getId()) * sampleSize) + " off street parking spots to link " + link.getId());
+                link.getAttributes().putAttribute(LINK_OFF_STREET_SPOTS, parkingSpotsPerLink.get(link.getId()));
             }
         }
 
@@ -205,10 +200,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
         return Integer.parseInt(value); // Otherwise, parse the integer
     }
 
-    private void assignOnStreetParking(
-            Scenario scenario,
-            double sampleSize
-    ) {
+    private void assignOnStreetParking(Scenario scenario) {
 
         List<PreparedGeometry> hundekopf = ShpGeometryUtils.loadPreparedGeometries(IOUtils.resolveFileOrResource(String.valueOf(shpHundekopf)));
         int totalNrOfParkingSpotsInHundekopf = 230000;
@@ -235,7 +227,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
                 if (l.getFreespeed() < 13.89) {
                     boolean isInHundekopf = ShpGeometryUtils.isCoordInPreparedGeometries(l.getCoord(), hundekopf);
                     if (isInHundekopf) {
-                        int onStreetSpots = (int) Math.round(l.getLength() * spotsPerMeterInsideHundekopf * sampleSize);
+                        int onStreetSpots = (int) Math.round(l.getLength() * spotsPerMeterInsideHundekopf);
                         l.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, onStreetSpots);
 
                         //log.info("Assigned " + onStreetSpots + " on street parking spots to link " + l.getId());
@@ -245,7 +237,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
             }
         }
 
-        log.info("Assigned " + assignedParkingSpotsInsideHundekopf + " on street parking spots inside Hundekopf based on a density of " + spotsPerMeterInsideHundekopf + " spots per meter and a sample size of " + sampleSize);
+        log.info("Assigned " + assignedParkingSpotsInsideHundekopf + " full-population on street parking spots inside Hundekopf based on a density of " + spotsPerMeterInsideHundekopf + " spots per meter.");
 
 
         List<PreparedGeometry> berlin = ShpGeometryUtils.loadPreparedGeometries(IOUtils.resolveFileOrResource(String.valueOf(shpBerlinGeometries)));
@@ -278,7 +270,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
                     boolean isInBerlin = ShpGeometryUtils.isCoordInPreparedGeometries(l.getCoord(), berlin);
                     boolean isInHundekopf = ShpGeometryUtils.isCoordInPreparedGeometries(l.getCoord(), hundekopf);
                     if (isInBerlin && !isInHundekopf) {
-                        int onStreetSpots = (int) Math.round(l.getLength() * (parkingSpotsToAssingRestOfBerlin / totalNetworkLengthBerlinWithoutHundekopf) * sampleSize);
+                        int onStreetSpots = (int) Math.round(l.getLength() * (parkingSpotsToAssingRestOfBerlin / totalNetworkLengthBerlinWithoutHundekopf));
                         l.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, onStreetSpots);
                         //log.info("Assigned " + onStreetSpots + " on street parking spots to link " + l.getId());
                         totalNumberOfParkingSpotsRestOfBerlin = totalNumberOfParkingSpotsRestOfBerlin + onStreetSpots;
@@ -287,7 +279,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
             }
         }
 
-        log.info("Assigned " + totalNumberOfParkingSpotsRestOfBerlin + " on street parking spots to the rest of Berlin based on a density of " + (parkingSpotsToAssingRestOfBerlin / totalNetworkLengthBerlinWithoutHundekopf) + " spots per meter and a sample size of " + sampleSize);
+        log.info("Assigned " + totalNumberOfParkingSpotsRestOfBerlin + " full-population on street parking spots to the rest of Berlin based on a density of " + (parkingSpotsToAssingRestOfBerlin / totalNetworkLengthBerlinWithoutHundekopf) + " spots per meter.");
 
         log.info("Using the share for the links outside of berlin");
         int totalNumberOfParkingSpotsOutsideBerlin = 0;
@@ -296,7 +288,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
                 if (l.getFreespeed() < 13.89) {
                     boolean isInBerlin = ShpGeometryUtils.isCoordInPreparedGeometries(l.getCoord(), berlin);
                     if (!isInBerlin) {
-                        int onStreetSpots = (int) Math.round(l.getLength() * (parkingSpotsToAssingRestOfBerlin / totalNetworkLengthBerlinWithoutHundekopf) * sampleSize);
+                        int onStreetSpots = (int) Math.round(l.getLength() * (parkingSpotsToAssingRestOfBerlin / totalNetworkLengthBerlinWithoutHundekopf));
                         l.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, onStreetSpots);
                         totalNumberOfParkingSpotsOutsideBerlin = totalNumberOfParkingSpotsOutsideBerlin + onStreetSpots;
                         //log.info("Assigned " + onStreetSpots + " on street parking spots to link " + l.getId());
@@ -304,7 +296,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
                 }
             }
         }
-        log.info("Asssigned a total of " + totalNumberOfParkingSpotsOutsideBerlin + " on street parking spots to links outside of Berlin based on the same density as in the rest of Berlin. The density is:" + (parkingSpotsToAssingRestOfBerlin / totalNetworkLengthBerlinWithoutHundekopf) + " spots per meter and a sample size of " + sampleSize);
+        log.info("Assigned a total of " + totalNumberOfParkingSpotsOutsideBerlin + " full-population on street parking spots to links outside of Berlin based on the same density as in the rest of Berlin. The density is: " + (parkingSpotsToAssingRestOfBerlin / totalNetworkLengthBerlinWithoutHundekopf) + " spots per meter.");
     }
 
 
