@@ -58,10 +58,10 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
     @CommandLine.Option(names = "--noModeChoice", defaultValue = "true")
     private boolean noModeChoice;
 
-    @CommandLine.Option(names = "--shp-hundekopf", description = "Shapefile of hundekop area")
+    @CommandLine.Option(names = "--shp-hundekopf", description = "Shapefile of hundekopf area", required = true)
     private String shpHundekopf;
 
-    @CommandLine.Option(names = "--shp-berlin-geometries", description = "Shapefile of berlin geometries")
+    @CommandLine.Option(names = "--shp-berlin-geometries", description = "Shapefile of Berlin geometries", required = true)
     private String shpBerlinGeometries;
 
     private static final Logger log = LogManager.getLogger(OpenBerlinWithParking.class);
@@ -80,9 +80,6 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
         //config.transit().setTransitScheduleFile("/Users/gregorr/Documents/work/respos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.4/input/berlin-v6.4-transitSchedule.xml.gz");
         //config.transit().setVehiclesFile("/Users/gregorr/Documents/work/respos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.4/input/berlin-v6.4-transitVehicles.xml.gz");
         preparedConfig.controller().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
-
-        List<PreparedGeometry> berlin = ShpGeometryUtils.loadPreparedGeometries(IOUtils.resolveFileOrResource(String.valueOf(shpBerlinGeometries)));
-        List<PreparedGeometry> hundekopf = ShpGeometryUtils.loadPreparedGeometries(IOUtils.resolveFileOrResource(String.valueOf(shpHundekopf)));
 
         if (noModeChoice) {
             // no mode choice if we simulate parking
