@@ -28,6 +28,7 @@ import java.util.*;
                 "parking_search_times_density.csv",
                 "parking_search_times.csv",
                 "parking_search_times_per_link.csv",
+                "average_parking_search_time_per_link.csv",
                 "total_parking_search_time_per_link.csv",
                 "parking_search_times_per_person.csv",
                 "total_parking_search_time_per_person.csv",
@@ -101,6 +102,29 @@ public class ParkingAnalysis implements MATSimAppCommand {
                 for (Double searchTime : entry.getValue()) {
                     csvPrinter.printRecord(linkId, searchTime);
                 }
+            }
+            csvPrinter.close();
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            BufferedWriter bufferedWriter = IOUtils.getBufferedWriter(
+                    output.getPath("average_parking_search_time_per_link.csv").toString()
+            );
+            CSVPrinter csvPrinter = new CSVPrinter(bufferedWriter, CSVFormat.Builder.create()
+                    .setDelimiter(";")
+                    .setHeader("link_id", "average_parking_search_time")
+                    .build()
+            );
+
+            for (Map.Entry<Id<Link>, List<Double>> entry : handler.parkingSearchTimesPerLink().entrySet()) {
+                double averageSearchTime = entry.getValue().stream()
+                        .mapToDouble(Double::doubleValue)
+                        .average()
+                        .orElse(0.0);
+                csvPrinter.printRecord(entry.getKey(), averageSearchTime);
             }
             csvPrinter.close();
 

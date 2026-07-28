@@ -1,9 +1,11 @@
 package org.matsim.dashboard;
 
+import org.matsim.application.prepare.network.CreateGeoJsonNetwork;
 import org.matsim.simwrapper.Dashboard;
 import org.matsim.simwrapper.Header;
 import org.matsim.simwrapper.Layout;
 import org.matsim.simwrapper.viz.ColorScheme;
+import org.matsim.simwrapper.viz.MapPlot;
 import org.matsim.simwrapper.viz.Plotly;
 import tech.tablesaw.plotly.components.Axis;
 import tech.tablesaw.plotly.traces.HistogramTrace;
@@ -125,6 +127,46 @@ public class ParkingDashboard implements Dashboard {
 					.build(),
 				ds.mapping().x("total_parking_search_time")
 			);
+
+		});
+
+		layout.row("parking-search-map").el(MapPlot.class, (viz, data) -> {
+
+			viz.title = "Total parking search time per link";
+			viz.description = "Sum of parking search time recorded on each link.";
+			viz.height = 12d;
+			viz.center = data.context().getCenter();
+			viz.zoom = data.context().getMapZoomLevel();
+
+			viz.setShape(data.compute(CreateGeoJsonNetwork.class, "network.geojson", "--with-properties"), "id");
+			viz.addDataset("parking", data.compute(ParkingAnalysis.class, "total_parking_search_time_per_link.csv"));
+
+			viz.display.lineColor.dataset = "parking";
+			viz.display.lineColor.columnName = "total_parking_search_time";
+			viz.display.lineColor.join = "link_id";
+			viz.display.lineColor.setColorRamp(ColorScheme.Oranges, 8, false);
+
+			viz.display.lineWidth.dataset = "@8";
+
+		});
+
+		layout.row("parking-search-average-map").el(MapPlot.class, (viz, data) -> {
+
+			viz.title = "Average parking search time per link";
+			viz.description = "Mean parking search time recorded on each link.";
+			viz.height = 12d;
+			viz.center = data.context().getCenter();
+			viz.zoom = data.context().getMapZoomLevel();
+
+			viz.setShape(data.compute(CreateGeoJsonNetwork.class, "network.geojson", "--with-properties"), "id");
+			viz.addDataset("parking", data.compute(ParkingAnalysis.class, "average_parking_search_time_per_link.csv"));
+
+			viz.display.lineColor.dataset = "parking";
+			viz.display.lineColor.columnName = "average_parking_search_time";
+			viz.display.lineColor.join = "link_id";
+			viz.display.lineColor.setColorRamp(ColorScheme.Oranges, 8, false);
+
+			viz.display.lineWidth.dataset = "@8";
 
 		});
 	}
