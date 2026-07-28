@@ -25,7 +25,7 @@ public class ParkingDashboard implements Dashboard {
 
 			viz.colorRamp = ColorScheme.Viridis;
 
-			Plotly.DataSet ds = viz.addDataset(data.compute(ParkingAnalysis.class, "parking_search_times.csv"));
+			Plotly.DataSet ds = viz.addDataset(data.compute(ParkingAnalysis.class, "parking_search_times_density.csv"));
 
 			viz.addTrace(ScatterTrace.builder(Plotly.INPUT, Plotly.INPUT)
 					.mode(ScatterTrace.Mode.LINE)
@@ -48,7 +48,7 @@ public class ParkingDashboard implements Dashboard {
 
 			viz.colorRamp = ColorScheme.Viridis;
 
-			Plotly.DataSet ds = viz.addDataset(data.output("output/berlin-v6.4-1pct/ITERS/it.0/berlin-v6.4.0.parking_initial_occupancy.csv"));
+			Plotly.DataSet ds = viz.addDataset(data.output("(*.)?parking_initial_occupancy.csv"));
 
 			viz.addTrace(ScatterTrace.builder(Plotly.INPUT, Plotly.INPUT)
 					.mode(ScatterTrace.Mode.MARKERS)

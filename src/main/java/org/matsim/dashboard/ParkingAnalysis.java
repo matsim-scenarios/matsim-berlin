@@ -169,7 +169,7 @@ public class ParkingAnalysis implements MATSimAppCommand {
             throw new RuntimeException(e);
         }
 
-        //write out CSV with header time_of_day,personId, search_time
+        //write out CSV with header time_of_day, person_id, search_time
         Collection<ParkingEventHandler.ParkingEvent> searchWithTimeOfDay = handler.parkingSearchAtTimeOfDay();
         try {
             BufferedWriter bufferedWriter = IOUtils.getBufferedWriter(
@@ -177,8 +177,7 @@ public class ParkingAnalysis implements MATSimAppCommand {
             );
             CSVPrinter csvPrinter = new CSVPrinter(bufferedWriter, CSVFormat.Builder.create()
                     .setDelimiter(";")
-                    .setHeader(new String[]{"time_of_day", "personId" +
-                            "", "search_time"}).build());
+                    .setHeader(new String[]{"time_of_day", "person_id", "search_time"}).build());
             for (ParkingEventHandler.ParkingEvent event : searchWithTimeOfDay) {
                 csvPrinter.printRecord(event.time, event.personId, event.searchTime);
             }
