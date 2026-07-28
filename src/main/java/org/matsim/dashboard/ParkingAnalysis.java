@@ -24,7 +24,15 @@ import java.util.*;
 )
 @CommandSpec(
         requireEvents = true,
-        produces = {"parking_search_times_density.csv", "parking_search_times.csv"},
+        produces = {
+                "parking_search_times_density.csv",
+                "parking_search_times.csv",
+                "parking_search_times_per_link.csv",
+                "total_parking_search_time_per_link.csv",
+                "parking_search_times_per_person.csv",
+                "total_parking_search_time_per_person.csv",
+                "parking_search_times_time_of_day.csv"
+        },
         group = "parking"
 )
 public class ParkingAnalysis implements MATSimAppCommand {
