@@ -72,7 +72,7 @@ public class ParkingAnalysis implements MATSimAppCommand {
         Map<Id<Person>, Double> totalParkingSearchTimePerPerson = new HashMap<>();
         try {
             BufferedWriter bufferedWriter = IOUtils.getBufferedWriter(
-                    output.getPath().resolve("total_parking_search_time_per_person.csv").toString()
+                    output.getPath("total_parking_search_time_per_person.csv").toString()
             );
             CSVPrinter csvPrinter = new CSVPrinter(bufferedWriter, CSVFormat.Builder.create()
                     .setDelimiter(";")
@@ -87,7 +87,7 @@ public class ParkingAnalysis implements MATSimAppCommand {
 
         try {
             BufferedWriter bufferedWriter = IOUtils.getBufferedWriter(
-                    output.getPath().resolve("parking_search_times_per_link.csv").toString()
+                    output.getPath("parking_search_times_per_link.csv").toString()
             );
 
             CSVPrinter csvPrinter = new CSVPrinter(bufferedWriter, CSVFormat.Builder.create()
@@ -111,7 +111,7 @@ public class ParkingAnalysis implements MATSimAppCommand {
 
         try {
             BufferedWriter bufferedWriter = IOUtils.getBufferedWriter(
-                    output.getPath().resolve("total_parking_search_time_per_link.csv").toString()
+                    output.getPath("total_parking_search_time_per_link.csv").toString()
             );
             CSVPrinter csvPrinter = new CSVPrinter(bufferedWriter, CSVFormat.Builder.create()
                     .setDelimiter(";")
@@ -129,7 +129,7 @@ public class ParkingAnalysis implements MATSimAppCommand {
         ArrayList<Double> searchTimes = handler.parkingSearchTimesList();
         try {
             BufferedWriter bufferedWriter = IOUtils.getBufferedWriter(
-                    output.getPath().resolve("parking_search_times.csv").toString()
+                    output.getPath("parking_search_times.csv").toString()
             );
             CSVPrinter csvPrinter = new CSVPrinter(bufferedWriter, CSVFormat.Builder.create()
                     .setDelimiter(";")
@@ -145,7 +145,7 @@ public class ParkingAnalysis implements MATSimAppCommand {
         Map<Id<Person>, List<Double>> parkingSearchTimePerPerson = handler.parkingSearchTimesPerPerson();
         try {
             BufferedWriter bufferedWriter = IOUtils.getBufferedWriter(
-                    output.getPath().resolve("parking_search_times_per_person.csv").toString()
+                    output.getPath("parking_search_times_per_person.csv").toString()
             );
             CSVPrinter csvPrinter = new CSVPrinter(bufferedWriter, CSVFormat.Builder.create()
                     .setDelimiter(";")
@@ -164,7 +164,7 @@ public class ParkingAnalysis implements MATSimAppCommand {
         // write CSV with header search_time, density
         try {
             BufferedWriter bufferedWriter = IOUtils.getBufferedWriter(
-                    output.getPath().resolve("parking_search_times_density.csv").toString()
+                    output.getPath("parking_search_times_density.csv").toString()
             );
             CSVPrinter csvPrinter = new CSVPrinter(bufferedWriter, CSVFormat.Builder.create()
                     .setDelimiter(";")
@@ -181,7 +181,7 @@ public class ParkingAnalysis implements MATSimAppCommand {
         Collection<ParkingEventHandler.ParkingEvent> searchWithTimeOfDay = handler.parkingSearchAtTimeOfDay();
         try {
             BufferedWriter bufferedWriter = IOUtils.getBufferedWriter(
-                    output.getPath().resolve("parking_search_times_time_of_day.csv").toString()
+                    output.getPath("parking_search_times_time_of_day.csv").toString()
             );
             CSVPrinter csvPrinter = new CSVPrinter(bufferedWriter, CSVFormat.Builder.create()
                     .setDelimiter(";")
