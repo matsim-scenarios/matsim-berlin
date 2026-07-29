@@ -18,6 +18,7 @@ import org.matsim.contrib.emissions.HbefaTechnology;
 import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
+import org.matsim.contrib.emissions.utils.HbefaUtils;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.ReplanningConfigGroup;
@@ -150,13 +151,20 @@ public class OpenBerlinScenario extends MATSimApplication {
 		}
 
 //		ride does not have engineInformation in vehicle types xml file
-		if (scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId("ride")).getEngineInformation().getAttributes().isEmpty()) {
-			EngineInformation engineInformation = scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId("ride")).getEngineInformation();
+		if (scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation().getAttributes().isEmpty()) {
+			EngineInformation engineInformation = scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation();
 			VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
 			VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
 			VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
 			VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
 		}
+
+//		bike does not have HbefaTechnology in vehicle types xml file
+		VehicleUtils.setHbefaTechnology(scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.bike)).getEngineInformation(), AVERAGE);
+
+//		for some of the input vehicle types hbefa emissionConcept and technology are swapped. We have to swap them back.
+//		hbefa4.1 relies on HbefaTechnology for correct emission calculation, not on HbefaEmissionConcept
+		HbefaUtils.checkAndCorrectHbefaTechnologyAndEmissionConcept(scenario);
 
 		for (VehicleType type : scenario.getVehicles().getVehicleTypes().values()) {
 			EngineInformation engineInformation = type.getEngineInformation();
