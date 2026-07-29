@@ -31,6 +31,11 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 		"For teleported bike this is the mean velocity, for routed on the network bike it is the maximum speed.", defaultValue = "1.0")
 	private double bikeSpeedFactor;
 
+	@Override
+	protected double getBikeSpeedFactor() {
+		return bikeSpeedFactor;
+	}
+
 	/**
 	 * make all necessary config changes for different simulation scenarios of bike.
 	 */

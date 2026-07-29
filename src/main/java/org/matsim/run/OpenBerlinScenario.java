@@ -50,7 +50,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 	public static final String CRS = "EPSG:25832";
 	private static final String AVERAGE = "average";
 	private static final String CAR_FUEL_TYPE = "petrol (4S)";
-	private static final double bikeSpeedFactor = 1.0;
+	private static final double BIKE_SPEED_FACTOR = 1.0;
 
 	//	To decrypt hbefa input files set MATSIM_DECRYPTION_PASSWORD as environment variable. ask VSP for access.
 	private static final String HBEFA_2020_PATH = "https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/0e73947443d68f95202b71a156b337f7f71604ae/";
@@ -101,6 +101,14 @@ public class OpenBerlinScenario extends MATSimApplication {
 	 **/
 	public static double getBikePce() {
 		return bikePce;
+	}
+
+	/**
+	 * Returns the factor applied to bike speeds when preparing the scenario.
+	 * The default Berlin scenario always keeps the original bike speed.
+	 */
+	protected double getBikeSpeedFactor() {
+		return BIKE_SPEED_FACTOR;
 	}
 
 	@Override
@@ -182,7 +190,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 		eConfig.setEmissionsComputationMethod(EmissionsConfigGroup.EmissionsComputationMethod.StopAndGoFraction);
 
 //		apply config changes for different bike scenarios. If default (bike routed on network, but not simulated in qsim), nothing changes.
-		OpenBerlinBikeNetworkScenario.configChangesForBikeNetworkScenario(config, bikeHandling, bikeSpeedFactor);
+		OpenBerlinBikeNetworkScenario.configChangesForBikeNetworkScenario(config, bikeHandling, getBikeSpeedFactor());
 
 		return config;
 	}
@@ -243,7 +251,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 			.values().forEach(type -> VehicleUtils.setHbefaVehicleCategory(type.getEngineInformation(), HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString()));
 
 //		apply scenario changes for different bike scenarios. If default (bike routed on network, but not simulated in qsim), nothing changes.
-		OpenBerlinBikeNetworkScenario.scenarioChangesForBikeNetworkScenario(scenario, bikeHandling, bikePce, bikeSpeedFactor);
+		OpenBerlinBikeNetworkScenario.scenarioChangesForBikeNetworkScenario(scenario, bikeHandling, bikePce, getBikeSpeedFactor());
 	}
 
 	@Override
