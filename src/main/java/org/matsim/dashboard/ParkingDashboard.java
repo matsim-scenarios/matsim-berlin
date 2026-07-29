@@ -1,6 +1,6 @@
 package org.matsim.dashboard;
 
-import org.matsim.application.prepare.network.CreateGeoJsonNetwork;
+import org.matsim.application.prepare.network.CreateAvroNetwork;
 import org.matsim.simwrapper.Dashboard;
 import org.matsim.simwrapper.Header;
 import org.matsim.simwrapper.Layout;
@@ -51,7 +51,7 @@ public class ParkingDashboard implements Dashboard {
 
 			viz.colorRamp = ColorScheme.Viridis;
 
-			Plotly.DataSet ds = viz.addDataset(data.output("(*.)?parking_initial_occupancy.csv"));
+			Plotly.DataSet ds = viz.addDataset(data.output("ITERS", "it.0", "(*.)?parking_initial_occupancy.csv"));
 
 			viz.addTrace(ScatterTrace.builder(Plotly.INPUT, Plotly.INPUT)
 					.mode(ScatterTrace.Mode.MARKERS)
@@ -138,7 +138,7 @@ public class ParkingDashboard implements Dashboard {
 			viz.center = data.context().getCenter();
 			viz.zoom = data.context().getMapZoomLevel();
 
-			viz.setShape(data.compute(CreateGeoJsonNetwork.class, "network.geojson", "--with-properties"), "id");
+			viz.setShape(data.compute(CreateAvroNetwork.class, "network.avro"), "id");
 			viz.addDataset("parking", data.compute(ParkingAnalysis.class, "total_parking_search_time_per_link.csv"));
 
 			viz.display.lineColor.dataset = "parking";
@@ -158,7 +158,7 @@ public class ParkingDashboard implements Dashboard {
 			viz.center = data.context().getCenter();
 			viz.zoom = data.context().getMapZoomLevel();
 
-			viz.setShape(data.compute(CreateGeoJsonNetwork.class, "network.geojson", "--with-properties"), "id");
+			viz.setShape(data.compute(CreateAvroNetwork.class, "network.avro"), "id");
 			viz.addDataset("parking", data.compute(ParkingAnalysis.class, "average_parking_search_time_per_link.csv"));
 
 			viz.display.lineColor.dataset = "parking";
