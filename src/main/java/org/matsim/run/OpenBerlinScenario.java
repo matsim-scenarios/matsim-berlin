@@ -5,6 +5,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import org.matsim.analysis.QsimTimingModule;
 import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Leg;
@@ -14,6 +15,7 @@ import org.matsim.application.MATSimApplication;
 import org.matsim.contrib.bicycle.*;
 import org.matsim.contrib.emissions.HbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.HbefaTechnology;
+import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.core.config.Config;
@@ -53,6 +55,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 	private static final String HBEFA_FILE_WARM_DETAILED = HBEFA_2020_PATH + "944637571c833ddcf1d0dfcccb59838509f397e6.enc";
 	private static final String HBEFA_FILE_COLD_AVERAGE = HBEFA_2020_PATH + "r9230ru2n209r30u2fn0c9rn20n2rujkhkjhoewt84202.enc" ;
 	private static final String HBEFA_FILE_WARM_AVERAGE = HBEFA_2020_PATH + "7eff8f308633df1b8ac4d06d05180dd0c5fdf577.enc";
+
+	private static final String AVERAGE = "average";
 
 	@CommandLine.Option(names = "--plan-selector",
 		description = "Plan selector to use.",
@@ -143,6 +147,15 @@ public class OpenBerlinScenario extends MATSimApplication {
 					}
 				}
 			}
+		}
+
+//		ride does not have engineInformation in vehicle types xml file
+		if (scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId("ride")).getEngineInformation().getAttributes().isEmpty()) {
+			EngineInformation engineInformation = scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId("ride")).getEngineInformation();
+			VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
+			VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
+			VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
+			VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
 		}
 
 		for (VehicleType type : scenario.getVehicles().getVehicleTypes().values()) {
