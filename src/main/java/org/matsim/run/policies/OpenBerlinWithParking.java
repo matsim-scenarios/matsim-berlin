@@ -31,11 +31,13 @@ import org.matsim.core.network.kernel.KernelDistance;
 import org.matsim.core.network.kernel.NetworkKernelFunction;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import org.matsim.core.utils.collections.QuadTree;
-import org.matsim.core.utils.geometry.CoordinateTransformation;
-import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.run.OpenBerlinScenario;
 import org.matsim.utils.gis.shp2matsim.ShpGeometryUtils;
+import org.osgeo.proj4j.CRSFactory;
+import org.osgeo.proj4j.CoordinateTransform;
+import org.osgeo.proj4j.CoordinateTransformFactory;
+import org.osgeo.proj4j.ProjCoordinate;
 import org.wololo.jts2geojson.GeoJSONReader;
 import picocli.CommandLine;
 
@@ -93,8 +95,12 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
     private static final int PARKING_SPOTS_IN_HUNDEKOPF = 230_000;
     private static final int PARKING_SPOTS_IN_BERLIN = 1_276_312;
     private static final double MAX_PARKING_LINK_FREESPEED = 13.89;
-    private static final CoordinateTransformation WGS84_TO_NETWORK_CRS =
-            TransformationFactory.getCoordinateTransformation(TransformationFactory.WGS84, "EPSG:25832");
+    private static final CRSFactory CRS_FACTORY = new CRSFactory();
+    private static final CoordinateTransform WGS84_TO_NETWORK_CRS =
+            new CoordinateTransformFactory().createTransform(
+                    CRS_FACTORY.createFromName("EPSG:4326"),
+                    CRS_FACTORY.createFromName("EPSG:25832")
+            );
 
     private enum OnStreetParkingAssignment {
         REGIONAL_TOTALS,
@@ -322,7 +328,9 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
 
         for (ParkingPolygon parking : parkingPolygons) {
             Coordinate centroid = parking.geometry().getCentroid().getCoordinate();
-            Coord transformedCentroid = WGS84_TO_NETWORK_CRS.transform(new Coord(centroid.x, centroid.y));
+            ProjCoordinate transformed = new ProjCoordinate();
+            WGS84_TO_NETWORK_CRS.transform(new ProjCoordinate(centroid.x, centroid.y), transformed);
+            Coord transformedCentroid = new Coord(transformed.x, transformed.y);
             Link nearestLink = linkIndex.getClosest(transformedCentroid.getX(), transformedCentroid.getY());
             double distance = distance(transformedCentroid, nearestLink.getCoord());
 
