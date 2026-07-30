@@ -202,9 +202,11 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
         List<PreparedGeometry> hundekopf = ShpGeometryUtils.loadPreparedGeometries(IOUtils.resolveFileOrResource(String.valueOf(shpHundekopf)));
         int totalNrOfParkingSpotsInHundekopf = 230000;
 
-        double totalNetworkLengthInsideHundekopf = scenario.getNetwork().getLinks().values().stream()
+		double speedAbove50kmh = 13.89; // this is 50.0004 km/h
+
+	    double totalNetworkLengthInsideHundekopf = scenario.getNetwork().getLinks().values().stream()
                 .filter(link -> link.getAllowedModes().contains(TransportMode.car))
-                .filter(link -> link.getFreespeed() < 13.89)
+                .filter(link -> link.getFreespeed() < speedAbove50kmh)
                 .filter(link -> ShpGeometryUtils.isCoordInPreparedGeometries(link.getCoord(), hundekopf)
                 )
                 .mapToDouble(Link::getLength)
@@ -221,7 +223,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
 
         for (Link l : scenario.getNetwork().getLinks().values()) {
             if (l.getAllowedModes().contains(TransportMode.car)) {
-                if (l.getFreespeed() < 13.89) {
+                if (l.getFreespeed() < speedAbove50kmh) {
                     boolean isInHundekopf = ShpGeometryUtils.isCoordInPreparedGeometries(l.getCoord(), hundekopf);
                     if (isInHundekopf) {
                         int onStreetSpots = (int) Math.round(l.getLength() * spotsPerMeterInsideHundekopf);
@@ -245,7 +247,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
         double totalNetworkLengthBerlinWithoutHundekopf = 0;
         for (Link l : scenario.getNetwork().getLinks().values()) {
             if (l.getAllowedModes().contains(TransportMode.car)) {
-                if (l.getFreespeed() < 13.89) {
+                if (l.getFreespeed() < speedAbove50kmh) {
                     boolean isInBerlin = ShpGeometryUtils.isCoordInPreparedGeometries(l.getCoord(), berlin);
                     boolean isInHundekopf = ShpGeometryUtils.isCoordInPreparedGeometries(l.getCoord(), hundekopf);
                     if (isInBerlin && !isInHundekopf) {
@@ -263,7 +265,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
         int totalNumberOfParkingSpotsRestOfBerlin = 0;
         for (Link l : scenario.getNetwork().getLinks().values()) {
             if (l.getAllowedModes().contains(TransportMode.car)) {
-                if (l.getFreespeed() < 13.89) {
+                if (l.getFreespeed() < speedAbove50kmh) {
                     boolean isInBerlin = ShpGeometryUtils.isCoordInPreparedGeometries(l.getCoord(), berlin);
                     boolean isInHundekopf = ShpGeometryUtils.isCoordInPreparedGeometries(l.getCoord(), hundekopf);
                     if (isInBerlin && !isInHundekopf) {
@@ -282,7 +284,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
         int totalNumberOfParkingSpotsOutsideBerlin = 0;
         for (Link l : scenario.getNetwork().getLinks().values()) {
             if (l.getAllowedModes().contains(TransportMode.car)) {
-                if (l.getFreespeed() < 13.89) {
+                if (l.getFreespeed() < speedAbove50kmh) {
                     boolean isInBerlin = ShpGeometryUtils.isCoordInPreparedGeometries(l.getCoord(), berlin);
                     if (!isInBerlin) {
                         int onStreetSpots = (int) Math.round(l.getLength() * (parkingSpotsToAssingRestOfBerlin / totalNetworkLengthBerlinWithoutHundekopf));
