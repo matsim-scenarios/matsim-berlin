@@ -65,6 +65,9 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
     private String shpBerlinGeometries;
 
     private static final Logger log = LogManager.getLogger(OpenBerlinWithParking.class);
+    private static final int PARKING_SPOTS_IN_HUNDEKOPF = 230_000;
+    private static final int PARKING_SPOTS_IN_BERLIN = 1_276_312;
+    private static final double MAX_PARKING_LINK_FREESPEED = 13.89;
 
 
     public static void main(String[] args) {
@@ -198,104 +201,82 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
     }
 
     public void assignOnStreetParking(Scenario scenario) {
-
         List<PreparedGeometry> hundekopf = ShpGeometryUtils.loadPreparedGeometries(IOUtils.resolveFileOrResource(String.valueOf(shpHundekopf)));
-        int totalNrOfParkingSpotsInHundekopf = 230000;
+        List<PreparedGeometry> berlin = ShpGeometryUtils.loadPreparedGeometries(IOUtils.resolveFileOrResource(String.valueOf(shpBerlinGeometries)));
 
-		double speedAbove50kmh = 13.89; // this is 50.0004 km/h
+        // Parking is assigned only to car links below 50 km/h. This excludes
+        // motorways and other high-speed roads where on-street parking is implausible.
+        List<? extends Link> eligibleLinks = scenario.getNetwork().getLinks().values().stream()
+                .filter(OpenBerlinWithParking::isEligibleForOnStreetParking)
+                .toList();
 
-	    double totalNetworkLengthInsideHundekopf = scenario.getNetwork().getLinks().values().stream()
-                .filter(link -> link.getAllowedModes().contains(TransportMode.car))
-                .filter(link -> link.getFreespeed() < speedAbove50kmh)
-                .filter(link -> ShpGeometryUtils.isCoordInPreparedGeometries(link.getCoord(), hundekopf)
-                )
-                .mapToDouble(Link::getLength)
-                .sum();
+        // Classify links by their coordinate. Hundekopf is handled separately
+        // because its parking density is derived from its own known supply.
+        List<? extends Link> hundekopfLinks = eligibleLinks.stream()
+                .filter(link -> isInArea(link, hundekopf))
+                .toList();
+        List<? extends Link> restOfBerlinLinks = eligibleLinks.stream()
+                .filter(link -> isInArea(link, berlin))
+                .filter(link -> !isInArea(link, hundekopf))
+                .toList();
+        List<? extends Link> outsideBerlinLinks = eligibleLinks.stream()
+                .filter(link -> !isInArea(link, berlin))
+                .toList();
 
-        double spotsPerMeterInsideHundekopf = totalNrOfParkingSpotsInHundekopf / totalNetworkLengthInsideHundekopf;
-        double meters_per_spotIndsideHundekopf = totalNetworkLengthInsideHundekopf / totalNrOfParkingSpotsInHundekopf;
+        // Distribute the known Hundekopf supply proportionally to link length.
+        // Capacities remain full-population values and are scaled later by the
+        // configured ParkingCapacityInitializer.
+        double totalNetworkLengthInsideHundekopf = totalLength(hundekopfLinks);
+        double spotsPerMeterInsideHundekopf = PARKING_SPOTS_IN_HUNDEKOPF / totalNetworkLengthInsideHundekopf;
+        int assignedParkingSpotsInsideHundekopf = assignParkingSpots(hundekopfLinks, spotsPerMeterInsideHundekopf);
+
         log.info("Total network length inside Hundekopf: " + totalNetworkLengthInsideHundekopf);
         log.info("Parking spots per meter " + spotsPerMeterInsideHundekopf);
-        log.info("Meters per parking spot " + meters_per_spotIndsideHundekopf);
-
-        //parse network filter if link is inside the hundekopf area and the freesspeed is below 13.89 to exclude motorways, then assign on-street parking spots based on the length of the link and the density of parking spots in the hundekopf area
-        int assignedParkingSpotsInsideHundekopf = 0;
-
-        for (Link l : scenario.getNetwork().getLinks().values()) {
-            if (l.getAllowedModes().contains(TransportMode.car)) {
-                if (l.getFreespeed() < speedAbove50kmh) {
-                    boolean isInHundekopf = ShpGeometryUtils.isCoordInPreparedGeometries(l.getCoord(), hundekopf);
-                    if (isInHundekopf) {
-                        int onStreetSpots = (int) Math.round(l.getLength() * spotsPerMeterInsideHundekopf);
-                        l.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, onStreetSpots);
-
-                        //log.info("Assigned " + onStreetSpots + " on street parking spots to link " + l.getId());
-                        assignedParkingSpotsInsideHundekopf += onStreetSpots;
-                    }
-                }
-            }
-        }
-
+        log.info("Meters per parking spot " + (totalNetworkLengthInsideHundekopf / PARKING_SPOTS_IN_HUNDEKOPF));
         log.info("Assigned " + assignedParkingSpotsInsideHundekopf + " full-population on street parking spots inside Hundekopf based on a density of " + spotsPerMeterInsideHundekopf + " spots per meter.");
 
-
-        List<PreparedGeometry> berlin = ShpGeometryUtils.loadPreparedGeometries(IOUtils.resolveFileOrResource(String.valueOf(shpBerlinGeometries)));
-        int totalNrOfParkingSpotsInBerlin = 1276312;
-        int parkingSpotsToAssingRestOfBerlin = totalNrOfParkingSpotsInBerlin - totalNrOfParkingSpotsInHundekopf;
-
-        //calculate total network length in berlin excluding hundekopf
-        double totalNetworkLengthBerlinWithoutHundekopf = 0;
-        for (Link l : scenario.getNetwork().getLinks().values()) {
-            if (l.getAllowedModes().contains(TransportMode.car)) {
-                if (l.getFreespeed() < speedAbove50kmh) {
-                    boolean isInBerlin = ShpGeometryUtils.isCoordInPreparedGeometries(l.getCoord(), berlin);
-                    boolean isInHundekopf = ShpGeometryUtils.isCoordInPreparedGeometries(l.getCoord(), hundekopf);
-                    if (isInBerlin && !isInHundekopf) {
-                        totalNetworkLengthBerlinWithoutHundekopf = totalNetworkLengthBerlinWithoutHundekopf + l.getLength();
-                    }
-                }
-            }
-        }
+        // The Berlin total includes Hundekopf. Therefore only the remaining
+        // supply is distributed across the rest of the city.
+        int parkingSpotsRestOfBerlin = PARKING_SPOTS_IN_BERLIN - PARKING_SPOTS_IN_HUNDEKOPF;
+        double totalNetworkLengthBerlinWithoutHundekopf = totalLength(restOfBerlinLinks);
+        double spotsPerMeterRestOfBerlin = parkingSpotsRestOfBerlin / totalNetworkLengthBerlinWithoutHundekopf;
+        int assignedParkingSpotsRestOfBerlin = assignParkingSpots(restOfBerlinLinks, spotsPerMeterRestOfBerlin);
 
         log.info("Total network length in Berlin excluding Hundekopf: " + totalNetworkLengthBerlinWithoutHundekopf);
-        log.info("Parking spots per meter in Berlin excluding Hundekopf: " + (parkingSpotsToAssingRestOfBerlin / totalNetworkLengthBerlinWithoutHundekopf));
-        log.info("Meters per parking spot in Berlin excluding Hundekopf: " + (totalNetworkLengthBerlinWithoutHundekopf / parkingSpotsToAssingRestOfBerlin));
+        log.info("Parking spots per meter in Berlin excluding Hundekopf: " + spotsPerMeterRestOfBerlin);
+        log.info("Meters per parking spot in Berlin excluding Hundekopf: " + (totalNetworkLengthBerlinWithoutHundekopf / parkingSpotsRestOfBerlin));
+        log.info("Assigned " + assignedParkingSpotsRestOfBerlin + " full-population on street parking spots to the rest of Berlin based on a density of " + spotsPerMeterRestOfBerlin + " spots per meter.");
 
-        //Assign parking spots to the rest of berlin based on the density of parking spots in berlin excluding hundekopf
-        int totalNumberOfParkingSpotsRestOfBerlin = 0;
-        for (Link l : scenario.getNetwork().getLinks().values()) {
-            if (l.getAllowedModes().contains(TransportMode.car)) {
-                if (l.getFreespeed() < speedAbove50kmh) {
-                    boolean isInBerlin = ShpGeometryUtils.isCoordInPreparedGeometries(l.getCoord(), berlin);
-                    boolean isInHundekopf = ShpGeometryUtils.isCoordInPreparedGeometries(l.getCoord(), hundekopf);
-                    if (isInBerlin && !isInHundekopf) {
-                        int onStreetSpots = (int) Math.round(l.getLength() * (parkingSpotsToAssingRestOfBerlin / totalNetworkLengthBerlinWithoutHundekopf));
-                        l.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, onStreetSpots);
-                        //log.info("Assigned " + onStreetSpots + " on street parking spots to link " + l.getId());
-                        totalNumberOfParkingSpotsRestOfBerlin = totalNumberOfParkingSpotsRestOfBerlin + onStreetSpots;
-                    }
-                }
-            }
-        }
-
-        log.info("Assigned " + totalNumberOfParkingSpotsRestOfBerlin + " full-population on street parking spots to the rest of Berlin based on a density of " + (parkingSpotsToAssingRestOfBerlin / totalNetworkLengthBerlinWithoutHundekopf) + " spots per meter.");
-
+        // No separate parking-supply estimate is available outside Berlin, so
+        // use the density calculated for Berlin excluding Hundekopf.
         log.info("Using the share for the links outside of berlin");
-        int totalNumberOfParkingSpotsOutsideBerlin = 0;
-        for (Link l : scenario.getNetwork().getLinks().values()) {
-            if (l.getAllowedModes().contains(TransportMode.car)) {
-                if (l.getFreespeed() < speedAbove50kmh) {
-                    boolean isInBerlin = ShpGeometryUtils.isCoordInPreparedGeometries(l.getCoord(), berlin);
-                    if (!isInBerlin) {
-                        int onStreetSpots = (int) Math.round(l.getLength() * (parkingSpotsToAssingRestOfBerlin / totalNetworkLengthBerlinWithoutHundekopf));
-                        l.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, onStreetSpots);
-                        totalNumberOfParkingSpotsOutsideBerlin = totalNumberOfParkingSpotsOutsideBerlin + onStreetSpots;
-                        //log.info("Assigned " + onStreetSpots + " on street parking spots to link " + l.getId());
-                    }
-                }
-            }
+        int assignedParkingSpotsOutsideBerlin = assignParkingSpots(outsideBerlinLinks, spotsPerMeterRestOfBerlin);
+        log.info("Assigned a total of " + assignedParkingSpotsOutsideBerlin + " full-population on street parking spots to links outside of Berlin based on the same density as in the rest of Berlin. The density is: " + spotsPerMeterRestOfBerlin + " spots per meter.");
+    }
+
+    private static boolean isEligibleForOnStreetParking(Link link) {
+        return link.getAllowedModes().contains(TransportMode.car)
+                && link.getFreespeed() < MAX_PARKING_LINK_FREESPEED;
+    }
+
+    private static boolean isInArea(Link link, List<PreparedGeometry> area) {
+        return ShpGeometryUtils.isCoordInPreparedGeometries(link.getCoord(), area);
+    }
+
+    private static double totalLength(List<? extends Link> links) {
+        return links.stream().mapToDouble(Link::getLength).sum();
+    }
+
+    private static int assignParkingSpots(List<? extends Link> links, double spotsPerMeter) {
+        int assignedParkingSpots = 0;
+        for (Link link : links) {
+            // Round per link because the network attribute stores whole spaces.
+            // Consequently, the summed result may differ slightly from the target.
+            int onStreetSpots = (int) Math.round(link.getLength() * spotsPerMeter);
+            link.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, onStreetSpots);
+            assignedParkingSpots += onStreetSpots;
         }
-        log.info("Assigned a total of " + totalNumberOfParkingSpotsOutsideBerlin + " full-population on street parking spots to links outside of Berlin based on the same density as in the rest of Berlin. The density is: " + (parkingSpotsToAssingRestOfBerlin / totalNetworkLengthBerlinWithoutHundekopf) + " spots per meter.");
+        return assignedParkingSpots;
     }
 
 
