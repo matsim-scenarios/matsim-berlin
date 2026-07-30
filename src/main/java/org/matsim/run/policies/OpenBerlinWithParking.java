@@ -197,7 +197,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
         return Integer.parseInt(value); // Otherwise, parse the integer
     }
 
-    private void assignOnStreetParking(Scenario scenario) {
+    public void assignOnStreetParking(Scenario scenario) {
 
         List<PreparedGeometry> hundekopf = ShpGeometryUtils.loadPreparedGeometries(IOUtils.resolveFileOrResource(String.valueOf(shpHundekopf)));
         int totalNrOfParkingSpotsInHundekopf = 230000;
