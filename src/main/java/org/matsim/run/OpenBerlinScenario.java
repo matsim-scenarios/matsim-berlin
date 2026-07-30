@@ -23,6 +23,7 @@ import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.emissions.utils.HbefaUtils;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.groups.PlanInheritanceConfigGroup;
 import org.matsim.core.config.groups.ReplanningConfigGroup;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
@@ -111,6 +112,13 @@ public class OpenBerlinScenario extends MATSimApplication {
 				.setWeight(0.15)
 				.setSubpopulation("person")
 		);
+
+//		write score explanations into person attrs for each person
+		config.scoring().setExplainScores(true);
+
+//		also enable plan inheritance analysis
+		PlanInheritanceConfigGroup planInheritanceConfigGroup = ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
+		planInheritanceConfigGroup.setEnabled(true);
 
 		// Need to switch to warning for best score
 		// best score is used because the pseudo random error term are added explicitly in the scoring
