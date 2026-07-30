@@ -262,6 +262,8 @@ $(FACILITIES_XML): setup $(NETWORK_MATSIM) $(FACILITIES_GPKG) $(FACILITY_MAPPING
 	 --zones-shp $(word 4,$^)\
 	 --output $@
 
+#TODO: create veh types xml file in code; incl. commercial types from RE and longDistanceFreight types from CL
+
 $(BERLIN_ONLY_100PCT): setup $(PLR_2013_2020) $(PLANUNGSRAUM_25833) $(FACILITIES_GPKG)
 	$(JAVA_APP) prepare berlin-population\
 		--input $<\
