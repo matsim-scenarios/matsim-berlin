@@ -1,9 +1,14 @@
 package org.matsim.run.policies;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
+import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -25,12 +30,17 @@ import org.matsim.core.network.kernel.DefaultKernelFunction;
 import org.matsim.core.network.kernel.KernelDistance;
 import org.matsim.core.network.kernel.NetworkKernelFunction;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
+import org.matsim.core.utils.collections.QuadTree;
+import org.matsim.core.utils.geometry.CoordinateTransformation;
+import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.run.OpenBerlinScenario;
 import org.matsim.utils.gis.shp2matsim.ShpGeometryUtils;
+import org.wololo.jts2geojson.GeoJSONReader;
 import picocli.CommandLine;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
@@ -58,16 +68,38 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
     @CommandLine.Option(names = "--noModeChoice", defaultValue = "true")
     private boolean noModeChoice;
 
-    @CommandLine.Option(names = "--shp-hundekopf", description = "Shapefile of hundekopf area", required = true)
+    @CommandLine.Option(names = "--on-street-parking-assignment",
+            description = "How to assign on-street parking: ${COMPLETION-CANDIDATES}",
+            defaultValue = "REGIONAL_TOTALS")
+    private OnStreetParkingAssignment onStreetParkingAssignment;
+
+    @CommandLine.Option(names = "--shp-hundekopf",
+            description = "Shapefile of Hundekopf; required for REGIONAL_TOTALS")
     private String shpHundekopf;
 
-    @CommandLine.Option(names = "--shp-berlin-geometries", description = "Shapefile of Berlin geometries", required = true)
+    @CommandLine.Option(names = "--shp-berlin-geometries",
+            description = "Shapefile of Berlin; required for REGIONAL_TOTALS")
     private String shpBerlinGeometries;
+
+    @CommandLine.Option(names = "--parking-inside",
+            description = "GeoJSON parking data inside Hundekopf; required for PARKING_DATA")
+    private String parkingInside;
+
+    @CommandLine.Option(names = "--parking-outside",
+            description = "GeoJSON parking data in the rest of Berlin; required for PARKING_DATA")
+    private String parkingOutside;
 
     private static final Logger log = LogManager.getLogger(OpenBerlinWithParking.class);
     private static final int PARKING_SPOTS_IN_HUNDEKOPF = 230_000;
     private static final int PARKING_SPOTS_IN_BERLIN = 1_276_312;
     private static final double MAX_PARKING_LINK_FREESPEED = 13.89;
+    private static final CoordinateTransformation WGS84_TO_NETWORK_CRS =
+            TransformationFactory.getCoordinateTransformation(TransformationFactory.WGS84, "EPSG:25832");
+
+    private enum OnStreetParkingAssignment {
+        REGIONAL_TOTALS,
+        PARKING_DATA
+    }
 
 
     public static void main(String[] args) {
@@ -201,6 +233,16 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
     }
 
     public void assignOnStreetParking(Scenario scenario) {
+        switch (onStreetParkingAssignment) {
+            case REGIONAL_TOTALS -> assignOnStreetParkingFromRegionalTotals(scenario);
+            case PARKING_DATA -> assignOnStreetParkingFromParkingData(scenario);
+        }
+    }
+
+    private void assignOnStreetParkingFromRegionalTotals(Scenario scenario) {
+        requireOption(shpHundekopf, "--shp-hundekopf", OnStreetParkingAssignment.REGIONAL_TOTALS);
+        requireOption(shpBerlinGeometries, "--shp-berlin-geometries", OnStreetParkingAssignment.REGIONAL_TOTALS);
+
         List<PreparedGeometry> hundekopf = ShpGeometryUtils.loadPreparedGeometries(IOUtils.resolveFileOrResource(String.valueOf(shpHundekopf)));
         List<PreparedGeometry> berlin = ShpGeometryUtils.loadPreparedGeometries(IOUtils.resolveFileOrResource(String.valueOf(shpBerlinGeometries)));
 
@@ -254,6 +296,98 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
         log.info("Assigned a total of " + assignedParkingSpotsOutsideBerlin + " full-population on street parking spots to links outside of Berlin based on the same density as in the rest of Berlin. The density is: " + spotsPerMeterRestOfBerlin + " spots per meter.");
     }
 
+    private void assignOnStreetParkingFromParkingData(Scenario scenario) {
+        requireOption(parkingInside, "--parking-inside", OnStreetParkingAssignment.PARKING_DATA);
+        requireOption(parkingOutside, "--parking-outside", OnStreetParkingAssignment.PARKING_DATA);
+
+        List<? extends Link> eligibleLinks = scenario.getNetwork().getLinks().values().stream()
+                .filter(OpenBerlinWithParking::isEligibleForOnStreetParking)
+                .toList();
+        QuadTree<Link> linkIndex = createLinkIndex(eligibleLinks);
+
+        assignParkingData(parkingInside, "errechnete_anzahl_parkplaetze", linkIndex, "inside Hundekopf");
+        assignParkingData(parkingOutside, "anzahl_parkplaetze", linkIndex, "in the rest of Berlin");
+    }
+
+    private static void assignParkingData(
+            String file,
+            String capacityField,
+            QuadTree<Link> linkIndex,
+            String area
+    ) {
+        List<ParkingPolygon> parkingPolygons = readParkingGeoJson(file, capacityField);
+        int assignedParkingSpots = 0;
+        double totalDistance = 0;
+        double maximumDistance = 0;
+
+        for (ParkingPolygon parking : parkingPolygons) {
+            Coordinate centroid = parking.geometry().getCentroid().getCoordinate();
+            Coord transformedCentroid = WGS84_TO_NETWORK_CRS.transform(new Coord(centroid.x, centroid.y));
+            Link nearestLink = linkIndex.getClosest(transformedCentroid.getX(), transformedCentroid.getY());
+            double distance = distance(transformedCentroid, nearestLink.getCoord());
+
+            Object existing = nearestLink.getAttributes().getAttribute(LINK_ON_STREET_SPOTS);
+            int currentCapacity = existing == null ? 0 : ((Number) existing).intValue();
+            nearestLink.getAttributes().putAttribute(LINK_ON_STREET_SPOTS, currentCapacity + parking.capacity());
+
+            assignedParkingSpots += parking.capacity();
+            totalDistance += distance;
+            maximumDistance = Math.max(maximumDistance, distance);
+        }
+
+        double meanDistance = parkingPolygons.isEmpty() ? 0 : totalDistance / parkingPolygons.size();
+        log.info("Assigned {} full-population on-street parking spots from {} polygons {}. Mean matching distance: {} m; maximum: {} m.",
+                assignedParkingSpots, parkingPolygons.size(), area, meanDistance, maximumDistance);
+    }
+
+    private static List<ParkingPolygon> readParkingGeoJson(String file, String capacityField) {
+        try {
+            JsonNode features = new ObjectMapper().readTree(new File(file)).path("features");
+            if (!features.isArray()) {
+                throw new IllegalArgumentException("GeoJSON contains no feature array: " + file);
+            }
+
+            GeoJSONReader geoJsonReader = new GeoJSONReader();
+            List<ParkingPolygon> result = new ArrayList<>();
+            for (JsonNode feature : features) {
+                JsonNode geometry = feature.get("geometry");
+                if (geometry == null || geometry.isNull()) {
+                    continue;
+                }
+
+                int capacity = feature.path("properties").path(capacityField).asInt(0);
+                result.add(new ParkingPolygon(geoJsonReader.read(geometry.toString()), capacity));
+            }
+            return result;
+        } catch (IOException e) {
+            throw new RuntimeException("Could not read parking data from " + file, e);
+        }
+    }
+
+    private static QuadTree<Link> createLinkIndex(List<? extends Link> links) {
+        if (links.isEmpty()) {
+            throw new IllegalArgumentException("The network contains no links eligible for on-street parking");
+        }
+
+        double minX = links.stream().mapToDouble(link -> link.getCoord().getX()).min().orElseThrow();
+        double minY = links.stream().mapToDouble(link -> link.getCoord().getY()).min().orElseThrow();
+        double maxX = links.stream().mapToDouble(link -> link.getCoord().getX()).max().orElseThrow();
+        double maxY = links.stream().mapToDouble(link -> link.getCoord().getY()).max().orElseThrow();
+        QuadTree<Link> index = new QuadTree<>(minX, minY, maxX, maxY);
+        links.forEach(link -> index.put(link.getCoord().getX(), link.getCoord().getY(), link));
+        return index;
+    }
+
+    private static double distance(Coord first, Coord second) {
+        return Math.hypot(first.getX() - second.getX(), first.getY() - second.getY());
+    }
+
+    private static void requireOption(String value, String option, OnStreetParkingAssignment assignment) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(option + " is required for " + assignment);
+        }
+    }
+
     private static boolean isEligibleForOnStreetParking(Link link) {
         return link.getAllowedModes().contains(TransportMode.car)
                 && link.getFreespeed() < MAX_PARKING_LINK_FREESPEED;
@@ -279,5 +413,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
         return assignedParkingSpots;
     }
 
+    private record ParkingPolygon(Geometry geometry, int capacity) {
+    }
 
 }

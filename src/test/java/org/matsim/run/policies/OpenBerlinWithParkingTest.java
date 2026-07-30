@@ -24,9 +24,13 @@ class OpenBerlinWithParkingTest {
     private static final String BERLIN_SHAPE = "/Users/gregorr/Documents/work/Paper/heartParking/berlin-2582.shp";
     private static final String HUNDEKOPF_SHAPE =
             "input/v6.4/hundekopf-shp/hundekopf-carBanArea-25832.shp";
+    private static final String PARKING_INSIDE =
+            "/Users/gregorr/Documents/work/Paper/heartParking/data/parkplaetze_parkplaetze_WGS84.geojson";
+    private static final String PARKING_OUTSIDE =
+            "/Users/gregorr/Documents/work/Paper/heartParking/data/parkplaetze_parkplaetze_aussen_WGS84.geojson";
 
     @Test
-    void assignOnStreetParkingAssignsExpectedNumberOfParkingSpots() {
+    void onStreetParkingApproachesAssignSimilarNumbersOfParkingSpots() {
         Scenario scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
         new MatsimNetworkReader(scenario.getNetwork()).readFile(
                 "https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/"
@@ -60,9 +64,30 @@ class OpenBerlinWithParkingTest {
 
         // Capacities are rounded per link, so their sum can differ slightly from the target.
         assertThat(assignedInBerlin)
-                .isCloseTo(EXPECTED_BERLIN_PARKING_SPOTS, offset(EXPECTED_BERLIN_PARKING_SPOTS + 100));
+                .isCloseTo(EXPECTED_BERLIN_PARKING_SPOTS, offset(EXPECTED_BERLIN_PARKING_SPOTS / 100));
         assertThat(assignedInHundekopf)
-                .isCloseTo(EXPECTED_HUNDEKOPF_PARKING_SPOTS, offset(EXPECTED_HUNDEKOPF_PARKING_SPOTS + 100));
+                .isCloseTo(EXPECTED_HUNDEKOPF_PARKING_SPOTS, offset(EXPECTED_HUNDEKOPF_PARKING_SPOTS / 100));
+
+        scenario.getNetwork().getLinks().values().forEach(
+                link -> link.getAttributes().removeAttribute(LINK_ON_STREET_SPOTS)
+        );
+
+        OpenBerlinWithParking parkingDataAssignment = CommandLine.populateCommand(
+                new OpenBerlinWithParking(),
+                "--parking-supply=unused.csv",
+                "--on-street-parking-assignment=PARKING_DATA",
+                "--parking-inside=" + PARKING_INSIDE,
+                "--parking-outside=" + PARKING_OUTSIDE
+        );
+        parkingDataAssignment.assignOnStreetParking(scenario);
+
+        int assignedFromParkingDataInBerlin = scenario.getNetwork().getLinks().values().stream()
+                .filter(link -> ShpGeometryUtils.isCoordInPreparedGeometries(link.getCoord(), berlin))
+                .mapToInt(OpenBerlinWithParkingTest::onStreetParkingSpots)
+                .sum();
+
+        assertThat(assignedFromParkingDataInBerlin)
+                .isCloseTo(assignedInBerlin, offset(assignedInBerlin / 20));
     }
 
     private static int onStreetParkingSpots(Link link) {
