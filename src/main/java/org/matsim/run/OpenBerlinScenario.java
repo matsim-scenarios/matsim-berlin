@@ -3,6 +3,8 @@ package org.matsim.run;
 import com.google.inject.Key;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.analysis.QsimTimingModule;
 import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
 import org.matsim.api.core.v01.Id;
@@ -58,6 +60,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 	private static final String HBEFA_FILE_WARM_AVERAGE = HBEFA_2020_PATH + "7eff8f308633df1b8ac4d06d05180dd0c5fdf577.enc";
 
 	private static final String AVERAGE = "average";
+	private static final Logger log = LogManager.getLogger(OpenBerlinScenario.VERSION);
 
 	@CommandLine.Option(names = "--plan-selector",
 		description = "Plan selector to use.",
@@ -157,10 +160,14 @@ public class OpenBerlinScenario extends MATSimApplication {
 			VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
 			VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
 			VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
+
+			log.warn("Engine information for {} were added to the respective vehicle type because they were not present." +
+				"The vehicle type will be ignored for emission calculation because it is marked as {}", TransportMode.ride, HbefaVehicleCategory.NON_HBEFA_VEHICLE);
 		}
 
 //		bike does not have HbefaTechnology in vehicle types xml file
 		VehicleUtils.setHbefaTechnology(scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.bike)).getEngineInformation(), AVERAGE);
+		log.warn("For vehicle type {}, the HbefaTechnolgy was missing and was set to {}.", TransportMode.bike, AVERAGE);
 
 //		for some of the input vehicle types hbefa emissionConcept and technology are swapped. We have to swap them back.
 //		hbefa4.1 relies on HbefaTechnology for correct emission calculation, not on HbefaEmissionConcept
@@ -171,6 +178,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 			if (VehicleUtils.getHbefaTechnology(engineInformation).equals("petrol")) {
 //				some veh types use technology "petrol" which does not exist. it either is petrol (4S) or petrol (2S). going for 4S here
 				VehicleUtils.setHbefaTechnology(engineInformation, HbefaTechnology.PETROL_4S.id);
+				log.warn("For vehicle type {} HbefaTechnology was set to 'petrol'. This is not a possible value. It was changed to {}." +
+					"Please check class HbefaTechnology for possibles values.", type.getId(), HbefaTechnology.PETROL_4S.id);
 			}
 		}
 	}
