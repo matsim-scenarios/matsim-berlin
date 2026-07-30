@@ -3,8 +3,11 @@ package org.matsim.run;
 import com.google.inject.Key;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.analysis.QsimTimingModule;
 import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Leg;
@@ -13,8 +16,11 @@ import org.matsim.api.core.v01.population.Plan;
 import org.matsim.application.MATSimApplication;
 import org.matsim.contrib.bicycle.*;
 import org.matsim.contrib.emissions.HbefaRoadTypeMapping;
+import org.matsim.contrib.emissions.HbefaTechnology;
+import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
+import org.matsim.contrib.emissions.utils.HbefaUtils;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanInheritanceConfigGroup;
@@ -34,6 +40,9 @@ import org.matsim.run.scoring.experimental.AdvancedScoringModule;
 import org.matsim.simwrapper.DashboardProvider;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
+import org.matsim.vehicles.EngineInformation;
+import org.matsim.vehicles.VehicleType;
+import org.matsim.vehicles.VehicleUtils;
 import picocli.CommandLine;
 
 import java.util.List;
@@ -50,6 +59,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 	private static final String HBEFA_FILE_WARM_DETAILED = HBEFA_2020_PATH + "944637571c833ddcf1d0dfcccb59838509f397e6.enc";
 	private static final String HBEFA_FILE_COLD_AVERAGE = HBEFA_2020_PATH + "r9230ru2n209r30u2fn0c9rn20n2rujkhkjhoewt84202.enc" ;
 	private static final String HBEFA_FILE_WARM_AVERAGE = HBEFA_2020_PATH + "7eff8f308633df1b8ac4d06d05180dd0c5fdf577.enc";
+
+	private static final String AVERAGE = "average";
+	private static final Logger log = LogManager.getLogger(OpenBerlinScenario.VERSION);
 
 	@CommandLine.Option(names = "--plan-selector",
 		description = "Plan selector to use.",
@@ -146,6 +158,36 @@ public class OpenBerlinScenario extends MATSimApplication {
 						leg.setTravelTimeUndefined();
 					}
 				}
+			}
+		}
+
+//		ride does not have engineInformation in vehicle types xml file
+		if (scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation().getAttributes().isEmpty()) {
+			EngineInformation engineInformation = scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation();
+			VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
+			VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
+			VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
+			VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
+
+			log.warn("Engine information for {} were added to the respective vehicle type because they were not present." +
+				"The vehicle type will be ignored for emission calculation because it is marked as {}", TransportMode.ride, HbefaVehicleCategory.NON_HBEFA_VEHICLE);
+		}
+
+//		bike does not have HbefaTechnology in vehicle types xml file
+		VehicleUtils.setHbefaTechnology(scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.bike)).getEngineInformation(), AVERAGE);
+		log.warn("For vehicle type {}, the HbefaTechnolgy was missing and was set to {}.", TransportMode.bike, AVERAGE);
+
+//		for some of the input vehicle types hbefa emissionConcept and technology are swapped. We have to swap them back.
+//		hbefa4.1 relies on HbefaTechnology for correct emission calculation, not on HbefaEmissionConcept
+		HbefaUtils.checkAndCorrectHbefaTechnologyAndEmissionConcept(scenario);
+
+		for (VehicleType type : scenario.getVehicles().getVehicleTypes().values()) {
+			EngineInformation engineInformation = type.getEngineInformation();
+			if (VehicleUtils.getHbefaTechnology(engineInformation).equals("petrol")) {
+//				some veh types use technology "petrol" which does not exist. it either is petrol (4S) or petrol (2S). going for 4S here
+				VehicleUtils.setHbefaTechnology(engineInformation, HbefaTechnology.PETROL_4S.id);
+				log.warn("For vehicle type {} HbefaTechnology was set to 'petrol'. This is not a possible value. It was changed to {}." +
+					"Please check class HbefaTechnology for possibles values.", type.getId(), HbefaTechnology.PETROL_4S.id);
 			}
 		}
 	}
