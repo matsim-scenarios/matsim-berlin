@@ -138,7 +138,8 @@ public class ParkingDashboard implements Dashboard {
 			viz.center = data.context().getCenter();
 			viz.zoom = data.context().getMapZoomLevel();
 
-			viz.setShape(data.compute(CreateAvroNetwork.class, "network.avro"), "id");
+			viz.setShape(data.withContext("all").compute(CreateAvroNetwork.class, "network.avro",
+				"--mode-filter", "", "--shp", "none"), "id");
 			viz.addDataset("parking", data.compute(ParkingAnalysis.class, "total_parking_search_time_per_link.csv"));
 
 			viz.display.lineColor.dataset = "parking";
@@ -158,7 +159,8 @@ public class ParkingDashboard implements Dashboard {
 			viz.center = data.context().getCenter();
 			viz.zoom = data.context().getMapZoomLevel();
 
-			viz.setShape(data.compute(CreateAvroNetwork.class, "network.avro"), "id");
+			viz.setShape(data.withContext("all").compute(CreateAvroNetwork.class, "network.avro",
+				"--mode-filter", "", "--shp", "none"), "id");
 			viz.addDataset("parking", data.compute(ParkingAnalysis.class, "average_parking_search_time_per_link.csv"));
 
 			viz.display.lineColor.dataset = "parking";
