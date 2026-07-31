@@ -5,8 +5,8 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.config.Config;
-import org.matsim.core.mobsim.qsim.qnetsimengine.parking.ParkingCapacityInitializer;
-import org.matsim.core.mobsim.qsim.qnetsimengine.parking.ParkingUtils;
+import org.matsim.contrib.parking.parkingsearchparameterization.ParkingCapacityInitializer;
+import org.matsim.contrib.parking.parkingsearchparameterization.ParkingUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,4 +40,3 @@ public class ZeroParkingCapacityInitializerBerlin implements ParkingCapacityInit
 		return res;
 	}
 }
-

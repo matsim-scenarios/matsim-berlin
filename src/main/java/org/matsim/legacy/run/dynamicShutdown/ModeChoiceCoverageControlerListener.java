@@ -22,7 +22,7 @@ import org.matsim.core.router.TripStructureUtils.Trip;
 import org.matsim.core.utils.charts.XYLineChart;
 import org.matsim.core.utils.io.IOUtils;
 
-import javax.inject.Inject;
+import com.google.inject.Inject;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.*;
@@ -39,7 +39,7 @@ import java.util.Map.Entry;
 public class ModeChoiceCoverageControlerListener implements StartupListener, IterationEndsListener,
         ShutdownListener {
 
-    private final static Logger log = LogManager.getLogger(org.matsim.analysis.ModeStatsControlerListener.class);
+    private final static Logger log = LogManager.getLogger(ModeChoiceCoverageControlerListener.class);
 
 
     private final Map<Integer, BufferedWriter> modeOutMap = new HashMap<>();

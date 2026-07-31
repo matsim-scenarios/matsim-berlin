@@ -58,7 +58,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 	private String planSelector;
 
 	public OpenBerlinScenario() {
-		super(String.format("input/v%s/berlin-v%s.config.xml", VERSION, VERSION));
+		configPath = String.format("input/v%s/berlin-v%s.config.xml", VERSION, VERSION);
 	}
 
 	public static void main(String[] args) {

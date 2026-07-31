@@ -9,7 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.contrib.accidents.AccidentsConfigGroup;
-import org.matsim.contrib.accidents.runExample.AccidentsNetworkModification;
+import org.matsim.contrib.accidents.AccidentsNetworkModification;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.network.NetworkUtils;
@@ -44,7 +44,7 @@ public class WriteBVWPAccidentRoadTypesIntoLinkAttributes {
 	Scenario scenario = RunBerlinScenario.prepareScenario(config);
 
 	AccidentsNetworkModification accidentsNetworkModification = new AccidentsNetworkModification(scenario);
-	NetworkUtils.writeNetwork(accidentsNetworkModification.setLinkAttributsBasedOnOSMFile(
+	NetworkUtils.writeNetwork(accidentsNetworkModification.setLinkAttributesBasedOnOSMFile(
 			landOSMInputShapeFile,
 			"EPSG:31468",
 			readColumn(0,tunnelLinkCSVInputFile,";"),

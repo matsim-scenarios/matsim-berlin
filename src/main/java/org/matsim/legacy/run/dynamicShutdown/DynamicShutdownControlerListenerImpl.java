@@ -2,7 +2,6 @@ package org.matsim.legacy.run.dynamicShutdown;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.matsim.analysis.ModeStatsControlerListener;
 import org.matsim.analysis.ScoreStats;
 import org.matsim.analysis.ScoreStatsControlerListener.ScoreItem;
 import org.matsim.api.core.v01.Scenario;
@@ -24,7 +23,7 @@ import org.matsim.core.replanning.ReplanningUtils;
 import org.matsim.core.replanning.StrategyManager;
 import org.matsim.core.utils.io.IOUtils;
 
-import javax.inject.Inject;
+import com.google.inject.Inject;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -50,7 +49,6 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
     private final ScoreStats scoreStats;
     private final ScoringConfigGroup scoreConfig;
     private final ReplanningConfigGroup strategyConfigGroup;
-    private final ModeStatsControlerListener modeStatsControlerListener;
     private final ModeChoiceCoverageControlerListener modeChoiceCoverageControlerListener;
     private final Scenario scenario;
     private final StrategyManager strategyManager;
@@ -78,7 +76,7 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
 
     @Inject
     DynamicShutdownControlerListenerImpl(ControllerConfigGroup controlerConfigGroup, ScoreStats scoreStats,
-                                         ModeStatsControlerListener modeStatsControlerListener, StrategyManager strategyManager,
+                                         StrategyManager strategyManager,
                                          ReplanningConfigGroup strategyConfigGroup, Scenario scenario, OutputDirectoryHierarchy controlerIO,
                                         ScoringConfigGroup scoreConfig,
                                          ModeChoiceCoverageControlerListener modeChoiceCoverageControlerListener) {
@@ -88,7 +86,6 @@ public class DynamicShutdownControlerListenerImpl implements IterationStartsList
         this.strategyManager = strategyManager;
         this.strategyConfigGroup = strategyConfigGroup;
         this.controlerConfigGroup = controlerConfigGroup ;
-        this.modeStatsControlerListener = modeStatsControlerListener ;
         this.outputFileName = controlerIO.getOutputFilename("dynShutdown_");
         this.modeChoiceCoverageControlerListener = modeChoiceCoverageControlerListener;
 

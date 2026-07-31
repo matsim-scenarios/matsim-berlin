@@ -82,7 +82,7 @@ public class ComputeTripChoices implements MATSimAppCommand {
 		config.controller().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
 
 		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
-		sw.setDefaultDashboards(SimWrapperConfigGroup.Mode.disabled);
+		sw.setDefaultDashboards(SimWrapperConfigGroup.DefaultDashboardsMode.disabled);
 
 		Controler controler = this.scenario.createControler();
 

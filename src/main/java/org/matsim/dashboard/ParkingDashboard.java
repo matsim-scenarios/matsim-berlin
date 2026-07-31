@@ -4,6 +4,7 @@ import org.matsim.application.prepare.network.CreateAvroNetwork;
 import org.matsim.simwrapper.Dashboard;
 import org.matsim.simwrapper.Header;
 import org.matsim.simwrapper.Layout;
+import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.viz.ColorScheme;
 import org.matsim.simwrapper.viz.MapPlot;
 import org.matsim.simwrapper.viz.Plotly;
@@ -13,7 +14,7 @@ import tech.tablesaw.plotly.traces.ScatterTrace;
 
 public class ParkingDashboard implements Dashboard {
 	@Override
-	public void configure(Header header, Layout layout) {
+	public void configure(Header header, Layout layout, SimWrapperConfigGroup configGroup) {
 		header.title = "Parking";
 		header.description = "Parking analysis";
 

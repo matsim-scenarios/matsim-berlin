@@ -24,6 +24,7 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.io.PopulationWriter;
 import org.matsim.core.scenario.ScenarioUtils;
 
@@ -56,11 +57,11 @@ public class MergePlans {
 
 		for (Person person: scenario1.getPopulation().getPersons().values()) {
 			population.addPerson(person);
-			population.getPersons().get(person.getId()).getAttributes().putAttribute(scenario3.getConfig().plans().getSubpopulationAttributeName(), "person");
+			PopulationUtils.putSubpopulation(person, "person");
 		}
 		for (Person person : scenario2.getPopulation().getPersons().values()) {
 			population.addPerson(person);
-			population.getPersons().get(person.getId()).getAttributes().putAttribute(scenario3.getConfig().plans().getSubpopulationAttributeName(), "freight");
+			PopulationUtils.putSubpopulation(person, "freight");
 		}
 
 		PopulationWriter writer = new PopulationWriter(population);
@@ -69,4 +70,3 @@ public class MergePlans {
 	}
 
 }
-

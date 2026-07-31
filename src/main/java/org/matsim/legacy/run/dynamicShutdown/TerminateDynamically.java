@@ -24,7 +24,7 @@
 import org.matsim.core.config.groups.ControllerConfigGroup;
 import org.matsim.core.controler.TerminationCriterion;
 
-import javax.inject.Inject;
+import com.google.inject.Inject;
 
 /**
  * Shuts down MATSim, when one of two criteria are satisfied: a) the lastIteration specified in the config file is reached or b) dynamic lastIteration, which can be

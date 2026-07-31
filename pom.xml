@@ -6,7 +6,7 @@
 		<artifactId>matsim-all</artifactId>
 
 		<!-- PR-labelled release -->
-		<version>2025.0-PR3760</version>
+		<version>2027.0-PR5086</version>
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
 <!--		<version>2025.0-SNAPSHOT</version>-->
@@ -27,7 +27,7 @@
 
 		<main.class>org.matsim.run.RunOpenBerlinScenario</main.class>
 
-		<maven.compiler.release>21</maven.compiler.release>
+		<maven.compiler.release>25</maven.compiler.release>
 	</properties>
 
 	<dependencies>
@@ -119,6 +119,13 @@
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>simwrapper</artifactId>
+			<version>${matsim.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.matsim.contrib</groupId>
+			<artifactId>parking</artifactId>
 			<version>${matsim.version}</version>
 			<scope>compile</scope>
 		</dependency>
@@ -261,18 +268,18 @@
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
-			<version>5.3.0</version>
+			<version>5.5.1</version>
 		</dependency>
 
 		<dependency>
 			<groupId>de.topobyte</groupId>
 			<artifactId>osm4j-pbf</artifactId>
-			<version>1.3.0</version>
+			<version>1.4.1</version>
 		</dependency>
 		<dependency>
 			<groupId>de.topobyte</groupId>
 			<artifactId>osm4j-geometry</artifactId>
-			<version>1.3.0</version>
+			<version>1.4.1</version>
 		</dependency>
 		<dependency>
 			<groupId>me.tongfei</groupId>
@@ -288,12 +295,12 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-statistics-distribution</artifactId>
-			<version>1.0</version>
+			<version>1.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-rng-simple</artifactId>
-			<version>1.5</version>
+			<version>1.7</version>
 		</dependency>
 
 
@@ -351,7 +358,7 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.12</version>
+				<version>0.8.14</version>
 				<executions>
 					<execution>
 						<goals>

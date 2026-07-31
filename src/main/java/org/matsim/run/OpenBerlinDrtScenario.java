@@ -22,7 +22,6 @@ package org.matsim.run;
 
 import ch.sbb.matsim.config.SwissRailRaptorConfigGroup;
 import ch.sbb.matsim.routing.pt.raptor.RaptorIntermodalAccessEgress;
-import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.ImmutableSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,7 +42,6 @@ import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.contrib.dvrp.run.DvrpModule;
 import org.matsim.contrib.dvrp.run.DvrpQSimComponents;
 import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.QSimConfigGroup;
 import org.matsim.core.config.groups.ScoringConfigGroup;
@@ -193,21 +191,14 @@ public class OpenBerlinDrtScenario extends OpenBerlinScenario {
 	}
 
 	@Override
-	protected List<ConfigGroup> getCustomModules() {
-		List<ConfigGroup> customModules = super.getCustomModules();
-		customModules.addAll(Lists.newArrayList(
-			new BerlinExperimentalConfigGroup(),
-			new DvrpConfigGroup(),
-			new MultiModeDrtConfigGroup(),
-			new SwissRailRaptorConfigGroup(),
-			new IntermodalTripFareCompensatorsConfigGroup(),
-			new PtIntermodalRoutingModesConfigGroup()));
-		return customModules;
-	}
-
-	@Override
 	protected Config prepareConfig(Config config) {
 		super.prepareConfig(config);
+		ConfigUtils.addOrGetModule(config, BerlinExperimentalConfigGroup.class);
+		ConfigUtils.addOrGetModule(config, DvrpConfigGroup.class);
+		ConfigUtils.addOrGetModule(config, MultiModeDrtConfigGroup.class);
+		ConfigUtils.addOrGetModule(config, SwissRailRaptorConfigGroup.class);
+		ConfigUtils.addOrGetModule(config, IntermodalTripFareCompensatorsConfigGroup.class);
+		ConfigUtils.addOrGetModule(config, PtIntermodalRoutingModesConfigGroup.class);
 
 		ConfigUtils.loadConfig(config, drtConfig);
 

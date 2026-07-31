@@ -1,6 +1,5 @@
 package org.matsim.analysis;
 
-import org.checkerframework.checker.units.qual.N;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;

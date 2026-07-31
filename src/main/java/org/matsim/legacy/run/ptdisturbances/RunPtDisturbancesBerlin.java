@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.inject.Provider;
+import com.google.inject.Provider;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -436,11 +436,11 @@ public final class RunPtDisturbancesBerlin {
 		}
 
 		@Override
-		public void onPrepareSim() {
+		public void beforeMobsim() {
 		}
 
 		@Override
-		public void afterSim() {
+		public void afterMobsim() {
 		}
 
 		@Override
@@ -452,7 +452,7 @@ public final class RunPtDisturbancesBerlin {
 
 	static void replanPtPassengers(double now, final Id<TransitLine> disturbedLineId, Provider<TripRouter> tripRouterProvider, Scenario scenario, InternalInterface internalInterface) {
 
-		final QSim qsim = internalInterface.getMobsim() ;
+		final QSim qsim = (QSim) internalInterface.getMobsim() ;
 
 		// force new transit router:
 		final TripRouter tripRouter = tripRouterProvider.get();
@@ -547,4 +547,3 @@ public final class RunPtDisturbancesBerlin {
 	}
 
 }
-

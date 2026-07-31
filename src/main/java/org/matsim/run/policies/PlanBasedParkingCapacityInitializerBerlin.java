@@ -9,7 +9,7 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.Config;
-import org.matsim.core.mobsim.qsim.qnetsimengine.parking.ParkingCapacityInitializer;
+import org.matsim.contrib.parking.parkingsearchparameterization.ParkingCapacityInitializer;
 import org.matsim.core.population.PopulationUtils;
 
 import java.util.Map;

@@ -33,6 +33,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.core.population.PopulationUtils;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
@@ -190,7 +191,7 @@ public class CreateFreightAgents {
 			pers.addPlan(plan) ;
 			population.addPerson(pers) ;
 
-			scenario.getPopulation().getPersons().get(pers.getId()).getAttributes().putAttribute(scenario.getConfig().plans().getSubpopulationAttributeName(), "freight");
+			PopulationUtils.putSubpopulation(pers, "freight");
 
 			personCounter++;
 		}
@@ -224,7 +225,7 @@ public class CreateFreightAgents {
 			pers.addPlan(plan) ;
 			population.addPerson(pers) ;
 
-			scenario.getPopulation().getPersons().get(pers.getId()).getAttributes().putAttribute(scenario.getConfig().plans().getSubpopulationAttributeName(), "freight");
+			PopulationUtils.putSubpopulation(pers, "freight");
 
 			personCounter++;
 		}
