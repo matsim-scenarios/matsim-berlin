@@ -169,7 +169,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		}
 
 		extractStations(stationPath, stations, counts);
-		matchWithNetwork(networkPath, geometries, stations, counts);
+		matchWithNetwork(networkPath, geometries, stations, counts, outputString);
 
 		List<CSVRecord> records = readCountData(countPaths);
 		aggregateAndAssignCountData(records, stations, car, freight, outputString);
@@ -308,7 +308,34 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		return factory.createLineString(coordinates);
 	}
 
-	private void matchWithNetwork(Path networkPath, Path geometries, Map<String, Station> stations, CountsOptions countsOption) throws TransformException, IOException {
+	/**
+	 * Distance between a station and a link, based on the link's detailed geometry.
+	 */
+	private static double distance(Map<Id<Link>, Geometry> geometries, Link link, Station station, NetworkIndex.GeometryGetter<Station> getter) {
+		return geometries.get(link.getId()).distance(getter.getGeometry(station));
+	}
+
+	/**
+	 * Writes one row of the map matching result file. Link columns stay empty if there is no matched link.
+	 */
+	private static void printMatch(CSVPrinter printer, String stationId, Station station, Link link, double distance, String status) throws IOException {
+
+		Object linkRoadName = link == null ? null : link.getAttributes().getAttribute("name");
+		Double stationBearing = COMPASS.get(normalizeDirection(station.direction()));
+
+		printer.printRecord(
+				stationId,
+				station.name(),
+				station.direction(),
+				status,
+				link == null ? "" : link.getId(),
+				linkRoadName == null ? "" : linkRoadName,
+				Double.isNaN(distance) ? "" : Math.round(distance),
+				link == null || stationBearing == null ? "" : Math.round(angularDiff(bearing(link), stationBearing))
+		);
+	}
+
+	private void matchWithNetwork(Path networkPath, Path geometries, Map<String, Station> stations, CountsOptions countsOption, String outputString) throws TransformException, IOException {
 
 		Network network = NetworkUtils.readNetwork(networkPath.toString());
 		CoordinateTransformation transformation = crs.getTransformation();
@@ -352,42 +379,54 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		logger.info("Start matching stations to network.");
 		int counter = 0;
 		int tooFar = 0;
-		for (var it = stations.entrySet().iterator(); it.hasNext();) {
-			Map.Entry<String, Station> next = it.next();
+		//Every station is written to the matching file, matched or not, so that results can be reviewed
+		Path matchingPath = Path.of(outputString + scenario + ".counts_matching.csv");
+		try (CSVPrinter printer = csv.createPrinter(matchingPath)) {
+			printer.printRecord("station_id", "station_name", "direction", "status", "link_id", "link_name", "distance", "angular_diff");
 
-			//Check for manual matching!
-			Id<Link> manuallyMatched = countsOption.isManuallyMatched(next.getKey());
-			if (manuallyMatched != null) {
-				if (!network.getLinks().containsKey(manuallyMatched))
-					throw new RuntimeException("Link " + manuallyMatched.toString() + " is not in the network!");
-				Link link = network.getLinks().get(manuallyMatched);
-				next.getValue().linkAtomicReference().set(link);
-				index.remove(link);
-				continue;
+			for (var it = stations.entrySet().iterator(); it.hasNext(); ) {
+				Map.Entry<String, Station> next = it.next();
+				Station station = next.getValue();
+
+				//Check for manual matching!
+				Id<Link> manuallyMatched = countsOption.isManuallyMatched(next.getKey());
+				if (manuallyMatched != null) {
+					if (!network.getLinks().containsKey(manuallyMatched))
+						throw new RuntimeException("Link " + manuallyMatched.toString() + " is not in the network!");
+					Link link = network.getLinks().get(manuallyMatched);
+					station.linkAtomicReference().set(link);
+					index.remove(link);
+					printMatch(printer, next.getKey(), station, link, distance(networkGeometries, link, station, getter), "manual");
+					continue;
+				}
+
+				Link query = index.query(station);
+
+				if (query == null) {
+					counter++;
+					it.remove();
+					printMatch(printer, next.getKey(), station, null, Double.NaN, "no_candidate");
+					continue;
+				}
+
+				//The index queries an envelope around the station and picks the closest candidate without an upper bound,
+				//so the actual distance has to be checked. The link stays in the index for the remaining stations.
+				double distance = distance(networkGeometries, query, station, getter);
+				if (distance > maxDistance) {
+					logger.debug("Station {} - {} is {}m away from its closest candidate {}", next.getKey(),
+							station.name(), Math.round(distance), query.getId());
+					tooFar++;
+					it.remove();
+					printMatch(printer, next.getKey(), station, query, distance, "too_far");
+					continue;
+				}
+
+				station.linkAtomicReference().set(query);
+				index.remove(query);
+				printMatch(printer, next.getKey(), station, query, distance, "matched");
 			}
-
-			Link query = index.query(next.getValue());
-
-			if (query == null) {
-				counter++;
-				it.remove();
-				continue;
-			}
-
-			//The index queries an envelope around the station and picks the closest candidate without an upper bound,
-			//so the actual distance has to be checked. The link stays in the index for the remaining stations.
-			double distance = networkGeometries.get(query.getId()).distance(getter.getGeometry(next.getValue()));
-			if (distance > maxDistance) {
-				logger.debug("Station {} - {} is {}m away from its closest candidate {}", next.getKey(),
-						next.getValue().name(), Math.round(distance), query.getId());
-				tooFar++;
-				it.remove();
-				continue;
-			}
-
-			next.getValue().linkAtomicReference().set(query);
-			index.remove(query);
 		}
+		logger.info("Wrote map matching results to {}", matchingPath);
 
 		if (!unknownDirections.isEmpty())
 			logger.warn("Ignored {} unknown direction labels, these stations were matched by distance only: {}",
