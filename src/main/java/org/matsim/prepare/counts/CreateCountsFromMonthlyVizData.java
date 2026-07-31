@@ -115,6 +115,9 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	@CommandLine.Option(names = "--use-road-names", description = "use road names to score map matching candidates")
 	boolean roadNames;
 
+	@CommandLine.Option(names = "--max-distance", description = "maximum distance [m] between a station and its matched link", defaultValue = "50")
+	double maxDistance;
+
 	@CommandLine.Mixin
 	private final CsvOptions csv = new CsvOptions();
 
@@ -325,7 +328,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			return MGC.coord2Point(transform);
 		};
 
-		NetworkIndex<Station> index = new NetworkIndex<>(network, networkGeometries, 50, getter);
+		NetworkIndex<Station> index = new NetworkIndex<>(network, networkGeometries, maxDistance, getter);
 		//Add link direction filter
 		Set<String> unknownDirections = new HashSet<>();
 		index.addLinkFilter((link, station) -> {
@@ -348,6 +351,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 
 		logger.info("Start matching stations to network.");
 		int counter = 0;
+		int tooFar = 0;
 		for (var it = stations.entrySet().iterator(); it.hasNext();) {
 			Map.Entry<String, Station> next = it.next();
 
@@ -370,6 +374,17 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 				continue;
 			}
 
+			//The index queries an envelope around the station and picks the closest candidate without an upper bound,
+			//so the actual distance has to be checked. The link stays in the index for the remaining stations.
+			double distance = networkGeometries.get(query.getId()).distance(getter.getGeometry(next.getValue()));
+			if (distance > maxDistance) {
+				logger.debug("Station {} - {} is {}m away from its closest candidate {}", next.getKey(),
+						next.getValue().name(), Math.round(distance), query.getId());
+				tooFar++;
+				it.remove();
+				continue;
+			}
+
 			next.getValue().linkAtomicReference().set(query);
 			index.remove(query);
 		}
@@ -378,7 +393,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			logger.warn("Ignored {} unknown direction labels, these stations were matched by distance only: {}",
 					unknownDirections.size(), unknownDirections);
 
-		logger.info("Could not match {} stations", counter);
+		logger.info("Could not match {} stations, discarded {} more with no candidate within {}m", counter, tooFar, maxDistance);
 	}
 
 	private void extractStations(Path path, Map<String, Station> stations, CountsOptions countsOption) {
