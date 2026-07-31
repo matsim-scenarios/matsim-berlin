@@ -52,6 +52,27 @@ import static tech.tablesaw.aggregate.AggregateFunctions.mean;
 @CommandLine.Command(name = "counts-detailed", description = "Own aggregation of VIZ data for MATSim Counts")
 public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 
+	/**
+	 * Compass direction of travel (degrees clockwise from north) for the direction labels used in the VIZ station data.
+	 */
+	private static final Map<String, Double> COMPASS = Map.of(
+			"nord", 0.,
+			"nordost", 45.,
+			"ost", 90.,
+			"sudost", 135.,
+			"sud", 180.,
+			"sudwest", 225.,
+			"west", 270.,
+			"nordwest", 315.
+	);
+
+	/**
+	 * A station's direction is one 45° compass sector. Accept links whose bearing lies within this tolerance around the
+	 * sector's center. 55° keeps the neighbouring diagonal sectors admissible as a fallback, while still rejecting the
+	 * opposite direction, which is always more than 90° away.
+	 */
+	private static final double DIRECTION_TOLERANCE = 55.;
+
 	@CommandLine.Option(names = "--input", description = "input count data directory", required = true)
 	Path input;
 
@@ -135,6 +156,45 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		return 0;
 	}
 
+	/**
+	 * Compass bearing of a link, from its from- to its to-node, in degrees clockwise from north.
+	 */
+	private static double bearing(Link link) {
+
+		Coord from = link.getFromNode().getCoord();
+		Coord to = link.getToNode().getCoord();
+
+		double angle = Math.toDegrees(Math.atan2(to.getX() - from.getX(), to.getY() - from.getY()));
+
+		return (angle + 360.) % 360.;
+	}
+
+	/**
+	 * Smallest angle between two bearings, in degrees, always between 0 and 180.
+	 */
+	private static double angularDiff(double a, double b) {
+
+		double diff = Math.abs(a - b) % 360.;
+
+		return Math.min(diff, 360. - diff);
+	}
+
+	/**
+	 * Maps a direction label of the VIZ station data onto a {@link #COMPASS} key, i.e. lower case and without umlauts.
+	 */
+	private static String normalizeDirection(String direction) {
+
+		if (direction == null)
+			return "";
+
+		return direction.toLowerCase(Locale.GERMAN)
+				.replace("ue", "u")
+				.replace("ü", "u")
+				.replace("ö", "o")
+				.replace("ä", "a")
+				.trim();
+	}
+
 	private LineString parseCoordinates(String coordinateSequence, GeometryFactory factory) {
 
 		String[] split = coordinateSequence.split("\\)");
@@ -171,25 +231,17 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			return MGC.coord2Point(transform);
 		});
 		//Add link direction filter
+		Set<String> unknownDirections = new HashSet<>();
 		index.addLinkFilter((link, station) -> {
-			String direction = station.direction();
+			Double stationBearing = COMPASS.get(normalizeDirection(station.direction()));
 
-			Coord from = link.link().getFromNode().getCoord();
-			Coord to = link.link().getToNode().getCoord();
+			//Unknown direction label: fall back to a purely distance based match
+			if (stationBearing == null) {
+				unknownDirections.add(station.direction());
+				return true;
+			}
 
-			String linkDir = "";
-			if (to.getY() > from.getY()) {
-				linkDir += "nord";
-			} else
-				linkDir += "süd";
-
-			if (to.getX() > from.getX()) {
-				linkDir += "ost";
-			} else
-				linkDir += "west";
-
-			Pattern pattern = Pattern.compile(direction, Pattern.CASE_INSENSITIVE);
-			return pattern.matcher(linkDir).find();
+			return angularDiff(bearing(link.link()), stationBearing) <= DIRECTION_TOLERANCE;
 		});
 		index.addLinkFilter((link, station) -> !link.link().getId().toString().startsWith("pt_"));
 
@@ -239,6 +291,10 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			next.getValue().linkAtomicReference().set(query);
 			index.remove(query);
 		}
+
+		if (!unknownDirections.isEmpty())
+			logger.warn("Ignored {} unknown direction labels, these stations were matched by distance only: {}",
+					unknownDirections.size(), unknownDirections);
 
 		logger.info("Could not match {} stations", counter);
 	}
