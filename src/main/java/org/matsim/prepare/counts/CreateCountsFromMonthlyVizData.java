@@ -38,6 +38,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
@@ -73,6 +74,26 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	 */
 	private static final double DIRECTION_TOLERANCE = 55.;
 
+	/**
+	 * Distance in m subtracted from a candidate's distance if its road name is the one the station reports.
+	 */
+	private static final double NAME_BONUS = 40.;
+
+	/**
+	 * A candidate publishing a road name different from the station's is evidence against the match, not just missing
+	 * evidence for it. The penalty is larger than {@link #NAME_BONUS}, so that a contradicting candidate has to be
+	 * clearly closer than an unnamed one (motorways carry no name) to still win.
+	 */
+	private static final double NAME_CONTRADICTION_PENALTY = 60.;
+
+	/**
+	 * Suffixes collapsed when comparing road names, so that e.g. "Ollenhauer Straße" and "Ollenhauerstr." match.
+	 */
+	private static final List<String> STREET_SUFFIXES = List.of("strasse", "str");
+
+	private static final Pattern NON_ALPHANUMERIC = Pattern.compile("[^a-z0-9]+");
+	private static final Pattern DIACRITICS = Pattern.compile("\\p{M}");
+
 	@CommandLine.Option(names = "--input", description = "input count data directory", required = true)
 	Path input;
 
@@ -91,7 +112,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	@CommandLine.Option(names = "--year", description = "year of count data", defaultValue = "2022")
 	int year;
 
-	@CommandLine.Option(names = "--use-road-names", description = "use road names to filter map matching results")
+	@CommandLine.Option(names = "--use-road-names", description = "use road names to score map matching candidates")
 	boolean roadNames;
 
 	@CommandLine.Mixin
@@ -195,6 +216,71 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 				.trim();
 	}
 
+	/**
+	 * Straight line from a link's from- to its to-node, used for links without a detailed geometry.
+	 */
+	private static LineString link2LineString(Link link, GeometryFactory factory) {
+
+		Coordinate from = MGC.coord2Coordinate(link.getFromNode().getCoord());
+		Coordinate to = MGC.coord2Coordinate(link.getToNode().getCoord());
+
+		return factory.createLineString(new Coordinate[]{from, to});
+	}
+
+	/**
+	 * Lower case, de-accented tokens of a road name, with the street suffix collapsed in both the standalone
+	 * ("Ollenhauer Straße") and the concatenated form ("Ollenhauerstraße").
+	 */
+	private static Set<String> nameTokens(String name) {
+
+		if (name == null || name.isBlank())
+			return Set.of();
+
+		String normalized = DIACRITICS.matcher(
+				Normalizer.normalize(name.toLowerCase(Locale.GERMAN).replace("ß", "ss"), Normalizer.Form.NFKD)
+		).replaceAll("");
+
+		Set<String> tokens = new HashSet<>();
+		for (String token : NON_ALPHANUMERIC.split(normalized)) {
+			if (token.isEmpty() || STREET_SUFFIXES.contains(token))
+				continue;
+
+			for (String suffix : STREET_SUFFIXES) {
+				if (token.endsWith(suffix) && token.length() > suffix.length()) {
+					token = token.substring(0, token.length() - suffix.length());
+					break;
+				}
+			}
+
+			tokens.add(token);
+		}
+
+		return tokens;
+	}
+
+	/**
+	 * Distance in m to add to a candidate, negative if the link's road name supports the match, positive if it
+	 * contradicts it. Returns 0 if either side is unnamed, i.e. if there is nothing to compare.
+	 * <p>
+	 * Token set equality is deliberately strict: qualifiers like "Neue" or "Alte" usually denote a different street
+	 * in Berlin, so "Späthstraße" must not be treated as "Neue Späthstraße".
+	 */
+	private static double nameScore(Station station, Link link) {
+
+		if (link == null)
+			return 0.;
+
+		Object linkRoadName = link.getAttributes().getAttribute("name");
+
+		Set<String> stationTokens = nameTokens(station.name());
+		Set<String> linkTokens = linkRoadName == null ? Set.of() : nameTokens(linkRoadName.toString());
+
+		if (stationTokens.isEmpty() || linkTokens.isEmpty())
+			return 0.;
+
+		return stationTokens.equals(linkTokens) ? -NAME_BONUS : NAME_CONTRADICTION_PENALTY;
+	}
+
 	private LineString parseCoordinates(String coordinateSequence, GeometryFactory factory) {
 
 		String[] split = coordinateSequence.split("\\)");
@@ -225,11 +311,21 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		CoordinateTransformation transformation = crs.getTransformation();
 
 		Map<Id<Link>, Geometry> networkGeometries = NetworkIndex.readGeometriesFromSumo(geometries.toString(), IdentityTransform.create(2));
-		NetworkIndex<Station> index = new NetworkIndex<>(network, networkGeometries, 50, toMatch -> {
+
+		//The distance function only receives the geometry, so keep a geometry -> link mapping to access the link
+		//attributes. Links without SUMO geometry are filled in here, so that every geometry in the index is known.
+		GeometryFactory factory = new GeometryFactory();
+		Map<Geometry, Link> geometryToLink = new IdentityHashMap<>();
+		for (Link link : network.getLinks().values())
+			geometryToLink.put(networkGeometries.computeIfAbsent(link.getId(), id -> link2LineString(link, factory)), link);
+
+		NetworkIndex.GeometryGetter<Station> getter = toMatch -> {
 			Coord coord = toMatch.coord();
 			Coord transform = transformation.transform(coord);
 			return MGC.coord2Point(transform);
-		});
+		};
+
+		NetworkIndex<Station> index = new NetworkIndex<>(network, networkGeometries, 50, getter);
 		//Add link direction filter
 		Set<String> unknownDirections = new HashSet<>();
 		index.addLinkFilter((link, station) -> {
@@ -245,24 +341,10 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		});
 		index.addLinkFilter((link, station) -> !link.link().getId().toString().startsWith("pt_"));
 
-		if (roadNames) {
-			index.addLinkFilter((link, station) -> {
-				String name = station.name().toLowerCase();
-
-				if (name.endsWith("straße") || name.endsWith("str"))
-					name.replace("straße", "").replace("str", "");
-
-				if (name.equals("straße des 17. juni"))
-					return true;
-
-				Object linkRoadName = link.link().getAttributes().getAttribute("name");
-
-				if (linkRoadName == null)
-					return true;
-
-				return Pattern.compile(name, Pattern.CASE_INSENSITIVE).matcher((String) linkRoadName).find();
-			});
-		}
+		//Road names are evidence, not a veto: they shift the distance a candidate is picked by, but never remove it
+		if (roadNames)
+			index.setDistanceCalculator((geom, station) -> geom.distance(getter.getGeometry(station))
+					+ nameScore(station, geometryToLink.get(geom)));
 
 		logger.info("Start matching stations to network.");
 		int counter = 0;
