@@ -220,3 +220,48 @@ modal_dist_group_car_plot <- ggplot(combined_modal_car, aes(x = dist_group, y = 
   )
 modal_dist_group_car_plot
 ggsave("modal_dist_group_car_plot.pdf", modal_dist_group_car_plot, dpi = 500, w = 9, h = 9)
+
+############################################ bicycle speed elasticities plot ##################################################
+
+# read data
+elasticities_share <- read_csv(file="C:/Users/Simon/Desktop/wd/2026-07-27/bike_speed_elasticities_share_bike_network_paper.csv") %>% 
+  mutate(
+    elasticity = elasticity %>%
+      na_if("#DIV/0!") %>%
+      replace_na("0")
+    ) %>% 
+  mutate(elasticity = as.numeric(elasticity)) %>% 
+  mutate(
+    case = case_when(
+      str_detect(run, "base-case-ctd") ~ "base",
+      str_detect(run, "bike-teleported") ~ "teleported",
+      str_detect(run, "bike-in-qsim") ~ paste0("qsim", str_extract(run, "(?<=pce-)[0-9.]+")),
+      TRUE ~ "Other"
+    )
+  ) %>% 
+  mutate(case = factor(case, levels = unique(case)))
+  
+
+elasticities_plot <- ggplot(elasticities_share,
+       aes(x = `bike speed [km/h]`,
+           y = `elasticity`,
+           color = case,
+           group = case)) +
+  geom_line(linewidth = 2) +
+  geom_point(size = 3) +
+  scale_color_okabe_ito(order = c(1,2,3,4,5,6,7)) +
+  labs(
+    x = "bicycle speed [km/h]",
+    y = "bicycle speed elasticity") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 20),
+    axis.title = element_text(size = 21),
+    axis.text = element_text(size = 20),
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+    legend.title = element_text(size = 20),
+    legend.text = element_text(size = 19),
+    plot.margin = margin(5, 5, 5, 5)
+  )
+elasticities_plot
+ggsave("bicycle_speed_elasticities_plot.pdf", elasticities_plot, dpi = 500, w = 9, h = 9)
