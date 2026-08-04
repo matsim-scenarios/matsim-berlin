@@ -116,11 +116,6 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
     @Override
     protected Config prepareConfig(Config config) {
         Config preparedConfig = super.prepareConfig(config);
-        //config.network().setInputFile("/Users/gregorr/Documents/work/respos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.4/input/berlin-v6.4-network-with-pt.xml.gz");
-        //config.plans().setInputFile(null);
-        //config.facilities().setInputFile("/Users/gregorr/Documents/work/respos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.4/input/berlin-v6.4-facilities.xml.gz");
-        //config.transit().setTransitScheduleFile("/Users/gregorr/Documents/work/respos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.4/input/berlin-v6.4-transitSchedule.xml.gz");
-        //config.transit().setVehiclesFile("/Users/gregorr/Documents/work/respos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v6.4/input/berlin-v6.4-transitVehicles.xml.gz");
         preparedConfig.controller().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
 
         if (noModeChoice) {
@@ -197,7 +192,6 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
         });
     }
 
-    //public record ParkingSpots(int onstreetSpots, int offstreetSpots) { }
 
 	/*
 	Read parking supply data from a CSV file and return a map of Link IDs to ParkingSpots objects.
@@ -270,9 +264,6 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
                 .filter(link -> isInArea(link, berlin))
                 .filter(link -> !isInArea(link, hundekopf))
                 .toList();
-        List<? extends Link> outsideBerlinLinks = eligibleLinks.stream()
-                .filter(link -> !isInArea(link, berlin))
-                .toList();
 
         // Distribute the known Hundekopf supply proportionally to link length.
         // Capacities remain full-population values and are scaled later by the
@@ -297,12 +288,6 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
         log.info("Parking spots per meter in Berlin excluding Hundekopf: " + spotsPerMeterRestOfBerlin);
         log.info("Meters per parking spot in Berlin excluding Hundekopf: " + (totalNetworkLengthBerlinWithoutHundekopf / parkingSpotsRestOfBerlin));
         log.info("Assigned " + assignedParkingSpotsRestOfBerlin + " full-population on street parking spots to the rest of Berlin based on a density of " + spotsPerMeterRestOfBerlin + " spots per meter.");
-
-        // No separate parking-supply estimate is available outside Berlin, so
-        // use the density calculated for Berlin excluding Hundekopf.
-        log.info("Using the share for the links outside of berlin");
-        int assignedParkingSpotsOutsideBerlin = assignParkingSpots(outsideBerlinLinks, spotsPerMeterRestOfBerlin);
-        log.info("Assigned a total of " + assignedParkingSpotsOutsideBerlin + " full-population on street parking spots to links outside of Berlin based on the same density as in the rest of Berlin. The density is: " + spotsPerMeterRestOfBerlin + " spots per meter.");
     }
 
     private void assignOnStreetParkingFromParkingData(Scenario scenario) {

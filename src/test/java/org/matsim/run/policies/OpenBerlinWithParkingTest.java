@@ -62,11 +62,17 @@ class OpenBerlinWithParkingTest {
                 .mapToInt(OpenBerlinWithParkingTest::onStreetParkingSpots)
                 .sum();
 
+        int assignedOutsideBerlin = scenario.getNetwork().getLinks().values().stream()
+                .filter(link -> !ShpGeometryUtils.isCoordInPreparedGeometries(link.getCoord(), berlin))
+                .mapToInt(OpenBerlinWithParkingTest::onStreetParkingSpots)
+                .sum();
+
         // Capacities are rounded per link, so their sum can differ slightly from the target.
         assertThat(assignedInBerlin)
                 .isCloseTo(EXPECTED_BERLIN_PARKING_SPOTS, offset(EXPECTED_BERLIN_PARKING_SPOTS / 100));
         assertThat(assignedInHundekopf)
                 .isCloseTo(EXPECTED_HUNDEKOPF_PARKING_SPOTS, offset(EXPECTED_HUNDEKOPF_PARKING_SPOTS / 100));
+        assertThat(assignedOutsideBerlin).isZero();
 
         scenario.getNetwork().getLinks().values().forEach(
                 link -> link.getAttributes().removeAttribute(LINK_ON_STREET_SPOTS)

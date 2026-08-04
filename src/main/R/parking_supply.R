@@ -39,84 +39,84 @@ if (!file.exists(berlin_districts_shp_filename)) {
 
 berlin_districts_shp <- st_read(berlin_districts_shp_filename) %>% st_transform(25832)
 
-# ----------------------------------------------------------
-# Question 1: Parking spots per meter of MATSim link
-# ----------------------------------------------------------
-
-nodes <- network_berlin$nodes %>%
-  st_as_sf(coords = c("x", "y"), crs = 25832)
-
-##filter only for links in Berlin
-nodes_in_berlin <- nodes %>% st_filter(berlin_districts_shp)
-nodes_in_berlin_ids <- nodes_in_berlin %>% pull(id)
-
-links_in_berlin <- network_berlin$links %>%
-  filter(from %in% nodes_in_berlin_ids | to %in% nodes_in_berlin_ids)
-
-##total link length of berlin
-total_link_length_berlin <- sum(links_in_berlin$length)
-total_parking_spots_berlin <- 1276312  # from Berlin official estimate
-
-# ----------------------------------------------------------
-# Links < 50 km/h --> filter out motorways
-# ----------------------------------------------------------
-links_in_berlin_filtered <- links_in_berlin %>%
-  filter(allowed_speed < 13.89)
-
-# ----------------------------------------------------------
-# Inside / Outside Hundekopf (Ring)
-# ----------------------------------------------------------
-
-# IMPORTANT: Add or load your "hundekopf" geometry here
-hundekopf <- st_read("/Users/gregorr/Documents/work/respos/git/matsim-berlin/input/v6.4/hundekopf-shp/hundekopf-carBanArea-25832.shp") %>% st_transform(25832)
-
-##filter out links in hundekopf
-nodes_in_hundekopf_ids <- nodes %>% st_filter(hundekopf) %>% pull(id)
-
-links_in_hundekopf_filtered <- links_in_berlin_filtered %>%
-  filter(from %in% nodes_in_hundekopf_ids | to %in% nodes_in_hundekopf_ids)
-
-links_outside_hundekopf_filtered <- links_in_berlin_filtered %>%
-  filter(!id %in% links_in_hundekopf_filtered$id)
-
-##where does the 230000 come from? --> 
-inside_hundekopf_stats <- links_in_hundekopf_filtered %>%
-  summarise(sum_link_distlink_length = sum(length)) %>%
-  mutate(
-    total_parking_spots = 230000,
-    spots_per_meter = total_parking_spots / sum_link_distlink_length,
-    meters_per_spot = sum_link_distlink_length / total_parking_spots
-  )
-
-outside_hundekopf_stats <- links_outside_hundekopf_filtered %>%
-  summarise(sum_link_distlink_length = sum(length)) %>%
-  mutate(
-    total_parking_spots = 1276312 - 230000,
-    spots_per_meter = total_parking_spots / sum_link_distlink_length,
-    meters_per_spot = sum_link_distlink_length / total_parking_spots
-  )
-
-onstreet_parking <- links_in_berlin_filtered %>%
-  mutate(
-    spots_per_meter = case_when(
-      id %in% links_in_hundekopf_filtered$id ~ inside_hundekopf_stats$spots_per_meter,
-      id %in% links_outside_hundekopf_filtered$id ~ outside_hundekopf_stats$spots_per_meter,
-      TRUE ~ NA
-    )
-  ) %>%
-  transmute(id = id, onstreet_spots = round(spots_per_meter * length, 0))
-
-onstreet_summary <- onstreet_parking %>%
-  mutate(area = case_when(
-    id %in% links_in_hundekopf_filtered$id ~ "inside_hundekopf",
-    id %in% links_outside_hundekopf_filtered$id ~ "outside_hundekopf",
-    TRUE ~ "unknown"
-  )) %>%
-  group_by(area) %>%
-  summarise(total_spots = sum(onstreet_spots, na.rm = TRUE))
-
-
-sum(links_in_hundekopf_filtered$length)
+# # ----------------------------------------------------------
+# # Question 1: Parking spots per meter of MATSim link
+# # ----------------------------------------------------------
+# 
+# nodes <- network_berlin$nodes %>%
+#   st_as_sf(coords = c("x", "y"), crs = 25832)
+# 
+# ##filter only for links in Berlin
+# nodes_in_berlin <- nodes %>% st_filter(berlin_districts_shp)
+# nodes_in_berlin_ids <- nodes_in_berlin %>% pull(id)
+# 
+# links_in_berlin <- network_berlin$links %>%
+#   filter(from %in% nodes_in_berlin_ids | to %in% nodes_in_berlin_ids)
+# 
+# ##total link length of berlin
+# total_link_length_berlin <- sum(links_in_berlin$length)
+# total_parking_spots_berlin <- 1276312  # from Berlin official estimate
+# 
+# # ----------------------------------------------------------
+# # Links < 50 km/h --> filter out motorways
+# # ----------------------------------------------------------
+# links_in_berlin_filtered <- links_in_berlin %>%
+#   filter(allowed_speed < 13.89)
+# 
+# # ----------------------------------------------------------
+# # Inside / Outside Hundekopf (Ring)
+# # ----------------------------------------------------------
+# 
+# # IMPORTANT: Add or load your "hundekopf" geometry here
+# hundekopf <- st_read("/Users/gregorr/Documents/work/respos/git/matsim-berlin/input/v6.4/hundekopf-shp/hundekopf-carBanArea-25832.shp") %>% st_transform(25832)
+# 
+# ##filter out links in hundekopf
+# nodes_in_hundekopf_ids <- nodes %>% st_filter(hundekopf) %>% pull(id)
+# 
+# links_in_hundekopf_filtered <- links_in_berlin_filtered %>%
+#   filter(from %in% nodes_in_hundekopf_ids | to %in% nodes_in_hundekopf_ids)
+# 
+# links_outside_hundekopf_filtered <- links_in_berlin_filtered %>%
+#   filter(!id %in% links_in_hundekopf_filtered$id)
+# 
+# ##where does the 230000 come from? --> 
+# inside_hundekopf_stats <- links_in_hundekopf_filtered %>%
+#   summarise(sum_link_distlink_length = sum(length)) %>%
+#   mutate(
+#     total_parking_spots = 230000,
+#     spots_per_meter = total_parking_spots / sum_link_distlink_length,
+#     meters_per_spot = sum_link_distlink_length / total_parking_spots
+#   )
+# 
+# outside_hundekopf_stats <- links_outside_hundekopf_filtered %>%
+#   summarise(sum_link_distlink_length = sum(length)) %>%
+#   mutate(
+#     total_parking_spots = 1276312 - 230000,
+#     spots_per_meter = total_parking_spots / sum_link_distlink_length,
+#     meters_per_spot = sum_link_distlink_length / total_parking_spots
+#   )
+# 
+# onstreet_parking <- links_in_berlin_filtered %>%
+#   mutate(
+#     spots_per_meter = case_when(
+#       id %in% links_in_hundekopf_filtered$id ~ inside_hundekopf_stats$spots_per_meter,
+#       id %in% links_outside_hundekopf_filtered$id ~ outside_hundekopf_stats$spots_per_meter,
+#       TRUE ~ NA
+#     )
+#   ) %>%
+#   transmute(id = id, onstreet_spots = round(spots_per_meter * length, 0))
+# 
+# onstreet_summary <- onstreet_parking %>%
+#   mutate(area = case_when(
+#     id %in% links_in_hundekopf_filtered$id ~ "inside_hundekopf",
+#     id %in% links_outside_hundekopf_filtered$id ~ "outside_hundekopf",
+#     TRUE ~ "unknown"
+#   )) %>%
+#   group_by(area) %>%
+#   summarise(total_spots = sum(onstreet_spots, na.rm = TRUE))
+# 
+# 
+# sum(links_in_hundekopf_filtered$length)
 # ----------------------------------------------------------
 # Question 2: Off-street parking (OSM)
 # ----------------------------------------------------------
