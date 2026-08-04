@@ -480,13 +480,27 @@
 	<repositories>
 		<!--Note that in general repositories are not transitive, so they need to be repeated at every level where needed.-->
 		<repository>
+			<!--
+				Maven consults repositories in declaration order, and the super-POM puts central LAST, i.e. after
+				everything below plus the jogl repo inherited from matsim-all. Redeclaring central here overrides
+				the super-POM's definition and moves it to the front, so the artifacts that live there (the large
+				majority) are found on the first try rather than after walking repositories that do not have them.
+				Snapshots stay off as in the super-POM; a redeclaration would otherwise silently enable them.
+			-->
+			<id>central</id>
+			<url>https://repo.maven.apache.org/maven2</url>
+			<snapshots><enabled>false</enabled></snapshots>
+		</repository>
+		<repository>
 			<!-- Geotools is not on Maven central -->
 			<id>osgeo</id>
 			<name>Geotools repository</name>
 			<url>https://repo.osgeo.org/repository/release/</url>
+			<snapshots><enabled>false</enabled></snapshots>
 		</repository>
 		<repository>
 			<!-- Repository for MATSim (MATSim is not on Maven central, releases and snapshots) -->
+			<!-- the only repository here that serves snapshots, so the only one worth asking for them. -->
 			<id>matsim</id>
 			<url>https://repo.matsim.org/repository/matsim</url>
 		</repository>
@@ -494,16 +508,30 @@
 		<repository>
 			<id>topobyte</id>
 			<url>https://mvn.topobyte.de</url>
+			<snapshots><enabled>false</enabled></snapshots>
 		</repository>
 		<!-- for dependencies of osm-network-reader -->
 		<repository>
 			<id>slimjars</id>
 			<url>https://mvn.slimjars.com</url>
+			<snapshots><enabled>false</enabled></snapshots>
 		</repository>
 
 		<repository>
 			<id>jitpack.io</id>
 			<url>https://jitpack.io</url>
+			<snapshots><enabled>false</enabled></snapshots>
+		</repository>
+		<repository>
+			<!--
+				Inherited from matsim-all. jogamp.org is slow (~45s per request), but it is the only source of
+				org.jogamp.gluegen:gluegen-rt and org.jogamp.jogl:jogl-all, which a cold resolve does pull in, so
+				it has to stay reachable. Redeclared only to move it behind the repositories that serve everything
+				else and to switch snapshots off, since it has none.
+			-->
+			<id>jogl</id>
+			<url>https://jogamp.org/deployment/maven/</url>
+			<snapshots><enabled>false</enabled></snapshots>
 		</repository>
 	</repositories>
 
