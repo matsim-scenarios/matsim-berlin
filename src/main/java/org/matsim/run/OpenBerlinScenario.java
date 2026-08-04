@@ -71,6 +71,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 	protected Config prepareConfig(Config config) {
 
 		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
+		config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
 
 		if (sample.isSet()) {
 			double sampleSize = sample.getSample();
