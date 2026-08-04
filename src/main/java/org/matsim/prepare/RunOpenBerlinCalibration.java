@@ -66,6 +66,8 @@ import org.matsim.prepare.pt.EndlessCircleLineScheduleModifier;
 import org.matsim.run.Activities;
 import org.matsim.run.OpenBerlinScenario;
 import org.matsim.run.scoring.experimental.AdvancedScoringConfigGroup;
+import org.matsim.run.scoring.BerlinScoringConfigGroup;
+import org.matsim.run.scoring.CalibrationScoringFunctionFactory;
 import org.matsim.run.scoring.experimental.AdvancedScoringModule;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
@@ -124,6 +126,19 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	@CommandLine.Option(names = "--scale-factor", description = "Scale factor for capacity to avoid congestions.", defaultValue = "1.5")
 	private double scaleFactor;
 
+	@CommandLine.Option(names = "--with-opening-times", description = "Give the activity types their opening times. " +
+		"Off by default, matching the scenario: the per-activity typical durations carry the schedule.")
+	private boolean withOpeningTimes = false;
+
+	@CommandLine.Option(names = "--simulation-period-in-days", description = "Length of the simulation period, as a " +
+		"multiple of 24h. Must match the scenario and the preprocessing.")
+	private double simulationPeriodInDays = OpenBerlinScenario.DEFAULT_SIMULATION_PERIOD_IN_DAYS;
+
+	@CommandLine.Option(names = "--allow-config-typical-durations", description = "Allow person-subpopulation " +
+		"activities without a typicalDuration attribute to score against the config typical duration. By default " +
+		"such an activity ABORTS the run.")
+	private boolean allowConfigTypicalDurations = false;
+
 	@CommandLine.Option(names = "--plan-index", description = "Only use one plan with specified index")
 	private Integer planIndex;
 
@@ -179,7 +194,14 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		config.scoring().setWriteExperiencedPlans(true);
 
 		// Location choice does not work with the split types
-		Activities.addScoringParams(config, mode != CalibrationMode.locationChoice, true);
+		Activities.addScoringParams(config, mode != CalibrationMode.locationChoice, withOpeningTimes);
+
+		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class)
+			.setAllowConfigTypicalDurations(allowConfigTypicalDurations);
+
+//		the calibration has to score the way the scenario does, so it needs the same day end; see
+//		OpenBerlinScenario --simulation-period-in-days.
+		config.scenario().setSimulationPeriodInDays(simulationPeriodInDays);
 
 		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
 
@@ -461,6 +483,17 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 				public void install() {
 					binder().bind(new TypeLiteral<StrategyChooser<Plan, Person>>() {
 					}).toInstance(new ForceInnovationStrategyChooser<>((int) Math.ceil(1.0 / weight), ForceInnovationStrategyChooser.Permute.yes));
+				}
+			});
+		}
+
+		if (mode != CalibrationMode.cadyts) {
+//			score activities against their typicalDuration attribute, like the scenario does. Skipped for cadyts,
+//			which replaces the scoring function wholesale above and does no activity scoring at all.
+			controler.addOverridingModule(new AbstractModule() {
+				@Override
+				public void install() {
+					bindScoringFunctionFactory().to(CalibrationScoringFunctionFactory.class);
 				}
 			});
 		}

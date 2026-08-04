@@ -46,18 +46,10 @@ public final class BerlinScoringFunctionFactory implements ScoringFunctionFactor
 
 		final ScoringParameters parameters = params.getScoringParameters(person);
 
-		BerlinScoringConfigGroup berlinScoring = ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class);
-		String subpopulation = PopulationUtils.getSubpopulation(person);
-
 //		the activities the events machinery hands to the scoring carry no attributes, so the calculator is given the
 //		person and reads them off the selected plan's main activities.
-		TypicalDurationCalculator typicalDurationCalculator =
-			"person".equals(subpopulation) && !berlinScoring.isAllowConfigTypicalDurations()
-				? new RequiredTypicalDurationCalculator(person)
-				: new ActivityAttributeTypicalDurationCalculator();
-
 		SumScoringFunction sumScoringFunction = new SumScoringFunction();
-		sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(parameters, typicalDurationCalculator, person));
+		sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(parameters, TypicalDurations.forPerson(config, person), person));
 		sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(parameters, config.transit().getTransitModes()));
 		sumScoringFunction.addScoringFunction(new PseudoRandomTripScoring(person.getId(), mmi, pseudoRNG));
 		sumScoringFunction.addScoringFunction(new TransitTripScoring(parameters, ptRouteToMode));
