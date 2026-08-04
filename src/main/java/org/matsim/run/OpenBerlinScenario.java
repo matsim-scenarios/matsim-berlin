@@ -35,6 +35,7 @@ import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.dashboard.BerlinDashboardProvider;
 import org.matsim.run.scoring.BerlinScoringModule;
+import org.matsim.run.scoring.BerlinScoringConfigGroup;
 import org.matsim.run.scoring.experimental.AdvancedScoringConfigGroup;
 import org.matsim.run.scoring.experimental.AdvancedScoringModule;
 import org.matsim.simwrapper.DashboardProvider;
@@ -63,10 +64,34 @@ public class OpenBerlinScenario extends MATSimApplication {
 	private static final String AVERAGE = "average";
 	private static final Logger log = LogManager.getLogger(OpenBerlinScenario.VERSION);
 
+	/**
+	 * Default length of the simulation period, as a multiple of 24h. 1.125 (= 27:00) makes the non-wrap-around
+	 * overnight scoring clamp the last activity at 27:00 instead of 24:00.
+	 */
+	public static final double DEFAULT_SIMULATION_PERIOD_IN_DAYS = 1.125;
+
 	@CommandLine.Option(names = "--plan-selector",
 		description = "Plan selector to use.",
 		defaultValue = DefaultPlanStrategiesModule.DefaultSelector.BestScore)
 	private String planSelector;
+
+	@CommandLine.Option(names = "--with-opening-times",
+		description = "Give the activity types their opening times. Off by default: the per-activity typical " +
+			"durations carry the schedule, so the opening times only distort it.")
+	private boolean withOpeningTimes = false;
+
+	@CommandLine.Option(names = "--simulation-period-in-days",
+		description = "Length of the simulation period, as a multiple of 24h. Moves the else-branch overnight " +
+			"scoring clamp: handleOvernightActivity scores the (non-wrap-around) last activity from its start to " +
+			"simulationPeriodInDays * 24h. Preprocessing (reschedule-late-plans, encode-typical-duration) must use " +
+			"the same value.")
+	private double simulationPeriodInDays = DEFAULT_SIMULATION_PERIOD_IN_DAYS;
+
+	@CommandLine.Option(names = "--allow-config-typical-durations",
+		description = "Allow person-subpopulation activities without a typicalDuration attribute to score against " +
+			"the config typical duration. By default such an activity ABORTS the run. Pass this for populations " +
+			"whose typical durations are still encoded in the activity type.")
+	private boolean allowConfigTypicalDurations = false;
 
 	public static void main(String[] args) {
 		MATSimApplication.execute(OpenBerlinScenario.class, args);
@@ -80,7 +105,15 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		config.qsim().setUsingTravelTimeCheckInTeleportation(true);
 
-		Activities.addScoringParams(config, true);
+//		still registering the duration-binned types, so populations that predate the typicalDuration attribute keep
+//		scoring; for attribute-carrying activities the type's typical duration is only a fallback.
+		Activities.addScoringParams(config, true, withOpeningTimes);
+
+		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class)
+			.setAllowConfigTypicalDurations(allowConfigTypicalDurations);
+
+//		move the else-branch overnight scoring clamp away from 24:00; see --simulation-period-in-days.
+		config.scenario().setSimulationPeriodInDays(simulationPeriodInDays);
 
 		// Required for all calibration strategies
 		for (String subpopulation : List.of("person", "freight", "goodsTraffic", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
