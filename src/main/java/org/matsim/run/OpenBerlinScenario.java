@@ -11,6 +11,8 @@ import org.matsim.application.options.SampleOptions;
 import org.matsim.contrib.bicycle.BicycleConfigGroup;
 import org.matsim.contrib.bicycle.BicycleLinkSpeedCalculator;
 import org.matsim.contrib.bicycle.BicycleLinkSpeedCalculatorDefaultImpl;
+import org.matsim.contrib.bicycle.BicycleParams;
+import org.matsim.contrib.bicycle.BicycleParamsDefaultImpl;
 import org.matsim.contrib.bicycle.BicycleTravelTime;
 import org.matsim.contrib.emissions.HbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
@@ -202,6 +204,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 				addTravelDisutilityFactoryBinding("freight").to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
 
 
+				bind(BicycleParams.class).to(BicycleParamsDefaultImpl.class);
 				bind(BicycleLinkSpeedCalculator.class).to(BicycleLinkSpeedCalculatorDefaultImpl.class);
 
 				// Bike should use free speed travel time
