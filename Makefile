@@ -20,6 +20,9 @@ OUTPUT := output/
 OSMOSIS := osmosis
 ## we use a tmp-dir because on the cluster the default-tmp-dir is to small
 TMP_DIR := ./tmp
+# Length of the simulation period as a multiple of 24h; must match OpenBerlinScenario.DEFAULT_SIMULATION_PERIOD_IN_DAYS
+# (1.125 = 27:00), since preprocessing and the scoring have to agree on where the day ends.
+SIM_PERIOD_DAYS ?= 1.125
 # Scenario creation tool
 JAVA_APP := java -Xmx$(MAKE_XMX) -XX:+UseParallelGC -Dorg.geotools.referencing.forceXY=true -Djava.io.tmpdir=$(TMP_DIR) -cp $(JAR) org.matsim.prepare.RunOpenBerlinCalibration
 
@@ -413,9 +416,18 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS): setup $(FACILITIES_XML) $(NETW
 	 --input-crs $(CRS)\
 	 --shp $(word 5,$^)
 
-	$(JAVA_APP) prepare split-activity-types-duration\
- 	 --exclude commercial_start,commercial_end,freight_start,freight_end\
-	 --input $@ --output $@
+# Give each activity its own typicalDuration attribute, which the scoring reads (see
+# BerlinScoringFunctionFactory), instead of encoding the typical duration in the activity type.
+# clean redundant max-duration attributes and reschedule plans whose activities run past the simulation day,
+# order-preserving, so the last activity keeps a positive window.
+	$(JAVA_APP) prepare reschedule-late-plans $@ --output $@ --simulation-period-in-days $(SIM_PERIOD_DAYS)
+# switch off wrap-around scoring: split first and last act of the day into separate _morning and _evening act types.
+	$(JAVA_APP) prepare split-wrap-around-activities $@ --output $@
+# encode each activity's typical duration as an attribute. Must run after the wrap-around split, so the (now
+# differing) morning/evening types take the non-wrap-around branch.
+	$(JAVA_APP) prepare encode-typical-duration $@ --output $@ --simulation-period-in-days $(SIM_PERIOD_DAYS) --min-typical-duration 300
+# for short activities, remove the end time and encode the span as a maximum duration instead.
+	$(JAVA_APP) prepare end-time-to-duration $@ --output $@ --end-time-to-duration 1800
 
 	$(JAVA_APP) prepare set-car-avail --input $@ --output $@
 

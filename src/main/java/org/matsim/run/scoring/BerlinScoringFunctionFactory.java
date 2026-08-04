@@ -4,12 +4,19 @@ import com.google.inject.Inject;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scoring.*;
 import org.matsim.core.scoring.functions.*;
 
 /**
  * Plugs together the scoring function factory for the Berlin model.
+ * <p>
+ * The activity term scores each activity against its own typical duration, taken from the
+ * {@value org.matsim.prepare.EncodeTypicalDuration#TYPICAL_DURATION} attribute rather than from the activity type (see
+ * {@link org.matsim.prepare.EncodeTypicalDuration}). Person activities must carry one, enforced by
+ * {@link RequiredTypicalDurationCalculator}; freight and commercial subpopulations fall back to the config values.
  */
 public final class BerlinScoringFunctionFactory implements ScoringFunctionFactory {
 
@@ -39,8 +46,18 @@ public final class BerlinScoringFunctionFactory implements ScoringFunctionFactor
 
 		final ScoringParameters parameters = params.getScoringParameters(person);
 
+		BerlinScoringConfigGroup berlinScoring = ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class);
+		String subpopulation = PopulationUtils.getSubpopulation(person);
+
+//		the activities the events machinery hands to the scoring carry no attributes, so the calculator is given the
+//		person and reads them off the selected plan's main activities.
+		TypicalDurationCalculator typicalDurationCalculator =
+			"person".equals(subpopulation) && !berlinScoring.isAllowConfigTypicalDurations()
+				? new RequiredTypicalDurationCalculator(person)
+				: new ActivityAttributeTypicalDurationCalculator();
+
 		SumScoringFunction sumScoringFunction = new SumScoringFunction();
-		sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(parameters));
+		sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(parameters, typicalDurationCalculator, person));
 		sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(parameters, config.transit().getTransitModes()));
 		sumScoringFunction.addScoringFunction(new PseudoRandomTripScoring(person.getId(), mmi, pseudoRNG));
 		sumScoringFunction.addScoringFunction(new TransitTripScoring(parameters, ptRouteToMode));
