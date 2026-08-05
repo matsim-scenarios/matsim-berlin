@@ -54,7 +54,7 @@ combined_bike <- combined %>%
   filter(mode == "bike")
 
 # plot tt per dist group bike
-tt_per_dist_group_bike_plot <- ggplot(combined_bike, aes(x = dist_group, y = mean_tt_min, fill = case)) +
+avg_cycling_speed_per_road_type_plot <- ggplot(combined_bike, aes(x = dist_group, y = mean_tt_min, fill = case)) +
   geom_col(
     data = combined_bike,
     position = position_dodge(width = 0.8), width = 0.7
@@ -78,8 +78,8 @@ tt_per_dist_group_bike_plot <- ggplot(combined_bike, aes(x = dist_group, y = mea
     legend.text = element_text(size = 19),
     plot.margin = margin(5, 5, 5, 5)
   )
-tt_per_dist_group_bike_plot
-ggsave("tt_per_dist_group_bike_plot.pdf", tt_per_dist_group_bike_plot, dpi = 500, w = 9, h = 9)
+avg_cycling_speed_per_road_type_plot
+ggsave("tt_per_dist_group_bike_plot.pdf", avg_cycling_speed_per_road_type_plot, dpi = 500, w = 9, h = 9)
 
 combined_car <- combined %>%
   filter(mode == "car")
@@ -265,3 +265,70 @@ elasticities_plot <- ggplot(elasticities_share,
   )
 elasticities_plot
 ggsave("bicycle_speed_elasticities_plot.pdf", elasticities_plot, dpi = 500, w = 9, h = 9)
+
+############################################ avg bicycle network speed per link type ##################################################
+avg_speed_per_road_type_qsim0.0 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.0/analysis/traffic/traffic_stats_by_road_type_daily_bike.csv") %>%
+  mutate(case = "qsim0.0") %>% 
+  rename(avg_speed_m_s = 'Avg. Speed [km/h]',
+         road_type = 'Road Type')
+avg_speed_per_road_type_qsim0.01 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.01/analysis/traffic/traffic_stats_by_road_type_daily_bike.csv") %>%
+  mutate(case = "qsim0.01") %>% 
+  rename(avg_speed_m_s = 'Avg. Speed [km/h]',
+         road_type = 'Road Type')
+avg_speed_per_road_type_qsim0.1 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.1/analysis/traffic/traffic_stats_by_road_type_daily_bike.csv") %>%
+  mutate(case = "qsim0.1") %>% 
+  rename(avg_speed_m_s = 'Avg. Speed [km/h]',
+         road_type = 'Road Type')
+avg_speed_per_road_type_qsim0.2 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.2/analysis/traffic/traffic_stats_by_road_type_daily_bike.csv") %>%
+  mutate(case = "qsim0.2") %>% 
+  rename(avg_speed_m_s = 'Avg. Speed [km/h]',
+         road_type = 'Road Type')
+avg_speed_per_road_type_qsim0.3 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.3/analysis/traffic/traffic_stats_by_road_type_daily_bike.csv") %>%
+  mutate(case = "qsim0.3") %>% 
+  rename(avg_speed_m_s = 'Avg. Speed [km/h]',
+         road_type = 'Road Type')
+
+road_type_levels <- c(
+  "primary",
+  "primary_link",
+  "secondary",
+  "secondary_link",
+  "tertiary",
+  "residential",
+  "living_street",
+  "service",
+  "path",
+  "cycleway",
+  "unclassified",
+  "all"
+)
+
+combined_avg_speed_per_road_type <- bind_rows(avg_speed_per_road_type_qsim0.0, avg_speed_per_road_type_qsim0.01, avg_speed_per_road_type_qsim0.1, avg_speed_per_road_type_qsim0.2, avg_speed_per_road_type_qsim0.3) %>%
+  mutate(road_type = factor(road_type, levels = road_type_levels)) %>%
+  mutate(case = factor(case, levels = unique(case))) %>%
+  mutate(avg_speed_km_h = round(avg_speed_m_s * 3.6, digits=2))
+
+avg_cycling_speed_per_road_type_plot <- ggplot(combined_avg_speed_per_road_type, aes(x = road_type, y = avg_speed_km_h, fill = case)) +
+  geom_col(
+    data = combined_avg_speed_per_road_type,
+    position = position_dodge(width = 0.8), width = 0.7
+  ) +
+  scale_fill_okabe_ito(order = c(3,4,5,6,7)) +
+  scale_y_continuous(
+    # limits = c(5, 11),
+    breaks = seq(5, max(combined_avg_speed_per_road_type$avg_speed_km_h, na.rm = TRUE), by = 1)
+  ) +
+  coord_cartesian(ylim = c(7, 11)) +
+  labs(x = "road type", y = "avg. cycling speed [km/h]") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 20),
+    axis.title = element_text(size = 21),
+    axis.text = element_text(size = 20),
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+    legend.title = element_text(size = 20),
+    legend.text = element_text(size = 19),
+    plot.margin = margin(5, 5, 5, 5)
+  )
+avg_cycling_speed_per_road_type_plot
+ggsave("avg_cycling_speed_per_road_type_plot.pdf", avg_cycling_speed_per_road_type_plot, dpi = 500, w = 9, h = 9)
