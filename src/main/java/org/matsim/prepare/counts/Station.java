@@ -16,6 +16,6 @@ public record Station(String id, String name, String direction, Coord coord, Ato
 
 	public String getStationId(){
 
-		return id + "_" + name;
+		return id + "_" + name + "_" + direction;
 	}
 }
