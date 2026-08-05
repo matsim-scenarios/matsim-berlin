@@ -150,14 +150,14 @@ $(JAR):
 	./mvnw clean package -DskipTests=true
 
 # Preprocessing and cleaning of raw osm data to geo-referenced activity facilities.
-$(FACILITIES_GPKG): setup $(BRANDENBURG_OSM_LOCAL) $(ACTIVITY_MAPPING)
+$(FACILITIES_GPKG): $(BRANDENBURG_OSM_LOCAL) $(ACTIVITY_MAPPING) | setup
 	$(JAVA_APP) prepare facility-shp\
 	 --activity-mapping $(word 2,$^)\
 	 --input $<\
 	 --output $@
 
 # filtering for those parts of the osm data that we need for the network:
-$(NETWORK_OSM): setup $(BRANDENBURG_OSM_LOCAL) $(AREA_POLY) $(REMOVE_RAILWAY)
+$(NETWORK_OSM): $(BRANDENBURG_OSM_LOCAL) $(AREA_POLY) $(REMOVE_RAILWAY) | setup
 
 	# Detailed network includes bikes as well
 	 # hard-coded because we delete within this step
@@ -179,7 +179,7 @@ $(NETWORK_OSM): setup $(BRANDENBURG_OSM_LOCAL) $(AREA_POLY) $(REMOVE_RAILWAY)
 	rm input/network-coarse.osm.pbf
 
 # converting the network from OSM format to SUMO format:
-$(NETWORK_SUMO): setup $(NETWORK_OSM) $(SUMO_OSM_NETCONVERT) $(SUMO_OSM_NETCONVERT_URBAN_DE)
+$(NETWORK_SUMO): $(NETWORK_OSM) $(SUMO_OSM_NETCONVERT) $(SUMO_OSM_NETCONVERT_URBAN_DE) | setup
 	netconvert --geometry.remove --ramps.guess --ramps.no-split\
 	 --type-files $(word 2,$^),$(word 3,$^)\
 	 --tls.guess-signals true --tls.discard-simple --tls.join --tls.default-type actuated\
@@ -197,7 +197,7 @@ $(NETWORK_SUMO): setup $(NETWORK_OSM) $(SUMO_OSM_NETCONVERT) $(SUMO_OSM_NETCONVE
 
 
 # converting the network from SUMO format to MATSim format:
-$(NETWORK_MATSIM): setup $(NETWORK_SUMO)
+$(NETWORK_MATSIM): $(NETWORK_SUMO) | setup
 	$(JAVA_APP) prepare network-from-sumo $< --target-crs $(CRS) --lane-restrictions REDUCE_CAR_LANES --output $@
 
 	$(JAVA_APP) prepare clean-network $@ --output $@ --modes car,bike,ride,truck --remove-turn-restrictions
@@ -221,7 +221,7 @@ $(NETWORK_MATSIM): setup $(NETWORK_SUMO)
 	  --decrease-only
 
 # add the PT network. Generates MATSim transit schedule as a side effect.  Note that this uses "complete-pt-2024-10-27.zip" as hardcoded input.
-$(NETWORK_MATSIM_PT): setup $(NETWORK_MATSIM) $(GTFS_DATA) $(PT_AREA) $(VMZ_COUNTS) $(COUNTS_UNDERESTIMATED)
+$(NETWORK_MATSIM_PT): $(NETWORK_MATSIM) $(GTFS_DATA) $(PT_AREA) $(VMZ_COUNTS) $(COUNTS_UNDERESTIMATED) | setup
 	$(JAVA_APP) prepare transit-from-gtfs --network $< --output=$(OUTPUT)\
 	 --name berlin-$(VERSION) --date $(GTFS_DAY_TO_CONVERT) --target-crs $(CRS) \
 	 $(word 2,$^)\
@@ -248,7 +248,7 @@ $(NETWORK_MATSIM_PT): setup $(NETWORK_MATSIM) $(GTFS_DATA) $(PT_AREA) $(VMZ_COUN
 	 	--output $@
 
 # register the VMZ counts (from 2018; see filename below) onto the network:
-$(VMZ_COUNTS): setup $(NETWORK_MATSIM) $(COUNTS_BERLIN_2018) $(LINK_GEOMETRIES) $(COUNTS_MAPPING)
+$(VMZ_COUNTS): $(NETWORK_MATSIM) $(COUNTS_BERLIN_2018) $(LINK_GEOMETRIES) $(COUNTS_MAPPING) | setup
 	$(JAVA_APP) prepare counts-from-vmz\
 	 --network $<\
 	 --excel $(word 2,$^)\
@@ -259,7 +259,7 @@ $(VMZ_COUNTS): setup $(NETWORK_MATSIM) $(COUNTS_BERLIN_2018) $(LINK_GEOMETRIES) 
 	 --counts-mapping $(word 4, $^)
 
 # convert the gpkg facilities (for activity locations) into MATSim format.
-$(FACILITIES_XML): setup $(NETWORK_MATSIM) $(FACILITIES_GPKG) $(FACILITY_MAPPING) $(PLANUNGSRAUM_25833)
+$(FACILITIES_XML): $(NETWORK_MATSIM) $(FACILITIES_GPKG) $(FACILITY_MAPPING) $(PLANUNGSRAUM_25833) | setup
 	$(JAVA_APP) prepare facilities --network $< --shp $(word 2,$^)\
 	 --facility-mapping $(word 3,$^)\
 	 --zones-shp $(word 4,$^)\
@@ -267,7 +267,7 @@ $(FACILITIES_XML): setup $(NETWORK_MATSIM) $(FACILITIES_GPKG) $(FACILITY_MAPPING
 
 #TODO: create veh types xml file in code; incl. commercial types from RE and longDistanceFreight types from CL
 
-$(BERLIN_ONLY_100PCT): setup $(PLR_2013_2020) $(PLANUNGSRAUM_25833) $(FACILITIES_GPKG)
+$(BERLIN_ONLY_100PCT): $(PLR_2013_2020) $(PLANUNGSRAUM_25833) $(FACILITIES_GPKG) | setup
 	$(JAVA_APP) prepare berlin-population\
 		--input $<\
 		--sample 1.0\
@@ -276,14 +276,14 @@ $(BERLIN_ONLY_100PCT): setup $(PLR_2013_2020) $(PLANUNGSRAUM_25833) $(FACILITIES
 		--output $@
 
 # (presumably generates a synthetic population for Berlin from the "PLR" data, i.e. the population attribute marginals at LOR500 level)
-$(BERLIN_ONLY_25PCT): setup $(PLR_2013_2020) $(PLANUNGSRAUM_25833) $(FACILITIES_GPKG)
+$(BERLIN_ONLY_25PCT): $(PLR_2013_2020) $(PLANUNGSRAUM_25833) $(FACILITIES_GPKG) | setup
 	$(JAVA_APP) prepare berlin-population\
 		--input $<\
 		--shp $(word 2,$^) --shp-crs EPSG:25833\
 		--facilities $(word 3,$^) --facilities-attr resident\
 		--output $@
 
-$(BRANDENBURG_ONLY_25PCT): setup $(FACILITIES_GPKG) $(VG5000_GEM) $(REGIONALSTAT_POP) $(REGIONALSTAT_EMPL)
+$(BRANDENBURG_ONLY_25PCT): $(FACILITIES_GPKG) $(VG5000_GEM) $(REGIONALSTAT_POP) $(REGIONALSTAT_EMPL) | setup
 	$(JAVA_APP) prepare brandenburg-population\
 	 --shp $(word 2,$^)\
 	 --population $(word 3,$^)\
@@ -292,13 +292,13 @@ $(BRANDENBURG_ONLY_25PCT): setup $(FACILITIES_GPKG) $(VG5000_GEM) $(REGIONALSTAT
  	 --output $@
 
 # (merges the two population, and joins spatial category into each person)
-$(BERLIN_BRANDENBURG_STATIC_25PCT): setup $(BERLIN_ONLY_25PCT) $(BRANDENBURG_ONLY_25PCT) $(REGIOSTAR)
+$(BERLIN_BRANDENBURG_STATIC_25PCT): $(BERLIN_ONLY_25PCT) $(BRANDENBURG_ONLY_25PCT) $(REGIOSTAR) | setup
 	$(JAVA_APP) prepare merge-populations $< $(word 2, $^)\
 	 --output $@
 
 	$(JAVA_APP) prepare lookup-regiostar --input $@ --output $@ --xls $(word 3, $^)
 
-$(BERLIN_BRANDENBURG_ACTS_25PCT): setup $(BERLIN_BRANDENBURG_STATIC_25PCT) $(SRV_PERSONS) $(SRV_ACTS) $(SRV_ZONES) $(FACILITIES_XML) $(NETWORK_MATSIM)
+$(BERLIN_BRANDENBURG_ACTS_25PCT): $(BERLIN_BRANDENBURG_STATIC_25PCT) $(SRV_PERSONS) $(SRV_ACTS) $(SRV_ZONES) $(FACILITIES_XML) $(NETWORK_MATSIM) | setup
 	$(JAVA_APP) prepare activity-sampling --seed 1 --input $< --output $@ --persons $(word 2, $^) --activities $(SRV_ACTS)
 
 	$(JAVA_APP) prepare assign-reference-population --population $@ --output $@\
@@ -313,7 +313,7 @@ $(BERLIN_BRANDENBURG_ACTS_25PCT): setup $(BERLIN_BRANDENBURG_STATIC_25PCT) $(SRV
 # Input tables can also be found on shared-svn (restricted access): https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-berlin/data/SrV/converted/
 # Assign activity locations to agents (except home, which is set before).
 # This computes work-locations based on REGIONALSTAT_COMMUTER & BERLIN_COMMUTER, edu- and secondary-locations are selected based on a distance from the last location, next location is ignored
-$(BERLIN_BRANDENBURG_INITIAL_25PCT): setup $(BERLIN_BRANDENBURG_ACTS_25PCT) $(FACILITIES_XML) $(NETWORK_MATSIM) $(VG5000_GEM) $(REGIONALSTAT_COMMUTER) $(BERLIN_COMMUTER)
+$(BERLIN_BRANDENBURG_INITIAL_25PCT): $(BERLIN_BRANDENBURG_ACTS_25PCT) $(FACILITIES_XML) $(NETWORK_MATSIM) $(VG5000_GEM) $(REGIONALSTAT_COMMUTER) $(BERLIN_COMMUTER) | setup
 	$(JAVA_APP) prepare init-location-choice\
 	 --input $<\
 	 --output $@\
@@ -329,7 +329,7 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT): setup $(BERLIN_BRANDENBURG_ACTS_25PCT) $(FA
 		 --samples 0.1 0.03 0.01\
 
 ## Freight-Processing currrently does not work. Should probably move to a separate makefile
-#$(BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT): setup $(GERMAN_FREIGHT_25PCT) $(GERMAN_FREIGHT_NETWORK) $(AREA_SHP)
+#$(BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT): $(GERMAN_FREIGHT_25PCT) $(GERMAN_FREIGHT_NETWORK) $(AREA_SHP) | setup
 #
 # $(NETWORK_MATSIM) was defined as input but never used?!
 #	$(JAVA_APP) prepare extract-freight-trips $<\
@@ -340,7 +340,7 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT): setup $(BERLIN_BRANDENBURG_ACTS_25PCT) $(FA
 #	 --cut-on-boundary\
 #	 --output $@
 
-#$(COMMERCIAL_FACILITIES): setup $(REGION_4326) $(BB_ZONES_4326) $(BB_BUILDINGS_4326) $(BERLIN_LANDUSE_4326) $(COMMERCIAL_TRAFFIC_AREA_DATA)
+#$(COMMERCIAL_FACILITIES): $(REGION_4326) $(BB_ZONES_4326) $(BB_BUILDINGS_4326) $(BERLIN_LANDUSE_4326) $(COMMERCIAL_TRAFFIC_AREA_DATA) | setup
 #	$(JAVA_APP) prepare create-data-distribution-of-structure-data\
 #	 --outputFacilityFile $@\
 #	 --outputDataDistributionFile $(DATA_DISTR_PER_ZONE)\
@@ -356,10 +356,10 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT): setup $(BERLIN_BRANDENBURG_ACTS_25PCT) $(FA
 #	 --shapeCRS "EPSG:4326"\
 #	 --pathToInvestigationAreaData $(word 5,$^)
 #	 
-#$(DATA_DISTR_PER_ZONE): setup $(COMMERCIAL_FACILITIES)
+#$(DATA_DISTR_PER_ZONE): $(COMMERCIAL_FACILITIES) | setup
 #	echo "this is only here because $(DATA_DISTR_PER_ZONE) is created together with $(COMMERCIAL_FACILITIES)"
 #
-#$(BERLIN_SMALLSCALE_COMMERCIAL_25PCT): setup $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DATA_DISTR_PER_ZONE) $(BB_ZONES_VKZ_4326)
+#$(BERLIN_SMALLSCALE_COMMERCIAL_25PCT): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DATA_DISTR_PER_ZONE) $(BB_ZONES_VKZ_4326) | setup
 #	$(JAVA_APP) prepare generate-small-scale-commercial-traffic\
 #	  input/$(VERSION)/berlin-$(VERSION).config.xml\
 #	 --pathToDataDistributionToZones $(abspath $(word 3,$^))\
@@ -379,18 +379,18 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT): setup $(BERLIN_BRANDENBURG_ACTS_25PCT) $(FA
 #	mv output/commercialPersonTraffic/$(notdir $@) $@
 #	#rm -r output/commercialPersonTraffic delete or keep?
 
-$(BERLIN_CADYTS_INPUT_25PCT): setup $(BERLIN_BRANDENBURG_INITIAL_25PCT) $(BERLIN_SMALLSCALE_COMMERCIAL_25PCT)
+$(BERLIN_CADYTS_INPUT_25PCT): $(BERLIN_BRANDENBURG_INITIAL_25PCT) $(BERLIN_SMALLSCALE_COMMERCIAL_25PCT) | setup
 	$(JAVA_APP) prepare merge-populations $^\
 	 --output $@
 
-$(VEHICLESFILE_OUT): setup $(VEHICLESFILE_IN)
+$(VEHICLESFILE_OUT): $(VEHICLESFILE_IN) | setup
 	cp $(VEHICLESFILE_IN) $(VEHICLESFILE_OUT)
 
-$(BERLIN_CADYTS_OUTPUT_25PCT): setup $(BERLIN_CADYTS_INPUT_25PCT) $(VEHICLESFILE_OUT)
+$(BERLIN_CADYTS_OUTPUT_25PCT): $(BERLIN_CADYTS_INPUT_25PCT) $(VEHICLESFILE_OUT) | setup
 	cat input/cadyts-config-template.xml | sed -e "s/==VERSION==/$(VERSION)/g" > ${OUTPUT}/cadyts.config.xml
 	./src/main/sh/cadyts.sh ${OUTPUT}/cadyts.config.xml $(VERSION)
 
-$(BERLIN_CADYTS_FINAL_25PCT): setup $(BERLIN_CADYTS_OUTPUT_25PCT) $(BERLIN_CADYTS_INPUT_25PCT)
+$(BERLIN_CADYTS_FINAL_25PCT): $(BERLIN_CADYTS_OUTPUT_25PCT) $(BERLIN_CADYTS_INPUT_25PCT) | setup
 	$(JAVA_APP) prepare extract-plans-idx\
 	 --input $<\
 	 --output $(BERLIN_CADYTS_SELECTION_25PCT)
@@ -400,12 +400,12 @@ $(BERLIN_CADYTS_FINAL_25PCT): setup $(BERLIN_CADYTS_OUTPUT_25PCT) $(BERLIN_CADYT
 	 --csv $(BERLIN_CADYTS_SELECTION_25PCT)\
 	 --output $@
  
-$(BERLIN_CADYTS_SELECTION_25PCT): setup $(BERLIN_CADYTS_FINAL_25PCT)
+$(BERLIN_CADYTS_SELECTION_25PCT): $(BERLIN_CADYTS_FINAL_25PCT) | setup
 	echo "check if $(BERLIN_CADYTS_SELECTION_25PCT) was produced" 
 
 # These depend on the output of cadyts calibration runs
 # should we really use NETWORK_MATSIM here or not maybe NETWORK_MATSIM_PT
-$(BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS): setup $(FACILITIES_XML) $(NETWORK_MATSIM) $(BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT) $(BERLIN_CADYTS_FINAL_25PCT) $(AREA_SHP)
+$(BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MATSIM) $(BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT) $(BERLIN_CADYTS_FINAL_25PCT) $(AREA_SHP) | setup
 	$(JAVA_APP) prepare scenario-cutout\
 	 --population $(word 4,$^)\
 	 --facilities $<\
@@ -450,12 +450,12 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS): setup $(FACILITIES_XML) $(NETW
 # which actually should not be there?! Further it is not clear if we really want to remove unselected plans, I think dresden
 # is different here.
 #$(BERLIN_AFTER_CHOICE_EXPERIMENTS): $(MODECHOICE_BASELINE_PLANS) $(CHOICE_EXPERIMENTS_10PCT_BASELINE_PLANS)
-$(BERLIN_AFTER_CHOICE_EXPERIMENTS): setup $(MODECHOICE_BASELINE_PLANS)
+$(BERLIN_AFTER_CHOICE_EXPERIMENTS): $(MODECHOICE_BASELINE_PLANS) | setup
 	$(JAVA_APP) prepare clean-population\
-	 --plans $(word 2,$^)\
+	 --plans $<\
 	 --remove-unselected-plans\
 	 --output $@
-	 
+
 	# TODO read from and write into the same file?
 	$(JAVA_APP) prepare taste-variations\
 	 --input $@ --output $@
@@ -469,31 +469,31 @@ $(BERLIN_AFTER_CHOICE_EXPERIMENTS): setup $(MODECHOICE_BASELINE_PLANS)
 #	 	--remove-unselected-plans\
 #	 	--output $(subst 10pct,3pct,$@)
 
-$(BERLIN_DOWNTOWN_3PCT_PLANS): setup $(BERLIN_INNER_CITY_GPKG) $(BERLIN_3PCT_PLANS) $(FACILITIES_XML) $(NETWORK_MATSIM)
+$(BERLIN_DOWNTOWN_3PCT_PLANS): $(BERLIN_INNER_CITY_GPKG) $(BERLIN_3PCT_PLANS) $(FACILITIES_XML) $(NETWORK_MATSIM) | setup
 
 	mkdir -p $(OUTPUT)/inner-city
 
 	$(JAVA_APP) prepare scenario-cutout\
-	 --population $(word 3,$^)\
-	 --facilities $(word 4,$^)\
-	 --network $(word 5,$^)\
+	 --population $(word 2,$^)\
+	 --facilities $(word 3,$^)\
+	 --network $(word 4,$^)\
 	 --output-population $@\
 	 --output-network $(OUTPUT)/inner-city/berlin-downtown-$(VERSION)-network.xml.gz\
 	 --output-facilities $(OUTPUT)/inner-city/berlin-downtown-$(VERSION)-facilities.xml.gz\
 	 --input-crs $(CRS)\
-	 --shp "$(word 2,$^)"
+	 --shp "$<"
 
-$(RANDOM_DRT_FLEET_10K): setup $(NETWORK_MATSIM) $(BERLIN_SHP_25832) $(BERLIN_INNER_CITY_GPKG)
+$(RANDOM_DRT_FLEET_10K): $(NETWORK_MATSIM) $(BERLIN_SHP_25832) $(BERLIN_INNER_CITY_GPKG) | setup
 	$(JAVA_APP) prepare create-drt-vehicles\
-	 --network $(word 2,$^)\
-	 --shp "$(word 3,$^)"\
+	 --network $<\
+	 --shp "$(word 2,$^)"\
 	 --output $(OUTPUT)/berlin-$(VERSION).\
 	 --vehicles 10000\
 	 --seats 4
 
 	$(JAVA_APP) prepare create-drt-vehicles\
 	 --network $<\
-	 --shp "$(word 4,$^)"\
+	 --shp "$(word 3,$^)"\
 	 --output $(OUTPUT)/berlin-$(VERSION).\
 	 --vehicles 500\
 	 --seats 4
