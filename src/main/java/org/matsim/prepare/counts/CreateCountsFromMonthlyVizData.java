@@ -1,5 +1,6 @@
 package org.matsim.prepare.counts;
 
+import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
@@ -36,7 +37,6 @@ import tech.tablesaw.api.DoubleColumn;
 import tech.tablesaw.api.StringColumn;
 import tech.tablesaw.api.Table;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,7 +49,7 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPInputStream;
+import java.util.stream.Stream;
 
 import static tech.tablesaw.aggregate.AggregateFunctions.mean;
 
@@ -99,8 +99,11 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	private static final Pattern NON_ALPHANUMERIC = Pattern.compile("[^a-z0-9]+");
 	private static final Pattern DIACRITICS = Pattern.compile("\\p{M}");
 
-	@CommandLine.Option(names = "--input", description = "input count data directory", required = true)
+	@CommandLine.Option(names = "--input", description = "directory the monthly count data is read from, searched recursively", required = true)
 	Path input;
+
+	@CommandLine.Option(names = "--stations", description = "station data of the count stations (xlsx)", required = true)
+	Path stationData;
 
 	@CommandLine.Option(names = "--network", description = "MATSim network file path", required = true)
 	Path networkPath;
@@ -147,32 +150,24 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 
 		String outputString = !output.toString().endsWith("/") || !output.toString().endsWith("\\") ? output + "/" : output.toString();
 
+		Files.createDirectories(output);
+
 		//Create Counts Object, car and freight are held as two measurables of the same location
 		Counts<Link> aggregated = new Counts<>();
 		aggregated.setName(scenario + " counts");
 		aggregated.setDescription("Car and freight counts based on data from the 'Verkehrsinformationszentrale Berlin'.");
 		aggregated.setYear(year);
 
-		//Get filepaths
-		List<Path> countPaths = new ArrayList<>();
-		Path stationPath = null;
-		for (Path path : Files.walk(input).collect(Collectors.toList())) {
-			//Station data is stored as .xlsx
-			if (path.toString().endsWith(".xlsx") && stationPath == null)
-				stationPath = path;
-			//count data is stored in .gz
-			if (path.toString().endsWith(".gz"))
-				countPaths.add(path);
+		//Get filepaths, count data is stored in .gz
+		List<Path> countPaths;
+		try (Stream<Path> paths = Files.walk(input)) {
+			countPaths = paths.filter(path -> path.toString().endsWith(".gz")).toList();
 		}
 
 		if (countPaths.size() < 12)
 			logger.warn("Expected 12 files, but only {} files containing count data were provided.", countPaths.size());
-		if (stationPath == null) {
-			logger.warn("No station data were provided. Return Code 1");
-			return 1;
-		}
 
-		extractStations(stationPath, stations, counts);
+		extractStations(stationData, stations, counts);
 		matchWithNetwork(networkPath, geometries, stations, counts, outputString);
 
 		List<CSVRecord> records = readCountData(countPaths);
@@ -477,18 +472,11 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		logger.info("Start parsing count data.");
 		List<CSVRecord> records = new ArrayList<>();
 		for (Path path : paths) {
-			try (GZIPInputStream gis = new GZIPInputStream(
-					new FileInputStream(path.toFile()))
-			) {
-				Path decompressed = Path.of(path.toString().replace(".gz", ""));
-				if (!Files.exists(decompressed))
-					Files.copy(gis, decompressed);
-
-				List<CSVRecord> month = csv.createParser(decompressed).getRecords();
-
-				records.addAll(month);
+			//The parser decompresses by file extension, so the data is never extracted to the input directory
+			try (CSVParser parser = csv.createParser(path)) {
+				records.addAll(parser.getRecords());
 			} catch (IOException e) {
-				logger.warn("Error processing file {}: ", path.toString());
+				logger.warn("Error processing file {}: ", path);
 				throw new RuntimeException(e);
 			}
 		}
