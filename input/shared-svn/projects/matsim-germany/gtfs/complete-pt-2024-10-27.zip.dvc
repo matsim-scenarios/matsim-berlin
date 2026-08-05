@@ -1,0 +1,12 @@
+md5: df8b3581ecb8b5ccdd7cf3fde7a405e9
+frozen: true
+deps:
+- checksum: '"39783//projects/matsim-germany/gtfs/complete-pt-2024-10-27.zip"'
+  size: 235538237
+  hash: md5
+  path: remote://shared-svn/projects/matsim-germany/gtfs/complete-pt-2024-10-27.zip
+outs:
+- md5: a0cc7c6fee944e54d2e71a7d1b4d4259
+  size: 235538237
+  hash: md5
+  path: complete-pt-2024-10-27.zip

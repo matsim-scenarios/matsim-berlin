@@ -1,0 +1,12 @@
+md5: 80b62ce04df574bc3580bdc3bc7b5a7d
+frozen: true
+deps:
+- checksum: '"39240//projects/matsim-germany/regionalstatistik/population.csv"'
+  size: 8588861
+  hash: md5
+  path: remote://shared-svn/projects/matsim-germany/regionalstatistik/population.csv
+outs:
+- md5: fd4b3458826503d8571e40a38e4ba80d
+  size: 8588861
+  hash: md5
+  path: population.csv
