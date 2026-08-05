@@ -1,0 +1,13 @@
+md5: e8cd4b3265d3f404b25ba42fa7813000
+frozen: true
+deps:
+- checksum: '"11907//matsim/scenarios/countries/de/berlin/berlin-v7.0/input/shp/Planungsraum_EPSG_25833.dbf"'
+  size: 128063
+  hash: md5
+  path: 
+    remote://public-svn/matsim/scenarios/countries/de/berlin/berlin-v7.0/input/shp/Planungsraum_EPSG_25833.dbf
+outs:
+- md5: 86fb8e6b60b58b040f5a7e1c5c368539
+  size: 128063
+  hash: md5
+  path: Planungsraum_EPSG_25833.dbf

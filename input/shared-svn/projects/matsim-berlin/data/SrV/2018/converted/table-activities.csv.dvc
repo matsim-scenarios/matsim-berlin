@@ -1,0 +1,13 @@
+md5: 9032be599027e7943d7ce0e4da1a44d4
+frozen: true
+deps:
+- checksum: '"40051//projects/matsim-berlin/data/SrV/2018/converted/table-activities.csv"'
+  size: 73766257
+  hash: md5
+  path: 
+    remote://shared-svn/projects/matsim-berlin/data/SrV/2018/converted/table-activities.csv
+outs:
+- md5: cdc950836436fb6c0bf25dcc60a2b92e
+  size: 73766257
+  hash: md5
+  path: table-activities.csv

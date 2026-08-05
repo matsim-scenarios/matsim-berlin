@@ -1,0 +1,9 @@
+[core]
+    remote = cluster-home
+['remote "cluster-home"']
+    url = ssh://zilske@cluster-a.math.tu-berlin.de/net/ils/zilske/dvc
+['remote "shared-svn"']
+    url = https://svn.vsp.tu-berlin.de/repos/shared-svn
+['remote "public-svn"']
+    url = https://svn.vsp.tu-berlin.de/repos/public-svn
+

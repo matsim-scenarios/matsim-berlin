@@ -1,0 +1,12 @@
+md5: 41fed8dc2e697d026ceb944d2a1bc680
+frozen: true
+deps:
+- checksum: '"40245//projects/matsim-berlin/data/osm/brandenburg-230101.osm.pbf"'
+  size: 239954390
+  hash: md5
+  path: remote://shared-svn/projects/matsim-berlin/data/osm/brandenburg-230101.osm.pbf
+outs:
+- md5: cdf527ec09f41fde0e12bcb7c373fa1e
+  size: 239954390
+  hash: md5
+  path: brandenburg-230101.osm.pbf

@@ -1,0 +1,12 @@
+md5: c824e7460f256aea015fc03cd8990324
+frozen: true
+deps:
+- checksum: '"39696//projects/matsim-germany/RegioStaR-Referenzdateien.xlsx"'
+  size: 6809508
+  hash: md5
+  path: remote://shared-svn/projects/matsim-germany/RegioStaR-Referenzdateien.xlsx
+outs:
+- md5: 9201901ab0b9ba728d1f0a42d7ed006b
+  size: 6809508
+  hash: md5
+  path: RegioStaR-Referenzdateien.xlsx
