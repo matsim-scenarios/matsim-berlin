@@ -15,6 +15,7 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.application.MATSimAppCommand;
@@ -25,9 +26,10 @@ import org.matsim.application.prepare.counts.NetworkIndex;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.core.utils.geometry.geotools.MGC;
-import org.matsim.counts.Count;
 import org.matsim.counts.Counts;
 import org.matsim.counts.CountsWriter;
+import org.matsim.counts.Measurable;
+import org.matsim.counts.MeasurementLocation;
 import picocli.CommandLine;
 import tech.tablesaw.api.DateColumn;
 import tech.tablesaw.api.DoubleColumn;
@@ -92,6 +94,8 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	 */
 	private static final List<String> STREET_SUFFIXES = List.of("strasse", "str");
 
+	private static final int HOURS_PER_DAY = 24;
+
 	private static final Pattern NON_ALPHANUMERIC = Pattern.compile("[^a-z0-9]+");
 	private static final Pattern DIACRITICS = Pattern.compile("\\p{M}");
 
@@ -143,15 +147,11 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 
 		String outputString = !output.toString().endsWith("/") || !output.toString().endsWith("\\") ? output + "/" : output.toString();
 
-		//Create Counts Objects
-		Counts<Link> car = new Counts<>();
-		car.setName(scenario + " car counts");
-		car.setDescription("Car counts based on data from the 'Verkehrsinformationszentrale Berlin'.");
-		car.setYear(year);
-		Counts<Link> freight = new Counts<>();
-		freight.setName(scenario + " freight counts");
-		freight.setDescription("Freight counts based on data from the 'Verkehrsinformationszentrale Berlin'.");
-		freight.setYear(year);
+		//Create Counts Object, car and freight are held as two measurables of the same location
+		Counts<Link> aggregated = new Counts<>();
+		aggregated.setName(scenario + " counts");
+		aggregated.setDescription("Car and freight counts based on data from the 'Verkehrsinformationszentrale Berlin'.");
+		aggregated.setYear(year);
 
 		//Get filepaths
 		List<Path> countPaths = new ArrayList<>();
@@ -176,10 +176,12 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		matchWithNetwork(networkPath, geometries, stations, counts, outputString);
 
 		List<CSVRecord> records = readCountData(countPaths);
-		aggregateAndAssignCountData(records, stations, car, freight, outputString);
+		Table table = createTable(records);
+		aggregateAndAssignCountData(table, stations, aggregated, outputString);
 
-		new CountsWriter(car).write(outputString + scenario + ".counts_car.xml");
-		new CountsWriter(freight).write(outputString + scenario + ".counts_freight.xml");
+		new CountsWriter(aggregated).write(outputString + scenario + ".counts.xml");
+
+		writeDailyCounts(table, stations, outputString);
 
 		return 0;
 	}
@@ -494,32 +496,34 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		return records;
 	}
 
-	private void aggregateAndAssignCountData(List<CSVRecord> records, Map<String, Station> stations, Counts<Link> carCounts, Counts<Link> freightCounts, String outputString) {
+	/**
+	 * One row per station, day and hour, as read from the raw count data.
+	 */
+	private Table createTable(List<CSVRecord> records) {
 
-		//Create table from records first
-		Table table;
-		{
-			StringColumn id = StringColumn.create(ColumnNames.id);
-			DateColumn date = DateColumn.create(ColumnNames.date);
-			StringColumn hour = StringColumn.create(ColumnNames.hour);
-			DoubleColumn car = DoubleColumn.create(ColumnNames.carVolume);
-			DoubleColumn freight = DoubleColumn.create(ColumnNames.freightVolume);
-			DoubleColumn carSpeed = DoubleColumn.create(ColumnNames.carAvgSpeed);
-			DoubleColumn freightSpeed = DoubleColumn.create(ColumnNames.freightAvgSpeed);
+		StringColumn id = StringColumn.create(ColumnNames.id);
+		DateColumn date = DateColumn.create(ColumnNames.date);
+		StringColumn hour = StringColumn.create(ColumnNames.hour);
+		DoubleColumn car = DoubleColumn.create(ColumnNames.carVolume);
+		DoubleColumn freight = DoubleColumn.create(ColumnNames.freightVolume);
+		DoubleColumn carSpeed = DoubleColumn.create(ColumnNames.carAvgSpeed);
+		DoubleColumn freightSpeed = DoubleColumn.create(ColumnNames.freightAvgSpeed);
 
-			for (CSVRecord row : records) {
-				id.append(row.get(0));
-				LocalDate formatedDate = LocalDate.parse(row.get(1), DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(Locale.GERMAN));
-				date.append(formatedDate);
-				hour.append(row.get(2));
-				car.append(Double.parseDouble(row.get(6)));
-				carSpeed.append(Double.parseDouble(row.get(7)));
-				freight.append(Double.parseDouble(row.get(8)));
-				freightSpeed.append(Double.parseDouble(row.get(9)));
-			}
-
-			table = Table.create(id, date, hour, car, freight, carSpeed, freightSpeed);
+		for (CSVRecord row : records) {
+			id.append(row.get(0));
+			LocalDate formatedDate = LocalDate.parse(row.get(1), DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(Locale.GERMAN));
+			date.append(formatedDate);
+			hour.append(row.get(2));
+			car.append(Double.parseDouble(row.get(6)));
+			carSpeed.append(Double.parseDouble(row.get(7)));
+			freight.append(Double.parseDouble(row.get(8)));
+			freightSpeed.append(Double.parseDouble(row.get(9)));
 		}
+
+		return Table.create(id, date, hour, car, freight, carSpeed, freightSpeed);
+	}
+
+	private void aggregateAndAssignCountData(Table table, Map<String, Station> stations, Counts<Link> aggregated, String outputString) {
 
 		Predicate<LocalDate> dayFilter = localDate -> weekdays.contains(localDate.getDayOfWeek());
 
@@ -548,29 +552,32 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 
 				Table idFiltered = summarized.copy().where(t -> t.stringColumn(ColumnNames.id).isEqualTo(key));
 
-				if (idFiltered.rowCount() != 24) {
+				if (idFiltered.rowCount() != HOURS_PER_DAY) {
 					logger.warn("Station {} - {} does not contain hour values for the whole day!", key, station.name());
 					counter++;
 					continue;
 				}
 
-				Count<Link> carCount = carCounts.createAndAddCount(station.linkAtomicReference().get().getId(), station.getStationId());
-				Count<Link> freightCount = freightCounts.createAndAddCount(station.linkAtomicReference().get().getId(), station.getStationId());
+				Id<Link> linkId = station.linkAtomicReference().get().getId();
+				MeasurementLocation<Link> location = aggregated.createAndAddMeasureLocation(linkId, station.getStationId());
+				Measurable carVolume = location.createVolume();
+				Measurable freightVolume = location.createVolume(TransportMode.truck);
 
 				for (tech.tablesaw.api.Row row : idFiltered) {
 					double car = row.getDouble(ColumnNames.carVolume);
-					//in VIZ data hours starts at 0, in MATSim count data starts at 1
-					int hour = Integer.parseInt(row.getString(ColumnNames.hour)) + 1;
+					//in VIZ data as well as in a Measurable hours start at 0
+					int hour = Integer.parseInt(row.getString(ColumnNames.hour));
 					double freight = row.getDouble(ColumnNames.freightVolume);
-					carCount.createVolume(hour, Math.round(car));
-					freightCount.createVolume(hour, Math.round(freight));
+					carVolume.setAtHour(hour, Math.round(car));
+					freightVolume.setAtHour(hour, Math.round(freight));
 
 					//print to file
 					double carSpeed = row.getDouble(ColumnNames.carAvgSpeed);
 					double freightSpeed = row.getDouble(ColumnNames.freightAvgSpeed);
 
-					printer.print(station.linkAtomicReference().get().getId().toString());
-					printer.print(hour);
+					printer.print(linkId.toString());
+					//in the speed file hours have always been counted from 1
+					printer.print(hour + 1);
 					printer.print(Math.round(carSpeed));
 					printer.print(Math.round(freightSpeed));
 					printer.println();
@@ -579,6 +586,116 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			logger.info("Skipped {} stations, because data was incomplete!", counter);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Writes one counts file per calendar day to {@code <output>/days/MM/dd.xml.gz}. Other than the aggregated counts
+	 * these hold the volumes actually measured on that day, for every day the data covers and not only for the
+	 * {@link #weekdays} the aggregation averages over.
+	 */
+	private void writeDailyCounts(Table table, Map<String, Station> stations, String outputString) throws IOException {
+
+		logger.info("Start writing daily counts.");
+
+		//date -> station id -> hourly volumes of that day, see DailyVolumes
+		Map<LocalDate, Map<String, DailyVolumes>> daily = new TreeMap<>();
+
+		DateColumn dates = table.dateColumn(ColumnNames.date);
+		StringColumn ids = table.stringColumn(ColumnNames.id);
+		StringColumn hours = table.stringColumn(ColumnNames.hour);
+		DoubleColumn carVolumes = table.doubleColumn(ColumnNames.carVolume);
+		DoubleColumn freightVolumes = table.doubleColumn(ColumnNames.freightVolume);
+
+		for (int i = 0; i < table.rowCount(); i++) {
+			String id = ids.get(i);
+
+			//Stations that could not be matched to a link were dropped during map matching
+			if (!stations.containsKey(id))
+				continue;
+
+			DailyVolumes volumes = daily.computeIfAbsent(dates.get(i), date -> new HashMap<>())
+					.computeIfAbsent(id, station -> DailyVolumes.create());
+
+			int hour = Integer.parseInt(hours.get(i));
+			volumes.car()[hour] = carVolumes.getDouble(i);
+			volumes.freight()[hour] = freightVolumes.getDouble(i);
+		}
+
+		Path dailyPath = Path.of(outputString, "days");
+		int incomplete = 0;
+		int written = 0;
+		for (Map.Entry<LocalDate, Map<String, DailyVolumes>> day : daily.entrySet()) {
+			LocalDate date = day.getKey();
+
+			Counts<Link> counts = new Counts<>();
+			counts.setName(scenario + " counts " + date);
+			counts.setDescription("Car and freight counts of " + date + " based on data from the 'Verkehrsinformationszentrale Berlin'.");
+			counts.setYear(date.getYear());
+
+			for (Map.Entry<String, DailyVolumes> entry : day.getValue().entrySet()) {
+				DailyVolumes volumes = entry.getValue();
+
+				//A station is only written if it covers the full day, the same rule the aggregation applies
+				if (!volumes.isComplete()) {
+					incomplete++;
+					continue;
+				}
+
+				Station station = stations.get(entry.getKey());
+				MeasurementLocation<Link> location = counts.createAndAddMeasureLocation(
+						station.linkAtomicReference().get().getId(), station.getStationId());
+
+				Measurable car = location.createVolume();
+				Measurable freight = location.createVolume(TransportMode.truck);
+
+				//in VIZ data as well as in a Measurable hours start at 0
+				for (int hour = 0; hour < HOURS_PER_DAY; hour++) {
+					car.setAtHour(hour, Math.round(volumes.car()[hour]));
+					freight.setAtHour(hour, Math.round(volumes.freight()[hour]));
+				}
+			}
+
+			//Days on which no station covers all hours would produce an empty counts file
+			if (counts.getMeasureLocations().isEmpty()) {
+				logger.warn("No station has data for the whole day on {}, no counts file is written.", date);
+				continue;
+			}
+
+			Path monthPath = dailyPath.resolve(String.format("%02d", date.getMonthValue()));
+			Files.createDirectories(monthPath);
+			new CountsWriter(counts).write(monthPath.resolve(String.format("%02d", date.getDayOfMonth()) + ".xml.gz").toString());
+			written++;
+		}
+
+		logger.info("Wrote counts for {} of {} days to {}, skipped {} station days with incomplete data.",
+				written, daily.size(), dailyPath, incomplete);
+	}
+
+	/**
+	 * Hourly car and freight volumes of one station on one day. Hours the data does not cover stay {@link Double#NaN}.
+	 */
+	private record DailyVolumes(double[] car, double[] freight) {
+
+		static DailyVolumes create() {
+
+			double[] car = new double[HOURS_PER_DAY];
+			double[] freight = new double[HOURS_PER_DAY];
+
+			Arrays.fill(car, Double.NaN);
+			Arrays.fill(freight, Double.NaN);
+
+			return new DailyVolumes(car, freight);
+		}
+
+		boolean isComplete() {
+
+			for (int hour = 0; hour < HOURS_PER_DAY; hour++) {
+				if (Double.isNaN(car[hour]) || Double.isNaN(freight[hour]))
+					return false;
+			}
+
+			return true;
 		}
 	}
 
