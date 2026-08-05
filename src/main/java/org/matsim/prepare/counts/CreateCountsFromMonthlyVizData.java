@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.Normalizer;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
@@ -117,6 +118,9 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 
 	@CommandLine.Option(names = "--max-distance", description = "maximum distance [m] between a station and its matched link", defaultValue = "50")
 	double maxDistance;
+
+	@CommandLine.Option(names = "--weekdays", split = ",", description = "days of week the hourly counts are averaged over. Default excludes MONDAY and FRIDAY, which have atypical traffic patterns. Candidates: ${COMPLETION-CANDIDATES}", defaultValue = "TUESDAY,WEDNESDAY,THURSDAY")
+	Set<DayOfWeek> weekdays;
 
 	@CommandLine.Mixin
 	private final CsvOptions csv = new CsvOptions();
@@ -517,13 +521,10 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			table = Table.create(id, date, hour, car, freight, carSpeed, freightSpeed);
 		}
 
-		Predicate<LocalDate> dayFilter = localDate -> {
-			int day = localDate.getDayOfWeek().getValue();
-			return day > 1 && day < 5;
-		};
+		Predicate<LocalDate> dayFilter = localDate -> weekdays.contains(localDate.getDayOfWeek());
 
 		//filter and aggregation
-		logger.info("Start Aggregation");
+		logger.info("Start Aggregation over {}", weekdays.stream().sorted().map(Enum::name).collect(Collectors.joining(", ")));
 		Table summarized = table.where(t -> t.dateColumn(ColumnNames.date).eval(dayFilter))
 				.summarize(ColumnNames.carVolume, ColumnNames.freightVolume, ColumnNames.carAvgSpeed, ColumnNames.freightAvgSpeed, mean)
 				.by(ColumnNames.id, ColumnNames.hour);
