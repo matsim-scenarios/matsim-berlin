@@ -38,6 +38,7 @@ import tech.tablesaw.api.StringColumn;
 import tech.tablesaw.api.Table;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.Normalizer;
@@ -99,7 +100,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	private static final Pattern NON_ALPHANUMERIC = Pattern.compile("[^a-z0-9]+");
 	private static final Pattern DIACRITICS = Pattern.compile("\\p{M}");
 
-	@CommandLine.Option(names = "--input", description = "directory the monthly count data is read from, searched recursively", required = true)
+	@CommandLine.Option(names = "--input", description = "directory the monthly count data is read from, not searched recursively", required = true)
 	Path input;
 
 	@CommandLine.Option(names = "--stations", description = "station data of the count stations (xlsx)", required = true)
@@ -158,9 +159,10 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		aggregated.setDescription("Car and freight counts based on data from the 'Verkehrsinformationszentrale Berlin'.");
 		aggregated.setYear(year);
 
-		//Get filepaths, count data is stored in .gz
+		//Get filepaths, count data is stored in .gz. Only the directory itself is read, so that sibling directories
+		//holding data of a different aggregation, e.g. the single lane detectors, are not picked up as well
 		List<Path> countPaths;
-		try (Stream<Path> paths = Files.walk(input)) {
+		try (Stream<Path> paths = Files.list(input)) {
 			countPaths = paths.filter(path -> path.toString().endsWith(".gz")).toList();
 		}
 
@@ -438,8 +440,10 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 
 	private void extractStations(Path path, Map<String, Station> stations, CountsOptions countsOption) {
 
+		//Opening the workbook by path opens it read-write and copies it back over the original on close, which must
+		//never happen to the raw input data. Reading from a stream leaves the file untouched.
 		XSSFSheet sheet;
-		try (XSSFWorkbook wb = new XSSFWorkbook(path.toString())) {
+		try (InputStream is = Files.newInputStream(path); XSSFWorkbook wb = new XSSFWorkbook(is)) {
 			sheet = wb.getSheetAt(0);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
