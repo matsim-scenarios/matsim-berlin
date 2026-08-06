@@ -193,6 +193,12 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			"Default: monday=MONDAY, midweek=TUESDAY,WEDNESDAY,THURSDAY, friday=FRIDAY, saturday=SATURDAY, sunday=SUNDAY")
 	List<String> aggregationSpecs;
 
+	@CommandLine.Option(names = "--min-days", defaultValue = "3", description = "minimum number of days every hour of " +
+			"a station has to rest on for the station to be written. Guards against profiles taken over one or two " +
+			"days, which a station whose detector was down for most of the period would otherwise produce. Keep in " +
+			"mind that an aggregation restricted to a short date range has few days to begin with")
+	int minDays;
+
 	@CommandLine.Mixin
 	private final CsvOptions csv = new CsvOptions();
 
@@ -928,6 +934,8 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		for (String name : table.columnNames())
 			summarized.columnNames().stream().filter(s -> s.contains(name)).findFirst().ifPresent(s -> summarized.column(s).setName(name));
 
+		Map<String, int[]> days = countDaysPerHour(filtered);
+
 		//Assign aggregted hourly traffic volumes to count objects AND write median speed per link and hour to csv file
 		try (CSVPrinter printer = csv.createPrinter(directory.resolve(scenario + ".median_speed.csv"))) {
 			printer.print(ColumnNames.id);
@@ -937,6 +945,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			printer.println();
 
 			int counter = 0;
+			int thin = 0;
 			for (Map.Entry<String, Station> entry : stations.entrySet()) {
 				String key = entry.getKey();
 				Station station = entry.getValue();
@@ -946,6 +955,18 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 				if (idFiltered.rowCount() != HOURS_PER_DAY) {
 					logger.warn("Station {} - {} does not contain hour values for the whole day in aggregation {}!", key, station.name(), aggregation.name());
 					counter++;
+					continue;
+				}
+
+				//Covering all 24 hours says nothing about how many days each of them rests on. A station whose
+				//detector was down for most of the period passes that check with a handful of days per hour, and
+				//those days are rarely a cross section of the period: an outage that ends at dawn leaves the night
+				//hours well covered and the peak hours with two days, which makes the profile worse than useless.
+				int fewest = Arrays.stream(days.get(key)).min().orElse(0);
+				if (fewest < minDays) {
+					logger.warn("Station {} - {} rests on only {} days in its thinnest hour in aggregation {}, fewer "
+							+ "than the {} required!", key, station.name(), fewest, aggregation.name(), minDays);
+					thin++;
 					continue;
 				}
 
@@ -974,11 +995,29 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 					printer.println();
 				}
 			}
-			logger.info("Aggregation {}: wrote {} stations, skipped {}, because data was incomplete!",
-					aggregation.name(), aggregated.getMeasureLocations().size(), counter);
+			logger.info("Aggregation {}: wrote {} stations, skipped {} for incomplete data and {} that rest on fewer "
+							+ "than {} days in their thinnest hour.",
+					aggregation.name(), aggregated.getMeasureLocations().size(), counter, thin, minDays);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	/**
+	 * Number of days the aggregation has data for, per station and hour of day. This is the sample the median of that
+	 * hour is taken over, which the row count of the summarized table no longer shows.
+	 */
+	private static Map<String, int[]> countDaysPerHour(Table filtered) {
+
+		Map<String, int[]> days = new HashMap<>();
+
+		StringColumn ids = filtered.stringColumn(ColumnNames.id);
+		StringColumn hours = filtered.stringColumn(ColumnNames.hour);
+
+		for (int i = 0; i < filtered.rowCount(); i++)
+			days.computeIfAbsent(ids.get(i), id -> new int[HOURS_PER_DAY])[Integer.parseInt(hours.get(i))]++;
+
+		return days;
 	}
 
 	/**
