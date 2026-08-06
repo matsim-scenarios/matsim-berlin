@@ -121,10 +121,22 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	);
 
 	/**
-	 * Lanes of the through carriageway. Only these are summed into a cross section, so that the volume is the one
-	 * the counts represent. Bus, parking, ramp and weaving lanes are left out.
+	 * Lanes left out of a cross section, per the annotation the station data gives them: "Busspur" and "Bus- und LKW
+	 * Spur". Their traffic is public transport, which the simulation does not route as car. Every other lane is
+	 * summed, including the ramps of a carriageway of its own (AbL "Ausfahrt links", ZuL "Zufahrt von links"), the
+	 * turn pockets (LA "Linksabbieger"), whose traffic shares the approach and only parts from it at the node, and
+	 * the one "Parkspur", which carries traffic the provider counts as well.
+	 * <p>
+	 * This follows what the provider does over 2023: it forms no value for any of the eleven bus-only cross sections
+	 * nor for the bus/lorry one, and no cross section mixes a bus lane with a running lane.
 	 */
-	private static final Set<String> MAIN_LANES = Set.of("HF_R", "HF_2vR", "HF_3vR", "HF_4vR", "HF");
+	private static final Set<String> EXCLUDED_LANES = Set.of("BUS", "BUS_LKW");
+
+	/**
+	 * A turn pocket is part of the approach, but on its own it is not the carriageway and its volume is not the
+	 * link's. The provider forms no value for the two cross sections that consist only of one.
+	 */
+	private static final String TURN_POCKET = "LA";
 
 	/**
 	 * Speed the VIZ reports for an hour without a single vehicle of that category, in both deliveries: the old one
@@ -644,12 +656,13 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	}
 
 	/**
-	 * Main lane detectors of every cross section, by station id. The new quality assurance reports one file per lane
-	 * detector, and only the station data knows which cross section a detector belongs to.
+	 * Carriageway lane detectors of every cross section, by station id. The new quality assurance reports one file
+	 * per lane detector, and only the station data knows which cross section a detector belongs to.
 	 */
 	private Map<String, List<String>> extractLanes(Path path) {
 
 		Map<String, List<String>> lanes = new HashMap<>();
+		Set<String> haveCarriageway = new HashSet<>();
 
 		for (Row row : openStationSheet(path)) {
 			if (row.getRowNum() == 0)
@@ -660,14 +673,26 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			String lane = row.getCell(9).getStringCellValue();
 
 			//Only stations that survived the map matching can carry counts, so the rest is not worth reading
-			if (!stations.containsKey(id) || !MAIN_LANES.contains(lane))
+			if (!stations.containsKey(id) || EXCLUDED_LANES.contains(lane))
 				continue;
+
+			if (!TURN_POCKET.equals(lane))
+				haveCarriageway.add(id);
 
 			lanes.computeIfAbsent(id, k -> new ArrayList<>()).add(detector);
 		}
 
-		logger.info("Read {} main lane detectors of {} cross sections from the station data.",
-				lanes.values().stream().mapToInt(List::size).sum(), lanes.size());
+		int pockets = 0;
+		for (var it = lanes.keySet().iterator(); it.hasNext(); ) {
+			if (!haveCarriageway.contains(it.next())) {
+				it.remove();
+				pockets++;
+			}
+		}
+
+		logger.info("Read {} lane detectors of {} cross sections from the station data, dropped {} cross sections "
+						+ "that consist of a turn pocket only.",
+				lanes.values().stream().mapToInt(List::size).sum(), lanes.size(), pockets);
 
 		return lanes;
 	}
