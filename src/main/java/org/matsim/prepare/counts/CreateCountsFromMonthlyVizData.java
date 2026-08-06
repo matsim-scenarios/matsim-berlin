@@ -558,6 +558,10 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 
 			return angularDiff(bearing(link.link()), stationBearing) <= DIRECTION_TOLERANCE;
 		});
+		//A car and freight count on a link cars cannot use is a target the simulation can never reach, and the
+		//stations sit close enough to a cycleway to be matched onto one. This covers the pt links as well, whose
+		//ids the filter below matches by prefix.
+		index.addLinkFilter((link, station) -> link.link().getAllowedModes().contains(TransportMode.car));
 		index.addLinkFilter((link, station) -> !link.link().getId().toString().startsWith("pt_"));
 
 		//Road names are evidence, not a veto: they shift the distance a candidate is picked by, but never remove it
