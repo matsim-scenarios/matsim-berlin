@@ -31,6 +31,7 @@ import org.matsim.counts.Counts;
 import org.matsim.counts.CountsWriter;
 import org.matsim.counts.Measurable;
 import org.matsim.counts.MeasurementLocation;
+import org.matsim.run.OpenBerlinScenario;
 import picocli.CommandLine;
 import tech.tablesaw.api.DateColumn;
 import tech.tablesaw.api.DoubleColumn;
@@ -103,11 +104,11 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	 * Monday, Friday and the weekend days are kept apart from the mid week, because their traffic patterns differ.
 	 */
 	private static final List<String> DEFAULT_AGGREGATIONS = List.of(
-			"monday=MONDAY",
-			"midweek=TUESDAY,WEDNESDAY,THURSDAY",
-			"friday=FRIDAY",
-			"saturday=SATURDAY",
-			"sunday=SUNDAY"
+			"mon=MONDAY",
+			"tue-thu=TUESDAY,WEDNESDAY,THURSDAY",
+			"fri=FRIDAY",
+			"sat=SATURDAY",
+			"sun=SUNDAY"
 	);
 
 	private static final Pattern NON_ALPHANUMERIC = Pattern.compile("[^a-z0-9]+");
@@ -133,7 +134,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	@CommandLine.Option(names = "--output", description = "output directory", defaultValue = "input/")
 	Path output;
 
-	@CommandLine.Option(names = "--scenario", description = "scenario name for output files", defaultValue = "berlin-v6.0")
+	@CommandLine.Option(names = "--scenario", description = "scenario name for output files", defaultValue = OpenBerlinScenario.VERSION)
 	String scenario;
 
 	@CommandLine.Option(names = "--year", description = "year of count data", defaultValue = "2022")
