@@ -252,6 +252,13 @@
 			<version>5.5.1</version>
 		</dependency>
 
+		<!-- reads the monthly tar archives of the VIZ lane detector data, see CreateCountsFromMonthlyVizData -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-compress</artifactId>
+			<version>1.28.0</version>
+		</dependency>
+
 		<dependency>
 			<groupId>de.topobyte</groupId>
 			<artifactId>osm4j-pbf</artifactId>
