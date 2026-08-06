@@ -142,10 +142,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	@CommandLine.Option(names = "--plan-index", description = "Only use one plan with specified index")
 	private Integer planIndex;
 
-	public RunOpenBerlinCalibration() {
-		super(ConfigUtils.loadConfig("input/v6.4/berlin-v6.4.config.xml"));
-	}
-
 	/**
 	 * Round to two digits.
 	 */
