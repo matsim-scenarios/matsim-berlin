@@ -210,15 +210,19 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			double sampleSize = sample.getSample();
 			double countScale = allCar ? CAR_FACTOR : 1;
 
+			log.info("sampleSize * countScale = {} * {}", sampleSize, countScale);
+
 			config.qsim().setFlowCapFactor(sampleSize * countScale);
 			config.qsim().setStorageCapFactor(sampleSize * countScale);
 
-			// Counts can be scaled with sample size
-			config.counts().setCountsScaleFactor(sampleSize * countScale);
+			// Despite its name, this factor is applied to the simulated flow, not the counts
+			config.counts().setCountsScaleFactor(1 / (sampleSize * countScale));
 			config.plans().setInputFile(sample.adjustName(config.plans().getInputFile()));
 
 			sw.setSampleSize(sampleSize * countScale);
 		}
+
+		log.info("before: config.qsim().getFlowCapFactor() * scaleFactor = {} * {}", config.qsim().getFlowCapFactor(), scaleFactor);
 
 		// Routes are not relaxed yet, and there should not be too heavy congestion
 		// factors are increased to accommodate for more than usual traffic
