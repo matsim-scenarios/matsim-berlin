@@ -43,7 +43,6 @@ import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.SumScoringFunction;
-import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.prepare.choices.ComputePlanChoices;
 import org.matsim.prepare.choices.ComputeTripChoices;
@@ -65,8 +64,6 @@ import org.matsim.run.OpenBerlinScenario;
 import org.matsim.run.scoring.experimental.AdvancedScoringConfigGroup;
 import org.matsim.run.scoring.BerlinScoringConfigGroup;
 import org.matsim.run.scoring.experimental.AdvancedScoringModule;
-import org.matsim.simwrapper.SimWrapperConfigGroup;
-import org.matsim.simwrapper.SimWrapperModule;
 import org.matsim.smallScaleCommercialTrafficGeneration.GenerateSmallScaleCommercialTrafficDemand;
 import org.matsim.smallScaleCommercialTrafficGeneration.prepare.CreateDataDistributionOfStructureData;
 import picocli.CommandLine;
@@ -171,10 +168,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 
 		config.controller().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
 
-		log.info("Running {} calibration {}", CalibrationMode.cadyts, populationPath);
-
 		config.plans().setInputFile(populationPath.toString());
-		config.controller().setRunId(CalibrationMode.cadyts.toString());
+		config.controller().setRunId("cadyts");
 		config.scoring().setWriteExperiencedPlans(true);
 
 		Activities.addScoringParams(config, false, withOpeningTimes);
@@ -183,8 +178,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			.setAllowConfigTypicalDurations(allowConfigTypicalDurations);
 
 		config.scenario().setSimulationPeriodInDays(simulationPeriodInDays);
-
-		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
 
 		config.replanningAnnealer().setActivateAnnealingModule(false);
 		config.replanning().setFractionOfIterationsToDisableInnovation(0.7);
@@ -198,8 +191,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			// Despite its name, this factor is applied to the simulated flow, not the counts
 			config.counts().setCountsScaleFactor(1 / (sample.getSample() * (double) CAR_FACTOR));
 			config.plans().setInputFile(sample.adjustName(config.plans().getInputFile()));
-
-			sw.setSampleSize(sample.getSample() * (double) CAR_FACTOR);
 		}
 
 		log.info("before: config.qsim().getFlowCapFactor() * scaleFactor = {} * {}", config.qsim().getFlowCapFactor(), scaleFactor);
@@ -212,9 +203,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		log.info("Running with flow and storage capacity: {} / {}", config.qsim().getFlowCapFactor(), config.qsim().getStorageCapFactor());
 
 		config.transit().setUseTransit(false);
-
-		// Disable dashboards, these take too many resources
-		sw.setDefaultDashboards(SimWrapperConfigGroup.DefaultDashboardsMode.disabled);
 
 		// Only car and ride will be network modes, ride is not simulated on the network though
 		config.routing().setNetworkModes(List.of(TransportMode.car, TransportMode.ride));
@@ -359,38 +347,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			}
 		});
 
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				addControlerListenerBinding().to(ExtendExperiencedPlansListener.class);
-			}
-		});
-
 		controler.addOverridingModule(new OpenBerlinScenario.TravelTimeBinding(true));
-		controler.addOverridingModule(new SimWrapperModule());
-
-		if (ConfigUtils.hasModule(controler.getConfig(), AdvancedScoringConfigGroup.class)) {
-			controler.addOverridingModule(new AdvancedScoringModule());
-		}
-	}
-
-	@Override
-	protected List<MATSimAppCommand> preparePostProcessing(Path outputFolder, String runId) {
-		// this is actually really bad, because we still have the controller and scenario in memory
-		return List.of(
-			new CleanPopulation().withArgs(
-				"--plans", outputFolder.resolve(runId + ".output_plans.xml.gz").toString(),
-				"--output", outputFolder.resolve(runId + ".output_selected_plans.xml.gz").toString(),
-				"--remove-unselected-plans"
-			)
-		);
-	}
-
-	/**
-	 * Different calibration stages.
-	 */
-	public enum CalibrationMode {
-		cadyts
 	}
 
 }
