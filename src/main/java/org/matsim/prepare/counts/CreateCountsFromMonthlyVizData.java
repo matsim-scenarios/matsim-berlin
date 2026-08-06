@@ -45,6 +45,7 @@ import java.text.Normalizer;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.format.FormatStyle;
 import java.util.*;
 import java.util.function.Predicate;
@@ -52,7 +53,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static tech.tablesaw.aggregate.AggregateFunctions.mean;
+import static tech.tablesaw.aggregate.AggregateFunctions.median;
 
 @CommandLine.Command(name = "counts-detailed", description = "Own aggregation of VIZ data for MATSim Counts")
 public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
@@ -97,8 +98,25 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 
 	private static final int HOURS_PER_DAY = 24;
 
+	/**
+	 * Aggregations used if {@code --aggregate} is not given: one per day type, each over the whole input period.
+	 * Monday, Friday and the weekend days are kept apart from the mid week, because their traffic patterns differ.
+	 */
+	private static final List<String> DEFAULT_AGGREGATIONS = List.of(
+			"monday=MONDAY",
+			"midweek=TUESDAY,WEDNESDAY,THURSDAY",
+			"friday=FRIDAY",
+			"saturday=SATURDAY",
+			"sunday=SUNDAY"
+	);
+
 	private static final Pattern NON_ALPHANUMERIC = Pattern.compile("[^a-z0-9]+");
 	private static final Pattern DIACRITICS = Pattern.compile("\\p{M}");
+
+	/**
+	 * An aggregation name is used as an output directory name, so it must not contain a path separator.
+	 */
+	private static final Pattern AGGREGATION_NAME = Pattern.compile("[A-Za-z0-9_-]+");
 
 	@CommandLine.Option(names = "--input", description = "directory the monthly count data is read from, not searched recursively", required = true)
 	Path input;
@@ -127,8 +145,13 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	@CommandLine.Option(names = "--max-distance", description = "maximum distance [m] between a station and its matched link", defaultValue = "50")
 	double maxDistance;
 
-	@CommandLine.Option(names = "--weekdays", split = ",", description = "days of week the hourly counts are averaged over. Default excludes MONDAY and FRIDAY, which have atypical traffic patterns. Candidates: ${COMPLETION-CANDIDATES}", defaultValue = "TUESDAY,WEDNESDAY,THURSDAY")
-	Set<DayOfWeek> weekdays;
+	@CommandLine.Option(names = "--aggregate", description = "one aggregation of the hourly counts, repeatable. " +
+			"Syntax: <name>=<DAY>[,<DAY>...][@<from>:<to>[+<from>:<to>...]], e.g. " +
+			"saturday=SATURDAY@2022-03-01:2022-05-31+2022-09-01:2022-10-31. Dates are inclusive and given as " +
+			"yyyy-MM-dd, a day is used if it falls into any of the ranges. Without ranges the whole input period " +
+			"is used. Each aggregation is written to its own output subdirectory. " +
+			"Default: monday=MONDAY, midweek=TUESDAY,WEDNESDAY,THURSDAY, friday=FRIDAY, saturday=SATURDAY, sunday=SUNDAY")
+	List<String> aggregationSpecs;
 
 	@CommandLine.Mixin
 	private final CsvOptions csv = new CsvOptions();
@@ -153,11 +176,9 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 
 		Files.createDirectories(output);
 
-		//Create Counts Object, car and freight are held as two measurables of the same location
-		Counts<Link> aggregated = new Counts<>();
-		aggregated.setName(scenario + " counts");
-		aggregated.setDescription("Car and freight counts based on data from the 'Verkehrsinformationszentrale Berlin'.");
-		aggregated.setYear(year);
+		//Parse before the expensive reading and map matching, so that a malformed option fails right away
+		List<Aggregation> aggregations = parseAggregations(
+				aggregationSpecs == null || aggregationSpecs.isEmpty() ? DEFAULT_AGGREGATIONS : aggregationSpecs);
 
 		//Get filepaths, count data is stored in .gz. Only the directory itself is read, so that sibling directories
 		//holding data of a different aggregation, e.g. the single lane detectors, are not picked up as well
@@ -174,13 +195,124 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 
 		List<CSVRecord> records = readCountData(countPaths);
 		Table table = createTable(records);
-		aggregateAndAssignCountData(table, stations, aggregated, outputString);
 
-		new CountsWriter(aggregated).write(outputString + scenario + ".counts.xml");
+		for (Aggregation aggregation : aggregations) {
+
+			Path directory = Path.of(outputString, aggregation.name());
+			Files.createDirectories(directory);
+
+			//Car and freight are held as two measurables of the same location
+			Counts<Link> aggregated = new Counts<>();
+			aggregated.setName(scenario + " counts " + aggregation.name());
+			aggregated.setDescription("Median car and freight counts (" + aggregation.describe()
+					+ ") based on data from the 'Verkehrsinformationszentrale Berlin'.");
+			aggregated.setYear(year);
+
+			aggregateAndAssignCountData(table, stations, aggregated, aggregation, directory);
+
+			//An aggregation whose ranges cover no day of the input would produce an empty counts file
+			if (aggregated.getMeasureLocations().isEmpty()) {
+				logger.warn("Aggregation {} matched no usable data, no counts file is written.", aggregation.name());
+				continue;
+			}
+
+			new CountsWriter(aggregated).write(directory.resolve(scenario + ".counts.xml").toString());
+		}
 
 		writeDailyCounts(table, stations, outputString);
 
 		return 0;
+	}
+
+	/**
+	 * Parses the {@code --aggregate} option values, see there for the syntax.
+	 */
+	private static List<Aggregation> parseAggregations(List<String> specs) {
+
+		List<Aggregation> aggregations = new ArrayList<>();
+		Set<String> names = new HashSet<>();
+
+		for (String spec : specs) {
+
+			int equals = spec.indexOf('=');
+			if (equals < 0)
+				throw new IllegalArgumentException("Aggregation '" + spec + "' has no '=', expected <name>=<DAY>[,<DAY>...][@<from>:<to>[+<from>:<to>...]]");
+
+			String name = spec.substring(0, equals).trim();
+			if (name.isEmpty())
+				throw new IllegalArgumentException("Aggregation '" + spec + "' has an empty name.");
+
+			//The name becomes a directory name, so it must not carry a path
+			if (!AGGREGATION_NAME.matcher(name).matches())
+				throw new IllegalArgumentException("Aggregation name '" + name + "' is not a plain name of letters, digits, '-' and '_', but it is used as an output directory name.");
+
+			if (!names.add(name))
+				throw new IllegalArgumentException("Aggregation name '" + name + "' is used more than once, but every aggregation needs its own output directory.");
+
+			//Everything up to the '@' are the days of week, everything behind it the date ranges
+			String definition = spec.substring(equals + 1);
+			int at = definition.indexOf('@');
+
+			Set<DayOfWeek> weekdays = parseWeekdays(at < 0 ? definition : definition.substring(0, at), spec);
+			List<DateRange> ranges = at < 0 ? List.of() : parseDateRanges(definition.substring(at + 1), spec);
+
+			aggregations.add(new Aggregation(name, weekdays, ranges));
+		}
+
+		return aggregations;
+	}
+
+	private static Set<DayOfWeek> parseWeekdays(String weekdays, String spec) {
+
+		Set<DayOfWeek> parsed = EnumSet.noneOf(DayOfWeek.class);
+
+		for (String day : weekdays.split(",")) {
+			day = day.trim();
+			if (day.isEmpty())
+				continue;
+
+			try {
+				parsed.add(DayOfWeek.valueOf(day.toUpperCase(Locale.ROOT)));
+			} catch (IllegalArgumentException e) {
+				throw new IllegalArgumentException("Aggregation '" + spec + "' names the unknown day of week '" + day
+						+ "', expected one of " + Arrays.toString(DayOfWeek.values()));
+			}
+		}
+
+		if (parsed.isEmpty())
+			throw new IllegalArgumentException("Aggregation '" + spec + "' does not name any day of week.");
+
+		return parsed;
+	}
+
+	private static List<DateRange> parseDateRanges(String ranges, String spec) {
+
+		List<DateRange> parsed = new ArrayList<>();
+
+		for (String range : ranges.split("\\+")) {
+			String[] bounds = range.trim().split(":");
+			if (bounds.length != 2)
+				throw new IllegalArgumentException("Aggregation '" + spec + "' has the malformed date range '" + range + "', expected <from>:<to> as yyyy-MM-dd:yyyy-MM-dd");
+
+			LocalDate from;
+			LocalDate to;
+			try {
+				from = LocalDate.parse(bounds[0].trim());
+				to = LocalDate.parse(bounds[1].trim());
+			} catch (DateTimeParseException e) {
+				throw new IllegalArgumentException("Aggregation '" + spec + "' has the unparsable date range '" + range + "', expected yyyy-MM-dd:yyyy-MM-dd", e);
+			}
+
+			if (from.isAfter(to))
+				throw new IllegalArgumentException("Aggregation '" + spec + "' has the date range '" + range + "', which starts after it ends.");
+
+			parsed.add(new DateRange(from, to));
+		}
+
+		if (parsed.isEmpty())
+			throw new IllegalArgumentException("Aggregation '" + spec + "' has a '@' but no date range behind it.");
+
+		return parsed;
 	}
 
 	/**
@@ -515,26 +647,35 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		return Table.create(id, date, hour, car, freight, carSpeed, freightSpeed);
 	}
 
-	private void aggregateAndAssignCountData(Table table, Map<String, Station> stations, Counts<Link> aggregated, String outputString) {
+	private void aggregateAndAssignCountData(Table table, Map<String, Station> stations, Counts<Link> aggregated, Aggregation aggregation, Path directory) {
 
-		Predicate<LocalDate> dayFilter = localDate -> weekdays.contains(localDate.getDayOfWeek());
+		Predicate<LocalDate> dayFilter = aggregation::covers;
 
 		//filter and aggregation
-		logger.info("Start Aggregation over {}", weekdays.stream().sorted().map(Enum::name).collect(Collectors.joining(", ")));
-		Table summarized = table.where(t -> t.dateColumn(ColumnNames.date).eval(dayFilter))
-				.summarize(ColumnNames.carVolume, ColumnNames.freightVolume, ColumnNames.carAvgSpeed, ColumnNames.freightAvgSpeed, mean)
+		logger.info("Start aggregation {} over {}", aggregation.name(), aggregation.describe());
+		Table filtered = table.where(t -> t.dateColumn(ColumnNames.date).eval(dayFilter));
+
+		if (filtered.isEmpty()) {
+			logger.warn("Aggregation {} does not cover any day of the count data.", aggregation.name());
+			return;
+		}
+
+		//The median is used instead of the mean, because single days with an accident, a closure or a broken
+		//detector would otherwise shift the whole profile
+		Table summarized = filtered
+				.summarize(ColumnNames.carVolume, ColumnNames.freightVolume, ColumnNames.carAvgSpeed, ColumnNames.freightAvgSpeed, median)
 				.by(ColumnNames.id, ColumnNames.hour);
 
 		//Column names were edited by summarize function
 		for (String name : table.columnNames())
 			summarized.columnNames().stream().filter(s -> s.contains(name)).findFirst().ifPresent(s -> summarized.column(s).setName(name));
 
-		//Assign aggregted hourly traffic volumes to count objects AND write avg speed per link and hour to csv file
-		try (CSVPrinter printer = csv.createPrinter(Path.of(outputString + scenario + ".avg_speed.csv"))) {
+		//Assign aggregted hourly traffic volumes to count objects AND write median speed per link and hour to csv file
+		try (CSVPrinter printer = csv.createPrinter(directory.resolve(scenario + ".median_speed.csv"))) {
 			printer.print(ColumnNames.id);
 			printer.print(ColumnNames.hour);
-			printer.print(ColumnNames.carAvgSpeed);
-			printer.print(ColumnNames.freightAvgSpeed);
+			printer.print(ColumnNames.carMedianSpeed);
+			printer.print(ColumnNames.freightMedianSpeed);
 			printer.println();
 
 			int counter = 0;
@@ -545,7 +686,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 				Table idFiltered = summarized.copy().where(t -> t.stringColumn(ColumnNames.id).isEqualTo(key));
 
 				if (idFiltered.rowCount() != HOURS_PER_DAY) {
-					logger.warn("Station {} - {} does not contain hour values for the whole day!", key, station.name());
+					logger.warn("Station {} - {} does not contain hour values for the whole day in aggregation {}!", key, station.name(), aggregation.name());
 					counter++;
 					continue;
 				}
@@ -575,7 +716,8 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 					printer.println();
 				}
 			}
-			logger.info("Skipped {} stations, because data was incomplete!", counter);
+			logger.info("Aggregation {}: wrote {} stations, skipped {}, because data was incomplete!",
+					aggregation.name(), aggregated.getMeasureLocations().size(), counter);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -583,8 +725,8 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 
 	/**
 	 * Writes one counts file per calendar day to {@code <output>/days/MM/dd.xml.gz}. Other than the aggregated counts
-	 * these hold the volumes actually measured on that day, for every day the data covers and not only for the
-	 * {@link #weekdays} the aggregation averages over.
+	 * these hold the volumes actually measured on that day, for every day the data covers and not only for the days
+	 * the {@link Aggregation}s select.
 	 */
 	private void writeDailyCounts(Table table, Map<String, Station> stations, String outputString) throws IOException {
 
@@ -665,6 +807,55 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	}
 
 	/**
+	 * One aggregation of the raw count data: the days of week its hourly volumes are taken from, and the date ranges
+	 * those days have to fall into. An empty range list accepts every date the input covers.
+	 */
+	private record Aggregation(String name, Set<DayOfWeek> weekdays, List<DateRange> ranges) {
+
+		/**
+		 * Whether the counts of that date are part of this aggregation.
+		 */
+		boolean covers(LocalDate date) {
+
+			if (!weekdays.contains(date.getDayOfWeek()))
+				return false;
+
+			if (ranges.isEmpty())
+				return true;
+
+			return ranges.stream().anyMatch(range -> range.contains(date));
+		}
+
+		/**
+		 * Human readable definition of the aggregation, used in the log and in the counts description.
+		 */
+		String describe() {
+
+			String days = weekdays.stream().sorted().map(Enum::name).collect(Collectors.joining(", "));
+
+			if (ranges.isEmpty())
+				return days;
+
+			return days + " within " + ranges.stream().map(DateRange::toString).collect(Collectors.joining(", "));
+		}
+	}
+
+	/**
+	 * Date range, inclusive on both ends.
+	 */
+	private record DateRange(LocalDate from, LocalDate to) {
+
+		boolean contains(LocalDate date) {
+			return !date.isBefore(from) && !date.isAfter(to);
+		}
+
+		@Override
+		public String toString() {
+			return from + ":" + to;
+		}
+	}
+
+	/**
 	 * Hourly car and freight volumes of one station on one day. Hours the data does not cover stay {@link Double#NaN}.
 	 */
 	private record DailyVolumes(double[] car, double[] freight) {
@@ -699,6 +890,10 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		static String carAvgSpeed = "car_avg_speed";
 		static String freightVolume = "freight_volume";
 		static String freightAvgSpeed = "freight_avg_speed";
+		//The raw data reports an average speed per hour, of which the median over the aggregated days is taken,
+		//so only the written columns are named after the median
+		static String carMedianSpeed = "car_median_speed";
+		static String freightMedianSpeed = "freight_median_speed";
 	}
 
 }
