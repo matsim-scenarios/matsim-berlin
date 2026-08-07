@@ -4,7 +4,7 @@ library(tidyverse)
 # Paths
 # -----------------------------------------------------------------------------
 
-path <- "/Users/gregorr/Volumes/math-cluster/matsim-berlin/v6.4-parking/experiments/baseBellocheNewSupplyiters/analysis/parking"
+path <- "/Users/gregorr/Volumes/math-cluster/matsim-berlin/v6.4-parking/experiments/baseBellocheRegionalTotals0iters/analysis/parking"
 
 links_berlin_path <- "/Users/gregorr/Documents/work/Paper/heartParking/linksInBerlin.csv"
 links_hundekopf_path <- "/Users/gregorr/Documents/work/Paper/heartParking/linksInHundekopf.csv"
