@@ -13,6 +13,7 @@ import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.MATSimApplication;
 import org.matsim.application.options.SampleOptions;
 import org.matsim.application.prepare.CreateLandUseShp;
+import org.matsim.application.prepare.counts.CreateCountsFromBAStData;
 import org.matsim.application.prepare.counts.MergeCounts;
 import org.matsim.application.prepare.longDistanceFreightGER.tripExtraction.ExtractRelevantFreightTrips;
 import org.matsim.application.prepare.network.CleanNetwork;
@@ -52,6 +53,7 @@ import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.prepare.choices.ComputePlanChoices;
 import org.matsim.prepare.choices.ComputeTripChoices;
 import org.matsim.prepare.counts.CreateCountsFromGeoPortalBerlin;
+import org.matsim.prepare.counts.CreateCountsFromMonthlyVizData;
 import org.matsim.prepare.counts.CreateCountsFromVMZ;
 import org.matsim.prepare.counts.CreateCountsFromVMZOld;
 import org.matsim.prepare.download.DownloadCommuterStatistic;
@@ -97,7 +99,7 @@ import java.util.stream.Collectors;
 	RunCountOptimization.class, SelectPlansFromIndex.class, ExtractPlanIndexFromType.class, AssignReferencePopulation.class, PrepareTasteVariations.class,
 	ExtractRelevantFreightTrips.class, CheckCarAvailability.class, FixSubtourModes.class, ComputeTripChoices.class, ComputePlanChoices.class,
 	ApplyNetworkParams.class, SetCarAvailabilityByAge.class, CreateDrtVehicles.class, EndlessCircleLineScheduleModifier.class,
-	MergeCounts.class
+	MergeCounts.class, CreateCountsFromMonthlyVizData.class, CreateCountsFromBAStData.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
 
