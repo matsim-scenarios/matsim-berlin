@@ -15,6 +15,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.geotools.api.referencing.operation.TransformException;
 import org.geotools.referencing.operation.transform.IdentityTransform;
+import org.jspecify.annotations.NonNull;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -238,21 +239,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		List<Aggregation> aggregations = parseAggregations(
 				aggregationSpecs == null || aggregationSpecs.isEmpty() ? DEFAULT_AGGREGATIONS : aggregationSpecs);
 
-		//Get filepaths. Only the directory itself is read, so that sibling directories holding data of a different
-		//aggregation, e.g. the single lane detectors, are not picked up as well. The extension has to distinguish the
-		//two deliveries, because a .tgz ends with .gz as well
-		String extension = inputFormat == InputFormat.CROSS_SECTIONS ? ".csv.gz" : ".tgz";
-		List<Path> countPaths;
-		try (Stream<Path> paths = Files.list(input)) {
-			countPaths = paths.filter(path -> path.toString().endsWith(extension)).sorted().toList();
-		}
-
-		if (countPaths.isEmpty())
-			throw new IllegalArgumentException("No " + extension + " file in " + input
-					+ ", which is what --input-format=" + inputFormat + " reads. Is --input-format correct?");
-
-		if (countPaths.size() < 12)
-			logger.warn("Expected 12 files, but only {} files containing count data were provided.", countPaths.size());
+		List<Path> countPaths = getCountFilePaths();
 
 		extractStations(stationData, stations, counts);
 		matchWithNetwork(networkPath, geometries, stations, counts, outputString);
@@ -288,6 +275,25 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		writeDailyCounts(table, stations, outputString);
 
 		return 0;
+	}
+
+	private @NonNull List<Path> getCountFilePaths() throws IOException {
+		//Get filepaths. Only the directory itself is read, so that sibling directories holding data of a different
+		//aggregation, e.g. the single lane detectors, are not picked up as well. The extension has to distinguish the
+		//two deliveries, because a .tgz ends with .gz as well
+		String extension = inputFormat == InputFormat.CROSS_SECTIONS ? ".csv.gz" : ".tgz";
+		List<Path> countPaths;
+		try (Stream<Path> paths = Files.list(input)) {
+			countPaths = paths.filter(path -> path.toString().endsWith(extension)).sorted().toList();
+		}
+
+		if (countPaths.isEmpty())
+			throw new IllegalArgumentException("No " + extension + " file in " + input
+					+ ", which is what --input-format=" + inputFormat + " reads. Is --input-format correct?");
+
+		if (countPaths.size() < 12)
+			logger.warn("Expected 12 files, but only {} files containing count data were provided.", countPaths.size());
+		return countPaths;
 	}
 
 	/**
@@ -435,20 +441,29 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	 * Lower case, de-accented tokens of a road name, with the street suffix collapsed in both the standalone
 	 * ("Ollenhauer Straße") and the concatenated form ("Ollenhauerstraße").
 	 */
-	private static Set<String> nameTokens(String name) {
+	static Set<String> nameTokens(String name) {
 
+		//An empty set means "no name given", which nameScore reads as "nothing to compare" rather than as a mismatch
 		if (name == null || name.isBlank())
 			return Set.of();
 
+		//NFKD splits an umlaut into its base letter and a combining mark, which \p{M} then removes, so that "Späth"
+		//becomes "spath". 'ß' has no such decomposition and is replaced by hand beforehand. The transliteration is
+		//not undone, i.e. a name spelled "Spaeth" does not meet one spelled "Späth"
 		String normalized = DIACRITICS.matcher(
 				Normalizer.normalize(name.toLowerCase(Locale.GERMAN).replace("ß", "ss"), Normalizer.Form.NFKD)
 		).replaceAll("");
 
 		Set<String> tokens = new HashSet<>();
+		//Everything that is not a lower case letter or a digit separates tokens, i.e. spaces, hyphens and the dot of
+		//an abbreviation. A leading separator makes split emit an empty first token
 		for (String token : NON_ALPHANUMERIC.split(normalized)) {
+			//"Ollenhauer Straße" carries the suffix as a token of its own, which says nothing about the street
 			if (token.isEmpty() || STREET_SUFFIXES.contains(token))
 				continue;
 
+			//"Ollenhauerstraße" and "Ollenhauerstr." carry it concatenated instead, so it is cut off here and both
+			//forms reduce to "ollenhauer". Only one suffix is stripped, and never the whole token
 			for (String suffix : STREET_SUFFIXES) {
 				if (token.endsWith(suffix) && token.length() > suffix.length()) {
 					token = token.substring(0, token.length() - suffix.length());
