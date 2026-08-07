@@ -27,6 +27,8 @@ import tech.tablesaw.api.*;
 import tech.tablesaw.columns.Column;
 import tech.tablesaw.selection.Selection;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -117,7 +119,7 @@ public class BicycleTrafficAnalysis implements MATSimAppCommand {
 
 //		List<String> means = List.of("excess_travel_time_index", "avg_speed",
 //			"road_capacity_utilization", "lane_km");
-		List<String> means = List.of("avg_speed", "lane_km");
+		List<String> means = List.of("avg_speed", "lane_km", "avg_speed_km_h");
 		Table dailyMean = normalizeColumns(ds.summarize(means, mean).by("link_id"));
 
 		List<String> sums = ds.columnNames().stream().filter(s -> s.startsWith("vol_") || s.endsWith("_volume")).toList();
@@ -182,6 +184,7 @@ public class BicycleTrafficAnalysis implements MATSimAppCommand {
 		perRoadType.column("road_type").setName("Road Type");
 //		perRoadType.column("road_capacity_utilization").setName("Cap. Utilization");
 		perRoadType.column("avg_speed").setName("Avg. Speed [m/s]");
+		perRoadType.column("avg_speed_km_h").setName("Avg. Speed [km/h]");
 //		perRoadType.column("congestion_index").setName("Congestion Index");
 //		perRoadType.column("excess_travel_time_index").setName("Excess Travel Time Index");
 
@@ -250,6 +253,7 @@ public class BicycleTrafficAnalysis implements MATSimAppCommand {
 			DoubleColumn.create("lane_km"),
 //			DoubleColumn.create("excess_travel_time_index"),
 			DoubleColumn.create("avg_speed"),
+			DoubleColumn.create("avg_speed_km_h"),
 //			DoubleColumn.create("road_capacity_utilization"),
 			DoubleColumn.create("simulated_traffic_volume")
 		);
@@ -296,7 +300,10 @@ public class BicycleTrafficAnalysis implements MATSimAppCommand {
 //				only calc avg speed for link at given time bin when there actually are bike traversing the link
 				if (bikeVolume > 0) {
 					// Beforehand, the avg_speed was in km/h. That was very confusing. I (paul) set to m/s. paul, jul '26.
-					row.setDouble("avg_speed", calc.getAvgSpeed(link, startTime, endTime));
+					double avgSpeed = calc.getAvgSpeed(link, startTime, endTime);
+					row.setDouble("avg_speed", avgSpeed);
+					row.setDouble("avg_speed_km_h",
+						BigDecimal.valueOf(avgSpeed * 3.6).setScale(2, RoundingMode.HALF_UP).doubleValue());
 				} else {
 //					if there is no bike traffic on the network, the usual approach sets avg_speed to the freespeed, which is much bigger than the usual bike speed
 //					in order to see some congestion effects = lower bike speeds, we have to set the avg speed with no traffic on the link to the avg bike speed
@@ -307,6 +314,8 @@ public class BicycleTrafficAnalysis implements MATSimAppCommand {
 					}
 
 					row.setDouble("avg_speed", avgBikeSpeed);
+					row.setDouble("avg_speed_km_h",
+						BigDecimal.valueOf(avgBikeSpeed * 3.6).setScale(2, RoundingMode.HALF_UP).doubleValue());
 				}
 			}
 		}
