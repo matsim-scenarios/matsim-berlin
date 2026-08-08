@@ -784,7 +784,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 		Set<String> unknown = new HashSet<>();
 		Set<String> delivered = new HashSet<>();
 		long incomplete = 0;
-		long partial = 0;
+//		long partial = 0;
 		long emitted = 0;
 
 		for (Path path : paths) {
@@ -835,10 +835,14 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 						if (laneHour == null)
 							continue;
 
-						if (laneHour.lanes() != lanesOfStation) {
-							partial++;
-							continue;
-						}
+						// we do not skip if the number of lanes delivered differs from the number of lanes
+						// registered for the detector. The lane might be closed or something else and we
+						// lose a lot of stations that way. For the aggregated data this will be mitigated
+						// anyway (mean/median) and for the daily counts we need the data!
+//						if (laneHour.lanes() != lanesOfStation) {
+//							partial++;
+//							continue;
+//						}
 
 						id.append(station.getKey());
 						date.append(day.getKey());
@@ -865,8 +869,10 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			logger.info("{} of {} main lane detectors of the station data are in none of the archives, the cross "
 					+ "sections they belong to are summed over their remaining lanes.", undelivered, detectorToStation.size());
 
-		logger.info("Built {} cross section hours, dropped {} lane hours below {}% completeness and {} cross section "
-				+ "hours that not all delivered lanes covered.", emitted, incomplete, minCompleteness, partial);
+//		logger.info("Built {} cross section hours, dropped {} lane hours below {}% completeness and {} cross section "
+//				+ "hours that not all delivered lanes covered.", emitted, incomplete, minCompleteness, partial);
+		logger.info("Built {} cross section hours, dropped {} lane hours below {}% completeness.",
+			emitted, incomplete, minCompleteness);
 
 		return Table.create(id, date, hour, car, freight, carSpeed, freightSpeed);
 	}
