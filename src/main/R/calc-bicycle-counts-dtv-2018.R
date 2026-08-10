@@ -68,10 +68,91 @@ daily <- working_day_bicycle_counts_2018 %>%
   ) %>% 
   select(-weekday)
 
-# calc dtv
+# calc dtv and bring into correct format for station location data
 dtv_bicycle_counts <- daily %>%
   summarise(
     across(where(is.numeric), ~ round(mean(.x, na.rm = TRUE)))
   )
 
-write.csv(dtv_bicycle_counts, file="dtv_typical_weekday_bicycle_counts_2018.csv", quote=FALSE, row.names=FALSE)
+dtv_bicycle_counts <- dtv_bicycle_counts %>% 
+  pivot_longer(cols = names(dtv_bicycle_counts)) %>% 
+  rename(station = 'name',
+         dtv_2018 = 'value')
+
+# read count location data
+count_stations_location <- read_excel("../../runs-svn/matsim-berlin/v6.4_bike_network_study/gesamtdatei-stundenwerte.xlsx", sheet="Standortdaten") %>%
+  rename(station = 'Zählstelle',
+         description_direction = 'Beschreibung - Fahrtrichtung',
+         x = 'Längengrad',
+         y = 'Breitengrad')
+
+names(count_stations_location)
+
+station_lookup <- c('02-MI-JAN-N' = 'Jannowitzbruecke_N',
+                    '02-MI-JAN-S' = 'Jannowitzbruecke_S',
+                    '03-MI-SAN-O' = 'Invalidenstr_O',
+                    '03-MI-SAN-W' = 'Invalidenstr_W',
+                    '05-FK-OBB-O' = 'Oberbaumbruecke_O',
+                    '05-FK-OBB-W' = 'Oberbaumbruecke_W',
+                    '06-FK-FRA-O' = 'Frankfurter_Allee_O',
+                    '06-FK-FRA-W' = 'Frankfurter_Allee_W',
+                    '10-PA-BER-N' = 'Berliner_Str_N',
+                    '10-PA-BER-S' = 'Berliner_Str_S',
+                    '12-PA-SCH' = 'Schwedter_Steg',
+                    '13-CW-PRI' = 'Prinzregentenstr',
+                    '15-SP-KLO-N' = 'Klosterstr_N',
+                    '15-SP-KLO-S' = 'Klosterstr_S',
+                    '17-SK-BRE-O' = 'Breitenbachplatz_O',
+                    '17-SK-BRE-W' = 'Breitenbachplatz_W',
+                    '18-TS-YOR-O' = 'Yorckstr_O',
+                    '18-TS-YOR-W' = 'Yorckstr_W',
+                    '19-TS-MON' = 'Monumentenst',
+                    '20-TS-MAR-N' = 'Mariendorfer_Damm_N',
+                    '20-TS-MAR-S' = 'Mariendorfer_Damm_S',
+                    '21-NK-MAY' = 'Maybachufer',
+                    '23-TK-KAI' = 'Kaisersteg',
+                    '24-MH-ALB' = 'Alberichstr',
+                    '26-LI-PUP' = 'Paul_Paula_Uferweg',
+                    '27-RE-MAR' = 'Marktstr')
+
+count_stations_location$station <- station_lookup[count_stations_location$station]
+
+# some stations did not exist in 2018, drop them
+count_stations_location_2018 <- count_stations_location %>% 
+  filter(!is.na(station))
+
+# manual station to matsim link assignment
+station_to_links <- c("909402342",
+                      "29383966",
+                      paste0("42104389#1,", "1119248953#1"),
+                      paste0("248010194,", "1119248951"),
+                      "127734801",
+                      "909409602",
+                      paste0("310172796#0,", "1123298492#1"),
+                      "6263126#0",
+                      "172439811#0",
+                      "4631949",
+                      NA,
+                      paste0("814840750#1,", "-814840750#1"),
+                      paste0("31697122#0,", "703182870#2,", "-824819958"),
+                      paste0("333500494#0,", "824819958"),
+                      "4405253#0",
+                      "4405254#0",
+                      paste0("-25178767#2,", "863543061"),
+                      "25178766",
+                      paste0("-527065428#0,", "337967751#4"),
+                      "1101002048#3",
+                      "881575686",
+                      paste0("-845476767,", "249453223#2"),
+                      NA,
+                      paste0("-514540368#1,", "514540368#1"),
+                      NA,
+                      paste0("4610040,", "-4610040")
+)
+
+dtv_bicycle_counts_with_locations <- dtv_bicycle_counts %>% 
+  inner_join(y=count_stations_location_2018, by='station') %>% 
+  mutate(links = station_to_links) %>% 
+  filter(!is.na(links))
+
+write.csv(dtv_bicycle_counts_with_locations, file="dtv_typical_weekday_bicycle_counts_2018_wgs84.csv", quote=FALSE, row.names=FALSE)

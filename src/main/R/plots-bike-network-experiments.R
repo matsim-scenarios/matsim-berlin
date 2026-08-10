@@ -332,3 +332,98 @@ avg_cycling_speed_per_road_type_plot <- ggplot(combined_avg_speed_per_road_type,
   )
 avg_cycling_speed_per_road_type_plot
 ggsave("avg_cycling_speed_per_road_type_plot.pdf", avg_cycling_speed_per_road_type_plot, dpi = 500, w = 9, h = 9)
+
+############################################ counts vs matsim bike volumes ##################################################
+# read data
+count_data <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/dtv_typical_weekday_bicycle_counts_2018_wgs84.csv")
+
+volumes_qsim0.0 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.0/analysis/traffic/traffic_stats_by_link_daily_bike.csv")
+volumes_qsim0.01 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.01/analysis/traffic/traffic_stats_by_link_daily_bike.csv") 
+volumes_qsim0.1 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.1/analysis/traffic/traffic_stats_by_link_daily_bike.csv") 
+volumes_qsim0.2 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.2/analysis/traffic/traffic_stats_by_link_daily_bike.csv") 
+volumes_qsim0.3 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.3/analysis/traffic/traffic_stats_by_link_daily_bike.csv") 
+
+get_bike_volumes <- function(count_data, volumes, case) {
+  volume_col <- case
+  
+  count_data %>%
+    rowwise() %>%
+    mutate( !!volume_col := sum(
+      volumes$vol_bike[
+        volumes$link_id %in% unlist(strsplit(links, ",\\s*"))
+      ], na.rm = TRUE
+    )
+    ) %>%
+    ungroup()
+  }
+
+count_data <- get_bike_volumes(count_data, volumes_qsim0.0, "qsim0.0")
+count_data <- get_bike_volumes(count_data, volumes_qsim0.01, "qsim0.01")
+count_data <- get_bike_volumes(count_data, volumes_qsim0.1, "qsim0.1")
+count_data <- get_bike_volumes(count_data, volumes_qsim0.2, "qsim0.2")
+count_data <- get_bike_volumes(count_data, volumes_qsim0.3, "qsim0.3")
+
+head(count_data)
+  
+count_plot_data <- count_data %>%
+  select(station, dtv_2018, starts_with("qsim")) %>% 
+  pivot_longer(
+    cols = starts_with("qsim"),
+    names_to = "case",
+    values_to = "simulation"
+  )
+
+counts_plot <- ggplot(count_plot_data,
+                      aes(x = dtv_2018,
+                          y = simulation,
+                          color = case,
+                          group = case)) +
+  geom_abline(slope = 1, intercept = 0, size=1) +
+  geom_point(size = 3) +
+  scale_x_continuous(limits = c(0, 15000)) +
+  scale_y_continuous(limits = c(0, 15000)) +
+  scale_color_okabe_ito(order = c(3, 4, 5, 6, 7)) +
+  labs(
+    x = "bicycle count dtv 2018",
+    y = "simulation"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 20),
+    axis.title = element_text(size = 21),
+    axis.text = element_text(size = 20),
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+    legend.title = element_text(size = 20),
+    legend.text = element_text(size = 19),
+    plot.margin = margin(5, 5, 5, 5)
+  )
+
+counts_plot
+ggsave("bicycle_counts_to_volumes_plot.pdf", counts_plot, dpi = 500, w = 9, h = 9)
+
+counts_performance <- count_plot_data %>%
+  group_by(case) %>%
+  summarise(
+    MAE = mean(abs(simulation - dtv_2018), na.rm = TRUE),
+    NMAE = mean(
+      abs(simulation - dtv_2018),
+      na.rm = TRUE
+    ) / mean(
+      dtv_2018,
+      na.rm = TRUE
+    ),
+    RMSE = sqrt(
+      mean((simulation - dtv_2018)^2, na.rm = TRUE)
+    ),
+    MBE = mean(
+      simulation - dtv_2018,
+      na.rm = TRUE
+    ),
+    MAPE = mean(
+      abs((simulation - dtv_2018) / dtv_2018),
+      na.rm = TRUE
+    ),
+    .groups = "drop"
+  )
+
+write.csv(counts_performance, file="error_measure_bicycle_counts_sim.csv", quote=FALSE, row.names=FALSE)
