@@ -13,6 +13,7 @@ import org.matsim.application.MATSimAppCommand;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
+import org.matsim.run.policies.OpenBerlinWithParking;
 import org.wololo.jts2geojson.GeoJSONReader;
 import picocli.CommandLine;
 
@@ -21,6 +22,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * @deprecated Parking-supply assignment has moved to {@link OpenBerlinWithParking}, where the
+ * assignment method and all required input files can be selected through command-line options.
+ */
+@Deprecated(forRemoval = true)
 public class CreateNetworkWithParking implements MATSimAppCommand {
 
 	@CommandLine.Option(names = {"-n", "--network"}, required = true)
