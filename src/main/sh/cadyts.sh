@@ -19,7 +19,7 @@ hostname
 pwd
 
 ## the location of the population-file needs to be relative to the cadyts-config.xml, which is kind of weird to me
-arguments="--weight 0.15 --output output/cadyts --scale-factor 1.0 --25pct --iterations 50 --population ./berlin-cadyts-input-${VERSION}-25pct.plans.xml.gz"
+arguments="--output output/cadyts --scale-factor 1.0 --25pct --iterations 50 --population ./berlin-cadyts-input-${VERSION}-25pct.plans.xml.gz"
 
 # Don't change anything below
 ################
