@@ -26,9 +26,10 @@ import java.util.*;
  * Utils class for plugging together different policies in the same scenario.
  */
 public final class MobilityToGridScenariosUtils {
-	private static final Logger log = LogManager.getLogger(MobilityToGridScenariosUtils.class);
+	public static final String AVERAGE = "average";
+	public static final String RICH = "rich";
 
-	private static final String AVERAGE = "average";
+	private static final Logger log = LogManager.getLogger(MobilityToGridScenariosUtils.class);
 
 	private MobilityToGridScenariosUtils() {}
 
@@ -66,9 +67,9 @@ public final class MobilityToGridScenariosUtils {
 					}
 					case "freight", TransportMode.truck -> {
 						VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
-						VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
+						VehicleUtils.setHbefaTechnology(engineInformation, Hbefa41Technology.DIESEL.toString());
 						VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
-						VehicleUtils.setHbefaEmissionsConcept(engineInformation, "diesel");
+						VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
 					}
 					default -> throw new IllegalArgumentException("does not know how to handle vehicleType " + type.getId().toString());
 				}
