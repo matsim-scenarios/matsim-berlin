@@ -106,8 +106,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	private static final Logger log = LogManager.getLogger(RunOpenBerlinCalibration.class);
 	@CommandLine.Mixin
 	private final SampleOptions sample = new SampleOptions(25, 10, 3, 1);
-	@CommandLine.Option(names = "--weight", description = "Strategy weight.", defaultValue = "1")
-	private double weight;
 	@CommandLine.Option(names = "--population", description = "Path to population.")
 	private Path populationPath;
 
@@ -235,7 +233,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service", "goodsTraffic")) {
 			config.replanning().addStrategySettings(new ReplanningConfigGroup.StrategySettings()
 				.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
-				.setWeight(weight / 8)
+				.setWeight(0.1)
 				.setSubpopulation(subpopulation)
 			);
 		}
@@ -336,14 +334,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 				sumScoringFunction.addScoringFunction(scoringFunction);
 
 				return sumScoringFunction;
-			}
-		});
-
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				binder().bind(new TypeLiteral<StrategyChooser<Plan, Person>>() {
-				}).toInstance(new ForceInnovationStrategyChooser<>((int) Math.ceil(1.0 / weight), ForceInnovationStrategyChooser.Permute.yes));
 			}
 		});
 
