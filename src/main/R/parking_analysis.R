@@ -471,27 +471,196 @@ ggsave(file.path(output_path, "mean_search_time_per_link_berlin_12_minutes.png")
 # Parking search time by time of day
 # -----------------------------------------------------------------------------
 
-search_time_by_hour <- parking_search_times_time_of_day %>%
-  mutate(hour = floor(time_of_day / 3600)) %>%
-  group_by(hour) %>%
+# The analysis output records the end of each completed parking search. The
+# parking-search delay is determined when the search starts, so reconstruct the
+# start time before aggregating. Simulation hours are not wrapped at 24.
+# Searches that were still running when QSim ended are absent from this input.
+if (nrow(parking_search_times_time_of_day) == 0) {
+  stop("No completed parking searches were found.")
+}
+
+if (any(!is.finite(parking_search_times_time_of_day$time_of_day)) ||
+    any(!is.finite(parking_search_times_time_of_day$search_time))) {
+  stop("Parking-search times must be finite.")
+}
+
+if (any(parking_search_times_time_of_day$search_time < 0)) {
+  stop("Parking-search durations must not be negative.")
+}
+
+parking_searches_with_timing <- parking_search_times_time_of_day %>%
+  transmute(
+    person_id,
+    subpopulation = str_extract(person_id, "^[^_]+"),
+    search_end_time = time_of_day,
+    search_time,
+    search_time_min = search_time / 60,
+    search_start_time = search_end_time - search_time,
+    search_start_hour = floor(search_start_time / 3600),
+    search_end_hour = floor(search_end_time / 3600)
+  )
+
+if (any(parking_searches_with_timing$search_start_time < 0)) {
+  stop("At least one parking search starts before simulation time zero.")
+}
+
+observed_search_time_by_start_hour <- parking_searches_with_timing %>%
+  group_by(search_start_hour) %>%
   summarise(
-    observations = n(),
-    mean_min = mean(search_time, na.rm = TRUE) / 60,
-    median_min = median(search_time, na.rm = TRUE) / 60,
+    parking_searches = n(),
+    total_search_time_hours = sum(search_time_min) / 60,
+    mean_min = mean(search_time_min),
+    median_min = median(search_time_min),
+    sd_min = sd(search_time_min),
+    p75_min = quantile(search_time_min, 0.75),
+    p90_min = quantile(search_time_min, 0.90),
+    p95_min = quantile(search_time_min, 0.95),
+    maximum_min = max(search_time_min),
+    share_over_1_min = mean(search_time_min > 1),
+    share_over_5_min = mean(search_time_min > 5),
+    share_over_10_min = mean(search_time_min > 10),
     .groups = "drop"
   )
 
-write_csv(search_time_by_hour, file.path(output_path, "search_time_by_hour.csv"))
+# Insert hours without completed searches so the CSV shows these gaps
+# explicitly. Their duration statistics remain empty.
+search_time_by_start_hour <- tibble(
+  search_start_hour = seq.int(
+    0,
+    max(parking_searches_with_timing$search_start_hour)
+  )
+) %>%
+  left_join(observed_search_time_by_start_hour, by = "search_start_hour") %>%
+  mutate(parking_searches = replace_na(parking_searches, 0L))
 
-ggplot(search_time_by_hour, aes(x = hour)) +
-  geom_line(aes(y = mean_min, color = "Mean"), linewidth = 1) +
-  geom_line(aes(y = median_min, color = "Median"), linewidth = 1) +
-  labs(
-    title = "Parking Search Time by Time of Day",
-    x = "Hour",
-    y = "Search time [minutes]",
-    color = NULL
+if (sum(search_time_by_start_hour$parking_searches) !=
+    nrow(parking_searches_with_timing)) {
+  stop("Hourly parking-search counts do not match the input.")
+}
+
+print(search_time_by_start_hour)
+# Print searches beginning after midnight separately while preserving their
+# original simulation hours.
+print(search_time_by_start_hour %>% filter(search_start_hour >= 24))
+write_csv(
+  search_time_by_start_hour,
+  file.path(output_path, "search_time_by_hour.csv")
+)
+
+# Aggregate the system-wide parking-search burden by subpopulation. These totals
+# intentionally retain every completed search, including extreme values from
+# the unbounded Belloche function.
+total_search_time_by_start_hour_and_subpopulation <-
+  parking_searches_with_timing %>%
+  group_by(search_start_hour, subpopulation) %>%
+  summarise(
+    parking_searches = n(),
+    total_search_time_hours = sum(search_time_min) / 60,
+    .groups = "drop"
+  )
+
+write_csv(
+  total_search_time_by_start_hour_and_subpopulation,
+  file.path(output_path, "total_search_time_by_hour_and_subpopulation.csv")
+)
+
+simulation_hour_range <- range(search_time_by_start_hour$search_start_hour)
+simulation_hour_breaks <- seq(
+  floor(simulation_hour_range[[1]] / 4) * 4,
+  ceiling(simulation_hour_range[[2]] / 4) * 4,
+  by = 4
+)
+
+hourly_total_search_time_plot <-
+  total_search_time_by_start_hour_and_subpopulation %>%
+  mutate(
+    subpopulation = factor(
+      recode(
+        subpopulation,
+        berlin = "Berlin residents",
+        bb = "Brandenburg residents",
+        commercialPersonTraffic = "Commercial person traffic",
+        goodsTraffic = "Goods traffic"
+      ),
+      levels = c(
+        "Berlin residents",
+        "Brandenburg residents",
+        "Commercial person traffic",
+        "Goods traffic"
+      )
+    )
+  ) %>%
+  ggplot(aes(
+    x = search_start_hour,
+    y = total_search_time_hours,
+    fill = subpopulation
+  )) +
+  geom_col(width = 0.85) +
+  geom_vline(xintercept = 24, color = "grey25", linetype = "dashed") +
+  scale_x_continuous(
+    breaks = simulation_hour_breaks,
+    limits = c(-0.5, simulation_hour_range[[2]] + 0.5)
   ) +
-  theme_minimal(base_size = 14)
+  scale_fill_manual(
+    values = c(
+      "Berlin residents" = "#0072B2",
+      "Brandenburg residents" = "#56B4E9",
+      "Commercial person traffic" = "#E69F00",
+      "Goods traffic" = "#D55E00"
+    )
+  ) +
+  labs(
+    title = "Total Parking Search Burden by Search Start Hour",
+    subtitle = "Completed parking searches stacked by agent group",
+    caption = "Dashed line marks simulation hour 24",
+    x = "Simulation hour at start of parking search",
+    y = "Total parking-search time [hours]",
+    fill = NULL
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "bottom"
+  ) +
+  guides(fill = guide_legend(nrow = 2, byrow = TRUE))
 
-ggsave(file.path(output_path, "parking_search_time_by_hour.png"), width = 8, height = 5)
+spike_hours <- search_time_by_start_hour %>%
+  filter(parking_searches > 0) %>%
+  slice_max(mean_min, n = 8, with_ties = FALSE) %>%
+  pull(search_start_hour)
+
+parking_searches_with_timing %>%
+  mutate(
+    subpopulation = str_extract(person_id, "^[^_]+")
+  ) %>%
+  filter(search_start_hour %in% spike_hours) %>%
+  group_by(search_start_hour) %>%
+  mutate(
+    contribution_to_hour =
+      search_time_min / sum(search_time_min)
+  ) %>%
+  slice_max(
+    search_time_min,
+    n = 5,
+    with_ties = FALSE
+  ) %>%
+  ungroup() %>%
+  select(
+    search_start_hour,
+    person_id,
+    subpopulation,
+    search_time_min,
+    search_end_hour,
+    contribution_to_hour
+  ) %>%
+  arrange(search_start_hour, desc(search_time_min))
+
+
+
+ggsave(
+  file.path(output_path, "parking_search_time_by_hour.png"),
+  plot = hourly_total_search_time_plot,
+  width = 8,
+  height = 5,
+  dpi = 300,
+  bg = "white"
+)
