@@ -383,6 +383,11 @@ $(BERLIN_CADYTS_INPUT_25PCT): $(BERLIN_BRANDENBURG_INITIAL_25PCT) $(BERLIN_SMALL
 	$(JAVA_APP) prepare merge-populations $^\
 	 --output $@
 
+	# For debugging and visualization
+	$(JAVA_APP) prepare downsample-population $@\
+		 --sample-size 0.25\
+		 --samples 0.1 0.03 0.01\
+
 $(VEHICLESFILE_OUT): $(VEHICLESFILE_IN) | setup
 	cp $(VEHICLESFILE_IN) $(VEHICLESFILE_OUT)
 

@@ -43,6 +43,10 @@ import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.SumScoringFunction;
+import org.matsim.core.scoring.functions.CharyparNagelLegScoring;
+import org.matsim.core.scoring.functions.ScoringParameters;
+import org.matsim.core.scoring.functions.ScoringParametersForPerson;
+import org.matsim.core.scoring.functions.SubpopulationScoringParameters;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.prepare.choices.ComputePlanChoices;
 import org.matsim.prepare.choices.ComputeTripChoices;
@@ -198,6 +202,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		config.qsim().setFlowCapFactor(config.qsim().getFlowCapFactor() * scaleFactor);
 		config.qsim().setStorageCapFactor(config.qsim().getStorageCapFactor() * scaleFactor);
 
+		config.global().setRelativeToleranceForSampleSizeFactors(999999.0);
+
 		log.info("Running with flow and storage capacity: {} / {}", config.qsim().getFlowCapFactor(), config.qsim().getStorageCapFactor());
 
 		config.transit().setUseTransit(false);
@@ -323,6 +329,9 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 			@Inject
 			private CadytsContext cadytsContext;
 
+			@Inject
+			private ScoringParametersForPerson spfp;
+
 			@Override
 			public ScoringFunction createNewScoringFunction(Person person) {
 				SumScoringFunction sumScoringFunction = new SumScoringFunction();
@@ -332,7 +341,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 				final CadytsScoring<Link> scoringFunction = new CadytsScoring<>(person.getSelectedPlan(), config, cadytsContext);
 				scoringFunction.setWeightOfCadytsCorrection(30 * config.scoring().getBrainExpBeta());
 				sumScoringFunction.addScoringFunction(scoringFunction);
-
+				sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(spfp.getScoringParameters(person)));
 				return sumScoringFunction;
 			}
 		});
