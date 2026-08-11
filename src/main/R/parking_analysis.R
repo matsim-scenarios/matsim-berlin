@@ -1,13 +1,57 @@
 library(tidyverse)
+library(matsim)
 
 # -----------------------------------------------------------------------------
 # Paths
 # -----------------------------------------------------------------------------
 
-path <- "/Users/gregorr/Volumes/math-cluster/matsim-berlin/v6.4-parking/experiments/baseBellocheRegionalTotals0iters/analysis/parking"
+path <- "/Users/gregorr/Volumes/math-cluster/matsim-berlin/v6.4-parking/experiments/baseBellocheParkingData0itersDetailedWithModeChoce/analysis/parking"
 
 links_berlin_path <- "/Users/gregorr/Documents/work/Paper/heartParking/linksInBerlin.csv"
 links_hundekopf_path <- "/Users/gregorr/Documents/work/Paper/heartParking/linksInHundekopf.csv"
+
+# The run directory is two levels above analysis/parking. MATSim writes one
+# output network into this directory, which provides the link geometries used
+# for the maps below.
+run_path <- dirname(dirname(path))
+# First look in the run directory, where MATSim normally writes the network.
+network_files <- list.files(
+  run_path,
+  pattern = "output_network\\.xml(\\.(gz|zst))?$",
+  full.names = TRUE
+)
+
+# Some archived runs store the output network in a subdirectory. Search there
+# only when no root-level output network was found.
+if (length(network_files) == 0) {
+  network_files <- list.files(
+    run_path,
+    pattern = "output_network\\.xml(\\.(gz|zst))?$",
+    full.names = TRUE,
+    recursive = TRUE
+  )
+}
+
+if (length(network_files) == 0) {
+  stop(
+    "No MATSim output network was found below: ", run_path,
+    "\nSet network_path manually to the run's output network file."
+  )
+}
+
+# Prefer Zstandard, followed by gzip, if several copies of the network exist.
+zstd_network_files <- network_files[str_ends(network_files, "\\.xml\\.zst$")]
+gzip_network_files <- network_files[str_ends(network_files, "\\.xml\\.gz$")]
+
+if (length(zstd_network_files) > 0) {
+  network_path <- sort(zstd_network_files)[[1]]
+} else if (length(gzip_network_files) > 0) {
+  network_path <- sort(gzip_network_files)[[1]]
+} else {
+  network_path <- sort(network_files)[[1]]
+}
+
+message("Using network: ", network_path)
 
 output_path <- file.path(path, "r-analysis")
 dir.create(output_path, showWarnings = FALSE)
@@ -25,6 +69,11 @@ parking_search_times <- read_delim(
 
 parking_search_times_per_link <- read_delim(
   file.path(path, "parking_search_times_per_link.csv"),
+  delim = ";"
+)
+
+total_parking_search_time_per_link <- read_delim(
+  file.path(path, "total_parking_search_time_per_link.csv"),
   delim = ";"
 )
 
@@ -212,6 +261,181 @@ region_summary <- bind_rows(
 
 print(region_summary)
 write_csv(region_summary, file.path(output_path, "region_summary.csv"))
+
+
+# -----------------------------------------------------------------------------
+# Maps of parking search time per link
+# -----------------------------------------------------------------------------
+
+# matsim::read_network() can read XML and gzip files, but not Zstandard files.
+# For a .zst network, temporarily decompress it and remove the XML afterwards.
+read_output_network <- function(network_path) {
+  if (!str_ends(network_path, "\\.zst$")) {
+    return(matsim::read_network(network_path))
+  }
+
+  zstd <- Sys.which("zstd")
+  if (zstd == "") {
+    stop("The zstd command is required to read: ", network_path)
+  }
+
+  temporary_network <- tempfile(fileext = ".xml")
+  on.exit(unlink(temporary_network), add = TRUE)
+
+  status <- system2(
+    zstd,
+    args = c("--decompress", "--stdout", shQuote(network_path)),
+    stdout = temporary_network
+  )
+
+  if (status != 0) {
+    stop("Could not decompress network: ", network_path)
+  }
+
+  matsim::read_network(temporary_network)
+}
+
+# The MATSim R package adds the coordinates of both end nodes to every link, so
+# the network can be drawn directly with geom_segment().
+network <- read_output_network(network_path)
+
+network_links <- network$links %>%
+  transmute(
+    link_id = as.character(id),
+    x_from = x.from,
+    y_from = y.from,
+    x_to = x.to,
+    y_to = y.to
+  )
+
+# Limit the maps to Berlin. Links without a recorded parking-search event form
+# the grey background, while links with observations are coloured.
+network_berlin <- network_links %>%
+  semi_join(links_in_berlin, by = c("link_id" = "linkId"))
+
+mean_search_time_map_data <- network_berlin %>%
+  inner_join(mean_per_link, by = "link_id")
+
+mean_map_limit <- quantile(
+  mean_search_time_map_data$mean_search_time_min,
+  0.99,
+  na.rm = TRUE
+)
+
+mean_search_time_map <- ggplot() +
+  geom_segment(
+    data = network_berlin,
+    aes(x = x_from, y = y_from, xend = x_to, yend = y_to),
+    color = "grey85",
+    linewidth = 0.08
+  ) +
+  geom_segment(
+    data = mean_search_time_map_data,
+    aes(
+      x = x_from,
+      y = y_from,
+      xend = x_to,
+      yend = y_to,
+      color = mean_search_time_min
+    ),
+    linewidth = 0.35
+  ) +
+  scale_color_viridis_c(
+    option = "magma",
+    trans = "sqrt",
+    limits = c(0, mean_map_limit),
+    oob = scales::squish,
+    name = "Mean search time\n[minutes]"
+  ) +
+  coord_equal() +
+  labs(
+    title = "Mean Parking Search Time per Link",
+    subtitle = paste(
+      "Values above the 99th percentile are capped;",
+      "links without observations are grey"
+    )
+  ) +
+  theme_void(base_size = 12) +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "bold")
+  )
+
+ggsave(
+  file.path(output_path, "mean_parking_search_time_per_link_map.png"),
+  plot = mean_search_time_map,
+  width = 9,
+  height = 8,
+  dpi = 300,
+  bg = "white"
+)
+
+
+# Total search time highlights links on which the largest overall parking-search
+# burden accumulates. This can differ from the mean map when a link has many
+# short search observations.
+total_per_link <- total_parking_search_time_per_link %>%
+  transmute(
+    link_id = as.character(link_id),
+    total_search_time_min = total_parking_search_time / 60
+  )
+
+total_search_time_map_data <- network_berlin %>%
+  inner_join(total_per_link, by = "link_id")
+
+total_map_limit <- quantile(
+  total_search_time_map_data$total_search_time_min,
+  0.99,
+  na.rm = TRUE
+)
+
+total_search_time_map <- ggplot() +
+  geom_segment(
+    data = network_berlin,
+    aes(x = x_from, y = y_from, xend = x_to, yend = y_to),
+    color = "grey85",
+    linewidth = 0.08
+  ) +
+  geom_segment(
+    data = total_search_time_map_data,
+    aes(
+      x = x_from,
+      y = y_from,
+      xend = x_to,
+      yend = y_to,
+      color = total_search_time_min
+    ),
+    linewidth = 0.35
+  ) +
+  scale_color_viridis_c(
+    option = "magma",
+    trans = "sqrt",
+    limits = c(0, total_map_limit),
+    oob = scales::squish,
+    name = "Total search time\n[minutes]"
+  ) +
+  coord_equal() +
+  labs(
+    title = "Total Parking Search Time per Link",
+    subtitle = paste(
+      "Values above the 99th percentile are capped;",
+      "links without observations are grey"
+    )
+  ) +
+  theme_void(base_size = 12) +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "bold")
+  )
+
+ggsave(
+  file.path(output_path, "total_parking_search_time_per_link_map.png"),
+  plot = total_search_time_map,
+  width = 9,
+  height = 8,
+  dpi = 300,
+  bg = "white"
+)
 
 
 ggplot(parking_berlin, aes(x = mean_search_time_min)) +

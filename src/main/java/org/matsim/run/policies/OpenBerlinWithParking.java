@@ -235,11 +235,14 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
         return Integer.parseInt(value); // Otherwise, parse the integer
     }
 
-    public void assignOnStreetParking(Scenario scenario) {
-        switch (onStreetParkingAssignment) {
-            case REGIONAL_TOTALS -> assignOnStreetParkingFromRegionalTotals(scenario);
+    public List<ParkingAssignmentStats> assignOnStreetParking(Scenario scenario) {
+        return switch (onStreetParkingAssignment) {
+            case REGIONAL_TOTALS -> {
+                assignOnStreetParkingFromRegionalTotals(scenario);
+                yield List.of();
+            }
             case PARKING_DATA -> assignOnStreetParkingFromParkingData(scenario);
-        }
+        };
     }
 
     private void assignOnStreetParkingFromRegionalTotals(Scenario scenario) {
@@ -290,7 +293,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
         log.info("Assigned " + assignedParkingSpotsRestOfBerlin + " full-population on street parking spots to the rest of Berlin based on a density of " + spotsPerMeterRestOfBerlin + " spots per meter.");
     }
 
-    private void assignOnStreetParkingFromParkingData(Scenario scenario) {
+    private List<ParkingAssignmentStats> assignOnStreetParkingFromParkingData(Scenario scenario) {
         requireOption(parkingInside, "--parking-inside", OnStreetParkingAssignment.PARKING_DATA);
         requireOption(parkingOutside, "--parking-outside", OnStreetParkingAssignment.PARKING_DATA);
 
@@ -299,11 +302,13 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
                 .toList();
         QuadTree<Link> linkIndex = createLinkIndex(eligibleLinks);
 
-        assignParkingData(parkingInside, "errechnete_anzahl_parkplaetze", linkIndex, "inside Hundekopf");
-        assignParkingData(parkingOutside, "anzahl_parkplaetze", linkIndex, "in the rest of Berlin");
+        return List.of(
+                assignParkingData(parkingInside, "errechnete_anzahl_parkplaetze", linkIndex, "inside Hundekopf"),
+                assignParkingData(parkingOutside, "anzahl_parkplaetze", linkIndex, "in the rest of Berlin")
+        );
     }
 
-    private static void assignParkingData(
+    private static ParkingAssignmentStats assignParkingData(
             String file,
             String capacityField,
             QuadTree<Link> linkIndex,
@@ -313,6 +318,8 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
         int assignedParkingSpots = 0;
         double totalDistance = 0;
         double maximumDistance = 0;
+        double[] matchingDistances = new double[parkingPolygons.size()];
+        int polygonIndex = 0;
 
         for (ParkingPolygon parking : parkingPolygons) {
             Coordinate centroid = parking.geometry().getCentroid().getCoordinate();
@@ -329,11 +336,36 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
             assignedParkingSpots += parking.capacity();
             totalDistance += distance;
             maximumDistance = Math.max(maximumDistance, distance);
+            matchingDistances[polygonIndex++] = distance;
         }
 
         double meanDistance = parkingPolygons.isEmpty() ? 0 : totalDistance / parkingPolygons.size();
-        log.info("Assigned {} full-population on-street parking spots from {} polygons {}. Mean matching distance: {} m; maximum: {} m.",
-                assignedParkingSpots, parkingPolygons.size(), area, meanDistance, maximumDistance);
+        Arrays.sort(matchingDistances);
+        ParkingAssignmentStats stats = new ParkingAssignmentStats(
+                area,
+                assignedParkingSpots,
+                parkingPolygons.size(),
+                meanDistance,
+                percentile(matchingDistances, 0.50),
+                percentile(matchingDistances, 0.90),
+                percentile(matchingDistances, 0.95),
+                maximumDistance
+        );
+
+        log.info("Assigned {} full-population on-street parking spots from {} polygons {}. "
+                        + "Matching distance in meters: mean={}, median={}, p90={}, p95={}, maximum={}.",
+                stats.assignedParkingSpots(), stats.polygonCount(), stats.area(),
+                stats.meanDistance(), stats.medianDistance(), stats.p90Distance(),
+                stats.p95Distance(), stats.maximumDistance());
+        return stats;
+    }
+
+    private static double percentile(double[] sortedValues, double percentile) {
+        if (sortedValues.length == 0) {
+            return 0;
+        }
+        // Use the same nearest-rank convention as the original matching-quality report.
+        return sortedValues[Math.min((int) (percentile * sortedValues.length), sortedValues.length - 1)];
     }
 
     private static List<ParkingPolygon> readParkingGeoJson(String file, String capacityField) {
@@ -410,6 +442,18 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
     }
 
     private record ParkingPolygon(Geometry geometry, int capacity) {
+    }
+
+    public record ParkingAssignmentStats(
+            String area,
+            int assignedParkingSpots,
+            int polygonCount,
+            double meanDistance,
+            double medianDistance,
+            double p90Distance,
+            double p95Distance,
+            double maximumDistance
+    ) {
     }
 
 }

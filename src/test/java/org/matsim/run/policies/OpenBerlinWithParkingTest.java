@@ -85,7 +85,8 @@ class OpenBerlinWithParkingTest {
                 "--parking-inside=" + PARKING_INSIDE,
                 "--parking-outside=" + PARKING_OUTSIDE
         );
-        parkingDataAssignment.assignOnStreetParking(scenario);
+        List<OpenBerlinWithParking.ParkingAssignmentStats> matchingStats =
+                parkingDataAssignment.assignOnStreetParking(scenario);
 
         int assignedFromParkingDataInBerlin = scenario.getNetwork().getLinks().values().stream()
                 .filter(link -> ShpGeometryUtils.isCoordInPreparedGeometries(link.getCoord(), berlin))
@@ -94,6 +95,28 @@ class OpenBerlinWithParkingTest {
 
         assertThat(assignedFromParkingDataInBerlin)
                 .isCloseTo(assignedInBerlin, offset(assignedInBerlin / 20));
+
+        // Verify that the parking polygons are still assigned to nearby network links.
+        assertThat(matchingStats).hasSize(2);
+        assertMatchingStats(matchingStats.get(0), 45_917, 33.7, 29.5, 64.4, 75.9, 323.6);
+        assertMatchingStats(matchingStats.get(1), 214_173, 42.9, 35.6, 79.5, 100.9, 889.3);
+    }
+
+    private static void assertMatchingStats(
+            OpenBerlinWithParking.ParkingAssignmentStats stats,
+            int polygonCount,
+            double mean,
+            double median,
+            double p90,
+            double p95,
+            double maximum
+    ) {
+        assertThat(stats.polygonCount()).isEqualTo(polygonCount);
+        assertThat(stats.meanDistance()).isCloseTo(mean, offset(0.05));
+        assertThat(stats.medianDistance()).isCloseTo(median, offset(0.05));
+        assertThat(stats.p90Distance()).isCloseTo(p90, offset(0.05));
+        assertThat(stats.p95Distance()).isCloseTo(p95, offset(0.05));
+        assertThat(stats.maximumDistance()).isCloseTo(maximum, offset(0.05));
     }
 
     private static int onStreetParkingSpots(Link link) {
