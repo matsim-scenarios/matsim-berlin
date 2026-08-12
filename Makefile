@@ -4,6 +4,22 @@
 ###################################
 JAR := matsim-berlin-*.jar
 VERSION := v7.1
+
+## Sample size of the generated population, in percent. Override per invocation, e.g.
+##   make prepare-calibration SAMPLE=10
+## Only the samples hardcoded in RunOpenBerlinCalibration (SampleOptions(25, 10, 3, 1))
+## work, because the cadyts run selects the sample via the --<N>pct switch.
+SAMPLE ?= 25
+SAMPLE_SIZE_1 := 0.01
+SAMPLE_SIZE_3 := 0.03
+SAMPLE_SIZE_10 := 0.1
+SAMPLE_SIZE_25 := 0.25
+SAMPLE_SIZE := $(SAMPLE_SIZE_$(SAMPLE))
+ifeq ($(SAMPLE_SIZE),)
+$(error SAMPLE=$(SAMPLE) is not supported. Use one of: 1 3 10 25)
+endif
+## the token that goes into every generated filename
+SAMPLE_PCT := $(SAMPLE)pct
 CRS := EPSG:25832
 MAKE_XMX ?= 20G
 
@@ -42,8 +58,8 @@ BERLINPUBLIC := $(SVN_PATH)/public-svn/matsim/scenarios/countries/de/berlin
 #GERMAN_FREIGHT_NETWORK := $(SVN_PATH)/public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/germany-europe-network.xml.gz
 
 ## For the time being, use the old version
-BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT := $(BERLINPUBLIC)/berlin-v7.0/input/berlin-longHaulFreight-v7.0-25pct.plans.xml.gz
-#BERLIN_SMALLSCALE_COMMERCIAL_25PCT := $(BERLINPUBLIC)/berlin-v7.0/input/berlin-small-scale-commercialTraffic-v7.0-25pct.plans.xml.gz
+BERLIN_BRANDENBURG_LONGHAULFREIGHT := $(BERLINPUBLIC)/berlin-v7.0/input/berlin-longHaulFreight-v7.0-25pct.plans.xml.gz
+#BERLIN_SMALLSCALE_COMMERCIAL := $(BERLINPUBLIC)/berlin-v7.0/input/berlin-small-scale-commercialTraffic-v7.0-25pct.plans.xml.gz
 
 AREA_POLY := input/v7.0/area/area.poly
 AREA_SHP := input/v7.0/area/area.shp
@@ -107,31 +123,35 @@ NETWORK_MATSIM_PT := $(OUTPUT)/berlin-$(VERSION)-network-with-pt.xml.gz
 VMZ_COUNTS := $(OUTPUT)/berlin-$(VERSION)-counts-vmz.xml.gz
 LINK_GEOMETRIES := $(OUTPUT)/berlin-$(VERSION)-network-linkGeometries.csv
 FACILITIES_XML := $(OUTPUT)/berlin-$(VERSION)-facilities.xml.gz
-BERLIN_ONLY_25PCT := $(OUTPUT)/berlin-only-$(VERSION)-25pct.plans.xml.gz
-BRANDENBURG_ONLY_25PCT := $(OUTPUT)/brandenburg-only-$(VERSION)-25pct.plans.xml.gz
-BERLIN_BRANDENBURG_STATIC_25PCT := $(OUTPUT)/berlin-static-$(VERSION)-25pct.plans.xml.gz
-BERLIN_BRANDENBURG_ACTS_25PCT := $(OUTPUT)/berlin-activities-$(VERSION)-25pct.plans.xml.gz
-BERLIN_BRANDENBURG_INITIAL_25PCT := $(OUTPUT)/berlin-initial-$(VERSION)-25pct.plans.xml.gz
-BERLIN_CADYTS_INPUT_25PCT := $(OUTPUT)/berlin-cadyts-input-$(VERSION)-25pct.plans.xml.gz
-BERLIN_CADYTS_OUTPUT_25PCT := $(OUTPUT)/cadyts/cadyts.output_plans.xml.gz
-BERLIN_CADYTS_FINAL_25PCT := $(OUTPUT)/berlin-$(VERSION)-25pct.plans_cadyts.xml.gz
-BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS := $(OUTPUT)/berlin-$(VERSION)-25pct.plans-initial.xml.gz
-BERLIN_AFTER_CHOICE_EXPERIMENTS := $(OUTPUT)/berlin-$(VERSION).plans.xml.gz
-BERLIN_DOWNTOWN_3PCT_PLANS := $(OUTPUT)/inner-city/berlin-downtown-$(VERSION)-3pct.xml.gz
-BERLIN_3PCT_PLANS := $(OUTPUT)/berlin-$(VERSION)-3pct.plans.xml.gz
+BERLIN_ONLY := $(OUTPUT)/berlin-only-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
+BRANDENBURG_ONLY := $(OUTPUT)/brandenburg-only-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
+BERLIN_BRANDENBURG_STATIC := $(OUTPUT)/berlin-static-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
+BERLIN_BRANDENBURG_ACTS := $(OUTPUT)/berlin-activities-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
+BERLIN_BRANDENBURG_INITIAL := $(OUTPUT)/berlin-initial-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
+BERLIN_CADYTS_INPUT := $(OUTPUT)/berlin-cadyts-input-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
+## one cadyts run directory per sample, so samples can be built independently
+BERLIN_CADYTS_DIR := $(OUTPUT)/cadyts-$(SAMPLE_PCT)
+BERLIN_CADYTS_CONFIG := $(OUTPUT)/cadyts-$(SAMPLE_PCT).config.xml
+BERLIN_CADYTS_OUTPUT := $(BERLIN_CADYTS_DIR)/cadyts.output_plans.xml.gz
+BERLIN_CADYTS_FINAL := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans_cadyts.xml.gz
+BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans-initial.xml.gz
+BERLIN_AFTER_CHOICE_EXPERIMENTS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
+BERLIN_DOWNTOWN_PLANS := $(OUTPUT)/inner-city/berlin-downtown-$(VERSION)-$(SAMPLE_PCT).xml.gz
 # this is coming from an external process. You can set it via environment-variable. For more info see comment 
 ## below where this file is used. 
 MODECHOICE_BASELINE_PLANS := ""
 
 ## long haul freight currently does not work; see the commented-out inputs above
-#BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT := $(OUTPUT)/berlin-longHaulFreight-$(VERSION)-25pct.plans.xml.gz
+#BERLIN_BRANDENBURG_LONGHAULFREIGHT := $(OUTPUT)/berlin-longHaulFreight-$(VERSION)-25pct.plans.xml.gz
 COMMERCIAL_FACILITIES := $(OUTPUT)/commercialFacilities.xml.gz
-BERLIN_SMALLSCALE_COMMERCIAL_25PCT := $(OUTPUT)/berlin-small-scale-commercialTraffic-$(VERSION)-25pct.plans.xml.gz
+BERLIN_SMALLSCALE_COMMERCIAL := $(OUTPUT)/berlin-small-scale-commercialTraffic-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
+## jsprit scratch output; per sample so parallel builds do not clobber each other
+COMMERCIAL_TRAFFIC_OUT := $(OUTPUT)/commercialPersonTraffic-$(SAMPLE_PCT)
 
 RANDOM_DRT_FLEET_10K := $(OUTPUT)/berlin-$(VERSION).drt-by-rndLocations-10000vehicles-4seats.xml.gz
 
-## this is produced together with BERLIN_CADYTS_FINAL_25PCT, it has an own target now
-BERLIN_CADYTS_SELECTION_25PCT := $(OUTPUT)/berlin-$(VERSION)-25pct.plans_selection_cadyts.csv
+## this is produced together with BERLIN_CADYTS_FINAL, it has an own target now
+BERLIN_CADYTS_SELECTION := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans_selection_cadyts.csv
 ## its produced together with the commercial-facilities and has an own target now
 DATA_DISTR_PER_ZONE := $(OUTPUT)/dataDistributionPerZone.csv
 
@@ -267,17 +287,17 @@ $(FACILITIES_XML): $(NETWORK_MATSIM) $(FACILITIES_GPKG) $(FACILITY_MAPPING) $(PL
 #TODO: create veh types xml file in code; incl. commercial types from RE and longDistanceFreight types from CL
 
 # (presumably generates a synthetic population for Berlin from the "PLR" data, i.e. the population attribute marginals at LOR500 level)
-$(BERLIN_ONLY_25PCT): $(PLR_2013_2020) $(PLANUNGSRAUM_25833) $(FACILITIES_GPKG) | setup
+$(BERLIN_ONLY): $(PLR_2013_2020) $(PLANUNGSRAUM_25833) $(FACILITIES_GPKG) | setup
 	$(JAVA_APP) prepare berlin-population\
 		--input $<\
-		--sample 0.25\
+		--sample $(SAMPLE_SIZE)\
 		--shp $(word 2,$^) --shp-crs EPSG:25833\
 		--facilities $(word 3,$^) --facilities-attr resident\
 		--output $@
 
-$(BRANDENBURG_ONLY_25PCT): $(FACILITIES_GPKG) $(VG5000_GEM) $(REGIONALSTAT_POP) $(REGIONALSTAT_EMPL) | setup
+$(BRANDENBURG_ONLY): $(FACILITIES_GPKG) $(VG5000_GEM) $(REGIONALSTAT_POP) $(REGIONALSTAT_EMPL) | setup
 	$(JAVA_APP) prepare brandenburg-population\
-	 --sample 0.25\
+	 --sample $(SAMPLE_SIZE)\
 	 --shp $(word 2,$^)\
 	 --population $(word 3,$^)\
 	 --employees $(word 4,$^)\
@@ -285,13 +305,13 @@ $(BRANDENBURG_ONLY_25PCT): $(FACILITIES_GPKG) $(VG5000_GEM) $(REGIONALSTAT_POP) 
 	 --output $@
 
 # (merges the two population, and joins spatial category into each person)
-$(BERLIN_BRANDENBURG_STATIC_25PCT): $(BERLIN_ONLY_25PCT) $(BRANDENBURG_ONLY_25PCT) $(REGIOSTAR) | setup
+$(BERLIN_BRANDENBURG_STATIC): $(BERLIN_ONLY) $(BRANDENBURG_ONLY) $(REGIOSTAR) | setup
 	$(JAVA_APP) prepare merge-populations $< $(word 2, $^)\
 	 --output $@
 
 	$(JAVA_APP) prepare lookup-regiostar --input $@ --output $@ --xls $(word 3, $^)
 
-$(BERLIN_BRANDENBURG_ACTS_25PCT): $(BERLIN_BRANDENBURG_STATIC_25PCT) $(SRV_PERSONS) $(SRV_ACTS) $(SRV_ZONES) $(FACILITIES_XML) $(NETWORK_MATSIM) | setup
+$(BERLIN_BRANDENBURG_ACTS): $(BERLIN_BRANDENBURG_STATIC) $(SRV_PERSONS) $(SRV_ACTS) $(SRV_ZONES) $(FACILITIES_XML) $(NETWORK_MATSIM) | setup
 	$(JAVA_APP) prepare activity-sampling --seed 1 --input $< --output $@ --persons $(word 2, $^) --activities $(SRV_ACTS)
 
 	$(JAVA_APP) prepare assign-reference-population --population $@ --output $@\
@@ -306,7 +326,7 @@ $(BERLIN_BRANDENBURG_ACTS_25PCT): $(BERLIN_BRANDENBURG_STATIC_25PCT) $(SRV_PERSO
 # Input tables can also be found on shared-svn (restricted access): https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-berlin/data/SrV/converted/
 # Assign activity locations to agents (except home, which is set before).
 # This computes work-locations based on REGIONALSTAT_COMMUTER & BERLIN_COMMUTER, edu- and secondary-locations are selected based on a distance from the last location, next location is ignored
-$(BERLIN_BRANDENBURG_INITIAL_25PCT): $(BERLIN_BRANDENBURG_ACTS_25PCT) $(FACILITIES_XML) $(NETWORK_MATSIM) $(VG5000_GEM) $(REGIONALSTAT_COMMUTER) $(BERLIN_COMMUTER) | setup
+$(BERLIN_BRANDENBURG_INITIAL): $(BERLIN_BRANDENBURG_ACTS) $(FACILITIES_XML) $(NETWORK_MATSIM) $(VG5000_GEM) $(REGIONALSTAT_COMMUTER) $(BERLIN_COMMUTER) | setup
 	$(JAVA_APP) prepare init-location-choice\
 	 --input $<\
 	 --output $@\
@@ -317,7 +337,7 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT): $(BERLIN_BRANDENBURG_ACTS_25PCT) $(FACILITI
 	 --berlin-commuter $(word 6,$^)
 
 ## Freight
-#$(BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT): $(GERMAN_FREIGHT_25PCT) $(GERMAN_FREIGHT_NETWORK) $(AREA_SHP) | setup
+#$(BERLIN_BRANDENBURG_LONGHAULFREIGHT): $(GERMAN_FREIGHT_25PCT) $(GERMAN_FREIGHT_NETWORK) $(AREA_SHP) | setup
 #	$(JAVA_APP) prepare extract-freight-trips $<\
 #	 --network $(word 2,$^)\
 #	 --input-crs $(CRS)\
@@ -345,12 +365,12 @@ $(COMMERCIAL_FACILITIES): $(REGION_4326) $(BB_ZONES_4326) $(BB_BUILDINGS_4326) $
 $(DATA_DISTR_PER_ZONE): $(COMMERCIAL_FACILITIES) | setup
 	echo "this is only here because $(DATA_DISTR_PER_ZONE) is created together with $(COMMERCIAL_FACILITIES)"
 
-$(BERLIN_SMALLSCALE_COMMERCIAL_25PCT): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DATA_DISTR_PER_ZONE) $(BB_ZONES_VKZ_4326) | setup
+$(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DATA_DISTR_PER_ZONE) $(BB_ZONES_VKZ_4326) | setup
 	$(JAVA_APP) prepare generate-small-scale-commercial-traffic\
 	  input/$(VERSION)/berlin-$(VERSION)-freight.config.xml\
 	 --pathToZoneAttributes $(abspath $(word 3,$^))\
 	 --pathToCommercialFacilities $(abspath $(word 2,$^))\
-	 --sample 0.25\
+	 --sample $(SAMPLE_SIZE)\
 	 --jspritIterations 10\
 	 --creationOption createNewCarrierFile\
 	 --network $(abspath $<)\
@@ -362,45 +382,45 @@ $(BERLIN_SMALLSCALE_COMMERCIAL_25PCT): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES
 	 --resistanceFactor_goodsTraffic 0.1\
 	 --numberOfPlanVariantsPerAgent 5\
 	 --nameOutputPopulation $(notdir $@)\
-	 --pathOutput output/commercialPersonTraffic
+	 --pathOutput $(COMMERCIAL_TRAFFIC_OUT)
 
-	mv output/commercialPersonTraffic/$(notdir $@) $@
-	#rm -r output/commercialPersonTraffic delete or keep?
+	mv $(COMMERCIAL_TRAFFIC_OUT)/$(notdir $@) $@
+	#rm -r $(COMMERCIAL_TRAFFIC_OUT) delete or keep?
 
-$(BERLIN_CADYTS_INPUT_25PCT): $(BERLIN_BRANDENBURG_INITIAL_25PCT) $(BERLIN_SMALLSCALE_COMMERCIAL_25PCT) | setup
+$(BERLIN_CADYTS_INPUT): $(BERLIN_BRANDENBURG_INITIAL) $(BERLIN_SMALLSCALE_COMMERCIAL) | setup
 	$(JAVA_APP) prepare merge-populations $^\
 	 --output $@
 
 $(VEHICLESFILE_OUT): $(VEHICLESFILE_IN) | setup
 	cp $(VEHICLESFILE_IN) $(VEHICLESFILE_OUT)
 
-$(BERLIN_CADYTS_OUTPUT_25PCT): $(BERLIN_CADYTS_INPUT_25PCT) $(NETWORK_MATSIM_PT) $(VEHICLESFILE_OUT) | setup
-	cat input/cadyts-config-template.xml | sed -e "s/==VERSION==/$(VERSION)/g" > ${OUTPUT}/cadyts.config.xml
-	./src/main/sh/cadyts.sh ${OUTPUT}/cadyts.config.xml $(VERSION)
+$(BERLIN_CADYTS_OUTPUT): $(BERLIN_CADYTS_INPUT) $(NETWORK_MATSIM_PT) $(VEHICLESFILE_OUT) | setup
+	cat input/cadyts-config-template.xml | sed -e "s/==VERSION==/$(VERSION)/g" -e "s/==SAMPLE==/$(SAMPLE_PCT)/g" > $(BERLIN_CADYTS_CONFIG)
+	./src/main/sh/cadyts.sh $(BERLIN_CADYTS_CONFIG) $(VERSION) $(SAMPLE_PCT)
 
-$(BERLIN_CADYTS_FINAL_25PCT): $(BERLIN_CADYTS_OUTPUT_25PCT) $(BERLIN_CADYTS_INPUT_25PCT) | setup
+$(BERLIN_CADYTS_FINAL): $(BERLIN_CADYTS_OUTPUT) $(BERLIN_CADYTS_INPUT) | setup
 	$(JAVA_APP) prepare extract-plans-idx\
 	 --input $<\
-	 --output $(BERLIN_CADYTS_SELECTION_25PCT)
+	 --output $(BERLIN_CADYTS_SELECTION)
 
 	$(JAVA_APP) prepare select-plans-idx\
 	 --input $(word 2,$^)\
-	 --csv $(BERLIN_CADYTS_SELECTION_25PCT)\
+	 --csv $(BERLIN_CADYTS_SELECTION)\
 	 --output $@
  
-$(BERLIN_CADYTS_SELECTION_25PCT): $(BERLIN_CADYTS_FINAL_25PCT) | setup
-	echo "check if $(BERLIN_CADYTS_SELECTION_25PCT) was produced" 
+$(BERLIN_CADYTS_SELECTION): $(BERLIN_CADYTS_FINAL) | setup
+	echo "check if $(BERLIN_CADYTS_SELECTION) was produced" 
 
 # These depend on the output of cadyts calibration runs
 # should we really use NETWORK_MATSIM here or not maybe NETWORK_MATSIM_PT
-$(BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MATSIM) $(BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT) $(BERLIN_CADYTS_FINAL_25PCT) $(AREA_SHP) | setup
+$(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MATSIM) $(BERLIN_BRANDENBURG_LONGHAULFREIGHT) $(BERLIN_CADYTS_FINAL) $(AREA_SHP) | setup
 	$(JAVA_APP) prepare scenario-cutout\
 	 --population $(word 4,$^)\
 	 --facilities $<\
 	 --network $(word 2,$^)\
 	 --output-population $@\
-	 --output-network $(OUTPUT)/network-cutout.xml.gz\
-	 --output-facilities $(OUTPUT)/facilities-cutout.xml.gz\
+	 --output-network $(OUTPUT)/network-cutout-$(SAMPLE_PCT).xml.gz\
+	 --output-facilities $(OUTPUT)/facilities-cutout-$(SAMPLE_PCT).xml.gz\
 	 --input-crs $(CRS)\
 	 --shp $(word 5,$^)
 
@@ -453,7 +473,7 @@ $(BERLIN_AFTER_CHOICE_EXPERIMENTS): $(MODECHOICE_BASELINE_PLANS) | setup
 #	 	--remove-unselected-plans\
 #	 	--output $(subst 10pct,3pct,$@)
 
-$(BERLIN_DOWNTOWN_3PCT_PLANS): $(BERLIN_INNER_CITY_GPKG) $(BERLIN_3PCT_PLANS) $(FACILITIES_XML) $(NETWORK_MATSIM) | setup
+$(BERLIN_DOWNTOWN_PLANS): $(BERLIN_INNER_CITY_GPKG) $(BERLIN_AFTER_CHOICE_EXPERIMENTS) $(FACILITIES_XML) $(NETWORK_MATSIM) | setup
 
 	mkdir -p $(OUTPUT)/inner-city
 
@@ -462,8 +482,8 @@ $(BERLIN_DOWNTOWN_3PCT_PLANS): $(BERLIN_INNER_CITY_GPKG) $(BERLIN_3PCT_PLANS) $(
 	 --facilities $(word 3,$^)\
 	 --network $(word 4,$^)\
 	 --output-population $@\
-	 --output-network $(OUTPUT)/inner-city/berlin-downtown-$(VERSION)-network.xml.gz\
-	 --output-facilities $(OUTPUT)/inner-city/berlin-downtown-$(VERSION)-facilities.xml.gz\
+	 --output-network $(OUTPUT)/inner-city/berlin-downtown-$(VERSION)-$(SAMPLE_PCT)-network.xml.gz\
+	 --output-facilities $(OUTPUT)/inner-city/berlin-downtown-$(VERSION)-$(SAMPLE_PCT)-facilities.xml.gz\
 	 --input-crs $(CRS)\
 	 --shp "$<"
 
@@ -483,23 +503,23 @@ $(RANDOM_DRT_FLEET_10K): $(NETWORK_MATSIM) $(BERLIN_SHP_25832) $(BERLIN_INNER_CI
 	 --seats 4
 
 setup:
-	echo "setup directories"
+	echo "setup directories (SAMPLE=$(SAMPLE) -> $(SAMPLE_SIZE), files tagged $(SAMPLE_PCT))"
 	mkdir -p $(OUTPUT)
 	mkdir -p $(TMP_DIR)
 
 prepare-network-and-counts: $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	echo done
 
-prepare-freight: $(BERLIN_SMALLSCALE_COMMERCIAL_25PCT)
+prepare-freight: $(BERLIN_SMALLSCALE_COMMERCIAL)
 
-prepare-calibration: $(BERLIN_CADYTS_INPUT_25PCT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
+prepare-calibration: $(BERLIN_CADYTS_INPUT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	#make -Bndri prepare-calibration | make2graph | gv2gml -o prepare-calibration_graph.gml
 	echo "Done"
 	
-prepare-run-cadyts: $(BERLIN_CADYTS_OUTPUT_25PCT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
+prepare-run-cadyts: $(BERLIN_CADYTS_OUTPUT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	echo "done"
 
-prepare-initial: $(BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS) $(NETWORK_MATSIM_PT)
+prepare-initial: $(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS) $(NETWORK_MATSIM_PT)
 	#make -Bndri prepare-initial | make2graph | gv2gml -o prepare-initial_graph.gml
 	echo "Done"
 

@@ -10,6 +10,9 @@ jar="matsim-berlin-*.jar"
 MEMORY="${MAKE_XMX:-60G}"
 CONFIG=$1
 VERSION=$2
+## sample token, e.g. 25pct / 10pct / 3pct / 1pct. Must be one of the samples declared in
+## RunOpenBerlinCalibration's SampleOptions, since it is passed through as the --<N>pct switch.
+SAMPLE_PCT=${3:-25pct}
 
 # check if we're on SLURM-cluster or if we really wan't to run this locally
 checkIfSlurmAndChangeDirOrAbort
@@ -19,7 +22,7 @@ hostname
 pwd
 
 ## the location of the population-file needs to be relative to the cadyts-config.xml, which is kind of weird to me
-arguments="--output output/cadyts --25pct --iterations 50 --population ./berlin-cadyts-input-${VERSION}-25pct.plans.xml.gz"
+arguments="--output output/cadyts-${SAMPLE_PCT} --${SAMPLE_PCT} --iterations 50 --population ./berlin-cadyts-input-${VERSION}-${SAMPLE_PCT}.plans.xml.gz"
 
 # Don't change anything below
 ################
