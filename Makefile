@@ -316,11 +316,6 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT): $(BERLIN_BRANDENBURG_ACTS_25PCT) $(FACILITI
 	 --commuter $(word 5,$^)\
 	 --berlin-commuter $(word 6,$^)
 
-	# For debugging and visualization
-	$(JAVA_APP) prepare downsample-population $@\
-		 --sample-size 0.25\
-		 --samples 0.1 0.03 0.01\
-
 ## Freight-Processing currrently does not work. Should probably move to a separate makefile
 #$(BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT): $(GERMAN_FREIGHT_25PCT) $(GERMAN_FREIGHT_NETWORK) $(AREA_SHP) | setup
 #
@@ -376,11 +371,6 @@ $(BERLIN_CADYTS_INPUT_25PCT): $(BERLIN_BRANDENBURG_INITIAL_25PCT) $(BERLIN_SMALL
 	$(JAVA_APP) prepare merge-populations $^\
 	 --output $@
 
-	# For debugging and visualization
-	$(JAVA_APP) prepare downsample-population $@\
-		 --sample-size 0.25\
-		 --samples 0.1 0.03 0.01\
-
 $(VEHICLESFILE_OUT): $(VEHICLESFILE_IN) | setup
 	cp $(VEHICLESFILE_IN) $(VEHICLESFILE_OUT)
 
@@ -435,10 +425,6 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MA
 
 	$(JAVA_APP) prepare merge-populations $@ $(word 3,$^)\
 		--output $@
-
-	$(JAVA_APP) prepare downsample-population $@\
-		 --sample-size 0.25\
-		 --samples 0.1 0.03 0.01 0.001\
 
 #  According to a discussion with CR: The following step is based on the output of the constant-calibration which is executed 
 # manually with src/main/sh/runCalib.sh and src/main/python/calibrate.py. In the following step only the first two sub-steps 
