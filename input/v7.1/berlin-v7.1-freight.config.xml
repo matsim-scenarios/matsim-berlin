@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "http://www.matsim.org/files/dtd/config_v2.dtd">
+<!--
+	Minimal config for the small-scale commercial traffic generation (make prepare-freight).
+
+	This step only needs a CRS, an output directory and a vehicle types file with cost
+	information; network, facilities, plans, transit and the sample size are all set by
+	GenerateSmallScaleCommercialTrafficDemand from its command line options.
+
+	It deliberately does not reuse the berlin-v7.1-[sample]pct.config.xml run configs: those
+	point their vehicles/plans/facilities at the calibrated run output on the public SVN,
+	which would be downloaded on every invocation.
+-->
+<config>
+	<module name="global">
+		<param name="coordinateSystem" value="EPSG:25832"/>
+		<param name="insistingOnDeprecatedConfigVersion" value="false"/>
+		<param name="numberOfThreads" value="16"/>
+	</module>
+	<module name="controller">
+		<param name="outputDirectory" value="./output/commercialPersonTraffic"/>
+		<param name="overwriteFiles" value="deleteDirectoryIfExists"/>
+		<param name="routingAlgorithmType" value="SpeedyALT"/>
+	</module>
+	<module name="vehicles">
+		<!-- relative to this config file; same file the rest of the pipeline copies to $(VEHICLESFILE_OUT) -->
+		<param name="vehiclesFile" value="../v7.0/berlin-v7.0-vehicleTypes.xml"/>
+	</module>
+	<module name="facilities">
+		<!-- the actual file is set to the generated commercial facilities via the pathToCommercialFacilities option -->
+		<param name="facilitiesSource" value="fromFile"/>
+	</module>
+</config>

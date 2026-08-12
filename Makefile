@@ -26,7 +26,7 @@ SIM_PERIOD_DAYS ?= 1.125
 # Scenario creation tool
 JAVA_APP := java -Xmx$(MAKE_XMX) -XX:+UseParallelGC -Dorg.geotools.referencing.forceXY=true -Djava.io.tmpdir=$(TMP_DIR) -cp $(JAR) org.matsim.prepare.RunOpenBerlinCalibration
 
-.PHONY: setup prepare prepare-network-and-counts prepare-calibration prepare-run-cadyts prepare-initial prepare-drt
+.PHONY: setup prepare prepare-network-and-counts prepare-freight prepare-calibration prepare-run-cadyts prepare-initial prepare-drt
 .DELETE_ON_ERROR:
 
 ###################################
@@ -43,7 +43,7 @@ BERLINPUBLIC := $(SVN_PATH)/public-svn/matsim/scenarios/countries/de/berlin
 
 ## For the time being, use the old version
 BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT := $(BERLINPUBLIC)/berlin-v7.0/input/berlin-longHaulFreight-v7.0-25pct.plans.xml.gz
-BERLIN_SMALLSCALE_COMMERCIAL_25PCT := $(BERLINPUBLIC)/berlin-v7.0/input/berlin-small-scale-commercialTraffic-v7.0-25pct.plans.xml.gz
+#BERLIN_SMALLSCALE_COMMERCIAL_25PCT := $(BERLINPUBLIC)/berlin-v7.0/input/berlin-small-scale-commercialTraffic-v7.0-25pct.plans.xml.gz
 
 AREA_POLY := input/v7.0/area/area.poly
 AREA_SHP := input/v7.0/area/area.shp
@@ -123,10 +123,10 @@ BERLIN_3PCT_PLANS := $(OUTPUT)/berlin-$(VERSION)-3pct.plans.xml.gz
 ## below where this file is used. 
 MODECHOICE_BASELINE_PLANS := ""
 
-## this currrently does not work. Should probably move to a separate makefile
+## long haul freight currently does not work; see the commented-out inputs above
 #BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT := $(OUTPUT)/berlin-longHaulFreight-$(VERSION)-25pct.plans.xml.gz
-#COMMERCIAL_FACILITIES := $(OUTPUT)/commercialFacilities.xml.gz
-#BERLIN_SMALLSCALE_COMMERCIAL_25PCT := $(OUTPUT)/berlin-small-scale-commercialTraffic-$(VERSION)-25pct.plans.xml.gz
+COMMERCIAL_FACILITIES := $(OUTPUT)/commercialFacilities.xml.gz
+BERLIN_SMALLSCALE_COMMERCIAL_25PCT := $(OUTPUT)/berlin-small-scale-commercialTraffic-$(VERSION)-25pct.plans.xml.gz
 
 RANDOM_DRT_FLEET_10K := $(OUTPUT)/berlin-$(VERSION).drt-by-rndLocations-10000vehicles-4seats.xml.gz
 
@@ -316,10 +316,8 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT): $(BERLIN_BRANDENBURG_ACTS_25PCT) $(FACILITI
 	 --commuter $(word 5,$^)\
 	 --berlin-commuter $(word 6,$^)
 
-## Freight-Processing currrently does not work. Should probably move to a separate makefile
+## Freight
 #$(BERLIN_BRANDENBURG_LONGHAULFREIGHT_25PCT): $(GERMAN_FREIGHT_25PCT) $(GERMAN_FREIGHT_NETWORK) $(AREA_SHP) | setup
-#
-# $(NETWORK_MATSIM) was defined as input but never used?!
 #	$(JAVA_APP) prepare extract-freight-trips $<\
 #	 --network $(word 2,$^)\
 #	 --input-crs $(CRS)\
@@ -328,44 +326,46 @@ $(BERLIN_BRANDENBURG_INITIAL_25PCT): $(BERLIN_BRANDENBURG_ACTS_25PCT) $(FACILITI
 #	 --cut-on-boundary\
 #	 --output $@
 
-#$(COMMERCIAL_FACILITIES): $(REGION_4326) $(BB_ZONES_4326) $(BB_BUILDINGS_4326) $(BERLIN_LANDUSE_4326) $(COMMERCIAL_TRAFFIC_AREA_DATA) | setup
-#	$(JAVA_APP) prepare create-data-distribution-of-structure-data\
-#	 --outputFacilityFile $@\
-#	 --outputDataDistributionFile $(DATA_DISTR_PER_ZONE)\
-#	 --landuseConfiguration useOSMBuildingsAndLanduse\
-#	 --regionsShapeFileName $<\
-#	 --regionsShapeRegionColumn "GEN"\
-#	 --zoneShapeFileName $(word 2,$^)\
-#	 --zoneShapeFileNameColumn "id"\
-#	 --buildingsShapeFileName $(word 3,$^)\
-#	 --shapeFileBuildingTypeColumn "type"\
-#	 --landuseShapeFileName $(word 4,$^)\
-#	 --shapeFileLanduseTypeColumn "fclass"\
-#	 --shapeCRS "EPSG:4326"\
-#	 --pathToInvestigationAreaData $(word 5,$^)
-#	 
-#$(DATA_DISTR_PER_ZONE): $(COMMERCIAL_FACILITIES) | setup
-#	echo "this is only here because $(DATA_DISTR_PER_ZONE) is created together with $(COMMERCIAL_FACILITIES)"
-#
-#$(BERLIN_SMALLSCALE_COMMERCIAL_25PCT): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DATA_DISTR_PER_ZONE) $(BB_ZONES_VKZ_4326) | setup
-#	$(JAVA_APP) prepare generate-small-scale-commercial-traffic\
-#	  input/$(VERSION)/berlin-$(VERSION).config.xml\
-#	 --pathToDataDistributionToZones $(abspath $(word 3,$^))\
-#	 --pathToCommercialFacilities $(abspath $(word 2,$^))\
-#	 --sample 0.25\
-#	 --jspritIterations 10\
-#	 --creationOption createNewCarrierFile\
-#	 --network $(abspath $<)\
-#	 --smallScaleCommercialTrafficType completeSmallScaleCommercialTraffic\
-#	 --zoneShapeFileName $(abspath $(word 4,$^))\
-#	 --zoneShapeFileNameColumn "id"\
-#	 --shapeCRS "EPSG:4326"\
-#	 --numberOfPlanVariantsPerAgent 5\
-#	 --nameOutputPopulation $(notdir $@)\
-#	 --pathOutput output/commercialPersonTraffic
-#
-#	mv output/commercialPersonTraffic/$(notdir $@) $@
-#	#rm -r output/commercialPersonTraffic delete or keep?
+$(COMMERCIAL_FACILITIES): $(REGION_4326) $(BB_ZONES_4326) $(BB_BUILDINGS_4326) $(BERLIN_LANDUSE_4326) $(COMMERCIAL_TRAFFIC_AREA_DATA) | setup
+	$(JAVA_APP) prepare create-data-distribution-of-structure-data\
+	 --outputFacilityFile $@\
+	 --outputDataDistributionFile $(DATA_DISTR_PER_ZONE)\
+	 --landuseConfiguration useOSMBuildingsAndLanduse\
+	 --regionsShapeFileName $<\
+	 --regionsShapeRegionColumn "GEN"\
+	 --zoneShapeFileName $(word 2,$^)\
+	 --zoneShapeFileNameColumn "id"\
+	 --buildingsShapeFileName $(word 3,$^)\
+	 --shapeFileBuildingTypeColumn "type"\
+	 --landuseShapeFileName $(word 4,$^)\
+	 --shapeFileLanduseTypeColumn "fclass"\
+	 --shapeCRS "EPSG:4326"\
+	 --pathToInvestigationAreaData $(word 5,$^)
+
+$(DATA_DISTR_PER_ZONE): $(COMMERCIAL_FACILITIES) | setup
+	echo "this is only here because $(DATA_DISTR_PER_ZONE) is created together with $(COMMERCIAL_FACILITIES)"
+
+$(BERLIN_SMALLSCALE_COMMERCIAL_25PCT): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DATA_DISTR_PER_ZONE) $(BB_ZONES_VKZ_4326) | setup
+	$(JAVA_APP) prepare generate-small-scale-commercial-traffic\
+	  input/$(VERSION)/berlin-$(VERSION)-freight.config.xml\
+	 --pathToZoneAttributes $(abspath $(word 3,$^))\
+	 --pathToCommercialFacilities $(abspath $(word 2,$^))\
+	 --sample 0.25\
+	 --jspritIterations 10\
+	 --creationOption createNewCarrierFile\
+	 --network $(abspath $<)\
+	 --smallScaleCommercialTrafficType completeSmallScaleCommercialTraffic\
+	 --zoneShapeFileName $(abspath $(word 4,$^))\
+	 --zoneShapeFileNameColumn "id"\
+	 --shapeCRS "EPSG:4326"\
+	 --resistanceFactor_commercialPersonTraffic 0.2\
+	 --resistanceFactor_goodsTraffic 0.1\
+	 --numberOfPlanVariantsPerAgent 5\
+	 --nameOutputPopulation $(notdir $@)\
+	 --pathOutput output/commercialPersonTraffic
+
+	mv output/commercialPersonTraffic/$(notdir $@) $@
+	#rm -r output/commercialPersonTraffic delete or keep?
 
 $(BERLIN_CADYTS_INPUT_25PCT): $(BERLIN_BRANDENBURG_INITIAL_25PCT) $(BERLIN_SMALLSCALE_COMMERCIAL_25PCT) | setup
 	$(JAVA_APP) prepare merge-populations $^\
@@ -489,6 +489,8 @@ setup:
 
 prepare-network-and-counts: $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	echo done
+
+prepare-freight: $(BERLIN_SMALLSCALE_COMMERCIAL_25PCT)
 
 prepare-calibration: $(BERLIN_CADYTS_INPUT_25PCT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	#make -Bndri prepare-calibration | make2graph | gv2gml -o prepare-calibration_graph.gml
