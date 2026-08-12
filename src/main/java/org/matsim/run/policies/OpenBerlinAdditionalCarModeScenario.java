@@ -21,6 +21,7 @@ import org.matsim.core.population.algorithms.PermissibleModesCalculator;
 import org.matsim.core.population.algorithms.PermissibleModesCalculatorImpl;
 import org.matsim.core.router.RoutingModeMainModeIdentifier;
 import org.matsim.core.router.TripStructureUtils;
+import org.matsim.run.BerlinCarAlternativePlanAlgorithm;
 import org.matsim.run.BerlinCarAlternativeSubtourModeChoice;
 import org.matsim.run.OpenBerlinScenario;
 import org.matsim.vehicles.EngineInformation;
@@ -42,12 +43,13 @@ import static org.matsim.run.policies.MobilityToGridScenariosUtils.RICH;
 public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 	private static final Logger log = LogManager.getLogger(OpenBerlinAdditionalCarModeScenario.class);
 
-	private static final String CAR_EXPENSIVE = "carExpensive";
+	public static final String CAR_EXPENSIVE = "carExpensive";
 
 	@CommandLine.Option(names = "--rich-agents-percentage", description = "Percentage of agents to be tagged as rich. Read as 'X% richest agents'. Value between 0-1.", defaultValue = "0.1")
 	private double pctForTagging;
 
-	@CommandLine.Option(names = "--expensive-distance-cost", description = "Defines to which value the monetary distance rate for the new, more expensive car mode is set. Default = -0.000149Eu/m", defaultValue = "-0.000149")
+	@CommandLine.Option(names = "--expensive-distance-cost", description = "Defines to which value the monetary distance rate for the new, more expensive car mode is set. " +
+		"Default = -0.0003Eu/m, which is double the usual distance cost of car.", defaultValue = "-0.0003")
 	private double expensiveMonetaryDistanceRate;
 
 	@Nullable
@@ -100,6 +102,10 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 		analyzedModes.add(CAR_EXPENSIVE);
 		config.travelTimeCalculator().setAnalyzedModes(analyzedModes);
 
+//		TODO: add car expensive smc as strategy for subpop rich
+//		TODO: also copy every other strategy for subpop person to rich
+//		first copy all, then adapt smc for subpop rich to verlin smc
+
 //		setCarCostInConfig(config, carFixCost, carDistanceCost);
 		return config;
 	}
@@ -122,6 +128,7 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 
 //		as car expensive is assumed to be synthetic fuels, we assume that "normal car" is bev
 		VehicleUtils.setHbefaTechnology(carEngineInfo, MobilityToGridScenariosUtils.Hbefa41Technology.ELECTRICITY.toString().toLowerCase(Locale.ROOT));
+		scenario.getVehicles().addVehicleType(carExpensiveType);
 
 //		add carExpensive as allowed mode when car is allowed
 		for (Link link : scenario.getNetwork().getLinks().values()) {
@@ -174,13 +181,13 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 			.sorted(Comparator.comparingDouble(PersonUtils::getIncome).reversed())
 			.toList();
 
-		int count = Math.ceil(sorted.size() * pctForTagging);
+		int count = (int) Math.ceil(sorted.size() * pctForTagging);
 
 		List<? extends Person> financiallyFortunate = sorted.subList(0, count);
 
 		for (Person rich : financiallyFortunate) {
 			scenario.getPopulation().getPersons()
-				.get(rich.getId()).getAttributes().putAttribute("richness", RICH);
+				.get(rich.getId()).getAttributes().putAttribute("subpopulation", RICH);
 		}
 	}
 

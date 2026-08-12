@@ -33,7 +33,7 @@ public class BerlinCarAlternativeSubtourModeChoice implements Provider<PlanStrat
 		builder.addStrategyModule(new AbstractMultithreadedModule(globalConfigGroup) {
 			@Override
 			public PlanAlgorithm getPlanAlgoInstance() {
-				return new BerlinCarAlternativePlanAlgorithm(subtourModeChoiceConfigGroup);
+				return new BerlinCarAlternativePlanAlgorithm();
 			}
 		});
 
