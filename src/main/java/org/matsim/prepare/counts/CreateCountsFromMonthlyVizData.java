@@ -216,7 +216,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	private final CsvOptions csv = new CsvOptions();
 
 	@CommandLine.Mixin
-	private final CrsOptions crs = new CrsOptions();
+	private final CrsOptions countsCrs = new CrsOptions();
 
 	@CommandLine.Mixin
 	private final CountsOptions counts = new CountsOptions();
@@ -554,7 +554,6 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 	private void matchWithNetwork(Path networkPath, Path geometries, Map<String, Station> stations, CountsOptions countsOption, String outputString) throws TransformException, IOException {
 
 		Network network = NetworkUtils.readNetwork(networkPath.toString());
-		CoordinateTransformation transformation = crs.getTransformation();
 
 		Map<Id<Link>, Geometry> networkGeometries = NetworkIndex.readGeometriesFromSumo(geometries.toString(), IdentityTransform.create(2));
 
@@ -566,9 +565,8 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 			geometryToLink.put(networkGeometries.computeIfAbsent(link.getId(), id -> link2LineString(link, factory)), link);
 
 		NetworkIndex.GeometryGetter<Station> getter = toMatch -> {
-			Coord coord = toMatch.coord();
-			Coord transform = transformation.transform(coord);
-			return MGC.coord2Point(transform);
+
+			return MGC.coord2Point(toMatch.coord());
 		};
 
 		NetworkIndex<Station> index = new NetworkIndex<>(network, networkGeometries, maxDistance, getter);
@@ -716,23 +714,30 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 
 		XSSFSheet sheet = openStationSheet(path);
 
+		CoordinateTransformation transformation = countsCrs.getTransformation();
+
 		for (Row row : sheet) {
-			if (row.getRowNum() == 0)
+			if (row.getRowNum() == 0) {
 				continue;
+			}
 
 			String id = row.getCell(0).getStringCellValue();
 			String lane = row.getCell(9).getStringCellValue();
 
 			//for some reason count stations on bus lanes have an own station id, but same coordinates like the regular stations and causing trouble in map matching
-			if (stations.containsKey(id) || "BUS".equals(lane) || countsOption.isIgnored(id))
+			if (stations.containsKey(id) || "BUS".equals(lane) || countsOption.isIgnored(id)) {
 				continue;
+			}
 
 			String name = row.getCell(5).getStringCellValue();
 			String direction = row.getCell(8).getStringCellValue();
 			double x = row.getCell(11).getNumericCellValue();
 			double y = row.getCell(12).getNumericCellValue();
 
-			Station station = new Station(id, name, direction, new Coord(x, y));
+			Coord coord = new Coord(x, y);
+			Coord transform = transformation.transform(coord);
+
+			Station station = new Station(id, name, direction, transform);
 			stations.put(id, station);
 		}
 	}
