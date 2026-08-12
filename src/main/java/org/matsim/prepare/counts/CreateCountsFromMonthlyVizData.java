@@ -1022,6 +1022,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 
 				Id<Link> linkId = station.linkAtomicReference().get().getId();
 				MeasurementLocation<Link> location = aggregated.createAndAddMeasureLocation(linkId, station.getStationId());
+				location.setCoordinates(station.coord());
 				Measurable carVolume = location.createVolume();
 				Measurable freightVolume = location.createVolume(TransportMode.truck);
 
@@ -1126,6 +1127,7 @@ public class CreateCountsFromMonthlyVizData implements MATSimAppCommand {
 				Station station = stations.get(entry.getKey());
 				MeasurementLocation<Link> location = counts.createAndAddMeasureLocation(
 						station.linkAtomicReference().get().getId(), station.getStationId());
+				location.setCoordinates(station.coord());
 
 				Measurable car = location.createVolume();
 				Measurable freight = location.createVolume(TransportMode.truck);
