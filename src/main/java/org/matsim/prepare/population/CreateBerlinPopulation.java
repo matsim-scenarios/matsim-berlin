@@ -63,7 +63,7 @@ public class CreateBerlinPopulation implements MATSimAppCommand {
 	@CommandLine.Option(names = "--year", description = "Year to use statistics from", defaultValue = "2019")
 	private int year;
 
-	@CommandLine.Option(names = "--sample", description = "Sample size to generate", defaultValue = "0.25")
+	@CommandLine.Option(names = "--sample", description = "Sample size to generate", defaultValue = "1.0")
 	private double sample;
 
 	private Map<String, MultiPolygon> lors;

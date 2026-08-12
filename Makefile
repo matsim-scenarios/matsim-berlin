@@ -107,7 +107,6 @@ NETWORK_MATSIM_PT := $(OUTPUT)/berlin-$(VERSION)-network-with-pt.xml.gz
 VMZ_COUNTS := $(OUTPUT)/berlin-$(VERSION)-counts-vmz.xml.gz
 LINK_GEOMETRIES := $(OUTPUT)/berlin-$(VERSION)-network-linkGeometries.csv
 FACILITIES_XML := $(OUTPUT)/berlin-$(VERSION)-facilities.xml.gz
-BERLIN_ONLY_100PCT := $(OUTPUT)/berlin-only-$(VERSION)-100pct.plans.xml.gz
 BERLIN_ONLY_25PCT := $(OUTPUT)/berlin-only-$(VERSION)-25pct.plans.xml.gz
 BRANDENBURG_ONLY_25PCT := $(OUTPUT)/brandenburg-only-$(VERSION)-25pct.plans.xml.gz
 BERLIN_BRANDENBURG_STATIC_25PCT := $(OUTPUT)/berlin-static-$(VERSION)-25pct.plans.xml.gz
@@ -267,29 +266,23 @@ $(FACILITIES_XML): $(NETWORK_MATSIM) $(FACILITIES_GPKG) $(FACILITY_MAPPING) $(PL
 
 #TODO: create veh types xml file in code; incl. commercial types from RE and longDistanceFreight types from CL
 
-$(BERLIN_ONLY_100PCT): $(PLR_2013_2020) $(PLANUNGSRAUM_25833) $(FACILITIES_GPKG) | setup
-	$(JAVA_APP) prepare berlin-population\
-		--input $<\
-		--sample 1.0\
-		--shp $(word 2,$^) --shp-crs EPSG:25833\
-		--facilities $(word 3,$^) --facilities-attr resident\
-		--output $@
-
 # (presumably generates a synthetic population for Berlin from the "PLR" data, i.e. the population attribute marginals at LOR500 level)
 $(BERLIN_ONLY_25PCT): $(PLR_2013_2020) $(PLANUNGSRAUM_25833) $(FACILITIES_GPKG) | setup
 	$(JAVA_APP) prepare berlin-population\
 		--input $<\
+		--sample 0.25\
 		--shp $(word 2,$^) --shp-crs EPSG:25833\
 		--facilities $(word 3,$^) --facilities-attr resident\
 		--output $@
 
 $(BRANDENBURG_ONLY_25PCT): $(FACILITIES_GPKG) $(VG5000_GEM) $(REGIONALSTAT_POP) $(REGIONALSTAT_EMPL) | setup
 	$(JAVA_APP) prepare brandenburg-population\
+	 --sample 0.25\
 	 --shp $(word 2,$^)\
 	 --population $(word 3,$^)\
 	 --employees $(word 4,$^)\
- 	 --facilities $< --facilities-attr resident\
- 	 --output $@
+	 --facilities $< --facilities-attr resident\
+	 --output $@
 
 # (merges the two population, and joins spatial category into each person)
 $(BERLIN_BRANDENBURG_STATIC_25PCT): $(BERLIN_ONLY_25PCT) $(BRANDENBURG_ONLY_25PCT) $(REGIOSTAR) | setup
