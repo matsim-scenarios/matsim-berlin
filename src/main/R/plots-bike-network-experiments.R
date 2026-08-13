@@ -350,7 +350,7 @@ get_bike_volumes <- function(count_data, volumes, case) {
     rowwise() %>%
     mutate( !!volume_col := sum(
       volumes$vol_bike[
-        volumes$link_id %in% unlist(strsplit(links, ",\\s*"))
+        volumes$link_id %in% unlist(strsplit(links, ";\\s*"))
       ], na.rm = TRUE
     )
     ) %>%
@@ -363,10 +363,23 @@ count_data <- get_bike_volumes(count_data, volumes_qsim0.1, "qsim0.1")
 count_data <- get_bike_volumes(count_data, volumes_qsim0.2, "qsim0.2")
 count_data <- get_bike_volumes(count_data, volumes_qsim0.3, "qsim0.3")
 
+count_data <- count_data %>% 
+  mutate(ratio_0.0 = dtv_2018 / qsim0.0,
+         ratio_0.01 = dtv_2018 / qsim0.01,
+         ratio_0.1 = dtv_2018 / qsim0.1,
+         ratio_0.2 = dtv_2018 / qsim0.2,
+         ratio_0.3 = dtv_2018 / qsim0.3)
+
+filtered <- count_data %>% 
+  filter(abs(ratio_0.0 - ratio_0.01) >= 0.5) 
+
+qsim0.0_less_volume_than_qsim0.3 <- count_data %>% 
+  filter(qsim0.0 < qsim0.3)
+
 head(count_data)
   
 count_plot_data <- count_data %>%
-  select(station, dtv_2018, starts_with("qsim")) %>% 
+  select(station, dtv_2018, starts_with("qsim"), highway_types) %>% 
   pivot_longer(
     cols = starts_with("qsim"),
     names_to = "case",
@@ -400,6 +413,44 @@ counts_plot <- ggplot(count_plot_data,
 
 counts_plot
 ggsave("bicycle_counts_to_volumes_plot.pdf", counts_plot, dpi = 500, w = 9, h = 9)
+
+count_highway_types <- c("primary", "secondary", "tertiary", "cycleway", "path", "residential")
+
+for (type in count_highway_types) {
+  count_plot_data_type <- count_plot_data %>%
+    filter(str_detect(highway_types, type))
+
+  counts_plot_type <- ggplot(count_plot_data_type,
+                                aes(x = dtv_2018,
+                                    y = simulation,
+                                    color = case,
+                                    group = case)) +
+    geom_abline(slope = 1, intercept = 0, size=1) +
+    geom_point(size = 3) +
+    scale_x_continuous(limits = c(0, 15000)) +
+    scale_y_continuous(limits = c(0, 15000)) +
+    scale_color_okabe_ito(order = c(3, 4, 5, 6, 7)) +
+    labs(
+      # title = paste0(type, ", n=", n_distinct(count_plot_data_type$station)),
+      x = "bicycle count dtv 2018",
+      y = "simulation"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 20),
+      axis.title = element_text(size = 21),
+      axis.text = element_text(size = 20),
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+      legend.title = element_text(size = 20),
+      legend.text = element_text(size = 19),
+      plot.margin = margin(5, 5, 5, 5))
+  
+  print(paste(type, ": n=", n_distinct(count_plot_data_type$station)))
+
+  print(counts_plot_type)
+  ggsave(paste0("bicycle_counts_to_volumes_plot_", type, ".pdf"), counts_plot_type, dpi = 500, w = 9, h = 9)
+}
+
 
 counts_performance <- count_plot_data %>%
   group_by(case) %>%

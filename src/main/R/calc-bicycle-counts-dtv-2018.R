@@ -124,35 +124,65 @@ count_stations_location_2018 <- count_stations_location %>%
 # manual station to matsim link assignment
 station_to_links <- c("909402342",
                       "29383966",
-                      paste0("42104389#1,", "1119248953#1"),
-                      paste0("248010194,", "1119248951"),
+                      paste0("42104389#1;", "1119248953#1"),
+                      paste0("248010194;", "1119248951"),
                       "127734801",
                       "909409602",
-                      paste0("310172796#0,", "1123298492#1"),
+                      paste0("310172796#0;", "1123298492#1"),
                       "6263126#0",
                       "172439811#0",
                       "4631949",
                       NA,
-                      paste0("814840750#1,", "-814840750#1"),
-                      paste0("31697122#0,", "703182870#2,", "-824819958"),
-                      paste0("333500494#0,", "824819958"),
+                      paste0("814840750#1;", "-814840750#1"),
+                      paste0("31697122#0;", "703182870#2;", "-824819958"),
+                      paste0("333500494#0;", "824819958"),
                       "4405253#0",
                       "4405254#0",
-                      paste0("-25178767#2,", "863543061"),
+                      paste0("-25178767#2;", "863543061"),
                       "25178766",
-                      paste0("-527065428#0,", "337967751#4"),
+                      paste0("-527065428#0;", "337967751#4"),
                       "1101002048#3",
                       "881575686",
-                      paste0("-845476767,", "249453223#2"),
+                      paste0("-845476767;", "249453223#2"),
                       NA,
-                      paste0("-514540368#1,", "514540368#1"),
+                      paste0("-514540368#1;", "514540368#1"),
                       NA,
-                      paste0("4610040,", "-4610040")
+                      paste0("4610040;", "-4610040")
+)
+
+link_types <- c("secondary",
+                "secondary",
+                paste0("secondary;", "cycleway"),
+                paste0("secondary;", "cycleway"),
+                "secondary",
+                "secondary",
+                paste0("primary;", "cycleway"),
+                "primary",
+                "secondary",
+                "secondary",
+                NA,
+                paste0("residential;", "residential"),
+                paste0("secondary;", "path;", "path"),
+                paste0("secondary;", "path"),
+                "tertiary",
+                "tertiary",
+                paste0("secondary;", "path"),
+                "secondary",
+                paste0("residential;", "residential"),
+                "primary",
+                "primary",
+                paste0("residential;", "residential"),
+                NA,
+                paste0("residential;", "residential"),
+                NA,
+                paste0("residential;", "residential")
 )
 
 dtv_bicycle_counts_with_locations <- dtv_bicycle_counts %>% 
   inner_join(y=count_stations_location_2018, by='station') %>% 
   mutate(links = station_to_links) %>% 
-  filter(!is.na(links))
+  mutate(highway_types = link_types) %>% 
+  filter(!is.na(links)) %>% 
+  filter(!is.na(highway_types))
 
 write.csv(dtv_bicycle_counts_with_locations, file="dtv_typical_weekday_bicycle_counts_2018_wgs84.csv", quote=FALSE, row.names=FALSE)
