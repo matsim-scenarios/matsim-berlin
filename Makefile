@@ -53,13 +53,8 @@ GERMANY := $(SVN_PATH)/shared-svn/projects/matsim-germany
 BERLINSHARED := $(SVN_PATH)/shared-svn/projects/matsim-berlin
 BERLINPUBLIC := $(SVN_PATH)/public-svn/matsim/scenarios/countries/de/berlin
 
-## Freight-Processing currrently does not work. Should probably move to a separate makefile
-#GERMAN_FREIGHT_25PCT := $(SVN_PATH)/public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/german_freight.25pct.plans.xml.gz
-#GERMAN_FREIGHT_NETWORK := $(SVN_PATH)/public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/germany-europe-network.xml.gz
-
-## For the time being, use the old version
-BERLIN_BRANDENBURG_LONGHAULFREIGHT := $(BERLINPUBLIC)/berlin-v7.0/input/berlin-longHaulFreight-v7.0-25pct.plans.xml.gz
-#BERLIN_SMALLSCALE_COMMERCIAL := $(BERLINPUBLIC)/berlin-v7.0/input/berlin-small-scale-commercialTraffic-v7.0-25pct.plans.xml.gz
+GERMAN_FREIGHT_25PCT := $(SVN_PATH)/public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/german_freight.25pct.plans.xml.gz
+GERMAN_FREIGHT_NETWORK := $(SVN_PATH)/public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/germany-europe-network.xml.gz
 
 AREA_POLY := input/v7.0/area/area.poly
 AREA_SHP := input/v7.0/area/area.shp
@@ -141,12 +136,12 @@ BERLIN_DOWNTOWN_PLANS := $(OUTPUT)/inner-city/berlin-downtown-$(VERSION)-$(SAMPL
 ## below where this file is used. 
 MODECHOICE_BASELINE_PLANS := ""
 
-## long haul freight currently does not work; see the commented-out inputs above
-#BERLIN_BRANDENBURG_LONGHAULFREIGHT := $(OUTPUT)/berlin-longHaulFreight-$(VERSION)-25pct.plans.xml.gz
 COMMERCIAL_FACILITIES := $(OUTPUT)/commercialFacilities.xml.gz
 BERLIN_SMALLSCALE_COMMERCIAL := $(OUTPUT)/berlin-small-scale-commercialTraffic-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
 ## jsprit scratch output; per sample so parallel builds do not clobber each other
 COMMERCIAL_TRAFFIC_OUT := $(OUTPUT)/commercialPersonTraffic-$(SAMPLE_PCT)
+
+BERLIN_BRANDENBURG_LONGHAULFREIGHT := $(OUTPUT)/berlin-longHaulFreight-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
 
 RANDOM_DRT_FLEET_10K := $(OUTPUT)/berlin-$(VERSION).drt-by-rndLocations-10000vehicles-4seats.xml.gz
 
@@ -336,16 +331,7 @@ $(BERLIN_BRANDENBURG_INITIAL): $(BERLIN_BRANDENBURG_ACTS) $(FACILITIES_XML) $(NE
 	 --commuter $(word 5,$^)\
 	 --berlin-commuter $(word 6,$^)
 
-## Freight
-#$(BERLIN_BRANDENBURG_LONGHAULFREIGHT): $(GERMAN_FREIGHT_25PCT) $(GERMAN_FREIGHT_NETWORK) $(AREA_SHP) | setup
-#	$(JAVA_APP) prepare extract-freight-trips $<\
-#	 --network $(word 2,$^)\
-#	 --input-crs $(CRS)\
-#	 --target-crs $(CRS)\
-#	 --shp $(word 3,$^)\
-#	 --cut-on-boundary\
-#	 --output $@
-
+## Small-scale commercial
 $(COMMERCIAL_FACILITIES): $(REGION_4326) $(BB_ZONES_4326) $(BB_BUILDINGS_4326) $(BERLIN_LANDUSE_4326) $(COMMERCIAL_TRAFFIC_AREA_DATA) | setup
 	$(JAVA_APP) prepare create-data-distribution-of-structure-data\
 	 --outputFacilityFile $@\
@@ -410,6 +396,19 @@ $(BERLIN_CADYTS_FINAL): $(BERLIN_CADYTS_OUTPUT) $(BERLIN_CADYTS_INPUT) | setup
  
 $(BERLIN_CADYTS_SELECTION): $(BERLIN_CADYTS_FINAL) | setup
 	echo "check if $(BERLIN_CADYTS_SELECTION) was produced" 
+
+$(BERLIN_BRANDENBURG_LONGHAULFREIGHT): $(GERMAN_FREIGHT_25PCT) $(GERMAN_FREIGHT_NETWORK) $(AREA_SHP) | setup
+	$(JAVA_APP) prepare extract-freight-trips $<\
+	 --network $(word 2,$^)\
+	 --input-crs $(CRS)\
+	 --target-crs $(CRS)\
+	 --shp $(word 3,$^)\
+	 --cut-on-boundary\
+	 --output $@
+
+	$(JAVA_APP) prepare downsample-population $@\
+		--sample-size 0.25\
+		--samples $(SAMPLE_SIZE)\
 
 # These depend on the output of cadyts calibration runs
 # should we really use NETWORK_MATSIM here or not maybe NETWORK_MATSIM_PT
@@ -510,7 +509,7 @@ setup:
 prepare-network-and-counts: $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	echo done
 
-prepare-freight: $(BERLIN_SMALLSCALE_COMMERCIAL)
+prepare-freight: $(BERLIN_BRANDENBURG_LONGHAULFREIGHT) $(BERLIN_SMALLSCALE_COMMERCIAL)
 
 prepare-calibration: $(BERLIN_CADYTS_INPUT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	#make -Bndri prepare-calibration | make2graph | gv2gml -o prepare-calibration_graph.gml
