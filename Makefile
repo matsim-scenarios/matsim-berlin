@@ -40,9 +40,10 @@ TMP_DIR := ./tmp
 # (1.125 = 27:00), since preprocessing and the scoring have to agree on where the day ends.
 SIM_PERIOD_DAYS ?= 1.125
 # Scenario creation tool
-JAVA_APP := java -Xmx$(MAKE_XMX) -XX:+UseParallelGC -Dorg.geotools.referencing.forceXY=true -Djava.io.tmpdir=$(TMP_DIR) -cp $(JAR) org.matsim.prepare.RunOpenBerlinCalibration
+JAVA_CP := java -Xmx$(MAKE_XMX) -XX:+UseParallelGC -Dorg.geotools.referencing.forceXY=true -Djava.io.tmpdir=$(TMP_DIR) -cp $(JAR)
+JAVA_APP := $(JAVA_CP) org.matsim.prepare.RunOpenBerlinCalibration
 
-.PHONY: setup prepare prepare-network-and-counts prepare-freight prepare-calibration prepare-run-cadyts prepare-initial prepare-drt
+.PHONY: setup prepare prepare-network-and-counts prepare-freight prepare-calibration prepare-run-cadyts prepare-initial prepare-drt analyze-freight
 .DELETE_ON_ERROR:
 
 ###################################
@@ -140,6 +141,9 @@ COMMERCIAL_FACILITIES := $(OUTPUT)/commercialFacilities.xml.gz
 BERLIN_SMALLSCALE_COMMERCIAL := $(OUTPUT)/berlin-small-scale-commercialTraffic-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
 ## jsprit scratch output; per sample so parallel builds do not clobber each other
 COMMERCIAL_TRAFFIC_OUT := $(OUTPUT)/commercialPersonTraffic-$(SAMPLE_PCT)
+FREIGHT_ANALYSIS_OUT := $(OUTPUT)/analysis-freight-$(SAMPLE_PCT)
+FREIGHT_OD_REPORT := $(FREIGHT_ANALYSIS_OUT)/commercial_od_summary.csv
+FREIGHT_TOUR_REPORT := $(FREIGHT_ANALYSIS_OUT)/commercial_tour_kpi.csv
 
 BERLIN_BRANDENBURG_LONGHAULFREIGHT := $(OUTPUT)/berlin-longHaulFreight-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
 
@@ -525,6 +529,29 @@ prepare-initial: $(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS) $(NETWORK_MATSIM_PT)
 prepare-drt: $(RANDOM_DRT_FLEET_10K)
 	#make -Bndri prepare-drt | make2graph | gv2gml -o prepare-drt_graph.gml
 	echo "Done"
+
+# Evaluate the OD matrix generation step: stop distance distribution, how well the destination constrained
+# gravity model reproduces the origin potentials, and the realised distance decay.
+$(FREIGHT_OD_REPORT): $(BERLIN_SMALLSCALE_COMMERCIAL) $(BB_ZONES_VKZ_4326) | setup
+	$(JAVA_CP) org.matsim.analysis.CommercialOdMatrixAnalysis\
+	 --calculated-data $(COMMERCIAL_TRAFFIC_OUT)/calculatedData\
+	 --shp $(word 2,$^)\
+	 --shp-crs "EPSG:4326"\
+	 --zone-id-column "id"\
+	 --target-crs $(CRS)\
+	 --output $(FREIGHT_ANALYSIS_OUT)
+
+# Evaluate the carrier plan step: stops per vehicle, fleet utilisation, and the realised travel time factor
+# against the 1.2 that the fleet sizing assumes.
+$(FREIGHT_TOUR_REPORT): $(BERLIN_SMALLSCALE_COMMERCIAL) $(NETWORK_MATSIM) | setup
+	$(JAVA_CP) org.matsim.analysis.CommercialTourAnalysis\
+	 --carriers $(COMMERCIAL_TRAFFIC_OUT)/output_carriers_solvedVRP.xml.gz\
+	 --vehicle-types $(COMMERCIAL_TRAFFIC_OUT)/output_carriersVehicleTypes.xml.gz\
+	 --network $(word 2,$^)\
+	 --output $(FREIGHT_ANALYSIS_OUT)
+
+analyze-freight: $(FREIGHT_OD_REPORT) $(FREIGHT_TOUR_REPORT)
+	echo "freight analysis written to $(FREIGHT_ANALYSIS_OUT)"
 
 prepare: $(BERLIN_AFTER_CHOICE_EXPERIMENTS)
 	#make -Bndri prepare | make2graph | gv2gml -o prepare_graph.gml
