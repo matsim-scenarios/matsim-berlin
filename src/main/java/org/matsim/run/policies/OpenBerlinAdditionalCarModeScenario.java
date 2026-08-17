@@ -1,5 +1,6 @@
 package org.matsim.run.policies;
 
+import com.google.inject.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -12,17 +13,23 @@ import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.groups.ReplanningConfigGroup;
 import org.matsim.core.config.groups.ScoringConfigGroup;
+import org.matsim.core.config.groups.SubtourModeChoiceConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.algorithms.PermissibleModesCalculator;
 import org.matsim.core.population.algorithms.PermissibleModesCalculatorImpl;
+import org.matsim.core.population.algorithms.PlanAlgorithm;
+import org.matsim.core.replanning.PlanStrategy;
+import org.matsim.core.replanning.PlanStrategyImpl;
+import org.matsim.core.replanning.modules.AbstractMultithreadedModule;
+import org.matsim.core.replanning.modules.SubtourModeChoice;
+import org.matsim.core.replanning.selectors.RandomPlanSelector;
 import org.matsim.core.router.RoutingModeMainModeIdentifier;
 import org.matsim.core.router.TripStructureUtils;
-import org.matsim.run.BerlinCarAlternativePlanAlgorithm;
-import org.matsim.run.BerlinCarAlternativeSubtourModeChoice;
 import org.matsim.run.OpenBerlinScenario;
 import org.matsim.vehicles.EngineInformation;
 import org.matsim.vehicles.VehicleType;
@@ -41,16 +48,20 @@ import static org.matsim.run.policies.MobilityToGridScenariosUtils.RICH;
  * All necessary configs will be made in this class.
  */
 public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
-	private static final Logger log = LogManager.getLogger(OpenBerlinAdditionalCarModeScenario.class);
-
 	public static final String CAR_EXPENSIVE = "carExpensive";
 
+	private static final Logger log = LogManager.getLogger(OpenBerlinAdditionalCarModeScenario.class);
+	private static final String SMC_RICH = "RichSubtourModeChoice";
+	private static List<String> richSmcAvailableModes;
+	private static List<String> richSmcChainBasedModes;
+	private static SubtourModeChoice richSubtourModeChoice;
+
 	@CommandLine.Option(names = "--rich-agents-percentage", description = "Percentage of agents to be tagged as rich. Read as 'X% richest agents'. Value between 0-1.", defaultValue = "0.1")
-	private double pctForTagging;
+	private static double pctForTagging;
 
 	@CommandLine.Option(names = "--expensive-distance-cost", description = "Defines to which value the monetary distance rate for the new, more expensive car mode is set. " +
 		"Default = -0.0003Eu/m, which is double the usual distance cost of car.", defaultValue = "-0.0003")
-	private double expensiveMonetaryDistanceRate;
+	private static double expensiveMonetaryDistanceRate;
 
 	@Nullable
 	@Override
@@ -58,6 +69,31 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 		//		apply all config changes from base scenario class
 		super.prepareConfig(config);
 
+		configureAdditionalCarModeInConfig(config);
+
+		return config;
+	}
+
+	@Override
+	public void prepareScenario(Scenario scenario) {
+		//		apply all scenario changes from base scenario class
+		super.prepareScenario(scenario);
+
+		configureAdditionalCarModeInScenario(scenario);
+	}
+
+	@Override
+	public void prepareControler(Controler controler) {
+		//		apply all controller changes from base scenario class
+		super.prepareControler(controler);
+
+		configureAdditionalCarModeInController(controler);
+	}
+
+	/**
+	 * Make all necessary configs for the additional car mode in config.
+	 */
+	static void configureAdditionalCarModeInConfig(Config config) {
 		if (pctForTagging < 0 || pctForTagging > 1.) {
 			log.fatal("you defined --rich-agents-percentage as {}, but the value should be between 0-1. Aborting!", pctForTagging);
 			throw new IllegalStateException("");
@@ -93,31 +129,65 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 		chainBasedModes.add(CAR_EXPENSIVE);
 		config.subtourModeChoice().setChainBasedModes(chainBasedModes.toArray(new String[0]));
 
+		richSmcChainBasedModes = new ArrayList<>(chainBasedModes);
+		richSmcChainBasedModes.remove(TransportMode.car);
+
 		List<String> smcModes = new ArrayList<>(List.of(config.subtourModeChoice().getModes()));
 		smcModes.add(CAR_EXPENSIVE);
 		config.subtourModeChoice().setModes(smcModes.toArray(new String[0]));
+
+		richSmcAvailableModes = new ArrayList<>(smcModes);
+		richSmcAvailableModes.remove(TransportMode.car);
 
 //		add new car mode to analyzed modes for tt calculation
 		Set<String> analyzedModes = new HashSet<>(config.travelTimeCalculator().getAnalyzedModes());
 		analyzedModes.add(CAR_EXPENSIVE);
 		config.travelTimeCalculator().setAnalyzedModes(analyzedModes);
 
-//		TODO: add car expensive smc as strategy for subpop rich
-//		TODO: also copy every other strategy for subpop person to rich
 //		first copy all, then adapt smc for subpop rich to verlin smc
+		Set<ReplanningConfigGroup.StrategySettings> copiedStrategies = new HashSet<>();
+		for (ReplanningConfigGroup.StrategySettings strategy : config.replanning().getStrategySettings()) {
+			if (strategy.getSubpopulation().equals("person")) {
+//				copy strategy for subpop person to subpop rich except SMC
+				if (strategy.getStrategyName().equals("SubtourModeChoice")) {
+					continue;
+				}
 
-//		setCarCostInConfig(config, carFixCost, carDistanceCost);
-		return config;
+				ReplanningConfigGroup.StrategySettings copy = new ReplanningConfigGroup.StrategySettings();
+				copy.setStrategyName(strategy.getStrategyName());
+				copy.setSubpopulation(RICH);
+
+//				set start weights for strategies as for subpop person
+				double weight = 0.;
+				if (strategy.getStrategyName().equals("ChangeExpBeta")) {
+					weight = 1.;
+				} else {
+					weight = 0.15;
+				}
+				copy.setWeight(weight);
+				copiedStrategies.add(copy);
+			}
+		}
+		copiedStrategies.forEach(s -> config.replanning().addStrategySettings(s));
+
+//		add car expensive smc as strategy for subpop rich
+		ReplanningConfigGroup.StrategySettings richSmc = new ReplanningConfigGroup.StrategySettings();
+		richSmc.setStrategyName(SMC_RICH);
+		richSmc.setSubpopulation(RICH);
+		richSmc.setWeight(0.15);
+		config.replanning().addStrategySettings(richSmc);
 	}
 
-	@Override
-	public void prepareScenario(Scenario scenario) {
-		//		apply all scenario changes from base scenario class
-		super.prepareScenario(scenario);
-
-//		add vehicle type for car expensive
+	/**
+	 * add vehicle type for new car mode.
+	 * add new mode to network.
+	 * tag rich agents.
+	 */
+	static void configureAdditionalCarModeInScenario(Scenario scenario) {
+		//		add vehicle type for car expensive
 		EngineInformation carEngineInfo = scenario.getVehicles().getVehicleTypes().get(Id.create(TransportMode.car, VehicleType.class)).getEngineInformation();
 		VehicleType carExpensiveType = VehicleUtils.createVehicleType(Id.create(CAR_EXPENSIVE, VehicleType.class));
+		carExpensiveType.setNetworkMode(CAR_EXPENSIVE);
 		EngineInformation carExpensiveEngineInfo = carExpensiveType.getEngineInformation();
 
 		VehicleUtils.setHbefaVehicleCategory(carExpensiveEngineInfo, HbefaVehicleCategory.PASSENGER_CAR.toString());
@@ -191,21 +261,48 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 		}
 	}
 
-	@Override
-	public void prepareControler(Controler controler) {
-		//		apply all controller changes from base scenario class
-		super.prepareControler(controler);
-
+	/**
+	 * Add separate carExpensive SMC without normal car and bind.
+	 */
+	static void configureAdditionalCarModeInController(Controler controler) {
+		//		add smc without "normal" car mode to be used for subpopulation "rich"
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
-//				this.addPersonPrepareForSimAlgorithm().to(BerlinCarAlternativePlanAlgorithm.class);
-				this.addPlanStrategyBinding(BerlinCarAlternativeSubtourModeChoice.STRATEGY_NAME).toProvider(BerlinCarAlternativeSubtourModeChoice.class);
+//				define new SMC strategy
+				this.addPlanStrategyBinding(SMC_RICH).toProvider(new Provider<PlanStrategy>() {
+					@Override
+					public PlanStrategy get() {
+						PlanStrategyImpl.Builder builder = new PlanStrategyImpl.Builder(new RandomPlanSelector<>());
 
+						Config newConfig = new Config();
+						SubtourModeChoiceConfigGroup richSmcCfg = new SubtourModeChoiceConfigGroup();
+						richSmcCfg.setBehavior(controler.getConfig().subtourModeChoice().getBehavior());
+						richSmcCfg.setChainBasedModes(richSmcChainBasedModes.toArray(new String[0]));
+						richSmcCfg.setConsiderCarAvailability(controler.getConfig().subtourModeChoice().considerCarAvailability());
+						richSmcCfg.setCoordDistance(controler.getConfig().subtourModeChoice().getCoordDistance());
+						richSmcCfg.setModes(richSmcAvailableModes.toArray(new String[0]));
+						richSmcCfg.setProbaForRandomSingleTripMode(controler.getConfig().subtourModeChoice().getProbaForRandomSingleTripMode());
+						newConfig.addModule(richSmcCfg);
+
+//						the config here must not be the controler.getConfig() because then car is taken back into the mode choice set
+						richSubtourModeChoice = new SubtourModeChoice(controler.getConfig().global(), richSmcCfg,
+							new PermissibleModesCalculatorImpl(newConfig));
+						builder.addStrategyModule(richSubtourModeChoice);
+
+						builder.addStrategyModule(new AbstractMultithreadedModule(controler.getConfig().global()) {
+							@Override
+							public PlanAlgorithm getPlanAlgoInstance() {
+								return richSubtourModeChoice.getPlanAlgoInstance();
+							}
+						});
+
+						return builder.build();
+					}
+				});
 				// Normally this is bound with the default subtour mode choice, because we use our own variant this is bound again here
 				bind(PermissibleModesCalculator.class).to(PermissibleModesCalculatorImpl.class);
 			}
 		});
-
 	}
 }
