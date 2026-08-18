@@ -375,6 +375,16 @@ $(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DA
 	 --pathOutput $(COMMERCIAL_TRAFFIC_OUT)
 
 	mv $(COMMERCIAL_TRAFFIC_OUT)/$(notdir $@) $@
+
+# jsprit routes on the unfiltered network and enforces the vehicle's network mode only through a
+# toll (CarriersUtils.addRoadPricingForVRPToEnsureSolutionsBasedOnNetworkModes, 1000 per link), so
+# a leg takes a bike-only link whenever the legal detour is dearer. Since matsim-libs #5024 those
+# routes are copied verbatim into the population, and the qsim rejects them at the start of the
+# cadyts run. Drop the routes and let MATSim route them itself on the mode-filtered network.
+	$(JAVA_APP) prepare clean-population\
+	 --plans $@\
+	 --remove-routes\
+	 --output $@
 	#rm -r $(COMMERCIAL_TRAFFIC_OUT) delete or keep?
 
 $(BERLIN_CADYTS_INPUT): $(BERLIN_BRANDENBURG_INITIAL) $(BERLIN_SMALLSCALE_COMMERCIAL) | setup
