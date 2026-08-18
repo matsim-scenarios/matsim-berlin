@@ -468,12 +468,6 @@ $(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MATSIM) 
 # is different here.
 #$(BERLIN_AFTER_CHOICE_EXPERIMENTS): $(MODECHOICE_BASELINE_PLANS) $(CHOICE_EXPERIMENTS_10PCT_BASELINE_PLANS)
 $(BERLIN_AFTER_CHOICE_EXPERIMENTS): $(MODECHOICE_BASELINE_PLANS) | setup
-	$(JAVA_APP) prepare clean-population\
-	 --plans $<\
-	 --remove-unselected-plans\
-	 --output $@
-
-	# TODO read from and write into the same file?
 	$(JAVA_APP) prepare taste-variations\
 	 --input $@ --output $@
 
