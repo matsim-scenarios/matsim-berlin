@@ -1,34 +1,16 @@
 package org.matsim.run.policies;
 
-import com.google.inject.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
-import org.matsim.api.core.v01.population.Plan;
-import org.matsim.api.core.v01.population.PlanElement;
-import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.groups.ScoringConfigGroup;
-import org.matsim.core.config.groups.SubtourModeChoiceConfigGroup;
-import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.population.PersonUtils;
-import org.matsim.core.population.PopulationUtils;
-import org.matsim.core.population.algorithms.PermissibleModesCalculator;
-import org.matsim.core.population.algorithms.PermissibleModesCalculatorImpl;
-import org.matsim.core.population.algorithms.PlanAlgorithm;
-import org.matsim.core.replanning.PlanStrategy;
-import org.matsim.core.replanning.PlanStrategyImpl;
-import org.matsim.core.replanning.modules.AbstractMultithreadedModule;
-import org.matsim.core.replanning.modules.SubtourModeChoice;
-import org.matsim.core.replanning.selectors.RandomPlanSelector;
-import org.matsim.core.router.RoutingModeMainModeIdentifier;
-import org.matsim.core.router.TripStructureUtils;
 import org.matsim.run.OpenBerlinScenario;
 import org.matsim.vehicles.EngineInformation;
 import org.matsim.vehicles.VehicleType;
@@ -37,9 +19,6 @@ import picocli.CommandLine;
 
 import javax.annotation.Nullable;
 import java.util.*;
-
-import static org.matsim.run.policies.MobilityToGridScenariosUtils.AVERAGE;
-import static org.matsim.run.policies.MobilityToGridScenariosUtils.RICH;
 
 /**
  * Berlin scenario including the possibility to add eBike as available mode.
