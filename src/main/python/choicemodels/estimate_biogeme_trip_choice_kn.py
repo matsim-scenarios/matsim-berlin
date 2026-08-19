@@ -58,22 +58,25 @@ if __name__ == "__main__":
     BETA_RIDE_ALPHA = Beta('alphaRide', 1, 0, 2, ESTIMATE )
 
     EXP_DIST = {}
-    est_exp_dist = []
+    est_exp_dist = ["car"]
     for mode in est_exp_dist:
         print(f"Estimating distance elasticity for {mode}")
-        EXP_DIST[mode] = (Beta(f'BETA_DIST_{mode}', 0, None, None, ESTIMATE), Beta(f'EXP_DIST_{mode}', 1, None, None, ESTIMATE))
+        EXP_DIST[mode] = (Beta(f'betaDist_{mode}', 0, None, None, ESTIMATE), Beta(f'lambdaDist_{mode}', 1, None, None, ESTIMATE))
+        # (wieso steht das da 2x drin? kai, aug'26)
+        # (--> das erste ist der normale beta Vorfaktor, der sonst auch ausgeschaltet ist!)
 
-    BETA_BIKE_EFFORT = Beta('betaBike', 0, 0, 10, ESTIMATE )
+    BETA_BIKE_EFFORT = Beta('betaBike', 0, -10, 10, ESTIMATE )
 
     # == overriding some things
 
     ASC['walk'] = 0
-    BETA_RIDE_ALPHA = 1
+    # BETA_RIDE_ALPHA = 1
     BETA_CAR_PRICE_PERCEPTION = 0.0
     BETA_PT_PRICE_PERCEPTION = BETA_CAR_PRICE_PERCEPTION
-    # EXP_INCOME = 0.
-    BETA_PT_SWITCHES = -1 # (this now needs to be "-" the way I have specified that!)
-    # BETA_BIKE_EFFORT = 0
+    EXP_INCOME = 0.
+    # BETA_PT_    SWITCHES = -1 # (this now needs to be "-" the way I have specified that!)
+    BETA_PT_SWITCHES = 0
+    BETA_BIKE_EFFORT = 0
 
     # == end overriding some things
 
@@ -112,6 +115,7 @@ if __name__ == "__main__":
 
         U[i] = u
         AV[i] = vv[f"{mode}_valid"]
+        # AV[i] = True
 
     # if not args.mxl_modes:
     logprob = models.loglogit(U, AV, vv["choice"])
