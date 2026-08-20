@@ -5,6 +5,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.matsim.analysis.PointElasticityStatsModule;
 import org.matsim.analysis.QsimTimingModule;
 import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
 import org.matsim.api.core.v01.Id;
@@ -350,6 +351,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 		}
 
 		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
+
+		// In-loop point elasticity monitor (open-loop, from plan memories; see class javadoc)
+		controler.addOverridingModule(new PointElasticityStatsModule());
 	}
 
 	/**
