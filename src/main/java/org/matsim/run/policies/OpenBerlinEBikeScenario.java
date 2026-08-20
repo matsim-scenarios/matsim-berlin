@@ -31,13 +31,14 @@ public class OpenBerlinEBikeScenario extends OpenBerlinScenario {
 	private static final Logger log = LogManager.getLogger(OpenBerlinEBikeScenario.class);
 	private static final SplittableRandom splittableRandom = new SplittableRandom(15);
 
-//	TODO: decide on default
+//	see link below for default cost calculation
 	@CommandLine.Option(names = "--ebike-distance-cost", description = "Defines to which value the monetary distance rate for ebike is set. " +
-		"Default = -0.0003Eu/m. This is an approximation of energy cost needed to recharge the vehicle.", defaultValue = "-0.0003")
+		"Default = -0.0000047Eu/m. This is an approximation of energy cost needed to recharge the vehicle in 2022.", defaultValue = "-0.0000047")
 	private static double eBikeMonetaryDistanceRate;
-	//	TODO: decide on default
+//	see following like for default cost calculation
+//	https://docs.google.com/document/d/12XPMBvQFwVve_tIXJW26IF_G1_CpRLUn/edit
 	@CommandLine.Option(names = "--ebike-fix-cost", description = "Defines to which value the daily monetary constant for ebike is set. " +
-		"Default = -0.0003Eu/m, which basically is purchase price / 7 year of usage / 250 days.", defaultValue = "-0.0003")
+		"Default = -1.6Eu/d, which basically is purchase price (2022) / 7 year of usage / 250 days.", defaultValue = "-1.6")
 	private static double eBikeMonetaryConstant;
 //	TODO: try out both and decide on default afterwards
 	@CommandLine.Option(names = "--agent-wise-asc-handling", description = "Decides whether the agent wise asc for eBike is copied from bike or distributed individually.")
