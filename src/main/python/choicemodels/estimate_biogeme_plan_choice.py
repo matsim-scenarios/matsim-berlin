@@ -63,10 +63,17 @@ if __name__ == "__main__":
     parser.add_argument("--ascs", help="Predefined ASCs", nargs="+", action='append', default=[])
     parser.add_argument("--car-util", help="Fixed utility for car", type=float, default=None)
     parser.add_argument("--no-income", help="Don't consider the income", action="store_true")
+    parser.add_argument("--dedup", help="Invalidate duplicate plan candidates (identical trip-mode sequences). "
+                                        "Off by default to reproduce the published runs exactly.",
+                        action="store_true")
 
     args = parser.parse_args()
 
     ds = read_plan_choices(args.input)
+
+    if args.dedup:
+        from prepare import invalidate_duplicate_candidates
+        invalidate_duplicate_candidates(ds.df, args.input, ds.k)
 
     # Needs to be numeric
     ds.df["choice"] = 1

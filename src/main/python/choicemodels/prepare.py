@@ -34,6 +34,33 @@ def read_global_income(input_file: str) -> float:
         return float(income.strip())
 
 
+def invalidate_duplicate_candidates(df_wide, input_file: str, k: int, max_plan_length: int = 7):
+    """ Invalidate plan candidates whose trip-mode sequence duplicates an earlier
+    candidate of the same person (the subtour generator emits such duplicates,
+    including copies of the observed plan). Duplicate alternatives distort the
+    likelihood (red-bus/blue-bus) and must be removed for clean estimation.
+    Modifies df_wide's plan_i_valid columns in place. """
+
+    raw = pd.read_csv(input_file, comment="#")
+    ndup = 0
+    for idx in df_wide.index:
+        row = raw.loc[idx]
+        seen = set()
+        for i in range(1, k + 1):
+            if df_wide.at[idx, f"plan_{i}_valid"] != 1:
+                continue
+            s = tuple(row[f"plan_{i}_trip_{j}_mode"] for j in range(max_plan_length))
+            if s in seen:
+                df_wide.at[idx, f"plan_{i}_valid"] = 0
+                ndup += 1
+            else:
+                seen.add(s)
+
+    print("Invalidated %d duplicate candidates (%.1f%% of all candidate slots)"
+          % (ndup, 100 * ndup / (len(df_wide) * k)))
+    return df_wide
+
+
 def read_plan_choices(input_file: str, sample: float = 1, seed: int = 42) -> PlanChoice:
     """ Read plan choices from input file """
 

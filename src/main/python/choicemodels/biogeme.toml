@@ -70,7 +70,7 @@ optimization_algorithm = "simple_bounds" # str: optimization algorithm to be use
                                          # 'simple_bounds_BFGS']
 
 [MonteCarlo]
-number_of_draws = 2000 # int: Number of draws for Monte-Carlo integration.
+number_of_draws = 300 # int: Number of draws for Monte-Carlo integration.
 seed = 42 # int: Seed used for the pseudo-random number generation. It is useful
          # only when each run should generate the exact same result. If 0, a new
          # seed is used at each run.

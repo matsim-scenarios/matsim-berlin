@@ -15,6 +15,7 @@
 		<param name="routingAlgorithmType" value="SpeedyALT"/>
 	</module>
 	<module name="global">
+		<param name="relativeToleranceForSampleSizeFactors" value="100000.0"/>
 		<param name="coordinateSystem" value="EPSG:25832"/>
 		<param name="insistingOnDeprecatedConfigVersion" value="false"/>
 		<param name="numberOfThreads" value="16"/>

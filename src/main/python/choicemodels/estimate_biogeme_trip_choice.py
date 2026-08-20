@@ -45,6 +45,16 @@ if __name__ == "__main__":
                         action="store_true")
 
     parser.add_argument("--no-income", help="Don't consider the income", action="store_true")
+    parser.add_argument("--ascs", metavar=("MODE", "VALUE"), help="Fix ASCs to given values, e.g. --ascs pt -0.73",
+                        nargs=2, action='append', default=[])
+    parser.add_argument("--performing", help="Beta for performing (fixed value, or start value if estimated)",
+                        type=float, default=6.88)
+    parser.add_argument("--exp-income", help="Exponent for income (fixed value, or start value if estimated)",
+                        type=float, default=1)
+    parser.add_argument("--util-money", help="Utility of money (fixed value, or start value if estimated)",
+                        type=float, default=1)
+    parser.add_argument("--price-perception", help="Price perception (fixed value, or start value if estimated)",
+                        type=float, default=1)
 
     args = parser.parse_args()
 
@@ -61,10 +71,16 @@ if __name__ == "__main__":
     database = db.Database("data/choices", df)
     v = database.variables
 
+    fixed_ascs = {x: float(y) for x, y in args.ascs}
+    if fixed_ascs:
+        print("Using fixed ascs", fixed_ascs)
+
     ASC = {}
     for mode in ds.modes:
         # Base asc
-        ASC[mode] = Beta(f"ASC_{mode}", 0, None, None, FIXED if mode == "walk" else ESTIMATE)
+        val = fixed_ascs.get(mode, 0)
+        status = FIXED if mode == "walk" or mode in fixed_ascs else ESTIMATE
+        ASC[mode] = Beta(f"ASC_{mode}", val, None, None, status)
 
         if mode in args.mxl_modes:
             sd = Beta(f"ASC_{mode}_s", 1, 0, None, ESTIMATE)
@@ -73,16 +89,16 @@ if __name__ == "__main__":
     U = {}
     AV = {}
 
-    EXP_INCOME = Beta('EXP_INCOME', 1, 0, 1.5, ESTIMATE if args.est_exp_income else FIXED)
-    UTIL_MONEY = Beta('UTIL_MONEY', 1, 0.3, 1.5, ESTIMATE if args.est_util_money else FIXED)
-    BETA_PERFORMING = Beta('BETA_PERFORMING', 6.88, 1, 15, ESTIMATE if args.est_performing else FIXED)
+    EXP_INCOME = Beta('EXP_INCOME', args.exp_income, 0, 1.5, ESTIMATE if args.est_exp_income else FIXED)
+    UTIL_MONEY = Beta('UTIL_MONEY', args.util_money, 0.3, 1.5, ESTIMATE if args.est_util_money else FIXED)
+    BETA_PERFORMING = Beta('BETA_PERFORMING', args.performing, 1, 15, ESTIMATE if args.est_performing else FIXED)
 
-    BETA_CAR_PRICE_PERCEPTION = Beta('BETA_CAR_PRICE_PERCEPTION', 1, 0, 1,
+    BETA_CAR_PRICE_PERCEPTION = Beta('BETA_CAR_PRICE_PERCEPTION', args.price_perception, 0, 1,
                                      ESTIMATE if args.est_price_perception_car else FIXED)
     if args.same_price_perception:
         BETA_PT_PRICE_PERCEPTION = BETA_CAR_PRICE_PERCEPTION
     else:
-        BETA_PT_PRICE_PERCEPTION = Beta('BETA_PT_PRICE_PERCEPTION', 1, 0, 1,
+        BETA_PT_PRICE_PERCEPTION = Beta('BETA_PT_PRICE_PERCEPTION', args.price_perception, 0, 1,
                                         ESTIMATE if args.est_price_perception_pt else FIXED)
 
     BETA_PT_SWITCHES = Beta('BETA_PT_SWITCHES', 1, 0, None, ESTIMATE if args.est_pt_switches else FIXED)
@@ -173,6 +189,13 @@ if __name__ == "__main__":
 
     corr_matrix = results.getCorrelationResults()
     print(corr_matrix)
+
+    if args.mxl_modes:
+        # The simulation below builds plain logit probabilities; with random draws in U they
+        # would need to be wrapped in MonteCarlo. Skip elasticities/predictions for MXL runs.
+        print("MXL run: skipping elasticity and prediction simulation (requires MonteCarlo integration).")
+        import sys
+        sys.exit(0)
 
     probs = {f"Prob {ds.modes[i]}": models.logit(U, AV, i + 1) for i in range(len(ds.modes))}
     probs["weight"] = v["weight"]

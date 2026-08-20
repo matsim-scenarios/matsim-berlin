@@ -18,6 +18,14 @@ import java.util.Set;
 public class BerlinDashboardProvider implements DashboardProvider {
 
 	@Override
+	public boolean isDefault() {
+		// These are the scenario's default dashboards; marking them as such makes
+		// simwrapper.defaultDashboards=disabled effective (used e.g. by the
+		// compute-trip-choices/compute-plan-choices tools to skip heavy analyses).
+		return true;
+	}
+
+	@Override
 	public List<Dashboard> getDashboards(Config config, SimWrapper simWrapper) {
 		TripDashboard trips = new TripDashboard("mode_share_ref.csv", "mode_share_per_dist_ref.csv", "mode_users_ref.csv")
 			.setAnalysisArgs("--match-id", "^berlin.+", "--shp-filter", "none")

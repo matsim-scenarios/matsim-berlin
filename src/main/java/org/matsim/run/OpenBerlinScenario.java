@@ -65,8 +65,18 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 	@CommandLine.Option(names = "--plan-selector",
 		description = "Plan selector to use.",
-		defaultValue = DefaultPlanStrategiesModule.DefaultSelector.BestScore)
+		// ChangeExpBeta supplies the estimation's residual plan-level Gumbel kernel (scale 1
+		// matches the estimation's normalization); frozen taste/error components live in the
+		// scores. BestScore remains available for the fully-frozen (common-random-numbers) setup.
+		defaultValue = DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta)
 	private String planSelector;
+
+	public OpenBerlinScenario() {
+	}
+
+	public OpenBerlinScenario(Config config) {
+		super(config);
+	}
 
 	public static void main(String[] args) {
 		MATSimApplication.execute(OpenBerlinScenario.class, args);
@@ -196,13 +206,19 @@ public class OpenBerlinScenario extends MATSimApplication {
 	protected void prepareControler(Controler controler) {
 
 		controler.addOverridingModule(new SimWrapperModule());
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				BerlinDashboardProvider dashboardProvider = new BerlinDashboardProvider();
-				Multibinder.newSetBinder( binder(), DashboardProvider.class ).addBinding().toInstance( dashboardProvider );
-			}
-		});
+
+		// Guice-bound providers bypass the SimWrapperListener's defaultDashboards check
+		// (only SPI-loaded providers are filtered by it), so honor the setting here.
+		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(controler.getConfig(), SimWrapperConfigGroup.class);
+		if (sw.getDefaultDashboards() != SimWrapperConfigGroup.DefaultDashboardsMode.disabled) {
+			controler.addOverridingModule(new AbstractModule() {
+				@Override
+				public void install() {
+					BerlinDashboardProvider dashboardProvider = new BerlinDashboardProvider();
+					Multibinder.newSetBinder( binder(), DashboardProvider.class ).addBinding().toInstance( dashboardProvider );
+				}
+			});
+		}
 
 		controler.addOverridingModule(new TravelTimeBinding());
 		controler.addOverridingModule(new QsimTimingModule());
