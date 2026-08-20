@@ -28,7 +28,8 @@ if __name__ == "__main__":
 
     df = ds.df * 1     # Convert all the columns to numeric
 
-    mean_dist = df.groupby("choice").agg(dist=("beelineDist", "mean")) * 1000 # mean_dist is needed later!
+    mean_dist = df.groupby("choice").agg(dist=("beelineDist", "mean")) # mean_dist is needed later!
+    overall_mean_dist = df["beelineDist"].mean()
 
     # choice = 1 ist walk, dann pt, car, bike, ride.  Kommt bei den V_i so raus; ich weiss nicht, woher  man das sonst wissen kann.
     # --> weiter unten gibt es einen Aufruf enumerate( ds.modes, 1 ), der das implizit macht!
@@ -47,7 +48,7 @@ if __name__ == "__main__":
 
     # df.drop(df[   (df["dist_weight"] * df["beelineDist"]) > 3   ].index, inplace=True) # yy ??
 
-    # df.drop( df[ df["choice"]==5 ].index, inplace=True ) # erzeugt weiterhin signifikante Schaetzwerte für ride, was nicht sein duerfte
+    # df.drop( df[ df["choice"]==5 ].index, inplace=True )
 
 
     database = db.Database("data/choices", df)     # convert from pandas to biogeme data container.  "database" is needed later.
@@ -68,11 +69,12 @@ if __name__ == "__main__":
 
     BETA_PERFORMING = Beta('betaPerf', -6.88, -15, -1, ESTIMATE )
     EXP_PERF_DIST = Beta( "lambdaPerfDist", 0, None, None, ESTIMATE )
+    EXP_PERF_TIME = Beta( "lambdaPerfTime", 0, None, None, ESTIMATE )
 
     # BETA_CAR_PRICE_PERCEPTION = Beta('betaFcpCar', 0, 0, None, ESTIMATE )
     # BETA_PT_PRICE_PERCEPTION = Beta('betaFcpPt', 0, 0, 1, ESTIMATE )
 
-    BETA_PT_SWITCHES = Beta('betaPtSwitches', -1, None, 0, ESTIMATE )
+    BETA_PT_SWITCHES = Beta('betaPtSwitches', -1, None, None, ESTIMATE )
 
     BETA_RIDE_ALPHA = Beta('alphaRide', 1, 0, 2, ESTIMATE )
 
@@ -81,14 +83,14 @@ if __name__ == "__main__":
     DIST = {}
     est_exp_dist = []
     for mode in est_exp_dist:
-        print(f"Estimating distance elasticity for {mode}")
+        print(f"Estimating distance exponent for {mode}")
         DIST[mode] = (Beta(f'betaDist_{mode}', 0, None, None, ESTIMATE), Beta(f'lambdaDist_{mode}', 1, None, None, ESTIMATE))
 
     # == beta_trav:
 
     TRAV = {}
     est_trav = []
-    # est_trav = ds.modes
+    # est_trav = ds.modes # sollte dann ohne betaPerf laufen
     for mode in est_trav:
        # TRAV[mode] = ( Beta(f'betaTrav_{mode}', 0, None, None, ESTIMATE) , Beta( f'lambdaTrav_{mode}', 0, None, None, ESTIMATE ) )
         TRAV[mode] = ( Beta(f'betaTrav_{mode}', 0, None, None, ESTIMATE) , 0 )
@@ -96,9 +98,11 @@ if __name__ == "__main__":
     # == overriding some things
 
     ASC['walk'] = 0
-    # BETA_RIDE_ALPHA = 1
-    # EXP_INCOME = 0
+    # BETA_RIDE_ALPHA = 1.
+    EXP_INCOME = 0
     # BETA_PERFORMING = 0.
+    EXP_PERF_DIST = 0.
+    EXP_PERF_TIME = 0.
 
     # BETA_CAR_PRICE_PERCEPTION = 0.0
     # BETA_PT_PRICE_PERCEPTION = BETA_CAR_PRICE_PERCEPTION
@@ -113,11 +117,13 @@ if __name__ == "__main__":
         u = ASC[mode]
         tmp = 0
         if BETA_PERFORMING != 0:
-            tmp = BETA_PERFORMING * vv[f"{mode}_hours"]
+            tmp = BETA_PERFORMING * vv[f"{mode}_hours"] * (vv[f"{mode}_hours"]**EXP_PERF_TIME)
             if BETA_RIDE_ALPHA != 0 and mode == "ride":
                 tmp *= (1 + BETA_RIDE_ALPHA)
             if EXP_PERF_DIST != 0:
-                tmp *= ((vv[f"{mode}_km"] * 1000) / round(mean_dist.loc[i].dist,0)) ** EXP_PERF_DIST
+                # tmp *= ( vv[f"{mode}_km"] / round(overall_mean_dist,3)) ** EXP_PERF_DIST
+                tmp *= ((vv[f"{mode}_km"]) / round(mean_dist.loc[i].dist,3)) ** EXP_PERF_DIST
+                # ( yyyy not sure if we want to divide of the average distance of the mode, and not by the average distance overall )
         # u = ASC[mode] + BETA_PERFORMING * v[f"{mode}_hours"] * ( (1 + BETA_RIDE_ALPHA) if mode == "ride" else 1) * ( 1.5 if mode == "pt" else 1)
         # u = ASC[mode] + BETA_PERFORMING * ( vv[f"{mode}_hours"] + ( vv["pt_walking_km"]/10 if mode=="pt" else 0 ) ) * ( (1 + BETA_RIDE_ALPHA) if mode == "ride" else 1)
         u += tmp
@@ -127,7 +133,7 @@ if __name__ == "__main__":
             u += beta * vv[f"{mode}_hours"]
             # ( Die Berücksichtigung vom ride_alpha ist hier erstmal nicht nötig, weil biogeme den Effekt nach beta_trav_ride absorbieren wird. )
             if expnt != 0:
-                u *= (  (vv[f"{mode}_km"] * 1000) / float(mean_dist.loc[i].dist)  ) ** expnt
+                u *= (  (vv[f"{mode}_km"]) / float(mean_dist.loc[i].dist)  ) ** expnt
 
         if km_costs[mode] != 0:
             price = km_costs[mode] * vv[f"{mode}_km"]
@@ -143,7 +149,7 @@ if __name__ == "__main__":
             #         price += daily_costs[mode] * vv["dist_weight"] * BETA_PT_PRICE_PERCEPTION
 
             if EXP_INCOME != 0:
-                price *= ( round(ds.global_income,0) / vv["income"] ) ** EXP_INCOME
+                price *= ( vv['income'] / round(ds.global_income,0) ) ** EXP_INCOME
 
             u += UTIL_MONEY * price
 
