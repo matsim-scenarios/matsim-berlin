@@ -99,9 +99,7 @@
 		<param name="separateModes" value="true"/>
 	</module>
 	<module name="vspExperimental">
-		<!-- warn instead of abort: positive marginalUtilityOfTraveling values below are deliberate
-		     (travel time partly usable; estimated as offsets against performing=6, see scoring comments) -->
-		<param name="vspDefaultsCheckingLevel" value="warn"/>
+		<param name="vspDefaultsCheckingLevel" value="abort"/>
 	</module>
 
 	<module name="scoring">
@@ -111,21 +109,15 @@
 
 		<parameterset type="scoringParameters">
 
-			<!-- Re-estimated specification (branch michaz/choicemodel, 2026-08-21, smoke-scale: 1pct, k=9 plan candidates).
-			     Structure: mode-specific time offsets against performing=6 estimated at trip level (trip_model.py),
-			     full unperceived daily costs, situational error components (EC_S in BerlinScoringModule),
-			     person-level taste variation for ride only (see modeTasteVariations regeneration).
-			     Constants below are estimation results used as calibration starting values.
-			     All values provisional pending k=70 / 10pct re-estimation. -->
+			<!-- All parameters in this section are based on estimated MXL model -->
+			<!-- Variations are loaded from person attributes -->
 			<param name="marginalUtilityOfMoney" value="0.397322"/>
-			<param name="performing" value="6.0"/>
-			<!-- Pair-consistent with PT_TIME below; estimated jointly (trip_model.py) -->
-			<param name="utilityOfLineSwitch" value="-0.318692"/>
+			<param name="performing" value="5.501071"/>
+			<param name="utilityOfLineSwitch" value="-1"/>
 
 			<parameterset type="tasteVariations" >
-				<!-- Income-dependent scoring disabled: no income effect identifiable in choice data
-				     (plan_model.py income tests, 2026-08-21). Income enters via availability/ownership margins only. -->
-				<param name="incomeExponent" value="0" />
+				<!-- Exponent for income dependent scoring. Exponent for (global_income / personal_income) ** x. -->
+				<param name="incomeExponent" value="0.275502" />
 
 				<!-- List of utility parameters that are loaded from each person. -->
 				<param name="variationsOf" value="constant" />
@@ -135,47 +127,44 @@
 			</parameterset>
 
 			<parameterset type="modeParams">
-				<param name="constant" value="-1.664753" />
-				<!-- 14.30€/day full value, no perception factor. Ownership = accepting this daily cost. -->
-				<param name="dailyMonetaryConstant" value="-14.30" />
+				<param name="constant" value="-0.7347353805149114" />
+				<!-- 14.90€ * 0.268622 (fixed cost perception) -->
+				<param name="dailyMonetaryConstant" value="-3.8412946" />
 				<param name="dailyUtilityConstant" value="0" />
 				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-				<!-- positive = in-vehicle time partly usable; offset against performing=6 (net -2.01/h) -->
-				<param name="marginalUtilityOfTraveling_util_hr" value="3.987524" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<!-- only petrol price 2022, other cost components were excluded -->
 				<param name="monetaryDistanceRate" value="-1.49E-4" />
 				<param name="mode" value="car" />
 			</parameterset>
 			<parameterset type="modeParams">
-				<param name="constant" value="-7.049106" />
+				<param name="constant" value="-6.239457898898021" />
 				<param name="dailyMonetaryConstant" value="0.0" />
 				<param name="dailyUtilityConstant" value="0.0" />
 				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-				<!-- 2x car time cost convention collapsed: 2*CAR_TIME - performing = 2*3.987524 - 6 -->
-				<param name="marginalUtilityOfTraveling_util_hr" value="1.975048" />
+				<!-- Result of estimation -->
+				<param name="marginalUtilityOfTraveling_util_hr" value="-4.442946" />
 				<!-- car_monetaryDistanceRate -->
 				<param name="monetaryDistanceRate" value="-1.49E-4" />
 				<param name="mode" value="ride" />
 			</parameterset>
 			<parameterset type="modeParams">
-				<param name="constant" value="-2.932627" />
-				<!-- 2022: 4-trips AB 10Euro -> 2.5 Eu/trip. yearly 761 Eu / 250 days ~ 3.00 Eu/day.
-				     Full value, no perception factor. -->
-				<param name="dailyMonetaryConstant" value="-3.00" />
+				<param name="constant" value="-1.5457706277415049" />
+				<!-- 2022: 4-trips AB 10Euro -> 2.5 Eu/trip. yearly 761 Eu / 250 days ~ 3.00 Eu/day -->
+				<!-- (fixed cost perception) 0.268622 * 3.00 -->
+				<param name="dailyMonetaryConstant" value="-0.805866" />
 				<param name="dailyUtilityConstant" value="0.0" />
 				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-				<!-- positive = pt time partly usable; offset against performing=6 (net -1.84/h) -->
-				<param name="marginalUtilityOfTraveling_util_hr" value="4.162085" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="monetaryDistanceRate" value="0.0" />
 				<param name="mode" value="pt" />
 			</parameterset>
 			<parameterset type="modeParams">
-				<param name="constant" value="-2.275658" />
+				<param name="constant" value="-1.2333836433785272" />
 				<param name="dailyMonetaryConstant" value="0.0" />
 				<param name="dailyUtilityConstant" value="0.0" />
 				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-				<!-- offset against performing=6 (net -3.91/h) -->
-				<param name="marginalUtilityOfTraveling_util_hr" value="2.085135" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="-1.309362" />
 				<param name="monetaryDistanceRate" value="0.0" />
 				<param name="mode" value="bike" />
 			</parameterset>
@@ -184,14 +173,13 @@
 				<param name="dailyMonetaryConstant" value="0.0" />
 				<param name="dailyUtilityConstant" value="0.0" />
 				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-				<!-- offset against performing=6 (net -7.13/h) -->
-				<param name="marginalUtilityOfTraveling_util_hr" value="-1.129768" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="monetaryDistanceRate" value="0.0" />
 				<param name="mode" value="walk" />
 			</parameterset>
 			<parameterset type="modeParams">
-				<!-- Bus submode penalty dropped in re-estimated spec -->
-				<param name="constant" value="0.0" />
+				<!-- Constant added to pt legs that use a bus. (Scoring for the whole pt trip still applies) -->
+				<param name="constant" value="-0.164051" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="bus" />
 			</parameterset>
