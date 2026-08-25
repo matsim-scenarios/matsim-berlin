@@ -63,6 +63,10 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 		"Default = -0.0003Eu/m, which is double the usual distance cost of car.", defaultValue = "-0.0003")
 	private static double expensiveMonetaryDistanceRate;
 
+	@CommandLine.Option(names = "--switch-car-trips-handling", description = "Decides whether for the initial demand, all car trips are changed to carExpensive trips or only those car trips" +
+		"of agents tagged as rich.")
+	static ManualModeSwitchForCarTripsHandling switchForCarTripsHandling = ManualModeSwitchForCarTripsHandling.SWITCH_ALL_CAR_TRIPS;
+
 	@Nullable
 	@Override
 	public Config prepareConfig(Config config) {
@@ -216,10 +220,32 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 
 		RoutingModeMainModeIdentifier mainModeIdentifier = new RoutingModeMainModeIdentifier();
 
+//		tag highest X% income agents
+		List<? extends Person> sorted = scenario.getPopulation().getPersons().values().stream()
+			.filter(p -> p.getAttributes().getAttribute("subpopulation").equals("person"))
+			.sorted(Comparator.comparingDouble(PersonUtils::getIncome).reversed())
+			.toList();
 
-//		switch all car legs to new car mode
+		int count = (int) Math.ceil(sorted.size() * pctForTagging);
+
+		List<? extends Person> financiallyFortunate = sorted.subList(0, count);
+
+		for (Person rich : financiallyFortunate) {
+			scenario.getPopulation().getPersons()
+				.get(rich.getId()).getAttributes().putAttribute("subpopulation", RICH);
+		}
+
+		Set<String> consideredSubpopulationsForManualModeSwitch = new HashSet<>();
+		consideredSubpopulationsForManualModeSwitch.add("person");
+		consideredSubpopulationsForManualModeSwitch.add(RICH);
+
+		if (switchForCarTripsHandling == ManualModeSwitchForCarTripsHandling.SWITCH_ONLY_CAR_TRIPS_OF_RICH_AGENTS) {
+			consideredSubpopulationsForManualModeSwitch.remove("person");
+		}
+
+		//		switch all car legs to new car mode
 		for (Person person : scenario.getPopulation().getPersons().values()) {
-			if (!person.getAttributes().getAttribute("subpopulation").equals("person")) {
+			if (!consideredSubpopulationsForManualModeSwitch.contains(person.getAttributes().getAttribute("subpopulation").toString())) {
 				continue;
 			}
 
@@ -243,21 +269,6 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 					}
 				}
 			}
-		}
-
-//		tag highest X% income agents
-		List<? extends Person> sorted = scenario.getPopulation().getPersons().values().stream()
-			.filter(p -> p.getAttributes().getAttribute("subpopulation").equals("person"))
-			.sorted(Comparator.comparingDouble(PersonUtils::getIncome).reversed())
-			.toList();
-
-		int count = (int) Math.ceil(sorted.size() * pctForTagging);
-
-		List<? extends Person> financiallyFortunate = sorted.subList(0, count);
-
-		for (Person rich : financiallyFortunate) {
-			scenario.getPopulation().getPersons()
-				.get(rich.getId()).getAttributes().putAttribute("subpopulation", RICH);
 		}
 	}
 
@@ -305,4 +316,6 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 			}
 		});
 	}
+
+	private enum ManualModeSwitchForCarTripsHandling {SWITCH_ALL_CAR_TRIPS, SWITCH_ONLY_CAR_TRIPS_OF_RICH_AGENTS}
 }
