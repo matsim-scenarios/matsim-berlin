@@ -7,6 +7,7 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scoring.*;
 import org.matsim.core.scoring.functions.*;
+import org.matsim.analysis.InLoopAscCalibration;
 import org.matsim.run.scoring.TransitRouteToMode;
 
 /**
@@ -20,16 +21,19 @@ public class AdvancedScoringFunctionFactory implements ScoringFunctionFactory {
 	private final ScoringParametersForPerson params;
 	private final PseudoRandomScorer pseudoRNG;
 	private final TransitRouteToMode ptRouteToMode;
+	private final InLoopAscCalibration.Offsets ascOffsets;
 
 	@Inject
 	public AdvancedScoringFunctionFactory(Config config, AnalysisMainModeIdentifier mmi, TransitRouteToMode ptRouteToMode,
-										  ScoringParametersForPerson params, PseudoRandomScorer pseudoRNG) {
+										  ScoringParametersForPerson params, PseudoRandomScorer pseudoRNG,
+										  InLoopAscCalibration.Offsets ascOffsets) {
 		this.config = config;
 		this.scoring = ConfigUtils.addOrGetModule(config, AdvancedScoringConfigGroup.class);
 		this.mmi = mmi;
 		this.params = params;
 		this.pseudoRNG = pseudoRNG;
 		this.ptRouteToMode = ptRouteToMode;
+		this.ascOffsets = ascOffsets;
 	}
 
 	@Override
@@ -48,6 +52,8 @@ public class AdvancedScoringFunctionFactory implements ScoringFunctionFactory {
 		sumScoringFunction.addScoringFunction(new CharyparNagelMoneyScoring(parameters));
 		sumScoringFunction.addScoringFunction(new CharyparNagelAgentStuckScoring(parameters));
 		sumScoringFunction.addScoringFunction(new ScoreEventScoring());
+		// in-loop ASC calibration offsets (inert zeros unless the calibration is active)
+		sumScoringFunction.addScoringFunction(new InLoopAscCalibration.OffsetTripScoring(ascOffsets));
 		return sumScoringFunction;
 	}
 

@@ -5,6 +5,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.matsim.analysis.InLoopAscCalibration;
 import org.matsim.analysis.PointElasticityStatsModule;
 import org.matsim.analysis.QsimTimingModule;
 import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
@@ -91,6 +92,12 @@ public class OpenBerlinScenario extends MATSimApplication {
 		description = "Scales the pt daily cost. Applied after --scoring-model, for price elasticity experiments.",
 		defaultValue = "1.0")
 	private double ptCostFactor;
+
+	@CommandLine.Option(names = "--in-loop-asc-calibration",
+		description = "Calibrate mode ASCs in-loop against SrV shares (Newton-conditioned logit update, " +
+			"self-determined convergence; see InLoopAscCalibration).",
+		defaultValue = "false")
+	private boolean inLoopAscCalibration;
 
 	public enum ScoringModel {published, reestimated}
 
@@ -354,6 +361,10 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		// In-loop point elasticity monitor (open-loop, from plan memories; see class javadoc)
 		controler.addOverridingModule(new PointElasticityStatsModule());
+
+		// Always installed: provides the (inert-by-default) score offsets the scoring factories
+		// depend on; the calibration listener itself only runs with --in-loop-asc-calibration.
+		controler.addOverridingModule(new InLoopAscCalibration(inLoopAscCalibration));
 	}
 
 	/**

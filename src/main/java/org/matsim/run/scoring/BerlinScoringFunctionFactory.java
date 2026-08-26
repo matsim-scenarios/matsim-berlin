@@ -7,6 +7,7 @@ import org.matsim.core.config.Config;
 import org.matsim.core.router.AnalysisMainModeIdentifier;
 import org.matsim.core.scoring.*;
 import org.matsim.core.scoring.functions.*;
+import org.matsim.analysis.InLoopAscCalibration;
 
 /**
  * Plugs together the scoring function factory for the Berlin model.
@@ -19,19 +20,22 @@ public final class BerlinScoringFunctionFactory implements ScoringFunctionFactor
 	private final ScoringParametersForPerson params;
 	private final TransitRouteToMode ptRouteToMode;
 	private final PseudoRandomScorer pseudoRNG;
+	private final InLoopAscCalibration.Offsets ascOffsets;
 
 
 	@Inject
 	public BerlinScoringFunctionFactory(Config config, AnalysisMainModeIdentifier mmi, Network network,
 										ScoringParametersForPerson params,
 										TransitRouteToMode ptRouteToMode,
-										PseudoRandomScorer pseudoRNG) {
+										PseudoRandomScorer pseudoRNG,
+										InLoopAscCalibration.Offsets ascOffsets) {
 		this.config = config;
 		this.mmi = mmi;
 		this.network = network;
 		this.params = params;
 		this.ptRouteToMode = ptRouteToMode;
 		this.pseudoRNG = pseudoRNG;
+		this.ascOffsets = ascOffsets;
 	}
 
 	@Override
@@ -47,6 +51,8 @@ public final class BerlinScoringFunctionFactory implements ScoringFunctionFactor
 		sumScoringFunction.addScoringFunction(new CharyparNagelMoneyScoring(parameters));
 		sumScoringFunction.addScoringFunction(new CharyparNagelAgentStuckScoring(parameters));
 		sumScoringFunction.addScoringFunction(new ScoreEventScoring());
+		// in-loop ASC calibration offsets (inert zeros unless the calibration is active)
+		sumScoringFunction.addScoringFunction(new InLoopAscCalibration.OffsetTripScoring(ascOffsets));
 		return sumScoringFunction;
 
 	}

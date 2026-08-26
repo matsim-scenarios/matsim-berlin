@@ -60,8 +60,10 @@ public class PointElasticityStatsModule extends AbstractModule {
 		private final List<Integer> iterations = new ArrayList<>();
 		private final List<Double> eCar = new ArrayList<>();
 		private final List<Double> ePt = new ArrayList<>();
+		private final List<Double> eBikeSpeed = new ArrayList<>();
 		private final List<Double> shareCar = new ArrayList<>();
 		private final List<Double> sharePt = new ArrayList<>();
+		private final List<Double> shareBike = new ArrayList<>();
 
 		@Inject
 		PointElasticityStatsListener(Population population, ScoringParametersForPerson scoringParams) {
@@ -75,8 +77,10 @@ public class PointElasticityStatsModule extends AbstractModule {
 			double totalTrips = 0;
 			double carTrips = 0;
 			double ptTrips = 0;
+			double bikeTrips = 0;
 			double carDeriv = 0;
 			double ptDeriv = 0;
+			double bikeSpeedDeriv = 0;
 
 			for (Person person : population.getPersons().values()) {
 				if (!"person".equals(PopulationUtils.getSubpopulation(person)))
@@ -93,6 +97,8 @@ public class PointElasticityStatsModule extends AbstractModule {
 				double mdrRide = monetaryDistanceRate(params, TransportMode.ride);
 				double dmcCar = dailyMoneyConstant(params, TransportMode.car);
 				double dmcPt = dailyMoneyConstant(params, TransportMode.pt);
+				// effective bike time cost per second: mode mUTT minus foregone performing
+				double bikeTimeCoeff = travelTimeCoeff(params, TransportMode.bike) - params.marginalUtilityOfPerforming_s;
 
 				List<double[]> plans = new ArrayList<>(); // score, nCar, nPt, xCar, xPt
 				for (Plan plan : person.getPlans()) {
@@ -101,9 +107,11 @@ public class PointElasticityStatsModule extends AbstractModule {
 
 					int nCar = 0;
 					int nPt = 0;
+					int nBike = 0;
 					int nAll = 0;
 					double carMeters = 0;
 					double rideMeters = 0;
+					double bikeSeconds = 0;
 					boolean carUsed = false;
 					boolean ptUsed = false;
 
@@ -111,6 +119,7 @@ public class PointElasticityStatsModule extends AbstractModule {
 						nAll++;
 						boolean hasCar = false;
 						boolean hasPt = false;
+						boolean hasBike = false;
 						for (Leg leg : trip.getLegsOnly()) {
 							switch (leg.getMode()) {
 								case TransportMode.car -> {
@@ -119,11 +128,17 @@ public class PointElasticityStatsModule extends AbstractModule {
 								}
 								case TransportMode.ride -> rideMeters += dist(leg);
 								case TransportMode.pt -> hasPt = true;
+								case TransportMode.bike -> {
+									hasBike = true;
+									if (leg.getTravelTime().isDefined())
+										bikeSeconds += leg.getTravelTime().seconds();
+								}
 								default -> { }
 							}
 						}
 						if (hasCar) nCar++;
 						if (hasPt) nPt++;
+						if (hasBike) nBike++;
 						carUsed |= hasCar;
 						ptUsed |= hasPt;
 					}
@@ -131,8 +146,10 @@ public class PointElasticityStatsModule extends AbstractModule {
 					// utility exposure to the respective cost factor (utils, typically negative)
 					double xCar = mUoM * (mdrCar * carMeters + mdrRide * rideMeters + (carUsed ? dmcCar : 0));
 					double xPt = mUoM * (ptUsed ? dmcPt : 0);
+					// utility exposure to a bike SPEED factor f (hours scale 1/f): dU/df at f=1
+					double xBikeSpeed = -bikeTimeCoeff * bikeSeconds;
 
-					plans.add(new double[]{plan.getScore(), nCar, nPt, xCar, xPt, nAll});
+					plans.add(new double[]{plan.getScore(), nCar, nPt, xCar, xPt, nAll, nBike, xBikeSpeed});
 				}
 
 				if (plans.isEmpty())
@@ -144,40 +161,51 @@ public class PointElasticityStatsModule extends AbstractModule {
 
 				double expCar = 0;
 				double expPt = 0;
+				double expBike = 0;
 				double expXCar = 0;
 				double expXPt = 0;
+				double expXBike = 0;
 				double expCarXCar = 0;
 				double expPtXPt = 0;
+				double expBikeXBike = 0;
 				double nTrips = 0;
 				for (double[] p : plans) {
 					double prob = Math.exp(p[0] - max) / denom;
 					expCar += prob * p[1];
 					expPt += prob * p[2];
+					expBike += prob * p[6];
 					expXCar += prob * p[3];
 					expXPt += prob * p[4];
+					expXBike += prob * p[7];
 					expCarXCar += prob * p[1] * p[3];
 					expPtXPt += prob * p[2] * p[4];
+					expBikeXBike += prob * p[6] * p[7];
 					nTrips += prob * p[5];
 				}
 
 				carTrips += expCar;
 				ptTrips += expPt;
+				bikeTrips += expBike;
 				totalTrips += nTrips;
 				// d E[trips_m] / d factor = cov(trips_m, exposure_m) under the plan-choice distribution
 				carDeriv += expCarXCar - expCar * expXCar;
 				ptDeriv += expPtXPt - expPt * expXPt;
+				bikeSpeedDeriv += expBikeXBike - expBike * expXBike;
 			}
 
 			double elCar = carTrips > 0 ? carDeriv / carTrips : Double.NaN;
 			double elPt = ptTrips > 0 ? ptDeriv / ptTrips : Double.NaN;
+			double elBikeSpeed = bikeTrips > 0 ? bikeSpeedDeriv / bikeTrips : Double.NaN;
 
 			iterations.add(event.getIteration());
 			eCar.add(elCar);
 			ePt.add(elPt);
+			eBikeSpeed.add(elBikeSpeed);
 			shareCar.add(totalTrips > 0 ? carTrips / totalTrips : Double.NaN);
 			sharePt.add(totalTrips > 0 ? ptTrips / totalTrips : Double.NaN);
+			shareBike.add(totalTrips > 0 ? bikeTrips / totalTrips : Double.NaN);
 
-			log.info("In-loop point elasticity estimate: car {} pt {}", elCar, elPt);
+			log.info("In-loop point elasticity estimate: car {} pt {} bike(speed) {}", elCar, elPt, elBikeSpeed);
 
 			writeCsv(event);
 			writePng(event);
@@ -186,9 +214,10 @@ public class PointElasticityStatsModule extends AbstractModule {
 		private void writeCsv(IterationEndsEvent event) {
 			Path out = Path.of(event.getServices().getControllerIO().getOutputFilename("elasticity_stats.csv"));
 			try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(out, StandardCharsets.UTF_8))) {
-				writer.println("iteration,elasticity_car,elasticity_pt,share_car,share_pt");
+				writer.println("iteration,elasticity_car,elasticity_pt,elasticity_bike_speed,share_car,share_pt,share_bike");
 				for (int i = 0; i < iterations.size(); i++) {
-					writer.printf("%d,%f,%f,%f,%f%n", iterations.get(i), eCar.get(i), ePt.get(i), shareCar.get(i), sharePt.get(i));
+					writer.printf("%d,%f,%f,%f,%f,%f,%f%n", iterations.get(i), eCar.get(i), ePt.get(i), eBikeSpeed.get(i),
+						shareCar.get(i), sharePt.get(i), shareBike.get(i));
 				}
 			} catch (IOException e) {
 				log.warn("Could not write elasticity stats", e);
@@ -198,9 +227,11 @@ public class PointElasticityStatsModule extends AbstractModule {
 		private void writePng(IterationEndsEvent event) {
 			if (iterations.size() < 2)
 				return;
-			XYLineChart chart = new XYLineChart("In-loop point elasticity estimate (open loop)", "iteration", "elasticity wrt cost factor");
-			chart.addSeries("car", toArray(iterations), toArray(eCar, iterations.size()));
-			chart.addSeries("pt", toArray(iterations), toArray(ePt, iterations.size()));
+			XYLineChart chart = new XYLineChart("In-loop point elasticity estimate (open loop)", "iteration",
+				"elasticity (car/pt wrt cost factor, bike wrt speed factor)");
+			chart.addSeries("car (cost)", toArray(iterations), toArray(eCar, iterations.size()));
+			chart.addSeries("pt (cost)", toArray(iterations), toArray(ePt, iterations.size()));
+			chart.addSeries("bike (speed)", toArray(iterations), toArray(eBikeSpeed, iterations.size()));
 			chart.saveAsPng(event.getServices().getControllerIO().getOutputFilename("elasticityEstimate.png"), 800, 600);
 		}
 
@@ -208,6 +239,11 @@ public class PointElasticityStatsModule extends AbstractModule {
 			if (leg.getRoute() == null || Double.isNaN(leg.getRoute().getDistance()))
 				return 0;
 			return leg.getRoute().getDistance();
+		}
+
+		private static double travelTimeCoeff(ScoringParameters params, String mode) {
+			ModeUtilityParameters p = params.modeParams.get(mode);
+			return p == null ? 0 : p.marginalUtilityOfTraveling_s;
 		}
 
 		private static double monetaryDistanceRate(ScoringParameters params, String mode) {
