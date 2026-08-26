@@ -1,6 +1,7 @@
 package org.matsim.dashboard;
 
 import org.matsim.analysis.EnergyConsumptionAnalysis;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.application.options.ShpOptions;
 import org.matsim.simwrapper.Dashboard;
 import org.matsim.simwrapper.Header;
@@ -10,13 +11,27 @@ import org.matsim.simwrapper.viz.MapPlot;
 import org.matsim.simwrapper.viz.Tile;
 import picocli.CommandLine;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 /**
  * Shows emission in the scenario.
  */
 public class EnergyConsumptionDashboard implements Dashboard {
+	private final Set<String> modes;
+
+	EnergyConsumptionDashboard() {
+		this.modes = Set.of(TransportMode.car);
+	}
+
+	EnergyConsumptionDashboard(Set<String> modes) {
+		this.modes = modes;
+	}
 
 	@Override
 	public void configure(Header header, Layout layout) {
+		String[] args = new ArrayList<>(List.of("--modes",String.join(",", modes))).toArray(new String[0]);
 
 		header.title = "Energy Consumption";
 		header.description = "This dashboard indicates the energy consumption of cars assuming 100% electrification. \n" +
@@ -37,7 +52,7 @@ public class EnergyConsumptionDashboard implements Dashboard {
 		layout.row("consumption_residents")
 				.el(Tile.class, (viz, data) -> {
 					viz.title = "Residents: Energy Consumption Estimation";
-					viz.dataset = data.compute(EnergyConsumptionAnalysis.class, "energy_consumption_residents.csv");
+					viz.dataset = data.compute(EnergyConsumptionAnalysis.class, "energy_consumption_residents.csv", args);
 					viz.height = 1.;
 					viz.description = "The energy consumption should not be directly translated into charging demand, as charging can also happen at other places (e.g. at work, depot, etc.). \n" +
 							" Note that the values are scaled to 100% electrification and the average consumption value is configurable. \n" +
@@ -52,7 +67,7 @@ public class EnergyConsumptionDashboard implements Dashboard {
 		layout.row("distance_residents")
 				.el(Tile.class, (viz, data) -> {
 					viz.title = "Non-Residents: Distance Statistics";
-					viz.dataset = data.compute(EnergyConsumptionAnalysis.class, "distance_stats_non_residents.csv");
+					viz.dataset = data.compute(EnergyConsumptionAnalysis.class, "distance_stats_non_residents.csv", args);
 					viz.height = 1.;
 					viz.description = " Note that the values are scaled to 100%.";
 				});
@@ -61,7 +76,7 @@ public class EnergyConsumptionDashboard implements Dashboard {
 		layout.row("consumption_residents")
 				.el(Tile.class, (viz, data) -> {
 					viz.title = "Non-Residents: Energy Consumption Estimation";
-					viz.dataset = data.compute(EnergyConsumptionAnalysis.class, "energy_consumption_non_residents.csv");
+					viz.dataset = data.compute(EnergyConsumptionAnalysis.class, "energy_consumption_non_residents.csv", args);
 					viz.height = 1.;
 					//TODO no duplicate description ?
 					viz.description = "The energy consumption should not be directly translated into charging demand, as charging can also happen at other places (e.g. at work, depot, etc.). \n" +
@@ -79,9 +94,9 @@ public class EnergyConsumptionDashboard implements Dashboard {
 				.el(MapPlot.class, (viz, data) -> {
 					viz.title = "Considered Area";
 					viz.description = "Area determining residents and non-residents for the energy consumption estimation.";
-					viz.setShape(data.compute(EnergyConsumptionAnalysis.class, "energy_consumption_area.gpkg"));
+					viz.setShape(data.compute(EnergyConsumptionAnalysis.class, "energy_consumption_area.gpkg", args));
 					viz.center = data.context().getCenter();
-					viz.zoom = data.context().getMapZoomLevel();
+					viz.zoom = data.context().mapZoomLevel;
 					viz.display.fill.fixedColors = new String[]{"#e15759"}; //
 					viz.height = 10.0;
 				});

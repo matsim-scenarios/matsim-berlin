@@ -25,12 +25,9 @@ public class BerlinDashboardProvider implements DashboardProvider {
 			.withDistanceDistribution("mode_share_distance_distribution.csv")
 			.withGroupedRefData("mode_share_per_group_dist_ref.csv", "age", "income", "employment", "economic_status");
 
-		Dashboard energyConsumption = Dashboard.customize(new EnergyConsumptionDashboard())
-				.context("gartenfeld");
-
 		return List.of(
 			trips,
-			energyConsumption,
+			new EnergyConsumptionDashboard(),
 			new TravelTimeComparisonDashboard(ApplicationUtils.resolve(config.getContext(), "berlin-v" + OpenBerlinScenario.VERSION + "-routes-ref.csv.gz")),
 			new EmissionsDashboard(config.global().getCoordinateSystem()),
 			new NoiseDashboard(config.global().getCoordinateSystem()),

@@ -10,7 +10,6 @@ import org.jetbrains.annotations.NotNull;
 import org.locationtech.jts.geom.Geometry;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Population;
@@ -53,19 +52,21 @@ public class EnergyConsumptionAnalysis implements MATSimAppCommand {
     private final OutputOptions output = OutputOptions.ofCommand(EnergyConsumptionAnalysis.class);
 
     @CommandLine.Mixin
-    private final ConfigOptions configOptions = new ConfigOptions();
-
-    @CommandLine.Mixin
     private final ShpOptions shp = new ShpOptions();
 
     @CommandLine.Mixin
     private final CrsOptions crsOptions = new CrsOptions();
 
-
-    @CommandLine.Mixin
+	@CommandLine.Mixin
     private final SampleOptions sampleOptions = new SampleOptions();
 
-    private double averageConsumptionInKWhPer100km = 15.0;
+//	TODO: this should rather be a map with mode=energyConsumption; see
+	@CommandLine.Option(names = "--modes-energy-consumption", split = ",", description = "Modes to consider for analysis + their average energy consumption. consumption in kwH/100km", required = true)
+	private Map<String, Double> modesToEnergyConsumption;
+
+//  TODO: what would be a decent value for eBike here
+	private double averageCarConsumptionInKWhPer100km = 15.0;
+
 
     /**
      * Run the command logic.
@@ -109,6 +110,11 @@ public class EnergyConsumptionAnalysis implements MATSimAppCommand {
         Set<Id<Person>> inhabitants = new HashSet();
         Set<Id<Person>> agentsWithDestinationActs = new HashSet();
 
+//		it is clunky to load both output plans and experienced plans, but the experienced plans are more accurate than output plans.
+//		I do not want to rely on output_plans in the following.
+		String experiencedPlansFile = ApplicationUtils.matchInput("output_experienced_plans.xml.gz", input.getRunDirectory()).toString();
+		Population experienced = PopulationUtils.readPopulation(experiencedPlansFile);
+
         if (shp.isDefined()) {
             Geometry geometry = shp.getGeometry();
 
@@ -123,7 +129,7 @@ public class EnergyConsumptionAnalysis implements MATSimAppCommand {
 //                                        .filter(act -> geometry.contains(MGC.coord2Point(act.getCoord())))
                                         .collect(Collectors.toCollection(HashSet::new));
 
-                        if (activitiesInShape.size() > 0) {
+                        if (!activitiesInShape.isEmpty()) {
                             //agents that have an activity of type "home*" are considered inhabitants
                             if (activitiesInShape.stream().anyMatch(act -> act.getType().startsWith("home"))) {
                                 inhabitants.add(person.getId());
@@ -145,26 +151,46 @@ public class EnergyConsumptionAnalysis implements MATSimAppCommand {
                     .collect(Collectors.toCollection(HashSet::new)));
         }
 
-        DescriptiveStatistics inhabitantsCarDistanceStats = new DescriptiveStatistics();
-        DescriptiveStatistics destinationAgentsCarDistanceStats = new DescriptiveStatistics();
+		Map<String, DescriptiveStatistics> inhabitantsStatistics = new HashMap<>();
+		Map<String, DescriptiveStatistics> destinationAgentsStatistics = new HashMap<>();
 
-        //now we calculate the total car distance driven by inhabitants
+		for (String mode : modesToEnergyConsumption.keySet()) {
+			inhabitantsStatistics.put(mode, new DescriptiveStatistics());
+			destinationAgentsStatistics.put(mode, new DescriptiveStatistics());
+		}
+
+//        DescriptiveStatistics inhabitantsCarDistanceStats = new DescriptiveStatistics();
+//        DescriptiveStatistics destinationAgentsCarDistanceStats = new DescriptiveStatistics();
+
+        //now we calculate the total distance driven by inhabitants
         for (Id<Person> inhabitant : inhabitants) {
-            Optional<Double> totalCarDistance = getTotalCarDistance(inhabitant, scenario.getPopulation());
-            if (totalCarDistance.isPresent()) {
-                inhabitantsCarDistanceStats.addValue(totalCarDistance.get() / 1000.0); //convert to km
-            }
+			for (Map.Entry<String, DescriptiveStatistics> entry : inhabitantsStatistics.entrySet()) {
+				Optional<Double> totalModeDistance = getTotalDistanceByMode(inhabitant, experienced, entry.getKey());
+				//convert to km
+				totalModeDistance.ifPresent(aDouble -> entry.getValue().addValue(aDouble / 1000.0));
+			}
+
+
+//            Optional<Double> totalCarDistance = getTotalDistanceByMode(inhabitant, scenario.getPopulation());
+//			//convert to km
+//			totalCarDistance.ifPresent(aDouble -> inhabitantsCarDistanceStats.addValue(aDouble / 1000.0));
         }
 
-        //now we calculate the total car distance driven by non-inhabitants who have destination activities in the area
+        //now we calculate the total distance driven by non-inhabitants who have destination activities in the area
         for (Id<Person> agentId : agentsWithDestinationActs) {
-            Optional<Double> totalCarDistance = getTotalCarDistance(agentId, scenario.getPopulation());
-            if (totalCarDistance.isPresent()) {
-                destinationAgentsCarDistanceStats.addValue(totalCarDistance.get() / 1000.0); //convert to km
-            }
+			for (Map.Entry<String, DescriptiveStatistics> entry : destinationAgentsStatistics.entrySet()) {
+				Optional<Double> totalModeDistance = getTotalDistanceByMode(agentId, scenario.getPopulation(), entry.getKey());
+				//convert to km
+				totalModeDistance.ifPresent(aDouble -> entry.getValue().addValue(aDouble / 1000.0));
+			}
+
+
+//            Optional<Double> totalCarDistance = getTotalDistanceByMode(agentId, scenario.getPopulation());
+//			//convert to km
+//			totalCarDistance.ifPresent(aDouble -> destinationAgentsCarDistanceStats.addValue(aDouble / 1000.0));
         }
 
-        writeTilesCSVs(inhabitantsCarDistanceStats, destinationAgentsCarDistanceStats);
+        writeTilesCSVs(inhabitantsStatistics, destinationAgentsStatistics);
 
         return 0;
     }
@@ -173,54 +199,60 @@ public class EnergyConsumptionAnalysis implements MATSimAppCommand {
         List<SimpleFeature> list = shp.readFeatures();
         Path path = output.getPath("energy_consumption_area.gpkg");
         if(path.toFile().exists()){
-            log.warn("The output file " + path + " already exists and will be overwritten.");
+            log.warn("The output file {} already exists and will be overwritten.", path);
             path.toFile().delete();
         }
         GeoFileWriter.writeGeometries(list, output.getPath("energy_consumption_area.gpkg").toString());
     }
 
-    private void writeTilesCSVs(DescriptiveStatistics inhabitantsCarDistanceStats, DescriptiveStatistics destinationAgentsCarDistanceStats) {
+    private void writeTilesCSVs(Map<String, DescriptiveStatistics> inhabitantsDistanceStats, Map<String, DescriptiveStatistics> destinationAgentsDistanceStats) {
         double factor = sampleOptions.getUpscaleFactor();
 
         // Total stats
         DecimalFormat df = new DecimalFormat("#", DecimalFormatSymbols.getInstance(Locale.US));
         try (CSVPrinter printer = new CSVPrinter(IOUtils.getBufferedWriter(output.getPath("distance_stats_residents.csv").toString()), CSVFormat.DEFAULT)) {
-            printer.printRecord("Total driven car distance by residents  [km]:", df.format(inhabitantsCarDistanceStats.getSum() * factor));
-            printer.printRecord("Mean driven car distance by resident car drivers [km]:", df.format(inhabitantsCarDistanceStats.getMean())); //no scale factor, because this a mean!
-            printer.printRecord("Number of resident car drivers [1]:", df.format(inhabitantsCarDistanceStats.getN() * factor));
+			for (Map.Entry<String, DescriptiveStatistics> entry : inhabitantsDistanceStats.entrySet()) {
+				printer.printRecord("Total driven " + entry.getKey() + " distance by residents  [km]:", df.format(entry.getValue().getSum() * factor));
+				printer.printRecord("Mean driven " + entry.getKey() + " distance by resident " + entry.getKey() + " drivers [km]:", df.format(entry.getValue().getMean())); //no scale factor, because this a mean!
+				printer.printRecord("Number of resident " + entry.getKey() + " drivers [1]:", df.format(entry.getValue().getN() * factor));
+			}
         } catch (IOException ex) {
             log.error(ex);
         }
         try (CSVPrinter printer = new CSVPrinter(IOUtils.getBufferedWriter(output.getPath("distance_stats_non_residents.csv").toString()), CSVFormat.DEFAULT)) {
-            printer.printRecord("Total driven car distance by non-residents with 1+ activities in shape [km]:", df.format(destinationAgentsCarDistanceStats.getSum() * factor));
-            printer.printRecord("Mean driven car distance by non-resident car drivers with 1+ activities in shape [km]:", df.format(destinationAgentsCarDistanceStats.getMean()));
-            printer.printRecord("Number of non-resident  car drivers [1]:", df.format(destinationAgentsCarDistanceStats.getN() * factor));
+			for (Map.Entry<String, DescriptiveStatistics> entry : destinationAgentsDistanceStats.entrySet()) {
+				printer.printRecord("Total driven " + entry.getKey() + " distance by non-residents with 1+ activities in shape [km]:", df.format(entry.getValue().getSum() * factor));
+				printer.printRecord("Mean driven " + entry.getKey() + " distance by non-resident " + entry.getKey() + " drivers with 1+ activities in shape [km]:", df.format(entry.getValue().getMean())); //no scale factor, because this a mean!
+				printer.printRecord("Number of non-resident " + entry.getKey() + " drivers [1]:", df.format(entry.getValue().getN() * factor));
+			}
         } catch (IOException ex) {
             log.error(ex);
         }
+
+//		TODO: continue here and test
+//		TODO: recherche für avg energy consumption eBBike
         try (CSVPrinter printer = new CSVPrinter(IOUtils.getBufferedWriter(output.getPath("energy_consumption_residents.csv").toString()), CSVFormat.DEFAULT)) {
-            printer.printRecord("Assumed energy consumption [kWh/100km]:", df.format(this.averageConsumptionInKWhPer100km));
-            printer.printRecord("Total energy consumption by resident car drivers  [kWh]:", df.format(inhabitantsCarDistanceStats.getSum()  * factor / 100.0 * this.averageConsumptionInKWhPer100km));
-            printer.printRecord("Mean energy consumption by resident car drivers [kWh]:", df.format(inhabitantsCarDistanceStats.getMean()  * factor / 100.0 * this.averageConsumptionInKWhPer100km));
+            printer.printRecord("Assumed energy consumption [kWh/100km]:", df.format(this.averageCarConsumptionInKWhPer100km));
+            printer.printRecord("Total energy consumption by resident car drivers  [kWh]:", df.format(inhabitantsDistanceStats.getSum()  * factor / 100.0 * this.averageCarConsumptionInKWhPer100km));
+            printer.printRecord("Mean energy consumption by resident car drivers [kWh]:", df.format(inhabitantsDistanceStats.getMean()  * factor / 100.0 * this.averageCarConsumptionInKWhPer100km));
         } catch (IOException ex) {
             log.error(ex);
         }
         try (CSVPrinter printer = new CSVPrinter(IOUtils.getBufferedWriter(output.getPath("energy_consumption_non_residents.csv").toString()), CSVFormat.DEFAULT)) {
-            printer.printRecord("Assumed energy consumption [kWh/100km]:", df.format(this.averageConsumptionInKWhPer100km));
-            printer.printRecord("Total energy consumption by resident car drivers  [kWh]:", df.format(destinationAgentsCarDistanceStats.getSum()  * factor / 100.0 * this.averageConsumptionInKWhPer100km));
-            printer.printRecord("Mean energy consumption by resident car drivers [kWh]:", df.format(destinationAgentsCarDistanceStats.getMean()  * factor / 100.0 * this.averageConsumptionInKWhPer100km));
+            printer.printRecord("Assumed energy consumption [kWh/100km]:", df.format(this.averageCarConsumptionInKWhPer100km));
+            printer.printRecord("Total energy consumption by resident car drivers  [kWh]:", df.format(destinationAgentsDistanceStats.getSum()  * factor / 100.0 * this.averageCarConsumptionInKWhPer100km));
+            printer.printRecord("Mean energy consumption by resident car drivers [kWh]:", df.format(destinationAgentsDistanceStats.getMean()  * factor / 100.0 * this.averageCarConsumptionInKWhPer100km));
         } catch (IOException ex) {
             log.error(ex);
         }
     }
 
-    private static @NotNull Optional<Double> getTotalCarDistance(Id<Person> agentId, Population population) {
-        Optional<Double> totalCarDistance = TripStructureUtils.getLegs(population.getPersons().get(agentId).getSelectedPlan()).stream()
-                .filter(leg -> leg.getMode().equals(TransportMode.car))
+    private static @NotNull Optional<Double> getTotalDistanceByMode(Id<Person> agentId, Population population, String mode) {
+		return TripStructureUtils.getLegs(population.getPersons().get(agentId).getSelectedPlan()).stream()
+                .filter(leg -> leg.getMode().equals(mode))
                 .filter(leg -> leg.getRoute() != null)
                 .map(leg -> leg.getRoute().getDistance())
                 .reduce(Double::sum);
-        return totalCarDistance;
     }
 
 }
