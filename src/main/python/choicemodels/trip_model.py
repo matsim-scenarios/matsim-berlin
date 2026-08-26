@@ -97,7 +97,7 @@ ASC_RIDE = est("ASC_ride", 0)
 # BIKE_TIME = fixed(0)
 # WALK_TIME = fixed(0)
 # UTIL_MONEY = fixed(0)            # utils per EUR
-# EXP_INCOME = fixed(1)            # money scaled by (avg_income/income)^x
+# EXP_INCOME = fixed(0)            # money scaled by (avg_income/income)^x
 # PT_SWITCHES = fixed(0)
 #
 #
