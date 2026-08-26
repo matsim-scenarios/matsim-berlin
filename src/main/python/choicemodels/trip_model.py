@@ -70,54 +70,15 @@ def money(eur):
 # Coefficients. Published stage-1 values; swap the fixed()/est() lines to
 # (un)estimate a coefficient.
 
-# PERFORMING = fixed(6)            # utils/h opportunity cost of (travel) time
-# DIST_CAR = fixed(-0.149)   # -0.149
-# CAR_TIME = est("CAR_TIME", 0, -50, 50)
-# PT_TIME = est("PT_TIME", 0, -50, 50)
-# BIKE_TIME = est("BIKE_TIME", 0, -50, 50)
-# WALK_TIME = est("WALK_TIME", 0, -50, 50)
-# UTIL_MONEY = fixed(0.397322)            # utils per EUR
-# EXP_INCOME = fixed(1)            # money scaled by (avg_income/income)^x
-# PT_SWITCHES = est("PT_SWITCHES", 0, -10, 0)
-#
-#
-# ASC_PT = est("ASC_pt", 0)               # walk is the reference (ASC = 0)
-# ASC_CAR = est("ASC_car", 0)
-# ASC_BIKE = est("ASC_bike", 0)
-# ASC_RIDE = est("ASC_ride", 0)
-
-
-
-#######
-
-# PERFORMING = fixed(6)            # utils/h opportunity cost of (travel) time
-# PERFORMING = est("PERFORMING", 0, 0, 50)
-PERFORMING = est("PERFORMING", 6, 0, 15)
-
-
-# DIST_CAR = est("DIST_CAR", 0, -15, 15)   # -0.149
+PERFORMING = fixed(6)
 DIST_CAR = fixed(-0.149)   # -0.149
-CAR_TIME = fixed(0)
-PT_TIME = fixed(0)
-BIKE_TIME = fixed(0)
-WALK_TIME = fixed(0)
-
-# UTIL_MONEY = fixed(1)
-UTIL_MONEY = fixed(0)            # utils per EUR
-# UTIL_MONEY = est("UTIL_MONEY", 0.4, 0, 1.5)
-
-EXP_INCOME = fixed(1)            # money scaled by (avg_income/income)^x
-# EXP_INCOME = fixed(0.275502)            # money scaled by (avg_income/income)^x
-# EXP_INCOME = est("EXP_INCOME", 0.3, 0, 1.5)
-
-# PRICE_PERCEPTION = fixed(0)      # applied to daily (fixed) costs only
-# PRICE_PERCEPTION = fixed(0.268622)      # applied to daily (fixed) costs only
-# PRICE_PERCEPTION = est("PRICE_PERCEPTION", 0.27, 0, 1)
-
-
-# PT_SWITCHES = est("PT_SWITCHES", 0, -10, 0)
-# PT_SWITCHES = fixed(-1)
-PT_SWITCHES = fixed(0)
+CAR_TIME = est("CAR_TIME", 0, -50, 50)
+PT_TIME = est("PT_TIME", 0, -50, 50)
+BIKE_TIME = est("BIKE_TIME", 0, -50, 50)
+WALK_TIME = est("WALK_TIME", 0, -50, 50)
+UTIL_MONEY = fixed(0.397322)            # utils per EUR
+EXP_INCOME = fixed(0)            # money scaled by (avg_income/income)^x
+PT_SWITCHES = est("PT_SWITCHES", 0, -10, 0)
 
 
 ASC_PT = est("ASC_pt", 0)               # walk is the reference (ASC = 0)
@@ -125,10 +86,25 @@ ASC_CAR = est("ASC_car", 0)
 ASC_BIKE = est("ASC_bike", 0)
 ASC_RIDE = est("ASC_ride", 0)
 
-# ASC_PT = fixed(0)               # walk is the reference (ASC = 0)
-# ASC_CAR = fixed(0)
-# ASC_BIKE = fixed(0)
-# ASC_RIDE = fixed(0)
+
+
+#######
+
+# PERFORMING = est("PERFORMING", 6, 0, 15)
+# DIST_CAR = fixed(-0.149)   # -0.149
+# CAR_TIME = fixed(0)
+# PT_TIME = fixed(0)
+# BIKE_TIME = fixed(0)
+# WALK_TIME = fixed(0)
+# UTIL_MONEY = fixed(0)            # utils per EUR
+# EXP_INCOME = fixed(1)            # money scaled by (avg_income/income)^x
+# PT_SWITCHES = fixed(0)
+#
+#
+# ASC_PT = est("ASC_pt", 0)               # walk is the reference (ASC = 0)
+# ASC_CAR = est("ASC_car", 0)
+# ASC_BIKE = est("ASC_bike", 0)
+# ASC_RIDE = est("ASC_ride", 0)
 
 
 # To pin an ASC instead:  ASC_PT = fixed(-0.731102)
