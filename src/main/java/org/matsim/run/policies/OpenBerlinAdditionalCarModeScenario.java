@@ -56,16 +56,26 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 	private static List<String> richSmcChainBasedModes;
 	private static SubtourModeChoice richSubtourModeChoice;
 
-	@CommandLine.Option(names = "--rich-agents-percentage", description = "Percentage of agents to be tagged as rich. Read as 'X% richest agents'. Value between 0-1.", defaultValue = "0.1")
-	private static double pctForTagging;
+	private static final SplittableRandom splittableRandom = new SplittableRandom(15);
+
+//	@CommandLine.Option(names = "--rich-agents-percentage", description = "Percentage of agents to be tagged as rich. Read as 'X% richest agents'. Value between 0-1.", defaultValue = "0.1")
+//	private static double pctForTagging;
 
 	@CommandLine.Option(names = "--expensive-distance-cost", description = "Defines to which value the monetary distance rate for the new, more expensive car mode is set. " +
 		"Default = -0.0003Eu/m, which is double the usual distance cost of car.", defaultValue = "-0.0003")
 	private static double expensiveMonetaryDistanceRate;
 
-	@CommandLine.Option(names = "--switch-car-trips-handling", description = "Decides whether for the initial demand, all car trips are changed to carExpensive trips or only those car trips" +
-		"of agents tagged as rich.")
-	static ManualModeSwitchForCarTripsHandling switchForCarTripsHandling = ManualModeSwitchForCarTripsHandling.SWITCH_ALL_CAR_TRIPS;
+	@CommandLine.Option(names = "--sigma", description = "Sigma value for uniform distribution of agent wise modal asc for carExpensive. " +
+		"Distribution is: y = (randomDouble[0,1] - 0.5) * 2 * sigma + mean.", defaultValue = "3.0")
+	private static double sigma;
+
+	@CommandLine.Option(names = "--mean", description = "Mean value for uniform distribution of agent wise modal asc for carExpensive. " +
+		"Distribution is: y = (randomDouble[0,1] - 0.5) * 2 * sigma + mean.", defaultValue = "0.0")
+	private static double mean;
+
+//	@CommandLine.Option(names = "--switch-car-trips-handling", description = "Decides whether for the initial demand, all car trips are changed to carExpensive trips or only those car trips" +
+//		"of agents tagged as rich.")
+//	static ManualModeSwitchForCarTripsHandling switchForCarTripsHandling = ManualModeSwitchForCarTripsHandling.SWITCH_ALL_CAR_TRIPS;
 
 	@Nullable
 	@Override
@@ -91,17 +101,17 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 		//		apply all controller changes from base scenario class
 		super.prepareControler(controler);
 
-		configureAdditionalCarModeInController(controler);
+//		configureAdditionalCarModeInController(controler);
 	}
 
 	/**
 	 * Make all necessary configs for the additional car mode in config.
 	 */
 	static void configureAdditionalCarModeInConfig(Config config) {
-		if (pctForTagging < 0 || pctForTagging > 1.) {
-			log.fatal("you defined --rich-agents-percentage as {}, but the value should be between 0-1. Aborting!", pctForTagging);
-			throw new IllegalStateException("");
-		}
+//		if (pctForTagging < 0 || pctForTagging > 1.) {
+//			log.fatal("you defined --rich-agents-percentage as {}, but the value should be between 0-1. Aborting!", pctForTagging);
+//			throw new IllegalStateException("");
+//		}
 
 //		add new car mode to qsim modes
 		Collection<String> mainModes = new HashSet<>(config.qsim().getMainModes());
@@ -133,15 +143,15 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 		chainBasedModes.add(CAR_EXPENSIVE);
 		config.subtourModeChoice().setChainBasedModes(chainBasedModes.toArray(new String[0]));
 
-		richSmcChainBasedModes = new ArrayList<>(chainBasedModes);
-		richSmcChainBasedModes.remove(TransportMode.car);
+//		richSmcChainBasedModes = new ArrayList<>(chainBasedModes);
+//		richSmcChainBasedModes.remove(TransportMode.car);
 
 		List<String> smcModes = new ArrayList<>(List.of(config.subtourModeChoice().getModes()));
 		smcModes.add(CAR_EXPENSIVE);
 		config.subtourModeChoice().setModes(smcModes.toArray(new String[0]));
 
-		richSmcAvailableModes = new ArrayList<>(smcModes);
-		richSmcAvailableModes.remove(TransportMode.car);
+//		richSmcAvailableModes = new ArrayList<>(smcModes);
+//		richSmcAvailableModes.remove(TransportMode.car);
 
 //		add new car mode to analyzed modes for tt calculation
 		Set<String> analyzedModes = new HashSet<>(config.travelTimeCalculator().getAnalyzedModes());
@@ -149,37 +159,37 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 		config.travelTimeCalculator().setAnalyzedModes(analyzedModes);
 
 //		first copy all, then adapt smc for subpop rich to verlin smc
-		Set<ReplanningConfigGroup.StrategySettings> copiedStrategies = new HashSet<>();
-		for (ReplanningConfigGroup.StrategySettings strategy : config.replanning().getStrategySettings()) {
-			if (strategy.getSubpopulation().equals("person")) {
-//				copy strategy for subpop person to subpop rich except SMC
-				if (strategy.getStrategyName().equals("SubtourModeChoice")) {
-					continue;
-				}
-
-				ReplanningConfigGroup.StrategySettings copy = new ReplanningConfigGroup.StrategySettings();
-				copy.setStrategyName(strategy.getStrategyName());
-				copy.setSubpopulation(RICH);
-
-//				set start weights for strategies as for subpop person
-				double weight = 0.;
-				if (strategy.getStrategyName().equals("ChangeExpBeta")) {
-					weight = 1.;
-				} else {
-					weight = 0.15;
-				}
-				copy.setWeight(weight);
-				copiedStrategies.add(copy);
-			}
-		}
-		copiedStrategies.forEach(s -> config.replanning().addStrategySettings(s));
-
-//		add car expensive smc as strategy for subpop rich
-		ReplanningConfigGroup.StrategySettings richSmc = new ReplanningConfigGroup.StrategySettings();
-		richSmc.setStrategyName(SMC_RICH);
-		richSmc.setSubpopulation(RICH);
-		richSmc.setWeight(0.15);
-		config.replanning().addStrategySettings(richSmc);
+//		Set<ReplanningConfigGroup.StrategySettings> copiedStrategies = new HashSet<>();
+//		for (ReplanningConfigGroup.StrategySettings strategy : config.replanning().getStrategySettings()) {
+//			if (strategy.getSubpopulation().equals("person")) {
+////				copy strategy for subpop person to subpop rich except SMC
+//				if (strategy.getStrategyName().equals("SubtourModeChoice")) {
+//					continue;
+//				}
+//
+//				ReplanningConfigGroup.StrategySettings copy = new ReplanningConfigGroup.StrategySettings();
+//				copy.setStrategyName(strategy.getStrategyName());
+//				copy.setSubpopulation(RICH);
+//
+////				set start weights for strategies as for subpop person
+//				double weight = 0.;
+//				if (strategy.getStrategyName().equals("ChangeExpBeta")) {
+//					weight = 1.;
+//				} else {
+//					weight = 0.15;
+//				}
+//				copy.setWeight(weight);
+//				copiedStrategies.add(copy);
+//			}
+//		}
+//		copiedStrategies.forEach(s -> config.replanning().addStrategySettings(s));
+//
+////		add car expensive smc as strategy for subpop rich
+//		ReplanningConfigGroup.StrategySettings richSmc = new ReplanningConfigGroup.StrategySettings();
+//		richSmc.setStrategyName(SMC_RICH);
+//		richSmc.setSubpopulation(RICH);
+//		richSmc.setWeight(0.15);
+//		config.replanning().addStrategySettings(richSmc);
 	}
 
 	/**
@@ -218,58 +228,71 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 			}
 		}
 
-		RoutingModeMainModeIdentifier mainModeIdentifier = new RoutingModeMainModeIdentifier();
+//		distribute carExpensive agent wise asc
+		for (Person person : scenario.getPopulation().getPersons().values()) {
+			if (PersonUtils.getModeConstants(person) != null &&
+				!PersonUtils.getModeConstants(person).containsKey(CAR_EXPENSIVE)) {
+				// linear
+//					mean=0.0; sigma=3.0 as for bike; calculation same as in class AddPersonSpecificAscsStreamReading
+				double carExpensiveModeConstant = (splittableRandom.nextDouble() - 0.5) * 2 * sigma + mean;
+				Map<String, String> modeConstants = new HashMap<>(PersonUtils.getModeConstants(person));
+				modeConstants.put(CAR_EXPENSIVE, String.valueOf(carExpensiveModeConstant));
+				PersonUtils.setModeConstants(person, modeConstants);
+			}
+		}
+
+//		RoutingModeMainModeIdentifier mainModeIdentifier = new RoutingModeMainModeIdentifier();
 
 //		tag highest X% income agents
-		List<? extends Person> sorted = scenario.getPopulation().getPersons().values().stream()
-			.filter(p -> p.getAttributes().getAttribute("subpopulation").equals("person"))
-			.sorted(Comparator.comparingDouble(PersonUtils::getIncome).reversed())
-			.toList();
-
-		int count = (int) Math.ceil(sorted.size() * pctForTagging);
-
-		List<? extends Person> financiallyFortunate = sorted.subList(0, count);
-
-		for (Person rich : financiallyFortunate) {
-			scenario.getPopulation().getPersons()
-				.get(rich.getId()).getAttributes().putAttribute("subpopulation", RICH);
-		}
-
-		Set<String> consideredSubpopulationsForManualModeSwitch = new HashSet<>();
-		consideredSubpopulationsForManualModeSwitch.add("person");
-		consideredSubpopulationsForManualModeSwitch.add(RICH);
-
-		if (switchForCarTripsHandling == ManualModeSwitchForCarTripsHandling.SWITCH_ONLY_CAR_TRIPS_OF_RICH_AGENTS) {
-			consideredSubpopulationsForManualModeSwitch.remove("person");
-		}
-
-		//		switch all car legs to new car mode
-		for (Person person : scenario.getPopulation().getPersons().values()) {
-			if (!consideredSubpopulationsForManualModeSwitch.contains(person.getAttributes().getAttribute("subpopulation").toString())) {
-				continue;
-			}
-
-			for (Plan p : person.getPlans()) {
-				List<PlanElement> planElements = p.getPlanElements();
-				List<TripStructureUtils.Trip> trips = TripStructureUtils.getTrips(p);
-
-				for (TripStructureUtils.Trip trip : trips) {
-					List<PlanElement> fullTrip =
-						planElements.subList(
-							planElements.indexOf( trip.getOriginActivity() ) + 1,
-							planElements.indexOf( trip.getDestinationActivity() ));
-					String mode = mainModeIdentifier.identifyMainMode(fullTrip);
-
-					if (mode.equals(TransportMode.car)) {
-						fullTrip.clear();
-						Leg leg = PopulationUtils.createLeg(CAR_EXPENSIVE);
-						TripStructureUtils.setRoutingMode(leg, CAR_EXPENSIVE);
-						fullTrip.add(leg);
-						if (fullTrip.size() != 1) throw new RuntimeException(fullTrip.toString());
-					}
-				}
-			}
-		}
+//		List<? extends Person> sorted = scenario.getPopulation().getPersons().values().stream()
+//			.filter(p -> p.getAttributes().getAttribute("subpopulation").equals("person"))
+//			.sorted(Comparator.comparingDouble(PersonUtils::getIncome).reversed())
+//			.toList();
+//
+//		int count = (int) Math.ceil(sorted.size() * pctForTagging);
+//
+//		List<? extends Person> financiallyFortunate = sorted.subList(0, count);
+//
+//		for (Person rich : financiallyFortunate) {
+//			scenario.getPopulation().getPersons()
+//				.get(rich.getId()).getAttributes().putAttribute("subpopulation", RICH);
+//		}
+//
+//		Set<String> consideredSubpopulationsForManualModeSwitch = new HashSet<>();
+//		consideredSubpopulationsForManualModeSwitch.add("person");
+//		consideredSubpopulationsForManualModeSwitch.add(RICH);
+//
+//		if (switchForCarTripsHandling == ManualModeSwitchForCarTripsHandling.SWITCH_ONLY_CAR_TRIPS_OF_RICH_AGENTS) {
+//			consideredSubpopulationsForManualModeSwitch.remove("person");
+//		}
+//
+//		//		switch all car legs to new car mode
+//		for (Person person : scenario.getPopulation().getPersons().values()) {
+//			if (!consideredSubpopulationsForManualModeSwitch.contains(person.getAttributes().getAttribute("subpopulation").toString())) {
+//				continue;
+//			}
+//
+//			for (Plan p : person.getPlans()) {
+//				List<PlanElement> planElements = p.getPlanElements();
+//				List<TripStructureUtils.Trip> trips = TripStructureUtils.getTrips(p);
+//
+//				for (TripStructureUtils.Trip trip : trips) {
+//					List<PlanElement> fullTrip =
+//						planElements.subList(
+//							planElements.indexOf( trip.getOriginActivity() ) + 1,
+//							planElements.indexOf( trip.getDestinationActivity() ));
+//					String mode = mainModeIdentifier.identifyMainMode(fullTrip);
+//
+//					if (mode.equals(TransportMode.car)) {
+//						fullTrip.clear();
+//						Leg leg = PopulationUtils.createLeg(CAR_EXPENSIVE);
+//						TripStructureUtils.setRoutingMode(leg, CAR_EXPENSIVE);
+//						fullTrip.add(leg);
+//						if (fullTrip.size() != 1) throw new RuntimeException(fullTrip.toString());
+//					}
+//				}
+//			}
+//		}
 	}
 
 	/**
