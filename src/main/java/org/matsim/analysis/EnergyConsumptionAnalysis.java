@@ -233,15 +233,15 @@ public class EnergyConsumptionAnalysis implements MATSimAppCommand {
 //		TODO: recherche für avg energy consumption eBBike
         try (CSVPrinter printer = new CSVPrinter(IOUtils.getBufferedWriter(output.getPath("energy_consumption_residents.csv").toString()), CSVFormat.DEFAULT)) {
             printer.printRecord("Assumed energy consumption [kWh/100km]:", df.format(this.averageCarConsumptionInKWhPer100km));
-            printer.printRecord("Total energy consumption by resident car drivers  [kWh]:", df.format(inhabitantsDistanceStats.getSum()  * factor / 100.0 * this.averageCarConsumptionInKWhPer100km));
-            printer.printRecord("Mean energy consumption by resident car drivers [kWh]:", df.format(inhabitantsDistanceStats.getMean()  * factor / 100.0 * this.averageCarConsumptionInKWhPer100km));
+//            printer.printRecord("Total energy consumption by resident car drivers  [kWh]:", df.format(inhabitantsDistanceStats.getSum()  * factor / 100.0 * this.averageCarConsumptionInKWhPer100km));
+//            printer.printRecord("Mean energy consumption by resident car drivers [kWh]:", df.format(inhabitantsDistanceStats.getMean()  * factor / 100.0 * this.averageCarConsumptionInKWhPer100km));
         } catch (IOException ex) {
             log.error(ex);
         }
         try (CSVPrinter printer = new CSVPrinter(IOUtils.getBufferedWriter(output.getPath("energy_consumption_non_residents.csv").toString()), CSVFormat.DEFAULT)) {
             printer.printRecord("Assumed energy consumption [kWh/100km]:", df.format(this.averageCarConsumptionInKWhPer100km));
-            printer.printRecord("Total energy consumption by resident car drivers  [kWh]:", df.format(destinationAgentsDistanceStats.getSum()  * factor / 100.0 * this.averageCarConsumptionInKWhPer100km));
-            printer.printRecord("Mean energy consumption by resident car drivers [kWh]:", df.format(destinationAgentsDistanceStats.getMean()  * factor / 100.0 * this.averageCarConsumptionInKWhPer100km));
+//            printer.printRecord("Total energy consumption by resident car drivers  [kWh]:", df.format(destinationAgentsDistanceStats.getSum()  * factor / 100.0 * this.averageCarConsumptionInKWhPer100km));
+//            printer.printRecord("Mean energy consumption by resident car drivers [kWh]:", df.format(destinationAgentsDistanceStats.getMean()  * factor / 100.0 * this.averageCarConsumptionInKWhPer100km));
         } catch (IOException ex) {
             log.error(ex);
         }
