@@ -170,7 +170,7 @@ CONST = {
     "pt": est("ASC_pt", -1), # + ASC_pt_inc * INC + taste("pt"),
     "car": est("ASC_car", -2),
     "bike": est("ASC_bike", -1), # + taste("bike"),
-    "ride": est("ASC_ride", -3) + taste("ride"),
+    "ride": est("ASC_ride", -3)# + taste("ride"),
 }
 
 # Optional: per-trip error components matching the simulation's frozen error
