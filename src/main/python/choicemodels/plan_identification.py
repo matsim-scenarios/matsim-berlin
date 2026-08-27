@@ -36,6 +36,7 @@ that no other column can imitate (low = ridge).
 Usage: python plan_identification.py <plan-choices-*.csv>
 """
 
+import os
 import sys
 
 import numpy as np
@@ -55,9 +56,22 @@ print(f"{len(raw)} persons, k={k}")
 # design columns
 # ---------------------------------------------------------------------------
 
-# variance parameters: taste sds, per-mode EC scales, pooled EC scale
+# optional sidecar with the subtour partition of each person's day (fixed
+# across candidates, since only modes vary): person, trip, subtour. Produced
+# from the plans file; enables subtour-level EC designs for the chain modes.
+ST_PATH = path.replace(".csv", ".subtours.csv")
+SUBTOURS = None
+if os.path.exists(ST_PATH):
+    _st = pd.read_csv(ST_PATH)
+    SUBTOURS = {str(p): list(g.sort_values("trip")["subtour"])
+                for p, g in _st.groupby("person")}
+    print(f"subtour sidecar loaded: {ST_PATH} ({len(SUBTOURS)} persons)")
+
+# variance parameters: taste sds, per-mode EC scales, pooled EC scale,
+# subtour-level EC scales for the mass-conserving (vehicle) modes
 VAR_COLS = ([f"taste_{m}" for m in TASTE_MODES]
-            + [f"ec_{m}" for m in MODES] + ["ec"])
+            + [f"ec_{m}" for m in MODES] + ["ec"]
+            + (["st_car", "st_bike"] if SUBTOURS else []))
 
 # stage-1 mean parameters and the plan-level regressors they multiply
 MEAN_COLS = (["asc_" + m for m in ["bike", "ride", "car", "pt"]]      # walk base
@@ -101,6 +115,10 @@ for _, person in raw.iterrows():
 
     ref = plans[0]  # chosen plan is candidate 1
 
+    st = SUBTOURS.get(str(person["person"])) if SUBTOURS else None
+    if SUBTOURS and (st is None or len(st) != int(person["n_trips"])):
+        raise AssertionError(f"subtour sidecar mismatch for person {person['person']}")
+
     def counts(seq):
         return {m: sum(1 for x in seq if x == m) for m in TASTE_MODES}
 
@@ -109,6 +127,14 @@ for _, person in raw.iterrows():
         v = [ca[m] * cb[m] for m in TASTE_MODES]
         per_mode = [sum(1 for x, y in zip(a, b) if x == y == m) for m in MODES]
         v += per_mode + [sum(per_mode)]
+        if st is not None:
+            for m in ["car", "bike"]:
+                val = 0
+                for s in set(st):
+                    na = sum(1 for x, si in zip(a, st) if si == s and x == m)
+                    nb = sum(1 for y, si in zip(b, st) if si == s and y == m)
+                    val += na * nb
+                v.append(val)
         return np.array(v, dtype=float)
 
     others = plans[1:]
@@ -224,6 +250,21 @@ SPECS = [
      "separating cells below.",
      [f"taste_{m}" for m in TASTE_MODES] + [f"ec_{m}" for m in MODES], G, VAR_COLS),
 
+     ("prospective spec: per-mode EC scales",
+      "not estimated yet",
+      [f"ec_{m}" for m in TASTE_MODES], G, VAR_COLS),
+
+    ("all-situational: per-mode EC scales, no taste sds",
+     "heteroscedastic situational noise -- each mode's trip-specific (per slot,\n"
+     "sub-day) unobservables get their own scale, no day-or-longer components at\n"
+     "all. the fully situational pole of the taste-vs-EC debate; not estimated yet.",
+     [f"ec_{m}" for m in MODES], G, VAR_COLS),
+
+    ("hybrid: ride_s + per-mode EC scales",
+     "spec C's persistent ride component kept, everything else situational but\n"
+     "heteroscedastic. watch taste_ride <-> ec_ride; not estimated yet.",
+     ["taste_ride"] + [f"ec_{m}" for m in MODES], G, VAR_COLS),
+
     ("stage-1 means opened in stage 2: all free (the run that failed)",
      "ASCs, all times, switches -- money stays fixed, as it did: that money\n"
      "must be 'guessed' was decided out of band, before any estimation.\n"
@@ -261,6 +302,21 @@ SPECS = [
      [c for c in MEAN_COLS if c.startswith("asc_")] + ["time_ride", "time_bike"],
      M, MEAN_COLS),
 ]
+
+if SUBTOURS:
+    SPECS += [
+        ("subtour ECs for chain modes + trip ECs for the rest",
+         "the 'car that goes out must come back' correlation put where it belongs:\n"
+         "one draw per (vehicle mode, subtour), trip-scale draws for walk/pt/ride.\n"
+         "not estimated yet.",
+         ["st_car", "st_bike", "ec_walk", "ec_pt", "ec_ride"], G, VAR_COLS),
+
+        ("diagnostic: the three car containers (day / subtour / trip)",
+         "taste_car correlates all car trips of the day, st_car those of one\n"
+         "subtour, ec_car none. separation comes from persons with several car\n"
+         "subtours (day vs subtour) and subtours with 3+ trips (subtour vs trip).",
+         ["taste_car", "st_car", "ec_car"], G, VAR_COLS),
+    ]
 
 for spec in SPECS:
     report(*spec)
