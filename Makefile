@@ -18,6 +18,12 @@ SAMPLE_SIZE := $(SAMPLE_SIZE_$(SAMPLE))
 ifeq ($(SAMPLE_SIZE),)
 $(error SAMPLE=$(SAMPLE) is not supported. Use one of: 1 3 10 25)
 endif
+## scales the simulated volumes up to full size before they are compared to the counts, i.e. 1 / SAMPLE_SIZE
+COUNTS_SCALE_1 := 100
+COUNTS_SCALE_3 := 33.333333
+COUNTS_SCALE_10 := 10
+COUNTS_SCALE_25 := 4
+COUNTS_SCALE := $(COUNTS_SCALE_$(SAMPLE))
 ## the token that goes into every generated filename
 SAMPLE_PCT := $(SAMPLE)pct
 CRS := EPSG:25832
@@ -43,7 +49,19 @@ SIM_PERIOD_DAYS ?= 1.125
 JAVA_CP := java -Xmx$(MAKE_XMX) -XX:+UseParallelGC -Dorg.geotools.referencing.forceXY=true -Djava.io.tmpdir=$(TMP_DIR) -cp $(JAR)
 JAVA_APP := $(JAVA_CP) org.matsim.prepare.RunOpenBerlinCalibration
 
-.PHONY: setup prepare prepare-network-and-counts prepare-freight prepare-calibration prepare-run-cadyts prepare-initial prepare-drt analyze-freight
+## The ASC calibration is driven from python and needs the calibration extra of the matsim python
+## tools, see src/main/sh/setup.sh; point PYTHON at the interpreter of that environment.
+PYTHON ?= python3
+## MATSim iterations of one calibration run, and how many calibration runs to add to the study.
+## Re-running the target continues the study instead of starting over.
+ASC_CALIB_ITERATIONS ?= 500
+ASC_CALIB_TRIALS ?= 10
+ASC_CALIB_XMX ?= 60G
+## Optional yaml with the estimated (non-ASC) parameters of the choice model, used as the base of
+## every trial. Empty means the parameters stay as they are in the generated config.
+ASC_CALIB_BASE_PARAMS ?=
+
+.PHONY: setup prepare prepare-network-and-counts prepare-freight prepare-calibration prepare-run-cadyts prepare-initial prepare-asc-calibration prepare-drt analyze-freight
 .DELETE_ON_ERROR:
 
 ###################################
@@ -131,6 +149,10 @@ BERLIN_CADYTS_CONFIG := $(OUTPUT)/cadyts-$(SAMPLE_PCT).config.xml
 BERLIN_CADYTS_OUTPUT := $(BERLIN_CADYTS_DIR)/cadyts.output_plans.xml.gz
 BERLIN_CADYTS_FINAL := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans_cadyts.xml.gz
 BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans-initial.xml.gz
+## one ASC calibration study per sample, so the run ensembles of the samples can coexist
+BERLIN_ASC_CALIB_DIR := $(OUTPUT)/asc-calib-$(SAMPLE_PCT)
+BERLIN_ASC_CALIB_CONFIG := $(OUTPUT)/asc-calib-$(SAMPLE_PCT).config.xml
+BERLIN_ASC_CALIB_PARAMS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).mode-params-calibrated.yaml
 BERLIN_AFTER_CHOICE_EXPERIMENTS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
 BERLIN_DOWNTOWN_PLANS := $(OUTPUT)/inner-city/berlin-downtown-$(VERSION)-$(SAMPLE_PCT).xml.gz
 # this is coming from an external process. You can set it via environment-variable. For more info see comment 
@@ -459,6 +481,31 @@ $(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MATSIM) 
 	$(JAVA_APP) prepare merge-populations $@ $(word 3,$^)\
 		--output $@
 
+# The config of the ASC calibration runs. It goes next to the artifacts it refers to, because the
+# relative paths in it are resolved against the directory of the config file. Everything that
+# depends on the sample size is substituted in here, the calibration itself is sample agnostic.
+$(BERLIN_ASC_CALIB_CONFIG): input/asc-calibration-config-template.xml | setup
+	sed -e "s/==VERSION==/$(VERSION)/g"\
+	 -e "s/==SAMPLE==/$(SAMPLE_PCT)/g"\
+	 -e "s/==SAMPLE_SIZE==/$(SAMPLE_SIZE)/g"\
+	 -e "s/==COUNTS_SCALE==/$(COUNTS_SCALE)/g"\
+	 -e "s|==AREA_SHP==|$(abspath $(AREA_SHP))|g"\
+	 $< > $@
+
+# Calibrate the mode constants against the SrV mode shares. Each trial is a full scenario run, so
+# this is by far the most expensive step; ASC_CALIB_TRIALS runs are added per invocation, and
+# re-running continues the study in $(BERLIN_ASC_CALIB_DIR) instead of starting over.
+$(BERLIN_ASC_CALIB_PARAMS): $(BERLIN_ASC_CALIB_CONFIG) $(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS) $(NETWORK_MATSIM_PT) $(FACILITIES_XML) $(VMZ_COUNTS) $(VEHICLESFILE_OUT) | setup
+	$(PYTHON) src/main/python/calibrate.py\
+	 --jar '$(JAR)'\
+	 --config $<\
+	 --run-dir $(BERLIN_ASC_CALIB_DIR)\
+	 --output $@\
+	 --trials $(ASC_CALIB_TRIALS)\
+	 --jvm-args "-Xmx$(ASC_CALIB_XMX) -Xms$(ASC_CALIB_XMX) -XX:+AlwaysPreTouch -XX:+UseParallelGC"\
+	 --args "--iterations $(ASC_CALIB_ITERATIONS) --simulation-period-in-days $(SIM_PERIOD_DAYS)"\
+	 $(if $(ASC_CALIB_BASE_PARAMS),--base-params $(abspath $(ASC_CALIB_BASE_PARAMS)))
+
 $(BERLIN_DOWNTOWN_PLANS): $(BERLIN_INNER_CITY_GPKG) $(BERLIN_AFTER_CHOICE_EXPERIMENTS) $(FACILITIES_XML) $(NETWORK_MATSIM) | setup
 
 	mkdir -p $(OUTPUT)/inner-city
@@ -508,6 +555,9 @@ prepare-run-cadyts: $(BERLIN_CADYTS_OUTPUT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 prepare-initial: $(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS) $(NETWORK_MATSIM_PT)
 	#make -Bndri prepare-initial | make2graph | gv2gml -o prepare-initial_graph.gml
 	echo "Done"
+
+prepare-asc-calibration: $(BERLIN_ASC_CALIB_PARAMS)
+	echo "calibrated mode parameters written to $(BERLIN_ASC_CALIB_PARAMS)"
 
 prepare-drt: $(RANDOM_DRT_FLEET_10K)
 	#make -Bndri prepare-drt | make2graph | gv2gml -o prepare-drt_graph.gml
