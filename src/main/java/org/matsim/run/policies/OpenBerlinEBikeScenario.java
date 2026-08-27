@@ -116,7 +116,7 @@ public class OpenBerlinEBikeScenario extends OpenBerlinScenario {
 		VehicleType eBikeType = VehicleUtils.createVehicleType(Id.create(E_BIKE, VehicleType.class));
 		eBikeType.setNetworkMode(E_BIKE);
 //		max speed for eBike is 25kmh
-		eBikeType.setMaximumVelocity(25 / 3.6);
+		eBikeType.setMaximumVelocity(20 / 3.6);
 		eBikeType.setLength(bikeType.getLength());
 		eBikeType.setWidth(bikeType.getWidth());
 		eBikeType.setPcuEquivalents(bikeType.getPcuEquivalents());
