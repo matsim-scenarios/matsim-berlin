@@ -146,7 +146,9 @@ BERLIN_CADYTS_INPUT := $(OUTPUT)/berlin-cadyts-input-$(VERSION)-$(SAMPLE_PCT).pl
 ## one cadyts run directory per sample, so samples can be built independently
 BERLIN_CADYTS_DIR := $(OUTPUT)/cadyts-$(SAMPLE_PCT)
 BERLIN_CADYTS_CONFIG := $(OUTPUT)/cadyts-$(SAMPLE_PCT).config.xml
-BERLIN_CADYTS_OUTPUT := $(BERLIN_CADYTS_DIR)/cadyts.output_plans.xml.gz
+## .zst, not .gz: files inside a run directory are written with controller.compressionType, which
+## defaults to zst since matsim 2026. Only files whose name we pass in ourselves end in .gz.
+BERLIN_CADYTS_OUTPUT := $(BERLIN_CADYTS_DIR)/cadyts.output_plans.xml.zst
 BERLIN_CADYTS_FINAL := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans_cadyts.xml.gz
 BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans-initial.xml.gz
 ## one ASC calibration study per sample, so the run ensembles of the samples can coexist
@@ -374,8 +376,13 @@ $(COMMERCIAL_FACILITIES): $(REGION_4326) $(BB_ZONES_4326) $(BB_BUILDINGS_4326) $
 	 --shapeCRS "EPSG:4326"\
 	 --pathToInvestigationAreaData $(word 5,$^)
 
+# This file is written by the recipe above, and written before the file that recipe is named after,
+# so it is always older than its own prerequisite. Give it the timestamp of the file it was written
+# with, otherwise it is out of date on every invocation and drags the whole commercial traffic chain
+# (jsprit!) and everything downstream of it along.
 $(DATA_DISTR_PER_ZONE): $(COMMERCIAL_FACILITIES) | setup
-	echo "this is only here because $(DATA_DISTR_PER_ZONE) is created together with $(COMMERCIAL_FACILITIES)"
+	test -f $@ || { echo "$@ is missing; delete $< to have both written again"; exit 1; }
+	touch -r $< $@
 
 $(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DATA_DISTR_PER_ZONE) $(BB_ZONES_VKZ_4326) | setup
 	$(JAVA_APP) prepare generate-small-scale-commercial-traffic\
@@ -430,8 +437,11 @@ $(BERLIN_CADYTS_FINAL): $(BERLIN_CADYTS_OUTPUT) $(BERLIN_CADYTS_INPUT) | setup
 	 --csv $(BERLIN_CADYTS_SELECTION)\
 	 --output $@
  
+# Same as for $(DATA_DISTR_PER_ZONE): written by the recipe above, by the step before the one that
+# writes $(BERLIN_CADYTS_FINAL), so it needs the timestamp of that file to not count as out of date.
 $(BERLIN_CADYTS_SELECTION): $(BERLIN_CADYTS_FINAL) | setup
-	echo "check if $(BERLIN_CADYTS_SELECTION) was produced" 
+	test -f $@ || { echo "$@ is missing; delete $< to have both written again"; exit 1; }
+	touch -r $< $@
 
 $(BERLIN_BRANDENBURG_LONGHAULFREIGHT): $(GERMAN_FREIGHT_25PCT) $(GERMAN_FREIGHT_NETWORK) $(AREA_SHP) | setup
 	$(JAVA_APP) prepare extract-freight-trips $<\
