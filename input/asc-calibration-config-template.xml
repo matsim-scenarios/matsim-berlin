@@ -28,6 +28,9 @@
 		<param name="writeEventsInterval" value="100"/>
 		<param name="writePlansInterval" value="100"/>
 		<param name="routingAlgorithmType" value="SpeedyALT"/>
+		<!-- the calibration finds the mode shares of a run by globbing for output_trips.csv.gz and
+		     output_persons.csv.gz, so the run output has to be gzipped, not zstd (the default) -->
+		<param name="compressionType" value="gzip"/>
 	</module>
 	<module name="global">
 		<param name="coordinateSystem" value="EPSG:25832"/>
