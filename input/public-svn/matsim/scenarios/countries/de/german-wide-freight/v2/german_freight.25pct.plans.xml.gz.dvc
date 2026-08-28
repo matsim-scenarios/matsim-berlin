@@ -1,0 +1,13 @@
+md5: cd4c3044466b215c995f2ef58a74bc89
+frozen: true
+deps:
+- checksum: '"7479//matsim/scenarios/countries/de/german-wide-freight/v2/german_freight.25pct.plans.xml.gz"'
+  size: 12420156
+  hash: md5
+  path: 
+    remote://public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/german_freight.25pct.plans.xml.gz
+outs:
+- md5: f94b003af02520dabd3826a9d07481a9
+  size: 12420156
+  hash: md5
+  path: german_freight.25pct.plans.xml.gz

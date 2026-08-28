@@ -1,0 +1,12 @@
+md5: 375ff98e9ba05c4e2c87475447f3b9c7
+frozen: true
+deps:
+- checksum: '"40050//projects/matsim-berlin/data/SrV/2018/zones/zones.shx"'
+  size: 2524
+  hash: md5
+  path: remote://shared-svn/projects/matsim-berlin/data/SrV/2018/zones/zones.shx
+outs:
+- md5: 3a81c623ce5ff739ff7a0a7ab5132790
+  size: 2524
+  hash: md5
+  path: zones.shx

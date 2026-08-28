@@ -1,0 +1,13 @@
+md5: a37753a119327e6fd8547da4a4d7e9ae
+frozen: true
+deps:
+- checksum: '"37145//projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx"'
+  size: 751058
+  hash: md5
+  path: 
+    remote://shared-svn/projects/matsim-berlin/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx
+outs:
+- md5: 9227371d253af0e77b61bb8fdb7915c0
+  size: 751058
+  hash: md5
+  path: Datenexport_2018_TU_Berlin.xlsx
