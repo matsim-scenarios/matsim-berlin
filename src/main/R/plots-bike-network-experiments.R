@@ -224,7 +224,7 @@ ggsave("modal_dist_group_car_plot.pdf", modal_dist_group_car_plot, dpi = 500, w 
 ############################################ bicycle speed elasticities plot ##################################################
 
 # read data
-elasticities_share <- read_csv(file="C:/Users/Simon/Desktop/wd/2026-07-27/bike_speed_elasticities_share_bike_network_paper.csv") %>% 
+elasticities_share <- read_csv(file="C:/Users/Simon/Desktop/wd/2026-08-24/bike_speed_elasticities_share_bike_network_paper.csv") %>% 
   mutate(
     elasticity = elasticity %>%
       na_if("#DIV/0!") %>%
@@ -239,20 +239,35 @@ elasticities_share <- read_csv(file="C:/Users/Simon/Desktop/wd/2026-07-27/bike_s
       TRUE ~ "Other"
     )
   ) %>% 
-  mutate(case = factor(case, levels = unique(case)))
-  
+  mutate(case = factor(case, levels = unique(case))) %>% 
+  filter(elasticity != 0)
 
-elasticities_plot <- ggplot(elasticities_share,
-       aes(x = `bike speed [km/h]`,
-           y = `elasticity`,
-           color = case,
-           group = case)) +
+elasticities_plot <- ggplot(
+  elasticities_share,
+  aes(
+    x = `bike speed [km/h]`,
+    y = elasticity,
+    color = case,
+    group = case
+  )
+) +
+  geom_vline(
+    xintercept = 10.3,
+    linetype = "longdash",
+    linewidth = 1
+  ) +
+  geom_vline(
+    xintercept = 10.7,
+    linetype = "dashed",
+    linewidth = 1
+  ) +
   geom_line(linewidth = 2) +
   geom_point(size = 3) +
-  scale_color_okabe_ito(order = c(1,2,3,4,5,6,7)) +
+  scale_color_okabe_ito(order = c(1, 2, 3, 4, 5, 6, 7)) +
   labs(
     x = "bicycle speed [km/h]",
-    y = "bicycle speed elasticity") +
+    y = "bicycle speed elasticity"
+  ) +
   theme_minimal() +
   theme(
     plot.title = element_text(hjust = 0.5, size = 20),
@@ -263,6 +278,7 @@ elasticities_plot <- ggplot(elasticities_share,
     legend.text = element_text(size = 19),
     plot.margin = margin(5, 5, 5, 5)
   )
+
 elasticities_plot
 ggsave("bicycle_speed_elasticities_plot.pdf", elasticities_plot, dpi = 500, w = 9, h = 9)
 
