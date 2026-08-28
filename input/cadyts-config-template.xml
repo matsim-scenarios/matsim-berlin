@@ -3,7 +3,12 @@
 <config>
 	<module name="timeAllocationMutator">
 		<param name="mutationRange" value="1800.0"/>
-		<param name="mutateAroundInitialEndTimeOnly" value="true"/>
+		<!-- short activities are duration based (see prepare end-time-to-duration), and mutating a
+		     10 min activity by up to half an hour makes no sense, so only end times are mutated -->
+		<param name="mutationAffectsDuration" value="false"/>
+		<!-- as in dresden: end times may not be mutated past the end of the simulated day, otherwise they
+		     random walk into a time that is never simulated. Must be at least qsim.endTime. -->
+		<param name="latestActivityEndTime" value="36:00:00"/>
 	</module>
 	<module name="controller">
 		<param name="lastIteration" value="500"/>
