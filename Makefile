@@ -45,6 +45,10 @@ TMP_DIR := ./tmp
 # Length of the simulation period as a multiple of 24h; must match OpenBerlinScenario.DEFAULT_SIMULATION_PERIOD_IN_DAYS
 # (1.125 = 27:00), since preprocessing and the scoring have to agree on where the day ends.
 SIM_PERIOD_DAYS ?= 1.125
+# Standard deviations of the person specific deviation from the mode constants, i.e. the random alternative specific
+# constants of the estimated mixed logit model. The mean is the constant in the config, which the ASC calibration
+# tunes. Walk is the reference mode, and the bus constant is fixed, so neither of them varies.
+MODE_CONSTANT_SIGMAS ?= car=1.506777,bike=0.879757,pt=1.737971,ride=2.861008
 # Scenario creation tool
 JAVA_CP := java -Xmx$(MAKE_XMX) -XX:+UseParallelGC -Dorg.geotools.referencing.forceXY=true -Djava.io.tmpdir=$(TMP_DIR) -cp $(JAR)
 JAVA_APP := $(JAVA_CP) org.matsim.prepare.RunOpenBerlinCalibration
@@ -487,6 +491,13 @@ $(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MATSIM) 
 	$(JAVA_APP) prepare check-car-avail --input $@ --output $@ --mode walk
 
 	$(JAVA_APP) prepare fix-subtour-modes --input $@ --output $@ --coord-dist 100
+
+# draw each person's deviation from the mode constants once, here, so that the population carries the taste
+# distribution and every run that reads it scores the same person the same way. Before the freight merge, because
+# only the person subpopulation is scored with taste variations.
+	$(JAVA_APP) prepare draw-mode-constant-variations $@ --output $@\
+	 --seed 1\
+	 --sigma $(MODE_CONSTANT_SIGMAS)
 
 	$(JAVA_APP) prepare merge-populations $@ $(word 3,$^)\
 		--output $@

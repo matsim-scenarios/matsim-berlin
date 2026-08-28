@@ -36,8 +36,6 @@ import org.matsim.core.router.util.TravelTime;
 import org.matsim.dashboard.BerlinDashboardProvider;
 import org.matsim.run.scoring.BerlinScoringModule;
 import org.matsim.run.scoring.BerlinScoringConfigGroup;
-import org.matsim.run.scoring.experimental.AdvancedScoringConfigGroup;
-import org.matsim.run.scoring.experimental.AdvancedScoringModule;
 import org.matsim.simwrapper.DashboardProvider;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
@@ -240,13 +238,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 		controler.addOverridingModule(new TravelTimeBinding());
 		controler.addOverridingModule(new QsimTimingModule());
 
-		// AdvancedScoring can be used for experiments or calibration, but is not needed to run the calibrated scenario.
-		if (ConfigUtils.hasModule(controler.getConfig(), AdvancedScoringConfigGroup.class)) {
-			controler.addOverridingModule(new AdvancedScoringModule());
-			controler.getConfig().scoring().setExplainScores(true);
-		} else {
-			controler.addOverridingModule(new BerlinScoringModule());
-		}
+		controler.addOverridingModule(new BerlinScoringModule());
 
 		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
 	}

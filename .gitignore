@@ -3,7 +3,6 @@
 # config for the checkstyle-eclipse-plugin
 /.checkstyle
 
-/RunGTFS2MATSimOpenBerlin/
 
 # Common files to ignore when working with matsim
 output/

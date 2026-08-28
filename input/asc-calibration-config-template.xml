@@ -135,7 +135,8 @@
 				<!-- Exponent for income dependent scoring. Exponent for (global_income / personal_income) ** x. -->
 				<param name="incomeExponent" value="0.275502" />
 
-				<!-- List of utility parameters that are loaded from each person. -->
+				<!-- The per person deviation from the mode constants, drawn and stored by
+				     prepare draw-mode-constant-variations and added to the constants below. -->
 				<param name="variationsOf" value="constant" />
 
 				<!-- These don't have any variations -->
