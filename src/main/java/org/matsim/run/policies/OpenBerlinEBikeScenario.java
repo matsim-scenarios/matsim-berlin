@@ -43,9 +43,11 @@ public class OpenBerlinEBikeScenario extends OpenBerlinScenario {
 	@CommandLine.Option(names = "--ebike-fix-cost", description = "Defines to which value the daily monetary constant for ebike is set. " +
 		"Default = -1.6Eu/d, which basically is purchase price (2022) / 7 year of usage / 250 days.", defaultValue = "-1.6")
 	private static double eBikeMonetaryConstant;
-//	TODO: try out both and decide on default afterwards
 	@CommandLine.Option(names = "--agent-wise-asc-handling", description = "Decides whether the agent wise asc for eBike is copied from bike or distributed individually.")
 	static EBikeAgentWiseAscHandling eBikeAgentWiseAscHandling = EBikeAgentWiseAscHandling.FROM_BIKE;
+	@CommandLine.Option(names = "--ebike-speed", description = "Defines to which value the maximum eBike speed in vehicle type is set in km/h. " +
+		"Default = 20km/h.", defaultValue = "20")
+	private static double eBikeSpeed;
 
 	@Nullable
 	@Override
@@ -121,7 +123,7 @@ public class OpenBerlinEBikeScenario extends OpenBerlinScenario {
 		VehicleType eBikeType = VehicleUtils.createVehicleType(Id.create(E_BIKE, VehicleType.class));
 		eBikeType.setNetworkMode(E_BIKE);
 //		max speed for eBike is 25kmh
-		eBikeType.setMaximumVelocity(20 / 3.6);
+		eBikeType.setMaximumVelocity(eBikeSpeed / 3.6);
 		eBikeType.setLength(bikeType.getLength());
 		eBikeType.setWidth(bikeType.getWidth());
 		eBikeType.setPcuEquivalents(bikeType.getPcuEquivalents());
@@ -179,7 +181,8 @@ public class OpenBerlinEBikeScenario extends OpenBerlinScenario {
 	private enum EBikeAgentWiseAscHandling {FROM_BIKE, SEPARATE_AGENT_MODAL_ASC}
 
 	/**
-	 * Add travel time bindings for ride and freight modes, which are not actually network modes.
+	 * Add travel time bindings for eBike like also done for bike.
+	 * See OpenBerlinScenario.
 	 */
 	public static final class EBikeTravelTimeBinding extends AbstractModule {
 
