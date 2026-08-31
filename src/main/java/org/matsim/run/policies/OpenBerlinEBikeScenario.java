@@ -7,10 +7,13 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.contrib.bicycle.BicycleTravelTime;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.groups.ScoringConfigGroup;
+import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.population.PersonUtils;
+import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutilityFactory;
 import org.matsim.run.OpenBerlinScenario;
 import org.matsim.vehicles.EngineInformation;
 import org.matsim.vehicles.VehicleType;
@@ -67,6 +70,8 @@ public class OpenBerlinEBikeScenario extends OpenBerlinScenario {
 	public void prepareControler(Controler controler) {
 		//		apply all controller changes from base scenario class
 		super.prepareControler(controler);
+
+		controler.addOverridingModule(new EBikeTravelTimeBinding());
 	}
 
 	/**
@@ -172,4 +177,17 @@ public class OpenBerlinEBikeScenario extends OpenBerlinScenario {
 	}
 
 	private enum EBikeAgentWiseAscHandling {FROM_BIKE, SEPARATE_AGENT_MODAL_ASC}
+
+	/**
+	 * Add travel time bindings for ride and freight modes, which are not actually network modes.
+	 */
+	public static final class EBikeTravelTimeBinding extends AbstractModule {
+
+		@Override
+		public void install() {
+			addTravelTimeBinding(E_BIKE).to(BicycleTravelTime.class);
+			addTravelDisutilityFactoryBinding(E_BIKE).to(OnlyTimeDependentTravelDisutilityFactory.class);
+
+		}
+	}
 }
