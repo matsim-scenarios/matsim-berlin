@@ -101,7 +101,7 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 		//		apply all controller changes from base scenario class
 		super.prepareControler(controler);
 
-//		configureAdditionalCarModeInController(controler);
+		configureAdditionalCarModeInController(controler);
 	}
 
 	/**
@@ -300,42 +300,51 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 	 */
 	static void configureAdditionalCarModeInController(Controler controler) {
 		//		add smc without "normal" car mode to be used for subpopulation "rich"
+//		controler.addOverridingModule(new AbstractModule() {
+//			@Override
+//			public void install() {
+////				define new SMC strategy
+//				this.addPlanStrategyBinding(SMC_RICH).toProvider(new Provider<PlanStrategy>() {
+//					@Override
+//					public PlanStrategy get() {
+//						PlanStrategyImpl.Builder builder = new PlanStrategyImpl.Builder(new RandomPlanSelector<>());
+//
+//						Config newConfig = new Config();
+//						SubtourModeChoiceConfigGroup richSmcCfg = new SubtourModeChoiceConfigGroup();
+//						richSmcCfg.setBehavior(controler.getConfig().subtourModeChoice().getBehavior());
+//						richSmcCfg.setChainBasedModes(richSmcChainBasedModes.toArray(new String[0]));
+//						richSmcCfg.setConsiderCarAvailability(controler.getConfig().subtourModeChoice().considerCarAvailability());
+//						richSmcCfg.setCoordDistance(controler.getConfig().subtourModeChoice().getCoordDistance());
+//						richSmcCfg.setModes(richSmcAvailableModes.toArray(new String[0]));
+//						richSmcCfg.setProbaForRandomSingleTripMode(controler.getConfig().subtourModeChoice().getProbaForRandomSingleTripMode());
+//						newConfig.addModule(richSmcCfg);
+//
+////						the config here must not be the controler.getConfig() because then car is taken back into the mode choice set
+//						richSubtourModeChoice = new SubtourModeChoice(controler.getConfig().global(), richSmcCfg,
+//							new PermissibleModesCalculatorImpl(newConfig));
+//						builder.addStrategyModule(richSubtourModeChoice);
+//
+//						builder.addStrategyModule(new AbstractMultithreadedModule(controler.getConfig().global()) {
+//							@Override
+//							public PlanAlgorithm getPlanAlgoInstance() {
+//								return richSubtourModeChoice.getPlanAlgoInstance();
+//							}
+//						});
+//
+//						return builder.build();
+//					}
+//				});
+//				// Normally this is bound with the default subtour mode choice, because we use our own variant this is bound again here
+//				bind(PermissibleModesCalculator.class).to(PermissibleModesCalculatorImpl.class);
+//			}
+//		});
+
+//		travel time binding for carExpensive
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
-//				define new SMC strategy
-				this.addPlanStrategyBinding(SMC_RICH).toProvider(new Provider<PlanStrategy>() {
-					@Override
-					public PlanStrategy get() {
-						PlanStrategyImpl.Builder builder = new PlanStrategyImpl.Builder(new RandomPlanSelector<>());
-
-						Config newConfig = new Config();
-						SubtourModeChoiceConfigGroup richSmcCfg = new SubtourModeChoiceConfigGroup();
-						richSmcCfg.setBehavior(controler.getConfig().subtourModeChoice().getBehavior());
-						richSmcCfg.setChainBasedModes(richSmcChainBasedModes.toArray(new String[0]));
-						richSmcCfg.setConsiderCarAvailability(controler.getConfig().subtourModeChoice().considerCarAvailability());
-						richSmcCfg.setCoordDistance(controler.getConfig().subtourModeChoice().getCoordDistance());
-						richSmcCfg.setModes(richSmcAvailableModes.toArray(new String[0]));
-						richSmcCfg.setProbaForRandomSingleTripMode(controler.getConfig().subtourModeChoice().getProbaForRandomSingleTripMode());
-						newConfig.addModule(richSmcCfg);
-
-//						the config here must not be the controler.getConfig() because then car is taken back into the mode choice set
-						richSubtourModeChoice = new SubtourModeChoice(controler.getConfig().global(), richSmcCfg,
-							new PermissibleModesCalculatorImpl(newConfig));
-						builder.addStrategyModule(richSubtourModeChoice);
-
-						builder.addStrategyModule(new AbstractMultithreadedModule(controler.getConfig().global()) {
-							@Override
-							public PlanAlgorithm getPlanAlgoInstance() {
-								return richSubtourModeChoice.getPlanAlgoInstance();
-							}
-						});
-
-						return builder.build();
-					}
-				});
-				// Normally this is bound with the default subtour mode choice, because we use our own variant this is bound again here
-				bind(PermissibleModesCalculator.class).to(PermissibleModesCalculatorImpl.class);
+				addTravelTimeBinding(CAR_EXPENSIVE).to(networkTravelTime());
+				addTravelDisutilityFactoryBinding(CAR_EXPENSIVE).to(carTravelDisutilityFactoryKey());
 			}
 		});
 	}
