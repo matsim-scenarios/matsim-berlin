@@ -136,9 +136,7 @@ public class RunAirpollutionAnalysisWithDifferentHbefaVehicleTypes implements MA
 			HbefaRoadTypeMapping roadTypeMapping = OsmHbefaMapping.build();
 			roadTypeMapping.addHbefaMappings(scenario.getNetwork());
 
-			String carFuelType = getCarFuelType();
-
-			addEngineInformationToVehicleTypes(scenario, carFuelType, carVehicleCategory, commercialVehicleCategories);
+			addEngineInformationToVehicleTypes(scenario, carTechnology.id, carVehicleCategory, commercialVehicleCategories);
 
 //			write outputs with adapted files.
 //			now we can write the prepared output to the usual output file paths.
@@ -186,22 +184,6 @@ public class RunAirpollutionAnalysisWithDifferentHbefaVehicleTypes implements MA
 		}
 
 		return 0;
-	}
-
-	@NotNull
-	private String getCarFuelType() {
-		String carFuelType;
-		if (carTechnology == MobilityToGridScenariosUtils.Hbefa41Technology.PETROL_4S) {
-			carFuelType = "petrol (4S)";
-		} else if (carTechnology == MobilityToGridScenariosUtils.Hbefa41Technology.DIESEL) {
-			carFuelType = "diesel";
-		} else if (carTechnology == MobilityToGridScenariosUtils.Hbefa41Technology.ELECTRICITY) {
-			carFuelType = "electricity";
-		} else {
-			log.error("Invalid HBEFA 4.1 emission concept: {}.", carTechnology);
-			throw new IllegalStateException("");
-		}
-		return carFuelType;
 	}
 
 	private static Path getUniqueTargetPath(Path targetPath) {
