@@ -58,8 +58,8 @@ public final class MobilityToGridScenariosUtils {
 						VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
 						VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
 					}
-					case TransportMode.bike -> {
-//							ignore bikes
+					case TransportMode.bike, TransportMode.drt -> {
+//							ignore bikes and drt
 						VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
 						VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
 						VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
