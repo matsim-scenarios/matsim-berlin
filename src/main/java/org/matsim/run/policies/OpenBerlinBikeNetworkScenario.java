@@ -36,6 +36,10 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 		return bikeSpeedFactor;
 	}
 
+	public OpenBerlinBikeNetworkScenario(@Nullable Config config) {
+		super(config);
+	}
+
 	/**
 	 * make all necessary config changes for different simulation scenarios of bike.
 	 */
@@ -151,4 +155,20 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 	 * Helper Enum to configure how bikes are simulated.
 	 */
 	public enum BikeHandling {ROUTED_ON_NETWORK_NOT_IN_QSIM, ROUTED_ON_NETWORK_IN_QSIM, TELEPORTED}
+
+
+	/**
+	 * Helper Enum to configure how bike link speed is calculated.
+	 */
+	public enum BikeSpeedHandling {BICYCLE_LINK_SPEED_CALCULATOR, NO_BICYCLE_LINK_SPEED_CALCULATOR}
+
+	/**
+	 * Helper Enum to configure how bike travel time is calculated.
+	 */
+	public enum BikeTravelTimeHandling {BICYCLE_TRAVEL_TIME, NO_BICYCLE_TRAVEL_TIME}
+
+	/**
+	 * Helper Enum to configure how bike disutility is calculated.
+	 */
+	public enum BikeTravelDisutilityHandling {ONLY_TIME_DEPENDENT_DISUTILITY, OTHER}
 }
