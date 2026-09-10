@@ -27,7 +27,6 @@ import java.util.*;
  */
 public final class MobilityToGridScenariosUtils {
 	public static final String AVERAGE = "average";
-	public static final String RICH = "rich";
 
 	private static final Logger log = LogManager.getLogger(MobilityToGridScenariosUtils.class);
 
