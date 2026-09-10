@@ -341,13 +341,13 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 //		});
 
 //		travel time binding for carExpensive
-//		controler.addOverridingModule(new AbstractModule() {
-//			@Override
-//			public void install() {
-//				addTravelTimeBinding(CAR_EXPENSIVE).to(networkTravelTime());
-//				addTravelDisutilityFactoryBinding(CAR_EXPENSIVE).to(carTravelDisutilityFactoryKey());
-//			}
-//		});
+		controler.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				addTravelTimeBinding(CAR_EXPENSIVE).to(networkTravelTime());
+				addTravelDisutilityFactoryBinding(CAR_EXPENSIVE).to(carTravelDisutilityFactoryKey());
+			}
+		});
 	}
 
 	private enum ManualModeSwitchForCarTripsHandling {SWITCH_ALL_CAR_TRIPS, SWITCH_ONLY_CAR_TRIPS_OF_RICH_AGENTS}
