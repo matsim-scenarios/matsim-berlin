@@ -201,8 +201,7 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 		//		add vehicle type for car expensive
 		EngineInformation carEngineInfo = scenario.getVehicles().getVehicleTypes().get(Id.create(TransportMode.car, VehicleType.class)).getEngineInformation();
 		VehicleType carExpensiveType = VehicleUtils.createVehicleType(Id.create(CAR_EXPENSIVE, VehicleType.class));
-//		carExpensiveType.setNetworkMode(CAR_EXPENSIVE);
-		carExpensiveType.setNetworkMode(TransportMode.car);
+		carExpensiveType.setNetworkMode(CAR_EXPENSIVE);
 		EngineInformation carExpensiveEngineInfo = carExpensiveType.getEngineInformation();
 
 		VehicleUtils.setHbefaVehicleCategory(carExpensiveEngineInfo, HbefaVehicleCategory.PASSENGER_CAR.toString());
