@@ -60,12 +60,10 @@ public class EnergyConsumptionAnalysis implements MATSimAppCommand {
 	@CommandLine.Mixin
     private final SampleOptions sampleOptions = new SampleOptions();
 
-//	TODO: this should rather be a map with mode=energyConsumption; see
+//	for car on average 15.0 kWh/100km
+//	for eBike on average 1.06 kWh/100km; source: https://link.springer.com/article/10.1007/s11116-025-10661-2
 	@CommandLine.Option(names = "--modes-energy-consumption", split = ",", description = "Modes to consider for analysis + their average energy consumption. consumption in kwH/100km", required = true)
 	private Map<String, Double> modesToEnergyConsumption;
-
-//  TODO: what would be a decent value for eBike here
-	private double averageCarConsumptionInKWhPer100km = 15.0;
 
 
     /**
@@ -229,19 +227,23 @@ public class EnergyConsumptionAnalysis implements MATSimAppCommand {
             log.error(ex);
         }
 
-//		TODO: continue here and test
-//		TODO: recherche für avg energy consumption eBBike
+//		TODO: in example, mean energy consumption is 6 kWh, but before (when analysis was not finished yet) it was 194. Check if the calculation is correct!!!
+
         try (CSVPrinter printer = new CSVPrinter(IOUtils.getBufferedWriter(output.getPath("energy_consumption_residents.csv").toString()), CSVFormat.DEFAULT)) {
-            printer.printRecord("Assumed energy consumption [kWh/100km]:", df.format(this.averageCarConsumptionInKWhPer100km));
-//            printer.printRecord("Total energy consumption by resident car drivers  [kWh]:", df.format(inhabitantsDistanceStats.getSum()  * factor / 100.0 * this.averageCarConsumptionInKWhPer100km));
-//            printer.printRecord("Mean energy consumption by resident car drivers [kWh]:", df.format(inhabitantsDistanceStats.getMean()  * factor / 100.0 * this.averageCarConsumptionInKWhPer100km));
+			for (Map.Entry<String, DescriptiveStatistics> entry : inhabitantsDistanceStats.entrySet()) {
+				printer.printRecord("Assumed energy consumption [kWh/100km] for " + entry.getKey() + ":", df.format(this.modesToEnergyConsumption.get(entry.getKey())));
+				printer.printRecord("Total energy consumption by resident " + entry.getKey() + " drivers [kWh]:", df.format(entry.getValue().getSum()  * factor / 100.0 * this.modesToEnergyConsumption.get(entry.getKey())));
+				printer.printRecord("Mean energy consumption by resident " + entry.getKey() + " drivers [kWh]:", df.format(entry.getValue().getMean()/ 100.0 * this.modesToEnergyConsumption.get(entry.getKey())));
+			}
         } catch (IOException ex) {
             log.error(ex);
         }
         try (CSVPrinter printer = new CSVPrinter(IOUtils.getBufferedWriter(output.getPath("energy_consumption_non_residents.csv").toString()), CSVFormat.DEFAULT)) {
-            printer.printRecord("Assumed energy consumption [kWh/100km]:", df.format(this.averageCarConsumptionInKWhPer100km));
-//            printer.printRecord("Total energy consumption by resident car drivers  [kWh]:", df.format(destinationAgentsDistanceStats.getSum()  * factor / 100.0 * this.averageCarConsumptionInKWhPer100km));
-//            printer.printRecord("Mean energy consumption by resident car drivers [kWh]:", df.format(destinationAgentsDistanceStats.getMean()  * factor / 100.0 * this.averageCarConsumptionInKWhPer100km));
+			for (Map.Entry<String, DescriptiveStatistics> entry : destinationAgentsDistanceStats.entrySet()) {
+				printer.printRecord("Assumed energy consumption [kWh/100km] for " + entry.getKey() + ":", df.format(this.modesToEnergyConsumption.get(entry.getKey())));
+				printer.printRecord("Total energy consumption by non-resident " + entry.getKey() + " drivers with 1+ activities in shape [kWh]:", df.format(entry.getValue().getSum()  * factor / 100.0 * this.modesToEnergyConsumption.get(entry.getKey())));
+				printer.printRecord("Mean energy consumption by non-resident " + entry.getKey() + " drivers with 1+ activities in shape [kWh]:", df.format(entry.getValue().getMean() / 100.0 * this.modesToEnergyConsumption.get(entry.getKey())));
+			}
         } catch (IOException ex) {
             log.error(ex);
         }

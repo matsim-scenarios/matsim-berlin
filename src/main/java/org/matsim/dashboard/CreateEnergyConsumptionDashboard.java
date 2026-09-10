@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -33,8 +34,10 @@ public class CreateEnergyConsumptionDashboard implements MATSimAppCommand {
     private final ShpOptions shp = new ShpOptions();
     @CommandLine.Parameters(arity = "1..*", description = "Path to run output directories for which the dashboards is to be generated.")
     private List<Path> inputPaths;
-	@CommandLine.Option(names = "--modes", split = ",", description = "Modes to consider for analysis. Currently only car and eBike are implemented.")
-	private Set<String> modes = Set.of(TransportMode.car);
+	//	for car on average 15.0 kWh/100km
+//	for eBike on average 1.06 kWh/100km; source: https://link.springer.com/article/10.1007/s11116-025-10661-2
+	@CommandLine.Option(names = "--modes-energy-consumption", split = ",", description = "Modes to consider for analysis + their average energy consumption. consumption in kwH/100km", required = true)
+	private Map<String, Double> modesToEnergyConsumption = Map.of(TransportMode.car, 15.0);
 
     private CreateEnergyConsumptionDashboard() {
     }
@@ -71,7 +74,7 @@ public class CreateEnergyConsumptionDashboard implements MATSimAppCommand {
             //skip default dashboards
             simwrapperCfg.defaultDashboards = SimWrapperConfigGroup.Mode.disabled;
 
-            sw.addDashboard(new EnergyConsumptionDashboard(modes));
+            sw.addDashboard(new EnergyConsumptionDashboard(modesToEnergyConsumption));
 
             try {
                 //append dashboard to existing ones

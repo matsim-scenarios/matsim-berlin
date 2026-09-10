@@ -2,36 +2,37 @@ package org.matsim.dashboard;
 
 import org.matsim.analysis.EnergyConsumptionAnalysis;
 import org.matsim.api.core.v01.TransportMode;
-import org.matsim.application.options.ShpOptions;
 import org.matsim.simwrapper.Dashboard;
 import org.matsim.simwrapper.Header;
 import org.matsim.simwrapper.Layout;
-import org.matsim.simwrapper.viz.ColorScheme;
 import org.matsim.simwrapper.viz.MapPlot;
 import org.matsim.simwrapper.viz.Tile;
-import picocli.CommandLine;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Shows emission in the scenario.
  */
 public class EnergyConsumptionDashboard implements Dashboard {
-	private final Set<String> modes;
+	private final Map<String, Double> modesEnergyConsumption;
 
 	EnergyConsumptionDashboard() {
-		this.modes = Set.of(TransportMode.car);
+		this.modesEnergyConsumption = Map.of(TransportMode.car, 15.0);
 	}
 
-	EnergyConsumptionDashboard(Set<String> modes) {
-		this.modes = modes;
+	EnergyConsumptionDashboard(Map<String, Double> modesEnergyConsumption) {
+		this.modesEnergyConsumption = modesEnergyConsumption;
 	}
 
 	@Override
 	public void configure(Header header, Layout layout) {
-		String[] args = new ArrayList<>(List.of("--modes",String.join(",", modes))).toArray(new String[0]);
+		String[] args = new ArrayList<>(List.of(
+			"--modes-energy-consumption",
+			modesEnergyConsumption.entrySet().stream()
+				.map(e -> e.getKey() + "=" + e.getValue())
+				.collect(Collectors.joining(","))
+		)).toArray(new String[0]);
 
 		header.title = "Energy Consumption";
 		header.description = "This dashboard indicates the energy consumption of cars assuming 100% electrification. \n" +
