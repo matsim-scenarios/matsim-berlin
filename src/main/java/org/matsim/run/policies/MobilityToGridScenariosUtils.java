@@ -50,6 +50,13 @@ public final class MobilityToGridScenariosUtils {
 //							source: https://www.kba.de/DE/Presse/Pressemitteilungen/Fahrzeugbestand/2025/pm10_fz_bestand_pm_komplett.html
 						VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
 					}
+					case OpenBerlinAdditionalCarModeScenario.CAR_EXPENSIVE -> {
+						VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.PASSENGER_CAR.toString());
+//						carExpensive is "synthetic fuels" which basically as the same emission exhaustion as convential ICE vehicles
+						VehicleUtils.setHbefaTechnology(engineInformation, Hbefa41Technology.PETROL_4S.id);
+						VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
+						VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
+					}
 					case TransportMode.ride -> {
 //							ignore ride, the mode is routed on network, but then teleported
 						VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
