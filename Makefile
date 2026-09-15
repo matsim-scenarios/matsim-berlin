@@ -159,8 +159,6 @@ BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_
 BERLIN_ASC_CALIB_DIR := $(OUTPUT)/asc-calib-$(SAMPLE_PCT)
 BERLIN_ASC_CALIB_CONFIG := $(OUTPUT)/asc-calib-$(SAMPLE_PCT).config.xml
 BERLIN_ASC_CALIB_PARAMS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).mode-params-calibrated.yaml
-BERLIN_AFTER_CHOICE_EXPERIMENTS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
-BERLIN_DOWNTOWN_PLANS := $(OUTPUT)/inner-city/berlin-downtown-$(VERSION)-$(SAMPLE_PCT).xml.gz
 # this is coming from an external process. You can set it via environment-variable. For more info see comment 
 ## below where this file is used. 
 MODECHOICE_BASELINE_PLANS := ""
@@ -527,20 +525,6 @@ $(BERLIN_ASC_CALIB_PARAMS): $(BERLIN_ASC_CALIB_CONFIG) $(BERLIN_BRANDENBURG_INIT
 	 --args "--iterations $(ASC_CALIB_ITERATIONS) --simulation-period-in-days $(SIM_PERIOD_DAYS)"\
 	 $(if $(ASC_CALIB_BASE_PARAMS),--base-params $(abspath $(ASC_CALIB_BASE_PARAMS)))
 
-$(BERLIN_DOWNTOWN_PLANS): $(BERLIN_INNER_CITY_GPKG) $(BERLIN_AFTER_CHOICE_EXPERIMENTS) $(FACILITIES_XML) $(NETWORK_MATSIM) | setup
-
-	mkdir -p $(OUTPUT)/inner-city
-
-	$(JAVA_APP) prepare scenario-cutout\
-	 --population $(word 2,$^)\
-	 --facilities $(word 3,$^)\
-	 --network $(word 4,$^)\
-	 --output-population $@\
-	 --output-network $(OUTPUT)/inner-city/berlin-downtown-$(VERSION)-$(SAMPLE_PCT)-network.xml.gz\
-	 --output-facilities $(OUTPUT)/inner-city/berlin-downtown-$(VERSION)-$(SAMPLE_PCT)-facilities.xml.gz\
-	 --input-crs $(CRS)\
-	 --shp "$<"
-
 $(RANDOM_DRT_FLEET_10K): $(NETWORK_MATSIM) $(BERLIN_SHP_25832) $(BERLIN_INNER_CITY_GPKG) | setup
 	$(JAVA_APP) prepare create-drt-vehicles\
 	 --network $<\
@@ -607,6 +591,5 @@ $(FREIGHT_TOUR_REPORT): $(BERLIN_SMALLSCALE_COMMERCIAL) $(NETWORK_MATSIM) | setu
 analyze-freight: $(FREIGHT_OD_REPORT) $(FREIGHT_TOUR_REPORT)
 	echo "freight analysis written to $(FREIGHT_ANALYSIS_OUT)"
 
-prepare: $(BERLIN_AFTER_CHOICE_EXPERIMENTS)
-	#make -Bndri prepare | make2graph | gv2gml -o prepare_graph.gml
-	echo "Done"
+## the calibrated mode parameters are the end of the pipeline
+prepare: prepare-asc-calibration
