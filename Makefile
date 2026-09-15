@@ -452,6 +452,8 @@ $(BERLIN_CADYTS_SELECTION): $(BERLIN_CADYTS_FINAL) | setup
 	test -f $@ || { echo "$@ is missing; delete $< to have both written again"; exit 1; }
 	touch -r $< $@
 
+# The leg mode has to be given: the scenario binds freight to the truck travel time and scores it with
+# its own mode params, but the tool's default became car with matsim-libs #4708.
 $(BERLIN_BRANDENBURG_LONGHAULFREIGHT): $(GERMAN_FREIGHT_25PCT) $(GERMAN_FREIGHT_NETWORK) $(AREA_SHP) | setup
 	$(JAVA_APP) prepare extract-freight-trips $<\
 	 --network $(word 2,$^)\
@@ -459,11 +461,15 @@ $(BERLIN_BRANDENBURG_LONGHAULFREIGHT): $(GERMAN_FREIGHT_25PCT) $(GERMAN_FREIGHT_
 	 --target-crs $(CRS)\
 	 --shp $(word 3,$^)\
 	 --cut-on-boundary\
+	 --legMode freight\
 	 --output $@
 
+# downsample-population writes the sample next to its input as <input>-<N>pct.xml.gz and leaves the input
+# alone; only for the 25% "sample" it writes the input itself. Replace the extract by the sample either way.
 	$(JAVA_APP) prepare downsample-population $@\
 		--sample-size 0.25\
-		--samples $(SAMPLE_SIZE)\
+		--samples $(SAMPLE_SIZE)
+	if [ -f $(@:.xml.gz=-$(SAMPLE_PCT).xml.gz) ]; then mv $(@:.xml.gz=-$(SAMPLE_PCT).xml.gz) $@; fi
 
 # These depend on the output of cadyts calibration runs
 # should we really use NETWORK_MATSIM here or not maybe NETWORK_MATSIM_PT
