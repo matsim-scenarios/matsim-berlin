@@ -87,6 +87,7 @@ COUNTS_UNDERESTIMATED := input/counts_underestimated.csv
 COUNTS_MAPPING := input/counts_mapping.csv
 FACILITY_MAPPING := input/facility_mapping.json
 COMMERCIAL_TRAFFIC_AREA_DATA := input/commercialTrafficAreaData.csv
+FREIGHT_CONFIG := input/freight-config.xml
 ACTIVITY_MAPPING := input/activity_mapping.json
 
 
@@ -378,9 +379,9 @@ $(DATA_DISTR_PER_ZONE): $(COMMERCIAL_FACILITIES) | setup
 	test -f $@ || { echo "$@ is missing; delete $< to have both written again"; exit 1; }
 	touch -r $< $@
 
-$(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DATA_DISTR_PER_ZONE) $(BB_ZONES_VKZ_4326) | setup
+$(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DATA_DISTR_PER_ZONE) $(BB_ZONES_VKZ_4326) $(FREIGHT_CONFIG) | setup
 	$(JAVA_APP) prepare generate-small-scale-commercial-traffic\
-	  input/$(VERSION)/berlin-$(VERSION)-freight.config.xml\
+	  $(word 5,$^)\
 	 --pathToZoneAttributes $(abspath $(word 3,$^))\
 	 --pathToCommercialFacilities $(abspath $(word 2,$^))\
 	 --sample $(SAMPLE_SIZE)\
