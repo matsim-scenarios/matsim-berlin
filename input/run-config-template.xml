@@ -1,17 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE config SYSTEM "http://www.matsim.org/files/dtd/config_v2.dtd">
 <!--
-	Template for the config of the ASC calibration runs. The Makefile substitutes the placeholders
-	and writes the result next to the artifacts it refers to (output/), because every relative path
-	below is resolved against the directory of the config file.
+	Template of the run config of the version the pipeline produces (VERSION in the Makefile). The
+	published versions live in input/v[VERSION]/ and are not touched by the pipeline; this file is
+	where the next version's config is developed.
 
-	Everything that depends on the sample size is in here (population, capacity factors, counts scale
-	factor), so the calibration itself does not need to know the sample: RunOpenBerlinCalibration has
-	a sample switch, but OpenBerlinScenario, which is what is run here, has not.
+	The Makefile substitutes the placeholders and writes the result next to the artifacts it refers
+	to (output/), because every relative path below is resolved against the directory of the config
+	file. Everything that depends on the sample size is in here (population, capacity factors, counts
+	scale factor), so nothing downstream needs to know the sample: RunOpenBerlinCalibration has a
+	sample switch, but OpenBerlinScenario, which is what runs this config, has not.
 
-	controller.outputDirectory, controller.runId and controller.lastIteration are overwritten per
-	calibration run by src/main/python/calibrate.py, and so are the mode constants below (through
-	the yaml overlay).
+	The ASC calibration runs this config with its own controller settings, passed on the command
+	line by the Makefile, and overwrites the mode constants per trial (yaml overlay). Its result, the
+	calibrated constants, is baked into this config by prepare write-run-config, which gives the run
+	config of the new version. To publish it, upload the artifacts it refers to and point the paths
+	at them.
 -->
 <config>
 	<module name="timeAllocationMutator">
@@ -24,18 +28,13 @@
 		<param name="latestActivityEndTime" value="36:00:00"/>
 	</module>
 	<module name="controller">
-		<!-- the calibration passes the iterations on the command line, this is only the default
-		     for running the config by hand -->
 		<param name="lastIteration" value="500"/>
-		<param name="overwriteFiles" value="deleteDirectoryIfExists"/>
-		<param name="runId" value="asc-calib"/>
-		<param name="outputDirectory" value="./asc-calib-output"/>
+		<param name="overwriteFiles" value="failIfDirectoryExists"/>
+		<param name="runId" value="berlin-==VERSION==-==SAMPLE=="/>
+		<param name="outputDirectory" value="./output/berlin-==VERSION==-==SAMPLE=="/>
 		<param name="writeEventsInterval" value="100"/>
 		<param name="writePlansInterval" value="100"/>
 		<param name="routingAlgorithmType" value="SpeedyALT"/>
-		<!-- the calibration finds the mode shares of a run by globbing for output_trips.csv.gz and
-		     output_persons.csv.gz, so the run output has to be gzipped, not zstd (the default) -->
-		<param name="compressionType" value="gzip"/>
 	</module>
 	<module name="global">
 		<param name="coordinateSystem" value="EPSG:25832"/>
@@ -102,9 +101,6 @@
 
 	<module name="simwrapper">
 		<param name="sampleSize" value="==SAMPLE_SIZE=="/>
-		<!-- the calibration only reads the mode shares from the run output; the noise and emission
-		     dashboards are the expensive ones and contribute nothing to it -->
-		<param name="exclude" value="NoiseDashboard,EmissionsDashboard"/>
 
 		<parameterset type="params">
 			<param name="context" value=""/>
@@ -151,8 +147,9 @@
 				<param name="excludeSubpopulations" value="commercialPersonTraffic,commercialPersonTraffic_service,freight,goodsTraffic"/>
 			</parameterset>
 
-			<!-- The mode constants are the starting point of the calibration; every calibration run
-			     overwrites them with the constants of its trial. -->
+			<!-- The mode constants are the starting point of the ASC calibration; every calibration run
+			     overwrites them with the constants of its trial, and write-run-config replaces them with
+			     the calibrated ones. -->
 			<parameterset type="modeParams">
 				<param name="constant" value="-2.0901447661509565" />
 				<!-- 14.90€ * 0.268622 (fixed cost perception) -->
