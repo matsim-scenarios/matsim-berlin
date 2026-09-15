@@ -3,7 +3,10 @@
 ########### SETUP #################
 ###################################
 JAR := matsim-berlin-*.jar
-VERSION := v7.1
+## The version this pipeline produces. Not the published version: the run configs in input/v*/ are
+## the published models and stay as released, the run config of this version is generated from
+## input/run-config-template.xml. Bumping this renames every artifact in $(OUTPUT).
+VERSION := v7.2
 
 ## Sample size of the generated population, in percent. Override per invocation, e.g.
 ##   make prepare-calibration SAMPLE=10
@@ -88,6 +91,7 @@ COUNTS_MAPPING := input/counts_mapping.csv
 FACILITY_MAPPING := input/facility_mapping.json
 COMMERCIAL_TRAFFIC_AREA_DATA := input/commercialTrafficAreaData.csv
 FREIGHT_CONFIG := input/freight-config.xml
+RUN_CONFIG_TEMPLATE := input/run-config-template.xml
 ACTIVITY_MAPPING := input/activity_mapping.json
 
 
@@ -158,6 +162,8 @@ BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_
 BERLIN_ASC_CALIB_DIR := $(OUTPUT)/asc-calib-$(SAMPLE_PCT)
 BERLIN_ASC_CALIB_CONFIG := $(OUTPUT)/asc-calib-$(SAMPLE_PCT).config.xml
 BERLIN_ASC_CALIB_PARAMS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).mode-params-calibrated.yaml
+## the run config of this version: the calibration config with the calibrated mode constants
+BERLIN_RUN_CONFIG := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).config.xml
 COMMERCIAL_FACILITIES := $(OUTPUT)/commercialFacilities.xml.gz
 BERLIN_SMALLSCALE_COMMERCIAL := $(OUTPUT)/berlin-small-scale-commercialTraffic-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
 ## jsprit scratch output; per sample so parallel builds do not clobber each other
@@ -175,7 +181,8 @@ DATA_DISTR_PER_ZONE := $(OUTPUT)/dataDistributionPerZone.csv
 
 VEHICLESFILE_OUT := $(OUTPUT)/berlin-$(VERSION)-vehicleTypes.xml
 
-## TODO where is this comming from
+## per link features of the sumo network, the input of apply-network-params. Not produced by this
+## Makefile: it was copied from the previous version, see its rule below
 NETWORK_FT := $(OUTPUT)/berlin-$(VERSION)-network-ft.csv.gz
 
 
@@ -234,7 +241,10 @@ $(NETWORK_SUMO): $(NETWORK_OSM) $(SUMO_OSM_NETCONVERT) $(SUMO_OSM_NETCONVERT_URB
 
 
 # converting the network from SUMO format to MATSim format:
-$(NETWORK_MATSIM): $(NETWORK_SUMO) | setup
+$(NETWORK_FT):
+	echo "$@ is missing. It is not produced by this Makefile; copy it from the previous version."; exit 1
+
+$(NETWORK_MATSIM): $(NETWORK_SUMO) $(NETWORK_FT) | setup
 	$(JAVA_APP) prepare network-from-sumo $< --target-crs $(CRS) --lane-restrictions REDUCE_CAR_LANES --output $@
 
 	$(JAVA_APP) prepare clean-network $@ --output $@ --modes car,bike,ride,truck --remove-turn-restrictions
@@ -256,6 +266,12 @@ $(NETWORK_MATSIM): $(NETWORK_SUMO) | setup
 	  --capacity-bounds 0.3\
 	  --model org.matsim.application.prepare.network.params.hbs.HBSNetworkParams\
 	  --decrease-only
+
+# Written by network-from-sumo, the first step of the recipe above, next to the network. Same as
+# $(DATA_DISTR_PER_ZONE): give it the timestamp of the network so it does not count as out of date.
+$(LINK_GEOMETRIES): $(NETWORK_MATSIM) | setup
+	test -f $@ || { echo "$@ is missing; delete $< to have both written again"; exit 1; }
+	touch -r $< $@
 
 # add the PT network. Generates MATSim transit schedule as a side effect.  Note that this uses "complete-pt-2024-10-27.zip" as hardcoded input.
 $(NETWORK_MATSIM_PT): $(NETWORK_MATSIM) $(GTFS_DATA) $(PT_AREA) $(VMZ_COUNTS) $(COUNTS_UNDERESTIMATED) | setup
@@ -493,10 +509,10 @@ $(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MATSIM) 
 	$(JAVA_APP) prepare merge-populations $@ $(word 3,$^)\
 		--output $@
 
-# The config of the ASC calibration runs. It goes next to the artifacts it refers to, because the
-# relative paths in it are resolved against the directory of the config file. Everything that
-# depends on the sample size is substituted in here, the calibration itself is sample agnostic.
-$(BERLIN_ASC_CALIB_CONFIG): input/asc-calibration-config-template.xml | setup
+# The run config of this version, before calibration. It goes next to the artifacts it refers to,
+# because the relative paths in it are resolved against the directory of the config file. Everything
+# that depends on the sample size is substituted in here, the calibration itself is sample agnostic.
+$(BERLIN_ASC_CALIB_CONFIG): $(RUN_CONFIG_TEMPLATE) | setup
 	sed -e "s/==VERSION==/$(VERSION)/g"\
 	 -e "s/==SAMPLE==/$(SAMPLE_PCT)/g"\
 	 -e "s/==SAMPLE_SIZE==/$(SAMPLE_SIZE)/g"\
@@ -507,6 +523,10 @@ $(BERLIN_ASC_CALIB_CONFIG): input/asc-calibration-config-template.xml | setup
 # Calibrate the mode constants against the SrV mode shares. Each trial is a full scenario run, so
 # this is by far the most expensive step; ASC_CALIB_TRIALS runs are added per invocation, and
 # re-running continues the study in $(BERLIN_ASC_CALIB_DIR) instead of starting over.
+# The calibration runs differ from a scenario run only in the settings passed here: the calibration
+# finds the mode shares of a run by globbing for output_trips.csv.gz and output_persons.csv.gz, so
+# the output has to be gzipped, not zstd; and it only reads the mode shares, so the expensive noise
+# and emission dashboards are skipped.
 $(BERLIN_ASC_CALIB_PARAMS): $(BERLIN_ASC_CALIB_CONFIG) $(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS) $(NETWORK_MATSIM_PT) $(FACILITIES_XML) $(VMZ_COUNTS) $(VEHICLESFILE_OUT) | setup
 	$(PYTHON) src/main/python/calibrate.py\
 	 --jar '$(JAR)'\
@@ -515,8 +535,20 @@ $(BERLIN_ASC_CALIB_PARAMS): $(BERLIN_ASC_CALIB_CONFIG) $(BERLIN_BRANDENBURG_INIT
 	 --output $@\
 	 --trials $(ASC_CALIB_TRIALS)\
 	 --jvm-args "-Xmx$(ASC_CALIB_XMX) -Xms$(ASC_CALIB_XMX) -XX:+AlwaysPreTouch -XX:+UseParallelGC"\
-	 --args "--iterations $(ASC_CALIB_ITERATIONS) --simulation-period-in-days $(SIM_PERIOD_DAYS)"\
+	 --args "--iterations $(ASC_CALIB_ITERATIONS) --simulation-period-in-days $(SIM_PERIOD_DAYS)\
+	 --config:controller.overwriteFiles=deleteDirectoryIfExists\
+	 --config:controller.compressionType=gzip\
+	 --config:simwrapper.exclude=NoiseDashboard,EmissionsDashboard"\
 	 $(if $(ASC_CALIB_BASE_PARAMS),--base-params $(abspath $(ASC_CALIB_BASE_PARAMS)))
+
+# Bake the calibrated mode constants into the config: this is the run config of this version. It
+# still points at the artifacts in $(OUTPUT); to publish it, upload those and point it at them.
+$(BERLIN_RUN_CONFIG): $(BERLIN_ASC_CALIB_CONFIG) $(BERLIN_ASC_CALIB_PARAMS) | setup
+	$(JAVA_APP) prepare write-run-config\
+	 --config $<\
+	 --yaml $(word 2,$^)\
+	 --run-id berlin-$(VERSION)-$(SAMPLE_PCT)\
+	 --output $@
 
 setup:
 	echo "setup directories (SAMPLE=$(SAMPLE) -> $(SAMPLE_SIZE), files tagged $(SAMPLE_PCT))"
@@ -565,5 +597,6 @@ $(FREIGHT_TOUR_REPORT): $(BERLIN_SMALLSCALE_COMMERCIAL) $(NETWORK_MATSIM) | setu
 analyze-freight: $(FREIGHT_OD_REPORT) $(FREIGHT_TOUR_REPORT)
 	echo "freight analysis written to $(FREIGHT_ANALYSIS_OUT)"
 
-## the calibrated mode parameters are the end of the pipeline
-prepare: prepare-asc-calibration
+## the run config of this version, with the calibrated mode constants, is the end of the pipeline
+prepare: $(BERLIN_RUN_CONFIG)
+	echo "run config of $(VERSION) written to $(BERLIN_RUN_CONFIG)"
