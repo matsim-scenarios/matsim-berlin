@@ -7,7 +7,7 @@
 	information; network, facilities, plans, transit and the sample size are all set by
 	GenerateSmallScaleCommercialTrafficDemand from its command line options.
 
-	It deliberately does not reuse the berlin-v7.1-[sample]pct.config.xml run configs: those
+	It deliberately does not reuse the berlin-v[VERSION]-[sample]pct.config.xml run configs: those
 	point their vehicles/plans/facilities at the calibrated run output on the public SVN,
 	which would be downloaded on every invocation.
 -->
@@ -24,7 +24,7 @@
 	</module>
 	<module name="vehicles">
 		<!-- relative to this config file; same file the rest of the pipeline copies to $(VEHICLESFILE_OUT) -->
-		<param name="vehiclesFile" value="../v7.0/berlin-v7.0-vehicleTypes.xml"/>
+		<param name="vehiclesFile" value="v7.0/berlin-v7.0-vehicleTypes.xml"/>
 	</module>
 	<module name="facilities">
 		<!-- the actual file is set to the generated commercial facilities via the pathToCommercialFacilities option -->
