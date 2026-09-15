@@ -65,7 +65,7 @@ ASC_CALIB_XMX ?= 60G
 ## every trial. Empty means the parameters stay as they are in the generated config.
 ASC_CALIB_BASE_PARAMS ?=
 
-.PHONY: setup prepare prepare-network-and-counts prepare-freight prepare-calibration prepare-run-cadyts prepare-initial prepare-asc-calibration prepare-drt analyze-freight
+.PHONY: setup prepare prepare-network-and-counts prepare-freight prepare-calibration prepare-run-cadyts prepare-initial prepare-asc-calibration analyze-freight
 .DELETE_ON_ERROR:
 
 ###################################
@@ -106,8 +106,6 @@ BB_ZONES_4326 := $(BERLINPUBLIC)/berlin-v7.0/input/shp/berlinBrandenburg_Zones_V
 BB_BUILDINGS_4326 := $(BERLINPUBLIC)/berlin-v7.0/input/shp/buildings_BerlinBrandenburg_4326.shp
 BERLIN_LANDUSE_4326 := $(BERLINPUBLIC)/berlin-v7.0/input/shp/berlinBrandenburg_landuse_4326.shp
 BB_ZONES_VKZ_4326 := $(BERLINPUBLIC)/berlin-v7.0/input/shp/berlinBrandenburg_Zones_VKZ_4326.shp
-BERLIN_INNER_CITY_GPKG := $(BERLINPUBLIC)/berlin-v6.4/input/shp/berlin_inner_city.gpkg
-BERLIN_SHP_25832 := $(BERLINPUBLIC)/berlin-v7.0/input/shp/Berlin_25832.shp
 
 COUNTS_BERLIN_2018 := $(BERLINSHARED)/berlin-v5.5/original_data/vmz_counts_2018/Datenexport_2018_TU_Berlin.xlsx
 PLR_2013_2020 := $(BERLINSHARED)/data/statistik-berlin-brandenburg/PLR_2013_2020.csv
@@ -159,10 +157,6 @@ BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_
 BERLIN_ASC_CALIB_DIR := $(OUTPUT)/asc-calib-$(SAMPLE_PCT)
 BERLIN_ASC_CALIB_CONFIG := $(OUTPUT)/asc-calib-$(SAMPLE_PCT).config.xml
 BERLIN_ASC_CALIB_PARAMS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).mode-params-calibrated.yaml
-# this is coming from an external process. You can set it via environment-variable. For more info see comment 
-## below where this file is used. 
-MODECHOICE_BASELINE_PLANS := ""
-
 COMMERCIAL_FACILITIES := $(OUTPUT)/commercialFacilities.xml.gz
 BERLIN_SMALLSCALE_COMMERCIAL := $(OUTPUT)/berlin-small-scale-commercialTraffic-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
 ## jsprit scratch output; per sample so parallel builds do not clobber each other
@@ -172,8 +166,6 @@ FREIGHT_OD_REPORT := $(FREIGHT_ANALYSIS_OUT)/commercial_od_summary.csv
 FREIGHT_TOUR_REPORT := $(FREIGHT_ANALYSIS_OUT)/commercial_tour_kpi.csv
 
 BERLIN_BRANDENBURG_LONGHAULFREIGHT := $(OUTPUT)/berlin-longHaulFreight-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
-
-RANDOM_DRT_FLEET_10K := $(OUTPUT)/berlin-$(VERSION).drt-by-rndLocations-10000vehicles-4seats.xml.gz
 
 ## this is produced together with BERLIN_CADYTS_FINAL, it has an own target now
 BERLIN_CADYTS_SELECTION := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans_selection_cadyts.csv
@@ -525,21 +517,6 @@ $(BERLIN_ASC_CALIB_PARAMS): $(BERLIN_ASC_CALIB_CONFIG) $(BERLIN_BRANDENBURG_INIT
 	 --args "--iterations $(ASC_CALIB_ITERATIONS) --simulation-period-in-days $(SIM_PERIOD_DAYS)"\
 	 $(if $(ASC_CALIB_BASE_PARAMS),--base-params $(abspath $(ASC_CALIB_BASE_PARAMS)))
 
-$(RANDOM_DRT_FLEET_10K): $(NETWORK_MATSIM) $(BERLIN_SHP_25832) $(BERLIN_INNER_CITY_GPKG) | setup
-	$(JAVA_APP) prepare create-drt-vehicles\
-	 --network $<\
-	 --shp "$(word 2,$^)"\
-	 --output $(OUTPUT)/berlin-$(VERSION).\
-	 --vehicles 10000\
-	 --seats 4
-
-	$(JAVA_APP) prepare create-drt-vehicles\
-	 --network $<\
-	 --shp "$(word 3,$^)"\
-	 --output $(OUTPUT)/berlin-$(VERSION).\
-	 --vehicles 500\
-	 --seats 4
-
 setup:
 	echo "setup directories (SAMPLE=$(SAMPLE) -> $(SAMPLE_SIZE), files tagged $(SAMPLE_PCT))"
 	mkdir -p $(OUTPUT)
@@ -563,10 +540,6 @@ prepare-initial: $(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS) $(NETWORK_MATSIM_PT)
 
 prepare-asc-calibration: $(BERLIN_ASC_CALIB_PARAMS)
 	echo "calibrated mode parameters written to $(BERLIN_ASC_CALIB_PARAMS)"
-
-prepare-drt: $(RANDOM_DRT_FLEET_10K)
-	#make -Bndri prepare-drt | make2graph | gv2gml -o prepare-drt_graph.gml
-	echo "Done"
 
 # Evaluate the OD matrix generation step: stop distance distribution, how well the destination constrained
 # gravity model reproduces the origin potentials, and the realised distance decay.
