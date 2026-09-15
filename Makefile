@@ -181,8 +181,8 @@ DATA_DISTR_PER_ZONE := $(OUTPUT)/dataDistributionPerZone.csv
 
 VEHICLESFILE_OUT := $(OUTPUT)/berlin-$(VERSION)-vehicleTypes.xml
 
-## per link features of the sumo network, the input of apply-network-params. Not produced by this
-## Makefile: it was copied from the previous version, see its rule below
+## per link features of the sumo network: written by network-from-sumo next to the network and read by
+## apply-network-params two steps later in the same recipe, so it never leaves the $(NETWORK_MATSIM) rule
 NETWORK_FT := $(OUTPUT)/berlin-$(VERSION)-network-ft.csv.gz
 
 
@@ -241,10 +241,7 @@ $(NETWORK_SUMO): $(NETWORK_OSM) $(SUMO_OSM_NETCONVERT) $(SUMO_OSM_NETCONVERT_URB
 
 
 # converting the network from SUMO format to MATSim format:
-$(NETWORK_FT):
-	echo "$@ is missing. It is not produced by this Makefile; copy it from the previous version."; exit 1
-
-$(NETWORK_MATSIM): $(NETWORK_SUMO) $(NETWORK_FT) | setup
+$(NETWORK_MATSIM): $(NETWORK_SUMO) | setup
 	$(JAVA_APP) prepare network-from-sumo $< --target-crs $(CRS) --lane-restrictions REDUCE_CAR_LANES --output $@
 
 	$(JAVA_APP) prepare clean-network $@ --output $@ --modes car,bike,ride,truck --remove-turn-restrictions
@@ -267,8 +264,9 @@ $(NETWORK_MATSIM): $(NETWORK_SUMO) $(NETWORK_FT) | setup
 	  --model org.matsim.application.prepare.network.params.hbs.HBSNetworkParams\
 	  --decrease-only
 
-# Written by network-from-sumo, the first step of the recipe above, next to the network. Same as
-# $(DATA_DISTR_PER_ZONE): give it the timestamp of the network so it does not count as out of date.
+# Written by network-from-sumo, the first step of the recipe above, next to the network (like
+# $(NETWORK_FT), but this one is read by another rule). Same as $(DATA_DISTR_PER_ZONE): give it the
+# timestamp of the network so it does not count as out of date.
 $(LINK_GEOMETRIES): $(NETWORK_MATSIM) | setup
 	test -f $@ || { echo "$@ is missing; delete $< to have both written again"; exit 1; }
 	touch -r $< $@
