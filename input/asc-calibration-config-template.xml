@@ -41,6 +41,9 @@
 		<param name="coordinateSystem" value="EPSG:25832"/>
 		<param name="insistingOnDeprecatedConfigVersion" value="false"/>
 		<param name="numberOfThreads" value="16"/>
+		<!-- the consistency check requires countsScaleFactor == 1 / flowCapacityFactor to within 1 ulp by default;
+		     for the 3% sample the decimal literal 33.333333 in the Makefile is not the exact reciprocal of 0.03 -->
+		<param name="relativeToleranceForSampleSizeFactors" value="1e-6"/>
 	</module>
 	<module name="network">
 		<param name="inputNetworkFile" value="./berlin-==VERSION==-network-with-pt.xml.gz"/>
