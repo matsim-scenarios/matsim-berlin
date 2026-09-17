@@ -1,81 +1,12 @@
 name: build
-
 on: push
-
 jobs:
-
-  checkstyle:
-    #run if push or pull_requests from fork
+  build:
+    # push, or pull_request from fork
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-    name: Checkstyle
-
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: 25
-          architecture: x64
-          distribution: temurin
-          cache: maven
-
-      - name: Package
-        run: mvn --batch-mode --update-snapshots checkstyle:checkstyle
-
-  enforce:
-    #run if push or pull_requests from fork
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-    name: Maven Dependencies
-
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: 25
-          architecture: x64
-          distribution: temurin
-          cache: maven
-
-      - name: Package
-        run: mvn --batch-mode --update-snapshots  enforcer:enforce
-
-  test:
-    #run if push or pull_requests from fork
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-    name: Tests
-
+    name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 45
-
-    strategy:
-      fail-fast: false
-      matrix:
-        java: [25]
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: ${{ matrix.java }}
-          architecture: x64
-          distribution: temurin
-          cache: maven
-
-      - name: Test
-        run: mvn --batch-mode --update-snapshots test -Dmatsim.preferLocalDtds=true -Dmaven.javadoc.skip -e
-      - uses: actions/upload-artifact@v4
-        with:
-          name: test-coverage
-          path: target/site/jacoco/
-
-  package:
-    #run if push or pull_requests from fork
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-    needs: [checkstyle, enforce, test]
-    name: Package
-
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -84,14 +15,27 @@ jobs:
           architecture: x64
           distribution: temurin
           cache: maven
-
-      - name: Package
-        run: mvn --batch-mode --update-snapshots package -DskipTests -Dmatsim.preferLocalDtds=true -Dmaven.javadoc.skip -e
+      # One pass instead of four parallel jobs: they shared no local repository, so on a cache miss each of them
+      # downloaded the whole dependency tree again.
+      # No --update-snapshots: nothing in the effective POM is a SNAPSHOT (the matsim parent is a pinned release),
+      # so it has nothing to update, while it forces every repository to be re-asked for metadata and for artifacts
+      # whose absence is already cached. Add it back when pinning a SNAPSHOT parent.
+      - run: mvn --batch-mode package checkstyle:checkstyle enforcer:enforce -Dmatsim.preferLocalDtds=true -Dmaven.javadoc.skip -e
       - run: mkdir staging && cp *.jar staging
       - uses: actions/upload-artifact@v4
         with:
           name: Package
           path: staging
-
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-coverage
+          path: target/site/jacoco/
     env:
-      MAVEN_OPTS: -Xmx512m
+      # Bound how long a single unresponsive repository can hold up resolution.
+      # Set for both the default resolver transport and wagon, whichever ends up being used.
+      MAVEN_OPTS: >-
+        -Xmx512m
+        -Daether.connector.connectTimeout=5000
+        -Daether.connector.requestTimeout=30000
+        -Dmaven.wagon.http.connectionTimeout=5000
+        -Dmaven.wagon.http.readTimeout=30000

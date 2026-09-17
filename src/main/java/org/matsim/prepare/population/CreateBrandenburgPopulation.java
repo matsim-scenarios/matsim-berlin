@@ -55,7 +55,7 @@ public class CreateBrandenburgPopulation implements MATSimAppCommand {
 	@CommandLine.Option(names = "--output", description = "Path to output population", required = true)
 	private Path output;
 
-	@CommandLine.Option(names = "--sample", description = "Sample size to generate", defaultValue = "0.25")
+	@CommandLine.Option(names = "--sample", description = "Sample size to generate", defaultValue = "1.0")
 	private double sample;
 
 	@CommandLine.Mixin
