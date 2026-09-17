@@ -359,9 +359,11 @@ $(BERLIN_BRANDENBURG_ACTS): $(BERLIN_BRANDENBURG_STATIC) $(SRV_PERSONS) $(SRV_AC
 # Assign activity locations to agents (except home, which is set before).
 # This computes work-locations based on REGIONALSTAT_COMMUTER & BERLIN_COMMUTER, edu- and secondary-locations are selected based on a distance from the last location, next location is ignored
 $(BERLIN_BRANDENBURG_INITIAL): $(BERLIN_BRANDENBURG_ACTS) $(FACILITIES_XML) $(NETWORK_MATSIM) $(VG5000_GEM) $(REGIONALSTAT_COMMUTER) $(BERLIN_COMMUTER) | setup
+# --sample: the commuter matrix is consumed as a quota, each assigned person uses up 1/sample commuters
 	$(JAVA_APP) prepare init-location-choice\
 	 --input $<\
 	 --output $@\
+	 --sample $(SAMPLE_SIZE)\
 	 --facilities $(word 2,$^)\
 	 --network $(word 3,$^)\
 	 --shp $(word 4,$^)\
