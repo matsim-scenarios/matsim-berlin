@@ -267,7 +267,7 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 							List<AttributedActivityFacility> res = query.stream().filter(f -> checkDistanceBound(dist, refCoord, f.getCoord(), b)).toList();
 
 							if (!res.isEmpty()) {
-								location = query.get(FacilityIndex.sampleByWeight(query, AttributedActivityFacility::getOtherAttraction, rnd));
+								location = res.get(FacilityIndex.sampleByWeight(res, AttributedActivityFacility::getOtherAttraction, rnd));
 								break;
 							}
 						}
