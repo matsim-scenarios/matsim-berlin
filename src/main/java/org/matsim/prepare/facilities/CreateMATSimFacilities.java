@@ -209,8 +209,14 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 
 		Object2DoubleMap<String> features = new Object2DoubleOpenHashMap<>();
 		for (int i = 0; i < ft.getAttributeCount(); i++) {
+			String name = ft.getFeatureType().getDescriptor(i).getLocalName();
 			if (ft.getAttribute(i) instanceof Number number) {
-				features.put(ft.getFeatureType().getDescriptor(i).getLocalName(), number.doubleValue());
+				features.put(name, number.doubleValue());
+			} else if (ft.getAttribute(i) instanceof Boolean bool) {
+				// The boolean columns (building, residential_only, landuse and the activity flags) are features of the
+				// attraction models, which were trained with them as 0/1. Older geotools versions returned them as
+				// numbers, since geotools 35 they come as Boolean and were silently left out.
+				features.put(name, bool ? 1 : 0);
 			}
 		}
 
