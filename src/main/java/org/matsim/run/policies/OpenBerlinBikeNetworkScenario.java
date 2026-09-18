@@ -55,6 +55,10 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 			qSimConfigGroup.setMainModes(mainModes);
 			log.info("Added bike as a qsim main mode. Hence, it will be simulated as congested mode.");
 
+			Set<String> analyzedModes = new HashSet<>(config.travelTimeCalculator().getAnalyzedModes());
+			analyzedModes.add(TransportMode.bike);
+			config.travelTimeCalculator().setAnalyzedModes(analyzedModes);
+
 		} else if (bikeHandling == BikeHandling.TELEPORTED) {
 			RoutingConfigGroup routingConfigGroup = ConfigUtils.addOrGetModule(config, RoutingConfigGroup.class);
 
