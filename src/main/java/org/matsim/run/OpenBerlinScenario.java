@@ -98,6 +98,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 	@Override
 	protected Config prepareConfig(Config config) {
 
+		// input files may live behind a login (shared-svn); see HttpAuthentication
+		HttpAuthentication.installFromEnvironment();
+
 		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
 		sw.setSampleSize(config.qsim().getFlowCapFactor());
 

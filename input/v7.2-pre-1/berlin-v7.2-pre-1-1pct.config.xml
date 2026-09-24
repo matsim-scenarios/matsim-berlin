@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "http://www.matsim.org/files/dtd/config_v2.dtd">
+<!--
+	Run config of the 1 % sample of berlin-v7.2-pre-1, for running the scenario as published.
+
+	This is NOT a v7.2 release. It is the run config the pipeline generated from the ASC
+	calibration of the pre-release (trial 009 of ten), with the input files pointing at what
+	was published under
+	  shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/
+
+	shared-svn needs a login, and MATSim reads URLs without authenticating. Set
+
+	  MATSIM_HTTP_USER, MATSIM_HTTP_PASSWORD
+
+	(environment variables or -D system properties) to your VSP SVN credentials, and the
+	scenario installs an authenticator for them at startup; see HttpAuthentication. In an IDE,
+	put them into the run configuration's environment. Without them every input URL fails with
+	HTTP 401. Nothing is cached: each start downloads about 40 MB.
+
+	See input/v7.2-pre-1/README.md, and the known issues in the README of the published folder.
+-->
+<config>
+	<module name="controller" >
+		<!-- Default=1000. Last Iteration of a simulation. -->
+		<param name="lastIteration" value="500" />
+		<param name="outputDirectory" value="./output/berlin-v7.2-pre-1-1pct" />
+		<!-- An identifier for the current run which is used as prefix for output files and mentioned in output xml files etc. -->
+		<param name="runId" value="berlin-v7.2-pre-1-1pct" />
+		<!-- iterationNumber % writeEventsInterval == 0 defines in which iterations events are written to a file. `0' disables events writing completely. -->
+		<param name="writeEventsInterval" value="100" />
+		<!-- iterationNumber % writePlansInterval == 0 defines (hopefully) in which iterations plans are written to a file. `0' disables plans writing completely.  Some plans in early iterations are always written -->
+		<param name="writePlansInterval" value="100" />
+	</module>
+	<module name="counts" >
+		<!-- factor by which to re-scale the simulated values.  necessary when simulation runs with something different from 100%.  needs to be adapted manually -->
+		<param name="countsScaleFactor" value="100.0" />
+		<!-- input file name to counts package -->
+		<param name="inputCountsFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-counts-vmz.xml.gz" />
+	</module>
+	<module name="facilities" >
+		<!-- This defines how facilities should be created. Possible values: none fromFile setInScenario onePerActivityLinkInPlansFile onePerActivityLinkInPlansFileExceptWhenCoordinatesAreGiven onePerActivityLocationInPlansFile  -->
+		<param name="facilitiesSource" value="fromFile" />
+		<param name="inputFacilitiesFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-facilities.xml.gz" />
+	</module>
+	<module name="global" >
+		<param name="coordinateSystem" value="EPSG:25832" />
+		<!-- "global" number of threads.  This number is used, e.g., for replanning, but NOT in QSim.  This can typically be set to as many cores as you have available, or possibly even slightly more. -->
+		<param name="numberOfThreads" value="16" />
+		<param name="relativeToleranceForSampleSizeFactors" value="1.0E-6" />
+	</module>
+	<module name="network" >
+		<param name="inputNetworkFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-network-with-pt.xml.gz" />
+	</module>
+	<module name="plans" >
+		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-1pct.plans-initial.xml.gz" />
+		<!-- (not tested) will remove plan attributes that are presumably not used, such as activityStartTime. default=false. Use with Caution! -->
+		<param name="removingUnnecessaryPlanAttributes" value="true" />
+	</module>
+	<module name="qsim" >
+		<param name="endTime" value="36:00:00" />
+		<param name="flowCapacityFactor" value="0.01" />
+		<!-- default: FIFO; options: FIFO PassingQ SeepageQ -->
+		<param name="linkDynamics" value="PassingQ" />
+		<!-- [comma-separated list] Defines which modes are congested modes. Technically, these are the modes that the departure handler of the netsimengine handles.  Effective cell size, effective lane width, flow capacity factor, and storage capacity factor need to be set with diligence.  Need to be vehicular modes to make sense. -->
+		<param name="mainMode" value="car,truck,freight" />
+		<!-- Number of threads used for the QSim.  Note that this setting is independent from the "global" threads setting.  In contrast to earlier versions, the non-parallel special version is no longer there. -->
+		<param name="numberOfThreads" value="12" />
+		<param name="startTime" value="00:00:00" />
+		<param name="storageCapacityFactor" value="0.01" />
+		<!-- time in seconds.  Time after which the frontmost vehicle on a link is called `stuck' if it does not move. -->
+		<param name="stuckTime" value="30.0" />
+		<!-- options: queue withHoles kinematicWaves  -->
+		<param name="trafficDynamics" value="kinematicWaves" />
+		<!-- If a route does not reference a vehicle, agents will use the vehicle with the same id as their own. -->
+		<param name="usePersonIdForMissingVehicleId" value="false" />
+		<!-- If vehicles should all be the same default vehicle, or come from the vehicles file, or something else.  Possible values:  defaultVehicle modeVehicleTypesFromVehiclesData fromVehiclesData -->
+		<param name="vehiclesSource" value="modeVehicleTypesFromVehiclesData" />
+	</module>
+	<module name="replanning" >
+		<!-- fraction of iterations where innovative strategies are switched off.  Something like 0.8 should be good.  E.g. if you run from iteration 400 to iteration 500, innovation is switched off at iteration 480. If the ReplanningAnnealer is used, it will also be switched off. -->
+		<param name="fractionOfIterationsToDisableInnovation" value="0.9" />
+	</module>
+	<module name="replanningAnnealer" >
+		<!-- Activate the scaling of replanning modules using an annealing approach rather than fixed rates. -->
+		<param name="activateAnnealingModule" value="true" />
+		<parameterset type="AnnealingVariable" >
+			<!-- options: linear, exponential, geometric, msa, sigmoid and disabled (no annealing). sigmoid: 1/(1+e^(shapeFactor*(it - halfLife))); geometric: startValue * shapeFactor^it; msa: startValue / it^shapeFactor. Exponential: startValue / exp(it/halfLife) -->
+			<param name="annealType" value="sigmoid" />
+			<!-- final annealing value. When the annealing function reaches this value, further results remain constant. -->
+			<param name="endValue" value="0.01" />
+			<!-- this parameter enters the exponential and sigmoid formulas. May be an iteration or a share, i.e. 0.5 for halfLife at 50% of iterations. -->
+			<param name="halfLife" value="0.5" />
+			<!-- see comment of parameter annealType. -->
+			<param name="shapeFactor" value="0.01" />
+			<!-- start value for annealing. -->
+			<param name="startValue" value="0.45" />
+			<!-- subpopulation to have the global innovation rate adjusted. Not applicable when annealing with other parameters. -->
+			<param name="subpopulation" value="person" />
+		</parameterset>
+	</module>
+	<module name="routing" >
+		<!-- Some typical teleportation routing params are set by default, such as for walk and bike.  Setting this switch to "true" will clear them.  Note that this will also clear settings for helper modes such as for non_network_walk -->
+		<param name="clearDefaultTeleportedModeParams" value="true" />
+		<!-- All the modes for which the router is supposed to generate network routes (like car) -->
+		<param name="networkModes" value="car,truck,freight,ride,bike" />
+		<parameterset type="teleportedModeParameters" >
+			<param name="mode" value="walk" />
+			<!-- Speed for a teleported mode. Travel time = (<beeline distance> * beelineDistanceFactor) / teleportedModeSpeed. Insert a line like this for every such mode. -->
+			<param name="teleportedModeSpeed" value="1.23" />
+		</parameterset>
+	</module>
+	<module name="scoring" >
+		<!-- fraction of iterations at which MSA score averaging is started. The matsim theory department suggests to use this together with switching off choice set innovation (where a similar switch exists), but it has not been tested yet. -->
+		<param name="fractionOfIterationsToStartScoreMSA" value="0.9" />
+		<param name="pathSizeLogitBeta" value="0.0" />
+		<parameterset type="scoringParameters" >
+			<param name="marginalUtilityOfMoney" value="0.397322" />
+			<param name="performing" value="5.501071" />
+			<param name="waitingPt" value="0.0" />
+			<parameterset type="modeParams" >
+				<!-- [utils] alternative-specific constant.  Normally per trip, but that is probably buggy for multi-leg trips. -->
+				<param name="constant" value="-1.0549050032955907" />
+				<!-- [unit_of_money/day] Fixed cost of mode, per day. -->
+				<param name="dailyMonetaryConstant" value="-3.8412946" />
+				<!-- [utils/hr] additional marginal utility of traveling.  normally negative.  this comes on top of the opportunity cost of time -->
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="mode" value="car" />
+				<!-- [unit_of_money/m] conversion of distance into money. Normally negative. -->
+				<param name="monetaryDistanceRate" value="-1.49E-4" />
+			</parameterset>
+			<parameterset type="modeParams" >
+				<param name="constant" value="-5.396347732154479" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="-4.442946" />
+				<param name="mode" value="ride" />
+				<param name="monetaryDistanceRate" value="-1.49E-4" />
+			</parameterset>
+			<parameterset type="modeParams" >
+				<param name="constant" value="-1.459206916867583" />
+				<param name="dailyMonetaryConstant" value="-0.805866" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="mode" value="pt" />
+			</parameterset>
+			<parameterset type="modeParams" >
+				<param name="constant" value="-1.1750965857674858" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="-1.309362" />
+				<param name="mode" value="bike" />
+			</parameterset>
+			<parameterset type="modeParams" >
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="mode" value="walk" />
+			</parameterset>
+			<parameterset type="modeParams" >
+				<param name="constant" value="-0.164051" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="mode" value="bus" />
+			</parameterset>
+			<parameterset type="modeParams" >
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="mode" value="freight" />
+				<param name="monetaryDistanceRate" value="-4.0E-4" />
+			</parameterset>
+			<parameterset type="modeParams" >
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="mode" value="truck" />
+				<param name="monetaryDistanceRate" value="-4.0E-4" />
+			</parameterset>
+			<parameterset type="tasteVariations" >
+				<!-- List of subpopulations for which no variations will be applied. -->
+				<param name="excludeSubpopulations" value="commercialPersonTraffic, commercialPersonTraffic_service, freight, goodsTraffic" />
+				<!-- Exponent for income dependent scoring. Exponent for (average_income / personal_income) ** x. Default is x=0, which disables it. -->
+				<param name="incomeExponent" value="0.275502" />
+				<!-- List of utility parameters that are loaded from each person. -->
+				<param name="variationsOf" value="constant" />
+			</parameterset>
+		</parameterset>
+	</module>
+	<module name="simwrapper" >
+		<param name="sampleSize" value="0.01" />
+		<parameterset type="params" >
+			<param name="context" value="" />
+			<param name="mapCenter" value="13.39,52.51" />
+			<param name="mapZoomLevel" value="9.1" />
+			<param name="shp" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v7.0/input/area/area.shp" />
+		</parameterset>
+	</module>
+	<module name="subtourModeChoice" >
+		<!-- Only for backwards compatibility.  Defines if only trips from modes list should change mode, or all trips.  Options: fromAllModesToSpecifiedModes fromSpecifiedModesToSpecifiedModes betweenAllAndFewerConstraints  -->
+		<param name="behavior" value="betweenAllAndFewerConstraints" />
+		<!-- Defines whether car availability must be considered or not. A agent has no car only if it has no license, or never access to a car -->
+		<param name="considerCarAvailability" value="true" />
+		<!-- If greater than 0, activities that are closer than coordDistance, to each other, will be considered part of the same subtour.i.e. if two activities are close to each other, the agent is allowed to use the same 'chain-based' vehicle for both subtours. -->
+		<param name="coordDistance" value="100.0" />
+		<!-- Defines all the modes available, including chain-based modes, seperated by commas -->
+		<param name="modes" value="car,pt,bike,walk,ride" />
+		<!-- Defines the probability of changing a single trip for a unchained mode instead of subtour. -->
+		<param name="probaForRandomSingleTripMode" value="0.5" />
+	</module>
+	<module name="timeAllocationMutator" >
+		<!-- Latest Activity End Time. Default = 24:00:00 -->
+		<param name="latestActivityEndTime" value="129600.0" />
+		<!-- Default:true; Defines whether time mutation changes an activity's duration. -->
+		<param name="mutationAffectsDuration" value="false" />
+	</module>
+	<module name="transit" >
+		<!-- Input file containing the transit schedule to be simulated. -->
+		<param name="transitScheduleFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-transitSchedule.xml.gz" />
+		<!-- Set this parameter to true if transit should be simulated, false if not. -->
+		<param name="useTransit" value="true" />
+		<!-- Input file containing the vehicles used by the departures in the transit schedule. -->
+		<param name="vehiclesFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-transitVehicles.xml.gz" />
+	</module>
+	<module name="transitRouter" >
+		<!-- maximum beeline distance between stops that agents could transfer to by walking -->
+		<param name="maxBeelineWalkConnectionDistance" value="300.0" />
+	</module>
+	<module name="travelTimeCalculator" >
+		<!-- (only for backwards compatibility; only used if filterModes==true)  Transport modes that will be respected by the travel time collector. 'car' is default which includes also buses from the pt simulation module. -->
+		<param name="analyzedModes" value="car,truck" />
+	</module>
+	<module name="vehicles" >
+		<param name="vehiclesFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-vehicleTypes.xml" />
+	</module>
+	<module name="vspExperimental" >
+		<!-- Options: | ignore | info | warn | abort | .  When violating VSP defaults, this results in nothing, logfile infos, logfile warnings, or aborts.  Members of VSP should use `abort' or talk to kai. -->
+		<param name="vspDefaultsCheckingLevel" value="abort" />
+	</module>
+
+</config>
