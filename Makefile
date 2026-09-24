@@ -8,10 +8,10 @@ JAR := matsim-berlin-*.jar
 ## input/run-config-template.xml. Bumping this renames every artifact in $(OUTPUT).
 VERSION := v7.2
 
-## Sample size of the generated population, in percent. Override per invocation, e.g.
-##   make prepare-calibration SAMPLE=10
-## Only the samples hardcoded in RunOpenBerlinCalibration (SampleOptions(25, 10, 3, 1))
-## work, because the cadyts run selects the sample via the --<N>pct switch.
+## Sample size of the scenario to build, in percent. Override per invocation, e.g.
+##   make prepare SAMPLE=10
+## Supported are 1, 3, 10 and 25: the sample token goes into file names as <N>pct, and
+## downsample-population rounds the fraction to whole percent, so fractions below 1 % would collide.
 SAMPLE ?= 25
 SAMPLE_SIZE_1 := 0.01
 SAMPLE_SIZE_3 := 0.03
@@ -27,8 +27,29 @@ COUNTS_SCALE_3 := 33.333333
 COUNTS_SCALE_10 := 10
 COUNTS_SCALE_25 := 4
 COUNTS_SCALE := $(COUNTS_SCALE_$(SAMPLE))
-## the token that goes into every generated filename
+## the token that goes into the file names of the sample being built
 SAMPLE_PCT := $(SAMPLE)pct
+
+## The population, the freight and the cadyts plan selection are built once, at this sample size, and
+## the smaller samples are downsampled from the result. Drawing the persons at the target size directly
+## would be fine, but two of the steps are not:
+##   - jsprit solves each carrier's share of the jobs, so at 1 % it serves the same stops with many
+##     small tours: 46 % more tours, 35-48 % fewer stops each, a third less vehicle kilometres;
+##   - the cadyts plan selection needs the mass of the full population to find a signal in the counts.
+##     At 25 % it moves 8.9 % of the work activities between 2 km cells, spatially coherent; at 1 %
+##     6.7 % against a 4.9 % random-reshuffle floor, with no coherence left.
+## So every artifact below carries $(PIPELINE_PCT), except the final population and the calibration,
+## which carry $(SAMPLE_PCT). Override it to build the whole chain small, e.g. for a local test:
+##   make prepare SAMPLE=1 PIPELINE_SAMPLE=1
+PIPELINE_SAMPLE ?= 25
+PIPELINE_SIZE := $(SAMPLE_SIZE_$(PIPELINE_SAMPLE))
+ifeq ($(PIPELINE_SIZE),)
+$(error PIPELINE_SAMPLE=$(PIPELINE_SAMPLE) is not supported. Use one of: 1 3 10 25)
+endif
+ifneq ($(shell test $(SAMPLE) -le $(PIPELINE_SAMPLE) && echo ok),ok)
+$(error SAMPLE=$(SAMPLE) is larger than PIPELINE_SAMPLE=$(PIPELINE_SAMPLE); the pipeline is only downsampled, never up)
+endif
+PIPELINE_PCT := $(PIPELINE_SAMPLE)pct
 CRS := EPSG:25832
 MAKE_XMX ?= 20G
 
@@ -144,20 +165,22 @@ NETWORK_MATSIM_PT := $(OUTPUT)/berlin-$(VERSION)-network-with-pt.xml.gz
 VMZ_COUNTS := $(OUTPUT)/berlin-$(VERSION)-counts-vmz.xml.gz
 LINK_GEOMETRIES := $(OUTPUT)/berlin-$(VERSION)-network-linkGeometries.csv
 FACILITIES_XML := $(OUTPUT)/berlin-$(VERSION)-facilities.xml.gz
-BERLIN_ONLY := $(OUTPUT)/berlin-only-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
-BRANDENBURG_ONLY := $(OUTPUT)/brandenburg-only-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
-BERLIN_BRANDENBURG_STATIC := $(OUTPUT)/berlin-static-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
-BERLIN_BRANDENBURG_ACTS := $(OUTPUT)/berlin-activities-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
-BERLIN_BRANDENBURG_INITIAL := $(OUTPUT)/berlin-initial-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
-BERLIN_CADYTS_INPUT := $(OUTPUT)/berlin-cadyts-input-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
-## one cadyts run directory per sample, so samples can be built independently
-BERLIN_CADYTS_DIR := $(OUTPUT)/cadyts-$(SAMPLE_PCT)
-BERLIN_CADYTS_CONFIG := $(OUTPUT)/cadyts-$(SAMPLE_PCT).config.xml
+BERLIN_ONLY := $(OUTPUT)/berlin-only-$(VERSION)-$(PIPELINE_PCT).plans.xml.gz
+BRANDENBURG_ONLY := $(OUTPUT)/brandenburg-only-$(VERSION)-$(PIPELINE_PCT).plans.xml.gz
+BERLIN_BRANDENBURG_STATIC := $(OUTPUT)/berlin-static-$(VERSION)-$(PIPELINE_PCT).plans.xml.gz
+BERLIN_BRANDENBURG_ACTS := $(OUTPUT)/berlin-activities-$(VERSION)-$(PIPELINE_PCT).plans.xml.gz
+BERLIN_BRANDENBURG_INITIAL := $(OUTPUT)/berlin-initial-$(VERSION)-$(PIPELINE_PCT).plans.xml.gz
+BERLIN_CADYTS_INPUT := $(OUTPUT)/berlin-cadyts-input-$(VERSION)-$(PIPELINE_PCT).plans.xml.gz
+## one cadyts run for the whole pipeline; the samples inherit its plan selection through the downsample
+BERLIN_CADYTS_DIR := $(OUTPUT)/cadyts-$(PIPELINE_PCT)
+BERLIN_CADYTS_CONFIG := $(OUTPUT)/cadyts-$(PIPELINE_PCT).config.xml
 ## .zst, not .gz: files inside a run directory are written with controller.compressionType, which
 ## defaults to zst since matsim 2026. Only files whose name we pass in ourselves end in .gz.
 BERLIN_CADYTS_OUTPUT := $(BERLIN_CADYTS_DIR)/cadyts.output_plans.xml.zst
-BERLIN_CADYTS_FINAL := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans_cadyts.xml.gz
-BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans-initial.xml.gz
+BERLIN_CADYTS_FINAL := $(OUTPUT)/berlin-$(VERSION)-$(PIPELINE_PCT).plans_cadyts.xml.gz
+BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS := $(OUTPUT)/berlin-$(VERSION)-$(PIPELINE_PCT).plans-initial.xml.gz
+## the run input of the sample being built: the file above for SAMPLE=25, a downsample of it otherwise
+BERLIN_PLANS_INITIAL := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans-initial.xml.gz
 ## one ASC calibration study per sample, so the run ensembles of the samples can coexist
 BERLIN_ASC_CALIB_DIR := $(OUTPUT)/asc-calib-$(SAMPLE_PCT)
 BERLIN_ASC_CALIB_CONFIG := $(OUTPUT)/asc-calib-$(SAMPLE_PCT).config.xml
@@ -165,17 +188,17 @@ BERLIN_ASC_CALIB_PARAMS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).mode-params
 ## the run config of this version: the calibration config with the calibrated mode constants
 BERLIN_RUN_CONFIG := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).config.xml
 COMMERCIAL_FACILITIES := $(OUTPUT)/commercialFacilities.xml.gz
-BERLIN_SMALLSCALE_COMMERCIAL := $(OUTPUT)/berlin-small-scale-commercialTraffic-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
-## jsprit scratch output; per sample so parallel builds do not clobber each other
-COMMERCIAL_TRAFFIC_OUT := $(OUTPUT)/commercialPersonTraffic-$(SAMPLE_PCT)
-FREIGHT_ANALYSIS_OUT := $(OUTPUT)/analysis-freight-$(SAMPLE_PCT)
+BERLIN_SMALLSCALE_COMMERCIAL := $(OUTPUT)/berlin-small-scale-commercialTraffic-$(VERSION)-$(PIPELINE_PCT).plans.xml.gz
+## jsprit scratch output and its analysis, for the one commercial traffic generation
+COMMERCIAL_TRAFFIC_OUT := $(OUTPUT)/commercialPersonTraffic-$(PIPELINE_PCT)
+FREIGHT_ANALYSIS_OUT := $(OUTPUT)/analysis-freight-$(PIPELINE_PCT)
 FREIGHT_OD_REPORT := $(FREIGHT_ANALYSIS_OUT)/commercial_od_summary.csv
 FREIGHT_TOUR_REPORT := $(FREIGHT_ANALYSIS_OUT)/commercial_tour_kpi.csv
 
-BERLIN_BRANDENBURG_LONGHAULFREIGHT := $(OUTPUT)/berlin-longHaulFreight-$(VERSION)-$(SAMPLE_PCT).plans.xml.gz
+BERLIN_BRANDENBURG_LONGHAULFREIGHT := $(OUTPUT)/berlin-longHaulFreight-$(VERSION)-$(PIPELINE_PCT).plans.xml.gz
 
 ## this is produced together with BERLIN_CADYTS_FINAL, it has an own target now
-BERLIN_CADYTS_SELECTION := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans_selection_cadyts.csv
+BERLIN_CADYTS_SELECTION := $(OUTPUT)/berlin-$(VERSION)-$(PIPELINE_PCT).plans_selection_cadyts.csv
 ## its produced together with the commercial-facilities and has an own target now
 DATA_DISTR_PER_ZONE := $(OUTPUT)/dataDistributionPerZone.csv
 
@@ -322,14 +345,14 @@ $(FACILITIES_XML): $(NETWORK_MATSIM) $(FACILITIES_GPKG) $(FACILITY_MAPPING) $(PL
 $(BERLIN_ONLY): $(PLR_2013_2020) $(PLANUNGSRAUM_25833) $(FACILITIES_GPKG) | setup
 	$(JAVA_APP) prepare berlin-population\
 		--input $<\
-		--sample $(SAMPLE_SIZE)\
+		--sample $(PIPELINE_SIZE)\
 		--shp $(word 2,$^) --shp-crs EPSG:25833\
 		--facilities $(word 3,$^) --facilities-attr resident\
 		--output $@
 
 $(BRANDENBURG_ONLY): $(FACILITIES_GPKG) $(VG5000_GEM) $(REGIONALSTAT_POP) $(REGIONALSTAT_EMPL) | setup
 	$(JAVA_APP) prepare brandenburg-population\
-	 --sample $(SAMPLE_SIZE)\
+	 --sample $(PIPELINE_SIZE)\
 	 --shp $(word 2,$^)\
 	 --population $(word 3,$^)\
 	 --employees $(word 4,$^)\
@@ -363,7 +386,7 @@ $(BERLIN_BRANDENBURG_INITIAL): $(BERLIN_BRANDENBURG_ACTS) $(FACILITIES_XML) $(NE
 	$(JAVA_APP) prepare init-location-choice\
 	 --input $<\
 	 --output $@\
-	 --sample $(SAMPLE_SIZE)\
+	 --sample $(PIPELINE_SIZE)\
 	 --facilities $(word 2,$^)\
 	 --network $(word 3,$^)\
 	 --shp $(word 4,$^)\
@@ -400,7 +423,7 @@ $(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DA
 	  $(word 5,$^)\
 	 --pathToZoneAttributes $(abspath $(word 3,$^))\
 	 --pathToCommercialFacilities $(abspath $(word 2,$^))\
-	 --sample $(SAMPLE_SIZE)\
+	 --sample $(PIPELINE_SIZE)\
 	 --jspritIterations 10\
 	 --creationOption createNewCarrierFile\
 	 --network $(abspath $<)\
@@ -435,8 +458,8 @@ $(VEHICLESFILE_OUT): $(VEHICLESFILE_IN) | setup
 	cp $(VEHICLESFILE_IN) $(VEHICLESFILE_OUT)
 
 $(BERLIN_CADYTS_OUTPUT): $(BERLIN_CADYTS_INPUT) $(NETWORK_MATSIM_PT) $(VEHICLESFILE_OUT) | setup
-	cat input/cadyts-config-template.xml | sed -e "s/==VERSION==/$(VERSION)/g" -e "s/==SAMPLE==/$(SAMPLE_PCT)/g" > $(BERLIN_CADYTS_CONFIG)
-	./src/main/sh/cadyts.sh $(BERLIN_CADYTS_CONFIG) $(VERSION) $(SAMPLE_PCT)
+	cat input/cadyts-config-template.xml | sed -e "s/==VERSION==/$(VERSION)/g" -e "s/==SAMPLE==/$(PIPELINE_PCT)/g" > $(BERLIN_CADYTS_CONFIG)
+	./src/main/sh/cadyts.sh $(BERLIN_CADYTS_CONFIG) $(VERSION) $(PIPELINE_PCT)
 
 $(BERLIN_CADYTS_FINAL): $(BERLIN_CADYTS_OUTPUT) $(BERLIN_CADYTS_INPUT) | setup
 	$(JAVA_APP) prepare extract-plans-idx\
@@ -454,6 +477,8 @@ $(BERLIN_CADYTS_SELECTION): $(BERLIN_CADYTS_FINAL) | setup
 	test -f $@ || { echo "$@ is missing; delete $< to have both written again"; exit 1; }
 	touch -r $< $@
 
+# The German wide freight population is a 25 % sample, so the extract is one too, which is what the
+# pipeline is built at. It is merged into the population below and downsampled together with it.
 # The leg mode has to be given: the scenario binds freight to the truck travel time and scores it with
 # its own mode params, but the tool's default became car with matsim-libs #4708.
 $(BERLIN_BRANDENBURG_LONGHAULFREIGHT): $(GERMAN_FREIGHT_25PCT) $(GERMAN_FREIGHT_NETWORK) $(AREA_SHP) | setup
@@ -465,13 +490,15 @@ $(BERLIN_BRANDENBURG_LONGHAULFREIGHT): $(GERMAN_FREIGHT_25PCT) $(GERMAN_FREIGHT_
 	 --cut-on-boundary\
 	 --legMode freight\
 	 --output $@
-
-# downsample-population writes the sample next to its input as <input>-<N>pct.xml.gz and leaves the input
-# alone; only for the 25% "sample" it writes the input itself. Replace the extract by the sample either way.
+ifneq ($(PIPELINE_SIZE),0.25)
+# Only when the pipeline itself is built smaller: the name of the extract does not say 25pct, so
+# downsample-population appends its own token instead of replacing one, and the sample has to be moved
+# onto the target. See the rule for $(BERLIN_PLANS_INITIAL) for the other, the regular case.
 	$(JAVA_APP) prepare downsample-population $@\
-		--sample-size 0.25\
-		--samples $(SAMPLE_SIZE)
-	if [ -f $(@:.xml.gz=-$(SAMPLE_PCT).xml.gz) ]; then mv $(@:.xml.gz=-$(SAMPLE_PCT).xml.gz) $@; fi
+	 --sample-size 0.25\
+	 --samples $(PIPELINE_SIZE)
+	mv $(@:.xml.gz=-$(PIPELINE_PCT).xml.gz) $@
+endif
 
 # These depend on the output of cadyts calibration runs
 # should we really use NETWORK_MATSIM here or not maybe NETWORK_MATSIM_PT
@@ -481,8 +508,8 @@ $(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MATSIM) 
 	 --facilities $<\
 	 --network $(word 2,$^)\
 	 --output-population $@\
-	 --output-network $(OUTPUT)/network-cutout-$(SAMPLE_PCT).xml.gz\
-	 --output-facilities $(OUTPUT)/facilities-cutout-$(SAMPLE_PCT).xml.gz\
+	 --output-network $(OUTPUT)/network-cutout-$(PIPELINE_PCT).xml.gz\
+	 --output-facilities $(OUTPUT)/facilities-cutout-$(PIPELINE_PCT).xml.gz\
 	 --input-crs $(CRS)\
 	 --shp $(word 5,$^)
 
@@ -515,6 +542,17 @@ $(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MATSIM) 
 	$(JAVA_APP) prepare merge-populations $@ $(word 3,$^)\
 		--output $@
 
+# The run input of the sample being built. Everything above is built once at $(PIPELINE_SIZE), so for a
+# smaller sample the persons, the commercial and long-haul freight agents and the plans that cadyts
+# selected are all downsampled together, here at the end. downsample-population writes its output next
+# to its input with the sample token in the name replaced, which is exactly this rule's target.
+ifneq ($(SAMPLE_PCT),$(PIPELINE_PCT))
+$(BERLIN_PLANS_INITIAL): $(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS) | setup
+	$(JAVA_APP) prepare downsample-population $<\
+	 --sample-size $(PIPELINE_SIZE)\
+	 --samples $(SAMPLE_SIZE)
+endif
+
 # The run config of this version, before calibration. It goes next to the artifacts it refers to,
 # because the relative paths in it are resolved against the directory of the config file. Everything
 # that depends on the sample size is substituted in here, the calibration itself is sample agnostic.
@@ -533,7 +571,7 @@ $(BERLIN_ASC_CALIB_CONFIG): $(RUN_CONFIG_TEMPLATE) | setup
 # finds the mode shares of a run by globbing for output_trips.csv.gz and output_persons.csv.gz, so
 # the output has to be gzipped, not zstd; and it only reads the mode shares, so the expensive noise
 # and emission dashboards are skipped.
-$(BERLIN_ASC_CALIB_PARAMS): $(BERLIN_ASC_CALIB_CONFIG) $(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS) $(NETWORK_MATSIM_PT) $(FACILITIES_XML) $(VMZ_COUNTS) $(VEHICLESFILE_OUT) | setup
+$(BERLIN_ASC_CALIB_PARAMS): $(BERLIN_ASC_CALIB_CONFIG) $(BERLIN_PLANS_INITIAL) $(NETWORK_MATSIM_PT) $(FACILITIES_XML) $(VMZ_COUNTS) $(VEHICLESFILE_OUT) | setup
 	$(PYTHON) src/main/python/calibrate.py\
 	 --jar '$(JAR)'\
 	 --config $<\
@@ -557,7 +595,7 @@ $(BERLIN_RUN_CONFIG): $(BERLIN_ASC_CALIB_CONFIG) $(BERLIN_ASC_CALIB_PARAMS) | se
 	 --output $@
 
 setup:
-	echo "setup directories (SAMPLE=$(SAMPLE) -> $(SAMPLE_SIZE), files tagged $(SAMPLE_PCT))"
+	echo "setup directories (pipeline at $(PIPELINE_SIZE), scenario SAMPLE=$(SAMPLE) -> $(SAMPLE_SIZE), tagged $(SAMPLE_PCT))"
 	mkdir -p $(OUTPUT)
 	mkdir -p $(TMP_DIR)
 
@@ -573,7 +611,7 @@ prepare-calibration: $(BERLIN_CADYTS_INPUT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 prepare-run-cadyts: $(BERLIN_CADYTS_OUTPUT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	echo "done"
 
-prepare-initial: $(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS) $(NETWORK_MATSIM_PT)
+prepare-initial: $(BERLIN_PLANS_INITIAL) $(NETWORK_MATSIM_PT)
 	#make -Bndri prepare-initial | make2graph | gv2gml -o prepare-initial_graph.gml
 	echo "Done"
 
