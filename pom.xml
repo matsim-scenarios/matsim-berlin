@@ -401,6 +401,12 @@
 										<Implementation-Version>${project.version}</Implementation-Version>
 										<SCM-Revision>${git.commit.id.describe}</SCM-Revision>
 										<Multi-Release>true</Multi-Release>
+										<!-- dsim's message broker uses Agrona, which reads jdk.internal.misc.Unsafe. Without
+										     this the injector fails with IllegalAccessError on org.agrona.UnsafeApi as soon as
+										     controller.mobsim=dsim. The JDK honours this attribute only for `java -jar`; a run
+										     started via -cp or from an IDE still needs the equivalent add-exports JVM option:
+										     add-exports java.base/jdk.internal.misc=ALL-UNNAMED -->
+										<Add-Exports>java.base/jdk.internal.misc</Add-Exports>
 									</manifestEntries>
 								</transformer>
 								<!-- This bit merges the various GeoTools META-INF/services files         -->
