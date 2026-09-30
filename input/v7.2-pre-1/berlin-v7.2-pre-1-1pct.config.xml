@@ -76,6 +76,38 @@
 		<!-- If vehicles should all be the same default vehicle, or come from the vehicles file, or something else.  Possible values:  defaultVehicle modeVehicleTypesFromVehiclesData fromVehiclesData -->
 		<param name="vehiclesSource" value="modeVehicleTypesFromVehiclesData" />
 	</module>
+
+	<module name="dsim" >
+		<!-- it seems that some of the parameters (flow/storage) are used from qsim. -->
+
+
+		<!-- End time of the simulation. Default: 24:00:00 -->
+		<param name="endTime" value="36:00:00" />
+
+		<!-- Link dynamics determine how vehicles can overtake. Options: [FIFO, PassingQ, Seepage(not implemented)], Default: PassingQ -->
+		<param name="linkDynamics" value="PassingQ" />
+
+		<!-- Modes which are simulated on the network. All other modes, expect pt will be teleported. Default: car -->
+		<param name="networkModes" value="car,truck,freight" />
+
+		<!-- Partitioning strategy for the network. Options: [none, bisect, metis], default: 'bisect' -->
+		<param name="partitioning" value="metis" />
+
+		<!-- Start time of the simulation. Default: 00:00:00 -->
+		<param name="startTime" value="00:00:00" />
+
+		<!-- Stuck time [s] after which a vehicle is pushed onto the next link regardless of available capacity. Default: 30 -->
+		<param name="stuckTime" value="30.0" />
+
+		<!-- Number of threads to use for execution. If <= 0, the number of available processors is used. -->
+		<param name="threads" value="12" />
+
+		<!-- Traffic dynamics determine how storage capacities and inflow capacities are freed. Options: [queue, kinematicWaves, withHoles (not implemented), Default: kinematicWaves -->
+		<param name="trafficDynamics" value="kinematicWaves" />
+
+		<!-- Determines how agents can access vehicles when starting a trip. Options=[teleport, wait (not implemented), exception], Default: teleport -->
+		<param name="vehicleBehavior" value="teleport" />
+	</module>
 	<module name="replanning" >
 		<!-- fraction of iterations where innovative strategies are switched off.  Something like 0.8 should be good.  E.g. if you run from iteration 400 to iteration 500, innovation is switched off at iteration 480. If the ReplanningAnnealer is used, it will also be switched off. -->
 		<param name="fractionOfIterationsToDisableInnovation" value="0.9" />
