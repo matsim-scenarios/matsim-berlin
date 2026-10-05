@@ -130,8 +130,7 @@ public class PointElasticityStatsModule extends AbstractModule {
 								case TransportMode.pt -> hasPt = true;
 								case TransportMode.bike -> {
 									hasBike = true;
-									if (leg.getTravelTime().isDefined())
-										bikeSeconds += leg.getTravelTime().seconds();
+									bikeSeconds += travelSeconds(leg);
 								}
 								default -> { }
 							}
@@ -233,6 +232,20 @@ public class PointElasticityStatsModule extends AbstractModule {
 			chart.addSeries("pt (cost)", toArray(iterations), toArray(ePt, iterations.size()));
 			chart.addSeries("bike (speed)", toArray(iterations), toArray(eBikeSpeed, iterations.size()));
 			chart.saveAsPng(event.getServices().getControllerIO().getOutputFilename("elasticityEstimate.png"), 800, 600);
+		}
+
+		/**
+		 * Travel time of a leg as the plan knows it. The leg's own travel time is not reliable for this:
+		 * with plans.removingUnnecessaryPlanAttributes (the VSP default, set in all run configs)
+		 * {@link org.matsim.core.population.VspPlansCleaner} clears it on every leg before each mobsim, so
+		 * only plans that have not been executed yet still carry it. The route keeps its travel time.
+		 */
+		private static double travelSeconds(Leg leg) {
+			if (leg.getTravelTime().isDefined())
+				return leg.getTravelTime().seconds();
+			if (leg.getRoute() != null && leg.getRoute().getTravelTime().isDefined())
+				return leg.getRoute().getTravelTime().seconds();
+			return 0;
 		}
 
 		private static double dist(Leg leg) {

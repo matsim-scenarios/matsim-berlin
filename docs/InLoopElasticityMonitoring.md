@@ -53,6 +53,11 @@ therefore handled correctly by construction; the measured object is the model's 
   share_car, share_pt, share_bike`. The bike series is the elasticity of bike trips w.r.t.
   a bike *speed* factor (exposure = -(bike time coefficient) x bike hours, read from the
   person's scoring parameters, so it is correct in both model arms); expected sign positive.
+  The bike hours are taken from the leg's travel time or, where that is gone, from its
+  route: `VspPlansCleaner` clears the leg travel time of every executed plan when
+  `plans.removingUnnecessaryPlanAttributes` is set, which all run configs do. Until
+  2026-10-05 the monitor read the leg only, so **every bike-speed value produced before
+  that date is zero by construction**, not a measurement.
 - `elasticityEstimate.png`: rewritten every iteration (core score-statistics style).
 
 ### Reading guide
