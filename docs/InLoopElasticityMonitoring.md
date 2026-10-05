@@ -141,26 +141,34 @@ fixed-gain update into a Newton-conditioned one — measured gains instead of gu
 ### Mechanics
 
 - **Offsets through scoring, not config**: per-mode additive constants are applied once per
-  trip (by main mode) via a `SumScoringFunction.TripScoring` component wired into both
-  scoring factories (`BerlinScoringFunctionFactory` and the experimental
-  `AdvancedScoringFunctionFactory`). Mutating config constants mid-run is *not* an option:
+  trip (by main mode) via a `SumScoringFunction.TripScoring` component wired into
+  `BerlinScoringFunctionFactory`. Mutating config constants mid-run is *not* an option:
   `ScoringParametersForPerson` implementations cache per person and would go stale silently.
 - **Measurement**: expected shares (smooth, not realized selections) over persons with ids
   starting `berlin`, mirroring the python calibration's person filter; the offsets apply to
   everyone's scoring, as in the outer loop.
 - **Update**: relative log error `(ln T_m − ln S_m) − (ln T_walk − ln S_walk)` (walk fixed),
-  divided by the measured sensitivity (floored at 0.05 so stale early memories cannot cause
-  explosive steps), gain 0.5, step cap ±0.2 utils/iteration.
+  divided by the measured sensitivity (floored at 0.25 so stale early memories cannot cause
+  explosive steps), gain 0.3, step cap ±0.2 utils/iteration. While the measured sensitivity
+  is below the floor, the update is therefore 1.2 x the log error per iteration.
 - **Self-determined convergence**: the calibrator ignores the annealing schedule and the
-  iteration budget. It updates from iteration 0 and **commits** when all share errors stay
-  within 0.5 percentage points for 25 consecutive iterations (earliest at iteration 30).
-  After committing, offsets are frozen for the rest of the run — the run's tail relaxes
-  under the final constants, which doubles as the confirmation phase. Post-commit drift
-  beyond twice the tolerance is logged as a warning; commitment is never reopened.
+  iteration budget. It updates from iteration 0 and **commits** when, for 25 consecutive
+  iterations (earliest at iteration 30), all share errors stay within 0.5 percentage points,
+  the largest applied step stays below 0.02 utils, and the churn (share of plan objects in
+  the counted memories that are new since the previous iteration) stays below 0.02. The
+  churn condition ties the commit to the end of innovation: at an innovation rate of 0.45
+  the churn is around 0.1, so with the default annealing a commit cannot happen before
+  innovation is switched off. After committing, offsets are frozen for the rest of the run —
+  the run's tail relaxes under the final constants, which doubles as the confirmation phase.
+  The commit is provisional: five consecutive iterations with a share error beyond twice the
+  tolerance re-arm the calibrator.
 
 ### Output
 
-- `asc_calibration_stats.csv`: per iteration, per-mode offsets and share errors, committed flag.
+- `asc_calibration_stats.csv`: per iteration, the committed flag, the churn, and per mode
+  the offset, the share error and the measured sensitivity `d ln(share)/d asc` before the
+  floor is applied. The sensitivity column tells whether the system can respond to the
+  offsets yet; far below the floor, the update is integrating an error it cannot influence.
 - `ascOffsets.png`, `ascShareErrors.png`: rewritten every iteration (commit iteration shown
   in the offsets chart title once reached).
 - `asc_offsets_final.txt` on commit: final offsets and config-ready constants

@@ -175,6 +175,7 @@ public final class InLoopAscCalibration extends AbstractModule {
 		private final List<Integer> iterations = new ArrayList<>();
 		private final List<double[]> offsetHistory = new ArrayList<>();
 		private final List<double[]> shareErrorHistory = new ArrayList<>();
+		private final List<double[]> sensitivityHistory = new ArrayList<>();
 		private final List<Double> churnHistory = new ArrayList<>();
 
 		private int withinToleranceStreak = 0;
@@ -275,6 +276,12 @@ public final class InLoopAscCalibration extends AbstractModule {
 				maxAbsError = Math.max(maxAbsError, Math.abs(shareError[m]));
 			}
 
+			// d ln share_m / d asc_m from the measured covariances, before the floor is applied. Recorded for every
+			// mode and iteration: it is what tells whether the system can respond to the offsets yet.
+			double[] rawSensitivity = new double[n];
+			for (int m = 0; m < n; m++)
+				rawSensitivity[m] = covMm[m] / Math.max(expTrips[m], 1e-9) - covTotM[m] / total;
+
 			// Newton-conditioned logit update, unless committed
 			if (!committed) {
 				double refError = Math.log(DEFAULT_TARGETS.get(MODES.get(FIXED_MODE))) - Math.log(shares[FIXED_MODE]);
@@ -284,9 +291,7 @@ public final class InLoopAscCalibration extends AbstractModule {
 					if (m == FIXED_MODE)
 						continue;
 					double err = Math.log(DEFAULT_TARGETS.get(MODES.get(m))) - Math.log(shares[m]) - refError;
-					// d ln share_m / d asc_m from the measured covariances
-					double sensitivity = covMm[m] / Math.max(expTrips[m], 1e-9) - covTotM[m] / total;
-					sensitivity = Math.max(sensitivity, MIN_SENSITIVITY);
+					double sensitivity = Math.max(rawSensitivity[m], MIN_SENSITIVITY);
 					double step = GAIN * err / sensitivity;
 					step = Math.max(-MAX_STEP, Math.min(MAX_STEP, step));
 					next[m] += step;
@@ -320,6 +325,7 @@ public final class InLoopAscCalibration extends AbstractModule {
 			iterations.add(event.getIteration());
 			offsetHistory.add(offsets.snapshot());
 			shareErrorHistory.add(shareError);
+			sensitivityHistory.add(rawSensitivity);
 			committedHistory.add(committed);
 			churnHistory.add(churn);
 
@@ -335,12 +341,16 @@ public final class InLoopAscCalibration extends AbstractModule {
 					writer.printf(",offset_%s", m);
 				for (String m : MODES)
 					writer.printf(",share_error_%s", m);
+				for (String m : MODES)
+					writer.printf(",sensitivity_%s", m);
 				writer.println();
 				for (int i = 0; i < iterations.size(); i++) {
 					writer.printf("%d,%b,%f", iterations.get(i), committedHistory.get(i), churnHistory.get(i));
 					for (double v : offsetHistory.get(i))
 						writer.printf(",%f", v);
 					for (double v : shareErrorHistory.get(i))
+						writer.printf(",%f", v);
+					for (double v : sensitivityHistory.get(i))
 						writer.printf(",%f", v);
 					writer.println();
 				}
