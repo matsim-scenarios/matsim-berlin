@@ -395,6 +395,10 @@ $(BERLIN_BRANDENBURG_INITIAL): $(BERLIN_BRANDENBURG_ACTS) $(FACILITIES_XML) $(NE
 
 ## Small-scale commercial
 $(COMMERCIAL_FACILITIES): $(REGION_4326) $(BB_ZONES_4326) $(BB_BUILDINGS_4326) $(BERLIN_LANDUSE_4326) $(COMMERCIAL_TRAFFIC_AREA_DATA) | setup
+# The contrib opens the per-zone file for appending (LanduseBuildingAnalysis.writeCSVWithCategoryHeader,
+# IOUtils.getBufferedWriter(..., append = true)), so a rerun puts a second copy, header included, behind
+# the first, and generate-small-scale-commercial-traffic then dies on NumberFormatException "Inhabitants".
+	rm -f $(DATA_DISTR_PER_ZONE)
 	$(JAVA_APP) prepare create-data-distribution-of-structure-data\
 	 --outputFacilityFile $@\
 	 --outputDataDistributionFile $(DATA_DISTR_PER_ZONE)\
