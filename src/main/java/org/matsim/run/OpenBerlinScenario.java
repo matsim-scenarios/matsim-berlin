@@ -52,6 +52,7 @@ import picocli.CommandLine;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
 
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true, showDefaultValues = true)
@@ -98,6 +99,25 @@ public class OpenBerlinScenario extends MATSimApplication {
 		defaultValue = "1.0")
 	private double ptCostFactor;
 
+	@CommandLine.Option(names = "--trip-error-scale",
+		description = "Standard deviation of the frozen per-trip normal error term, overriding the value the scoring " +
+			"model implies (published 0.495, re-estimated 2.213). E.g. 0.703 is the published model with its units " +
+			"slip corrected: sqrt(pi^2/6/3.32) instead of pi^2/6/3.32.")
+	private Double tripErrorScale;
+
+	@CommandLine.Option(names = "--bike-speed-offset",
+		description = "Add this many km/h to the bike vehicle type's maximum velocity. For the bike speed " +
+			"elasticity experiment; run it with the constants fixed.",
+		defaultValue = "0")
+	private double bikeSpeedOffset;
+
+	@CommandLine.Option(names = "--taste-variations",
+		description = "'published' applies the per-person mode constant deviations the population carries " +
+			"(tasteVariations.variationsOf as configured); 'none' empties variationsOf so the persons' draws are " +
+			"ignored and everybody gets the config constants. The income exponent is unaffected.",
+		defaultValue = "published")
+	private TasteVariations tasteVariations;
+
 	@CommandLine.Option(names = "--in-loop-asc-calibration",
 		description = "Calibrate mode ASCs in-loop against SrV shares (Newton-conditioned logit update, " +
 			"self-determined convergence; see InLoopAscCalibration).",
@@ -123,6 +143,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 	private boolean allowConfigTypicalDurations = false;
 
 	public enum ScoringModel {published, reestimated}
+
+	public enum TasteVariations {published, none}
 
 	public OpenBerlinScenario() {
 	}
@@ -205,6 +227,15 @@ public class OpenBerlinScenario extends MATSimApplication {
 			// ChangeExpBeta supplies the estimation's residual plan-level Gumbel kernel (scale 1
 			// matches the estimation's normalization); frozen error components live in the scores.
 			planSelector = DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta;
+		}
+
+		if (tasteVariations == TasteVariations.none) {
+			TasteVariationsConfigParameterSet tv = config.scoring().getScoringParameters(null).getTasteVariationsParams();
+			if (tv != null) {
+				// an empty set makes IndividualPersonScoringParameters skip the persons' draws (income scaling stays)
+				tv.setVariationsOf(Set.of());
+				log.info("Taste variations switched off: every person scores with the config constants.");
+			}
 		}
 
 		// Price experiment factors, applied after model selection so they work in both arms.
@@ -317,6 +348,13 @@ public class OpenBerlinScenario extends MATSimApplication {
 		HbefaRoadTypeMapping roadTypeMapping = OsmHbefaMapping.build();
 		roadTypeMapping.addHbefaMappings(scenario.getNetwork());
 
+		if (bikeSpeedOffset != 0) {
+			VehicleType bike = scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.bike));
+			double v = bike.getMaximumVelocity() + bikeSpeedOffset / 3.6;
+			log.info("Bike speed offset {} km/h: maximum velocity {} -> {} m/s", bikeSpeedOffset, bike.getMaximumVelocity(), v);
+			bike.setMaximumVelocity(v);
+		}
+
 		// Force the update of all bike travel times, otherwise bike speeds would only update once a leg is routed
 		for (Person person : scenario.getPopulation().getPersons().values()) {
 			for (Plan plan : person.getPlans()) {
@@ -381,9 +419,12 @@ public class OpenBerlinScenario extends MATSimApplication {
 		controler.addOverridingModule(new TravelTimeBinding());
 		controler.addOverridingModule(new QsimTimingModule());
 
-		controler.addOverridingModule(new BerlinScoringModule(scoringModel == ScoringModel.reestimated
+		double errorScale = tripErrorScale != null ? tripErrorScale
+			: scoringModel == ScoringModel.reestimated
 			? BerlinScoringModule.PSEUDO_RANDOM_SCALE_REESTIMATED
-			: BerlinScoringModule.PSEUDO_RANDOM_SCALE_PUBLISHED));
+			: BerlinScoringModule.PSEUDO_RANDOM_SCALE_PUBLISHED;
+		log.info("Frozen per-trip error term: normal with sd {}", errorScale);
+		controler.addOverridingModule(new BerlinScoringModule(errorScale));
 
 		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
 
