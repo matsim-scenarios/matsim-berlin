@@ -118,6 +118,8 @@ SRV_PERSONS := $(BERLINSHARED)/data/SrV/2018/converted/table-persons.csv
 SRV_ACTS := $(BERLINSHARED)/data/SrV/2018/converted/table-activities.csv
 BERLIN_COMMUTER := $(BERLINSHARED)/data/SrV/2018/converted/berlin-work-commuter.csv
 SRV_ZONES := $(BERLINSHARED)/data/SrV/2018/zones/zones.shp
+LOR_MEDIAN_INCOME := input/v7.2-pre-1/Medianeinkommen_Karte_31-12-2023.xlsx
+LOR_INCOME_SHAPE := input/v7.2-pre-1/lor_2021-01-01_k3_shapefiles_nur_id/LOR_2023-01-01_PLR_EPSG_25833_nur_ID.shp
 
 GTFS_DAY_TO_CONVERT := "2024-11-19"
 GTFS_DATA := $(GERMANY)/gtfs/complete-pt-2024-10-27.zip 
@@ -343,7 +345,7 @@ $(BERLIN_BRANDENBURG_STATIC): $(BERLIN_ONLY) $(BRANDENBURG_ONLY) $(REGIOSTAR) | 
 
 	$(JAVA_APP) prepare lookup-regiostar --input $@ --output $@ --xls $(word 3, $^)
 
-$(BERLIN_BRANDENBURG_ACTS): $(BERLIN_BRANDENBURG_STATIC) $(SRV_PERSONS) $(SRV_ACTS) $(SRV_ZONES) $(FACILITIES_XML) $(NETWORK_MATSIM) | setup
+$(BERLIN_BRANDENBURG_ACTS): $(BERLIN_BRANDENBURG_STATIC) $(SRV_PERSONS) $(SRV_ACTS) $(SRV_ZONES) $(FACILITIES_XML) $(NETWORK_MATSIM) $(LOR_MEDIAN_INCOME) $(LOR_INCOME_SHAPE) | setup
 	$(JAVA_APP) prepare activity-sampling --seed 1 --input $< --output $@ --persons $(word 2, $^) --activities $(SRV_ACTS)
 
 	$(JAVA_APP) prepare assign-reference-population --population $@ --output $@\
@@ -353,6 +355,20 @@ $(BERLIN_BRANDENBURG_ACTS): $(BERLIN_BRANDENBURG_STATIC) $(SRV_PERSONS) $(SRV_AC
 	 --shp-crs $(CRS)\
 	 --facilities $(word 5,$^)\
 	 --network $(word 6,$^)\
+
+	$(JAVA_APP) prepare assign-spatial-income\
+	 --input $@ --output $@\
+	 --income-xlsx $(LOR_MEDIAN_INCOME)\
+	 --sheet "Medianeinkommen PLR"\
+	 --lor-column RAUMID\
+	 --median-column "Medianeinkommen in EUR"\
+	 --shp $(LOR_INCOME_SHAPE)\
+	 --shp-crs EPSG:25833\
+	 --shp-id-attribute PLR_ID\
+	 --seed 4711\
+	 --spatial-exponent 1\
+	 --income-class-lower-bounds 0,500,900,1500,2000,2600,3000,3600,4600,5600\
+	 --minimum-income 249
 
 # ("reference population" = population taken from SrV; used to assign activity chains. SrV records have to be processed (manually, not automatically done here) by extract_population_data.py to create src/main/python/table-....csv as input.
 # Input tables can also be found on shared-svn (restricted access): https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-berlin/data/SrV/converted/

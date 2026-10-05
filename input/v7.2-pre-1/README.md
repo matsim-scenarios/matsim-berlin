@@ -44,3 +44,21 @@ the ones in the config.
 
 The config runs 500 iterations. For a smoke test add `--iterations 0`, which loads everything,
 simulates one day and writes the output directory; that takes a few minutes at 1 %.
+
+## Spatially differentiated income input
+
+`Medianeinkommen_Karte_31-12-2023.xlsx` contains median gross earnings for the 542 Berlin LOR
+planning areas. The population-generation pipeline uses the sheet `Medianeinkommen PLR` after
+`assign-reference-population` has assigned the original SrV income. It creates continuous incomes
+and transfers the relative spatial differences between the LOR medians while retaining the mean
+income used by MATSim's income-dependent scoring.
+
+The spatial join uses
+`lor_2021-01-01_k3_shapefiles_nur_id/LOR_2023-01-01_PLR_EPSG_25833_nur_ID.shp` with 542
+features, the `PLR_ID` attribute and CRS EPSG:25833. Person home coordinates are queried in the
+scenario CRS EPSG:25832; MATSim's shape index handles the coordinate transformation.
+
+The workbook contains 505 numerical LOR medians. For the 37 suppressed or missing values, the
+preparation command uses the available medians from the next LOR hierarchy level. The workbook is
+not read by a normal scenario run: the population must be regenerated with the Makefile for the
+new incomes to become part of the plans file.

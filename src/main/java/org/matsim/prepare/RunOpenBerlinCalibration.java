@@ -90,7 +90,8 @@ import java.util.Set;
 	MergePlans.class, SplitActivityTypesDuration.class, CleanPopulation.class, CleanAttributes.class,
 	RescheduleLatePlans.class, SplitWrapAroundActivities.class, EncodeTypicalDuration.class, EndTimeToDuration.class,
 	GenerateSmallScaleCommercialTrafficDemand.class, CreateDataDistributionOfStructureData.class, LinkCapacityFromMeasurements.class,
-	RunCountOptimization.class, SelectPlansFromIndex.class, ExtractPlanIndexFromType.class, AssignReferencePopulation.class, DrawModeConstantVariations.class,
+	RunCountOptimization.class, SelectPlansFromIndex.class, ExtractPlanIndexFromType.class, AssignReferencePopulation.class,
+	AssignSpatialIncome.class, DrawModeConstantVariations.class,
 	ExtractRelevantFreightTrips.class, CheckCarAvailability.class, FixSubtourModes.class, ComputeTripChoices.class, ComputePlanChoices.class,
 	ApplyNetworkParams.class, SetCarAvailabilityByAge.class, CreateDrtVehicles.class, EndlessCircleLineScheduleModifier.class,
 	WriteRunConfig.class
