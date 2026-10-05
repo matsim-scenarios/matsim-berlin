@@ -41,8 +41,7 @@ import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.dashboard.BerlinDashboardProvider;
 import org.matsim.run.scoring.BerlinScoringModule;
-import org.matsim.run.scoring.experimental.AdvancedScoringConfigGroup;
-import org.matsim.run.scoring.experimental.AdvancedScoringModule;
+import org.matsim.run.scoring.BerlinScoringConfigGroup;
 import org.matsim.simwrapper.DashboardProvider;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
@@ -70,6 +69,12 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 	private static final String AVERAGE = "average";
 	private static final Logger log = LogManager.getLogger(OpenBerlinScenario.VERSION);
+
+	/**
+	 * Default length of the simulation period, as a multiple of 24h. 1.125 (= 27:00) makes the non-wrap-around
+	 * overnight scoring clamp the last activity at 27:00 instead of 24:00.
+	 */
+	public static final double DEFAULT_SIMULATION_PERIOD_IN_DAYS = 1.125;
 
 	@CommandLine.Option(names = "--plan-selector",
 		description = "Plan selector to use.",
@@ -99,6 +104,24 @@ public class OpenBerlinScenario extends MATSimApplication {
 		defaultValue = "false")
 	private boolean inLoopAscCalibration;
 
+	@CommandLine.Option(names = "--with-opening-times",
+		description = "Give the activity types their opening times. Off by default: the per-activity typical " +
+			"durations carry the schedule, so the opening times only distort it.")
+	private boolean withOpeningTimes = false;
+
+	@CommandLine.Option(names = "--simulation-period-in-days",
+		description = "Length of the simulation period, as a multiple of 24h. Moves the else-branch overnight " +
+			"scoring clamp: handleOvernightActivity scores the (non-wrap-around) last activity from its start to " +
+			"simulationPeriodInDays * 24h. Preprocessing (reschedule-late-plans, encode-typical-duration) must use " +
+			"the same value.")
+	private double simulationPeriodInDays = DEFAULT_SIMULATION_PERIOD_IN_DAYS;
+
+	@CommandLine.Option(names = "--allow-config-typical-durations",
+		description = "Allow person-subpopulation activities without a typicalDuration attribute to score against " +
+			"the config typical duration. By default such an activity ABORTS the run. Pass this for populations " +
+			"whose typical durations are still encoded in the activity type.")
+	private boolean allowConfigTypicalDurations = false;
+
 	public enum ScoringModel {published, reestimated}
 
 	public OpenBerlinScenario() {
@@ -115,12 +138,23 @@ public class OpenBerlinScenario extends MATSimApplication {
 	@Override
 	protected Config prepareConfig(Config config) {
 
+		// input files may live behind a login (shared-svn); see HttpAuthentication
+		HttpAuthentication.installFromEnvironment();
+
 		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
 		sw.setSampleSize(config.qsim().getFlowCapFactor());
 
 		config.qsim().setUsingTravelTimeCheckInTeleportation(true);
 
-		Activities.addScoringParams(config, true);
+//		still registering the duration-binned types, so populations that predate the typicalDuration attribute keep
+//		scoring; for attribute-carrying activities the type's typical duration is only a fallback.
+		Activities.addScoringParams(config, true, withOpeningTimes);
+
+		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class)
+			.setAllowConfigTypicalDurations(allowConfigTypicalDurations);
+
+//		move the else-branch overnight scoring clamp away from 24:00; see --simulation-period-in-days.
+		config.scenario().setSimulationPeriodInDays(simulationPeriodInDays);
 
 		if (scoringModel == ScoringModel.reestimated) {
 			// Re-estimated choice model (branch michaz/choicemodel; smoke-scale k=9/1pct estimates
@@ -347,15 +381,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 		controler.addOverridingModule(new TravelTimeBinding());
 		controler.addOverridingModule(new QsimTimingModule());
 
-		// AdvancedScoring can be used for experiments or calibration, but is not needed to run the calibrated scenario.
-		if (ConfigUtils.hasModule(controler.getConfig(), AdvancedScoringConfigGroup.class)) {
-			controler.addOverridingModule(new AdvancedScoringModule());
-			controler.getConfig().scoring().setExplainScores(true);
-		} else {
-			controler.addOverridingModule(new BerlinScoringModule(scoringModel == ScoringModel.reestimated
-				? BerlinScoringModule.PSEUDO_RANDOM_SCALE_REESTIMATED
-				: BerlinScoringModule.PSEUDO_RANDOM_SCALE_PUBLISHED));
-		}
+		controler.addOverridingModule(new BerlinScoringModule(scoringModel == ScoringModel.reestimated
+			? BerlinScoringModule.PSEUDO_RANDOM_SCALE_REESTIMATED
+			: BerlinScoringModule.PSEUDO_RANDOM_SCALE_PUBLISHED));
 
 		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
 

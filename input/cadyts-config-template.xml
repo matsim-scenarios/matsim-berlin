@@ -3,13 +3,18 @@
 <config>
 	<module name="timeAllocationMutator">
 		<param name="mutationRange" value="1800.0"/>
-		<param name="mutateAroundInitialEndTimeOnly" value="true"/>
+		<!-- short activities are duration based (see prepare end-time-to-duration), and mutating a
+		     10 min activity by up to half an hour makes no sense, so only end times are mutated -->
+		<param name="mutationAffectsDuration" value="false"/>
+		<!-- as in dresden: end times may not be mutated past the end of the simulated day, otherwise they
+		     random walk into a time that is never simulated. Must be at least qsim.endTime. -->
+		<param name="latestActivityEndTime" value="36:00:00"/>
 	</module>
 	<module name="controller">
 		<param name="lastIteration" value="500"/>
 		<param name="overwriteFiles" value="failIfDirectoryExists"/>
 		<param name="runId" value="berlin-==VERSION=="/>
-		<param name="outputDirectory" value="./output/berlin-==VERSION==-10pct"/>
+		<param name="outputDirectory" value="./output/berlin-==VERSION==-==SAMPLE=="/>
 		<param name="writeEventsInterval" value="100"/>
 		<param name="writePlansInterval" value="100"/>
 		<param name="routingAlgorithmType" value="SpeedyALT"/>
@@ -23,7 +28,7 @@
 		<param name="inputNetworkFile" value="./berlin-==VERSION==-network-with-pt.xml.gz"/>
 	</module>
 	<module name="plans">
-		<param name="inputPlansFile" value="./berlin-==VERSION==-10pct.plans.xml.gz"/>
+		<param name="inputPlansFile" value="./berlin-==VERSION==-==SAMPLE==.plans.xml.gz"/>
 		<param name="removingUnnecessaryPlanAttributes" value="true"/>
 	</module>
 	<module name="vehicles">

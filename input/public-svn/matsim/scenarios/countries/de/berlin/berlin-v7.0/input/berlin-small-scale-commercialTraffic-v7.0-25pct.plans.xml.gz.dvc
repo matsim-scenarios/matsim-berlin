@@ -1,0 +1,13 @@
+md5: e707a09b89d0c1487686372378cec7ca
+frozen: true
+deps:
+- checksum: '"11859//matsim/scenarios/countries/de/berlin/berlin-v7.0/input/berlin-small-scale-commercialTraffic-v7.0-25pct.plans.xml.gz"'
+  size: 10762714
+  hash: md5
+  path: 
+    remote://public-svn/matsim/scenarios/countries/de/berlin/berlin-v7.0/input/berlin-small-scale-commercialTraffic-v7.0-25pct.plans.xml.gz
+outs:
+- md5: 4e27a6c1fd9511cbfd49c4c438705084
+  size: 10762714
+  hash: md5
+  path: berlin-small-scale-commercialTraffic-v7.0-25pct.plans.xml.gz

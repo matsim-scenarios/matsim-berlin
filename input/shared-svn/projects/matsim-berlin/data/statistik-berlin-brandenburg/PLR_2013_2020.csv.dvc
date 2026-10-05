@@ -1,0 +1,13 @@
+md5: 756794916968e802f853e8dcc4b3ad25
+frozen: true
+deps:
+- checksum: '"40225//projects/matsim-berlin/data/statistik-berlin-brandenburg/PLR_2013_2020.csv"'
+  size: 392715
+  hash: md5
+  path: 
+    remote://shared-svn/projects/matsim-berlin/data/statistik-berlin-brandenburg/PLR_2013_2020.csv
+outs:
+- md5: 73cbccff0ff1f743bb0e1c41ebc6175d
+  size: 392715
+  hash: md5
+  path: PLR_2013_2020.csv

@@ -1,0 +1,13 @@
+md5: 3b5e77db34ffcad62a160d3325e0f9b2
+frozen: true
+deps:
+- checksum: '"11668//matsim/scenarios/countries/de/german-wide-freight/v2/germany-europe-network.xml.gz"'
+  size: 63219609
+  hash: md5
+  path: 
+    remote://public-svn/matsim/scenarios/countries/de/german-wide-freight/v2/germany-europe-network.xml.gz
+outs:
+- md5: 5c3aa813ac31acd66347bbdcced0bfd4
+  size: 63219609
+  hash: md5
+  path: germany-europe-network.xml.gz

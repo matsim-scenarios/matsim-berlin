@@ -5,6 +5,8 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.openxml4j.opc.PackageAccess;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -80,7 +82,9 @@ public class LookupRegioStaR implements MATSimAppCommand, PersonAlgorithm {
 
 		Int2IntMap result = new Int2IntOpenHashMap();
 
-		try (XSSFWorkbook workbook = new XSSFWorkbook(regiostar.toFile())) {
+		// Open read-only. XSSFWorkbook(File) opens the package read-write, and close() then saves it back over the
+		// input file, which moves its mtime and makes the population of every other sample out of date for make.
+		try (XSSFWorkbook workbook = new XSSFWorkbook(OPCPackage.open(regiostar.toFile(), PackageAccess.READ))) {
 
 			XSSFSheet sheet = workbook.getSheet("ReferenzGebietsstand2020");
 

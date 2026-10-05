@@ -1,0 +1,13 @@
+md5: 0506455a08fe5e4ef5979ae3cd890618
+frozen: true
+deps:
+- checksum: '"39217//projects/matsim-germany/vg5000/vg5000_ebenen_0101/VG5000_GEM.shx"'
+  size: 88044
+  hash: md5
+  path: 
+    remote://shared-svn/projects/matsim-germany/vg5000/vg5000_ebenen_0101/VG5000_GEM.shx
+outs:
+- md5: f3e810fba51e4c9bdd0c4918c59fb847
+  size: 88044
+  hash: md5
+  path: VG5000_GEM.shx

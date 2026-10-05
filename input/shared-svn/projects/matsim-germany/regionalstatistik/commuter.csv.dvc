@@ -1,0 +1,12 @@
+md5: 4c38c44daf0d3f2f257b65f8ba6eb0f4
+frozen: true
+deps:
+- checksum: '"39240//projects/matsim-germany/regionalstatistik/commuter.csv"'
+  size: 5999579
+  hash: md5
+  path: remote://shared-svn/projects/matsim-germany/regionalstatistik/commuter.csv
+outs:
+- md5: e4dafec33ec8f8b70c3a2d91b568c089
+  size: 5999579
+  hash: md5
+  path: commuter.csv
