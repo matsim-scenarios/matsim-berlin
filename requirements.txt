@@ -1,0 +1,13 @@
+# Tooling for fetching the DVC-tracked input and output data; see the "Input data (DVC)"
+# section of the README. Install with:
+#
+#     pip install -r requirements.txt
+#
+# This covers the data transfer only. The python env for the ASC calibration is a separate
+# one, set up by src/main/sh/setup.sh, and SUMO comes from its own pip install (see Makefile).
+#
+# The version is pinned because `dvc update` re-serializes every *.dvc pointer file from
+# scratch. Different DVC versions write the same content slightly differently (YAML line
+# wrapping, the isexec flag), so an unpinned DVC produces diffs in all of input/**/*.dvc
+# with identical hashes, which look like data changes but are not.
+dvc[ssh]==3.67.1
