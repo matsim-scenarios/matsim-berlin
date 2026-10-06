@@ -46,7 +46,9 @@ Handling of large files within git is not without problems (git lfs files are no
 
 The large input and output files are tracked with [DVC](https://dvc.org) rather than git: git holds only a small `*.dvc` pointer file per artifact (source URL, hash and size), and the data itself is fetched on demand into a local cache. You need this only to regenerate the scenario with the `Makefile`; to run a published scenario, see the sections above.
 
-Install DVC with the SSH extra, e.g. `pip install 'dvc[ssh]'`.
+Install DVC from `requirements.txt`, i.e. `pip install -r requirements.txt`. The version is pinned there:
+`dvc update` rewrites every pointer file, and different DVC versions serialize them differently, so an
+unpinned DVC churns all of `input/**/*.dvc` without any data having changed.
 
 ### Remotes
 
