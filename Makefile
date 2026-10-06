@@ -53,11 +53,6 @@ PIPELINE_PCT := $(PIPELINE_SAMPLE)pct
 CRS := EPSG:25832
 MAKE_XMX ?= 20G
 
-## we assume SUMO is installed locally via pip
-## use either the agimo-digital-twin-workflow or 
-## install via pip install eclipse-sumo==[VERSION]
-#SUMO_VERSION := 1.20.0
-
 ## if you want to override thes variables set them as environment-variables and run make -e
 ## make will then use the environment-variable instead what you defined here.
 SVN_PATH := ..
@@ -77,9 +72,21 @@ MODE_CONSTANT_SIGMAS ?= car=1.506777,bike=0.879757,pt=1.737971,ride=2.861008
 JAVA_CP := java -Xmx$(MAKE_XMX) -XX:+UseParallelGC -Dorg.geotools.referencing.forceXY=true -Djava.io.tmpdir=$(TMP_DIR) -cp $(JAR)
 JAVA_APP := $(JAVA_CP) org.matsim.prepare.RunOpenBerlinCalibration
 
-## The ASC calibration is driven from python and needs the calibration extra of the matsim python
-## tools, see src/main/sh/setup.sh; point PYTHON at the interpreter of that environment.
-PYTHON ?= python3
+## Python and SUMO both come from the virtual environment that `make python-env` builds from
+## requirements.txt: the ASC calibration needs the calibration extra of the matsim python tools,
+## and the network conversion needs netconvert. Override VENV to put the environment elsewhere,
+## VENV_PYTHON to bootstrap it with a particular interpreter (the one on the cluster may be too
+## old), or PYTHON / NETCONVERT to use an installation of your own. A native Windows venv puts
+## its executables in Scripts/ rather than bin/: set VENV_BIN=$(VENV)/Scripts. The rest of this
+## Makefile needs a POSIX shell in any case, so WSL or the cluster is the supported way to run it.
+VENV ?= .venv
+VENV_BIN ?= $(VENV)/bin
+VENV_PYTHON ?= python3
+PYTHON ?= $(VENV_BIN)/python
+NETCONVERT ?= $(VENV_BIN)/netconvert
+ifeq ($(strip $(VENV)),)
+$(error VENV must name a dedicated directory; its contents are wiped when the env is rebuilt)
+endif
 ## MATSim iterations of one calibration run, and how many calibration runs to add to the study.
 ## Re-running the target continues the study instead of starting over.
 ASC_CALIB_ITERATIONS ?= 500
@@ -89,7 +96,7 @@ ASC_CALIB_XMX ?= 60G
 ## every trial. Empty means the parameters stay as they are in the generated config.
 ASC_CALIB_BASE_PARAMS ?=
 
-.PHONY: setup prepare prepare-network-and-counts prepare-freight prepare-calibration prepare-run-cadyts prepare-initial prepare-asc-calibration analyze-freight
+.PHONY: setup python-env prepare prepare-network-and-counts prepare-freight prepare-calibration prepare-run-cadyts prepare-initial prepare-asc-calibration analyze-freight
 .DELETE_ON_ERROR:
 
 ###################################
@@ -247,8 +254,9 @@ $(NETWORK_OSM): $(BRANDENBURG_OSM_LOCAL) $(AREA_POLY) $(REMOVE_RAILWAY) | setup
 
 # converting the network from OSM format to SUMO format:
 $(NETWORK_SUMO): $(NETWORK_OSM) $(SUMO_OSM_NETCONVERT) $(SUMO_OSM_NETCONVERT_URBAN_DE) | setup
-	netconvert --geometry.remove --ramps.guess --ramps.no-split\
-	 --type-files $(word 2,$^),$(word 3,$^)\
+	command -v $(NETCONVERT) >/dev/null || { echo "$(NETCONVERT) not found; run: make python-env"; exit 1; }
+	$(NETCONVERT) --geometry.remove --ramps.guess --ramps.no-split\
+	 --type-files $(SUMO_OSM_NETCONVERT),$(SUMO_OSM_NETCONVERT_URBAN_DE)\
 	 --tls.guess-signals true --tls.discard-simple --tls.join --tls.default-type actuated\
 	 --junctions.join --junctions.corner-detail 5\
 	 --roundabouts.guess --remove-edges.isolated\
@@ -576,6 +584,7 @@ $(BERLIN_ASC_CALIB_CONFIG): $(RUN_CONFIG_TEMPLATE) | setup
 # the output has to be gzipped, not zstd; and it only reads the mode shares, so the expensive noise
 # and emission dashboards are skipped.
 $(BERLIN_ASC_CALIB_PARAMS): $(BERLIN_ASC_CALIB_CONFIG) $(BERLIN_PLANS_INITIAL) $(NETWORK_MATSIM_PT) $(FACILITIES_XML) $(VMZ_COUNTS) $(VEHICLESFILE_OUT) | setup
+	command -v $(PYTHON) >/dev/null || { echo "$(PYTHON) not found; run: make python-env"; exit 1; }
 	$(PYTHON) src/main/python/calibrate.py\
 	 --jar '$(JAR)'\
 	 --config $<\
@@ -602,6 +611,22 @@ setup:
 	echo "setup directories (pipeline at $(PIPELINE_SIZE), scenario SAMPLE=$(SAMPLE) -> $(SAMPLE_SIZE), tagged $(SAMPLE_PCT))"
 	mkdir -p $(OUTPUT)
 	mkdir -p $(TMP_DIR)
+
+# The environment the pipeline's python and netconvert come from. Not a prerequisite of anything:
+# the rules that need it check for it and point here, so that rebuilding the environment does not
+# invalidate the expensive artifacts that were built with it.
+# --clear because `python -m venv` on an existing directory neither errors nor cleans, so without
+# it a requirement dropped from requirements.txt would never be uninstalled, and a run that failed
+# half way through would be installed on top of rather than repaired. pip runs as `python -m pip`
+# because driving pip through bin/pip makes it replace itself while running, and because bin/pip's
+# #! line breaks once the path to it passes 127 characters, which cluster home directories do.
+$(VENV)/.stamp: requirements.txt
+	$(VENV_PYTHON) -m venv --clear $(VENV)
+	$(VENV_BIN)/python -m pip install -r requirements.txt
+	touch $@
+
+python-env: $(VENV)/.stamp
+	echo "python env in $(VENV), built with $(VENV_PYTHON)"
 
 prepare-network-and-counts: $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	echo done

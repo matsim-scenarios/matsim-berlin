@@ -15,9 +15,15 @@ The Makefile references the downloaded files in the svn directory. (https://svn.
 Re-downloading is normally not necessary.
 
 
-### Install Make
+### Install the build tools
 
-The process is automated using the `Makefile` in the root directory of the repository. This requires `make` to be installed on your system.
+The process is automated using the `Makefile` in the root directory of the repository. This requires `make` to be installed on your system, along with a JDK, `osmosis` on the `PATH`, and the python environment that provides DVC, `netconvert` and the calibration interpreter:
+
+```bash
+make python-env
+```
+
+See [Prerequisites](../README.md#prerequisites) in the README for the full list and for how to use your own installation of a tool instead.
 
 
 ## Running scenario generation
