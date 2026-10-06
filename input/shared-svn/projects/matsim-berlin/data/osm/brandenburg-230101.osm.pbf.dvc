@@ -4,7 +4,8 @@ deps:
 - checksum: '"40245//projects/matsim-berlin/data/osm/brandenburg-230101.osm.pbf"'
   size: 239954390
   hash: md5
-  path: remote://shared-svn/projects/matsim-berlin/data/osm/brandenburg-230101.osm.pbf
+  path: 
+    remote://shared-svn/projects/matsim-berlin/data/osm/brandenburg-230101.osm.pbf
 outs:
 - md5: cdf527ec09f41fde0e12bcb7c373fa1e
   size: 239954390

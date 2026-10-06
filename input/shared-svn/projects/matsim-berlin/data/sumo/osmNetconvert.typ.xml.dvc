@@ -4,7 +4,8 @@ deps:
 - checksum: '"40246//projects/matsim-berlin/data/sumo/osmNetconvert.typ.xml"'
   size: 6058
   hash: md5
-  path: remote://shared-svn/projects/matsim-berlin/data/sumo/osmNetconvert.typ.xml
+  path: 
+    remote://shared-svn/projects/matsim-berlin/data/sumo/osmNetconvert.typ.xml
 outs:
 - md5: 0066fde2555d04d925d07b0065ff31bd
   size: 6058
