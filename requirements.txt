@@ -1,13 +1,24 @@
-# Tooling for fetching the DVC-tracked input and output data; see the "Input data (DVC)"
-# section of the README. Install with:
+# Everything `make` needs beyond Java, Make and osmosis. Build the environment with
 #
-#     pip install -r requirements.txt
+#     make python-env
 #
-# This covers the data transfer only. The python env for the ASC calibration is a separate
-# one, set up by src/main/sh/setup.sh, and SUMO comes from its own pip install (see Makefile).
+# which creates .venv and installs this file into it. The Makefile defaults PYTHON and
+# NETCONVERT into that environment, so a plain `make` then works without further setup.
 #
-# The version is pinned because `dvc update` re-serializes every *.dvc pointer file from
-# scratch. Different DVC versions write the same content slightly differently (YAML line
-# wrapping, the isexec flag), so an unpinned DVC produces diffs in all of input/**/*.dvc
-# with identical hashes, which look like data changes but are not.
+# Not covered: the analysis scripts under src/main/python that are run by hand, and the
+# separate research environments of src/main/python/capacity and
+# src/main/python/choicemodels, which have their own setup.sh and conflicting pins.
+
+# Fetches the DVC-tracked input and output data; see the README. Pinned because `dvc update`
+# re-serializes every *.dvc pointer file from scratch, and different DVC versions write the
+# same content differently (the YAML line wrapping of long paths, the isexec flag), so an
+# unpinned DVC produces diffs across input/**/*.dvc with identical hashes - changes that look
+# like the data moved when it did not.
 dvc[ssh]==3.67.1
+
+# Drives the ASC calibration, src/main/python/calibrate.py.
+matsim-tools[calibration]==0.0.22
+
+# Provides netconvert, which builds $(OUTPUT)/sumo.net.xml. 1.20.0 matches the committed
+# osmNetconvert type maps in shared-svn, which were taken from the v1_20_0 tag.
+eclipse-sumo==1.20.0
