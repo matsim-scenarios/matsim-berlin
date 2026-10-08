@@ -185,6 +185,8 @@ BERLIN_PLANS_INITIAL := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans-initial.
 BERLIN_ASC_CALIB_DIR := $(OUTPUT)/asc-calib-$(SAMPLE_PCT)
 BERLIN_ASC_CALIB_CONFIG := $(OUTPUT)/asc-calib-$(SAMPLE_PCT).config.xml
 BERLIN_ASC_CALIB_PARAMS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).mode-params-calibrated.yaml
+## the output population of the best calibration trial, the population of the run config (as in v7.1)
+BERLIN_ASC_CALIB_PLANS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans-calibrated.xml.gz
 ## the run config of this version: the calibration config with the calibrated mode constants
 BERLIN_RUN_CONFIG := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).config.xml
 COMMERCIAL_FACILITIES := $(OUTPUT)/commercialFacilities.xml.gz
@@ -581,6 +583,7 @@ $(BERLIN_ASC_CALIB_PARAMS): $(BERLIN_ASC_CALIB_CONFIG) $(BERLIN_PLANS_INITIAL) $
 	 --config $<\
 	 --run-dir $(BERLIN_ASC_CALIB_DIR)\
 	 --output $@\
+	 --output-plans $(BERLIN_ASC_CALIB_PLANS)\
 	 --trials $(ASC_CALIB_TRIALS)\
 	 --jvm-args "-Xmx$(ASC_CALIB_XMX) -Xms$(ASC_CALIB_XMX) -XX:+AlwaysPreTouch -XX:+UseParallelGC"\
 	 --args "--iterations $(ASC_CALIB_ITERATIONS) --simulation-period-in-days $(SIM_PERIOD_DAYS)\
@@ -589,12 +592,22 @@ $(BERLIN_ASC_CALIB_PARAMS): $(BERLIN_ASC_CALIB_CONFIG) $(BERLIN_PLANS_INITIAL) $
 	 --config:simwrapper.exclude=NoiseDashboard,EmissionsDashboard"\
 	 $(if $(ASC_CALIB_BASE_PARAMS),--base-params $(abspath $(ASC_CALIB_BASE_PARAMS)))
 
-# Bake the calibrated mode constants into the config: this is the run config of this version. It
-# still points at the artifacts in $(OUTPUT); to publish it, upload those and point it at them.
-$(BERLIN_RUN_CONFIG): $(BERLIN_ASC_CALIB_CONFIG) $(BERLIN_ASC_CALIB_PARAMS) | setup
+# Written by the recipe above, next to the parameters of the same trial; see $(BERLIN_CADYTS_SELECTION). For
+# a study that finished before the recipe wrote it, delete $< and re-run with ASC_CALIB_TRIALS=0: that writes
+# both from the trials already in the study, without running new ones.
+$(BERLIN_ASC_CALIB_PLANS): $(BERLIN_ASC_CALIB_PARAMS) | setup
+	test -f $@ || { echo "$@ is missing; delete $< and re-run with ASC_CALIB_TRIALS=0 to have both written from the existing study"; exit 1; }
+	touch -r $< $@
+
+# Bake the calibrated mode constants into the config: this is the run config of this version. Its
+# population is the output population of the trial the constants come from, the end of the chain of
+# calibration runs, not the initial plans the calibration started from. It still points at the
+# artifacts in $(OUTPUT); to publish it, upload those and point it at them.
+$(BERLIN_RUN_CONFIG): $(BERLIN_ASC_CALIB_CONFIG) $(BERLIN_ASC_CALIB_PARAMS) $(BERLIN_ASC_CALIB_PLANS) | setup
 	$(JAVA_APP) prepare write-run-config\
 	 --config $<\
 	 --yaml $(word 2,$^)\
+	 --plans ./$(notdir $(word 3,$^))\
 	 --run-id berlin-$(VERSION)-$(SAMPLE_PCT)\
 	 --output $@
 

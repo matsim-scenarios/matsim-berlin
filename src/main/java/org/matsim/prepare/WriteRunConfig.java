@@ -14,7 +14,8 @@ import java.nio.file.Path;
 /**
  * Bake the calibrated mode constants into the config: apply the yaml the ASC calibration writes for its best trial,
  * the same way the calibration runs apply it ({@code --yaml}), and write the result as the run config of the
- * version the pipeline produces.
+ * version the pipeline produces. The population is replaced by the output population of that trial: the config
+ * the calibration ran reads the initial plans the calibration started from.
  * <p>
  * The config is written without comments and with only the parameters that differ from their defaults; the
  * template it was generated from (input/run-config-template.xml) is where the comments live. Relative paths are
@@ -34,6 +35,9 @@ public class WriteRunConfig implements MATSimAppCommand {
 	@CommandLine.Option(names = "--yaml", description = "Calibrated parameters, as written by calibrate.py", required = true)
 	private Path yaml;
 
+	@CommandLine.Option(names = "--plans", description = "Population of the run config: the output population of the best trial, as written by calibrate.py", required = true)
+	private String plans;
+
 	@CommandLine.Option(names = "--run-id", description = "Run id of the run config; the output directory is ./output/<run id>", required = true)
 	private String runId;
 
@@ -48,6 +52,7 @@ public class WriteRunConfig implements MATSimAppCommand {
 		ApplicationUtils.applyConfigUpdate(cfg, yaml);
 		log.info("Applied {} to {}", yaml, config);
 
+		cfg.plans().setInputFile(plans);
 		cfg.controller().setRunId(runId);
 		cfg.controller().setOutputDirectory("./output/" + runId);
 
