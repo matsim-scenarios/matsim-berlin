@@ -50,7 +50,6 @@ You need these only to regenerate the scenario with the `Makefile`; to run a pub
 | --- | --- |
 | Java and Maven | the build uses the bundled `./mvnw`, so only a JDK has to be installed |
 | Make | the pipeline is a `Makefile` |
-| [osmosis](https://wiki.openstreetmap.org/wiki/Osmosis) on `PATH` | cuts the OSM extracts; override the `OSMOSIS` variable to point elsewhere |
 | `make python-env` | everything installed from python: DVC, `netconvert` and the calibration interpreter |
 
 `make python-env` builds a virtual environment in `.venv` from `requirements.txt`, which pins all three:
