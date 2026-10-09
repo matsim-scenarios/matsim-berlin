@@ -17,7 +17,7 @@ Re-downloading is normally not necessary.
 
 ### Install the build tools
 
-The process is automated using the `Makefile` in the root directory of the repository. This requires `make` to be installed on your system, along with a JDK, `osmosis` on the `PATH`, and the python environment that provides DVC, `netconvert` and the calibration interpreter:
+The process is automated using the `Makefile` in the root directory of the repository. This requires `make` to be installed on your system, along with a JDK and the python environment that provides DVC, `netconvert` and the calibration interpreter:
 
 ```bash
 make python-env

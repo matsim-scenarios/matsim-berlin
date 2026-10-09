@@ -1,4 +1,4 @@
-# Everything `make` needs beyond Java, Make and osmosis. Build the environment with
+# Everything `make` needs beyond Java and Make. Build the environment with
 #
 #     make python-env
 #

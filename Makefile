@@ -57,8 +57,6 @@ MAKE_XMX ?= 20G
 ## make will then use the environment-variable instead what you defined here.
 SVN_PATH := ..
 OUTPUT := output
-## either use the global installation via, e.g. apt-get, or define where this is comming from
-OSMOSIS := osmosis
 ## we use a tmp-dir because on the cluster the default-tmp-dir is to small
 TMP_DIR := ./tmp
 # Length of the simulation period as a multiple of 24h; must match OpenBerlinScenario.DEFAULT_SIMULATION_PERIOD_IN_DAYS
@@ -165,6 +163,15 @@ VEHICLESFILE_IN := input/v7.0/berlin-v7.0-vehicleTypes.xml
 FACILITIES_GPKG := $(OUTPUT)/facilities.gpkg
 
 NETWORK_OSM := $(OUTPUT)/network.osm
+## the two layers the network osm file is merged from. Scratch output of the $(NETWORK_OSM) rule, which
+## deletes them again, so they live in the tmp dir rather than next to the artifacts.
+NETWORK_OSM_DETAILED := $(TMP_DIR)/network-detailed.osm.pbf
+NETWORK_OSM_COARSE := $(TMP_DIR)/network-coarse.osm.pbf
+## the osm way types each layer keeps. The detailed layer is clipped to $(AREA_POLY) and also keeps the
+## ways tagged bicycle=designated; the coarse layer is deliberately not clipped, so that traffic from
+## outside the area still has a network to arrive on.
+NETWORK_HIGHWAYS_DETAILED := motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction,residential,living_street,unclassified,cycleway
+NETWORK_HIGHWAYS_COARSE := motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction
 NETWORK_SUMO := $(OUTPUT)/sumo.net.xml
 NETWORK_MATSIM := $(OUTPUT)/berlin-$(VERSION)-network.xml.gz
 NETWORK_MATSIM_PT := $(OUTPUT)/berlin-$(VERSION)-network-with-pt.xml.gz
@@ -232,27 +239,28 @@ $(FACILITIES_GPKG): $(BRANDENBURG_OSM_LOCAL) $(ACTIVITY_MAPPING) | setup
 	 --input $<\
 	 --output $@
 
-# filtering for those parts of the osm data that we need for the network:
+# filtering for those parts of the osm data that we need for the network: three osmosis stages, run
+# from the osmosis libraries in the pom rather than from an installation on the PATH.
 $(NETWORK_OSM): $(BRANDENBURG_OSM_LOCAL) $(AREA_POLY) $(REMOVE_RAILWAY) | setup
 
-	# Detailed network includes bikes as well
-	 # hard-coded because we delete within this step
-	$(OSMOSIS) --rb file=$<\
-	 --tf accept-ways bicycle=designated highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction,residential,living_street,unclassified,cycleway\
-	 --bounding-polygon file="$(word 2,$^)"\
-	 --used-node --wb input/network-detailed.osm.pbf
+	# Detailed network includes bikes as well, and only reaches as far as the area
+	$(JAVA_APP) prepare filter-osm-ways $<\
+	 --highways $(NETWORK_HIGHWAYS_DETAILED)\
+	 --bicycle designated\
+	 --area $(word 2,$^)\
+	 --output $(NETWORK_OSM_DETAILED)
 
-	$(OSMOSIS) --rb file=$<\
-	 --tf accept-ways highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction\
-	 --used-node --wb input/network-coarse.osm.pbf
+	# Coarse network of the major roads, kept beyond the area as well
+	$(JAVA_APP) prepare filter-osm-ways $<\
+	 --highways $(NETWORK_HIGHWAYS_COARSE)\
+	 --output $(NETWORK_OSM_COARSE)
 
-	$(OSMOSIS) --rb file=input/network-coarse.osm.pbf --rb file=input/network-detailed.osm.pbf\
-  	 --merge\
-  	 --tag-transform file=$(word 3,$^)\
-  	 --wx $@
+	# Merge the two layers and drop the railway tags
+	$(JAVA_APP) prepare merge-osm $(NETWORK_OSM_COARSE) $(NETWORK_OSM_DETAILED)\
+	 --tag-transform $(word 3,$^)\
+	 --output $@
 
-	rm input/network-detailed.osm.pbf
-	rm input/network-coarse.osm.pbf
+	rm $(NETWORK_OSM_DETAILED) $(NETWORK_OSM_COARSE)
 
 # converting the network from OSM format to SUMO format:
 $(NETWORK_SUMO): $(NETWORK_OSM) $(SUMO_OSM_NETCONVERT) $(SUMO_OSM_NETCONVERT_URBAN_DE) | setup

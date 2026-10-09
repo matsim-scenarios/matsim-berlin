@@ -28,7 +28,27 @@
 		<main.class>org.matsim.run.OpenBerlinScenarioWrapper</main.class>
 
 		<maven.compiler.release>25</maven.compiler.release>
+
+		<osmosis.version>0.49.2</osmosis.version>
 	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<!--
+				osmosis-pbf needs the full protobuf runtime and asks for 3.25.0, while osm4j-pbf (our facility
+				extraction, and the osm contrib) needs the lite one, which matsim-all manages at 4.35.1. The two
+				jars share ~520 classes in com.google.protobuf and both stay on the classpath, so whichever the
+				classloader picks has to work for both generated-code flavours - which it only does if they are
+				the same release. Hence the full runtime is pinned here; keep it at the version matsim-all
+				manages for protobuf-javalite.
+			-->
+			<dependency>
+				<groupId>com.google.protobuf</groupId>
+				<artifactId>protobuf-java</artifactId>
+				<version>4.35.1</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<dependencies>
 
@@ -266,6 +286,48 @@
 			<groupId>me.tongfei</groupId>
 			<artifactId>progressbar</artifactId>
 			<version>0.10.1</version>
+		</dependency>
+
+		<!--
+			Osmosis as a library: the OSM filtering step of the pipeline runs in-process in
+			org.matsim.prepare.network.FilterOsmNetwork instead of shelling out to an osmosis
+			installation on the PATH. One artifact per task the pipeline uses, all at compile scope,
+			because the published osmosis poms declare their inter-module dependencies as runtime only.
+		-->
+		<dependency>
+			<groupId>org.openstreetmap.osmosis</groupId>
+			<artifactId>osmosis-core</artifactId>
+			<version>${osmosis.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openstreetmap.osmosis</groupId>
+			<artifactId>osmosis-pbf</artifactId>
+			<version>${osmosis.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openstreetmap.osmosis</groupId>
+			<artifactId>osmosis-xml</artifactId>
+			<version>${osmosis.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openstreetmap.osmosis</groupId>
+			<artifactId>osmosis-tagfilter</artifactId>
+			<version>${osmosis.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openstreetmap.osmosis</groupId>
+			<artifactId>osmosis-areafilter</artifactId>
+			<version>${osmosis.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openstreetmap.osmosis</groupId>
+			<artifactId>osmosis-set</artifactId>
+			<version>${osmosis.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openstreetmap.osmosis</groupId>
+			<artifactId>osmosis-tagtransform</artifactId>
+			<version>${osmosis.version}</version>
 		</dependency>
 
 		<!-- for weighted random draw: https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
