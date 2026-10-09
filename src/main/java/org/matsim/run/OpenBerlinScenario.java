@@ -28,6 +28,7 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanInheritanceConfigGroup;
 import org.matsim.core.config.groups.ReplanningConfigGroup;
+import org.matsim.core.config.groups.ScoringConfigGroup;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
@@ -168,7 +169,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 		planInheritanceConfigGroup.setEnabled(true);
 
 
-		// overwrite ride scoring params with values derived from car
+		applyV64ScoringParameters(config);
+
+		// Overwrite ride scoring params with values derived from the v6.4 car parameters.
 		RideScoringParamsFromCarParams.setRideScoringParamsBasedOnCarParams(config.scoring(), 1.0);
 
 		// Need to switch to warning for best score
@@ -198,6 +201,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		//vsp consistency check does not know about recent changes to time structure, setting this to warn now
 		config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
+
+		config.controller().setLastIteration(0);
 
 
 		return config;
@@ -314,9 +319,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 		//TODO make default?
 		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
 
-		//TODO take ASC from v6.4 and prices from v6.4. --> will be done in the calib script
-
-		//TODO beta_perform should be set to 6.0 and we need to discuss about the model reference year
+		// ASCs intentionally remain untouched and are handled by the calibration script.
 	}
 
 	@Override
@@ -385,5 +388,32 @@ public class OpenBerlinScenario extends MATSimApplication {
 			}
 		}
 	}
+
+	/**
+	 * Apply the global and mode-specific v6.4 scoring parameters without changing any ASCs.
+	 */
+	private static void applyV64ScoringParameters(Config config) {
+		ScoringConfigGroup scoring = config.scoring();
+		scoring.setPerforming_utils_hr(6.88);
+		scoring.setMarginalUtilityOfMoney(1.0);
+
+		setV64ModeParams(scoring, TransportMode.car, -5.0, 0.0, -1.49e-4);
+		setV64ModeParams(scoring, TransportMode.pt, -3.0, 0.0, 0.0);
+		setV64ModeParams(scoring, TransportMode.bike, 0.0, 0.0, 0.0);
+		setV64ModeParams(scoring, TransportMode.walk, 0.0, 0.0, 0.0);
+		setV64ModeParams(scoring, "freight", 0.0, 0.0, -4.0e-4);
+		setV64ModeParams(scoring, TransportMode.truck, 0.0, 0.0, -4.0e-4);
+	}
+
+	private static void setV64ModeParams(ScoringConfigGroup scoring, String mode, double dailyMonetaryConstant,
+										 double marginalUtilityOfTraveling, double monetaryDistanceRate) {
+		ScoringConfigGroup.ModeParams params = scoring.getOrCreateModeParams(mode);
+		params.setDailyMonetaryConstant(dailyMonetaryConstant);
+		params.setDailyUtilityConstant(0.0);
+		params.setMarginalUtilityOfDistance(0.0);
+		params.setMarginalUtilityOfTraveling(marginalUtilityOfTraveling);
+		params.setMonetaryDistanceRate(monetaryDistanceRate);
+	}
+
 
 }
