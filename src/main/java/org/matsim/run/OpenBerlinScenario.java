@@ -196,6 +196,10 @@ public class OpenBerlinScenario extends MATSimApplication {
 		eConfig.setDetailedVsAverageLookupBehavior(EmissionsConfigGroup.DetailedVsAverageLookupBehavior.tryDetailedThenTechnologyAverageThenAverageTable);
 		eConfig.setEmissionsComputationMethod(EmissionsConfigGroup.EmissionsComputationMethod.StopAndGoFraction);
 
+		//vsp consistency check does not know about recent changes to time structure, setting this to warn now
+		config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
+
+
 		return config;
 	}
 
@@ -368,16 +372,16 @@ public class OpenBerlinScenario extends MATSimApplication {
 				addTravelDisutilityFactoryBinding("freight").to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
 
 				//TODO talk with SM. -->
-				bind(BicycleLinkSpeedCalculator.class).to(BicycleLinkSpeedCalculatorDefaultImpl.class);
-				bind(BicycleParams.class).to(BicycleParamsDefaultImpl.class);
+				//bind(BicycleLinkSpeedCalculator.class).to(BicycleLinkSpeedCalculatorDefaultImpl.class);
+				//bind(BicycleParams.class).to(BicycleParamsDefaultImpl.class);
 
 				// Bike should use free speed travel time
 				//compensate for bug in core library #4981?
 				//TODO think about the effect of this
 				//addTravelTimeBinding(TransportMode.bike).to(BicycleTravelTime.class);
 				//addTravelDisutilityFactoryBinding(TransportMode.bike).to(OnlyTimeDependentTravelDisutilityFactory.class);
-				addTravelTimeBinding(TransportMode.bike).to(BicycleTravelTime.class);
-				addTravelDisutilityFactoryBinding(TransportMode.bike).to(OnlyTimeDependentTravelDisutilityFactory.class);
+				//addTravelTimeBinding(TransportMode.bike).to(BicycleTravelTime.class);
+				//addTravelDisutilityFactoryBinding(TransportMode.bike).to(OnlyTimeDependentTravelDisutilityFactory.class);
 			}
 		}
 	}
