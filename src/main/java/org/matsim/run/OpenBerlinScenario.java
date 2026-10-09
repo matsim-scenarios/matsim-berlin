@@ -202,7 +202,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 		//vsp consistency check does not know about recent changes to time structure, setting this to warn now
 		config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
 
-		config.controller().setLastIteration(0);
+
 
 
 		return config;
