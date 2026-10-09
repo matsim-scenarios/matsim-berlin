@@ -23,6 +23,7 @@ import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.emissions.utils.HbefaUtils;
+import org.matsim.contrib.vsp.scoring.RideScoringParamsFromCarParams;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanInheritanceConfigGroup;
@@ -35,6 +36,7 @@ import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutilityFactory;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
+import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.dashboard.BerlinDashboardProvider;
 import org.matsim.run.scoring.BerlinScoringModule;
 import org.matsim.run.scoring.BerlinScoringConfigGroup;
@@ -45,6 +47,7 @@ import org.matsim.vehicles.EngineInformation;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 import picocli.CommandLine;
+import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -164,15 +167,24 @@ public class OpenBerlinScenario extends MATSimApplication {
 		PlanInheritanceConfigGroup planInheritanceConfigGroup = ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
 		planInheritanceConfigGroup.setEnabled(true);
 
+
+		// overwrite ride scoring params with values derived from car
+		RideScoringParamsFromCarParams.setRideScoringParamsBasedOnCarParams(config.scoring(), 1.0);
+
 		// Need to switch to warning for best score
 		// best score is used because the pseudo random error term are added explicitly in the scoring
-		//not best score but selectExp
-		if (planSelector.equals(DefaultPlanStrategiesModule.DefaultSelector.BestScore)) {
-			config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
-		}
+		//not best score but selectExp as we removed the taste variations for now gr 10/26
+		//if (planSelector.equals(DefaultPlanStrategiesModule.DefaultSelector.BestScore)) {
+		//	config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
+	//}
 
-		// Bicycle config must be present
-		ConfigUtils.addOrGetModule(config, BicycleConfigGroup.class);
+		// Bicycle config must be present --> we simulate the bicycle just as in dresden
+		//ConfigUtils.addOrGetModule(config, BicycleConfigGroup.class);
+		config.qsim().setMainModes(
+			List.of(TransportMode.car, TransportMode.truck, "freight", TransportMode.bike)
+		);
+
+
 
 		// Add emissions configuration
 		EmissionsConfigGroup eConfig = ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
@@ -218,9 +230,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 				"The vehicle type will be ignored for emission calculation because it is marked as {}", TransportMode.ride, HbefaVehicleCategory.NON_HBEFA_VEHICLE);
 		}
 
-//		bike does not have HbefaTechnology in vehicle types xml file
-		VehicleUtils.setHbefaTechnology(scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.bike)).getEngineInformation(), AVERAGE);
-		log.warn("For vehicle type {}, the HbefaTechnolgy was missing and was set to {}.", TransportMode.bike, AVERAGE);
+		configureBikeVehicleType(scenario);
 
 //		for some of the input vehicle types hbefa emissionConcept and technology are swapped. We have to swap them back.
 //		hbefa4.1 relies on HbefaTechnology for correct emission calculation, not on HbefaEmissionConcept
@@ -235,6 +245,38 @@ public class OpenBerlinScenario extends MATSimApplication {
 					"Please check class HbefaTechnology for possibles values.", type.getId(), HbefaTechnology.PETROL_4S.id);
 			}
 		}
+	}
+
+	/**
+	 * Apply the bike vehicle specification used by the Dresden scenario, expect the maximum velocity this is from berlin v6.4
+	 */
+	private static void configureBikeVehicleType(Scenario scenario) {
+		Id<VehicleType> bikeTypeId = Id.createVehicleTypeId(TransportMode.bike);
+		VehicleType bikeType = scenario.getVehicles().getVehicleTypes().get(bikeTypeId);
+
+		if (bikeType == null) {
+			bikeType = scenario.getVehicles().getFactory().createVehicleType(bikeTypeId);
+			scenario.getVehicles().addVehicleType(bikeType);
+		}
+
+		bikeType.setAccessTime(1.0);
+		bikeType.setEgressTime(1.0);
+		bikeType.getCapacity().setSeats(0);
+		bikeType.getCapacity().setStandingRoom(0);
+		bikeType.setLength(2.0);
+		bikeType.setWidth(1.0);
+		//bikeType.setMaximumVelocity(4.16); --> dresden
+		//belwo from berlin v6.4
+		bikeType.setMaximumVelocity(2.98);
+		bikeType.setPcuEquivalents(0.2);
+		bikeType.setNetworkMode(TransportMode.bike);
+		bikeType.setFlowEfficiencyFactor(1.0);
+
+		EngineInformation engineInformation = bikeType.getEngineInformation();
+		VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
+		VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
+		VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
+		VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
 	}
 
 	@Override
@@ -255,15 +297,20 @@ public class OpenBerlinScenario extends MATSimApplication {
 		//TODO think about moving this to libs, is this not just the stop watch??
 		controler.addOverridingModule(new QsimTimingModule());
 
-		//TODO comment out
-		controler.addOverridingModule(new BerlinScoringModule());
+		//We want to use the default scoring again
+		//controler.addOverridingModule(new BerlinScoringModule());
+
+		controler.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class).asEagerSingleton();
+			}
+		});
 
 		//TODO make default?
 		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
 
-		//TODO bike just as in dresden
-
-		//TODO take ASC from v6.4 and prices from v6.4.
+		//TODO take ASC from v6.4 and prices from v6.4. --> will be done in the calib script
 
 		//TODO beta_perform should be set to 6.0 and we need to discuss about the model reference year
 	}
@@ -320,7 +367,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 				addTravelTimeBinding("freight").to(Key.get(TravelTime.class, Names.named(TransportMode.truck)));
 				addTravelDisutilityFactoryBinding("freight").to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
 
-				//TODO talk with SM.
+				//TODO talk with SM. -->
 				bind(BicycleLinkSpeedCalculator.class).to(BicycleLinkSpeedCalculatorDefaultImpl.class);
 				bind(BicycleParams.class).to(BicycleParamsDefaultImpl.class);
 
