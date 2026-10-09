@@ -48,12 +48,16 @@ if __name__ == "__main__":
 
     # df.drop(df[   (df["dist_weight"] * df["beelineDist"]) > 3   ].index, inplace=True) # yy ??
 
-    # df.drop( df[ df["choice"]==5 ].index, inplace=True )
+    df.drop( df[ df["choice"]==5 ].index, inplace=True ) # ride
+    df.drop( df[ df["choice"]==4 ].index, inplace=True ) # bike
+    df.drop( df[ df["choice"]==1 ].index, inplace=True ) # walk
 
 
     database = db.Database("data/choices", df)     # convert from pandas to biogeme data container.  "database" is needed later.
 
     vv = database.variables
+
+    # == ASCs:
 
     ASC = {}
     for mode in ds.modes:
@@ -64,78 +68,98 @@ if __name__ == "__main__":
         #     sd = Beta(f"ASC_{mode}_s", 1, 0, None, ESTIMATE)
         #     ASC[mode] += sd * bioDraws(f"{mode}_RND", "NORMAL_ANTI")
 
-    UTIL_MONEY = Beta('betaMoney', 1, None, None, ESTIMATE )
-    EXP_INCOME = Beta('lambdaIncome', 0.4, None, None, ESTIMATE )
+    # == ttime:
 
     BETA_PERFORMING = Beta('betaPerf', -6.88, -15, -1, ESTIMATE )
     EXP_PERF_DIST = Beta( "lambdaPerfDist", 0, None, None, ESTIMATE )
     EXP_PERF_TIME = Beta( "lambdaPerfTime", 0, None, None, ESTIMATE )
 
-    # BETA_CAR_PRICE_PERCEPTION = Beta('betaFcpCar', 0, 0, None, ESTIMATE )
-    # BETA_PT_PRICE_PERCEPTION = Beta('betaFcpPt', 0, 0, 1, ESTIMATE )
-
-    BETA_PT_SWITCHES = Beta('betaPtSwitches', -1, None, None, ESTIMATE )
-
-    BETA_RIDE_ALPHA = Beta('alphaRide', 1, 0, 2, ESTIMATE )
-
-    # == beta_dist:
-
-    DIST = {}
-    est_exp_dist = []
-    for mode in est_exp_dist:
-        print(f"Estimating distance exponent for {mode}")
-        DIST[mode] = (Beta(f'betaDist_{mode}', 0, None, None, ESTIMATE), Beta(f'lambdaDist_{mode}', 1, None, None, ESTIMATE))
-
-    # == beta_trav:
-
     TRAV = {}
     est_trav = []
     # est_trav = ds.modes # sollte dann ohne betaPerf laufen
     for mode in est_trav:
-       # TRAV[mode] = ( Beta(f'betaTrav_{mode}', 0, None, None, ESTIMATE) , Beta( f'lambdaTrav_{mode}', 0, None, None, ESTIMATE ) )
+        # TRAV[mode] = ( Beta(f'betaTrav_{mode}', 0, None, None, ESTIMATE) , Beta( f'lambdaTrav_{mode}', 0, None, None, ESTIMATE ) )
         TRAV[mode] = ( Beta(f'betaTrav_{mode}', 0, None, None, ESTIMATE) , 0 )
+
+    # == money:
+
+    UTIL_MONEY = Beta('betaMoney', 1, None, None, ESTIMATE )
+    EXP_INCOME = Beta('lambdaIncome', 0.4, None, None, ESTIMATE )
+
+    # BETA_CAR_PRICE_PERCEPTION = Beta('betaFcpCar', 0, 0, None, ESTIMATE )
+    # BETA_PT_PRICE_PERCEPTION = Beta('betaFcpPt', 0, 0, 1, ESTIMATE )
+
+    # == distance:
+
+    BETA_DIST = Beta( "betaDist", 1, None, None, ESTIMATE )
+
+    DIST = {}
+    est_exp_dist = []
+    # est_exp_dist = ds.modes
+    for mode in est_exp_dist:
+       DIST[mode] = (Beta(f'betaDist_{mode}', 0, None, None, ESTIMATE), Beta(f'lambdaDist_{mode}', 1, None, None, ESTIMATE))
+
+    # == other:
+
+    BETA_PT_SWITCHES = Beta('betaPtSwitches', -1, None, None, ESTIMATE )
+    BETA_RIDE_ALPHA = Beta('alphaRide', 1, None, None, ESTIMATE )
 
     # == overriding some things
 
     ASC['walk'] = 0
-    # BETA_RIDE_ALPHA = 1.
-    EXP_INCOME = 0
+
+    # ttime:
     # BETA_PERFORMING = 0.
     EXP_PERF_DIST = 0.
     EXP_PERF_TIME = 0.
 
+    # money:
+    # UTIL_MONEY = 0.
     # BETA_CAR_PRICE_PERCEPTION = 0.0
     # BETA_PT_PRICE_PERCEPTION = BETA_CAR_PRICE_PERCEPTION
+    EXP_INCOME = 0
+
+    # other:
+    BETA_PT_SWITCHES = 0.
+    BETA_RIDE_ALPHA = 0.
 
     # == end overriding some things
+    ############################################
+    ############################################
 
     U = {} # utility
     AV = {} # availability
 
     for i, mode in enumerate( ds.modes, 1):  # dies hier MUSS ds.modes bleiben, weil es sonst mit dem "i" nicht mehr zusammenpasst!
-        # Ride also incurs alpha x cost/time_cost of the driver
+
+        # TRAVEL TIMES:
+
         u = ASC[mode]
         tmp = 0
         if BETA_PERFORMING != 0:
-            tmp = BETA_PERFORMING * vv[f"{mode}_hours"] * (vv[f"{mode}_hours"]**EXP_PERF_TIME)
+            tmp = BETA_PERFORMING * vv[f"{mode}_hours"]
             if BETA_RIDE_ALPHA != 0 and mode == "ride":
                 tmp *= (1 + BETA_RIDE_ALPHA)
             if EXP_PERF_DIST != 0:
                 # tmp *= ( vv[f"{mode}_km"] / round(overall_mean_dist,3)) ** EXP_PERF_DIST
                 tmp *= ((vv[f"{mode}_km"]) / round(mean_dist.loc[i].dist,3)) ** EXP_PERF_DIST
                 # ( yyyy not sure if we want to divide of the average distance of the mode, and not by the average distance overall )
-        # u = ASC[mode] + BETA_PERFORMING * v[f"{mode}_hours"] * ( (1 + BETA_RIDE_ALPHA) if mode == "ride" else 1) * ( 1.5 if mode == "pt" else 1)
-        # u = ASC[mode] + BETA_PERFORMING * ( vv[f"{mode}_hours"] + ( vv["pt_walking_km"]/10 if mode=="pt" else 0 ) ) * ( (1 + BETA_RIDE_ALPHA) if mode == "ride" else 1)
-        u += tmp
+            if EXP_PERF_TIME != 0.:
+                tmp *= vv[f"{mode}_hours"]**EXP_PERF_TIME
+            # u = ASC[mode] + BETA_PERFORMING * v[f"{mode}_hours"] * ( (1 + BETA_RIDE_ALPHA) if mode == "ride" else 1) * ( 1.5 if mode == "pt" else 1)
+            # u = ASC[mode] + BETA_PERFORMING * ( vv[f"{mode}_hours"] + ( vv["pt_walking_km"]/10 if mode=="pt" else 0 ) ) * ( (1 + BETA_RIDE_ALPHA) if mode == "ride" else 1)
+            u += tmp
 
         if mode in TRAV:
             beta,expnt = TRAV[mode]
             u += beta * vv[f"{mode}_hours"]
-            # ( Die Berücksichtigung vom ride_alpha ist hier erstmal nicht nötig, weil biogeme den Effekt nach beta_trav_ride absorbieren wird. )
+            # ( Die Berücksichtigung vom ride_alpha ist hier erstmal nicht zwingend nötig, weil biogeme den Effekt nach beta_trav_ride absorbieren wird. )
             if expnt != 0:
                 u *= (  (vv[f"{mode}_km"]) / float(mean_dist.loc[i].dist)  ) ** expnt
 
-        if km_costs[mode] != 0:
+        # MONEY:
+
+        if UTIL_MONEY != 0. and km_costs[mode] != 0:
             price = km_costs[mode] * vv[f"{mode}_km"]
             # ( die km costs sind upstream negativ eingetragen )
             if mode=="ride":
@@ -153,12 +177,21 @@ if __name__ == "__main__":
 
             u += UTIL_MONEY * price
 
+        # DISTANCE
+
+        # u += BETA_DIST * vv["beelineDist"]
+#        u += BETA_DIST * vv[f"{mode}_km"]
+
         if mode in DIST:
             beta, expnt = DIST[mode]
-            u += beta * ((vv[f"{mode}_km"] * 1000) / float(mean_dist.loc[i].dist)) ** expnt
+            u += beta * vv['beelineDist']
+
+#            u += beta * (vv[f"{mode}_km"] / float(mean_dist.loc[i].dist)) ** expnt
             # (das liest sich ungewohnt.  Liegt daran, dass es gar keine Interaktion ist, sondern so etwas wie distance * distance^lambda = distance^(1+lambda) . )
 
-        if mode == "pt":
+        # OTHER:
+
+        if BETA_PT_SWITCHES != 0. and mode == "pt":
             u += vv[f"{mode}_switches"] * BETA_PT_SWITCHES
 
         U[i] = u
