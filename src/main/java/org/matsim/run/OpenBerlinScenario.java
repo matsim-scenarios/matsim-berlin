@@ -166,6 +166,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		// Need to switch to warning for best score
 		// best score is used because the pseudo random error term are added explicitly in the scoring
+		//not best score but selectExp
 		if (planSelector.equals(DefaultPlanStrategiesModule.DefaultSelector.BestScore)) {
 			config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
 		}
@@ -239,6 +240,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 	@Override
 	protected void prepareControler(Controler controler) {
 
+		//TODO seperate observers from configurations
 		controler.addOverridingModule(new SimWrapperModule());
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
@@ -248,12 +250,22 @@ public class OpenBerlinScenario extends MATSimApplication {
 			}
 		});
 
+		//TODO inline this?
 		controler.addOverridingModule(new TravelTimeBinding());
+		//TODO think about moving this to libs, is this not just the stop watch??
 		controler.addOverridingModule(new QsimTimingModule());
 
+		//TODO comment out
 		controler.addOverridingModule(new BerlinScoringModule());
 
+		//TODO make default?
 		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
+
+		//TODO bike just as in dresden
+
+		//TODO take ASC from v6.4 and prices from v6.4.
+
+		//TODO beta_perform should be set to 6.0 and we need to discuss about the model reference year
 	}
 
 	@Override
@@ -304,13 +316,19 @@ public class OpenBerlinScenario extends MATSimApplication {
 			addTravelDisutilityFactoryBinding(TransportMode.ride).to(carTravelDisutilityFactoryKey());
 
 			if (!carOnly) {
+				//take names from vsp contrib --> SubpopulationDefaultNames
 				addTravelTimeBinding("freight").to(Key.get(TravelTime.class, Names.named(TransportMode.truck)));
 				addTravelDisutilityFactoryBinding("freight").to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
 
+				//TODO talk with SM.
 				bind(BicycleLinkSpeedCalculator.class).to(BicycleLinkSpeedCalculatorDefaultImpl.class);
 				bind(BicycleParams.class).to(BicycleParamsDefaultImpl.class);
 
 				// Bike should use free speed travel time
+				//compensate for bug in core library #4981?
+				//TODO think about the effect of this
+				//addTravelTimeBinding(TransportMode.bike).to(BicycleTravelTime.class);
+				//addTravelDisutilityFactoryBinding(TransportMode.bike).to(OnlyTimeDependentTravelDisutilityFactory.class);
 				addTravelTimeBinding(TransportMode.bike).to(BicycleTravelTime.class);
 				addTravelDisutilityFactoryBinding(TransportMode.bike).to(OnlyTimeDependentTravelDisutilityFactory.class);
 			}
