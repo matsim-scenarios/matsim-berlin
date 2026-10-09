@@ -61,8 +61,8 @@ def resolve_jar(pattern):
     return os.path.abspath(jars[0])
 
 
-def write_calibrated_params(study, output):
-    """Copy the parameters of the best trial to where the Makefile expects them."""
+def write_calibrated_params(study, output, output_plans):
+    """Copy the parameters of the best trial, and link its output population, to where the Makefile expects them."""
     completed = utils.completed_trials(study)
     if not completed:
         raise RuntimeError("No trial of the study completed, no parameters to write.")
@@ -78,6 +78,19 @@ def write_calibrated_params(study, output):
     shutil.copyfile(params, output)
     print("Calibrated mode parameters written to %s" % output)
 
+    # The trials are chained, each starting from the output plans of an earlier one, so this is the end of
+    # that chain and the population that goes with the constants. Linked rather than copied: it is large.
+    plans = glob.glob(os.path.join("runs", "%03d" % best.number, "*.output_plans.xml.gz"))
+    if len(plans) != 1:
+        raise RuntimeError("Expected one output population of trial %d, found: %s" % (best.number, plans))
+    if os.path.lexists(output_plans):
+        os.remove(output_plans)
+    try:
+        os.link(plans[0], output_plans)
+    except OSError:
+        shutil.copyfile(plans[0], output_plans)
+    print("Output population of trial %d linked to %s" % (best.number, output_plans))
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
@@ -89,6 +102,8 @@ def main():
                              "parameters and the output of every run. One per sample size.")
     parser.add_argument("--output", required=True,
                         help="Where to write the parameters of the best trial.")
+    parser.add_argument("--output-plans", required=True,
+                        help="Where to put the output population of the best trial.")
     parser.add_argument("--trials", type=int, default=10,
                         help="Number of runs to add to the study. A study that is already in "
                              "--run-dir is continued, not restarted.")
@@ -107,6 +122,7 @@ def main():
     config = os.path.abspath(args.config)
     base_params = os.path.abspath(args.base_params) if args.base_params else None
     output = os.path.abspath(args.output)
+    output_plans = os.path.abspath(args.output_plans)
 
     # create_calibration puts the study database, the parameters and the runs into the working
     # directory, so the working directory is what separates the sample sizes from each other.
@@ -131,7 +147,7 @@ def main():
 
     study.optimize(obj, args.trials)
 
-    write_calibrated_params(study, output)
+    write_calibrated_params(study, output, output_plans)
 
 
 if __name__ == "__main__":

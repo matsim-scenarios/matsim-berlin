@@ -5,6 +5,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.matsim.analysis.AgentWiseComparison;
 import org.matsim.analysis.QsimTimingModule;
 import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
 import org.matsim.api.core.v01.Id;
@@ -13,6 +14,7 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
+import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.MATSimApplication;
 import org.matsim.contrib.bicycle.*;
 import org.matsim.contrib.emissions.HbefaRoadTypeMapping;
@@ -44,9 +46,11 @@ import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 import picocli.CommandLine;
 
+import java.nio.file.Path;
 import java.util.List;
 
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true, showDefaultValues = true)
+@MATSimApplication.Analysis({AgentWiseComparison.class})
 public class OpenBerlinScenario extends MATSimApplication {
 
 	public static final String VERSION = "7.1";
@@ -90,6 +94,12 @@ public class OpenBerlinScenario extends MATSimApplication {
 			"the config typical duration. By default such an activity ABORTS the run. Pass this for populations " +
 			"whose typical durations are still encoded in the activity type.")
 	private boolean allowConfigTypicalDurations = false;
+
+	@CommandLine.Option(names = "--agent-wise-comparison-base",
+		description = "Output directory of a base run. After the run, compare the scores of this run's agents against " +
+			"it, see AgentWiseComparison; results go to analysis/agent-wise-comparison. With --post-processing " +
+			"post_process_only, the existing output is compared without running.")
+	private Path agentWiseComparisonBase;
 
 	public static void main(String[] args) {
 		MATSimApplication.execute(OpenBerlinScenario.class, args);
@@ -244,6 +254,33 @@ public class OpenBerlinScenario extends MATSimApplication {
 		controler.addOverridingModule(new BerlinScoringModule());
 
 		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
+	}
+
+	@Override
+	protected List<MATSimAppCommand> preparePostProcessing(Path outputFolder, String runId) {
+		if (agentWiseComparisonBase == null)
+			return List.of();
+		return List.of(new AgentWiseComparison(agentWiseComparisonBase, outputFolder));
+	}
+
+	/**
+	 * A controler for an existing scenario, set up the way {@link #prepareControler} sets up a run, but not run.
+	 * Analyses that recompute parts of the score take their bindings from its injector, so that they use what the run
+	 * used instead of a setup of their own that has to be kept in agreement with it.
+	 */
+	public static Controler prepareControlerForAnalysis(Scenario scenario) {
+		// an output config read back by plain ConfigUtils.loadConfig has the groups prepareConfig adds as untyped
+		// groups, but the modules are bound against the typed ones
+		Config config = scenario.getConfig();
+		ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
+		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class);
+		ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
+		ConfigUtils.addOrGetModule(config, BicycleConfigGroup.class);
+		ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
+
+		Controler controler = new Controler(scenario);
+		new OpenBerlinScenario().prepareControler(controler);
+		return controler;
 	}
 
 	/**
