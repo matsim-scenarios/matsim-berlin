@@ -36,6 +36,10 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 		return bikeSpeedFactor;
 	}
 
+	public OpenBerlinBikeNetworkScenario() {
+		// initialize defaults
+	}
+
 	public OpenBerlinBikeNetworkScenario(@Nullable Config config) {
 		super(config);
 	}
