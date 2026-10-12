@@ -79,7 +79,7 @@ JAVA_APP := $(JAVA_CP) org.matsim.prepare.RunOpenBerlinCalibration
 ## Makefile needs a POSIX shell in any case, so WSL or the cluster is the supported way to run it.
 VENV ?= .venv
 VENV_BIN ?= $(VENV)/bin
-VENV_PYTHON ?= python3
+VENV_PYTHON ?= python3.12
 PYTHON ?= $(VENV_BIN)/python
 NETCONVERT ?= $(VENV_BIN)/netconvert
 ifeq ($(strip $(VENV)),)
@@ -643,6 +643,7 @@ setup:
 # #! line breaks once the path to it passes 127 characters, which cluster home directories do.
 $(VENV)/.stamp: requirements.txt
 	$(VENV_PYTHON) -m venv --clear $(VENV)
+	$(VENV_BIN)/python -m pip install --upgrade pip
 	$(VENV_BIN)/python -m pip install -r requirements.txt
 	touch $@
 
