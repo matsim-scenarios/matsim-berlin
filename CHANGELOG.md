@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file. 
 
+### 7.2 (unreleased)
+- Plan selection uses **ChangeExpBeta** (the MATSim default) again; the pseudo-random trip error term is disabled
+
 ### 7.0 (2025-11)
 - Major update to scoring function and parameters
   - The scoring now uses **tasteVariations** which assumes that each agent has a random preference towards each transport mode

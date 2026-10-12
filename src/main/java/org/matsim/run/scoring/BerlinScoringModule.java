@@ -17,8 +17,8 @@ public class BerlinScoringModule extends AbstractModule {
 
 		bindScoringFunctionFactory().to(BerlinScoringFunctionFactory.class).in(Singleton.class);
 
-		// scale = pi ^2 / 6 / 3.32 ~ 0.495 (variance of gumbel / mean number of trips)
-		install(new PseudoRandomScoringModule(TasteVariationsConfigParameterSet.VariationType.normal, 0.495));
+		// scale 0 disables the pseudo-random trip error; the plan selector supplies the choice randomness
+		install(new PseudoRandomScoringModule(TasteVariationsConfigParameterSet.VariationType.normal, 0));
 	}
 
 }

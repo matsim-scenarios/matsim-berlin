@@ -74,7 +74,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 	@CommandLine.Option(names = "--plan-selector",
 		description = "Plan selector to use.",
-		defaultValue = DefaultPlanStrategiesModule.DefaultSelector.BestScore)
+		defaultValue = DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta)
 	private String planSelector;
 
 	@CommandLine.Option(names = "--with-opening-times",
@@ -164,8 +164,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 		PlanInheritanceConfigGroup planInheritanceConfigGroup = ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
 		planInheritanceConfigGroup.setEnabled(true);
 
-		// Need to switch to warning for best score
-		// best score is used because the pseudo random error term are added explicitly in the scoring
+		// BestScore (available via --plan-selector) fails the vsp defaults check; downgrade it to a warning
 		if (planSelector.equals(DefaultPlanStrategiesModule.DefaultSelector.BestScore)) {
 			config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
 		}
