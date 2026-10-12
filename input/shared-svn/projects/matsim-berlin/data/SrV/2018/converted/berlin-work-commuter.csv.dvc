@@ -1,0 +1,13 @@
+md5: 1618ff3a876c518e40745d972290069a
+frozen: true
+deps:
+- checksum: '"40051//projects/matsim-berlin/data/SrV/2018/converted/berlin-work-commuter.csv"'
+  size: 1234
+  hash: md5
+  path: 
+    remote://shared-svn/projects/matsim-berlin/data/SrV/2018/converted/berlin-work-commuter.csv
+outs:
+- md5: 6978cf40e7b5c87ac8088e793c942fd8
+  size: 1234
+  hash: md5
+  path: berlin-work-commuter.csv

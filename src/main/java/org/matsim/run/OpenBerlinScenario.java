@@ -1,24 +1,31 @@
 package org.matsim.run;
 
-import java.util.List;
-
+import com.google.inject.Key;
+import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.matsim.analysis.AgentWiseComparison;
 import org.matsim.analysis.QsimTimingModule;
 import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
+import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.MATSimApplication;
-import org.matsim.contrib.bicycle.BicycleConfigGroup;
-import org.matsim.contrib.bicycle.BicycleLinkSpeedCalculator;
-import org.matsim.contrib.bicycle.BicycleLinkSpeedCalculatorDefaultImpl;
-import org.matsim.contrib.bicycle.BicycleTravelTime;
+import org.matsim.contrib.bicycle.*;
 import org.matsim.contrib.emissions.HbefaRoadTypeMapping;
+import org.matsim.contrib.emissions.HbefaTechnology;
+import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
+import org.matsim.contrib.emissions.utils.HbefaUtils;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.groups.PlanInheritanceConfigGroup;
 import org.matsim.core.config.groups.ReplanningConfigGroup;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
@@ -28,18 +35,22 @@ import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutilityFactory;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
+import org.matsim.dashboard.BerlinDashboardProvider;
 import org.matsim.run.scoring.BerlinScoringModule;
-import org.matsim.run.scoring.experimental.AdvancedScoringConfigGroup;
-import org.matsim.run.scoring.experimental.AdvancedScoringModule;
+import org.matsim.run.scoring.BerlinScoringConfigGroup;
+import org.matsim.simwrapper.DashboardProvider;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
-
-import com.google.inject.Key;
-import com.google.inject.name.Names;
-
+import org.matsim.vehicles.EngineInformation;
+import org.matsim.vehicles.VehicleType;
+import org.matsim.vehicles.VehicleUtils;
 import picocli.CommandLine;
 
+import java.nio.file.Path;
+import java.util.List;
+
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true, showDefaultValues = true)
+@MATSimApplication.Analysis({AgentWiseComparison.class})
 public class OpenBerlinScenario extends MATSimApplication {
 
 	public static final String VERSION = "7.1";
@@ -52,10 +63,43 @@ public class OpenBerlinScenario extends MATSimApplication {
 	private static final String HBEFA_FILE_COLD_AVERAGE = HBEFA_2020_PATH + "r9230ru2n209r30u2fn0c9rn20n2rujkhkjhoewt84202.enc" ;
 	private static final String HBEFA_FILE_WARM_AVERAGE = HBEFA_2020_PATH + "7eff8f308633df1b8ac4d06d05180dd0c5fdf577.enc";
 
+	private static final String AVERAGE = "average";
+	private static final Logger log = LogManager.getLogger(OpenBerlinScenario.VERSION);
+
+	/**
+	 * Default length of the simulation period, as a multiple of 24h. 1.125 (= 27:00) makes the non-wrap-around
+	 * overnight scoring clamp the last activity at 27:00 instead of 24:00.
+	 */
+	public static final double DEFAULT_SIMULATION_PERIOD_IN_DAYS = 1.125;
+
 	@CommandLine.Option(names = "--plan-selector",
 		description = "Plan selector to use.",
 		defaultValue = DefaultPlanStrategiesModule.DefaultSelector.BestScore)
 	private String planSelector;
+
+	@CommandLine.Option(names = "--with-opening-times",
+		description = "Give the activity types their opening times. Off by default: the per-activity typical " +
+			"durations carry the schedule, so the opening times only distort it.")
+	private boolean withOpeningTimes = false;
+
+	@CommandLine.Option(names = "--simulation-period-in-days",
+		description = "Length of the simulation period, as a multiple of 24h. Moves the else-branch overnight " +
+			"scoring clamp: handleOvernightActivity scores the (non-wrap-around) last activity from its start to " +
+			"simulationPeriodInDays * 24h. Preprocessing (reschedule-late-plans, encode-typical-duration) must use " +
+			"the same value.")
+	private double simulationPeriodInDays = DEFAULT_SIMULATION_PERIOD_IN_DAYS;
+
+	@CommandLine.Option(names = "--allow-config-typical-durations",
+		description = "Allow person-subpopulation activities without a typicalDuration attribute to score against " +
+			"the config typical duration. By default such an activity ABORTS the run. Pass this for populations " +
+			"whose typical durations are still encoded in the activity type.")
+	private boolean allowConfigTypicalDurations = false;
+
+	@CommandLine.Option(names = "--agent-wise-comparison-base",
+		description = "Output directory of a base run. After the run, compare the scores of this run's agents against " +
+			"it, see AgentWiseComparison; results go to analysis/agent-wise-comparison. With --post-processing " +
+			"post_process_only, the existing output is compared without running.")
+	private Path agentWiseComparisonBase;
 
 	public static void main(String[] args) {
 		MATSimApplication.execute(OpenBerlinScenario.class, args);
@@ -64,12 +108,23 @@ public class OpenBerlinScenario extends MATSimApplication {
 	@Override
 	protected Config prepareConfig(Config config) {
 
+		// input files may live behind a login (shared-svn); see HttpAuthentication
+		HttpAuthentication.installFromEnvironment();
+
 		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
 		sw.setSampleSize(config.qsim().getFlowCapFactor());
 
 		config.qsim().setUsingTravelTimeCheckInTeleportation(true);
 
-		Activities.addScoringParams(config, true);
+//		still registering the duration-binned types, so populations that predate the typicalDuration attribute keep
+//		scoring; for attribute-carrying activities the type's typical duration is only a fallback.
+		Activities.addScoringParams(config, true, withOpeningTimes);
+
+		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class)
+			.setAllowConfigTypicalDurations(allowConfigTypicalDurations);
+
+//		move the else-branch overnight scoring clamp away from 24:00; see --simulation-period-in-days.
+		config.scenario().setSimulationPeriodInDays(simulationPeriodInDays);
 
 		// Required for all calibration strategies
 		for (String subpopulation : List.of("person", "freight", "goodsTraffic", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
@@ -101,6 +156,13 @@ public class OpenBerlinScenario extends MATSimApplication {
 				.setWeight(0.15)
 				.setSubpopulation("person")
 		);
+
+//		write score explanations into person attrs for each person
+		config.scoring().setExplainScores(true);
+
+//		also enable plan inheritance analysis
+		PlanInheritanceConfigGroup planInheritanceConfigGroup = ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
+		planInheritanceConfigGroup.setEnabled(true);
 
 		// Need to switch to warning for best score
 		// best score is used because the pseudo random error term are added explicitly in the scoring
@@ -142,24 +204,83 @@ public class OpenBerlinScenario extends MATSimApplication {
 				}
 			}
 		}
+
+//		ride does not have engineInformation in vehicle types xml file
+		if (scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation().getAttributes().isEmpty()) {
+			EngineInformation engineInformation = scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation();
+			VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
+			VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
+			VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
+			VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
+
+			log.warn("Engine information for {} were added to the respective vehicle type because they were not present." +
+				"The vehicle type will be ignored for emission calculation because it is marked as {}", TransportMode.ride, HbefaVehicleCategory.NON_HBEFA_VEHICLE);
+		}
+
+//		bike does not have HbefaTechnology in vehicle types xml file
+		VehicleUtils.setHbefaTechnology(scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.bike)).getEngineInformation(), AVERAGE);
+		log.warn("For vehicle type {}, the HbefaTechnolgy was missing and was set to {}.", TransportMode.bike, AVERAGE);
+
+//		for some of the input vehicle types hbefa emissionConcept and technology are swapped. We have to swap them back.
+//		hbefa4.1 relies on HbefaTechnology for correct emission calculation, not on HbefaEmissionConcept
+		HbefaUtils.checkAndCorrectHbefaTechnologyAndEmissionConcept(scenario);
+
+		for (VehicleType type : scenario.getVehicles().getVehicleTypes().values()) {
+			EngineInformation engineInformation = type.getEngineInformation();
+			if (VehicleUtils.getHbefaTechnology(engineInformation).equals("petrol")) {
+//				some veh types use technology "petrol" which does not exist. it either is petrol (4S) or petrol (2S). going for 4S here
+				VehicleUtils.setHbefaTechnology(engineInformation, HbefaTechnology.PETROL_4S.id);
+				log.warn("For vehicle type {} HbefaTechnology was set to 'petrol'. This is not a possible value. It was changed to {}." +
+					"Please check class HbefaTechnology for possibles values.", type.getId(), HbefaTechnology.PETROL_4S.id);
+			}
+		}
 	}
 
 	@Override
 	protected void prepareControler(Controler controler) {
 
 		controler.addOverridingModule(new SimWrapperModule());
+		controler.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				BerlinDashboardProvider dashboardProvider = new BerlinDashboardProvider();
+				Multibinder.newSetBinder( binder(), DashboardProvider.class ).addBinding().toInstance( dashboardProvider );
+			}
+		});
+
 		controler.addOverridingModule(new TravelTimeBinding());
 		controler.addOverridingModule(new QsimTimingModule());
 
-		// AdvancedScoring can be used for experiments or calibration, but is not needed to run the calibrated scenario.
-		if (ConfigUtils.hasModule(controler.getConfig(), AdvancedScoringConfigGroup.class)) {
-			controler.addOverridingModule(new AdvancedScoringModule());
-			controler.getConfig().scoring().setExplainScores(true);
-		} else {
-			controler.addOverridingModule(new BerlinScoringModule());
-		}
+		controler.addOverridingModule(new BerlinScoringModule());
 
 		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
+	}
+
+	@Override
+	protected List<MATSimAppCommand> preparePostProcessing(Path outputFolder, String runId) {
+		if (agentWiseComparisonBase == null)
+			return List.of();
+		return List.of(new AgentWiseComparison(agentWiseComparisonBase, outputFolder));
+	}
+
+	/**
+	 * A controler for an existing scenario, set up the way {@link #prepareControler} sets up a run, but not run.
+	 * Analyses that recompute parts of the score take their bindings from its injector, so that they use what the run
+	 * used instead of a setup of their own that has to be kept in agreement with it.
+	 */
+	public static Controler prepareControlerForAnalysis(Scenario scenario) {
+		// an output config read back by plain ConfigUtils.loadConfig has the groups prepareConfig adds as untyped
+		// groups, but the modules are bound against the typed ones
+		Config config = scenario.getConfig();
+		ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
+		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class);
+		ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
+		ConfigUtils.addOrGetModule(config, BicycleConfigGroup.class);
+		ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
+
+		Controler controler = new Controler(scenario);
+		new OpenBerlinScenario().prepareControler(controler);
+		return controler;
 	}
 
 	/**
@@ -187,6 +308,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 				addTravelDisutilityFactoryBinding("freight").to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
 
 				bind(BicycleLinkSpeedCalculator.class).to(BicycleLinkSpeedCalculatorDefaultImpl.class);
+				bind(BicycleParams.class).to(BicycleParamsDefaultImpl.class);
 
 				// Bike should use free speed travel time
 				addTravelTimeBinding(TransportMode.bike).to(BicycleTravelTime.class);

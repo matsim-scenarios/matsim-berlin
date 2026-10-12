@@ -1,0 +1,13 @@
+md5: 58d84ac24569488a6175358953160db4
+frozen: true
+deps:
+- checksum: '"11860//matsim/scenarios/countries/de/berlin/berlin-v7.0/input/shp/buildings_BerlinBrandenburg_4326.dbf"'
+  size: 96881414
+  hash: md5
+  path: 
+    remote://public-svn/matsim/scenarios/countries/de/berlin/berlin-v7.0/input/shp/buildings_BerlinBrandenburg_4326.dbf
+outs:
+- md5: 6fe7da81f2e15c3076cc9fc22b3f2148
+  size: 96881414
+  hash: md5
+  path: buildings_BerlinBrandenburg_4326.dbf

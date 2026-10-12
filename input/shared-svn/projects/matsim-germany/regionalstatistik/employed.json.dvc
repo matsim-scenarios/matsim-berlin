@@ -1,0 +1,12 @@
+md5: a80ee951ae73b86db19b62cfc28bc6a3
+frozen: true
+deps:
+- checksum: '"39240//projects/matsim-germany/regionalstatistik/employed.json"'
+  size: 258476
+  hash: md5
+  path: remote://shared-svn/projects/matsim-germany/regionalstatistik/employed.json
+outs:
+- md5: 165517dc191d853155e855a81027b3e0
+  size: 258476
+  hash: md5
+  path: employed.json

@@ -1,5 +1,6 @@
 package org.matsim.run;
 
+import org.matsim.contrib.common.conventions.vsp.SnzActivities;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.groups.ScoringConfigGroup;
 
@@ -64,16 +65,29 @@ public enum Activities {
 
 	/**
 	 * Add required activity params for the scenario.
+	 *
+	 * @param splitTypes        also register the duration-binned type variants (type_600 .. type_97200). Only needed
+	 *                          for populations whose typical durations are still encoded in the activity type; with
+	 *                          the typicalDuration attribute the untagged types are enough.
+	 * @param withOpeningTimes  give the types their opening and closing times. Off for attribute-based typical
+	 *                          durations, which carry the schedule themselves.
 	 */
-	public static void addScoringParams(Config config, boolean splitTypes) {
+	public static void addScoringParams(Config config, boolean splitTypes, boolean withOpeningTimes) {
 
 		for (Activities value : Activities.values()) {
 			// Default length if none is given
-			config.scoring().addActivityParams(value.apply(new ScoringConfigGroup.ActivityParams(value.name())).setTypicalDuration(6 * 3600));
+			ScoringConfigGroup.ActivityParams params = new ScoringConfigGroup.ActivityParams(value.name()).setTypicalDuration(6 * 3600);
+			config.scoring().addActivityParams(withOpeningTimes ? value.apply(params) : params);
+
+//			the _morning and _evening variants that SplitWrapAroundActivities produces to switch off wrap-around
+//			scoring; deliberately without opening times, since they are the two halves of an overnight activity.
+			config.scoring().addActivityParams(new ScoringConfigGroup.ActivityParams(SnzActivities.createMorningActivityType(value.name())).setTypicalDuration(6 * 3600));
+			config.scoring().addActivityParams(new ScoringConfigGroup.ActivityParams(SnzActivities.createEveningActivityType(value.name())).setTypicalDuration(6 * 3600));
 
 			if (splitTypes)
 				for (long ii = 600; ii <= 97200; ii += 600) {
-					config.scoring().addActivityParams(value.apply(new ScoringConfigGroup.ActivityParams(value.name() + "_" + ii).setTypicalDuration(ii)));
+					ScoringConfigGroup.ActivityParams binned = new ScoringConfigGroup.ActivityParams(value.name() + "_" + ii).setTypicalDuration(ii);
+					config.scoring().addActivityParams(withOpeningTimes ? value.apply(binned) : binned);
 				}
 		}
 

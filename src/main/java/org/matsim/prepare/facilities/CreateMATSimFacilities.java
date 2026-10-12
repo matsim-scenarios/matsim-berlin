@@ -4,11 +4,11 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
-import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.geotools.api.feature.simple.SimpleFeature;
+import org.geotools.api.feature.simple.SimpleFeatureType;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.TopologyException;
@@ -115,8 +115,17 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 
 		List<SimpleFeature> fts = shp.readFeatures();
 
+		// Fail here, with a list of what is wrong, rather than predicting attractions from features that quietly
+		// read as 0 because the datastore hands them over as an unexpected type
+		Set<String> required = FacilityFeatures.requiredFeatures(FacilityAttractionModelWork.INSTANCE, FacilityAttractionModelOther.INSTANCE);
+		if (!fts.isEmpty()) {
+			SimpleFeatureType schema = fts.get(0).getFeatureType();
+			FacilityFeatures.checkSchema(schema, required, "the attraction models");
+			FacilityFeatures.checkSchema(schema, config.attributes(), "the facility mapping");
+		}
+
 		List<Holder> data = fts.parallelStream()
-			.map(ft -> processFeature(ft, carOnlyNetwork))
+			.map(ft -> processFeature(ft, carOnlyNetwork, required))
 			.filter(Objects::nonNull)
 			.toList();
 
@@ -189,7 +198,7 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 	/**
 	 * Sample points and choose link with the nearest points.
 	 */
-	private Holder processFeature(SimpleFeature ft, Network network) {
+	private Holder processFeature(SimpleFeature ft, Network network, Set<String> required) {
 
 		Set<String> activities = activities(ft);
 		if (activities.isEmpty())
@@ -207,12 +216,7 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		if (map.isEmpty())
 			return null;
 
-		Object2DoubleMap<String> features = new Object2DoubleOpenHashMap<>();
-		for (int i = 0; i < ft.getAttributeCount(); i++) {
-			if (ft.getAttribute(i) instanceof Number number) {
-				features.put(ft.getFeatureType().getDescriptor(i).getLocalName(), number.doubleValue());
-			}
-		}
+		Object2DoubleMap<String> features = FacilityFeatures.features(ft, required);
 
 		List<Map.Entry<Id<Link>, Long>> counts = map.entrySet().stream().sorted(Map.Entry.comparingByValue())
 			.toList();
@@ -305,6 +309,13 @@ public class CreateMATSimFacilities implements MATSimAppCommand {
 		@JsonAnySetter
 		private void setActivities(String value, Set<String> activities) {
 			values.put(value, activities);
+		}
+
+		/**
+		 * The attributes of the facilities file that the mapping reads.
+		 */
+		public Set<String> attributes() {
+			return values.keySet();
 		}
 
 	}

@@ -1,0 +1,13 @@
+md5: e34b5d7d982b689e466bec4dac742f09
+frozen: true
+deps:
+- checksum: '"11860//matsim/scenarios/countries/de/berlin/berlin-v7.0/input/shp/berlinBrandenburg_Zones_VKZ_4326.dbf"'
+  size: 161717
+  hash: md5
+  path: 
+    remote://public-svn/matsim/scenarios/countries/de/berlin/berlin-v7.0/input/shp/berlinBrandenburg_Zones_VKZ_4326.dbf
+outs:
+- md5: de6d057ef2ccff0112dd8ff277ed5c1f
+  size: 161717
+  hash: md5
+  path: berlinBrandenburg_Zones_VKZ_4326.dbf

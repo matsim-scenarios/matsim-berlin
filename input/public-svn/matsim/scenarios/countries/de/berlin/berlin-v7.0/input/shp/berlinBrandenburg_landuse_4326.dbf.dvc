@@ -1,0 +1,13 @@
+md5: 88aff539b8a12cc166a3726513e6d82f
+frozen: true
+deps:
+- checksum: '"11860//matsim/scenarios/countries/de/berlin/berlin-v7.0/input/shp/berlinBrandenburg_landuse_4326.dbf"'
+  size: 10784364
+  hash: md5
+  path: 
+    remote://public-svn/matsim/scenarios/countries/de/berlin/berlin-v7.0/input/shp/berlinBrandenburg_landuse_4326.dbf
+outs:
+- md5: 6df6411cdc6799cbb2ecdb616d523c79
+  size: 10784364
+  hash: md5
+  path: berlinBrandenburg_landuse_4326.dbf

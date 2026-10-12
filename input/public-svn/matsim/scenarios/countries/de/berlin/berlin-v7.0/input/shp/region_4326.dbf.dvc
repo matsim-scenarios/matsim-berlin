@@ -1,0 +1,13 @@
+md5: d4eb053ec8bd21aa6d0bc1eb0961335e
+frozen: true
+deps:
+- checksum: '"11860//matsim/scenarios/countries/de/berlin/berlin-v7.0/input/shp/region_4326.dbf"'
+  size: 188
+  hash: md5
+  path: 
+    remote://public-svn/matsim/scenarios/countries/de/berlin/berlin-v7.0/input/shp/region_4326.dbf
+outs:
+- md5: bbd3c94a665157a93ae08a685f2f4a01
+  size: 188
+  hash: md5
+  path: region_4326.dbf

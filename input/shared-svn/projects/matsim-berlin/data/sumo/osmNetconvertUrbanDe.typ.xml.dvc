@@ -1,0 +1,13 @@
+md5: b3e636baa8e7630056a518e41b64b33b
+frozen: true
+deps:
+- checksum: '"40246//projects/matsim-berlin/data/sumo/osmNetconvertUrbanDe.typ.xml"'
+  size: 2066
+  hash: md5
+  path: 
+    remote://shared-svn/projects/matsim-berlin/data/sumo/osmNetconvertUrbanDe.typ.xml
+outs:
+- md5: d1c08d1421928c71a9d6378d13ff910e
+  size: 2066
+  hash: md5
+  path: osmNetconvertUrbanDe.typ.xml
