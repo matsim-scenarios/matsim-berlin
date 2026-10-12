@@ -21,6 +21,7 @@ import org.matsim.contrib.emissions.HbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.HbefaTechnology;
 import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
+import org.matsim.contrib.emissions.scenarioCheckers.Hbefa41ScenarioChecker;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.emissions.utils.HbefaUtils;
 import org.matsim.contrib.vsp.scoring.RideScoringParamsFromCarParams;
@@ -34,13 +35,9 @@ import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import org.matsim.core.router.TripStructureUtils;
-import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutilityFactory;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
-import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.dashboard.BerlinDashboardProvider;
-import org.matsim.run.scoring.BerlinScoringModule;
-import org.matsim.run.scoring.BerlinScoringConfigGroup;
 import org.matsim.simwrapper.DashboardProvider;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
@@ -48,7 +45,6 @@ import org.matsim.vehicles.EngineInformation;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 import picocli.CommandLine;
-import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -78,13 +74,13 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 	@CommandLine.Option(names = "--plan-selector",
 		description = "Plan selector to use.",
-		defaultValue = DefaultPlanStrategiesModule.DefaultSelector.BestScore)
+		defaultValue = DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta)
 	private String planSelector;
 
-	@CommandLine.Option(names = "--with-opening-times",
+	/*@CommandLine.Option(names = "--with-opening-times",
 		description = "Give the activity types their opening times. Off by default: the per-activity typical " +
 			"durations carry the schedule, so the opening times only distort it.")
-	private boolean withOpeningTimes = false;
+	private boolean withOpeningTimes = false; */
 
 	@CommandLine.Option(names = "--simulation-period-in-days",
 		description = "Length of the simulation period, as a multiple of 24h. Moves the else-branch overnight " +
@@ -93,11 +89,11 @@ public class OpenBerlinScenario extends MATSimApplication {
 			"the same value.")
 	private double simulationPeriodInDays = DEFAULT_SIMULATION_PERIOD_IN_DAYS;
 
-	@CommandLine.Option(names = "--allow-config-typical-durations",
+	/*@CommandLine.Option(names = "--allow-config-typical-durations",
 		description = "Allow person-subpopulation activities without a typicalDuration attribute to score against " +
 			"the config typical duration. By default such an activity ABORTS the run. Pass this for populations " +
 			"whose typical durations are still encoded in the activity type.")
-	private boolean allowConfigTypicalDurations = false;
+	private boolean allowConfigTypicalDurations = false; */
 
 	@CommandLine.Option(names = "--agent-wise-comparison-base",
 		description = "Output directory of a base run. After the run, compare the scores of this run's agents against " +
@@ -122,15 +118,17 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 //		still registering the duration-binned types, so populations that predate the typicalDuration attribute keep
 //		scoring; for attribute-carrying activities the type's typical duration is only a fallback.
-		Activities.addScoringParams(config, true, withOpeningTimes);
+		Activities.addScoringParams(config, true, false);
 
-		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class)
-			.setAllowConfigTypicalDurations(allowConfigTypicalDurations);
+//		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class)
+//			.setAllowConfigTypicalDurations(false);
 
 //		move the else-branch overnight scoring clamp away from 24:00; see --simulation-period-in-days.
 		config.scenario().setSimulationPeriodInDays(simulationPeriodInDays);
 
+		//switched this from bestScore to ChangeExpBeta.
 		// Required for all calibration strategies
+		//TODO use subpoulations default names
 		for (String subpopulation : List.of("person", "freight", "goodsTraffic", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
 			config.replanning().addStrategySettings(
 				new ReplanningConfigGroup.StrategySettings()
@@ -162,12 +160,12 @@ public class OpenBerlinScenario extends MATSimApplication {
 		);
 
 //		write score explanations into person attrs for each person
+		//there are now two ways to explain scores do we really want both?
 		config.scoring().setExplainScores(true);
 
 //		also enable plan inheritance analysis
 		PlanInheritanceConfigGroup planInheritanceConfigGroup = ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
 		planInheritanceConfigGroup.setEnabled(true);
-
 
 		applyV64ScoringParameters(config);
 
@@ -184,9 +182,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 		// Bicycle config must be present --> we simulate the bicycle just as in dresden
 		//ConfigUtils.addOrGetModule(config, BicycleConfigGroup.class);
 		config.qsim().setMainModes(
-			List.of(TransportMode.car, TransportMode.truck, "freight", TransportMode.bike)
+			List.of(TransportMode.car, TransportMode.truck, "freight")
 		);
-
 
 
 		// Add emissions configuration
@@ -200,10 +197,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 		eConfig.setEmissionsComputationMethod(EmissionsConfigGroup.EmissionsComputationMethod.StopAndGoFraction);
 
 		//vsp consistency check does not know about recent changes to time structure, setting this to warn now
-		config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
-
-
-
+		//TODO write down error message
+		config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.abort);
 
 		return config;
 	}
@@ -228,6 +223,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 		}
 
 //		ride does not have engineInformation in vehicle types xml file
+		//TODO move bike also to here
 		if (scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation().getAttributes().isEmpty()) {
 			EngineInformation engineInformation = scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation();
 			VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
@@ -239,11 +235,15 @@ public class OpenBerlinScenario extends MATSimApplication {
 				"The vehicle type will be ignored for emission calculation because it is marked as {}", TransportMode.ride, HbefaVehicleCategory.NON_HBEFA_VEHICLE);
 		}
 
+		//TODO inline
 		configureBikeVehicleType(scenario);
 
 //		for some of the input vehicle types hbefa emissionConcept and technology are swapped. We have to swap them back.
 //		hbefa4.1 relies on HbefaTechnology for correct emission calculation, not on HbefaEmissionConcept
-		HbefaUtils.checkAndCorrectHbefaTechnologyAndEmissionConcept(scenario);
+
+		scenario.addScenarioChecker( new Hbefa41ScenarioChecker());
+
+		// HbefaUtils.checkAndCorrectHbefaTechnologyAndEmissionConcept(scenario);
 
 		for (VehicleType type : scenario.getVehicles().getVehicleTypes().values()) {
 			EngineInformation engineInformation = type.getEngineInformation();
@@ -268,23 +268,33 @@ public class OpenBerlinScenario extends MATSimApplication {
 			scenario.getVehicles().addVehicleType(bikeType);
 		}
 
-		bikeType.setAccessTime(1.0);
-		bikeType.setEgressTime(1.0);
-		bikeType.getCapacity().setSeats(0);
-		bikeType.getCapacity().setStandingRoom(0);
-		bikeType.setLength(2.0);
-		bikeType.setWidth(1.0);
+		//check if this is really the case in dresden, should be set to zero!
+		//bikeType.setAccessTime(1.0);
+		//bikeType.setEgressTime(1.0);
+		//bikeType.getCapacity().setSeats(0);
+		//bikeType.getCapacity().setStandingRoom(0);
+		//not set this
+		//bikeType.setLength(2.0);
+		//not set this
+		//bikeType.setWidth(1.0);
+
 		//bikeType.setMaximumVelocity(4.16); --> dresden
-		//belwo from berlin v6.4
+		//below from berlin v6.4
 		bikeType.setMaximumVelocity(2.98);
 		bikeType.setPcuEquivalents(0.2);
 		bikeType.setNetworkMode(TransportMode.bike);
-		bikeType.setFlowEfficiencyFactor(1.0);
+		//bikeType.setFlowEfficiencyFactor(1.0);
+
+
+
 
 		EngineInformation engineInformation = bikeType.getEngineInformation();
+		// check if this is really needed
 		VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
 		VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
 		VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
+
+		//this is needed!
 		VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
 	}
 
@@ -309,12 +319,15 @@ public class OpenBerlinScenario extends MATSimApplication {
 		//We want to use the default scoring again
 		//controler.addOverridingModule(new BerlinScoringModule());
 
-		controler.addOverridingModule(new AbstractModule() {
+		// taste variations income exponent, taste variations config block muss da sein!
+		// set income exponent auf 0.6 basierend auf Poznan. 0.3 ist zu low aus CR Diss und 1.0 ist zu hoch.
+		// 	<param name="variationsOf" value="constant" /> muss raus!
+		/*controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
 				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class).asEagerSingleton();
 			}
-		});
+		}); */
 
 		//TODO make default?
 		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
@@ -339,7 +352,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 		// groups, but the modules are bound against the typed ones
 		Config config = scenario.getConfig();
 		ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
-		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class);
+		//ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class);
 		ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
 		ConfigUtils.addOrGetModule(config, BicycleConfigGroup.class);
 		ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
@@ -354,12 +367,14 @@ public class OpenBerlinScenario extends MATSimApplication {
 	 */
 	public static final class TravelTimeBinding extends AbstractModule {
 
+		@Deprecated
 		private final boolean carOnly;
 
 		public TravelTimeBinding() {
 			this.carOnly = false;
 		}
 
+		@Deprecated //try to do without
 		public TravelTimeBinding(boolean carOnly) {
 			this.carOnly = carOnly;
 		}
@@ -370,11 +385,15 @@ public class OpenBerlinScenario extends MATSimApplication {
 			addTravelDisutilityFactoryBinding(TransportMode.ride).to(carTravelDisutilityFactoryKey());
 
 			if (!carOnly) {
-				//take names from vsp contrib --> SubpopulationDefaultNames
+				//TODO take names from vsp contrib --> SubpopulationDefaultNames
+				//was soll diese Sonderbehandlung??
+				//in the below there is a confusion between mode and vehicle class
+				//the idea here is to differintiate up to 3.5 tonnes Pkw and larger then 3.5 tonnes
+				//rename "freight" to truck.
 				addTravelTimeBinding("freight").to(Key.get(TravelTime.class, Names.named(TransportMode.truck)));
 				addTravelDisutilityFactoryBinding("freight").to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
 
-				//TODO talk with SM. -->
+				//TODO talk with SM. --> Beschluss: Bike nur als routing network mode und nicht als qsim mode und bike contrib aus pom.xml raus.
 				//bind(BicycleLinkSpeedCalculator.class).to(BicycleLinkSpeedCalculatorDefaultImpl.class);
 				//bind(BicycleParams.class).to(BicycleParamsDefaultImpl.class);
 
@@ -394,13 +413,17 @@ public class OpenBerlinScenario extends MATSimApplication {
 	 */
 	private static void applyV64ScoringParameters(Config config) {
 		ScoringConfigGroup scoring = config.scoring();
-		scoring.setPerforming_utils_hr(6.88);
+		//this is different from v6.4
+		scoring.setPerforming_utils_hr(6.0);
 		scoring.setMarginalUtilityOfMoney(1.0);
+
+		//same as in Berlin v6.4
 
 		setV64ModeParams(scoring, TransportMode.car, -5.0, 0.0, -1.49e-4);
 		setV64ModeParams(scoring, TransportMode.pt, -3.0, 0.0, 0.0);
 		setV64ModeParams(scoring, TransportMode.bike, 0.0, 0.0, 0.0);
 		setV64ModeParams(scoring, TransportMode.walk, 0.0, 0.0, 0.0);
+		//TODO: Think about scoring of commercial agents...
 		setV64ModeParams(scoring, "freight", 0.0, 0.0, -4.0e-4);
 		setV64ModeParams(scoring, TransportMode.truck, 0.0, 0.0, -4.0e-4);
 	}
