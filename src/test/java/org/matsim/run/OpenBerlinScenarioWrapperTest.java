@@ -25,7 +25,10 @@ public class OpenBerlinScenarioWrapperTest {
 			"--allow-config-typical-durations",
 			"--config:qsim.numberOfThreads", "2",
 			"--config:global.numberOfThreads", "2",
-			"--config:simwrapper.defaultDashboards", "disabled"
+			"--config:simwrapper.defaultDashboards", "disabled",
+			// the v7.1 config asks for vsp-abort but sets mutateAroundInitialEndTimeOnly, which the checker
+			// counts as abort-worthy; the run class only downgrades the check for the BestScore selector.
+			"--config:vspExperimental.vspDefaultsCheckingLevel", "warn"
 		);
 
 		assertThat(code).isEqualTo(0);
