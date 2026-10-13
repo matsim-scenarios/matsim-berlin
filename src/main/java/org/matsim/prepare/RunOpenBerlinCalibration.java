@@ -5,6 +5,7 @@ import com.google.inject.TypeLiteral;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Coord;
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
@@ -320,6 +321,38 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 				}
 			}
 		}
+
+		replicateCarDrivingNonPersons(scenario.getPopulation(), CAR_FACTOR);
+	}
+
+	/**
+	 * The conversion to car plans puts {@code CAR_FACTOR} times the persons' real car traffic on the network, and the
+	 * capacity and the counts scale are set for that: one simulated vehicle stands for 1 / (sample * CAR_FACTOR) real
+	 * ones. Agents of the other subpopulations that drive a car (the commercial cars and vans) are real car traffic as
+	 * they are, so without this they would weigh 1 / CAR_FACTOR of what they stand for, in the congestion as in the
+	 * comparison with the car counts, which include them (all vehicles but heavy trucks). Each of them gets
+	 * {@code factor - 1} copies, which are only there for that weight: select-plans-idx goes through the cadyts input
+	 * and never looks them up. Trucks and long-haul freight are teleported here and are not in the car counts.
+	 */
+	static void replicateCarDrivingNonPersons(Population population, int factor) {
+		List<? extends Person> drivers = population.getPersons().values().stream()
+			.filter(p -> !"person".equals(PopulationUtils.getSubpopulation(p)))
+			.filter(p -> TripStructureUtils.getLegs(p.getSelectedPlan()).stream().anyMatch(l -> TransportMode.car.equals(l.getMode())))
+			.toList();
+
+		for (Person person : drivers) {
+			int selected = person.getPlans().indexOf(person.getSelectedPlan());
+			for (int k = 1; k < factor; k++) {
+				Person copy = population.getFactory().createPerson(Id.createPersonId(person.getId() + "_car_factor_" + k));
+				PopulationUtils.copyFromTo(person, copy);
+				// would make the copies share their vehicles; the run creates one per person and mode instead
+				copy.getAttributes().removeAttribute("vehicles");
+				copy.setSelectedPlan(copy.getPlans().get(selected));
+				population.addPerson(copy);
+			}
+		}
+
+		log.info("{} car driving agents of the non-person subpopulations now count {} times each.", drivers.size(), factor);
 	}
 
 	@Override
