@@ -218,7 +218,7 @@
 		<param name="analyzedModes" value="car,truck" />
 	</module>
 	<module name="vehicles" >
-		<param name="vehiclesFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-vehicleTypes.xml" />
+		<param name="vehiclesFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-vehicleTypes-hbefaFixed.xml" />
 	</module>
 	<module name="vspExperimental" >
 		<!-- Options: | ignore | info | warn | abort | .  When violating VSP defaults, this results in nothing, logfile infos, logfile warnings, or aborts.  Members of VSP should use `abort' or talk to kai. -->
