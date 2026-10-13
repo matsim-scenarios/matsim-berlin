@@ -48,6 +48,8 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 	 * make all necessary config changes for different simulation scenarios of bike.
 	 */
 	public static void configChangesForBikeNetworkScenario(Config config, BikeHandling bikeHandling, double bikeSpeedFactor) {
+		config.qsim().setPcuThresholdForFlowCapacityEasing(-0.1);
+
 		if (bikeHandling == BikeHandling.ROUTED_ON_NETWORK_NOT_IN_QSIM) {
 //			default
 		} else if (bikeHandling == BikeHandling.ROUTED_ON_NETWORK_IN_QSIM) {
