@@ -282,27 +282,36 @@ public class OpenBerlinScenario extends MATSimApplication {
 		bikeType.setNetworkMode(TransportMode.bike);
 		//bikeType.setFlowEfficiencyFactor(1.0);
 
-//		ride does not have engineInformation in vehicle types xml file
-		if (scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation().getAttributes().isEmpty()) {
+		// do not repair here. Do this via vehicles-file if necessary.
+//		if (scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation().getAttributes().isEmpty()) {
+//			EngineInformation engineInformation = scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation();
+//			VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
+//			VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
+//			VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
+//			VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
+//			log.warn("Engine information for {} were added to the respective vehicle type because they were not present." +
+//				"The vehicle type will be ignored for emission calculation because it is marked as {}", TransportMode.ride, HbefaVehicleCategory.NON_HBEFA_VEHICLE);
+//		}
+//
+//		if (scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.bike)).getEngineInformation().getAttributes().isEmpty()) {
+//			EngineInformation engineInformation1 = bikeType.getEngineInformation();
+//			//TODO check if this is really needed
+//			VehicleUtils.setHbefaEmissionsConcept(engineInformation1, AVERAGE);
+//			VehicleUtils.setHbefaSizeClass(engineInformation1, AVERAGE);
+//			VehicleUtils.setHbefaTechnology(engineInformation1, AVERAGE);
+//			//this is needed!
+//			VehicleUtils.setHbefaVehicleCategory(engineInformation1, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
+//		}
+
+		// we fix this here for testing. later the checker should be fixed and ingnore NON_HBEFA_VEHICLES
+		{
 			EngineInformation engineInformation = scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation();
-			VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
-			VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
-			VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
+			VehicleUtils.setHbefaTechnology(engineInformation, HbefaTechnology.PETROL_4S.id);
 			VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
-			log.warn("Engine information for {} were added to the respective vehicle type because they were not present." +
-				"The vehicle type will be ignored for emission calculation because it is marked as {}", TransportMode.ride, HbefaVehicleCategory.NON_HBEFA_VEHICLE);
+			engineInformation = scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.bike)).getEngineInformation();
+			VehicleUtils.setHbefaTechnology(engineInformation, HbefaTechnology.ELECTRICITY.id);
+			VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
 		}
-
-		if (scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.bike)).getEngineInformation().getAttributes().isEmpty()) {
-			EngineInformation engineInformation1 = bikeType.getEngineInformation();
-			//TODO check if this is really needed
-			VehicleUtils.setHbefaEmissionsConcept(engineInformation1, AVERAGE);
-			VehicleUtils.setHbefaSizeClass(engineInformation1, AVERAGE);
-			VehicleUtils.setHbefaTechnology(engineInformation1, AVERAGE);
-			//this is needed!
-			VehicleUtils.setHbefaVehicleCategory(engineInformation1, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
-		}
-
 //		for some of the input vehicle types hbefa emissionConcept and technology are swapped. We have to swap them back.
 //		hbefa4.1 relies on HbefaTechnology for correct emission calculation, not on HbefaEmissionConcept
 //  WARN Hbefa41ScenarioChecker:94 You have configured vehicle types with invalid hbefa emission concept settings. For Hbefa4.1, the only valid emission concept is: average. If you want to analyse air pollution of different engine types, please use param HbefaTechnology.
