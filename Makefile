@@ -446,6 +446,10 @@ $(DATA_DISTR_PER_ZONE): $(COMMERCIAL_FACILITIES) | setup
 # vehicle kilometres; that is a change of the scenario to make on purpose, not along the way. The resistance is
 # exp(-factor * monetary travel cost) of an example van, whose cost per second the contrib has since halved, so
 # 0.005 now decays a little less with distance than it did in v7.1.
+# One plan per tour, the one jsprit solved. With more plan variants per agent the contrib adds copies of the tour
+# with the stops in random order (CreateDifferentPlansForFreightPopulation) for cadyts to choose from. They are not
+# alternatives of the demand but worse routes of the same tour, 20-27 % longer, and at 25 % cadyts chose among them
+# almost at random, adding 13-26 % to the commercial vehicle kilometres.
 $(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DATA_DISTR_PER_ZONE) $(BB_ZONES_VKZ_4326) $(FREIGHT_CONFIG) | setup
 	$(JAVA_APP) prepare generate-small-scale-commercial-traffic\
 	  $(word 5,$^)\
@@ -461,7 +465,7 @@ $(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DA
 	 --shapeCRS "EPSG:4326"\
 	 --resistanceFactor_commercialPersonTraffic 0.005\
 	 --resistanceFactor_goodsTraffic 0.005\
-	 --numberOfPlanVariantsPerAgent 5\
+	 --numberOfPlanVariantsPerAgent 1\
 	 --nameOutputPopulation $(notdir $@)\
 	 --pathOutput $(COMMERCIAL_TRAFFIC_OUT)
 
