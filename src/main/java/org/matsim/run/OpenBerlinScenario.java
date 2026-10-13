@@ -16,7 +16,6 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.MATSimApplication;
-import org.matsim.contrib.bicycle.*;
 import org.matsim.contrib.common.conventions.vsp.SubpopulationDefaultNames;
 import org.matsim.contrib.emissions.HbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.HbefaTechnology;
@@ -368,7 +367,6 @@ public class OpenBerlinScenario extends MATSimApplication {
 		ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
 		//ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class);
 		ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
-		ConfigUtils.addOrGetModule(config, BicycleConfigGroup.class);
 		ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
 
 		Controler controler = new Controler(scenario);
