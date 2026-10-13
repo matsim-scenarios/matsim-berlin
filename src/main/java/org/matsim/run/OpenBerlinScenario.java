@@ -410,7 +410,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 				addTravelTimeBinding("freight").to(Key.get(TravelTime.class, Names.named(TransportMode.truck)));
 				addTravelDisutilityFactoryBinding("freight").to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
 
-				//TODO talk with SM. --> Beschluss: Bike nur als routing network mode und nicht als qsim mode und bike contrib aus pom.xml raus.
+				//TODO talk with SM. --> Beschluss: Bike nur als routing network mode und nicht als qsim mode und bike contrib aus pom.xml raus. --> removed bike from pom
 				//bind(BicycleLinkSpeedCalculator.class).to(BicycleLinkSpeedCalculatorDefaultImpl.class);
 				//bind(BicycleParams.class).to(BicycleParamsDefaultImpl.class);
 
