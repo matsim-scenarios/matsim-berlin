@@ -39,8 +39,8 @@
 		<engineInformation>
 			<attributes>
 				<attribute name="HbefaVehicleCategory" class="java.lang.String">NON_HBEFA_VEHICLE</attribute>
-				<attribute name="HbefaTechnology" class="java.lang.String">average</attribute>
 				<attribute name="HbefaSizeClass" class="java.lang.String">average</attribute>
+				<attribute name="HbefaEmissionsConcept" class="java.lang.String">average</attribute>
 			</attributes>
 		</engineInformation>
 
