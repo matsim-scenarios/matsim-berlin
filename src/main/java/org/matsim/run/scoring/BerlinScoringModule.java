@@ -13,12 +13,12 @@ public class BerlinScoringModule extends AbstractModule {
 	@Override
 	public void install() {
 
-		bind(TransitRouteToMode.class).in(Singleton.class);
+//		bind(TransitRouteToMode.class).in(Singleton.class);
 
 		bindScoringFunctionFactory().to(BerlinScoringFunctionFactory.class).in(Singleton.class);
 
-		// scale = pi ^2 / 6 / 3.32 ~ 0.495 (variance of gumbel / mean number of trips)
-		install(new PseudoRandomScoringModule(TasteVariationsConfigParameterSet.VariationType.normal, 0.495));
+//		// scale = pi ^2 / 6 / 3.32 ~ 0.495 (variance of gumbel / mean number of trips)
+//		install(new PseudoRandomScoringModule(TasteVariationsConfigParameterSet.VariationType.normal, 0.495));
 	}
 
 }

@@ -16,30 +16,24 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.MATSimApplication;
-import org.matsim.contrib.common.conventions.vsp.SubpopulationDefaultNames;
-import org.matsim.contrib.emissions.HbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.HbefaTechnology;
 import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
 import org.matsim.contrib.emissions.scenarioCheckers.Hbefa41ScenarioChecker;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
-import org.matsim.contrib.emissions.utils.HbefaUtils;
 import org.matsim.contrib.vsp.scoring.RideScoringParamsFromCarParams;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.config.groups.PlanInheritanceConfigGroup;
-import org.matsim.core.config.groups.ReplanningConfigGroup;
-import org.matsim.core.config.groups.ScoringConfigGroup;
-import org.matsim.core.config.groups.TasteVariationsConfigParameterSet;
-import org.matsim.core.config.groups.VspExperimentalConfigGroup;
+import org.matsim.core.config.groups.*;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
-import org.matsim.core.scenario.checkers.VspScenarioCheckerImpl;
 import org.matsim.dashboard.BerlinDashboardProvider;
+import org.matsim.run.scoring.BerlinScoringConfigGroup;
+import org.matsim.run.scoring.BerlinScoringModule;
 import org.matsim.simwrapper.DashboardProvider;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
@@ -53,7 +47,8 @@ import java.util.List;
 import java.util.Set;
 
 import static org.matsim.contrib.common.conventions.vsp.SubpopulationDefaultNames.*;
-import static org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule.*;
+import static org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule.DefaultSelector;
+import static org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule.DefaultStrategy;
 
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true, showDefaultValues = true)
 @MATSimApplication.Analysis({AgentWiseComparison.class})
@@ -140,11 +135,11 @@ public class OpenBerlinScenario extends MATSimApplication {
 		// TODO talk with MZ. How do we pull in the act-specific typical-duration here? // DR20261013
 		// this is needed for freight, commercial according to TypicalDurations#forPerson
 
-//		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class).setAllowConfigTypicalDurations(false);
+		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class).setAllowConfigTypicalDurations(false);
 		// see comment at corresponding config switch (also commented out)
 		// When we comment this out we also drop the person-activity-specific typical-durations.
 		// Currently we can only use them via BerlinScoringFunctionFactory#52
-		// sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(parameters, TypicalDurations.forPerson(config, person), person));
+//		 sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(parameters, TypicalDurations.forPerson(config, person), person));
 		// as far as I see it is not possible to use the default matsim-scoring when we want to use thee person-specific durations.
 		// DR20261013
 
@@ -345,7 +340,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 		controler.addOverridingModule(new QsimTimingModule());
 
 		//We want to use the default scoring again
-		//controler.addOverridingModule(new BerlinScoringModule());
+		// if we want to use person-specific typical-durations we need this // DR20261013
+		controler.addOverridingModule(new BerlinScoringModule());
 
 		//TODO make default?
 		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
