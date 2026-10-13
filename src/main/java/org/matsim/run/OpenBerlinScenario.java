@@ -135,12 +135,18 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 //		still registering the duration-binned types, so populations that predate the typicalDuration attribute keep
 //		scoring; for attribute-carrying activities the type's typical duration is only a fallback.
-//		Activities.addScoringParams(config, true, false);
+		Activities.addScoringParams(config, true, false);
 		// yy this looks like we could/should eventually get rid of it??
 		// TODO talk with MZ. How do we pull in the act-specific typical-duration here? // DR20261013
+		// this is needed for freight, commercial according to TypicalDurations#forPerson
 
 //		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class).setAllowConfigTypicalDurations(false);
 		// see comment at corresponding config switch (also commented out)
+		// When we comment this out we also drop the person-activity-specific typical-durations.
+		// Currently we can only use them via BerlinScoringFunctionFactory#52
+		// sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(parameters, TypicalDurations.forPerson(config, person), person));
+		// as far as I see it is not possible to use the default matsim-scoring when we want to use thee person-specific durations.
+		// DR20261013
 
 //		move the else-branch overnight scoring clamp away from 24:00; see --simulation-period-in-days.
 		config.scenario().setSimulationPeriodInDays(simulationPeriodInDays);
