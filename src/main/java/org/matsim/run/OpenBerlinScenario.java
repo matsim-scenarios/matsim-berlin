@@ -138,6 +138,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 //		scoring; for attribute-carrying activities the type's typical duration is only a fallback.
 		Activities.addScoringParams(config, true, false);
 		// yy this looks like we could/should eventually get rid of it??
+		// TODO talk with MZ. How do we pull in the act-specific typical-duration here? // DR20261013
 
 //		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class).setAllowConfigTypicalDurations(false);
 		// see comment at corresponding config switch (also commented out)
@@ -188,6 +189,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 		PlanInheritanceConfigGroup planInheritanceConfigGroup = ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
 		planInheritanceConfigGroup.setEnabled(true);
 
+		// TODO only here for experiments, move to config when done // DR20261013
 		applyV64ScoringParameters(config);
 
 		// taste variations income exponent, taste variations config block muss da sein!
@@ -208,6 +210,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 		//	config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
 	//}
 
+		// add bike as network-mode? // DR 20261013
 
 		config.qsim().setMainModes(
 			List.of(TransportMode.car, TransportMode.truck, "freight")
@@ -242,6 +245,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		// Force the update of all bike travel times, otherwise bike speeds would only update once a leg is routed
 		// (this is, e.g., an issue if bicycle speeds are changed from one run to the next, e.g. for speed elasticities)
+		// Is this really necessary here? Or only for policies? // DR20261013
 		for (Person person : scenario.getPopulation().getPersons().values()) {
 			for (Plan plan : person.getPlans()) {
 				for (Leg leg : TripStructureUtils.getLegs(plan)) {
@@ -383,14 +387,15 @@ public class OpenBerlinScenario extends MATSimApplication {
 	// lines of syntactic sugar. kai, oct'26
 	public static final class TravelTimeBinding extends AbstractModule {
 
-		@Deprecated
+
 		private final boolean carOnly;
 
+		@Deprecated
 		public TravelTimeBinding() {
 			this.carOnly = false;
 		}
 
-		@Deprecated //try to do without
+		@Deprecated //try to do without // The carOnly-stuff is needed for RunOpenBerlinCalibration // DR20261013
 		public TravelTimeBinding(boolean carOnly) {
 			this.carOnly = carOnly;
 		}
