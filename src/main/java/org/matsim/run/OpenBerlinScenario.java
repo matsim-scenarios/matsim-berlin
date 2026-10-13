@@ -146,9 +146,10 @@ public class OpenBerlinScenario extends MATSimApplication {
 		// Required for all calibration strategies
 		//TODO use subpoulations default names --> habe ich gemacht. kai
 		for (String subpopulation : List.of( SUBPOP_PERSON, SUBPOP_FREIGHT,  SUBPOP_GOODS, SUBPOP_COM_PERSON, SUBPOP_COM_PERSON_SERVICE )) {
+			/// yy in the medium term, replace {@link SUBPOP_FREIGHT} by {@link SUBPOP_LONG_DISTANCE_FREIGHT}.
 			config.replanning().addStrategySettings(
 				new ReplanningConfigGroup.StrategySettings()
-					.setStrategyName(planSelector)
+					.setStrategyName(planSelector) // setting from cmd line param
 					.setWeight(1.0)
 					.setSubpopulation(subpopulation)
 			);
@@ -161,6 +162,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 			);
 		}
 
+		// the following are only for the person subpopulation
 		config.replanning().addStrategySettings(
 			new ReplanningConfigGroup.StrategySettings()
 				.setStrategyName( DefaultStrategy.TimeAllocationMutator )
@@ -221,12 +223,15 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 	@Override
 	protected void prepareScenario(Scenario scenario) {
+		// yyyyyy there should be a scenario checker that checks if we are separating out the subpopulation scoring.
+		// Programmed by Ricardo.  Maybe this is not yet in 8.0-pre, but it should at least exist already in a comment.
+		// kai, oct'26
 
 		// add hbefa link attributes.
-		HbefaRoadTypeMapping roadTypeMapping = OsmHbefaMapping.build();
-		roadTypeMapping.addHbefaMappings(scenario.getNetwork());
+		OsmHbefaMapping.build().addHbefaMappings(scenario.getNetwork() );
 
 		// Force the update of all bike travel times, otherwise bike speeds would only update once a leg is routed
+		// (this is, e.g., an issue if bicycle speeds are changed from one run to the next, e.g. for speed elasticities)
 		for (Person person : scenario.getPopulation().getPersons().values()) {
 			for (Plan plan : person.getPlans()) {
 				for (Leg leg : TripStructureUtils.getLegs(plan)) {
@@ -254,12 +259,14 @@ public class OpenBerlinScenario extends MATSimApplication {
 		//TODO inline
 		configureBikeVehicleType(scenario);
 
+		// (yy Is this here the best place to add hbefa attribs?  Shouldn't this be upstream?  In particular since we have
+		// mode vehicles, so it should be only few places where to modify.)
+
 //		for some of the input vehicle types hbefa emissionConcept and technology are swapped. We have to swap them back.
 //		hbefa4.1 relies on HbefaTechnology for correct emission calculation, not on HbefaEmissionConcept
-
-		scenario.addScenarioChecker( new Hbefa41ScenarioChecker());
-
 		// HbefaUtils.checkAndCorrectHbefaTechnologyAndEmissionConcept(scenario);
+		// --> the above checks and fixes.  Since we want to reduce automagic, this is now replaced by "check and abort":
+		scenario.addScenarioChecker( new Hbefa41ScenarioChecker());
 
 		for (VehicleType type : scenario.getVehicles().getVehicleTypes().values()) {
 			EngineInformation engineInformation = type.getEngineInformation();
@@ -270,12 +277,16 @@ public class OpenBerlinScenario extends MATSimApplication {
 					"Please check class HbefaTechnology for possibles values.", type.getId(), HbefaTechnology.PETROL_4S.id);
 			}
 		}
+		// (yy Is this here the best place to modify hbefa attribs?  Shouldn't this be upstream?  In particular since we have
+		// mode vehicles, so it should be only few places where to modify.)
 	}
 
 	/**
 	 * Apply the bike vehicle specification used by the Dresden scenario, expect the maximum velocity this is from berlin v6.4
 	 */
 	private static void configureBikeVehicleType(Scenario scenario) {
+		// yy seems to me that everything that follows here should be upstream. --??
+
 		Id<VehicleType> bikeTypeId = Id.createVehicleTypeId(TransportMode.bike);
 		VehicleType bikeType = scenario.getVehicles().getVehicleTypes().get(bikeTypeId);
 
@@ -300,8 +311,6 @@ public class OpenBerlinScenario extends MATSimApplication {
 		bikeType.setPcuEquivalents(0.2);
 		bikeType.setNetworkMode(TransportMode.bike);
 		//bikeType.setFlowEfficiencyFactor(1.0);
-
-
 
 
 		EngineInformation engineInformation = bikeType.getEngineInformation();
@@ -376,11 +385,17 @@ public class OpenBerlinScenario extends MATSimApplication {
 		Controler controler = new Controler(scenario);
 		new OpenBerlinScenario().prepareControler(controler);
 		return controler;
+
+		// yy the above has to to do with the question if the agentWiseComparison can be set up globally, or separately for
+		// every scenario.  For the main user (kn), a global setup would be __far__ easier.  Discussion exists elsewhere.
 	}
 
 	/**
 	 * Add travel time bindings for ride and freight modes, which are not actually network modes.
 	 */
+	@Deprecated
+	// yyyy my preference would be to do without this class, since it only contains two lines of material, and adds 20
+	// lines of syntactic sugar. kai, oct'26
 	public static final class TravelTimeBinding extends AbstractModule {
 
 		@Deprecated
