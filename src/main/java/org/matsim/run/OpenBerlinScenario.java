@@ -207,8 +207,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 		//	config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
 	//}
 
-		// Bicycle config must be present --> we simulate the bicycle just as in dresden
-		//ConfigUtils.addOrGetModule(config, BicycleConfigGroup.class);
+
 		config.qsim().setMainModes(
 			List.of(TransportMode.car, TransportMode.truck, "freight")
 		);
