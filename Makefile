@@ -440,6 +440,12 @@ $(DATA_DISTR_PER_ZONE): $(COMMERCIAL_FACILITIES) | setup
 	test -f $@ || { echo "$@ is missing; delete $< to have both written again"; exit 1; }
 	touch -r $< $@
 
+# The resistance factors of the gravity model are the single --resistanceFactor that v7.1 used implicitly: the
+# contrib's default of 0.005 until it was split per segment without a default. 0.2 / 0.1, the values of other
+# deployments, make the commercial trips a third (business, service) to a half (goods) as long and halve the
+# vehicle kilometres; that is a change of the scenario to make on purpose, not along the way. The resistance is
+# exp(-factor * monetary travel cost) of an example van, whose cost per second the contrib has since halved, so
+# 0.005 now decays a little less with distance than it did in v7.1.
 $(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DATA_DISTR_PER_ZONE) $(BB_ZONES_VKZ_4326) $(FREIGHT_CONFIG) | setup
 	$(JAVA_APP) prepare generate-small-scale-commercial-traffic\
 	  $(word 5,$^)\
@@ -453,8 +459,8 @@ $(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DA
 	 --zoneShapeFileName $(abspath $(word 4,$^))\
 	 --zoneShapeFileNameColumn "id"\
 	 --shapeCRS "EPSG:4326"\
-	 --resistanceFactor_commercialPersonTraffic 0.2\
-	 --resistanceFactor_goodsTraffic 0.1\
+	 --resistanceFactor_commercialPersonTraffic 0.005\
+	 --resistanceFactor_goodsTraffic 0.005\
 	 --numberOfPlanVariantsPerAgent 5\
 	 --nameOutputPopulation $(notdir $@)\
 	 --pathOutput $(COMMERCIAL_TRAFFIC_OUT)
