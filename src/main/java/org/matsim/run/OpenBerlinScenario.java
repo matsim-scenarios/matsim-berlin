@@ -39,6 +39,7 @@ import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
+import org.matsim.core.scenario.checkers.VspScenarioCheckerImpl;
 import org.matsim.dashboard.BerlinDashboardProvider;
 import org.matsim.simwrapper.DashboardProvider;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
@@ -278,7 +279,6 @@ public class OpenBerlinScenario extends MATSimApplication {
 		//bikeType.setFlowEfficiencyFactor(1.0);
 
 //		ride does not have engineInformation in vehicle types xml file
-		//TODO move bike also to here
 		if (scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation().getAttributes().isEmpty()) {
 			EngineInformation engineInformation = scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation();
 			VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
