@@ -2,10 +2,15 @@ package org.matsim.run.policies;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Activity;
+import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Plan;
+import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -134,6 +139,27 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 					Set<String> modes = new HashSet<>(l.getAllowedModes());
 					modes.remove(TransportMode.bike);
 					l.setAllowedModes(modes);
+				}
+			}
+
+//			remove linkId and facility from activities. If no coord present, try to get it from facility.
+			for (Person p : scenario.getPopulation().getPersons().values()) {
+				for (Plan plan : p.getPlans()) {
+					for (PlanElement el : plan.getPlanElements()) {
+						if (el instanceof Activity act) {
+//							there are 360 links without linkId; there are 360 links without coord; there are 360 links with facilityId and without linkId
+//							assuming that those are the same links; try to get coord for act from facility
+							if (act.getCoord() == null) {
+								Coord coord = scenario.getActivityFacilities().getFacilities().get(act.getFacilityId()).getCoord();
+								act.setCoord(coord);
+								log.info("For act {}, there was no coord present. The coord from the activity facility with id {} of act {} is used as act coord now.", act, act.getFacilityId(), act);
+							}
+
+//							after ensuring the act has a coord, we can delete linkId as well as facility
+							act.setLinkId(null);
+							act.setFacilityId(null);
+						}
+					}
 				}
 			}
 
