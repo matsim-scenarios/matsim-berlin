@@ -5,11 +5,14 @@ import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.network.Link;
+import org.matsim.contrib.emissions.OsmHbefaMapping;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.QSimConfigGroup;
 import org.matsim.core.config.groups.RoutingConfigGroup;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.network.NetworkUtils;
 import org.matsim.run.OpenBerlinScenario;
 import org.matsim.vehicles.VehicleType;
 import picocli.CommandLine;
@@ -108,6 +111,32 @@ public class OpenBerlinBikeNetworkScenario extends OpenBerlinScenario {
 					.setPcuEquivalents(bikePce);
 				log.info("PCE (passenger car equivalents) for bike was set to {}. Default is {}.", bikePce, 0.2);
 			}
+
+			// add hbefa link attributes to new bike links. not sure if this is necessary, as bikes do not exhaust emissions in our modells.
+			OsmHbefaMapping roadTypeMapping = OsmHbefaMapping.build();
+
+//			look for all links with bike as allowed mode. create copy of link with bike only, 1 lane. remove bike from old link
+			for (Link l : scenario.getNetwork().getLinks().values()) {
+				if (l.getId().toString().startsWith("pt_")) {
+					continue;
+				}
+
+				if (l.getAllowedModes().contains(TransportMode.bike)) {
+//					copy link
+					Link bikeLink = NetworkUtils.createAndAddLink(scenario.getNetwork(), Id.createLinkId( "bike_" + l.getId().toString()),
+						l.getFromNode(), l.getToNode(), l.getLength(), l.getFreespeed(), l.getCapacity() / l.getNumberOfLanes(), 1.,
+						l.getId().toString(), "highway.cycleway");
+					bikeLink.setAllowedModes(Set.of(TransportMode.bike));
+					bikeLink.getAttributes().putAttribute("allowed_speed", l.getAttributes().getAttribute("allowed_speed"));
+					bikeLink.getAttributes().putAttribute("hbefa_road_type", roadTypeMapping.determineHbefaType(bikeLink));
+
+//					remove bike as allowed mode from old link
+					Set<String> modes = new HashSet<>(l.getAllowedModes());
+					modes.remove(TransportMode.bike);
+					l.setAllowedModes(modes);
+				}
+			}
+
 		} else if (bikeHandling == BikeHandling.TELEPORTED) {
 //			remove bike veh type
 			scenario.getVehicles().removeVehicleType(Id.create(TransportMode.bike, VehicleType.class));
