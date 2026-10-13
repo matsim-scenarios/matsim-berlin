@@ -24,6 +24,7 @@ import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
 import org.matsim.contrib.emissions.scenarioCheckers.Hbefa41ScenarioChecker;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
+import org.matsim.contrib.emissions.utils.HbefaUtils;
 import org.matsim.contrib.vsp.scoring.RideScoringParamsFromCarParams;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -51,11 +52,16 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
+import static org.matsim.contrib.common.conventions.vsp.SubpopulationDefaultNames.*;
+import static org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule.*;
+
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true, showDefaultValues = true)
 @MATSimApplication.Analysis({AgentWiseComparison.class})
 public class OpenBerlinScenario extends MATSimApplication {
 
 	public static final String VERSION = "7.1";
+	// yyyy need to clarify if this should be 8.<something> on this branch
+
 	public static final String CRS = "EPSG:25832";
 
 	//	To decrypt hbefa input files set MATSIM_DECRYPTION_PASSWORD as environment variable. ask VSP for access.
@@ -66,6 +72,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 	private static final String HBEFA_FILE_WARM_AVERAGE = HBEFA_2020_PATH + "7eff8f308633df1b8ac4d06d05180dd0c5fdf577.enc";
 
 	private static final String AVERAGE = "average";
+	// yyyy if this is a hbefa string, it should go into the corresponding global package
+
 	private static final Logger log = LogManager.getLogger(OpenBerlinScenario.VERSION);
 
 	/**
@@ -78,11 +86,16 @@ public class OpenBerlinScenario extends MATSimApplication {
 		description = "Plan selector to use.",
 		defaultValue = DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta)
 	private String planSelector;
+	/// (The issue here is that CR has switched this to {@link DefaultSelector#BestScore}, since this is in some sense more consistent with frozen randomness.
+	/// It has the problem that plans, especially after innovation switchoff, are rarely selected for re-evaluation if they do not have the best score.
+	/// yy Unclear /// how we want to proceed here. kai, oct'26)
 
 	/*@CommandLine.Option(names = "--with-opening-times",
 		description = "Give the activity types their opening times. Off by default: the per-activity typical " +
 			"durations carry the schedule, so the opening times only distort it.")
 	private boolean withOpeningTimes = false; */
+		// we think that we do not need this any more after the end of the experiments.
+		// yy unclear how much of this we want to keep (as functionality) and how that would need to be documented. kai, oct'26
 
 	@CommandLine.Option(names = "--simulation-period-in-days",
 		description = "Length of the simulation period, as a multiple of 24h. Moves the else-branch overnight " +
@@ -96,11 +109,14 @@ public class OpenBerlinScenario extends MATSimApplication {
 			"the config typical duration. By default such an activity ABORTS the run. Pass this for populations " +
 			"whose typical durations are still encoded in the activity type.")
 	private boolean allowConfigTypicalDurations = false; */
+	// we think that we do not need this any more after the end of the experiments.
+	// yy unclear how much of this we want to keep (as functionality) and how that would need to be documented. kai, oct'26
 
 	@CommandLine.Option(names = "--agent-wise-comparison-base",
 		description = "Output directory of a base run. After the run, compare the scores of this run's agents against " +
 			"it, see AgentWiseComparison; results go to analysis/agent-wise-comparison. With --post-processing " +
 			"post_process_only, the existing output is compared without running.")
+	// yy what does "the existing output is compared without running" mean?  I do not understand.  compared with what?  not running what?  kai, oct'26
 	private Path agentWiseComparisonBase;
 
 	public static void main(String[] args) {
@@ -113,51 +129,52 @@ public class OpenBerlinScenario extends MATSimApplication {
 		// input files may live behind a login (shared-svn); see HttpAuthentication
 		HttpAuthentication.installFromEnvironment();
 
-		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
-		sw.setSampleSize(config.qsim().getFlowCapFactor());
+		ConfigUtils.addOrGetModule( config, SimWrapperConfigGroup.class ).setSampleSize( config.qsim().getFlowCapFactor() );
 
 		config.qsim().setUsingTravelTimeCheckInTeleportation(true);
 
 //		still registering the duration-binned types, so populations that predate the typicalDuration attribute keep
 //		scoring; for attribute-carrying activities the type's typical duration is only a fallback.
 		Activities.addScoringParams(config, true, false);
+		// yy this looks like we could/should eventually get rid of it??
 
-//		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class)
-//			.setAllowConfigTypicalDurations(false);
+//		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class).setAllowConfigTypicalDurations(false);
+		// see comment at corresponding config switch (also commented out)
 
 //		move the else-branch overnight scoring clamp away from 24:00; see --simulation-period-in-days.
 		config.scenario().setSimulationPeriodInDays(simulationPeriodInDays);
 
 		//switched this from bestScore to ChangeExpBeta.
 		// Required for all calibration strategies
-
-		//sub population freight is deprecated. Should be SubpopulationDefaultNames.SUBPOP_LONG_DISTANCE_FREIGHT. Consider in demand generation?
-		for (String subpopulation : List.of("person", SubpopulationDefaultNames.SUBPOP_FREIGHT, SubpopulationDefaultNames.SUBPOP_GOODS, SubpopulationDefaultNames.SUBPOP_COM_PERSON, SubpopulationDefaultNames.SUBPOP_COM_PERSON_SERVICE)) {
+		//TODO use subpoulations default names --> habe ich gemacht. kai
+		for (String subpopulation : List.of( SUBPOP_PERSON, SUBPOP_FREIGHT,  SUBPOP_GOODS, SUBPOP_COM_PERSON, SUBPOP_COM_PERSON_SERVICE )) {
+			/// yy in the medium term, replace {@link SUBPOP_FREIGHT} by {@link SUBPOP_LONG_DISTANCE_FREIGHT}.
 			config.replanning().addStrategySettings(
 				new ReplanningConfigGroup.StrategySettings()
-					.setStrategyName(planSelector)
+					.setStrategyName(planSelector) // setting from cmd line param
 					.setWeight(1.0)
 					.setSubpopulation(subpopulation)
 			);
 
 			config.replanning().addStrategySettings(
 				new ReplanningConfigGroup.StrategySettings()
-					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
+					.setStrategyName( DefaultStrategy.ReRoute )
 					.setWeight(0.15)
 					.setSubpopulation(subpopulation)
 			);
 		}
 
+		// the following are only for the person subpopulation
 		config.replanning().addStrategySettings(
 			new ReplanningConfigGroup.StrategySettings()
-				.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.TimeAllocationMutator)
+				.setStrategyName( DefaultStrategy.TimeAllocationMutator )
 				.setWeight(0.15)
 				.setSubpopulation("person")
 		);
 
 		config.replanning().addStrategySettings(
 			new ReplanningConfigGroup.StrategySettings()
-				.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.SubtourModeChoice)
+				.setStrategyName( DefaultStrategy.SubtourModeChoice )
 				.setWeight(0.15)
 				.setSubpopulation("person")
 		);
@@ -216,12 +233,15 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 	@Override
 	protected void prepareScenario(Scenario scenario) {
+		// yyyyyy there should be a scenario checker that checks if we are separating out the subpopulation scoring.
+		// Programmed by Ricardo.  Maybe this is not yet in 8.0-pre, but it should at least exist already in a comment.
+		// kai, oct'26
 
 		// add hbefa link attributes.
-		HbefaRoadTypeMapping roadTypeMapping = OsmHbefaMapping.build();
-		roadTypeMapping.addHbefaMappings(scenario.getNetwork());
+		OsmHbefaMapping.build().addHbefaMappings(scenario.getNetwork() );
 
 		// Force the update of all bike travel times, otherwise bike speeds would only update once a leg is routed
+		// (this is, e.g., an issue if bicycle speeds are changed from one run to the next, e.g. for speed elasticities)
 		for (Person person : scenario.getPopulation().getPersons().values()) {
 			for (Plan plan : person.getPlans()) {
 				for (Leg leg : TripStructureUtils.getLegs(plan)) {
@@ -303,6 +323,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 	@Override
 	protected void prepareControler(Controler controler) {
 
+		//TODO seperate observers from configurations
 		controler.addOverridingModule(new SimWrapperModule());
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
@@ -350,11 +371,17 @@ public class OpenBerlinScenario extends MATSimApplication {
 		Controler controler = new Controler(scenario);
 		new OpenBerlinScenario().prepareControler(controler);
 		return controler;
+
+		// yy the above has to to do with the question if the agentWiseComparison can be set up globally, or separately for
+		// every scenario.  For the main user (kn), a global setup would be __far__ easier.  Discussion exists elsewhere.
 	}
 
 	/**
 	 * Add travel time bindings for ride and freight modes, which are not actually network modes.
 	 */
+	@Deprecated
+	// yyyy my preference would be to do without this class, since it only contains two lines of material, and adds 20
+	// lines of syntactic sugar. kai, oct'26
 	public static final class TravelTimeBinding extends AbstractModule {
 
 		@Deprecated
