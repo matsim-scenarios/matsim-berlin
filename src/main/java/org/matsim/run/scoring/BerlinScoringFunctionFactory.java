@@ -22,23 +22,23 @@ public final class BerlinScoringFunctionFactory implements ScoringFunctionFactor
 
 	private final Config config;
 	private final AnalysisMainModeIdentifier mmi;
-	private final Network network;
+//	private final Network network;
 	private final ScoringParametersForPerson params;
-	private final TransitRouteToMode ptRouteToMode;
-	private final PseudoRandomScorer pseudoRNG;
+//	private final TransitRouteToMode ptRouteToMode;
+//	private final PseudoRandomScorer pseudoRNG;
 
 
 	@Inject
-	public BerlinScoringFunctionFactory(Config config, AnalysisMainModeIdentifier mmi, Network network,
-										ScoringParametersForPerson params,
+	public BerlinScoringFunctionFactory(Config config, AnalysisMainModeIdentifier mmi,/*Network network,*/
+										ScoringParametersForPerson params/*,
 										TransitRouteToMode ptRouteToMode,
-										PseudoRandomScorer pseudoRNG) {
+										PseudoRandomScorer pseudoRNG*/) {
 		this.config = config;
 		this.mmi = mmi;
-		this.network = network;
+//		this.network = network;
 		this.params = params;
-		this.ptRouteToMode = ptRouteToMode;
-		this.pseudoRNG = pseudoRNG;
+//		this.ptRouteToMode = ptRouteToMode;
+//		this.pseudoRNG = pseudoRNG;
 	}
 
 	@Override
