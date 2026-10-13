@@ -17,19 +17,20 @@ import org.matsim.api.core.v01.population.Plan;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.MATSimApplication;
 import org.matsim.contrib.bicycle.*;
+import org.matsim.contrib.common.conventions.vsp.SubpopulationDefaultNames;
 import org.matsim.contrib.emissions.HbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.HbefaTechnology;
 import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
 import org.matsim.contrib.emissions.scenarioCheckers.Hbefa41ScenarioChecker;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
-import org.matsim.contrib.emissions.utils.HbefaUtils;
 import org.matsim.contrib.vsp.scoring.RideScoringParamsFromCarParams;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanInheritanceConfigGroup;
 import org.matsim.core.config.groups.ReplanningConfigGroup;
 import org.matsim.core.config.groups.ScoringConfigGroup;
+import org.matsim.core.config.groups.TasteVariationsConfigParameterSet;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
@@ -48,6 +49,7 @@ import picocli.CommandLine;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true, showDefaultValues = true)
 @MATSimApplication.Analysis({AgentWiseComparison.class})
@@ -128,8 +130,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		//switched this from bestScore to ChangeExpBeta.
 		// Required for all calibration strategies
-		//TODO use subpoulations default names
-		for (String subpopulation : List.of("person", "freight", "goodsTraffic", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
+
+		//sub population freight is deprecated. Should be SubpopulationDefaultNames.SUBPOP_LONG_DISTANCE_FREIGHT. Consider in demand generation?
+		for (String subpopulation : List.of("person", SubpopulationDefaultNames.SUBPOP_FREIGHT, SubpopulationDefaultNames.SUBPOP_GOODS, SubpopulationDefaultNames.SUBPOP_COM_PERSON, SubpopulationDefaultNames.SUBPOP_COM_PERSON_SERVICE)) {
 			config.replanning().addStrategySettings(
 				new ReplanningConfigGroup.StrategySettings()
 					.setStrategyName(planSelector)
@@ -168,6 +171,14 @@ public class OpenBerlinScenario extends MATSimApplication {
 		planInheritanceConfigGroup.setEnabled(true);
 
 		applyV64ScoringParameters(config);
+
+		// taste variations income exponent, taste variations config block muss da sein!
+		// set income exponent auf 0.6 basierend auf Poznan. 0.3 ist zu low aus CR Diss und 1.0 ist zu hoch.
+		TasteVariationsConfigParameterSet tasteVariations = config.scoring()
+			.getScoringParameters(null)
+			.getOCreateTasteVariationsParams();
+		tasteVariations.setIncomeExponent(0.6);
+		tasteVariations.setVariationsOf(Set.of());
 
 		// Overwrite ride scoring params with values derived from the v6.4 car parameters.
 		RideScoringParamsFromCarParams.setRideScoringParamsBasedOnCarParams(config.scoring(), 1.0);
@@ -222,44 +233,6 @@ public class OpenBerlinScenario extends MATSimApplication {
 			}
 		}
 
-//		ride does not have engineInformation in vehicle types xml file
-		//TODO move bike also to here
-		if (scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation().getAttributes().isEmpty()) {
-			EngineInformation engineInformation = scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation();
-			VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
-			VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
-			VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
-			VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
-
-			log.warn("Engine information for {} were added to the respective vehicle type because they were not present." +
-				"The vehicle type will be ignored for emission calculation because it is marked as {}", TransportMode.ride, HbefaVehicleCategory.NON_HBEFA_VEHICLE);
-		}
-
-		//TODO inline
-		configureBikeVehicleType(scenario);
-
-//		for some of the input vehicle types hbefa emissionConcept and technology are swapped. We have to swap them back.
-//		hbefa4.1 relies on HbefaTechnology for correct emission calculation, not on HbefaEmissionConcept
-
-		scenario.addScenarioChecker( new Hbefa41ScenarioChecker());
-
-		// HbefaUtils.checkAndCorrectHbefaTechnologyAndEmissionConcept(scenario);
-
-		for (VehicleType type : scenario.getVehicles().getVehicleTypes().values()) {
-			EngineInformation engineInformation = type.getEngineInformation();
-			if (VehicleUtils.getHbefaTechnology(engineInformation).equals("petrol")) {
-//				some veh types use technology "petrol" which does not exist. it either is petrol (4S) or petrol (2S). going for 4S here
-				VehicleUtils.setHbefaTechnology(engineInformation, HbefaTechnology.PETROL_4S.id);
-				log.warn("For vehicle type {} HbefaTechnology was set to 'petrol'. This is not a possible value. It was changed to {}." +
-					"Please check class HbefaTechnology for possibles values.", type.getId(), HbefaTechnology.PETROL_4S.id);
-			}
-		}
-	}
-
-	/**
-	 * Apply the bike vehicle specification used by the Dresden scenario, expect the maximum velocity this is from berlin v6.4
-	 */
-	private static void configureBikeVehicleType(Scenario scenario) {
 		Id<VehicleType> bikeTypeId = Id.createVehicleTypeId(TransportMode.bike);
 		VehicleType bikeType = scenario.getVehicles().getVehicleTypes().get(bikeTypeId);
 
@@ -285,23 +258,51 @@ public class OpenBerlinScenario extends MATSimApplication {
 		bikeType.setNetworkMode(TransportMode.bike);
 		//bikeType.setFlowEfficiencyFactor(1.0);
 
+//		ride does not have engineInformation in vehicle types xml file
+		//TODO move bike also to here
+		if (scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation().getAttributes().isEmpty()) {
+			EngineInformation engineInformation = scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation();
+			VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
+			VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
+			VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
+			VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
+			log.warn("Engine information for {} were added to the respective vehicle type because they were not present." +
+				"The vehicle type will be ignored for emission calculation because it is marked as {}", TransportMode.ride, HbefaVehicleCategory.NON_HBEFA_VEHICLE);
+		}
 
+		if (scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.bike)).getEngineInformation().getAttributes().isEmpty()) {
+			EngineInformation engineInformation1 = bikeType.getEngineInformation();
+			//TODO check if this is really needed
+			VehicleUtils.setHbefaEmissionsConcept(engineInformation1, AVERAGE);
+			VehicleUtils.setHbefaSizeClass(engineInformation1, AVERAGE);
+			VehicleUtils.setHbefaTechnology(engineInformation1, AVERAGE);
+			//this is needed!
+			VehicleUtils.setHbefaVehicleCategory(engineInformation1, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
+		}
 
+//		for some of the input vehicle types hbefa emissionConcept and technology are swapped. We have to swap them back.
+//		hbefa4.1 relies on HbefaTechnology for correct emission calculation, not on HbefaEmissionConcept
+//  WARN Hbefa41ScenarioChecker:94 You have configured vehicle types with invalid hbefa emission concept settings. For Hbefa4.1, the only valid emission concept is: average. If you want to analyse air pollution of different engine types, please use param HbefaTechnology.
+// FATAL Hbefa41ScenarioChecker:48 found a situation that leads to vsp-abort.  aborting ...
+		scenario.addScenarioChecker( new Hbefa41ScenarioChecker());
 
-		EngineInformation engineInformation = bikeType.getEngineInformation();
-		// check if this is really needed
-		VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
-		VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
-		VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
+		// HbefaUtils.checkAndCorrectHbefaTechnologyAndEmissionConcept(scenario);
 
-		//this is needed!
-		VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
+		for (VehicleType type : scenario.getVehicles().getVehicleTypes().values()) {
+			EngineInformation engineInformation = type.getEngineInformation();
+			if (VehicleUtils.getHbefaTechnology(engineInformation).equals("petrol")) {
+//				some veh types use technology "petrol" which does not exist. it either is petrol (4S) or petrol (2S). going for 4S here
+				VehicleUtils.setHbefaTechnology(engineInformation, HbefaTechnology.PETROL_4S.id);
+				log.warn("For vehicle type {} HbefaTechnology was set to 'petrol'. This is not a possible value. It was changed to {}." +
+					"Please check class HbefaTechnology for possibles values.", type.getId(), HbefaTechnology.PETROL_4S.id);
+			}
+		}
 	}
+
 
 	@Override
 	protected void prepareControler(Controler controler) {
 
-		//TODO seperate observers from configurations
 		controler.addOverridingModule(new SimWrapperModule());
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
@@ -311,28 +312,17 @@ public class OpenBerlinScenario extends MATSimApplication {
 			}
 		});
 
-		//TODO inline this?
-		controler.addOverridingModule(new TravelTimeBinding());
 		//TODO think about moving this to libs, is this not just the stop watch??
 		controler.addOverridingModule(new QsimTimingModule());
 
 		//We want to use the default scoring again
 		//controler.addOverridingModule(new BerlinScoringModule());
 
-		// taste variations income exponent, taste variations config block muss da sein!
-		// set income exponent auf 0.6 basierend auf Poznan. 0.3 ist zu low aus CR Diss und 1.0 ist zu hoch.
-		// 	<param name="variationsOf" value="constant" /> muss raus!
-		/*controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				bind(ScoringParametersForPerson.class).to(IncomeDependentUtilityOfMoneyPersonScoringParameters.class).asEagerSingleton();
-			}
-		}); */
-
 		//TODO make default?
 		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
 
-		// ASCs intentionally remain untouched and are handled by the calibration script.
+		//TODO inline this?
+		controler.addOverridingModule(new TravelTimeBinding());
 	}
 
 	@Override
