@@ -135,7 +135,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 //		still registering the duration-binned types, so populations that predate the typicalDuration attribute keep
 //		scoring; for attribute-carrying activities the type's typical duration is only a fallback.
-		Activities.addScoringParams(config, true, false);
+//		Activities.addScoringParams(config, true, false);
 		// yy this looks like we could/should eventually get rid of it??
 		// TODO talk with MZ. How do we pull in the act-specific typical-duration here? // DR20261013
 
