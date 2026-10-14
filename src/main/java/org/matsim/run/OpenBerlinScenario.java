@@ -47,6 +47,8 @@ import java.util.List;
 import java.util.Set;
 
 import static org.matsim.contrib.common.conventions.vsp.SubpopulationDefaultNames.*;
+import static org.matsim.contrib.emissions.utils.EmissionsConfigGroup.*;
+import static org.matsim.core.config.groups.ReplanningConfigGroup.*;
 import static org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule.DefaultSelector;
 import static org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule.DefaultStrategy;
 
@@ -88,9 +90,10 @@ public class OpenBerlinScenario extends MATSimApplication {
 	/*@CommandLine.Option(names = "--with-opening-times",
 		description = "Give the activity types their opening times. Off by default: the per-activity typical " +
 			"durations carry the schedule, so the opening times only distort it.")
-	private boolean withOpeningTimes = false; */
+	private boolean withOpeningTimes = false;
 		// we think that we do not need this any more after the end of the experiments.
 		// yy unclear how much of this we want to keep (as functionality) and how that would need to be documented. kai, oct'26
+	 */
 
 	@CommandLine.Option(names = "--simulation-period-in-days",
 		description = "Length of the simulation period, as a multiple of 24h. Moves the else-branch overnight " +
@@ -103,9 +106,10 @@ public class OpenBerlinScenario extends MATSimApplication {
 		description = "Allow person-subpopulation activities without a typicalDuration attribute to score against " +
 			"the config typical duration. By default such an activity ABORTS the run. Pass this for populations " +
 			"whose typical durations are still encoded in the activity type.")
-	private boolean allowConfigTypicalDurations = false; */
+	private boolean allowConfigTypicalDurations = false;
 	// we think that we do not need this any more after the end of the experiments.
 	// yy unclear how much of this we want to keep (as functionality) and how that would need to be documented. kai, oct'26
+	*/
 
 	@CommandLine.Option(names = "--agent-wise-comparison-base",
 		description = "Output directory of a base run. After the run, compare the scores of this run's agents against " +
@@ -151,15 +155,16 @@ public class OpenBerlinScenario extends MATSimApplication {
 		//TODO use subpoulations default names --> habe ich gemacht. kai
 		for (String subpopulation : List.of( SUBPOP_PERSON, SUBPOP_FREIGHT,  SUBPOP_GOODS, SUBPOP_COM_PERSON, SUBPOP_COM_PERSON_SERVICE )) {
 			/// yy in the medium term, replace {@link SUBPOP_FREIGHT} by {@link SUBPOP_LONG_DISTANCE_FREIGHT}.
+
 			config.replanning().addStrategySettings(
-				new ReplanningConfigGroup.StrategySettings()
+				new StrategySettings()
 					.setStrategyName(planSelector) // setting from cmd line param
 					.setWeight(1.0)
 					.setSubpopulation(subpopulation)
 			);
 
 			config.replanning().addStrategySettings(
-				new ReplanningConfigGroup.StrategySettings()
+				new StrategySettings()
 					.setStrategyName( DefaultStrategy.ReRoute )
 					.setWeight(0.15)
 					.setSubpopulation(subpopulation)
@@ -168,14 +173,14 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		// the following are only for the person subpopulation
 		config.replanning().addStrategySettings(
-			new ReplanningConfigGroup.StrategySettings()
+			new StrategySettings()
 				.setStrategyName( DefaultStrategy.TimeAllocationMutator )
 				.setWeight(0.15)
 				.setSubpopulation("person")
 		);
 
 		config.replanning().addStrategySettings(
-			new ReplanningConfigGroup.StrategySettings()
+			new StrategySettings()
 				.setStrategyName( DefaultStrategy.SubtourModeChoice )
 				.setWeight(0.15)
 				.setSubpopulation("person")
@@ -216,16 +221,15 @@ public class OpenBerlinScenario extends MATSimApplication {
 			List.of(TransportMode.car, TransportMode.truck, "freight")
 		);
 
-
 		// Add emissions configuration
 		EmissionsConfigGroup eConfig = ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
-		eConfig.setDetailedColdEmissionFactorsFile(HBEFA_FILE_COLD_DETAILED);
+		eConfig.setDetailedColdEmissionFactorsFile(HBEFA_FILE_COLD_DETAILED );
 		eConfig.setDetailedWarmEmissionFactorsFile(HBEFA_FILE_WARM_DETAILED);
 		eConfig.setAverageColdEmissionFactorsFile(HBEFA_FILE_COLD_AVERAGE);
 		eConfig.setAverageWarmEmissionFactorsFile(HBEFA_FILE_WARM_AVERAGE);
-		eConfig.setHbefaTableConsistencyCheckingLevel(EmissionsConfigGroup.HbefaTableConsistencyCheckingLevel.consistent);
-		eConfig.setDetailedVsAverageLookupBehavior(EmissionsConfigGroup.DetailedVsAverageLookupBehavior.tryDetailedThenTechnologyAverageThenAverageTable);
-		eConfig.setEmissionsComputationMethod(EmissionsConfigGroup.EmissionsComputationMethod.StopAndGoFraction);
+		eConfig.setHbefaTableConsistencyCheckingLevel( HbefaTableConsistencyCheckingLevel.consistent );
+		eConfig.setDetailedVsAverageLookupBehavior( DetailedVsAverageLookupBehavior.tryDetailedThenTechnologyAverageThenAverageTable );
+		eConfig.setEmissionsComputationMethod( EmissionsComputationMethod.StopAndGoFraction );
 
 		//vsp consistency check does not know about recent changes to time structure, setting this to warn now
 		//TODO write down error message
