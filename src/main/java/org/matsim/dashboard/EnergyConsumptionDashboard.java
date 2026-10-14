@@ -1,6 +1,6 @@
 package org.matsim.dashboard;
 
-import org.matsim.analysis.EnergyConsumptionAnalysis;
+import org.matsim.analysis.energy.EnergyConsumptionAnalysis;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.simwrapper.Dashboard;
 import org.matsim.simwrapper.Header;
@@ -18,7 +18,7 @@ public class EnergyConsumptionDashboard implements Dashboard {
 	private final Map<String, Double> modesEnergyConsumption;
 
 	EnergyConsumptionDashboard() {
-		this.modesEnergyConsumption = Map.of(TransportMode.car, 15.0);
+		this.modesEnergyConsumption = Map.of(TransportMode.car, 22.1);
 	}
 
 	EnergyConsumptionDashboard(Map<String, Double> modesEnergyConsumption) {

@@ -1,4 +1,4 @@
-package org.matsim.analysis;
+package org.matsim.analysis.energy;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -60,7 +60,21 @@ public class EnergyConsumptionAnalysis implements MATSimAppCommand {
 	@CommandLine.Mixin
     private final SampleOptions sampleOptions = new SampleOptions();
 
-//	for car on average 15.0 kWh/100km
+//	TODO: we need to decide if either a) we want to split between ICE and BEV in normative percentages as done for emissions
+//	TODO: or b) use car / carExpensive as BEV/ICE and split the 2 groups via MATSim mode
+//	TODO: maybe it is also fine to just assume for EnergyConsumption that all cars are BEV as it is a hypothetic view on the future with 100% BEV. This is what we are doing right now, see EnergyConsumptionDashboard or this analysis class.
+
+//	for petrol cars:
+//  in 2024 7.8l/100km avg fuel consumption; https://www.destatis.de/EN/Themes/Society-Environment/Environment/Environmental-Economic-Accounting/transport-tourism/Tables/mileage-fuel-consumption.html
+//	petrol has 8.88 kWh/l; https://transport.ec.europa.eu/document/download/f3e45461-f84a-4e2a-bae9-83bc1898817b_en
+//	resulting in 7.8 * 8.88 = 69.3 kWh/100km
+//	for diesel cars; same sources as for petrol:
+//	in 2024 7.3l/100km avg fuel consumption
+//	diesel has 10 kWh/l
+//	resulting in 7.3 * 10 = 73kWh/100km
+//	IMPORTANT: as we do not differ between diesel and petrol, we use 70kWh/100km!
+//	for BEV:
+//	in 2024 22.1kWh/100km; https://www.destatis.de/EN/Themes/Society-Environment/Environment/Environmental-Economic-Accounting/transport-tourism/Tables/mileage-fuel-consumption.html
 //	for eBike on average 1.06 kWh/100km; source: https://link.springer.com/article/10.1007/s11116-025-10661-2
 	@CommandLine.Option(names = "--modes-energy-consumption", split = ",", description = "Modes to consider for analysis + their average energy consumption. consumption in kwH/100km", required = true)
 	private Map<String, Double> modesToEnergyConsumption;
@@ -207,7 +221,7 @@ public class EnergyConsumptionAnalysis implements MATSimAppCommand {
         double factor = sampleOptions.getUpscaleFactor();
 
         // Total stats
-        DecimalFormat df = new DecimalFormat("#", DecimalFormatSymbols.getInstance(Locale.US));
+        DecimalFormat df = new DecimalFormat("0.00", DecimalFormatSymbols.getInstance(Locale.US));
         try (CSVPrinter printer = new CSVPrinter(IOUtils.getBufferedWriter(output.getPath("distance_stats_residents.csv").toString()), CSVFormat.DEFAULT)) {
 			for (Map.Entry<String, DescriptiveStatistics> entry : inhabitantsDistanceStats.entrySet()) {
 				printer.printRecord("Total driven " + entry.getKey() + " distance by residents  [km]:", df.format(entry.getValue().getSum() * factor));
@@ -226,8 +240,6 @@ public class EnergyConsumptionAnalysis implements MATSimAppCommand {
         } catch (IOException ex) {
             log.error(ex);
         }
-
-//		TODO: in example, mean energy consumption is 6 kWh, but before (when analysis was not finished yet) it was 194. Check if the calculation is correct!!!
 
         try (CSVPrinter printer = new CSVPrinter(IOUtils.getBufferedWriter(output.getPath("energy_consumption_residents.csv").toString()), CSVFormat.DEFAULT)) {
 			for (Map.Entry<String, DescriptiveStatistics> entry : inhabitantsDistanceStats.entrySet()) {
