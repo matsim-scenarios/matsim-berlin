@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "http://www.matsim.org/files/dtd/config_v2.dtd">
+<!--
+	Berlin v7.1, 1pct, simulated with DSim for 10 iterations.
+
+	Set up like berlin_iterations_v7 of the parallel QSim in rust (parallel-qsim-berlin), to compare the runtimes of mobsim,
+	replanning and scoring (stopwatch.csv). Run with org.matsim.run.dsim.OpenBerlinDSimBenchmark, which also removes persons using pt
+	and scores by travel time only. See README-dsim-benchmark.md.
+
+	Differences to berlin-v7.1-1pct.config.xml:
+	- mobsim dsim, bike is simulated on the network, FIFO queues without kinematic waves
+	- replanning: ReRoute 0.2 / SelectExpBeta 0.8 for persons, KeepLastSelected for the other subpopulations, no annealing,
+	  innovation is never switched off, no score MSA
+	- no pt, no counts, no events/plans/trips/link stats written during the iterations, no leg histogram/durations
+-->
+<config>
+	<module name="controller">
+		<param name="lastIteration" value="9"/>
+		<param name="mobsim" value="dsim"/>
+		<param name="overwriteFiles" value="failIfDirectoryExists"/>
+		<param name="runId" value="berlin-v7.1-1pct"/>
+		<param name="outputDirectory" value="./output/berlin-v7.1-1pct-dsim"/>
+		<param name="routingAlgorithmType" value="SpeedyALT"/>
+		<param name="writeEventsInterval" value="0"/>
+		<param name="writePlansInterval" value="0"/>
+		<param name="writeTripsInterval" value="0"/>
+		<param name="createGraphsInterval" value="0"/>
+		<!-- Both are global event handlers in DSim, which reduce the parallelism of the mobsim -->
+		<param name="legHistogramInterval" value="0"/>
+		<param name="legDurationsInterval" value="0"/>
+	</module>
+	<module name="global">
+		<param name="coordinateSystem" value="EPSG:25832"/>
+		<param name="insistingOnDeprecatedConfigVersion" value="false"/>
+		<!-- Used for replanning. Should be the same as dsim.threads, as the rust binary uses one replanning thread per partition. -->
+		<param name="numberOfThreads" value="16"/>
+	</module>
+	<module name="network">
+		<!-- For the same partitioning as in rust, use berlin-v7.1.network.metis.<NNN>.xml.zst from
+		     shared-svn/projects/rust-qsim/berlin-v7.1/network and set dsim.partitioning to none. -->
+		<param name="inputNetworkFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v7.1/calibrated-1pct/output/berlin-v7.1-1pct.output_network.xml.gz"/>
+	</module>
+	<module name="plans">
+		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v7.1/calibrated-1pct/output/berlin-v7.1-1pct.output_plans.xml.gz"/>
+		<param name="removingUnnecessaryPlanAttributes" value="true"/>
+	</module>
+	<module name="vehicles">
+		<param name="vehiclesFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v7.1/calibrated-1pct/output/berlin-v7.1-1pct.output_vehicles.xml.gz"/>
+	</module>
+	<module name="facilities">
+		<param name="facilitiesSource" value="fromFile"/>
+		<param name="inputFacilitiesFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v7.1/calibrated-1pct/output/berlin-v7.1-1pct.output_facilities.xml.gz"/>
+	</module>
+	<module name="transit">
+		<!-- Persons using pt are removed by OpenBerlinDSimBenchmark -->
+		<param name="useTransit" value="false"/>
+	</module>
+	<module name="routing">
+		<param name="networkModes" value="car,truck,freight,ride,bike"/>
+		<param name="accessEgressType" value="accessEgressModeToLink"/>
+		<param name="clearDefaultTeleportedModeParams" value="true"/>
+		<!-- The rust router does not randomize the travel disutility -->
+		<param name="routingRandomness" value="0.0"/>
+		<parameterset type="teleportedModeParameters">
+			<param name="beelineDistanceFactor" value="1.3"/>
+			<param name="mode" value="walk"/>
+			<param name="teleportedModeSpeed" value="1.23"/>
+		</parameterset>
+	</module>
+	<module name="qsim">
+		<!-- DSim uses the flow and storage capacity factors of the qsim, the other values are set in dsim. -->
+		<param name="mainMode" value="car,truck,freight,bike"/>
+		<param name="flowCapacityFactor" value="0.01"/>
+		<param name="storageCapacityFactor" value="0.01"/>
+		<param name="startTime" value="00:00:00"/>
+		<param name="endTime" value="36:00:00"/>
+		<param name="stuckTime" value="30.0"/>
+		<param name="trafficDynamics" value="queue"/>
+		<param name="linkDynamics" value="FIFO"/>
+		<param name="vehiclesSource" value="modeVehicleTypesFromVehiclesData"/>
+		<param name="insertingWaitingVehiclesBeforeDrivingVehicles" value="true"/>
+		<param name="usePersonIdForMissingVehicleId" value="false"/>
+	</module>
+	<module name="dsim">
+		<!-- Number of threads = partitions. The option "threads" of OpenBerlinDSimBenchmark sets this and global.numberOfThreads. -->
+		<param name="threads" value="16"/>
+		<!-- metis partitions by the routes of the agents. none uses the partition attributes of the network. -->
+		<param name="partitioning" value="metis"/>
+		<!-- as main_modes in rust -->
+		<param name="networkModes" value="car,truck,freight,bike"/>
+		<param name="startTime" value="00:00:00"/>
+		<param name="endTime" value="36:00:00"/>
+		<param name="stuckTime" value="30.0"/>
+		<!-- the rust links are FIFO queues, storage capacity is released immediately -->
+		<param name="linkDynamics" value="FIFO"/>
+		<param name="trafficDynamics" value="queue"/>
+		<param name="vehicleBehavior" value="teleport"/>
+	</module>
+	<module name="travelTimeCalculator">
+		<param name="analyzedModes" value="car,truck"/>
+		<param name="separateModes" value="true"/>
+	</module>
+	<module name="linkStats">
+		<param name="writeLinkStatsInterval" value="0"/>
+	</module>
+	<module name="vspExperimental">
+		<param name="vspDefaultsCheckingLevel" value="warn"/>
+	</module>
+
+	<module name="replanning">
+		<param name="fractionOfIterationsToDisableInnovation" value="1.0"/>
+		<param name="maxAgentPlanMemorySize" value="5"/>
+		<param name="planSelectorForRemoval" value="WorstPlanSelector"/>
+
+		<parameterset type="strategysettings">
+			<param name="strategyName" value="ReRoute"/>
+			<param name="subpopulation" value="person"/>
+			<param name="weight" value="0.2"/>
+		</parameterset>
+		<parameterset type="strategysettings">
+			<param name="strategyName" value="SelectExpBeta"/>
+			<param name="subpopulation" value="person"/>
+			<param name="weight" value="0.8"/>
+		</parameterset>
+		<!-- rust has no strategies for these subpopulations, they keep their selected plan -->
+		<parameterset type="strategysettings">
+			<param name="strategyName" value="KeepLastSelected"/>
+			<param name="subpopulation" value="freight"/>
+			<param name="weight" value="1.0"/>
+		</parameterset>
+		<parameterset type="strategysettings">
+			<param name="strategyName" value="KeepLastSelected"/>
+			<param name="subpopulation" value="goodsTraffic"/>
+			<param name="weight" value="1.0"/>
+		</parameterset>
+		<parameterset type="strategysettings">
+			<param name="strategyName" value="KeepLastSelected"/>
+			<param name="subpopulation" value="commercialPersonTraffic"/>
+			<param name="weight" value="1.0"/>
+		</parameterset>
+		<parameterset type="strategysettings">
+			<param name="strategyName" value="KeepLastSelected"/>
+			<param name="subpopulation" value="commercialPersonTraffic_service"/>
+			<param name="weight" value="1.0"/>
+		</parameterset>
+	</module>
+
+	<!-- Plans are scored by travel time only (OpenBerlinDSimBenchmark). The parameters below are only used by the router. -->
+	<module name="scoring">
+		<param name="brainExpBeta" value="1.0"/>
+		<param name="writeExperiencedPlans" value="false"/>
+		<param name="pathSizeLogitBeta" value="0"/>
+
+		<parameterset type="scoringParameters">
+			<param name="marginalUtilityOfMoney" value="0.397322"/>
+			<param name="performing" value="5.501071"/>
+			<parameterset type="modeParams">
+				<param name="constant" value="-0.7347353805149114" />
+				<!-- 14.90€ * 0.268622 (fixed cost perception) -->
+				<param name="dailyMonetaryConstant" value="-3.8412946" />
+				<param name="dailyUtilityConstant" value="0" />
+				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<!-- only petrol price 2022, other cost components were excluded -->
+				<param name="monetaryDistanceRate" value="-1.49E-4" />
+				<param name="mode" value="car" />
+			</parameterset>
+			<parameterset type="modeParams">
+				<param name="constant" value="-6.239457898898021" />
+				<param name="dailyMonetaryConstant" value="0.0" />
+				<param name="dailyUtilityConstant" value="0.0" />
+				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<!-- Result of estimation -->
+				<param name="marginalUtilityOfTraveling_util_hr" value="-4.442946" />
+				<!-- car_monetaryDistanceRate -->
+				<param name="monetaryDistanceRate" value="-1.49E-4" />
+				<param name="mode" value="ride" />
+			</parameterset>
+			<parameterset type="modeParams">
+				<param name="constant" value="-1.5457706277415049" />
+				<!-- 2022: 4-trips AB 10Euro -> 2.5 Eu/trip. yearly 761 Eu / 250 days ~ 3.00 Eu/day -->
+				<!-- (fixed cost perception) 0.268622 * 3.00 -->
+				<param name="dailyMonetaryConstant" value="-0.805866" />
+				<param name="dailyUtilityConstant" value="0.0" />
+				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="monetaryDistanceRate" value="0.0" />
+				<param name="mode" value="pt" />
+			</parameterset>
+			<parameterset type="modeParams">
+				<param name="constant" value="-1.2333836433785272" />
+				<param name="dailyMonetaryConstant" value="0.0" />
+				<param name="dailyUtilityConstant" value="0.0" />
+				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="-1.309362" />
+				<param name="monetaryDistanceRate" value="0.0" />
+				<param name="mode" value="bike" />
+			</parameterset>
+			<parameterset type="modeParams">
+				<param name="constant" value="0.0" />
+				<param name="dailyMonetaryConstant" value="0.0" />
+				<param name="dailyUtilityConstant" value="0.0" />
+				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="monetaryDistanceRate" value="0.0" />
+				<param name="mode" value="walk" />
+			</parameterset>
+			<parameterset type="modeParams">
+				<!-- Constant added to pt legs that use a bus. (Scoring for the whole pt trip still applies) -->
+				<param name="constant" value="-0.164051" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="mode" value="bus" />
+			</parameterset>
+			<parameterset type="modeParams" >
+				<param name="constant" value="0.0" />
+				<param name="dailyMonetaryConstant" value="0.0" />
+				<param name="dailyUtilityConstant" value="0.0" />
+				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="monetaryDistanceRate" value="-4.0E-4" />
+				<param name="mode" value="freight" />
+			</parameterset>
+			<parameterset type="modeParams" >
+				<param name="constant" value="0.0" />
+				<param name="dailyMonetaryConstant" value="0.0" />
+				<param name="dailyUtilityConstant" value="0.0" />
+				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
+				<param name="monetaryDistanceRate" value="-4.0E-4" />
+				<param name="mode" value="truck" />
+			</parameterset>
+		</parameterset>
+	</module>
+
+</config>
