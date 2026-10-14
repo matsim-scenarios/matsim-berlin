@@ -31,9 +31,11 @@ import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
+import org.matsim.core.scoring.functions.CharyparNagelActivityScoring;
 import org.matsim.dashboard.BerlinDashboardProvider;
 import org.matsim.run.scoring.BerlinScoringConfigGroup;
 import org.matsim.run.scoring.BerlinScoringModule;
+import org.matsim.run.scoring.TypicalDurations;
 import org.matsim.simwrapper.DashboardProvider;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
@@ -355,6 +357,19 @@ public class OpenBerlinScenario extends MATSimApplication {
 		//We want to use the default scoring again
 		// if we want to use person-specific typical-durations we need this // DR20261013
 		controler.addOverridingModule(new BerlinScoringModule());
+
+		// Der verbleibende Unterschied zum norameln scoring ist, glaube ich, nur noch dies hier:
+		// sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(parameters, TypicalDurations.forPerson(config, person ), person) );
+		// und hier speziell das TypicalDurations.forPerson(config, person ).
+
+		// Wenn ich es richtig sehe, dann könnte man es
+		// (1) in CharyparNagelScoringFunctionModule binden (analog ScoringParametersForPerson.class, also abhängig von einer config option, die wir noch diskutieren müssen)
+		// (2) in CharyparNagelScoringFunctionFactory abholen.
+
+		// Dabei sollte man m.E. gleich den public constructor von CharyparNagelScoringFunctionFactory beseitigen.  Die
+		// Tests laufen hoffentlich auch, wenn dieser constructor package-private ist.  Und delegation kriegen wir
+		// inzwischen ja auch bei non-public constructors hin (wenn nicht bekannt, bitte nachfragen).
+
 
 		//TODO make default?
 		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
