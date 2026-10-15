@@ -205,6 +205,7 @@ java -jar [FILENAME].jar
 
 ## Internal documentation
 
+For car/PT cost experiments and Slurm submission, see [Cost elasticity experiments](docs/Elasticities.md).
+
 Internal documentation can be found here:
 https://docs.google.com/document/d/133CuXaMuWL0NcstyFHodk4y7J5yFLy9nrLtbBVpNWzM/edit?usp=drive_link
-
