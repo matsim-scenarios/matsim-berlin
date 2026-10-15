@@ -310,14 +310,14 @@ public class OpenBerlinScenario extends MATSimApplication {
 //		}
 
 		// we fix this here for testing. later the checker should be fixed and ingnore NON_HBEFA_VEHICLES
-		{
-			EngineInformation engineInformation = scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation();
-			VehicleUtils.setHbefaTechnology(engineInformation, HbefaTechnology.PETROL_4S.id);
-			VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
-			engineInformation = scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.bike)).getEngineInformation();
-			VehicleUtils.setHbefaTechnology(engineInformation, HbefaTechnology.ELECTRICITY.id);
-			VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
-		}
+//		{
+//			EngineInformation engineInformation = scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation();
+//			VehicleUtils.setHbefaTechnology(engineInformation, HbefaTechnology.PETROL_4S.id);
+//			VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
+//			engineInformation = scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.bike)).getEngineInformation();
+//			VehicleUtils.setHbefaTechnology(engineInformation, HbefaTechnology.ELECTRICITY.id);
+//			VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
+//		}
 //		for some of the input vehicle types hbefa emissionConcept and technology are swapped. We have to swap them back.
 //		hbefa4.1 relies on HbefaTechnology for correct emission calculation, not on HbefaEmissionConcept
 //  WARN Hbefa41ScenarioChecker:94 You have configured vehicle types with invalid hbefa emission concept settings. For Hbefa4.1, the only valid emission concept is: average. If you want to analyse air pollution of different engine types, please use param HbefaTechnology.
@@ -326,15 +326,15 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		// HbefaUtils.checkAndCorrectHbefaTechnologyAndEmissionConcept(scenario);
 
-		for (VehicleType type : scenario.getVehicles().getVehicleTypes().values()) {
-			EngineInformation engineInformation = type.getEngineInformation();
-			if (VehicleUtils.getHbefaTechnology(engineInformation).equals("petrol")) {
-//				some veh types use technology "petrol" which does not exist. it either is petrol (4S) or petrol (2S). going for 4S here
-				VehicleUtils.setHbefaTechnology(engineInformation, HbefaTechnology.PETROL_4S.id);
-				log.warn("For vehicle type {} HbefaTechnology was set to 'petrol'. This is not a possible value. It was changed to {}." +
-					"Please check class HbefaTechnology for possibles values.", type.getId(), HbefaTechnology.PETROL_4S.id);
-			}
-		}
+//		for (VehicleType type : scenario.getVehicles().getVehicleTypes().values()) {
+//			EngineInformation engineInformation = type.getEngineInformation();
+//			if (VehicleUtils.getHbefaTechnology(engineInformation).equals("petrol")) {
+////				some veh types use technology "petrol" which does not exist. it either is petrol (4S) or petrol (2S). going for 4S here
+//				VehicleUtils.setHbefaTechnology(engineInformation, HbefaTechnology.PETROL_4S.id);
+//				log.warn("For vehicle type {} HbefaTechnology was set to 'petrol'. This is not a possible value. It was changed to {}." +
+//					"Please check class HbefaTechnology for possibles values.", type.getId(), HbefaTechnology.PETROL_4S.id);
+//			}
+//		}
 	}
 
 
