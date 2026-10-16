@@ -384,7 +384,7 @@ $(BERLIN_BRANDENBURG_STATIC): $(BERLIN_ONLY) $(BRANDENBURG_ONLY) $(REGIOSTAR) | 
 
 	$(JAVA_APP) prepare lookup-regiostar --input $@ --output $@ --xls $(word 3, $^)
 
-$(BERLIN_BRANDENBURG_ACTS): $(BERLIN_BRANDENBURG_STATIC) $(SRV_PERSONS) $(SRV_ACTS) $(SRV_ZONES) $(FACILITIES_XML) $(NETWORK_MATSIM) | setup
+$(BERLIN_BRANDENBURG_ACTS): $(BERLIN_BRANDENBURG_STATIC) $(SRV_PERSONS) $(SRV_ACTS) $(SRV_ZONES) $(FACILITIES_XML) $(NETWORK_MATSIM) Makefile | setup
 	$(JAVA_APP) prepare activity-sampling --seed 1 --input $< --output $@ --persons $(word 2, $^) --activities $(SRV_ACTS)
 
 	$(JAVA_APP) prepare assign-reference-population --population $@ --output $@\
@@ -393,7 +393,10 @@ $(BERLIN_BRANDENBURG_ACTS): $(BERLIN_BRANDENBURG_STATIC) $(SRV_PERSONS) $(SRV_AC
 	 --shp $(word 4,$^)\
 	 --shp-crs $(CRS)\
 	 --facilities $(word 5,$^)\
-	 --network $(word 6,$^)\
+	 --network $(word 6,$^)
+
+	$(JAVA_APP) prepare assign-income\
+	 --input $@ --output $@
 
 # ("reference population" = population taken from SrV; used to assign activity chains. SrV records have to be processed (manually, not automatically done here) by extract_population_data.py to create src/main/python/table-....csv as input.
 # Input tables can also be found on shared-svn (restricted access): https://svn.vsp.tu-berlin.de/repos/shared-svn/projects/matsim-berlin/data/SrV/converted/
