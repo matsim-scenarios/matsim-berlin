@@ -13,10 +13,10 @@ import org.matsim.core.scoring.functions.*;
 /**
  * Plugs together the scoring function factory for the Berlin model.
  * <p>
- * The activity term scores each activity against its own typical duration, taken from the
- * {@value org.matsim.prepare.EncodeTypicalDuration#TYPICAL_DURATION} attribute rather than from the activity type (see
- * {@link org.matsim.prepare.EncodeTypicalDuration}). Person activities must carry one, enforced by
- * {@link RequiredTypicalDurationCalculator}; freight and commercial subpopulations fall back to the config values.
+ * The activity term scores each activity against its own typical duration, taken from the person's
+ * {@value TypicalDurations#ATTRIBUTE} attribute rather than from the activity type (see {@link TypicalDurations} and
+ * {@link org.matsim.prepare.EncodeTypicalDuration}). Every scored activity of a person must have one, enforced by
+ * {@link PersonTypicalDurationCalculator}; the other subpopulations use the config values where they have none.
  */
 public final class BerlinScoringFunctionFactory implements ScoringFunctionFactory {
 
@@ -46,8 +46,8 @@ public final class BerlinScoringFunctionFactory implements ScoringFunctionFactor
 
 		final ScoringParameters parameters = params.getScoringParameters(person);
 
-//		the activities the events machinery hands to the scoring carry no attributes, so the calculator is given the
-//		person and reads them off the selected plan's main activities.
+//		with the person, the core pairs each executed activity with the selected plan's main activity at the same
+//		position, and the calculator takes the typical duration at that position from the person attribute.
 		SumScoringFunction sumScoringFunction = new SumScoringFunction();
 		sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(parameters, TypicalDurations.forPerson(config, person), person));
 		sumScoringFunction.addScoringFunction(new CharyparNagelLegScoring(parameters, config.transit().getTransitModes()));

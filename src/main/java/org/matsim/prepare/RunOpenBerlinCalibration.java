@@ -91,7 +91,7 @@ import java.util.Set;
 	CleanNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, CreateScenarioCutOut.class,
 	CreateCountsFromGeoPortalBerlin.class, CreateCountsFromVMZOld.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class,
 	MergePlans.class, SplitActivityTypesDuration.class, CleanPopulation.class, CleanAttributes.class,
-	RescheduleLatePlans.class, SplitWrapAroundActivities.class, EncodeTypicalDuration.class, EndTimeToDuration.class,
+	RescheduleLatePlans.class, SplitWrapAroundActivities.class, EncodeTypicalDuration.class, MoveTypicalDurationsToPerson.class, EndTimeToDuration.class,
 	GenerateSmallScaleCommercialTrafficDemand.class, CreateDataDistributionOfStructureData.class, LinkCapacityFromMeasurements.class,
 	RunCountOptimization.class, SelectPlansFromIndex.class, ExtractPlanIndexFromType.class, AssignReferencePopulation.class, DrawModeConstantVariations.class,
 	ExtractRelevantFreightTrips.class, CheckCarAvailability.class, FixSubtourModes.class, ComputeTripChoices.class, ComputePlanChoices.class,
@@ -127,7 +127,8 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	private double simulationPeriodInDays = OpenBerlinScenario.DEFAULT_SIMULATION_PERIOD_IN_DAYS;
 
 	@CommandLine.Option(names = "--allow-config-typical-durations", description = "Allow person-subpopulation " +
-		"activities without a typicalDuration attribute to score against the config typical duration. By default " +
+		"activities without a typical duration (the typicalDurations person attribute) to score against the config " +
+		"typical duration. By default " +
 		"such an activity ABORTS the run.")
 	private boolean allowConfigTypicalDurations = false;
 

@@ -21,7 +21,7 @@ public class OpenBerlinScenarioWrapperTest {
 			"--output", utils.getOutputDirectory(),
 			"--iterations", "2",
 			// the checked-in 1pct population still encodes its typical durations in the activity type
-			// (home_86400, ...) and carries no typicalDuration attribute; drop once it is re-preprocessed.
+			// (home_86400, ...) and has no typicalDurations person attribute; drop once it is re-preprocessed.
 			"--allow-config-typical-durations",
 			"--config:qsim.numberOfThreads", "2",
 			"--config:global.numberOfThreads", "2",
