@@ -22,12 +22,12 @@ import org.matsim.core.scenario.MutableScenario;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.ScoringFunctionFactory;
-import org.matsim.core.scoring.functions.ActivityAttributeTypicalDurationCalculator;
 import org.matsim.core.scoring.functions.ModeUtilityParameters;
 import org.matsim.core.scoring.functions.ScoringParameters;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.run.OpenBerlinScenario;
+import org.matsim.run.scoring.TypicalDurations;
 import org.matsim.utils.tablesaw.TablesawUtils;
 import picocli.CommandLine;
 import tech.tablesaw.api.DoubleColumn;
@@ -53,7 +53,8 @@ import java.util.regex.Pattern;
  * construction, and for the Berlin scoring it does not: it imposes income-dependent money with exponent 1 where the
  * run uses {@code tasteVariations.incomeExponent}, it takes the mode constants from the config where the run adds the
  * person-specific {@code modeTasteVariations}, it scores activities against the typical duration of their type where
- * the run uses the per-activity {@code typicalDuration} attribute, and it does not know the pt submode constants of
+ * the run uses each activity's own (from the {@code typicalDurations} person attribute), and it does not know the pt
+ * submode constants of
  * {@link org.matsim.run.scoring.TransitTripScoring} or the pseudo-random trip term. This class reads whatever the run
  * has already computed and recomputes only what it has to:
  * <ul>
@@ -374,8 +375,9 @@ public final class AgentWiseComparison implements MATSimAppCommand {
 	/**
 	 * MUSE, the marginal utility of starting an activity earlier, as in the original's {@code MuseComputation}: for
 	 * every main activity with a start time, the change of the activity score when it starts one second earlier, in
-	 * utils per hour. The main activities are scored with the run's scoring function, which resolves their typical
-	 * durations from the selected plan as in the run. Stage activities are not handed: they are not scored, and the
+	 * utils per hour. The main activities are scored with the run's scoring function, which takes their typical
+	 * durations from the person, by their position in the selected plan, as in the run. They have to be handed in the
+	 * order they were executed. Stage activities are not handed: they are not scored, and the
 	 * population reader drops their times. Only activities are handed, so only the activity part of the score
 	 * changes.
 	 *
@@ -385,7 +387,7 @@ public final class AgentWiseComparison implements MATSimAppCommand {
 					   List<ActivityMuse> result) {
 
 		List<Activity> activities = TripStructureUtils.getActivities(experienced, TripStructureUtils.StageActivityHandling.ExcludeStageActivities);
-		List<Activity> planned = TripStructureUtils.getActivities(person.getSelectedPlan(), TripStructureUtils.StageActivityHandling.ExcludeStageActivities);
+		List<TypicalDurations.Entry> typicalDurations = TypicalDurations.get(person);
 		double unchanged = scoreActivities(person, activities, factory);
 
 		for (int main = 0; main < activities.size(); main++) {
@@ -400,9 +402,8 @@ public final class AgentWiseComparison implements MATSimAppCommand {
 			double museH = (scoreActivities(person, changed, factory) - unchanged) * 3600;
 
 			double typicalDuration = Double.NaN;
-			if (main < planned.size() && planned.get(main).getType().equals(act.getType())
-				&& planned.get(main).getAttributes().getAttribute(ActivityAttributeTypicalDurationCalculator.TYPICAL_DURATION_ATTRIBUTE) instanceof Number n)
-				typicalDuration = n.doubleValue();
+			if (typicalDurations != null && main < typicalDurations.size() && typicalDurations.get(main).type().equals(act.getType()))
+				typicalDuration = typicalDurations.get(main).seconds();
 
 			result.add(new ActivityMuse(main, act.getType(), act.getStartTime().seconds(), act.getEndTime().orElse(Double.NaN),
 				typicalDuration, main - 1 < arrivingModes.size() ? arrivingModes.get(main - 1) : null, museH));

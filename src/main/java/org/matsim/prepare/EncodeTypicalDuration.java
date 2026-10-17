@@ -9,27 +9,23 @@ import org.matsim.api.core.v01.population.Population;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.router.TripStructureUtils;
+import org.matsim.run.scoring.TypicalDurations;
 import picocli.CommandLine;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 @CommandLine.Command(
 	name = "encode-typical-duration",
-	description = "Encode each activity's typical duration as a \"typicalDuration\" attribute on the activity."
+	description = "Encode the typical duration of each activity in the person's \"typicalDurations\" attribute."
 )
 public class EncodeTypicalDuration implements MATSimAppCommand {
 
 	private static final Logger log = LogManager.getLogger(EncodeTypicalDuration.class);
 
 	private static final double SECONDS_PER_DAY = 24 * 3600;
-
-	/**
-	 * Attribute key under which the typical duration (in seconds) is stored on each activity. Named after
-	 * {@link org.matsim.core.config.groups.ScoringConfigGroup.ActivityParams#TYPICAL_DURATION}.
-	 */
-	public static final String TYPICAL_DURATION = "typicalDuration";
 
 	@CommandLine.Parameters(arity = "1", paramLabel = "INPUT", description = "Path to input population")
 	private Path input;
@@ -70,8 +66,10 @@ public class EncodeTypicalDuration implements MATSimAppCommand {
 	}
 
 	/**
-	 * Encode the typical duration of every activity as the {@link #TYPICAL_DURATION} attribute on the activity.
-	 * This replaces the previous activity-type tagging of the typical duration.
+	 * Encode the typical duration of every main activity in the person's {@value TypicalDurations#ATTRIBUTE}
+	 * attribute (see {@link TypicalDurations}). This replaces the previous activity-type tagging of the typical
+	 * duration, and the per-activity attribute after it. All plans of the person must have the same sequence of main
+	 * activities; the values are those of the selected plan.
 	 * <p>
 	 * The first and last activity of a plan need special treatment because their start resp. end is not observed
 	 * within the simulation period:
@@ -86,39 +84,68 @@ public class EncodeTypicalDuration implements MATSimAppCommand {
 	 * </ul>
 	 */
 	void encodeTypicalDuration(Person person) {
+		List<TypicalDurations.Entry> selected = null;
+		List<String> types = null;
 		for (Plan plan : person.getPlans()) {
-
-			List<Activity> activities = TripStructureUtils.getActivities(plan, TripStructureUtils.StageActivityHandling.ExcludeStageActivities);
-
-			// Stay-home agents (single activity) have no observed duration; nothing to encode.
-			if (activities.size() < 2) {
-				continue;
+			List<TypicalDurations.Entry> entries = typicalDurations(plan);
+			List<String> planTypes = TripStructureUtils.getActivities(plan, TripStructureUtils.StageActivityHandling.ExcludeStageActivities)
+				.stream().map(Activity::getType).toList();
+			if (types == null) {
+				types = planTypes;
+			} else if (!types.equals(planTypes)) {
+				throw new IllegalStateException("The plans of person " + person.getId() + " have different sequences of main activities ("
+					+ types + " and " + planTypes + "), but the typical durations are encoded once per person.");
 			}
-
-			double[] starts = startTimes(plan, activities);
-
-			// Middle activities are fully observed: their typical duration is simply their own duration.
-			for (int i = 1; i < activities.size() - 1; i++) {
-				Activity act = activities.get(i);
-				prolongToMinimumDuration(act, starts[i]);
-				setTypicalDuration(act, ownDuration(act, starts[i]));
-			}
-
-			Activity first = activities.get(0);
-			Activity last = activities.get(activities.size() - 1);
-			double lastStart = starts[activities.size() - 1];
-
-			if (first.getType().equals(last.getType())) {
-				// wrap-around: first and last are one activity wrapping around midnight.
-				double wrapped = ownDuration(first, 0) + (SECONDS_PER_DAY - lastStart);
-				setTypicalDuration(first, wrapped);
-				setTypicalDuration(last, wrapped);
-			} else {
-				// no wrap-around: the last activity runs from its start to the effective end of the simulation period.
-				setTypicalDuration(first, ownDuration(first, 0));
-				setTypicalDuration(last, simulationPeriodInDays * SECONDS_PER_DAY - lastStart);
+			if (plan == person.getSelectedPlan()) {
+				selected = entries;
 			}
 		}
+		TypicalDurations.set(person, selected);
+	}
+
+	/**
+	 * The typical durations of the plan's main activities, in order; null for a stay-home plan. Prolongs too-short
+	 * middle activities on the way (see {@link #prolongToMinimumDuration}).
+	 */
+	private List<TypicalDurations.Entry> typicalDurations(Plan plan) {
+
+		List<Activity> activities = TripStructureUtils.getActivities(plan, TripStructureUtils.StageActivityHandling.ExcludeStageActivities);
+
+		// Stay-home agents (single activity) have no observed duration; nothing to encode.
+		if (activities.size() < 2) {
+			return null;
+		}
+
+		double[] starts = startTimes(plan, activities);
+		double[] typical = new double[activities.size()];
+
+		// Middle activities are fully observed: their typical duration is simply their own duration.
+		for (int i = 1; i < activities.size() - 1; i++) {
+			Activity act = activities.get(i);
+			prolongToMinimumDuration(act, starts[i]);
+			typical[i] = ownDuration(act, starts[i]);
+		}
+
+		Activity first = activities.get(0);
+		Activity last = activities.get(activities.size() - 1);
+		double lastStart = starts[activities.size() - 1];
+
+		if (first.getType().equals(last.getType())) {
+			// wrap-around: first and last are one activity wrapping around midnight.
+			double wrapped = ownDuration(first, 0) + (SECONDS_PER_DAY - lastStart);
+			typical[0] = wrapped;
+			typical[activities.size() - 1] = wrapped;
+		} else {
+			// no wrap-around: the last activity runs from its start to the effective end of the simulation period.
+			typical[0] = ownDuration(first, 0);
+			typical[activities.size() - 1] = simulationPeriodInDays * SECONDS_PER_DAY - lastStart;
+		}
+
+		List<TypicalDurations.Entry> entries = new ArrayList<>(activities.size());
+		for (int i = 0; i < activities.size(); i++) {
+			entries.add(new TypicalDurations.Entry(activities.get(i).getType(), clamp(typical[i])));
+		}
+		return entries;
 	}
 
 	/**
@@ -165,11 +192,8 @@ public class EncodeTypicalDuration implements MATSimAppCommand {
 		}
 	}
 
-	private void setTypicalDuration(Activity act, double typicalDuration) {
-		if (minTypicalDuration > 0) {
-			typicalDuration = Math.max(typicalDuration, minTypicalDuration);
-		}
-		act.getAttributes().putAttribute(TYPICAL_DURATION, typicalDuration);
+	private double clamp(double typicalDuration) {
+		return minTypicalDuration > 0 ? Math.max(typicalDuration, minTypicalDuration) : typicalDuration;
 	}
 
 	/**

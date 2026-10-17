@@ -90,9 +90,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 	private double simulationPeriodInDays = DEFAULT_SIMULATION_PERIOD_IN_DAYS;
 
 	@CommandLine.Option(names = "--allow-config-typical-durations",
-		description = "Allow person-subpopulation activities without a typicalDuration attribute to score against " +
-			"the config typical duration. By default such an activity ABORTS the run. Pass this for populations " +
-			"whose typical durations are still encoded in the activity type.")
+		description = "Allow person-subpopulation activities without a typical duration (the typicalDurations person " +
+			"attribute) to score against the config typical duration. By default such an activity ABORTS the run. " +
+			"Pass this for populations whose typical durations are still encoded in the activity type.")
 	private boolean allowConfigTypicalDurations = false;
 
 	@CommandLine.Option(names = "--agent-wise-comparison-base",
@@ -116,8 +116,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		config.qsim().setUsingTravelTimeCheckInTeleportation(true);
 
-//		still registering the duration-binned types, so populations that predate the typicalDuration attribute keep
-//		scoring; for attribute-carrying activities the type's typical duration is only a fallback.
+//		still registering the duration-binned types, so populations that predate per-activity typical durations keep
+//		scoring; for activities with their own typical duration, the type's is only a fallback.
 		Activities.addScoringParams(config, true, withOpeningTimes);
 
 		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class)
