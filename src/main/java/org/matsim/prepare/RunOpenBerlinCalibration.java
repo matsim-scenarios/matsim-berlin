@@ -65,7 +65,6 @@ import org.matsim.prepare.population.*;
 import org.matsim.prepare.pt.EndlessCircleLineScheduleModifier;
 import org.matsim.run.Activities;
 import org.matsim.run.OpenBerlinScenario;
-import org.matsim.run.scoring.BerlinScoringConfigGroup;
 import org.matsim.smallScaleCommercialTrafficGeneration.GenerateSmallScaleCommercialTrafficDemand;
 import org.matsim.smallScaleCommercialTrafficGeneration.prepare.CreateDataDistributionOfStructureData;
 import picocli.CommandLine;
@@ -88,7 +87,7 @@ import java.util.Set;
 	CleanNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, CreateScenarioCutOut.class,
 	CreateCountsFromGeoPortalBerlin.class, CreateCountsFromVMZOld.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class,
 	MergePlans.class, SplitActivityTypesDuration.class, CleanPopulation.class, CleanAttributes.class,
-	RescheduleLatePlans.class, SplitWrapAroundActivities.class, EncodeTypicalDuration.class, EndTimeToDuration.class,
+	RescheduleLatePlans.class, SplitWrapAroundActivities.class, EncodeTypicalDurations.class, EndTimeToDuration.class,
 	GenerateSmallScaleCommercialTrafficDemand.class, CreateDataDistributionOfStructureData.class, LinkCapacityFromMeasurements.class,
 	RunCountOptimization.class, SelectPlansFromIndex.class, ExtractPlanIndexFromType.class, AssignReferencePopulation.class, DrawModeConstantVariations.class,
 	ExtractRelevantFreightTrips.class, CheckCarAvailability.class, FixSubtourModes.class, ComputeTripChoices.class, ComputePlanChoices.class,
@@ -122,11 +121,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	@CommandLine.Option(names = "--simulation-period-in-days", description = "Length of the simulation period, as a " +
 		"multiple of 24h. Must match the scenario and the preprocessing.")
 	private double simulationPeriodInDays = OpenBerlinScenario.DEFAULT_SIMULATION_PERIOD_IN_DAYS;
-
-	@CommandLine.Option(names = "--allow-config-typical-durations", description = "Allow person-subpopulation " +
-		"activities without a typicalDuration attribute to score against the config typical duration. By default " +
-		"such an activity ABORTS the run.")
-	private boolean allowConfigTypicalDurations = false;
 
 	/**
 	 * Round to two digits.
@@ -174,9 +168,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		config.scoring().setWriteExperiencedPlans(true);
 
 		Activities.addScoringParams(config, false, withOpeningTimes);
-
-		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class)
-			.setAllowConfigTypicalDurations(allowConfigTypicalDurations);
 
 		config.scenario().setSimulationPeriodInDays(simulationPeriodInDays);
 

@@ -33,8 +33,6 @@ import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.dashboard.BerlinDashboardProvider;
-import org.matsim.run.scoring.BerlinScoringConfigGroup;
-import org.matsim.run.scoring.BerlinScoringModule;
 import org.matsim.simwrapper.DashboardProvider;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
@@ -108,7 +106,6 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		// ######### add config-modules and edit config ##############
 		// TODO This should move to matsim-libs in the future but is still work in progress
-		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class).setAllowConfigTypicalDurations(false);
 		ConfigUtils.addOrGetModule( config, SimWrapperConfigGroup.class ).setSampleSize( config.qsim().getFlowCapFactor() );
 		// TODO this should move to config.xml
 		PlanInheritanceConfigGroup planInheritanceConfigGroup = ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
@@ -117,7 +114,11 @@ public class OpenBerlinScenario extends MATSimApplication {
 		// this is a sanity-check for tt < beeline/teleportedSpeed
 		config.qsim().setUsingTravelTimeCheckInTeleportation(true);
 
-		// this is needed for freight, commercial according to TypicalDurations#forPerson
+		// score each activity against its own typical duration from the person's typicalDurations attribute; persons
+		// without one (freight, populations that encode the typical duration in the activity type) use the type's
+		config.scoring().setTypicalDurationSource(ScoringConfigGroup.TypicalDurationSource.personAttribute);
+
+		// this is needed for freight, commercial, which have no typical durations of their own
 		// maybe we can limit this to specific subpopulation so we do not blow up the config so much
 		Activities.addScoringParams(config, true, false);
 
@@ -199,7 +200,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 		eConfig.setDetailedVsAverageLookupBehavior( DetailedVsAverageLookupBehavior.tryDetailedThenTechnologyAverageThenAverageTable );
 		eConfig.setEmissionsComputationMethod( EmissionsComputationMethod.StopAndGoFraction );
 
-		config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.abort);
+		// the vsp defaults check asks for scoring parameters per subpopulation (matsim-libs #5116), which the configs do not
+		// have yet; back to abort once they do.
+		config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
 
 		return config;
 	}
@@ -235,10 +238,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 	@Override
 	protected void prepareControler(Controler controler) {
 
-		//We want to use the default scoring again
-		// if we want to use person-specific typical-durations we need this // DR20261013
-		// this should be part of libs in the future
-		controler.addOverridingModule(new BerlinScoringModule());
+		// the default scoring; the person-specific typical durations are a core option now, see prepareConfig
 
 		// This should probably go away, but since it is also used in RunOpenBerlinCalibration
 		// I'm not sure how to keep this consistent // DR20261016
@@ -282,9 +282,10 @@ public class OpenBerlinScenario extends MATSimApplication {
 		// groups, but the modules are bound against the typed ones
 		Config config = scenario.getConfig();
 		ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
-		//ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class);
 		ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
 		ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
+		// the output configs of runs from before the typical duration source was a config parameter do not have it
+		config.scoring().setTypicalDurationSource(ScoringConfigGroup.TypicalDurationSource.personAttribute);
 
 		Controler controler = new Controler(scenario);
 		new OpenBerlinScenario().prepareControler(controler);
