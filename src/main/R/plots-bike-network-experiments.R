@@ -224,7 +224,7 @@ ggsave("modal_dist_group_car_plot.pdf", modal_dist_group_car_plot, dpi = 500, w 
 ############################################ bicycle speed elasticities plot ##################################################
 
 # read data
-elasticities_share <- read_csv(file="C:/Users/Simon/Desktop/wd/2026-08-24/bike_speed_elasticities_share_bike_network_paper.csv") %>% 
+elasticities_share <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/bike_speed_elasticities_share_bike_network_paper.csv") %>% 
   mutate(
     elasticity = elasticity %>%
       na_if("#DIV/0!") %>%
