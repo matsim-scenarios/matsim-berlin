@@ -27,6 +27,7 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanInheritanceConfigGroup;
 import org.matsim.core.config.groups.ReplanningConfigGroup;
+import org.matsim.core.config.groups.ScoringConfigGroup;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
@@ -37,7 +38,6 @@ import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.dashboard.BerlinDashboardProvider;
 import org.matsim.run.scoring.BerlinScoringModule;
-import org.matsim.run.scoring.BerlinScoringConfigGroup;
 import org.matsim.simwrapper.DashboardProvider;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
@@ -89,12 +89,6 @@ public class OpenBerlinScenario extends MATSimApplication {
 			"the same value.")
 	private double simulationPeriodInDays = DEFAULT_SIMULATION_PERIOD_IN_DAYS;
 
-	@CommandLine.Option(names = "--allow-config-typical-durations",
-		description = "Allow person-subpopulation activities without a typical duration (the typicalDurations person " +
-			"attribute) to score against the config typical duration. By default such an activity ABORTS the run. " +
-			"Pass this for populations whose typical durations are still encoded in the activity type.")
-	private boolean allowConfigTypicalDurations = false;
-
 	@CommandLine.Option(names = "--agent-wise-comparison-base",
 		description = "Output directory of a base run. After the run, compare the scores of this run's agents against " +
 			"it, see AgentWiseComparison; results go to analysis/agent-wise-comparison. With --post-processing " +
@@ -120,8 +114,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 //		scoring; for activities with their own typical duration, the type's is only a fallback.
 		Activities.addScoringParams(config, true, withOpeningTimes);
 
-		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class)
-			.setAllowConfigTypicalDurations(allowConfigTypicalDurations);
+//		score each activity against its own typical duration from the person's typicalDurations attribute; persons without
+//		one (other subpopulations, populations that encode the typical duration in the activity type) use the type's.
+		config.scoring().setTypicalDurationSource(ScoringConfigGroup.TypicalDurationSource.personAttribute);
 
 //		move the else-branch overnight scoring clamp away from 24:00; see --simulation-period-in-days.
 		config.scenario().setSimulationPeriodInDays(simulationPeriodInDays);
@@ -164,10 +159,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 		PlanInheritanceConfigGroup planInheritanceConfigGroup = ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
 		planInheritanceConfigGroup.setEnabled(true);
 
-		// BestScore (available via --plan-selector) fails the vsp defaults check; downgrade it to a warning
-		if (planSelector.equals(DefaultPlanStrategiesModule.DefaultSelector.BestScore)) {
-			config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
-		}
+		// the vsp defaults check asks for scoring parameters per subpopulation (matsim-libs #5116), which the configs do not
+		// have yet; BestScore (available via --plan-selector) fails it as well. Downgrade it to a warning.
+		config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
 
 		// Bicycle config must be present
 		ConfigUtils.addOrGetModule(config, BicycleConfigGroup.class);
@@ -272,10 +266,11 @@ public class OpenBerlinScenario extends MATSimApplication {
 		// groups, but the modules are bound against the typed ones
 		Config config = scenario.getConfig();
 		ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
-		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class);
 		ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
 		ConfigUtils.addOrGetModule(config, BicycleConfigGroup.class);
 		ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
+		// the output configs of runs from before the typical duration source was a config parameter do not have it
+		config.scoring().setTypicalDurationSource(ScoringConfigGroup.TypicalDurationSource.personAttribute);
 
 		Controler controler = new Controler(scenario);
 		new OpenBerlinScenario().prepareControler(controler);

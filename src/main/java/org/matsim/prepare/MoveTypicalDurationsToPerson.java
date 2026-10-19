@@ -9,8 +9,8 @@ import org.matsim.api.core.v01.population.Population;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.router.TripStructureUtils;
+import org.matsim.core.population.PersonUtils;
 import org.matsim.core.scoring.functions.ActivityAttributeTypicalDurationCalculator;
-import org.matsim.run.scoring.TypicalDurations;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
@@ -20,7 +20,7 @@ import java.util.Objects;
 
 /**
  * Converts a population from the earlier encoding of the typical durations, a {@code typicalDuration} attribute on
- * every main activity, to the {@value TypicalDurations#ATTRIBUTE} person attribute (see {@link TypicalDurations}),
+ * every main activity, to the {@value PersonUtils#TYPICAL_DURATIONS} person attribute,
  * and removes the activity attributes. The values are taken over unchanged, from the selected plan; the other plans
  * must carry the same sequence. Persons without the activity attributes are left as they are.
  */
@@ -69,9 +69,9 @@ public class MoveTypicalDurationsToPerson implements MATSimAppCommand {
 		if (person.getSelectedPlan() == null) {
 			return false;
 		}
-		List<TypicalDurations.Entry> selected = entries(person, person.getSelectedPlan());
+		List<PersonUtils.TypicalDuration> selected = entries(person, person.getSelectedPlan());
 		for (Plan plan : person.getPlans()) {
-			List<TypicalDurations.Entry> entries = entries(person, plan);
+			List<PersonUtils.TypicalDuration> entries = entries(person, plan);
 			if (!Objects.equals(entries, selected)) {
 				throw new IllegalStateException("The plans of person " + person.getId() + " carry different typical durations: " + entries + " and " + selected);
 			}
@@ -86,21 +86,21 @@ public class MoveTypicalDurationsToPerson implements MATSimAppCommand {
 		if (selected == null) {
 			return false;
 		}
-		TypicalDurations.set(person, selected);
+		PersonUtils.setTypicalDurations(person, selected);
 		return true;
 	}
 
 	/**
 	 * The typical durations on the plan's main activities, or null if none of them has one.
 	 */
-	private static List<TypicalDurations.Entry> entries(Person person, Plan plan) {
+	private static List<PersonUtils.TypicalDuration> entries(Person person, Plan plan) {
 		List<Activity> activities = TripStructureUtils.getActivities(plan, TripStructureUtils.StageActivityHandling.ExcludeStageActivities);
-		List<TypicalDurations.Entry> entries = new ArrayList<>(activities.size());
+		List<PersonUtils.TypicalDuration> entries = new ArrayList<>(activities.size());
 		int missing = 0;
 		for (Activity act : activities) {
 			Object value = act.getAttributes().getAttribute(ACTIVITY_ATTRIBUTE);
 			if (value instanceof Number n) {
-				entries.add(new TypicalDurations.Entry(act.getType(), n.doubleValue()));
+				entries.add(new PersonUtils.TypicalDuration(act.getType(), n.doubleValue()));
 			} else {
 				missing++;
 			}
