@@ -450,6 +450,9 @@ $(DATA_DISTR_PER_ZONE): $(COMMERCIAL_FACILITIES) | setup
 # with the stops in random order (CreateDifferentPlansForFreightPopulation) for cadyts to choose from. They are not
 # alternatives of the demand but worse routes of the same tour, 20-27 % longer, and at 25 % cadyts chose among them
 # almost at random, adding 13-26 % to the commercial vehicle kilometres.
+# The network and the output directory go in as config settings: matsim-libs #5103 removed --network and --pathOutput,
+# and since then unknown options are passed on as config arguments, of which only the --config: ones are applied.
+# The old options would be dropped silently and the run would stop for want of a network.
 $(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DATA_DISTR_PER_ZONE) $(BB_ZONES_VKZ_4326) $(FREIGHT_CONFIG) | setup
 	$(JAVA_APP) prepare generate-small-scale-commercial-traffic\
 	  $(word 5,$^)\
@@ -458,7 +461,7 @@ $(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DA
 	 --sample $(PIPELINE_SIZE)\
 	 --jspritIterations 10\
 	 --creationOption createNewCarrierFile\
-	 --network $(abspath $<)\
+	 --config:network.inputNetworkFile=$(abspath $<)\
 	 --smallScaleCommercialTrafficType completeSmallScaleCommercialTraffic\
 	 --zoneShapeFileName $(abspath $(word 4,$^))\
 	 --zoneShapeFileNameColumn "id"\
@@ -467,7 +470,7 @@ $(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DA
 	 --resistanceFactor_goodsTraffic 0.005\
 	 --numberOfPlanVariantsPerAgent 1\
 	 --nameOutputPopulation $(notdir $@)\
-	 --pathOutput $(COMMERCIAL_TRAFFIC_OUT)
+	 --config:controller.outputDirectory=$(abspath $(COMMERCIAL_TRAFFIC_OUT))
 
 	mv $(COMMERCIAL_TRAFFIC_OUT)/$(notdir $@) $@
 
