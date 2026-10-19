@@ -6,9 +6,9 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
+import org.matsim.core.population.PersonUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.router.TripStructureUtils;
-import org.matsim.run.scoring.TypicalDurations;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -23,10 +23,10 @@ class MoveTypicalDurationsToPersonTest {
 
 		assertThat(MoveTypicalDurationsToPerson.move(person)).isTrue();
 
-		assertThat(TypicalDurations.get(person)).containsExactly(
-			new TypicalDurations.Entry("home_morning", 25200),
-			new TypicalDurations.Entry("work", 30600),
-			new TypicalDurations.Entry("home_evening", 41400));
+		assertThat(PersonUtils.getTypicalDurations(person)).containsExactly(
+			new PersonUtils.TypicalDuration("home_morning", 25200),
+			new PersonUtils.TypicalDuration("work", 30600),
+			new PersonUtils.TypicalDuration("home_evening", 41400));
 		for (Plan plan : person.getPlans()) {
 			for (Activity act : TripStructureUtils.getActivities(plan, TripStructureUtils.StageActivityHandling.ExcludeStageActivities)) {
 				assertThat(act.getAttributes().getAttribute(ACTIVITY_ATTRIBUTE)).isNull();
@@ -39,7 +39,7 @@ class MoveTypicalDurationsToPersonTest {
 		Person person = person(plan());
 
 		assertThat(MoveTypicalDurationsToPerson.move(person)).isFalse();
-		assertThat(TypicalDurations.get(person)).isNull();
+		assertThat(PersonUtils.getTypicalDurations(person)).isNull();
 	}
 
 	@Test

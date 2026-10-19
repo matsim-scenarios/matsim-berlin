@@ -27,7 +27,6 @@ import org.matsim.core.scoring.functions.ScoringParameters;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.run.OpenBerlinScenario;
-import org.matsim.run.scoring.TypicalDurations;
 import org.matsim.utils.tablesaw.TablesawUtils;
 import picocli.CommandLine;
 import tech.tablesaw.api.DoubleColumn;
@@ -387,7 +386,7 @@ public final class AgentWiseComparison implements MATSimAppCommand {
 					   List<ActivityMuse> result) {
 
 		List<Activity> activities = TripStructureUtils.getActivities(experienced, TripStructureUtils.StageActivityHandling.ExcludeStageActivities);
-		List<TypicalDurations.Entry> typicalDurations = TypicalDurations.get(person);
+		List<PersonUtils.TypicalDuration> typicalDurations = PersonUtils.getTypicalDurations(person);
 		double unchanged = scoreActivities(person, activities, factory);
 
 		for (int main = 0; main < activities.size(); main++) {

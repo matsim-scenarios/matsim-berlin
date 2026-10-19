@@ -546,7 +546,7 @@ $(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MATSIM) 
 	 --shp $(word 5,$^)
 
 # Give each activity its own typical duration, kept in the person's typicalDurations attribute, which the scoring
-# reads (see TypicalDurations), instead of encoding the typical duration in the activity type.
+# reads (scoring.typicalDurationSource = personAttribute), instead of encoding the typical duration in the activity type.
 # clean redundant max-duration attributes and reschedule plans whose activities run past the simulation day,
 # order-preserving, so the last activity keeps a positive window.
 	$(JAVA_APP) prepare reschedule-late-plans $@ --output $@ --simulation-period-in-days $(SIM_PERIOD_DAYS)
