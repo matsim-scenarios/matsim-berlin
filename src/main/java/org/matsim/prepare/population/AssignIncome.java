@@ -68,6 +68,7 @@ public final class AssignIncome implements MATSimAppCommand, PersonAlgorithm {
 
 		// Uniform draws in equivalent-income bands; the lowest uses (0, upper] to avoid zero income.
 		double income = switch (incomeGroup) {
+			//darf nicht bis null gehen...
 			case 1 -> (1 - rnd.nextDouble()) * (500 / householdSize);
 			case 2 -> rnd.nextDouble(500 / householdSize, 900 / householdSize);
 			case 3 -> rnd.nextDouble(900 / householdSize, 1500 / householdSize);
