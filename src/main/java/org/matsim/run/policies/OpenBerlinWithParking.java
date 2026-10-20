@@ -162,6 +162,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
         NetworkUtils.writeNetwork(scenario.getNetwork(), "network-v6.4-with-parking.xml.gz");
     }
 
+	//TODO replace this by a modul
     @Override
     protected void prepareControler(Controler controler) {
         super.prepareControler(controler);
