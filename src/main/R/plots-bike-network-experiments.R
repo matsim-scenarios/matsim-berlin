@@ -224,7 +224,8 @@ ggsave("modal_dist_group_car_plot.pdf", modal_dist_group_car_plot, dpi = 500, w 
 ############################################ bicycle speed elasticities plot ##################################################
 
 # read data
-elasticities_share <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/bike_speed_elasticities_share_bike_network_paper.csv") %>% 
+# elasticities_share <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/bike_speed_elasticities_share_bike_network_paper.csv") %>% 
+elasticities_share <- read_csv(file="C:/Users/Simon/Desktop/wd/2026-10-19/bike_speed_elasticities_share_bike_network_paper_additional_teleported_runs.csv") %>% 
   mutate(
     elasticity = elasticity %>%
       na_if("#DIV/0!") %>%
@@ -239,11 +240,29 @@ elasticities_share <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network
       TRUE ~ "Other"
     )
   ) %>% 
-  mutate(case = factor(case, levels = unique(case))) %>% 
+  mutate(case = factor(case, levels = unique(case)))
+
+elasticities_no_0 <- elasticities_share %>% 
   filter(elasticity != 0)
 
+elasticities_teleported <- elasticities_share %>% 
+  filter(case=="teleported")
+
+shares_plot <- ggplot(
+  elasticities_teleported,
+  aes(
+    x = `speed factor`,
+    y = `bike share`,
+    color = case
+  )
+)+
+  geom_line(linewidth = 2) +
+  geom_point(size = 3)
+shares_plot
+
+
 elasticities_plot <- ggplot(
-  elasticities_share,
+  elasticities_no_0,
   aes(
     x = `bike speed [km/h]`,
     y = elasticity,
@@ -280,7 +299,8 @@ elasticities_plot <- ggplot(
   )
 
 elasticities_plot
-ggsave("bicycle_speed_elasticities_plot.pdf", elasticities_plot, dpi = 500, w = 9, h = 9)
+# ggsave("bicycle_speed_elasticities_plot.pdf", elasticities_plot, dpi = 500, w = 9, h = 9)
+ggsave("bicycle_speed_elasticities_plot_additional_teleported_runs.pdf", elasticities_plot, dpi = 500, w = 9, h = 9)
 
 ############################################ avg bicycle network speed per link type ##################################################
 avg_speed_per_road_type_qsim0.0 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.0/analysis/traffic/traffic_stats_by_road_type_daily_bike.csv") %>%
