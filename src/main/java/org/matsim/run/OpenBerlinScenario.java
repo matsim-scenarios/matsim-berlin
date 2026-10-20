@@ -17,7 +17,6 @@ import org.matsim.api.core.v01.population.Plan;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.MATSimApplication;
 import org.matsim.contrib.emissions.HbefaTechnology;
-import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
 import org.matsim.contrib.emissions.scenarioCheckers.Hbefa41ScenarioChecker;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
@@ -113,6 +112,14 @@ public class OpenBerlinScenario extends MATSimApplication {
 			"post_process_only, the existing output is compared without running.")
 	// yy what does "the existing output is compared without running" mean?  I do not understand.  compared with what?  not running what?  kai, oct'26
 	private Path agentWiseComparisonBase;
+
+	public static enum RideMode{
+		teleportedCarspeed,teleportedFreespeed,pcu0qsim
+	}
+
+	@CommandLine.Option(names = "--rideMode",
+	description = "ride-implementation used.")
+	private RideMode rideMode = RideMode.teleportedCarspeed;
 
 	public static void main(String[] args) {
 		MATSimApplication.execute(OpenBerlinScenario.class, args);
@@ -212,9 +219,19 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		// add bike as network-mode? // DR 20261013
 
-		config.qsim().setMainModes(
-			List.of(TransportMode.car, TransportMode.truck, "freight")
-		);
+		switch (rideMode){
+			case teleportedFreespeed:
+			case teleportedCarspeed:
+				config.qsim().setMainModes(
+					List.of(TransportMode.car, TransportMode.truck, "freight")
+				);
+				break;
+			case pcu0qsim:
+				config.qsim().setMainModes(
+					List.of(TransportMode.car, TransportMode.truck, "freight", TransportMode.ride)
+				);
+				break;
+		}
 
 
 		// Add emissions configuration
@@ -329,6 +346,17 @@ public class OpenBerlinScenario extends MATSimApplication {
 					"Please check class HbefaTechnology for possibles values.", type.getId(), HbefaTechnology.PETROL_4S.id);
 			}
 		}
+
+		if (rideMode.equals(RideMode.pcu0qsim)) {
+			Id<VehicleType> rideTypeId = Id.createVehicleTypeId(TransportMode.ride);
+			VehicleType rideType = scenario.getVehicles().getVehicleTypes().get(rideTypeId);
+
+			if (rideType == null) {
+				rideType = scenario.getVehicles().getFactory().createVehicleType(rideTypeId);
+				scenario.getVehicles().addVehicleType(rideType);
+			}
+			rideType.setPcuEquivalents(0.0);
+		}
 	}
 
 
@@ -356,7 +384,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
 
 		//TODO inline this?
-		controler.addOverridingModule(new TravelTimeBinding());
+		controler.addOverridingModule(new TravelTimeBinding(rideMode));
 	}
 
 	@Override
@@ -398,21 +426,33 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 
 		private final boolean carOnly;
+		private final RideMode rideMode;
 
 		@Deprecated
-		public TravelTimeBinding() {
+		public TravelTimeBinding(RideMode rideMode) {
 			this.carOnly = false;
+			this.rideMode = rideMode;
 		}
 
 		@Deprecated //try to do without // The carOnly-stuff is needed for RunOpenBerlinCalibration // DR20261013
 		public TravelTimeBinding(boolean carOnly) {
 			this.carOnly = carOnly;
+			this.rideMode = RideMode.teleportedCarspeed;
 		}
 
 		@Override
 		public void install() {
-			addTravelTimeBinding(TransportMode.ride).to(carTravelTime());
-			addTravelDisutilityFactoryBinding(TransportMode.ride).to(carTravelDisutilityFactoryKey());
+
+			switch (rideMode){
+				case teleportedFreespeed:
+					break;
+				case teleportedCarspeed:
+					addTravelTimeBinding(TransportMode.ride).to(carTravelTime());
+					addTravelDisutilityFactoryBinding(TransportMode.ride).to(carTravelDisutilityFactoryKey());
+					break;
+				case pcu0qsim:
+					break;
+			}
 
 			if (!carOnly) {
 				//TODO take names from vsp contrib --> SubpopulationDefaultNames
