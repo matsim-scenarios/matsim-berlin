@@ -62,7 +62,7 @@ public class EnergyConsumptionAnalysis implements MATSimAppCommand {
 
 //	TODO: we need to decide if either a) we want to split between ICE and BEV in normative percentages as done for emissions
 //	TODO: or b) use car / carExpensive as BEV/ICE and split the 2 groups via MATSim mode
-//	TODO: maybe it is also fine to just assume for EnergyConsumption that all cars are BEV as it is a hypothetic view on the future with 100% BEV. This is what we are doing right now, see EnergyConsumptionDashboard or this analysis class.
+//	TODO: maybe it is also fine to just assume for EnergyConsumption that all cars are BEV as it is a hypothetic view on the future with 100% BEV and we are mainly interested in the demand for electric power. This is what we are doing right now, see EnergyConsumptionDashboard or this analysis class.
 
 //	for petrol cars:
 //  in 2024 7.8l/100km avg fuel consumption; https://www.destatis.de/EN/Themes/Society-Environment/Environment/Environmental-Economic-Accounting/transport-tourism/Tables/mileage-fuel-consumption.html
