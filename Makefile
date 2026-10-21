@@ -205,6 +205,9 @@ BERLIN_ASC_CALIB_PLANS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans-calibr
 BERLIN_RUN_CONFIG := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).config.xml
 COMMERCIAL_FACILITIES := $(OUTPUT)/commercialFacilities.xml.gz
 BERLIN_SMALLSCALE_COMMERCIAL := $(OUTPUT)/berlin-small-scale-commercialTraffic-$(VERSION)-$(PIPELINE_PCT).plans.xml.gz
+## the commercial traffic v7.0 generated, which v7.1 used and the cadyts input is built from, see its rule
+BERLIN_SMALLSCALE_COMMERCIAL_V70 := $(BERLINPUBLIC)/berlin-v7.0/input/berlin-small-scale-commercialTraffic-v7.0-25pct.plans.xml.gz
+BERLIN_SMALLSCALE_COMMERCIAL_FROZEN := $(OUTPUT)/berlin-small-scale-commercialTraffic-v7.0-$(PIPELINE_PCT).plans.xml.gz
 ## jsprit scratch output and its analysis, for the one commercial traffic generation
 COMMERCIAL_TRAFFIC_OUT := $(OUTPUT)/commercialPersonTraffic-$(PIPELINE_PCT)
 FREIGHT_ANALYSIS_OUT := $(OUTPUT)/analysis-freight-$(PIPELINE_PCT)
@@ -485,7 +488,26 @@ $(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DA
 	 --output $@
 	#rm -r $(COMMERCIAL_TRAFFIC_OUT) delete or keep?
 
-$(BERLIN_CADYTS_INPUT): $(BERLIN_BRANDENBURG_INITIAL) $(BERLIN_SMALLSCALE_COMMERCIAL) | setup
+# The cadyts input takes the commercial traffic v7.0 generated, as v7.1 did, not the one generated above, until that
+# one is understood (#217): its fleet sizing and repair loop come from a later contrib and give more tours with fewer
+# stops and a fifth more vehicle kilometres. The rule above stays for that work (make analyze-freight). The file has
+# activities by coordinate only, so it fits this network. v7.0 gave most tours five plans for cadyts to choose from:
+# the one jsprit solved, which is selected, and copies with the stops in random order. Only the selected one is kept,
+# for the reason given at the rule above.
+$(BERLIN_SMALLSCALE_COMMERCIAL_FROZEN): $(BERLIN_SMALLSCALE_COMMERCIAL_V70) | setup
+	$(JAVA_APP) prepare clean-population\
+	 --plans $<\
+	 --remove-unselected-plans\
+	 --output $@
+ifneq ($(PIPELINE_SIZE),0.25)
+# As for $(BERLIN_BRANDENBURG_LONGHAULFREIGHT): the file is a 25 % sample, the name of the target does not say 25pct.
+	$(JAVA_APP) prepare downsample-population $@\
+	 --sample-size 0.25\
+	 --samples $(PIPELINE_SIZE)
+	mv $(@:.xml.gz=-$(PIPELINE_PCT).xml.gz) $@
+endif
+
+$(BERLIN_CADYTS_INPUT): $(BERLIN_BRANDENBURG_INITIAL) $(BERLIN_SMALLSCALE_COMMERCIAL_FROZEN) | setup
 	$(JAVA_APP) prepare merge-populations $^\
 	 --output $@
 
@@ -666,7 +688,7 @@ python-env: $(VENV)/.stamp
 prepare-network-and-counts: $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	echo done
 
-prepare-freight: $(BERLIN_BRANDENBURG_LONGHAULFREIGHT) $(BERLIN_SMALLSCALE_COMMERCIAL)
+prepare-freight: $(BERLIN_BRANDENBURG_LONGHAULFREIGHT) $(BERLIN_SMALLSCALE_COMMERCIAL_FROZEN)
 
 prepare-calibration: $(BERLIN_CADYTS_INPUT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	#make -Bndri prepare-calibration | make2graph | gv2gml -o prepare-calibration_graph.gml
