@@ -305,23 +305,28 @@ ggsave("bicycle_speed_elasticities_plot_additional_teleported_runs.pdf", elastic
 ############################################ avg bicycle network speed per link type ##################################################
 avg_speed_per_road_type_qsim0.0 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.0/analysis/traffic/traffic_stats_by_road_type_daily_bike.csv") %>%
   mutate(case = "qsim0.0") %>% 
-  rename(avg_speed_m_s = 'Avg. Speed [km/h]',
+  rename(avg_speed_m_s = 'Avg. Speed [m/s]',
+         avg_speed_km_h = 'Avg. Speed [km/h]',
          road_type = 'Road Type')
 avg_speed_per_road_type_qsim0.01 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.01/analysis/traffic/traffic_stats_by_road_type_daily_bike.csv") %>%
   mutate(case = "qsim0.01") %>% 
-  rename(avg_speed_m_s = 'Avg. Speed [km/h]',
+  rename(avg_speed_m_s = 'Avg. Speed [m/s]',
+         avg_speed_km_h = 'Avg. Speed [km/h]',
          road_type = 'Road Type')
 avg_speed_per_road_type_qsim0.1 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.1/analysis/traffic/traffic_stats_by_road_type_daily_bike.csv") %>%
   mutate(case = "qsim0.1") %>% 
-  rename(avg_speed_m_s = 'Avg. Speed [km/h]',
+  rename(avg_speed_m_s = 'Avg. Speed [m/s]',
+         avg_speed_km_h = 'Avg. Speed [km/h]',
          road_type = 'Road Type')
 avg_speed_per_road_type_qsim0.2 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.2/analysis/traffic/traffic_stats_by_road_type_daily_bike.csv") %>%
   mutate(case = "qsim0.2") %>% 
-  rename(avg_speed_m_s = 'Avg. Speed [km/h]',
+  rename(avg_speed_m_s = 'Avg. Speed [m/s]',
+         avg_speed_km_h = 'Avg. Speed [km/h]',
          road_type = 'Road Type')
 avg_speed_per_road_type_qsim0.3 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.3/analysis/traffic/traffic_stats_by_road_type_daily_bike.csv") %>%
   mutate(case = "qsim0.3") %>% 
-  rename(avg_speed_m_s = 'Avg. Speed [km/h]',
+  rename(avg_speed_m_s = 'Avg. Speed [m/s]',
+         avg_speed_km_h = 'Avg. Speed [km/h]',
          road_type = 'Road Type')
 
 road_type_levels <- c(
@@ -341,8 +346,9 @@ road_type_levels <- c(
 
 combined_avg_speed_per_road_type <- bind_rows(avg_speed_per_road_type_qsim0.0, avg_speed_per_road_type_qsim0.01, avg_speed_per_road_type_qsim0.1, avg_speed_per_road_type_qsim0.2, avg_speed_per_road_type_qsim0.3) %>%
   mutate(road_type = factor(road_type, levels = road_type_levels)) %>%
-  mutate(case = factor(case, levels = unique(case))) %>%
-  mutate(avg_speed_km_h = round(avg_speed_m_s * 3.6, digits=2))
+  mutate(case = factor(case, levels = unique(case)))
+  #   %>%
+  # mutate(avg_speed_km_h = round(avg_speed_m_s * 3.6, digits=2))
 
 avg_cycling_speed_per_road_type_plot <- ggplot(combined_avg_speed_per_road_type, aes(x = road_type, y = avg_speed_km_h, fill = case)) +
   geom_col(
