@@ -11,44 +11,36 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.MATSimApplication;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
+import org.matsim.contrib.emissions.scenarioCheckers.Hbefa41ScenarioChecker;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
+import org.matsim.contrib.vsp.scoring.RideScoringParamsFromCarParams;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.config.groups.PlanInheritanceConfigGroup;
-import org.matsim.core.config.groups.VspExperimentalConfigGroup;
+import org.matsim.core.config.groups.*;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.dashboard.BerlinDashboardProvider;
-import org.matsim.run.scoring.BerlinScoringModule;
 import org.matsim.simwrapper.DashboardProvider;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
-import org.matsim.contrib.emissions.scenarioCheckers.Hbefa41ScenarioChecker;
-import org.matsim.contrib.vsp.scoring.RideScoringParamsFromCarParams;
-import org.matsim.core.config.groups.ScoringConfigGroup;
-import org.matsim.core.config.groups.TasteVariationsConfigParameterSet;
-import org.matsim.run.scoring.BerlinScoringModule;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
 import java.util.List;
 
+import static org.matsim.contrib.common.conventions.vsp.SubpopulationDefaultNames.*;
+import static org.matsim.core.config.groups.ReplanningConfigGroup.StrategySettings;
+import static org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule.DefaultStrategy;
+
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true, showDefaultValues = true)
 @MATSimApplication.Analysis({AgentWiseComparison.class})
 public class OpenBerlinScenario extends MATSimApplication {
 
-	public static final String VERSION = "7.1";
+	public static final String VERSION = "7.3";
 	public static final String CRS = "EPSG:25832";
-
-	//	To decrypt hbefa input files set MATSIM_DECRYPTION_PASSWORD as environment variable. ask VSP for access.
-	private static final String HBEFA_2020_PATH = "https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/0e73947443d68f95202b71a156b337f7f71604ae/";
-	private static final String HBEFA_FILE_COLD_DETAILED = HBEFA_2020_PATH + "82t7b02rc0rji2kmsahfwp933u2rfjlkhfpi2u9r20.enc";
-	private static final String HBEFA_FILE_WARM_DETAILED = HBEFA_2020_PATH + "944637571c833ddcf1d0dfcccb59838509f397e6.enc";
-	private static final String HBEFA_FILE_COLD_AVERAGE = HBEFA_2020_PATH + "r9230ru2n209r30u2fn0c9rn20n2rujkhkjhoewt84202.enc" ;
-	private static final String HBEFA_FILE_WARM_AVERAGE = HBEFA_2020_PATH + "7eff8f308633df1b8ac4d06d05180dd0c5fdf577.enc";
 
 	private static final String AVERAGE = "average";
 	private static final Logger log = LogManager.getLogger(OpenBerlinScenario.VERSION);
@@ -66,6 +58,11 @@ public class OpenBerlinScenario extends MATSimApplication {
 	/// (The issue here is that CR has switched this to {@link DefaultSelector#BestScore}, since this is in some sense more consistent with frozen randomness.
 	/// It has the problem that plans, especially after innovation switchoff, are rarely selected for re-evaluation if they do not have the best score.
 	/// yy Unclear /// how we want to proceed here. kai, oct'26)
+
+	@CommandLine.Option(names = "--with-opening-times",
+		description = "Give the activity types their opening times. Off by default: the per-activity typical " +
+			"durations carry the schedule, so the opening times only distort it.")
+	private boolean withOpeningTimes = false;
 
 	@CommandLine.Option(names = "--simulation-period-in-days",
 		description = "Length of the simulation period, as a multiple of 24h. Moves the else-branch overnight " +
@@ -93,13 +90,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 		HttpAuthentication.installFromEnvironment();
 
 		// ######### add config-modules and edit config ##############
-		// TODO This should move to matsim-libs in the future but is still work in progress
-		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class).setAllowConfigTypicalDurations(false);
-		ConfigUtils.addOrGetModule( config, SimWrapperConfigGroup.class ).setSampleSize( config.qsim().getFlowCapFactor() );
-		// TODO this should move to config.xml
-		PlanInheritanceConfigGroup planInheritanceConfigGroup = ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
-		planInheritanceConfigGroup.setEnabled(true);
-
+		// this is not accessible via xml
 		config.qsim().setUsingTravelTimeCheckInTeleportation(true);
 
 //		still registering the duration-binned types, so populations that predate per-activity typical durations keep
@@ -126,7 +117,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 			);
 
 			config.replanning().addStrategySettings(
-				new StrategySettings()
+				new ReplanningConfigGroup.StrategySettings()
 					.setStrategyName( DefaultStrategy.ReRoute )
 					.setWeight(0.15)
 					.setSubpopulation(subpopulation)
@@ -135,7 +126,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		// the following are only for the person subpopulation
 		config.replanning().addStrategySettings(
-			new StrategySettings()
+			new ReplanningConfigGroup.StrategySettings()
 				.setStrategyName( DefaultStrategy.TimeAllocationMutator )
 				.setWeight(0.15)
 				.setSubpopulation(SUBPOP_PERSON)
@@ -148,47 +139,15 @@ public class OpenBerlinScenario extends MATSimApplication {
 				.setSubpopulation(SUBPOP_PERSON)
 		);
 
-//		write score explanations into person attrs for each person
-		//there are now two ways to explain scores do we really want both?
-		// TODO this should move to config.xml
-		config.scoring().setExplainScores(true);
-
-//		also enable plan inheritance analysis
-		PlanInheritanceConfigGroup planInheritanceConfigGroup = ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
-		planInheritanceConfigGroup.setEnabled(true);
-
 		// TODO only here for experiments, move to config when done // DR20261013
 		applyV64ScoringParameters(config);
 
-		// taste variations income exponent, taste variations config block muss da sein!
-		// set income exponent auf 0.6 basierend auf Poznan. 0.3 ist zu low aus CR Diss und 1.0 ist zu hoch.
-		// TODO this should move to config.xml
-		TasteVariationsConfigParameterSet tasteVariations = config.scoring()
-			.getScoringParameters(null)
-			.getOCreateTasteVariationsParams();
-		tasteVariations.setIncomeExponent(0.6);
-		tasteVariations.setVariationsOf(Set.of());
 
 		// Overwrite ride scoring params with values derived from the v6.4 car parameters.
 		RideScoringParamsFromCarParams.setRideScoringParamsBasedOnCarParams(config.scoring(), 1.0);
 
-		// TODO move this to config.xml
-		config.qsim().setMainModes(
-			List.of(TransportMode.car, TransportMode.truck, "freight")
-		);
-
-		// Add emissions configuration
-		// TODO move this to config.xml
-		EmissionsConfigGroup eConfig = ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
-		eConfig.setDetailedColdEmissionFactorsFile(HBEFA_FILE_COLD_DETAILED);
-		eConfig.setDetailedWarmEmissionFactorsFile(HBEFA_FILE_WARM_DETAILED);
-		eConfig.setAverageColdEmissionFactorsFile(HBEFA_FILE_COLD_AVERAGE);
-		eConfig.setAverageWarmEmissionFactorsFile(HBEFA_FILE_WARM_AVERAGE);
-		eConfig.setHbefaTableConsistencyCheckingLevel(HbefaTableConsistencyCheckingLevel.consistent );
-		eConfig.setDetailedVsAverageLookupBehavior(DetailedVsAverageLookupBehavior.tryDetailedThenTechnologyAverageThenAverageTable );
-		eConfig.setEmissionsComputationMethod( missionsComputationMethod.StopAndGoFraction );
-
-		config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.abort);
+		// Set to abort when subpops are used in config
+		config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
 
 		return config;
 	}
@@ -201,33 +160,12 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		// add hbefa link attributes. Shouldn't this go upstream?
 		OsmHbefaMapping.build().addHbefaMappings(scenario.getNetwork() );
-
-		// Force the update of all bike travel times, otherwise bike speeds would only update once a leg is routed
-		// (this is, e.g., an issue if bicycle speeds are changed from one run to the next, e.g. for speed elasticities)
-		// Is this really necessary here? Or only for policies? // DR20261013
-//		for (Person person : scenario.getPopulation().getPersons().values()) {
-//			for (Plan plan : person.getPlans()) {
-//				for (Leg leg : TripStructureUtils.getLegs(plan)) {
-//					if (leg.getMode().equals(TransportMode.bike)) {
-//						leg.setRoute(null);
-//						leg.setTravelTimeUndefined();
-//					}
-//				}
-//			}
-//		}
-
-		// vehicle-related stuff should be set upstream in vehicle-files, add a checker instead.
 		scenario.addScenarioChecker( new Hbefa41ScenarioChecker());
 	}
 
 
 	@Override
 	protected void prepareControler(Controler controler) {
-
-		//We want to use the default scoring again
-		// if we want to use person-specific typical-durations we need this // DR20261013
-		// this should be part of libs in the future
-		controler.addOverridingModule(new BerlinScoringModule());
 
 		// This should probably go away, but since it is also used in RunOpenBerlinCalibration
 		// I'm not sure how to keep this consistent // DR20261016
@@ -244,14 +182,6 @@ public class OpenBerlinScenario extends MATSimApplication {
 			}
 		});
 
-
-		// think about moving this to libs, is this not just the stop watch??
-		// I also think this is basically stopwatch. Remove? // DR20261016
-//		controler.addOverridingModule(new QsimTimingModule());
-
-		// make default?
-		// The code is already in libs, but not active. Why?
-//		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
 	}
 
 	@Override
@@ -314,20 +244,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 				//in the below there is a confusion between mode and vehicle class
 				//the idea here is to differintiate up to 3.5 tonnes Pkw and larger then 3.5 tonnes
 				//rename "freight" to truck.
-				addTravelTimeBinding("freight").to(Key.get(TravelTime.class, Names.named(TransportMode.truck)));
-				addTravelDisutilityFactoryBinding("freight").to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
-
-				//TODO talk with SM. --> Beschluss: Bike nur als routing network mode und nicht als qsim mode und bike contrib aus pom.xml raus. --> removed bike from pom
-				//bind(BicycleLinkSpeedCalculator.class).to(BicycleLinkSpeedCalculatorDefaultImpl.class);
-				//bind(BicycleParams.class).to(BicycleParamsDefaultImpl.class);
-
-				// Bike should use free speed travel time
-				//compensate for bug in core library #4981?
-				//TODO think about the effect of this
-				//addTravelTimeBinding(TransportMode.bike).to(BicycleTravelTime.class);
-				//addTravelDisutilityFactoryBinding(TransportMode.bike).to(OnlyTimeDependentTravelDisutilityFactory.class);
-				//addTravelTimeBinding(TransportMode.bike).to(BicycleTravelTime.class);
-				//addTravelDisutilityFactoryBinding(TransportMode.bike).to(OnlyTimeDependentTravelDisutilityFactory.class);
+				addTravelTimeBinding(SUBPOP_FREIGHT).to(Key.get(TravelTime.class, Names.named(TransportMode.truck)));
+				addTravelDisutilityFactoryBinding(SUBPOP_FREIGHT).to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
 			}
 		}
 	}
