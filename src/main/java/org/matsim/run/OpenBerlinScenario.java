@@ -139,15 +139,14 @@ public class OpenBerlinScenario extends MATSimApplication {
 				.setSubpopulation(SUBPOP_PERSON)
 		);
 
-		// TODO only here for experiments, move to config when done // DR20261013
-		applyV64ScoringParameters(config);
-
-
 		// Overwrite ride scoring params with values derived from the v6.4 car parameters.
 		RideScoringParamsFromCarParams.setRideScoringParamsBasedOnCarParams(config.scoring(), 1.0);
 
 		// Set to abort when subpops are used in config
 		config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
+
+		// add this here, otherwise the config-group can not materialize
+		ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
 
 		return config;
 	}
@@ -249,36 +248,4 @@ public class OpenBerlinScenario extends MATSimApplication {
 			}
 		}
 	}
-
-	/**
-	 * Apply the global and mode-specific v6.4 scoring parameters without changing any ASCs.
-	 */
-	private static void applyV64ScoringParameters(Config config) {
-		ScoringConfigGroup scoring = config.scoring();
-		//this is different from v6.4
-		scoring.setPerforming_utils_hr(6.0);
-		scoring.setMarginalUtilityOfMoney(1.0);
-
-		//same as in Berlin v6.4
-
-		setV64ModeParams(scoring, TransportMode.car, -5.0, 0.0, -1.49e-4);
-		setV64ModeParams(scoring, TransportMode.pt, -3.0, 0.0, 0.0);
-		setV64ModeParams(scoring, TransportMode.bike, 0.0, 0.0, 0.0);
-		setV64ModeParams(scoring, TransportMode.walk, 0.0, 0.0, 0.0);
-		//TODO: Think about scoring of commercial agents...
-		setV64ModeParams(scoring, "freight", 0.0, 0.0, -4.0e-4);
-		setV64ModeParams(scoring, TransportMode.truck, 0.0, 0.0, -4.0e-4);
-	}
-
-	private static void setV64ModeParams(ScoringConfigGroup scoring, String mode, double dailyMonetaryConstant,
-										 double marginalUtilityOfTraveling, double monetaryDistanceRate) {
-		ScoringConfigGroup.ModeParams params = scoring.getOrCreateModeParams(mode);
-		params.setDailyMonetaryConstant(dailyMonetaryConstant);
-		params.setDailyUtilityConstant(0.0);
-		params.setMarginalUtilityOfDistance(0.0);
-		params.setMarginalUtilityOfTraveling(marginalUtilityOfTraveling);
-		params.setMonetaryDistanceRate(monetaryDistanceRate);
-	}
-
-
 }
