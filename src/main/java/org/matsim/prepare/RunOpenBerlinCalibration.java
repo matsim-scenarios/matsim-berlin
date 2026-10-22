@@ -5,6 +5,7 @@ import com.google.inject.TypeLiteral;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Coord;
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
@@ -57,7 +58,9 @@ import org.matsim.prepare.download.DownloadCommuterStatistic;
 import org.matsim.prepare.drt.CreateDrtVehicles;
 import org.matsim.prepare.facilities.CreateMATSimFacilities;
 import org.matsim.prepare.facilities.ExtractFacilityGeoPkg;
+import org.matsim.prepare.network.FilterOsmWays;
 import org.matsim.prepare.network.LinkCapacityFromMeasurements;
+import org.matsim.prepare.network.MergeOsm;
 import org.matsim.prepare.opt.ExtractPlanIndexFromType;
 import org.matsim.prepare.opt.RunCountOptimization;
 import org.matsim.prepare.opt.SelectPlansFromIndex;
@@ -65,7 +68,6 @@ import org.matsim.prepare.population.*;
 import org.matsim.prepare.pt.EndlessCircleLineScheduleModifier;
 import org.matsim.run.Activities;
 import org.matsim.run.OpenBerlinScenario;
-import org.matsim.run.scoring.BerlinScoringConfigGroup;
 import org.matsim.smallScaleCommercialTrafficGeneration.GenerateSmallScaleCommercialTrafficDemand;
 import org.matsim.smallScaleCommercialTrafficGeneration.prepare.CreateDataDistributionOfStructureData;
 import picocli.CommandLine;
@@ -88,11 +90,11 @@ import java.util.Set;
 	CleanNetwork.class, CreateMATSimFacilities.class, InitLocationChoice.class, CreateScenarioCutOut.class,
 	CreateCountsFromGeoPortalBerlin.class, CreateCountsFromVMZOld.class, CreateCountsFromVMZ.class, ReprojectNetwork.class, RunActivitySampling.class,
 	MergePlans.class, SplitActivityTypesDuration.class, CleanPopulation.class, CleanAttributes.class,
-	RescheduleLatePlans.class, SplitWrapAroundActivities.class, EncodeTypicalDuration.class, EndTimeToDuration.class,
+	RescheduleLatePlans.class, SplitWrapAroundActivities.class, EncodeTypicalDurations.class, MoveTypicalDurationsToPerson.class, EndTimeToDuration.class,
 	GenerateSmallScaleCommercialTrafficDemand.class, CreateDataDistributionOfStructureData.class, LinkCapacityFromMeasurements.class,
 	RunCountOptimization.class, SelectPlansFromIndex.class, ExtractPlanIndexFromType.class, AssignReferencePopulation.class, DrawModeConstantVariations.class,
 	ExtractRelevantFreightTrips.class, CheckCarAvailability.class, FixSubtourModes.class, ComputeTripChoices.class, ComputePlanChoices.class,
-	ApplyNetworkParams.class, SetCarAvailabilityByAge.class, CreateDrtVehicles.class, EndlessCircleLineScheduleModifier.class,
+	FilterOsmWays.class, MergeOsm.class, ApplyNetworkParams.class, SetCarAvailabilityByAge.class, CreateDrtVehicles.class, EndlessCircleLineScheduleModifier.class,
 	WriteRunConfig.class
 })
 public class RunOpenBerlinCalibration extends MATSimApplication {
@@ -122,11 +124,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 	@CommandLine.Option(names = "--simulation-period-in-days", description = "Length of the simulation period, as a " +
 		"multiple of 24h. Must match the scenario and the preprocessing.")
 	private double simulationPeriodInDays = OpenBerlinScenario.DEFAULT_SIMULATION_PERIOD_IN_DAYS;
-
-	@CommandLine.Option(names = "--allow-config-typical-durations", description = "Allow person-subpopulation " +
-		"activities without a typicalDuration attribute to score against the config typical duration. By default " +
-		"such an activity ABORTS the run.")
-	private boolean allowConfigTypicalDurations = false;
 
 	/**
 	 * Round to two digits.
@@ -174,9 +171,6 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		config.scoring().setWriteExperiencedPlans(true);
 
 		Activities.addScoringParams(config, false, withOpeningTimes);
-
-		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class)
-			.setAllowConfigTypicalDurations(allowConfigTypicalDurations);
 
 		config.scenario().setSimulationPeriodInDays(simulationPeriodInDays);
 
@@ -318,6 +312,38 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 				}
 			}
 		}
+
+		replicateCarDrivingNonPersons(scenario.getPopulation(), CAR_FACTOR);
+	}
+
+	/**
+	 * The conversion to car plans puts {@code CAR_FACTOR} times the persons' real car traffic on the network, and the
+	 * capacity and the counts scale are set for that: one simulated vehicle stands for 1 / (sample * CAR_FACTOR) real
+	 * ones. Agents of the other subpopulations that drive a car (the commercial cars and vans) are real car traffic as
+	 * they are, so without this they would weigh 1 / CAR_FACTOR of what they stand for, in the congestion as in the
+	 * comparison with the car counts, which include them (all vehicles but heavy trucks). Each of them gets
+	 * {@code factor - 1} copies, which are only there for that weight: select-plans-idx goes through the cadyts input
+	 * and never looks them up. Trucks and long-haul freight are teleported here and are not in the car counts.
+	 */
+	static void replicateCarDrivingNonPersons(Population population, int factor) {
+		List<? extends Person> drivers = population.getPersons().values().stream()
+			.filter(p -> !"person".equals(PopulationUtils.getSubpopulation(p)))
+			.filter(p -> TripStructureUtils.getLegs(p.getSelectedPlan()).stream().anyMatch(l -> TransportMode.car.equals(l.getMode())))
+			.toList();
+
+		for (Person person : drivers) {
+			int selected = person.getPlans().indexOf(person.getSelectedPlan());
+			for (int k = 1; k < factor; k++) {
+				Person copy = population.getFactory().createPerson(Id.createPersonId(person.getId() + "_car_factor_" + k));
+				PopulationUtils.copyFromTo(person, copy);
+				// would make the copies share their vehicles; the run creates one per person and mode instead
+				copy.getAttributes().removeAttribute("vehicles");
+				copy.setSelectedPlan(copy.getPlans().get(selected));
+				population.addPerson(copy);
+			}
+		}
+
+		log.info("{} car driving agents of the non-person subpopulations now count {} times each.", drivers.size(), factor);
 	}
 
 	@Override

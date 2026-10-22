@@ -8,7 +8,7 @@ mode shares, and derives the constants of the next trial from them. It is driven
 requested sample size and gives every sample size its own run directory, so that the ensembles of
 different sample sizes can live in the tree next to each other.
 
-Needs the calibration extra of the matsim python tools, see src/main/sh/setup.sh.
+Needs the calibration extra of the matsim python tools; run `make python-env` to get it.
 """
 
 import argparse

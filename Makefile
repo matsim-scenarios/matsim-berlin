@@ -53,17 +53,10 @@ PIPELINE_PCT := $(PIPELINE_SAMPLE)pct
 CRS := EPSG:25832
 MAKE_XMX ?= 20G
 
-## we assume SUMO is installed locally via pip
-## use either the agimo-digital-twin-workflow or 
-## install via pip install eclipse-sumo==[VERSION]
-#SUMO_VERSION := 1.20.0
-
 ## if you want to override thes variables set them as environment-variables and run make -e
 ## make will then use the environment-variable instead what you defined here.
 SVN_PATH := ..
 OUTPUT := output
-## either use the global installation via, e.g. apt-get, or define where this is comming from
-OSMOSIS := osmosis
 ## we use a tmp-dir because on the cluster the default-tmp-dir is to small
 TMP_DIR := ./tmp
 # Length of the simulation period as a multiple of 24h; must match OpenBerlinScenario.DEFAULT_SIMULATION_PERIOD_IN_DAYS
@@ -77,9 +70,21 @@ MODE_CONSTANT_SIGMAS ?= car=1.506777,bike=0.879757,pt=1.737971,ride=2.861008
 JAVA_CP := java -Xmx$(MAKE_XMX) -XX:+UseParallelGC -Dorg.geotools.referencing.forceXY=true -Djava.io.tmpdir=$(TMP_DIR) -cp $(JAR)
 JAVA_APP := $(JAVA_CP) org.matsim.prepare.RunOpenBerlinCalibration
 
-## The ASC calibration is driven from python and needs the calibration extra of the matsim python
-## tools, see src/main/sh/setup.sh; point PYTHON at the interpreter of that environment.
-PYTHON ?= python3
+## Python and SUMO both come from the virtual environment that `make python-env` builds from
+## requirements.txt: the ASC calibration needs the calibration extra of the matsim python tools,
+## and the network conversion needs netconvert. Override VENV to put the environment elsewhere,
+## VENV_PYTHON to bootstrap it with a particular interpreter (the one on the cluster may be too
+## old), or PYTHON / NETCONVERT to use an installation of your own. A native Windows venv puts
+## its executables in Scripts/ rather than bin/: set VENV_BIN=$(VENV)/Scripts. The rest of this
+## Makefile needs a POSIX shell in any case, so WSL or the cluster is the supported way to run it.
+VENV ?= .venv
+VENV_BIN ?= $(VENV)/bin
+VENV_PYTHON ?= python3.12
+PYTHON ?= $(VENV_BIN)/python
+NETCONVERT ?= $(VENV_BIN)/netconvert
+ifeq ($(strip $(VENV)),)
+$(error VENV must name a dedicated directory; its contents are wiped when the env is rebuilt)
+endif
 ## MATSim iterations of one calibration run, and how many calibration runs to add to the study.
 ## Re-running the target continues the study instead of starting over.
 ASC_CALIB_ITERATIONS ?= 500
@@ -89,7 +94,7 @@ ASC_CALIB_XMX ?= 60G
 ## every trial. Empty means the parameters stay as they are in the generated config.
 ASC_CALIB_BASE_PARAMS ?=
 
-.PHONY: setup prepare prepare-network-and-counts prepare-freight prepare-calibration prepare-run-cadyts prepare-initial prepare-asc-calibration analyze-freight
+.PHONY: setup python-env prepare prepare-network-and-counts prepare-freight prepare-calibration prepare-run-cadyts prepare-initial prepare-asc-calibration analyze-freight
 .DELETE_ON_ERROR:
 
 ###################################
@@ -158,6 +163,15 @@ VEHICLESFILE_IN := input/v7.0/berlin-v7.0-vehicleTypes-fixed.xml
 FACILITIES_GPKG := $(OUTPUT)/facilities.gpkg
 
 NETWORK_OSM := $(OUTPUT)/network.osm
+## the two layers the network osm file is merged from. Scratch output of the $(NETWORK_OSM) rule, which
+## deletes them again, so they live in the tmp dir rather than next to the artifacts.
+NETWORK_OSM_DETAILED := $(TMP_DIR)/network-detailed.osm.pbf
+NETWORK_OSM_COARSE := $(TMP_DIR)/network-coarse.osm.pbf
+## the osm way types each layer keeps. The detailed layer is clipped to $(AREA_POLY) and also keeps the
+## ways tagged bicycle=designated; the coarse layer is deliberately not clipped, so that traffic from
+## outside the area still has a network to arrive on.
+NETWORK_HIGHWAYS_DETAILED := motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction,residential,living_street,unclassified,cycleway
+NETWORK_HIGHWAYS_COARSE := motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction
 NETWORK_SUMO := $(OUTPUT)/sumo.net.xml
 NETWORK_MATSIM := $(OUTPUT)/berlin-$(VERSION)-network.xml.gz
 NETWORK_MATSIM_PT := $(OUTPUT)/berlin-$(VERSION)-network-with-pt.xml.gz
@@ -191,6 +205,9 @@ BERLIN_ASC_CALIB_PLANS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans-calibr
 BERLIN_RUN_CONFIG := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).config.xml
 COMMERCIAL_FACILITIES := $(OUTPUT)/commercialFacilities.xml.gz
 BERLIN_SMALLSCALE_COMMERCIAL := $(OUTPUT)/berlin-small-scale-commercialTraffic-$(VERSION)-$(PIPELINE_PCT).plans.xml.gz
+## the commercial traffic v7.0 generated, which v7.1 used and the cadyts input is built from, see its rule
+BERLIN_SMALLSCALE_COMMERCIAL_V70 := $(BERLINPUBLIC)/berlin-v7.0/input/berlin-small-scale-commercialTraffic-v7.0-25pct.plans.xml.gz
+BERLIN_SMALLSCALE_COMMERCIAL_FROZEN := $(OUTPUT)/berlin-small-scale-commercialTraffic-v7.0-$(PIPELINE_PCT).plans.xml.gz
 ## jsprit scratch output and its analysis, for the one commercial traffic generation
 COMMERCIAL_TRAFFIC_OUT := $(OUTPUT)/commercialPersonTraffic-$(PIPELINE_PCT)
 FREIGHT_ANALYSIS_OUT := $(OUTPUT)/analysis-freight-$(PIPELINE_PCT)
@@ -225,32 +242,34 @@ $(FACILITIES_GPKG): $(BRANDENBURG_OSM_LOCAL) $(ACTIVITY_MAPPING) | setup
 	 --input $<\
 	 --output $@
 
-# filtering for those parts of the osm data that we need for the network:
+# filtering for those parts of the osm data that we need for the network: three osmosis stages, run
+# from the osmosis libraries in the pom rather than from an installation on the PATH.
 $(NETWORK_OSM): $(BRANDENBURG_OSM_LOCAL) $(AREA_POLY) $(REMOVE_RAILWAY) | setup
 
-	# Detailed network includes bikes as well
-	 # hard-coded because we delete within this step
-	$(OSMOSIS) --rb file=$<\
-	 --tf accept-ways bicycle=designated highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction,residential,living_street,unclassified,cycleway\
-	 --bounding-polygon file="$(word 2,$^)"\
-	 --used-node --wb input/network-detailed.osm.pbf
+	# Detailed network includes bikes as well, and only reaches as far as the area
+	$(JAVA_APP) prepare filter-osm-ways $<\
+	 --highways $(NETWORK_HIGHWAYS_DETAILED)\
+	 --bicycle designated\
+	 --area $(word 2,$^)\
+	 --output $(NETWORK_OSM_DETAILED)
 
-	$(OSMOSIS) --rb file=$<\
-	 --tf accept-ways highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary_link,secondary,tertiary,motorway_junction\
-	 --used-node --wb input/network-coarse.osm.pbf
+	# Coarse network of the major roads, kept beyond the area as well
+	$(JAVA_APP) prepare filter-osm-ways $<\
+	 --highways $(NETWORK_HIGHWAYS_COARSE)\
+	 --output $(NETWORK_OSM_COARSE)
 
-	$(OSMOSIS) --rb file=input/network-coarse.osm.pbf --rb file=input/network-detailed.osm.pbf\
-  	 --merge\
-  	 --tag-transform file=$(word 3,$^)\
-  	 --wx $@
+	# Merge the two layers and drop the railway tags
+	$(JAVA_APP) prepare merge-osm $(NETWORK_OSM_COARSE) $(NETWORK_OSM_DETAILED)\
+	 --tag-transform $(word 3,$^)\
+	 --output $@
 
-	rm input/network-detailed.osm.pbf
-	rm input/network-coarse.osm.pbf
+	rm $(NETWORK_OSM_DETAILED) $(NETWORK_OSM_COARSE)
 
 # converting the network from OSM format to SUMO format:
 $(NETWORK_SUMO): $(NETWORK_OSM) $(SUMO_OSM_NETCONVERT) $(SUMO_OSM_NETCONVERT_URBAN_DE) | setup
-	netconvert --geometry.remove --ramps.guess --ramps.no-split\
-	 --type-files $(word 2,$^),$(word 3,$^)\
+	command -v $(NETCONVERT) >/dev/null || { echo "$(NETCONVERT) not found; run: make python-env"; exit 1; }
+	$(NETCONVERT) --geometry.remove --ramps.guess --ramps.no-split\
+	 --type-files $(SUMO_OSM_NETCONVERT),$(SUMO_OSM_NETCONVERT_URBAN_DE)\
 	 --tls.guess-signals true --tls.discard-simple --tls.join --tls.default-type actuated\
 	 --junctions.join --junctions.corner-detail 5\
 	 --roundabouts.guess --remove-edges.isolated\
@@ -424,6 +443,19 @@ $(DATA_DISTR_PER_ZONE): $(COMMERCIAL_FACILITIES) | setup
 	test -f $@ || { echo "$@ is missing; delete $< to have both written again"; exit 1; }
 	touch -r $< $@
 
+# The resistance factors of the gravity model are the single --resistanceFactor that v7.1 used implicitly: the
+# contrib's default of 0.005 until it was split per segment without a default. 0.2 / 0.1, the values of other
+# deployments, make the commercial trips a third (business, service) to a half (goods) as long and halve the
+# vehicle kilometres; that is a change of the scenario to make on purpose, not along the way. The resistance is
+# exp(-factor * monetary travel cost) of an example van, whose cost per second the contrib has since halved, so
+# 0.005 now decays a little less with distance than it did in v7.1.
+# One plan per tour, the one jsprit solved. With more plan variants per agent the contrib adds copies of the tour
+# with the stops in random order (CreateDifferentPlansForFreightPopulation) for cadyts to choose from. They are not
+# alternatives of the demand but worse routes of the same tour, 20-27 % longer, and at 25 % cadyts chose among them
+# almost at random, adding 13-26 % to the commercial vehicle kilometres.
+# The network and the output directory go in as config settings: matsim-libs #5103 removed --network and --pathOutput,
+# and since then unknown options are passed on as config arguments, of which only the --config: ones are applied.
+# The old options would be dropped silently and the run would stop for want of a network.
 $(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DATA_DISTR_PER_ZONE) $(BB_ZONES_VKZ_4326) $(FREIGHT_CONFIG) | setup
 	$(JAVA_APP) prepare generate-small-scale-commercial-traffic\
 	  $(word 5,$^)\
@@ -432,16 +464,16 @@ $(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DA
 	 --sample $(PIPELINE_SIZE)\
 	 --jspritIterations 10\
 	 --creationOption createNewCarrierFile\
-	 --network $(abspath $<)\
+	 --config:network.inputNetworkFile=$(abspath $<)\
 	 --smallScaleCommercialTrafficType completeSmallScaleCommercialTraffic\
 	 --zoneShapeFileName $(abspath $(word 4,$^))\
 	 --zoneShapeFileNameColumn "id"\
 	 --shapeCRS "EPSG:4326"\
-	 --resistanceFactor_commercialPersonTraffic 0.2\
-	 --resistanceFactor_goodsTraffic 0.1\
-	 --numberOfPlanVariantsPerAgent 5\
+	 --resistanceFactor_commercialPersonTraffic 0.005\
+	 --resistanceFactor_goodsTraffic 0.005\
+	 --numberOfPlanVariantsPerAgent 1\
 	 --nameOutputPopulation $(notdir $@)\
-	 --pathOutput $(COMMERCIAL_TRAFFIC_OUT)
+	 --config:controller.outputDirectory=$(abspath $(COMMERCIAL_TRAFFIC_OUT))
 
 	mv $(COMMERCIAL_TRAFFIC_OUT)/$(notdir $@) $@
 
@@ -456,7 +488,26 @@ $(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DA
 	 --output $@
 	#rm -r $(COMMERCIAL_TRAFFIC_OUT) delete or keep?
 
-$(BERLIN_CADYTS_INPUT): $(BERLIN_BRANDENBURG_INITIAL) $(BERLIN_SMALLSCALE_COMMERCIAL) | setup
+# The cadyts input takes the commercial traffic v7.0 generated, as v7.1 did, not the one generated above, until that
+# one is understood (#217): its fleet sizing and repair loop come from a later contrib and give more tours with fewer
+# stops and a fifth more vehicle kilometres. The rule above stays for that work (make analyze-freight). The file has
+# activities by coordinate only, so it fits this network. v7.0 gave most tours five plans for cadyts to choose from:
+# the one jsprit solved, which is selected, and copies with the stops in random order. Only the selected one is kept,
+# for the reason given at the rule above.
+$(BERLIN_SMALLSCALE_COMMERCIAL_FROZEN): $(BERLIN_SMALLSCALE_COMMERCIAL_V70) | setup
+	$(JAVA_APP) prepare clean-population\
+	 --plans $<\
+	 --remove-unselected-plans\
+	 --output $@
+ifneq ($(PIPELINE_SIZE),0.25)
+# As for $(BERLIN_BRANDENBURG_LONGHAULFREIGHT): the file is a 25 % sample, the name of the target does not say 25pct.
+	$(JAVA_APP) prepare downsample-population $@\
+	 --sample-size 0.25\
+	 --samples $(PIPELINE_SIZE)
+	mv $(@:.xml.gz=-$(PIPELINE_PCT).xml.gz) $@
+endif
+
+$(BERLIN_CADYTS_INPUT): $(BERLIN_BRANDENBURG_INITIAL) $(BERLIN_SMALLSCALE_COMMERCIAL_FROZEN) | setup
 	$(JAVA_APP) prepare merge-populations $^\
 	 --output $@
 
@@ -519,14 +570,14 @@ $(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MATSIM) 
 	 --input-crs $(CRS)\
 	 --shp $(word 5,$^)
 
-# Give each activity its own typicalDuration attribute, which the scoring reads (see
-# BerlinScoringFunctionFactory), instead of encoding the typical duration in the activity type.
+# Give each activity its own typical duration, kept in the person's typicalDurations attribute, which the scoring
+# reads (scoring.typicalDurationSource = personAttribute), instead of encoding the typical duration in the activity type.
 # clean redundant max-duration attributes and reschedule plans whose activities run past the simulation day,
 # order-preserving, so the last activity keeps a positive window.
 	$(JAVA_APP) prepare reschedule-late-plans $@ --output $@ --simulation-period-in-days $(SIM_PERIOD_DAYS)
 # switch off wrap-around scoring: split first and last act of the day into separate _morning and _evening act types.
 	$(JAVA_APP) prepare split-wrap-around-activities $@ --output $@
-# encode each activity's typical duration as an attribute. Must run after the wrap-around split, so the (now
+# encode each activity's typical duration in the person attribute. Must run after the wrap-around split, so the (now
 # differing) morning/evening types take the non-wrap-around branch.
 	$(JAVA_APP) prepare encode-typical-duration $@ --output $@ --simulation-period-in-days $(SIM_PERIOD_DAYS) --min-typical-duration 300
 # for short activities, remove the end time and encode the span as a maximum duration instead.
@@ -578,6 +629,7 @@ $(BERLIN_ASC_CALIB_CONFIG): $(RUN_CONFIG_TEMPLATE) | setup
 # the output has to be gzipped, not zstd; and it only reads the mode shares, so the expensive noise
 # and emission dashboards are skipped.
 $(BERLIN_ASC_CALIB_PARAMS): $(BERLIN_ASC_CALIB_CONFIG) $(BERLIN_PLANS_INITIAL) $(NETWORK_MATSIM_PT) $(FACILITIES_XML) $(VMZ_COUNTS) $(VEHICLESFILE_OUT) | setup
+	command -v $(PYTHON) >/dev/null || { echo "$(PYTHON) not found; run: make python-env"; exit 1; }
 	$(PYTHON) src/main/python/calibrate.py\
 	 --jar '$(JAR)'\
 	 --config $<\
@@ -616,10 +668,27 @@ setup:
 	mkdir -p $(OUTPUT)
 	mkdir -p $(TMP_DIR)
 
+# The environment the pipeline's python and netconvert come from. Not a prerequisite of anything:
+# the rules that need it check for it and point here, so that rebuilding the environment does not
+# invalidate the expensive artifacts that were built with it.
+# --clear because `python -m venv` on an existing directory neither errors nor cleans, so without
+# it a requirement dropped from requirements.txt would never be uninstalled, and a run that failed
+# half way through would be installed on top of rather than repaired. pip runs as `python -m pip`
+# because driving pip through bin/pip makes it replace itself while running, and because bin/pip's
+# #! line breaks once the path to it passes 127 characters, which cluster home directories do.
+$(VENV)/.stamp: requirements.txt
+	$(VENV_PYTHON) -m venv --clear $(VENV)
+	$(VENV_BIN)/python -m pip install --upgrade pip
+	$(VENV_BIN)/python -m pip install -r requirements.txt
+	touch $@
+
+python-env: $(VENV)/.stamp
+	echo "python env in $(VENV), built with $(VENV_PYTHON)"
+
 prepare-network-and-counts: $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	echo done
 
-prepare-freight: $(BERLIN_BRANDENBURG_LONGHAULFREIGHT) $(BERLIN_SMALLSCALE_COMMERCIAL)
+prepare-freight: $(BERLIN_BRANDENBURG_LONGHAULFREIGHT) $(BERLIN_SMALLSCALE_COMMERCIAL_FROZEN)
 
 prepare-calibration: $(BERLIN_CADYTS_INPUT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	#make -Bndri prepare-calibration | make2graph | gv2gml -o prepare-calibration_graph.gml

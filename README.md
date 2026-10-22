@@ -42,6 +42,79 @@ The **MATSim input files, output files, analysis data and visualizations** are l
 Handling of large files within git is not without problems (git lfs files are not included in the zip download; we have to pay; ...).  In consequence, large files, both on the input and on the output side, reside at https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin .  
 
 ----
+## Prerequisites
+
+You need these only to regenerate the scenario with the `Makefile`; to run a published scenario, see the sections above.
+
+| | |
+| --- | --- |
+| Java and Maven | the build uses the bundled `./mvnw`, so only a JDK has to be installed |
+| Make | the pipeline is a `Makefile` |
+| `make python-env` | everything installed from python: DVC, `netconvert` and the calibration interpreter |
+
+`make python-env` builds a virtual environment in `.venv` from `requirements.txt`, which pins all three:
+
+```bash
+make python-env
+```
+
+The `Makefile` then finds `.venv` on its own — there is nothing to activate. The rules that need
+it check for it first and tell you to run the target if it is missing, rather than failing with a
+bare "command not found". Re-run it after changing `requirements.txt`; it is a no-op otherwise.
+
+To use your own installation of either tool instead, override `PYTHON` or `NETCONVERT`
+(e.g. `make PYTHON=python3 …`), and the environment is not built at all. Note that activating a
+virtual environment in your shell has no effect on what `make` runs, since `PYTHON` points into
+`.venv` explicitly.
+
+The commands below spell DVC out as `.venv/bin/dvc`, because that is where `make python-env` puts
+it. Activating `.venv` and saying `dvc` works just as well.
+
+----
+## Input data (DVC)
+
+The large input and output files are tracked with [DVC](https://dvc.org) rather than git: git holds only a small `*.dvc` pointer file per artifact (source URL, hash and size), and the data itself is fetched on demand into a local cache.
+
+DVC is pinned in `requirements.txt` because `dvc update` rewrites every pointer file, and different
+DVC versions serialize them differently, so an unpinned DVC churns all of `input/**/*.dvc` without
+any data having changed.
+
+### Remotes
+
+| Remote | Holds | Access |
+| --- | --- | --- |
+| `public-svn` | public input files | open, no credentials |
+| `shared-svn` | non-public input files | VSP SVN account |
+| `cluster-home` (default) | generated `output/` data | account on the TU math cluster |
+
+The remote URLs deliberately carry no user name, so each person configures their own in `.dvc/config.local`, which is not committed:
+
+```bash
+# non-public inputs
+.venv/bin/dvc remote modify --local shared-svn auth basic
+.venv/bin/dvc remote modify --local shared-svn user <your-svn-user>
+.venv/bin/dvc remote modify --local shared-svn password <your-svn-password>
+
+# generated output on the cluster
+.venv/bin/dvc remote modify --local cluster-home user <your-cluster-login>
+```
+
+### Getting the input data
+
+The files under `input/` are pinned imports of files on the VSP SVN servers (ca. 1.2 GB in total). Download them from there with:
+
+```bash
+.venv/bin/dvc update -R input
+```
+
+Note that `dvc pull` does **not** fetch these: it only ever talks to the default remote, which is `cluster-home`. Use `dvc pull` to download a previously generated `output/` directory (ca. 2.7 GB) instead of building it yourself, and `dvc add output && dvc push` to share the result of your own `make` run.
+
+Two things to watch out for with `dvc update`:
+
+* It re-pins every import to the current state of the source. If a file on the SVN has changed, its `*.dvc` file changes too, so check `git status` afterwards and commit those changes only if you intend to move to the new version.
+* Do not pass `--no-download`. Without the data DVC cannot hash it, so it writes pointer files with an empty output hash.
+
+----
 ## Simple things (without installing/running MATSim)
 
 ### Use SimWrapper dashboards

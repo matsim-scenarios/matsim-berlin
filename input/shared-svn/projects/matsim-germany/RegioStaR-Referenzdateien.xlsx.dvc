@@ -4,7 +4,8 @@ deps:
 - checksum: '"39696//projects/matsim-germany/RegioStaR-Referenzdateien.xlsx"'
   size: 6809508
   hash: md5
-  path: remote://shared-svn/projects/matsim-germany/RegioStaR-Referenzdateien.xlsx
+  path: 
+    remote://shared-svn/projects/matsim-germany/RegioStaR-Referenzdateien.xlsx
 outs:
 - md5: 9201901ab0b9ba728d1f0a42d7ed006b
   size: 6809508

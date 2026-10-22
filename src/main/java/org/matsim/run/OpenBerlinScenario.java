@@ -6,56 +6,42 @@ import com.google.inject.name.Names;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.analysis.AgentWiseComparison;
-import org.matsim.analysis.QsimTimingModule;
-import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
-import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.population.Leg;
-import org.matsim.api.core.v01.population.Person;
-import org.matsim.api.core.v01.population.Plan;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.MATSimApplication;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
-import org.matsim.contrib.emissions.scenarioCheckers.Hbefa41ScenarioChecker;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
-import org.matsim.contrib.vsp.scoring.RideScoringParamsFromCarParams;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanInheritanceConfigGroup;
-import org.matsim.core.config.groups.ScoringConfigGroup;
-import org.matsim.core.config.groups.TasteVariationsConfigParameterSet;
 import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
-import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.dashboard.BerlinDashboardProvider;
-import org.matsim.run.scoring.BerlinScoringConfigGroup;
 import org.matsim.run.scoring.BerlinScoringModule;
 import org.matsim.simwrapper.DashboardProvider;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
-import org.matsim.vehicles.VehicleType;
+import org.matsim.contrib.emissions.scenarioCheckers.Hbefa41ScenarioChecker;
+import org.matsim.contrib.vsp.scoring.RideScoringParamsFromCarParams;
+import org.matsim.core.config.groups.ScoringConfigGroup;
+import org.matsim.core.config.groups.TasteVariationsConfigParameterSet;
+import org.matsim.run.scoring.BerlinScoringModule;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
-
-import static org.matsim.contrib.common.conventions.vsp.SubpopulationDefaultNames.*;
-import static org.matsim.contrib.emissions.utils.EmissionsConfigGroup.*;
-import static org.matsim.core.config.groups.ReplanningConfigGroup.StrategySettings;
-import static org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule.DefaultSelector;
-import static org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule.DefaultStrategy;
 
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true, showDefaultValues = true)
 @MATSimApplication.Analysis({AgentWiseComparison.class})
 public class OpenBerlinScenario extends MATSimApplication {
 
-	private static final Logger log = LogManager.getLogger(OpenBerlinScenario.VERSION);
+	public static final String VERSION = "7.1";
+	public static final String CRS = "EPSG:25832";
 
 	//	To decrypt hbefa input files set MATSIM_DECRYPTION_PASSWORD as environment variable. ask VSP for access.
 	private static final String HBEFA_2020_PATH = "https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/0e73947443d68f95202b71a156b337f7f71604ae/";
@@ -64,14 +50,14 @@ public class OpenBerlinScenario extends MATSimApplication {
 	private static final String HBEFA_FILE_COLD_AVERAGE = HBEFA_2020_PATH + "r9230ru2n209r30u2fn0c9rn20n2rujkhkjhoewt84202.enc" ;
 	private static final String HBEFA_FILE_WARM_AVERAGE = HBEFA_2020_PATH + "7eff8f308633df1b8ac4d06d05180dd0c5fdf577.enc";
 
+	private static final String AVERAGE = "average";
+	private static final Logger log = LogManager.getLogger(OpenBerlinScenario.VERSION);
+
 	/**
 	 * Default length of the simulation period, as a multiple of 24h. 1.125 (= 27:00) makes the non-wrap-around
 	 * overnight scoring clamp the last activity at 27:00 instead of 24:00.
 	 */
 	public static final double DEFAULT_SIMULATION_PERIOD_IN_DAYS = 1.125;
-
-	public static final String VERSION = "8.0";
-	public static final String CRS = "EPSG:25832";
 
 	@CommandLine.Option(names = "--plan-selector",
 		description = "Plan selector to use.",
@@ -114,18 +100,19 @@ public class OpenBerlinScenario extends MATSimApplication {
 		PlanInheritanceConfigGroup planInheritanceConfigGroup = ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
 		planInheritanceConfigGroup.setEnabled(true);
 
-		// this is a sanity-check for tt < beeline/teleportedSpeed
 		config.qsim().setUsingTravelTimeCheckInTeleportation(true);
 
-		// this is needed for freight, commercial according to TypicalDurations#forPerson
-		// maybe we can limit this to specific subpopulation so we do not blow up the config so much
-		Activities.addScoringParams(config, true, false);
+//		still registering the duration-binned types, so populations that predate per-activity typical durations keep
+//		scoring; for activities with their own typical duration, the type's is only a fallback.
+		Activities.addScoringParams(config, true, withOpeningTimes);
 
+//		score each activity against its own typical duration from the person's typicalDurations attribute; persons without
+//		one (other subpopulations, populations that encode the typical duration in the activity type) use the type's.
+		config.scoring().setTypicalDurationSource(ScoringConfigGroup.TypicalDurationSource.personAttribute);
 
-		// this is necessary if we use person-specific typical durations
+//		move the else-branch overnight scoring clamp away from 24:00; see --simulation-period-in-days.
 		config.scenario().setSimulationPeriodInDays(simulationPeriodInDays);
 
-		//switched this from bestScore to ChangeExpBeta.
 		// Required for all calibration strategies
 		//TODO use subpoulations default names --> habe ich gemacht. kai
 		for (String subpopulation : List.of( SUBPOP_PERSON, SUBPOP_FREIGHT,  SUBPOP_GOODS, SUBPOP_COM_PERSON, SUBPOP_COM_PERSON_SERVICE )) {
@@ -166,7 +153,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 		// TODO this should move to config.xml
 		config.scoring().setExplainScores(true);
 
-
+//		also enable plan inheritance analysis
+		PlanInheritanceConfigGroup planInheritanceConfigGroup = ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
+		planInheritanceConfigGroup.setEnabled(true);
 
 		// TODO only here for experiments, move to config when done // DR20261013
 		applyV64ScoringParameters(config);
@@ -191,13 +180,13 @@ public class OpenBerlinScenario extends MATSimApplication {
 		// Add emissions configuration
 		// TODO move this to config.xml
 		EmissionsConfigGroup eConfig = ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
-		eConfig.setDetailedColdEmissionFactorsFile(HBEFA_FILE_COLD_DETAILED );
+		eConfig.setDetailedColdEmissionFactorsFile(HBEFA_FILE_COLD_DETAILED);
 		eConfig.setDetailedWarmEmissionFactorsFile(HBEFA_FILE_WARM_DETAILED);
 		eConfig.setAverageColdEmissionFactorsFile(HBEFA_FILE_COLD_AVERAGE);
 		eConfig.setAverageWarmEmissionFactorsFile(HBEFA_FILE_WARM_AVERAGE);
-		eConfig.setHbefaTableConsistencyCheckingLevel( HbefaTableConsistencyCheckingLevel.consistent );
-		eConfig.setDetailedVsAverageLookupBehavior( DetailedVsAverageLookupBehavior.tryDetailedThenTechnologyAverageThenAverageTable );
-		eConfig.setEmissionsComputationMethod( EmissionsComputationMethod.StopAndGoFraction );
+		eConfig.setHbefaTableConsistencyCheckingLevel(HbefaTableConsistencyCheckingLevel.consistent );
+		eConfig.setDetailedVsAverageLookupBehavior(DetailedVsAverageLookupBehavior.tryDetailedThenTechnologyAverageThenAverageTable );
+		eConfig.setEmissionsComputationMethod( missionsComputationMethod.StopAndGoFraction );
 
 		config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.abort);
 
@@ -301,7 +290,6 @@ public class OpenBerlinScenario extends MATSimApplication {
 	// yyyy my preference would be to do without this class, since it only contains two lines of material, and adds 20
 	// lines of syntactic sugar. kai, oct'26
 	public static final class TravelTimeBinding extends AbstractModule {
-
 
 		private final boolean carOnly;
 
