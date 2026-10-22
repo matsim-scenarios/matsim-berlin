@@ -187,6 +187,13 @@ In an IDE, add it to the VM options of the run configuration. Note that the argu
 the JVM that actually runs MATSim: when starting the jar by double-click, the MATSim GUI opens a
 second JVM for the run, so start the jar from the command line as shown above instead.
 
+
+When running on a HPC-cluster you also need to add to your runscript or .bashrc
+
+```
+module load metis-5.1
+```
+
 <details>
 <summary>    
     <h3>... using a runnable jar file</h3>
