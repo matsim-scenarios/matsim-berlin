@@ -49,14 +49,30 @@ import static org.matsim.prepare.facilities.CreateMATSimFacilities.IGNORED_LINK_
 public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 
 	/**
-	 * Detour factor for routes > 3000m. Factor is based on data, but adjusted to better match distance distribution.
+	 * Detour factor at a beeline distance of one kilometre: a trip of one kilometre as the crow flies is this much
+	 * longer when it is actually travelled. Measured on the realized trips of a 1 % run (Berlin residents, all modes,
+	 * sum of routed over sum of beeline distance per beeline distance group):
+	 *
+	 * <pre>
+	 *   beeline distance   0-1 km   1-2 km   2-5 km   5-10 km
+	 *   detour factor        1.57     1.49     1.43      1.37
+	 * </pre>
+	 * <p>
+	 * The same measurement on the published v7.1 run gives 1.60 / 1.52 / 1.44 / 1.36, so this is a property of the
+	 * network and the mode mix rather than of one run.
+	 * <p>
+	 * It is measured with the ruler the scenario itself uses, which is not a pure network distance: walk is
+	 * teleported at a beeline factor of 1.3, and for the network modes the access and egress walk legs count into the
+	 * distance of the trip. So the factor belongs to this routing configuration as much as to the road network, and
+	 * has to be measured again if walk stops being teleported or access and egress are accounted differently.
 	 */
-	private static final double DETOUR_FACTOR = 1.25;
+	private static final double DETOUR_FACTOR_1KM = 1.52;
 
 	/**
-	 * Factor for short trips < 3000m. Factor was calculated based on data.
+	 * How fast the detour factor falls with distance: {@code detour(d) = DETOUR_FACTOR_1KM * (d / 1000m)^-DETOUR_DECAY}.
+	 * This power law fits the four measured points above to within 0.005, and extends to 1.31 at 20 km and 1.27 at 50 km.
 	 */
-	private static final double DETOUR_FACTOR_SHORT = 1.3;
+	private static final double DETOUR_DECAY = 0.05;
 
 	private static final Logger log = LogManager.getLogger(InitLocationChoice.class);
 
@@ -109,14 +125,15 @@ public class InitLocationChoice implements MATSimAppCommand, PersonAlgorithm {
 	}
 
 	/**
-	 * Approximate beeline dist from known traveled distance. Distance will be reduced by a fixed detour factor.
+	 * Approximate the beeline distance of a trip from the distance it was reported to have been travelled. This is the
+	 * distance a location has to be sampled at for the trip to it to come out the reported length, so it inverts
+	 * {@code travelled = beeline * detour(beeline)}, which is a power law and has a power law as its inverse.
 	 *
-	 * @param travelDist distance in km
+	 * @param travelDist travelled distance in km
 	 * @return beeline distance in meters
 	 */
 	public static double beelineDist(double travelDist) {
-		double detourFactor = travelDist <= 3 ? DETOUR_FACTOR_SHORT : DETOUR_FACTOR;
-		return travelDist * 1000 / detourFactor;
+		return 1000 * Math.pow(travelDist / DETOUR_FACTOR_1KM, 1 / (1 - DETOUR_DECAY));
 	}
 
 	static Coord rndCoord(SplittableRandom rnd, double dist, Coord origin) {

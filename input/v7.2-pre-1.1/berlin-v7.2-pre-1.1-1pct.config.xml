@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE config SYSTEM "http://www.matsim.org/files/dtd/config_v2.dtd">
 <!--
-	Run config of the 1 % sample of berlin-v7.2-pre-1, for running the scenario as published.
+	Run config of the 1 % sample of berlin-v7.2-pre-1.1, for running the scenario as published.
 
+	berlin-v7.2-pre-1.1 is berlin-v7.2-pre-1 with the typical durations of the activities kept on
+	the person (the typicalDurations attribute) instead of on each activity; nothing else changed.
 	This is NOT a v7.2 release. It is the run config the pipeline generated from the ASC
-	calibration of the pre-release (trial 009 of ten), with the input files pointing at what
-	was published under
+	calibration of the pre-release (trial 009 of ten), starting from that trial's output
+	population. The population is read from
+	  shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1.1/
+	and every other input from what was published under
 	  shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/
 
 	shared-svn needs a login, and MATSim reads URLs without authenticating. Set
@@ -15,17 +19,17 @@
 	(environment variables or -D system properties) to your VSP SVN credentials, and the
 	scenario installs an authenticator for them at startup; see HttpAuthentication. In an IDE,
 	put them into the run configuration's environment. Without them every input URL fails with
-	HTTP 401. Nothing is cached: each start downloads about 40 MB.
+	HTTP 401. Nothing is cached: each start downloads about 155 MB.
 
-	See input/v7.2-pre-1/README.md, and the known issues in the README of the published folder.
+	See input/v7.2-pre-1.1/README.md, and the known issues in the README of the pre-1 folder.
 -->
 <config>
 	<module name="controller" >
 		<!-- Default=1000. Last Iteration of a simulation. -->
 		<param name="lastIteration" value="500" />
-		<param name="outputDirectory" value="./output/berlin-v7.2-pre-1-1pct" />
+		<param name="outputDirectory" value="./output/berlin-v7.2-pre-1.1-1pct" />
 		<!-- An identifier for the current run which is used as prefix for output files and mentioned in output xml files etc. -->
-		<param name="runId" value="berlin-v7.2-pre-1-1pct" />
+		<param name="runId" value="berlin-v7.2-pre-1.1-1pct" />
 		<!-- iterationNumber % writeEventsInterval == 0 defines in which iterations events are written to a file. `0' disables events writing completely. -->
 		<param name="writeEventsInterval" value="100" />
 		<!-- iterationNumber % writePlansInterval == 0 defines (hopefully) in which iterations plans are written to a file. `0' disables plans writing completely.  Some plans in early iterations are always written -->
@@ -52,7 +56,7 @@
 		<param name="inputNetworkFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-network-with-pt.xml.gz" />
 	</module>
 	<module name="plans" >
-		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-1pct.plans-initial.xml.gz" />
+		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1.1/output/berlin-v7.2-pre-1.1-1pct.plans.xml.gz" />
 		<!-- (not tested) will remove plan attributes that are presumably not used, such as activityStartTime. default=false. Use with Caution! -->
 		<param name="removingUnnecessaryPlanAttributes" value="true" />
 	</module>
@@ -250,7 +254,7 @@
 		<param name="analyzedModes" value="car,truck" />
 	</module>
 	<module name="vehicles" >
-		<param name="vehiclesFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-vehicleTypes.xml" />
+		<param name="vehiclesFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-vehicleTypes-hbefaFixed.xml" />
 	</module>
 	<module name="vspExperimental" >
 		<!-- Options: | ignore | info | warn | abort | .  When violating VSP defaults, this results in nothing, logfile infos, logfile warnings, or aborts.  Members of VSP should use `abort' or talk to kai. -->
