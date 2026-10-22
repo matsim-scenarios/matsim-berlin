@@ -39,7 +39,7 @@ import static org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule.
 @MATSimApplication.Analysis({AgentWiseComparison.class})
 public class OpenBerlinScenario extends MATSimApplication {
 
-	public static final String VERSION = "7.2";
+	public static final String VERSION = "7.1";
 	public static final String CRS = "EPSG:25832";
 
 	private static final String AVERAGE = "average";
@@ -147,6 +147,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 		// add this here, otherwise the config-group can not materialize
 		ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
+		ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
 
 		return config;
 	}
