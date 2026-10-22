@@ -36,11 +36,9 @@
 		<!-- The reported data is 10.29 km/h, it needs to set higher here (+0.7) because this includes access/egress as well -->
 		<maximumVelocity meterPerSecond="3.05"/>
 
+		<!-- adding this but leaving it empty. This vehicle has no engine, but missing engineInformation-block leads to a NPE -->
 		<engineInformation>
 			<attributes>
-				<attribute name="HbefaVehicleCategory" class="java.lang.String">NON_HBEFA_VEHICLE</attribute>
-				<attribute name="HbefaSizeClass" class="java.lang.String">average</attribute>
-				<attribute name="HbefaEmissionsConcept" class="java.lang.String">average</attribute>
 			</attributes>
 		</engineInformation>
 
@@ -56,6 +54,13 @@
 		</attributes>
 		<length meter="7.5"/>
 		<width meter="1.0"/>
+
+		<!-- adding this but leaving it empty. This vehicle has no engine, but missing engineInformation-block leads to a NPE -->
+		<engineInformation>
+			<attributes>
+			</attributes>
+		</engineInformation>
+
 		<passengerCarEquivalents pce="1.0"/>
 		<networkMode networkMode="car"/>
 	</vehicleType>
