@@ -13,7 +13,7 @@ import java.util.SplittableRandom;
 
 /**
  * Dresden-style draws within inferred SrV bands, stored as Äquivalenzeinkommen.
- * Input must contain the unsmoothed, midpoint-based incomes from activity sampling.
+ * Infers bands from midpoint-based incomes; other positive incomes are retained.
  */
 @CommandLine.Command(name = "assign-income")
 public final class AssignIncome implements MATSimAppCommand, PersonAlgorithm {
@@ -65,6 +65,9 @@ public final class AssignIncome implements MATSimAppCommand, PersonAlgorithm {
 				break;
 			}
 		}
+		// Preserve already continuous or otherwise unmatched valid income, including older prepared demand.
+		if (incomeGroup == 0 && currentIncome != null && Double.isFinite(currentIncome) && currentIncome > 0)
+			return;
 
 		// Uniform draws in equivalent-income bands; the lowest uses (0, upper] to avoid zero income.
 		double income = switch (incomeGroup) {
@@ -80,7 +83,7 @@ public final class AssignIncome implements MATSimAppCommand, PersonAlgorithm {
 			case 9 -> rnd.nextDouble(4600 / householdSize, 5600 / householdSize);
 			// Dresden's half-normal upper tail, starting at the SrV threshold of EUR 5600.
 			case 10 -> (Math.abs(rnd.nextGaussian()) * 1000 + 5600) / householdSize;
-			// Unmatched/missing income uses Dresden's fallback: 2364 EUR per person/month (2021).
+			// Missing/invalid income uses Dresden's fallback: 2364 EUR per person/month (2021).
 			// Dresden's source comment cites average gross household income of 4734 EUR/month
 			// and about 2 persons per household (83.1M persons / 41.5M households).
 			// Destatis, accessed 21 Sep. 2021 in the Dresden implementation:

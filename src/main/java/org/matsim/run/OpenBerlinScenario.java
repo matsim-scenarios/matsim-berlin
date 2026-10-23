@@ -36,6 +36,7 @@ import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutilityF
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.dashboard.BerlinDashboardProvider;
+import org.matsim.prepare.population.AssignIncome;
 import org.matsim.run.scoring.BerlinScoringModule;
 import org.matsim.run.scoring.BerlinScoringConfigGroup;
 import org.matsim.simwrapper.DashboardProvider;
@@ -187,6 +188,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 	@Override
 	protected void prepareScenario(Scenario scenario) {
+
+		// TODO: Resolve income smoothing in the demand pipeline; apply it here temporarily for existing demand.
+		AssignIncome.assignIncomeToPersons(scenario.getPopulation());
 
 		// add hbefa link attributes.
 		HbefaRoadTypeMapping roadTypeMapping = OsmHbefaMapping.build();
