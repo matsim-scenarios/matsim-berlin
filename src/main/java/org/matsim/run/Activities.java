@@ -68,8 +68,8 @@ public enum Activities {
 	 *
 	 * @param splitTypes        also register the duration-binned type variants (type_600 .. type_97200). Only needed
 	 *                          for populations whose typical durations are still encoded in the activity type; with
-	 *                          the typicalDuration attribute the untagged types are enough.
-	 * @param withOpeningTimes  give the types their opening and closing times. Off for attribute-based typical
+	 *                          the typicalDurations person attribute the untagged types are enough.
+	 * @param withOpeningTimes  give the types their opening and closing times. Off for per-activity typical
 	 *                          durations, which carry the schedule themselves.
 	 */
 	public static void addScoringParams(Config config, boolean splitTypes, boolean withOpeningTimes) {

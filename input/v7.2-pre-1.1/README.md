@@ -1,4 +1,4 @@
-# berlin-v7.2-pre-1
+# berlin-v7.2-pre-1.1
 
 Run configs for the samples of the pre-release that are calibrated and published. They run the
 scenario as it was published, reading every input over the network — no local pipeline run, no
@@ -6,17 +6,27 @@ checkout:
 
 | config | sample | from |
 | --- | --- | --- |
-| `berlin-v7.2-pre-1-1pct.config.xml` | 1 % | ASC calibration trial 009 of ten |
-| `berlin-v7.2-pre-1-3pct.config.xml` | 3 % | ASC calibration trial 010 of eleven |
+| `berlin-v7.2-pre-2-1pct.config.xml` | 1 % | ASC calibration trial 009 of ten |
+| `berlin-v7.2-pre-2-3pct.config.xml` | 3 % | ASC calibration trial 010 of eleven |
+
+pre-1.1 is pre-1 with the typical durations of the activities kept on the person, in the
+`typicalDurations` attribute, instead of in a `typicalDuration` attribute on each activity. The
+values, the plans and everything else are the same. Code from before that change cannot read the
+pre-1.1 populations, and current code cannot read the pre-1 ones.
 
 Both are the run config the pipeline generated from the calibration result, with the calibrated
-mode constants in them and the input paths pointing at
+mode constants in them. The populations are read from
+
+    shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1.1/output/
+
+and every other input from
 
     shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/
 
 The population is the output population of the calibration trial the constants come from, as in
-v7.1, where the configs read the output plans of the calibrated runs:
-`asc-calib-1pct/runs/009/009.output_plans.xml.gz` and `asc-calib-3pct/runs/010/010.output_plans.xml.gz`.
+v7.1, where the configs read the output plans of the calibrated runs: pre-1's
+`asc-calib-1pct/runs/009/009.output_plans.xml.gz` and `asc-calib-3pct/runs/010/010.output_plans.xml.gz`,
+converted with `prepare typical-durations-to-person`.
 The calibration chains its trials, each one starting from the output plans of an earlier one, so
 these are the end of a 2000-iteration chain (1 %: initial plans → 001 → 003 → 005 → 009; 3 %:
 initial plans → 001 → 003 → 006 → 010, 500 iterations each). The generated configs read
@@ -25,14 +35,14 @@ derives from the cadyts run; that is the population the calibration starts from,
 one, and runs with it start every activity exactly at its typical duration.
 
 This is **not** a v7.2 release. The 10 % sample is not published yet, and the pre-release has
-known issues; see the README of the published folder (commercial traffic generated at the
+known issues; see the README of the pre-1 folder (commercial traffic generated at the
 target sample size, cadyts near-inert at 1 %, sample specific mode constants).
 
 ## Running it
 
 Main class `org.matsim.run.OpenBerlinScenarioWrapper`, program arguments:
 
-    --config input/v7.2-pre-1/berlin-v7.2-pre-1-1pct.config.xml run
+    --config input/v7.2-pre-1.1/berlin-v7.2-pre-1.1-1pct.config.xml run
 
 Environment variables:
 
@@ -53,10 +63,11 @@ Once this folder is mirrored to public-svn, the URLs can be swapped and no login
 Nothing is cached between runs, so each start downloads the inputs again: about 155 MB at 1 %
 and about 420 MB at 3 %, most of it the output plans (every agent with its five plans and their
 routes), and 22 MB the supply both samples share — network with pt, facilities, transit schedule,
-transit vehicles, counts, vehicle types. To avoid the repeated
-download, check the published folder out once
+transit vehicles, counts, vehicle types. To avoid the repeated download, check the two published
+folders out once
 
     svn co https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1
+    svn co https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1.1
 
 and point the config at the local files instead — inside `output/` the paths are exactly the
 ones in the config.
