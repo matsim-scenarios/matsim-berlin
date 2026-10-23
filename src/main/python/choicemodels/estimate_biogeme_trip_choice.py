@@ -74,18 +74,18 @@ if __name__ == "__main__":
     AV = {}
 
     EXP_INCOME = Beta('EXP_INCOME', 1, 0, 1.5, ESTIMATE if args.est_exp_income else FIXED)
-    UTIL_MONEY = Beta('UTIL_MONEY', 1, 0.3, 1.5, ESTIMATE if args.est_util_money else FIXED)
+    UTIL_MONEY = Beta('UTIL_MONEY', 1, None, None, ESTIMATE if args.est_util_money else FIXED)
     BETA_PERFORMING = Beta('BETA_PERFORMING', 6.88, 1, 15, ESTIMATE if args.est_performing else FIXED)
 
-    BETA_CAR_PRICE_PERCEPTION = Beta('BETA_CAR_PRICE_PERCEPTION', 1, 0, 1,
+    BETA_CAR_PRICE_PERCEPTION = Beta('BETA_CAR_PRICE_PERCEPTION', 1, None, None,
                                      ESTIMATE if args.est_price_perception_car else FIXED)
     if args.same_price_perception:
         BETA_PT_PRICE_PERCEPTION = BETA_CAR_PRICE_PERCEPTION
     else:
-        BETA_PT_PRICE_PERCEPTION = Beta('BETA_PT_PRICE_PERCEPTION', 1, 0, 1,
+        BETA_PT_PRICE_PERCEPTION = Beta('BETA_PT_PRICE_PERCEPTION', 1, None, None,
                                         ESTIMATE if args.est_price_perception_pt else FIXED)
 
-    BETA_PT_SWITCHES = Beta('BETA_PT_SWITCHES', 1, 0, None, ESTIMATE if args.est_pt_switches else FIXED)
+    BETA_PT_SWITCHES = Beta('BETA_PT_SWITCHES', 0, None, None, FIXED)
     BETA_BUS_USAGE = Beta('BETA_BUS_LEGS', 0, 0, None, ESTIMATE if args.est_bus_legs else FIXED)
 
     # THe detour factor for ride trip, influences the time costs, as well as distance cost

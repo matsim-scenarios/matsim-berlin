@@ -6,7 +6,7 @@ second_derivatives = 0.1 # float: proportion (between 0 and 1) of iterations whe
                          # the analytical Hessian is calculated
 tolerance = 6.06273418136464e-06 # float: the algorithm stops when this precision
                                  # is reached
-max_iterations = 100 # int: maximum number of iterations
+max_iterations = 1000 # int: maximum number of iterations
 infeasible_cg = "False" # If True, the conjugate gradient algorithm may generate
                         # infeasible solutions until termination.  The result
                         # will then be projected on the feasible domain.  If
