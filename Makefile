@@ -154,7 +154,7 @@ REGIONALSTAT_COMMUTER := $(GERMANY)/regionalstatistik/commuter.csv
 ## (link no longer working; in general, mcloud no longer exists; RegioStar = spatial planning categories)
 #REGIOSTAR_URL := https://mcloud.de/downloads/mcloud/536149D1-2902-4975-9F7D-253191C0AD07/RegioStaR-Referenzdateien.xlsx
 REGIOSTAR := $(GERMANY)/RegioStaR-Referenzdateien.xlsx
-VEHICLESFILE_IN := input/v7.0/berlin-v7.0-vehicleTypes.xml
+VEHICLESFILE_IN := input/v7.0/berlin-v7.0-vehicleTypes-hbefaFixed.xml
 
 ###################################
 ######## OUTPUT ###################
@@ -205,6 +205,9 @@ BERLIN_ASC_CALIB_PLANS := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).plans-calibr
 BERLIN_RUN_CONFIG := $(OUTPUT)/berlin-$(VERSION)-$(SAMPLE_PCT).config.xml
 COMMERCIAL_FACILITIES := $(OUTPUT)/commercialFacilities.xml.gz
 BERLIN_SMALLSCALE_COMMERCIAL := $(OUTPUT)/berlin-small-scale-commercialTraffic-$(VERSION)-$(PIPELINE_PCT).plans.xml.gz
+## the commercial traffic v7.0 generated, which v7.1 used and the cadyts input is built from, see its rule
+BERLIN_SMALLSCALE_COMMERCIAL_V70 := $(BERLINPUBLIC)/berlin-v7.0/input/berlin-small-scale-commercialTraffic-v7.0-25pct.plans.xml.gz
+BERLIN_SMALLSCALE_COMMERCIAL_FROZEN := $(OUTPUT)/berlin-small-scale-commercialTraffic-v7.0-$(PIPELINE_PCT).plans.xml.gz
 ## jsprit scratch output and its analysis, for the one commercial traffic generation
 COMMERCIAL_TRAFFIC_OUT := $(OUTPUT)/commercialPersonTraffic-$(PIPELINE_PCT)
 FREIGHT_ANALYSIS_OUT := $(OUTPUT)/analysis-freight-$(PIPELINE_PCT)
@@ -450,6 +453,9 @@ $(DATA_DISTR_PER_ZONE): $(COMMERCIAL_FACILITIES) | setup
 # with the stops in random order (CreateDifferentPlansForFreightPopulation) for cadyts to choose from. They are not
 # alternatives of the demand but worse routes of the same tour, 20-27 % longer, and at 25 % cadyts chose among them
 # almost at random, adding 13-26 % to the commercial vehicle kilometres.
+# The network and the output directory go in as config settings: matsim-libs #5103 removed --network and --pathOutput,
+# and since then unknown options are passed on as config arguments, of which only the --config: ones are applied.
+# The old options would be dropped silently and the run would stop for want of a network.
 $(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DATA_DISTR_PER_ZONE) $(BB_ZONES_VKZ_4326) $(FREIGHT_CONFIG) | setup
 	$(JAVA_APP) prepare generate-small-scale-commercial-traffic\
 	  $(word 5,$^)\
@@ -458,7 +464,7 @@ $(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DA
 	 --sample $(PIPELINE_SIZE)\
 	 --jspritIterations 10\
 	 --creationOption createNewCarrierFile\
-	 --network $(abspath $<)\
+	 --config:network.inputNetworkFile=$(abspath $<)\
 	 --smallScaleCommercialTrafficType completeSmallScaleCommercialTraffic\
 	 --zoneShapeFileName $(abspath $(word 4,$^))\
 	 --zoneShapeFileNameColumn "id"\
@@ -467,7 +473,7 @@ $(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DA
 	 --resistanceFactor_goodsTraffic 0.005\
 	 --numberOfPlanVariantsPerAgent 1\
 	 --nameOutputPopulation $(notdir $@)\
-	 --pathOutput $(COMMERCIAL_TRAFFIC_OUT)
+	 --config:controller.outputDirectory=$(abspath $(COMMERCIAL_TRAFFIC_OUT))
 
 	mv $(COMMERCIAL_TRAFFIC_OUT)/$(notdir $@) $@
 
@@ -482,7 +488,26 @@ $(BERLIN_SMALLSCALE_COMMERCIAL): $(NETWORK_MATSIM) $(COMMERCIAL_FACILITIES) $(DA
 	 --output $@
 	#rm -r $(COMMERCIAL_TRAFFIC_OUT) delete or keep?
 
-$(BERLIN_CADYTS_INPUT): $(BERLIN_BRANDENBURG_INITIAL) $(BERLIN_SMALLSCALE_COMMERCIAL) | setup
+# The cadyts input takes the commercial traffic v7.0 generated, as v7.1 did, not the one generated above, until that
+# one is understood (#217): its fleet sizing and repair loop come from a later contrib and give more tours with fewer
+# stops and a fifth more vehicle kilometres. The rule above stays for that work (make analyze-freight). The file has
+# activities by coordinate only, so it fits this network. v7.0 gave most tours five plans for cadyts to choose from:
+# the one jsprit solved, which is selected, and copies with the stops in random order. Only the selected one is kept,
+# for the reason given at the rule above.
+$(BERLIN_SMALLSCALE_COMMERCIAL_FROZEN): $(BERLIN_SMALLSCALE_COMMERCIAL_V70) | setup
+	$(JAVA_APP) prepare clean-population\
+	 --plans $<\
+	 --remove-unselected-plans\
+	 --output $@
+ifneq ($(PIPELINE_SIZE),0.25)
+# As for $(BERLIN_BRANDENBURG_LONGHAULFREIGHT): the file is a 25 % sample, the name of the target does not say 25pct.
+	$(JAVA_APP) prepare downsample-population $@\
+	 --sample-size 0.25\
+	 --samples $(PIPELINE_SIZE)
+	mv $(@:.xml.gz=-$(PIPELINE_PCT).xml.gz) $@
+endif
+
+$(BERLIN_CADYTS_INPUT): $(BERLIN_BRANDENBURG_INITIAL) $(BERLIN_SMALLSCALE_COMMERCIAL_FROZEN) | setup
 	$(JAVA_APP) prepare merge-populations $^\
 	 --output $@
 
@@ -545,14 +570,14 @@ $(BERLIN_BRANDENBURG_INITIAL_AFTER_CADYTS): $(FACILITIES_XML) $(NETWORK_MATSIM) 
 	 --input-crs $(CRS)\
 	 --shp $(word 5,$^)
 
-# Give each activity its own typicalDuration attribute, which the scoring reads (see
-# BerlinScoringFunctionFactory), instead of encoding the typical duration in the activity type.
+# Give each activity its own typical duration, kept in the person's typicalDurations attribute, which the scoring
+# reads (scoring.typicalDurationSource = personAttribute), instead of encoding the typical duration in the activity type.
 # clean redundant max-duration attributes and reschedule plans whose activities run past the simulation day,
 # order-preserving, so the last activity keeps a positive window.
 	$(JAVA_APP) prepare reschedule-late-plans $@ --output $@ --simulation-period-in-days $(SIM_PERIOD_DAYS)
 # switch off wrap-around scoring: split first and last act of the day into separate _morning and _evening act types.
 	$(JAVA_APP) prepare split-wrap-around-activities $@ --output $@
-# encode each activity's typical duration as an attribute. Must run after the wrap-around split, so the (now
+# encode each activity's typical duration in the person attribute. Must run after the wrap-around split, so the (now
 # differing) morning/evening types take the non-wrap-around branch.
 	$(JAVA_APP) prepare encode-typical-duration $@ --output $@ --simulation-period-in-days $(SIM_PERIOD_DAYS) --min-typical-duration 300
 # for short activities, remove the end time and encode the span as a maximum duration instead.
@@ -663,7 +688,7 @@ python-env: $(VENV)/.stamp
 prepare-network-and-counts: $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	echo done
 
-prepare-freight: $(BERLIN_BRANDENBURG_LONGHAULFREIGHT) $(BERLIN_SMALLSCALE_COMMERCIAL)
+prepare-freight: $(BERLIN_BRANDENBURG_LONGHAULFREIGHT) $(BERLIN_SMALLSCALE_COMMERCIAL_FROZEN)
 
 prepare-calibration: $(BERLIN_CADYTS_INPUT) $(NETWORK_MATSIM_PT) $(VMZ_COUNTS)
 	#make -Bndri prepare-calibration | make2graph | gv2gml -o prepare-calibration_graph.gml

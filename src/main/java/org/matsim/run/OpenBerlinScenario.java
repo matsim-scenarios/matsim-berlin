@@ -6,48 +6,34 @@ import com.google.inject.name.Names;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.analysis.AgentWiseComparison;
-import org.matsim.analysis.QsimTimingModule;
-import org.matsim.analysis.personMoney.PersonMoneyEventsAnalysisModule;
-import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.population.Leg;
-import org.matsim.api.core.v01.population.Person;
-import org.matsim.api.core.v01.population.Plan;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.MATSimApplication;
-import org.matsim.contrib.bicycle.*;
-import org.matsim.contrib.emissions.HbefaRoadTypeMapping;
-import org.matsim.contrib.emissions.HbefaTechnology;
-import org.matsim.contrib.emissions.HbefaVehicleCategory;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
+import org.matsim.contrib.emissions.scenarioCheckers.Hbefa41ScenarioChecker;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
-import org.matsim.contrib.emissions.utils.HbefaUtils;
+import org.matsim.contrib.vsp.scoring.RideScoringParamsFromCarParams;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.config.groups.PlanInheritanceConfigGroup;
-import org.matsim.core.config.groups.ReplanningConfigGroup;
-import org.matsim.core.config.groups.VspExperimentalConfigGroup;
+import org.matsim.core.config.groups.*;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
-import org.matsim.core.router.TripStructureUtils;
-import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutilityFactory;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.dashboard.BerlinDashboardProvider;
-import org.matsim.run.scoring.BerlinScoringModule;
-import org.matsim.run.scoring.BerlinScoringConfigGroup;
 import org.matsim.simwrapper.DashboardProvider;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
-import org.matsim.vehicles.EngineInformation;
-import org.matsim.vehicles.VehicleType;
-import org.matsim.vehicles.VehicleUtils;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
 import java.util.List;
+
+import static org.matsim.contrib.common.conventions.vsp.SubpopulationDefaultNames.*;
+import static org.matsim.core.config.groups.ReplanningConfigGroup.StrategySettings;
+import static org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule.DefaultStrategy;
 
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true, showDefaultValues = true)
 @MATSimApplication.Analysis({AgentWiseComparison.class})
@@ -55,13 +41,6 @@ public class OpenBerlinScenario extends MATSimApplication {
 
 	public static final String VERSION = "7.1";
 	public static final String CRS = "EPSG:25832";
-
-	//	To decrypt hbefa input files set MATSIM_DECRYPTION_PASSWORD as environment variable. ask VSP for access.
-	private static final String HBEFA_2020_PATH = "https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/0e73947443d68f95202b71a156b337f7f71604ae/";
-	private static final String HBEFA_FILE_COLD_DETAILED = HBEFA_2020_PATH + "82t7b02rc0rji2kmsahfwp933u2rfjlkhfpi2u9r20.enc";
-	private static final String HBEFA_FILE_WARM_DETAILED = HBEFA_2020_PATH + "944637571c833ddcf1d0dfcccb59838509f397e6.enc";
-	private static final String HBEFA_FILE_COLD_AVERAGE = HBEFA_2020_PATH + "r9230ru2n209r30u2fn0c9rn20n2rujkhkjhoewt84202.enc" ;
-	private static final String HBEFA_FILE_WARM_AVERAGE = HBEFA_2020_PATH + "7eff8f308633df1b8ac4d06d05180dd0c5fdf577.enc";
 
 	private static final String AVERAGE = "average";
 	private static final Logger log = LogManager.getLogger(OpenBerlinScenario.VERSION);
@@ -76,6 +55,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 		description = "Plan selector to use.",
 		defaultValue = DefaultPlanStrategiesModule.DefaultSelector.ChangeExpBeta)
 	private String planSelector;
+	/// (The issue here is that CR has switched this to {@link DefaultSelector#BestScore}, since this is in some sense more consistent with frozen randomness.
+	/// It has the problem that plans, especially after innovation switchoff, are rarely selected for re-evaluation if they do not have the best score.
+	/// yy Unclear /// how we want to proceed here. kai, oct'26)
 
 	@CommandLine.Option(names = "--with-opening-times",
 		description = "Give the activity types their opening times. Off by default: the per-activity typical " +
@@ -89,16 +71,12 @@ public class OpenBerlinScenario extends MATSimApplication {
 			"the same value.")
 	private double simulationPeriodInDays = DEFAULT_SIMULATION_PERIOD_IN_DAYS;
 
-	@CommandLine.Option(names = "--allow-config-typical-durations",
-		description = "Allow person-subpopulation activities without a typicalDuration attribute to score against " +
-			"the config typical duration. By default such an activity ABORTS the run. Pass this for populations " +
-			"whose typical durations are still encoded in the activity type.")
-	private boolean allowConfigTypicalDurations = false;
-
+	// TODO this should go away and be part of matsim-libs
 	@CommandLine.Option(names = "--agent-wise-comparison-base",
 		description = "Output directory of a base run. After the run, compare the scores of this run's agents against " +
 			"it, see AgentWiseComparison; results go to analysis/agent-wise-comparison. With --post-processing " +
 			"post_process_only, the existing output is compared without running.")
+	// yy what does "the existing output is compared without running" mean?  I do not understand.  compared with what?  not running what?  kai, oct'26
 	private Path agentWiseComparisonBase;
 
 	public static void main(String[] args) {
@@ -111,133 +89,90 @@ public class OpenBerlinScenario extends MATSimApplication {
 		// input files may live behind a login (shared-svn); see HttpAuthentication
 		HttpAuthentication.installFromEnvironment();
 
-		SimWrapperConfigGroup sw = ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
-		sw.setSampleSize(config.qsim().getFlowCapFactor());
-
+		// ######### add config-modules and edit config ##############
+		// this is not accessible via xml
 		config.qsim().setUsingTravelTimeCheckInTeleportation(true);
 
-//		still registering the duration-binned types, so populations that predate the typicalDuration attribute keep
-//		scoring; for attribute-carrying activities the type's typical duration is only a fallback.
+//		still registering the duration-binned types, so populations that predate per-activity typical durations keep
+//		scoring; for activities with their own typical duration, the type's is only a fallback.
 		Activities.addScoringParams(config, true, withOpeningTimes);
 
-		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class)
-			.setAllowConfigTypicalDurations(allowConfigTypicalDurations);
+//		score each activity against its own typical duration from the person's typicalDurations attribute; persons without
+//		one (other subpopulations, populations that encode the typical duration in the activity type) use the type's.
+		config.scoring().setTypicalDurationSource(ScoringConfigGroup.TypicalDurationSource.personAttribute);
 
 //		move the else-branch overnight scoring clamp away from 24:00; see --simulation-period-in-days.
 		config.scenario().setSimulationPeriodInDays(simulationPeriodInDays);
 
 		// Required for all calibration strategies
-		for (String subpopulation : List.of("person", "freight", "goodsTraffic", "commercialPersonTraffic", "commercialPersonTraffic_service")) {
+		//TODO use subpoulations default names --> habe ich gemacht. kai
+		for (String subpopulation : List.of( SUBPOP_PERSON, SUBPOP_FREIGHT,  SUBPOP_GOODS, SUBPOP_COM_PERSON, SUBPOP_COM_PERSON_SERVICE )) {
+			/// yy in the medium term, replace {@link SUBPOP_FREIGHT} by {@link SUBPOP_LONG_DISTANCE_FREIGHT}.
+
 			config.replanning().addStrategySettings(
-				new ReplanningConfigGroup.StrategySettings()
-					.setStrategyName(planSelector)
+				new StrategySettings()
+					.setStrategyName(planSelector) // setting from cmd line param
 					.setWeight(1.0)
 					.setSubpopulation(subpopulation)
 			);
 
 			config.replanning().addStrategySettings(
 				new ReplanningConfigGroup.StrategySettings()
-					.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.ReRoute)
+					.setStrategyName( DefaultStrategy.ReRoute )
 					.setWeight(0.15)
 					.setSubpopulation(subpopulation)
 			);
 		}
 
+		// the following are only for the person subpopulation
 		config.replanning().addStrategySettings(
 			new ReplanningConfigGroup.StrategySettings()
-				.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.TimeAllocationMutator)
+				.setStrategyName( DefaultStrategy.TimeAllocationMutator )
 				.setWeight(0.15)
-				.setSubpopulation("person")
+				.setSubpopulation(SUBPOP_PERSON)
 		);
 
 		config.replanning().addStrategySettings(
-			new ReplanningConfigGroup.StrategySettings()
-				.setStrategyName(DefaultPlanStrategiesModule.DefaultStrategy.SubtourModeChoice)
+			new StrategySettings()
+				.setStrategyName( DefaultStrategy.SubtourModeChoice )
 				.setWeight(0.15)
-				.setSubpopulation("person")
+				.setSubpopulation(SUBPOP_PERSON)
 		);
 
-//		write score explanations into person attrs for each person
-		config.scoring().setExplainScores(true);
+		// Overwrite ride scoring params with values derived from the v6.4 car parameters.
+		RideScoringParamsFromCarParams.setRideScoringParamsBasedOnCarParams(config.scoring(), 1.0);
 
-//		also enable plan inheritance analysis
-		PlanInheritanceConfigGroup planInheritanceConfigGroup = ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
-		planInheritanceConfigGroup.setEnabled(true);
+		// Set to abort when subpops are used in config
+		config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
 
-		// BestScore (available via --plan-selector) fails the vsp defaults check; downgrade it to a warning
-		if (planSelector.equals(DefaultPlanStrategiesModule.DefaultSelector.BestScore)) {
-			config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
-		}
-
-		// Bicycle config must be present
-		ConfigUtils.addOrGetModule(config, BicycleConfigGroup.class);
-
-		// Add emissions configuration
-		EmissionsConfigGroup eConfig = ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
-		eConfig.setDetailedColdEmissionFactorsFile(HBEFA_FILE_COLD_DETAILED);
-		eConfig.setDetailedWarmEmissionFactorsFile(HBEFA_FILE_WARM_DETAILED);
-		eConfig.setAverageColdEmissionFactorsFile(HBEFA_FILE_COLD_AVERAGE);
-		eConfig.setAverageWarmEmissionFactorsFile(HBEFA_FILE_WARM_AVERAGE);
-		eConfig.setHbefaTableConsistencyCheckingLevel(EmissionsConfigGroup.HbefaTableConsistencyCheckingLevel.consistent);
-		eConfig.setDetailedVsAverageLookupBehavior(EmissionsConfigGroup.DetailedVsAverageLookupBehavior.tryDetailedThenTechnologyAverageThenAverageTable);
-		eConfig.setEmissionsComputationMethod(EmissionsConfigGroup.EmissionsComputationMethod.StopAndGoFraction);
+		// add this here, otherwise the config-group can not materialize
+		ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
+		ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
 
 		return config;
 	}
 
 	@Override
 	protected void prepareScenario(Scenario scenario) {
+		// yyyyyy there should be a scenario checker that checks if we are separating out the subpopulation scoring.
+		// Programmed by Ricardo.  Maybe this is not yet in 8.0-pre, but it should at least exist already in a comment.
+		// kai, oct'26
 
-		// add hbefa link attributes.
-		HbefaRoadTypeMapping roadTypeMapping = OsmHbefaMapping.build();
-		roadTypeMapping.addHbefaMappings(scenario.getNetwork());
-
-		// Force the update of all bike travel times, otherwise bike speeds would only update once a leg is routed
-		for (Person person : scenario.getPopulation().getPersons().values()) {
-			for (Plan plan : person.getPlans()) {
-				for (Leg leg : TripStructureUtils.getLegs(plan)) {
-					if (leg.getMode().equals(TransportMode.bike)) {
-						leg.setRoute(null);
-						leg.setTravelTimeUndefined();
-					}
-				}
-			}
-		}
-
-//		ride does not have engineInformation in vehicle types xml file
-		if (scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation().getAttributes().isEmpty()) {
-			EngineInformation engineInformation = scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.ride)).getEngineInformation();
-			VehicleUtils.setHbefaSizeClass(engineInformation, AVERAGE);
-			VehicleUtils.setHbefaTechnology(engineInformation, AVERAGE);
-			VehicleUtils.setHbefaVehicleCategory(engineInformation, HbefaVehicleCategory.NON_HBEFA_VEHICLE.toString());
-			VehicleUtils.setHbefaEmissionsConcept(engineInformation, AVERAGE);
-
-			log.warn("Engine information for {} were added to the respective vehicle type because they were not present." +
-				"The vehicle type will be ignored for emission calculation because it is marked as {}", TransportMode.ride, HbefaVehicleCategory.NON_HBEFA_VEHICLE);
-		}
-
-//		bike does not have HbefaTechnology in vehicle types xml file
-		VehicleUtils.setHbefaTechnology(scenario.getVehicles().getVehicleTypes().get(Id.createVehicleTypeId(TransportMode.bike)).getEngineInformation(), AVERAGE);
-		log.warn("For vehicle type {}, the HbefaTechnolgy was missing and was set to {}.", TransportMode.bike, AVERAGE);
-
-//		for some of the input vehicle types hbefa emissionConcept and technology are swapped. We have to swap them back.
-//		hbefa4.1 relies on HbefaTechnology for correct emission calculation, not on HbefaEmissionConcept
-		HbefaUtils.checkAndCorrectHbefaTechnologyAndEmissionConcept(scenario);
-
-		for (VehicleType type : scenario.getVehicles().getVehicleTypes().values()) {
-			EngineInformation engineInformation = type.getEngineInformation();
-			if (VehicleUtils.getHbefaTechnology(engineInformation).equals("petrol")) {
-//				some veh types use technology "petrol" which does not exist. it either is petrol (4S) or petrol (2S). going for 4S here
-				VehicleUtils.setHbefaTechnology(engineInformation, HbefaTechnology.PETROL_4S.id);
-				log.warn("For vehicle type {} HbefaTechnology was set to 'petrol'. This is not a possible value. It was changed to {}." +
-					"Please check class HbefaTechnology for possibles values.", type.getId(), HbefaTechnology.PETROL_4S.id);
-			}
-		}
+		// add hbefa link attributes. Shouldn't this go upstream?
+		OsmHbefaMapping.build().addHbefaMappings(scenario.getNetwork() );
+		scenario.addScenarioChecker( new Hbefa41ScenarioChecker());
 	}
+
 
 	@Override
 	protected void prepareControler(Controler controler) {
 
+		// This should probably go away, but since it is also used in RunOpenBerlinCalibration
+		// I'm not sure how to keep this consistent // DR20261016
+		//TODO inline this?
+		controler.addOverridingModule(new TravelTimeBinding());
+
+		// ANALYSIS BELOW
 		controler.addOverridingModule(new SimWrapperModule());
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
@@ -247,12 +182,6 @@ public class OpenBerlinScenario extends MATSimApplication {
 			}
 		});
 
-		controler.addOverridingModule(new TravelTimeBinding());
-		controler.addOverridingModule(new QsimTimingModule());
-
-		controler.addOverridingModule(new BerlinScoringModule());
-
-		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
 	}
 
 	@Override
@@ -272,27 +201,34 @@ public class OpenBerlinScenario extends MATSimApplication {
 		// groups, but the modules are bound against the typed ones
 		Config config = scenario.getConfig();
 		ConfigUtils.addOrGetModule(config, SimWrapperConfigGroup.class);
-		ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class);
+		//ConfigUtils.addOrGetModule(config, BerlinScoringConfigGroup.class);
 		ConfigUtils.addOrGetModule(config, PlanInheritanceConfigGroup.class);
-		ConfigUtils.addOrGetModule(config, BicycleConfigGroup.class);
 		ConfigUtils.addOrGetModule(config, EmissionsConfigGroup.class);
 
 		Controler controler = new Controler(scenario);
 		new OpenBerlinScenario().prepareControler(controler);
 		return controler;
+
+		// yy the above has to to do with the question if the agentWiseComparison can be set up globally, or separately for
+		// every scenario.  For the main user (kn), a global setup would be __far__ easier.  Discussion exists elsewhere.
 	}
 
 	/**
 	 * Add travel time bindings for ride and freight modes, which are not actually network modes.
 	 */
+	@Deprecated
+	// yyyy my preference would be to do without this class, since it only contains two lines of material, and adds 20
+	// lines of syntactic sugar. kai, oct'26
 	public static final class TravelTimeBinding extends AbstractModule {
 
 		private final boolean carOnly;
 
+		@Deprecated
 		public TravelTimeBinding() {
 			this.carOnly = false;
 		}
 
+		@Deprecated //try to do without // The carOnly-stuff is needed for RunOpenBerlinCalibration // DR20261013
 		public TravelTimeBinding(boolean carOnly) {
 			this.carOnly = carOnly;
 		}
@@ -303,17 +239,14 @@ public class OpenBerlinScenario extends MATSimApplication {
 			addTravelDisutilityFactoryBinding(TransportMode.ride).to(carTravelDisutilityFactoryKey());
 
 			if (!carOnly) {
-				addTravelTimeBinding("freight").to(Key.get(TravelTime.class, Names.named(TransportMode.truck)));
-				addTravelDisutilityFactoryBinding("freight").to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
-
-				bind(BicycleLinkSpeedCalculator.class).to(BicycleLinkSpeedCalculatorDefaultImpl.class);
-				bind(BicycleParams.class).to(BicycleParamsDefaultImpl.class);
-
-				// Bike should use free speed travel time
-				addTravelTimeBinding(TransportMode.bike).to(BicycleTravelTime.class);
-				addTravelDisutilityFactoryBinding(TransportMode.bike).to(OnlyTimeDependentTravelDisutilityFactory.class);
+				//TODO take names from vsp contrib --> SubpopulationDefaultNames
+				//was soll diese Sonderbehandlung??
+				//in the below there is a confusion between mode and vehicle class
+				//the idea here is to differintiate up to 3.5 tonnes Pkw and larger then 3.5 tonnes
+				//rename "freight" to truck.
+				addTravelTimeBinding(SUBPOP_FREIGHT).to(Key.get(TravelTime.class, Names.named(TransportMode.truck)));
+				addTravelDisutilityFactoryBinding(SUBPOP_FREIGHT).to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
 			}
 		}
 	}
-
 }

@@ -3,7 +3,6 @@ package org.matsim.legacy.prepare.bicycle;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.contrib.bicycle.BicycleUtils;
 import org.matsim.core.api.internal.MatsimWriter;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.network.io.MatsimNetworkReader;
@@ -17,7 +16,7 @@ import java.util.Set;
 public class NetworkFileModifier {
 
     public static void main(String[] args) {
-        String inputNetworkFile = "../../public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz";
+        /*String inputNetworkFile = "../../public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network.xml.gz";
         String outputNetworkFile = "../../public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.5-10pct/input/berlin-v5.5-network-with-bicycles.xml.gz";
 
         String BICYCLE = "bicycle";
@@ -41,6 +40,6 @@ public class NetworkFileModifier {
                 .forEach(link -> BicycleUtils.setBicycleInfrastructureFactor(link, 1.0));
 
         NetworkWriter networkWriter = new NetworkWriter(scenario.getNetwork());
-        networkWriter.write(outputNetworkFile);
+        networkWriter.write(outputNetworkFile);*/
     }
 }
