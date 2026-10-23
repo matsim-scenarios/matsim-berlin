@@ -24,9 +24,6 @@ import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.dashboard.BerlinDashboardProvider;
 import org.matsim.prepare.population.AssignIncome;
-import org.matsim.run.scoring.BerlinScoringModule;
-import org.matsim.run.scoring.BerlinScoringConfigGroup;
-import org.matsim.prepare.population.AssignIncome;
 import org.matsim.simwrapper.DashboardProvider;
 import org.matsim.simwrapper.SimWrapperConfigGroup;
 import org.matsim.simwrapper.SimWrapperModule;
@@ -162,14 +159,15 @@ public class OpenBerlinScenario extends MATSimApplication {
 		// Programmed by Ricardo.  Maybe this is not yet in 8.0-pre, but it should at least exist already in a comment.
 		// kai, oct'26
 
+		// TODO: Resolve income smoothing in the demand pipeline; apply it here temporarily for existing demand.
+		AssignIncome.assignIncomeToPersons(scenario.getPopulation());
+
+		log.info("Added income distribution to the population");
+
 		// add hbefa link attributes. Shouldn't this go upstream?
 		OsmHbefaMapping.build().addHbefaMappings(scenario.getNetwork() );
 		scenario.addScenarioChecker( new Hbefa41ScenarioChecker());
 	}
-
-	// TODO: Resolve income smoothing in the demand pipeline; apply it here temporarily for existing demand.
-		AssignIncome.assignIncomeToPersons(scenario.getPopulation());
-
 
 	@Override
 	protected void prepareControler(Controler controler) {
