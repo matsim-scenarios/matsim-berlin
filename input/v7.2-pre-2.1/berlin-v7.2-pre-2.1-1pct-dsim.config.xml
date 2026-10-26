@@ -1,23 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE config SYSTEM "http://www.matsim.org/files/dtd/config_v2.dtd">
 <!--
-	based on the config of the 3 % sample of berlin-v7.2-pre-1.1, with scoring-parameters from v6.4
+	based on the config of the 1 % sample of berlin-v7.2-pre-1.1, with scoring-parameters from v6.4
+	calibrated input.
 -->
 <config>
 	<module name="controller" >
 		<!-- Default=1000. Last Iteration of a simulation. -->
 		<param name="lastIteration" value="500" />
-		<param name="outputDirectory" value="./output/berlin-v7.2-pre-2-3pct" />
+		<param name="outputDirectory" value="./output/berlin-v7.2-pre-2.1-1pct-dsim" />
 		<!-- An identifier for the current run which is used as prefix for output files and mentioned in output xml files etc. -->
-		<param name="runId" value="berlin-v7.2-pre-2-3pct" />
+		<param name="runId" value="berlin-v7.2-pre-2.1-1pct-dsim" />
 		<!-- iterationNumber % writeEventsInterval == 0 defines in which iterations events are written to a file. `0' disables events writing completely. -->
 		<param name="writeEventsInterval" value="100" />
 		<!-- iterationNumber % writePlansInterval == 0 defines (hopefully) in which iterations plans are written to a file. `0' disables plans writing completely.  Some plans in early iterations are always written -->
 		<param name="writePlansInterval" value="100" />
+		<param name="mobsim" value="dsim" />
+	</module>
+	<module name="dsim" >
+		<!-- it seems that some of the parameters (flow/storage) are used from qsim. -->
+
+
+		<!-- End time of the simulation. Default: 24:00:00 -->
+		<param name="endTime" value="36:00:00" />
+
+		<!-- Link dynamics determine how vehicles can overtake. Options: [FIFO, PassingQ, Seepage(not implemented)], Default: PassingQ -->
+		<param name="linkDynamics" value="PassingQ" />
+
+		<!-- Modes which are simulated on the network. All other modes, expect pt will be teleported. Default: car -->
+		<param name="networkModes" value="car,truck,freight" />
+
+		<!-- Partitioning strategy for the network. Options: [none, bisect, metis], default: 'bisect' -->
+		<param name="partitioning" value="metis" />
+
+		<!-- Start time of the simulation. Default: 00:00:00 -->
+		<param name="startTime" value="00:00:00" />
+
+		<!-- Stuck time [s] after which a vehicle is pushed onto the next link regardless of available capacity. Default: 30 -->
+		<param name="stuckTime" value="30.0" />
+
+		<!-- Number of threads to use for execution. If <= 0, the number of available processors is used. -->
+		<param name="threads" value="12" />
+
+		<!-- Traffic dynamics determine how storage capacities and inflow capacities are freed. Options: [queue, kinematicWaves, withHoles (not implemented), Default: kinematicWaves -->
+		<param name="trafficDynamics" value="kinematicWaves" />
+
+		<!-- Determines how agents can access vehicles when starting a trip. Options=[teleport, wait (not implemented), exception], Default: teleport -->
+		<param name="vehicleBehavior" value="teleport" />
 	</module>
 	<module name="counts" >
 		<!-- factor by which to re-scale the simulated values.  necessary when simulation runs with something different from 100%.  needs to be adapted manually -->
-		<param name="countsScaleFactor" value="33.333333" />
+		<param name="countsScaleFactor" value="100.0" />
 		<!-- input file name to counts package -->
 		<param name="inputCountsFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-counts-vmz.xml.gz" />
 	</module>
@@ -72,13 +105,13 @@
 		<param name="enabled" value="true" />
 	</module>
 	<module name="plans" >
-		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1.1/output/berlin-v7.2-pre-1.1-3pct.plans.xml.gz" />
+		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-2-dsim/output/asc-calib-1pct/runs/010/010.output_plans.xml.gz" />
 		<!-- (not tested) will remove plan attributes that are presumably not used, such as activityStartTime. default=false. Use with Caution! -->
 		<param name="removingUnnecessaryPlanAttributes" value="true" />
 	</module>
 	<module name="qsim" >
 		<param name="endTime" value="36:00:00" />
-		<param name="flowCapacityFactor" value="0.03" />
+		<param name="flowCapacityFactor" value="0.01" />
 		<!-- default: FIFO; options: FIFO PassingQ SeepageQ -->
 		<param name="linkDynamics" value="PassingQ" />
 		<!-- [comma-separated list] Defines which modes are congested modes. Technically, these are the modes that the departure handler of the netsimengine handles.  Effective cell size, effective lane width, flow capacity factor, and storage capacity factor need to be set with diligence.  Need to be vehicular modes to make sense. -->
@@ -86,7 +119,7 @@
 		<!-- Number of threads used for the QSim.  Note that this setting is independent from the "global" threads setting.  In contrast to earlier versions, the non-parallel special version is no longer there. -->
 		<param name="numberOfThreads" value="12" />
 		<param name="startTime" value="00:00:00" />
-		<param name="storageCapacityFactor" value="0.03" />
+		<param name="storageCapacityFactor" value="0.01" />
 		<!-- time in seconds.  Time after which the frontmost vehicle on a link is called `stuck' if it does not move. -->
 		<param name="stuckTime" value="30.0" />
 		<!-- options: queue withHoles kinematicWaves  -->
@@ -140,7 +173,7 @@
 			<param name="waitingPt" value="0.0" />
 			<parameterset type="modeParams" >
 				<!-- [utils] alternative-specific constant.  Normally per trip, but that is probably buggy for multi-leg trips. -->
-				<param name="constant" value="-1.0549050032955907" />
+				<param name="constant" value="0.44984080698638507" />
 				<!-- [unit_of_money/day] Fixed cost of mode, per day. -->
 				<param name="dailyMonetaryConstant" value="-5.0" />
 				<!-- [utils/hr] additional marginal utility of traveling.  normally negative.  this comes on top of the opportunity cost of time -->
@@ -150,19 +183,19 @@
 				<param name="monetaryDistanceRate" value="-1.49E-4" />
 			</parameterset>
 			<parameterset type="modeParams" >
-				<param name="constant" value="-5.396347732154479" />
+				<param name="constant" value="-0.9407254829066438" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="-4.442946" />
 				<param name="mode" value="ride" />
 				<param name="monetaryDistanceRate" value="-1.49E-4" />
 			</parameterset>
 			<parameterset type="modeParams" >
-				<param name="constant" value="-1.459206916867583" />
+				<param name="constant" value="-0.005203682796750559" />
 				<param name="dailyMonetaryConstant" value="-3.0" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="pt" />
 			</parameterset>
 			<parameterset type="modeParams" >
-				<param name="constant" value="-1.1750965857674858" />
+				<param name="constant" value="-1.0374132179772666" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="bike" />
 			</parameterset>
@@ -196,7 +229,7 @@
 		</parameterset>
 	</module>
 	<module name="simwrapper" >
-		<param name="sampleSize" value="0.03" />
+		<param name="sampleSize" value="0.01" />
 		<parameterset type="params" >
 			<param name="context" value="" />
 			<param name="mapCenter" value="13.39,52.51" />
