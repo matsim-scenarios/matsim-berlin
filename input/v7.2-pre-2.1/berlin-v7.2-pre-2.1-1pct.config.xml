@@ -105,7 +105,7 @@
 		<param name="enabled" value="true" />
 	</module>
 	<module name="plans" >
-		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-2/output/asc-calib-1pct/runs/007/007.output_plans.xml.gz" />
+		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-2.1/output/asc-calib-1pct/runs/007/007.output_plans.xml.gz" />
 		<!-- (not tested) will remove plan attributes that are presumably not used, such as activityStartTime. default=false. Use with Caution! -->
 		<param name="removingUnnecessaryPlanAttributes" value="true" />
 	</module>
