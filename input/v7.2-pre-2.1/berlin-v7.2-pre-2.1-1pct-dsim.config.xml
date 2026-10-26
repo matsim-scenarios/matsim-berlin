@@ -31,7 +31,7 @@
 		<param name="networkModes" value="car,truck,freight" />
 
 		<!-- Partitioning strategy for the network. Options: [none, bisect, metis], default: 'bisect' -->
-		<param name="partitioning" value="metis" />
+		<param name="partitioning" value="bisect" />
 
 		<!-- Start time of the simulation. Default: 00:00:00 -->
 		<param name="startTime" value="00:00:00" />
