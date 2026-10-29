@@ -17,6 +17,12 @@ import java.util.Set;
  */
 public class BerlinDashboardProvider implements DashboardProvider {
 
+	private final boolean useCustomDashboards;
+
+	public BerlinDashboardProvider(boolean useCustomDashboards) {
+		this.useCustomDashboards = useCustomDashboards;
+	}
+
 	@Override
 	public List<Dashboard> getDashboards(Config config, SimWrapper simWrapper) {
 		TripDashboard trips = new TripDashboard("mode_share_ref.csv", "mode_share_per_dist_ref.csv", "mode_users_ref.csv")
@@ -24,6 +30,9 @@ public class BerlinDashboardProvider implements DashboardProvider {
 			.withChoiceEvaluation(true)
 			.withDistanceDistribution("mode_share_distance_distribution.csv")
 			.withGroupedRefData("mode_share_per_group_dist_ref.csv", "age", "income", "employment", "economic_status", "zone");
+		if (!useCustomDashboards) {
+			return List.of(trips);
+		}
 
 		ActivityDashboard activities = new ActivityDashboard("berlin_inspire_grid_1km.gpkg")
 			.addActivityType("work", List.of("work"), List.of(ActivityDashboard.Indicator.COUNTS), false, null)
