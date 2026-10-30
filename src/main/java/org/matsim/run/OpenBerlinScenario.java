@@ -10,6 +10,7 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.MATSimApplication;
+import org.matsim.application.analysis.population.VttsModule;
 import org.matsim.contrib.emissions.OsmHbefaMapping;
 import org.matsim.contrib.emissions.scenarioCheckers.Hbefa41ScenarioChecker;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
@@ -188,6 +189,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 				Multibinder.newSetBinder( binder(), DashboardProvider.class ).addBinding().toInstance( dashboardProvider );
 			}
 		});
+
+		controler.addOverridingModule(new VttsModule());
 
 	}
 

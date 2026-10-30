@@ -6,7 +6,8 @@
 		<artifactId>matsim-all</artifactId>
 
 		<!-- PR-labelled release -->
-		<version>2027.0-PR5217</version>
+		<version>2027.0-SNAPSHOT</version>
+		<relativePath>../matsim-libs/pom.xml</relativePath>
 
 		<!-- snapshot == not recommended: rather use PR-labelled release!-->
 <!--		<version>2026.0-SNAPSHOT</version>-->
@@ -30,6 +31,9 @@
 		<maven.compiler.release>25</maven.compiler.release>
 
 		<osmosis.version>0.49.2</osmosis.version>
+		<matsim.version>${project.parent.version}</matsim.version>
+		<maven.compiler.release>25</maven.compiler.release>
+
 	</properties>
 
 	<dependencyManagement>
