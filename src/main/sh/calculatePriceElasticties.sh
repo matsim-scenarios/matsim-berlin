@@ -37,8 +37,8 @@ fi
 echo "Using Java $java_version: $java_bin"
 
 if [[ "${1:-}" == --report ]]; then
-    exec srun "$java_bin" -Xmx2G -Dmatsim.preferLocalDtds=true -cp "$jar" org.matsim.run.RunOpenBerlinElasticities run \
-        --report --output "$output"
+    exec srun "$java_bin" -Xmx2G -Dmatsim.preferLocalDtds=true -cp "$jar" org.matsim.analysis.PriceElasticitiesAnalysis \
+        --output "$output"
 fi
 
 if [[ ! -r "$config" ]]; then
@@ -67,7 +67,7 @@ if (( task == 0 )); then
         --cpus-per-task=1 --mem=4G --time=01:00:00 --output=elasticities-%A_%a.log)
     if [[ -n "${SLURM_JOB_ACCOUNT:-}" ]]; then report_args+=(--account="$SLURM_JOB_ACCOUNT"); fi
     printf -v report_command '%q ' srun "$java_bin" -Xmx2G -Dmatsim.preferLocalDtds=true \
-        -cp "$jar" org.matsim.run.RunOpenBerlinElasticities run --report --output "$output"
+        -cp "$jar" org.matsim.analysis.PriceElasticitiesAnalysis --output "$output"
     if ! sbatch "${report_args[@]}" <<EOF
 #!/bin/bash --login
 set -euo pipefail

@@ -1,11 +1,8 @@
 package org.matsim.run;
 
-import org.matsim.analysis.PriceElasticitiesAnalysis;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.application.MATSimApplication;
-import org.matsim.dashboard.PriceElasticitiesDashboard;
-import org.matsim.simwrapper.SimWrapper;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
@@ -25,23 +22,8 @@ public class RunOpenBerlinElasticities extends OpenBerlinScenario {
 		description = "Multiplier for PT dailyMonetaryConstant (e.g. 1.6 increases the cost by 60%).")
 	private double ptFactor = 1.0;
 
-	@CommandLine.Option(names = "--report", description = "Generate the single comparison dashboard from completed runs under --output, without simulating.")
-	private boolean report;
-
 	public static void main(String[] args) {
 		MATSimApplication.run(RunOpenBerlinElasticities.class, args);
-	}
-
-	@Override
-	public Integer call() throws Exception {
-		if (!report)
-			return super.call();
-		Path directory = output == null ? Path.of("output/elasticities") : output;
-		var results = PriceElasticitiesAnalysis.run(directory);
-		SimWrapper simWrapper = SimWrapper.create();
-		simWrapper.addDashboard(new PriceElasticitiesDashboard(results));
-		simWrapper.generate(directory);
-		return 0;
 	}
 
 	@Override

@@ -4,11 +4,15 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.matsim.application.ApplicationUtils;
+import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.analysis.population.Category;
 import org.matsim.application.options.CsvOptions;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.utils.io.IOUtils;
+import org.matsim.dashboard.PriceElasticitiesDashboard;
+import org.matsim.simwrapper.SimWrapper;
+import picocli.CommandLine;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -20,7 +24,9 @@ import java.nio.file.Path;
 import java.util.*;
 
 /** Compare person trips using the same demographic categories as Berlin's Trips dashboard. */
-public final class PriceElasticitiesAnalysis {
+@CommandLine.Command(name = "price-elasticities", mixinStandardHelpOptions = true,
+	description = "Generate an elasticity dashboard from completed base and experiment runs, without simulating.")
+public final class PriceElasticitiesAnalysis implements MATSimAppCommand {
 
 	public static final String ALL = "All persons";
 	public static final List<String> CATEGORIES = List.of("age", "income", "employment", "economic_status", "zone");
@@ -30,7 +36,30 @@ public final class PriceElasticitiesAnalysis {
 	private static final String[] HEADER = {"Scenario", "Experiment", "Run type", "Price component", "Cost change [%]",
 		"Category", "Group", "Mode", "Base trips", "Trips", "Trip change [trips]", "Trip change [%]", "Elasticity", "Status"};
 
-	private PriceElasticitiesAnalysis() {
+	@CommandLine.Option(names = "--output", defaultValue = "output/elasticities",
+		description = "Dashboard directory. Without explicit inputs, scans its run subdirectories and uses its base folder.")
+	private Path output;
+
+	@CommandLine.Option(names = "--base", description = "Base run output directory. Default: <output>/base.")
+	private Path basePath;
+
+	@CommandLine.Parameters(arity = "0..*", paramLabel = "<experiment>",
+		description = "Experiment output directories. Default: run subdirectories of --output, excluding the base.")
+	private List<Path> experiments = new ArrayList<>();
+
+	public static void main(String[] args) {
+		new PriceElasticitiesAnalysis().execute(args);
+	}
+
+	@Override
+	public Integer call() throws IOException {
+		Path base = basePath == null ? output.resolve("base") : basePath;
+		List<Path> inputs = experiments.isEmpty() ? findExperiments(output, base) : experiments;
+		Result results = run(output, base, inputs);
+		SimWrapper simWrapper = SimWrapper.create();
+		simWrapper.addDashboard(new PriceElasticitiesDashboard(results));
+		simWrapper.generate(output);
+		return 0;
 	}
 
 	public record Row(String experiment, String scenario, String price, double carFactor, double ptFactor, Double costChange,
@@ -55,21 +84,31 @@ public final class PriceElasticitiesAnalysis {
 
 	/** Read completed runs, validate them, and write overview and demographic comparisons. */
 	public static Result run(Path directory) throws IOException {
+		Path base = directory.resolve("base");
+		return run(directory, base, findExperiments(directory, base));
+	}
+
+	/** Compare explicitly selected run directories, regardless of the scenario runner or folder naming scheme. */
+	public static Result run(Path directory, Path baseDirectory, List<Path> experimentDirectories) throws IOException {
 		Map<String, Set<String>> labels = categoryLabels();
 		Map<String, Category> categories = new LinkedHashMap<>();
 		labels.forEach((name, values) -> categories.put(name, new Category(values)));
-		Run base = read(directory.resolve("base"), categories);
+		Run base = read(baseDirectory, categories);
 		List<Run> runs = new ArrayList<>(List.of(base));
-		try (var children = Files.list(directory)) {
-			for (Path child : children.filter(Files::isDirectory).sorted().toList()) {
-				if (child.getFileName().toString().equals("base")) continue;
-				try (var files = Files.list(child)) {
-					if (files.anyMatch(p -> p.getFileName().toString().endsWith("output_config.xml")
-						|| p.getFileName().toString().contains("persons.csv") || p.getFileName().toString().contains("trips.csv")))
-						runs.add(read(child, categories));
-				}
+		Set<Path> paths = new HashSet<>(List.of(baseDirectory.toAbsolutePath().normalize()));
+		Set<String> names = new HashSet<>(List.of(base.name));
+		for (Path input : experimentDirectories) {
+			if (!paths.add(input.toAbsolutePath().normalize()))
+				throw new IllegalArgumentException("Duplicate run directory: " + input);
+			Run run = read(input, categories);
+			if (!names.add(run.name)) {
+				run = new Run(input.toAbsolutePath().normalize().toString(), run.config, run.counts, run.costs);
+				names.add(run.name);
 			}
+			runs.add(run);
 		}
+		if (paths.contains(directory.toAbsolutePath().normalize()))
+			throw new IllegalArgumentException("Dashboard output must differ from the input run directories: " + directory);
 		if (runs.size() == 1)
 			throw new IllegalArgumentException("No experiment results found in " + directory);
 		for (Run run : runs) validate(base, run);
@@ -120,6 +159,21 @@ public final class PriceElasticitiesAnalysis {
 		}
 		writePrices(output.resolve("prices.csv"), base, runs);
 		return new Result(tabs, List.copyOf(rows));
+	}
+
+	private static List<Path> findExperiments(Path directory, Path base) throws IOException {
+		List<Path> inputs = new ArrayList<>();
+		try (var children = Files.list(directory)) {
+			for (Path child : children.filter(Files::isDirectory).sorted().toList()) {
+				if (child.toAbsolutePath().normalize().equals(base.toAbsolutePath().normalize())) continue;
+				try (var files = Files.list(child)) {
+					if (files.anyMatch(p -> p.getFileName().toString().endsWith("output_config.xml")
+						|| p.getFileName().toString().contains("persons.csv") || p.getFileName().toString().contains("trips.csv")))
+						inputs.add(child);
+				}
+			}
+		}
+		return inputs;
 	}
 
 	private static Map<String, Set<String>> categoryLabels() throws IOException {
