@@ -4,7 +4,7 @@ library(ggokabeito)
 ###################################### tt per dist group plots #############################################################################################################
 
 # read data
-tt_per_dist_group_base <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-base-case-ctd/mean_tt_per_distance_bin.csv") %>%
+tt_per_dist_group_base <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-base-case-ctd-no-routes/mean_tt_per_distance_bin.csv") %>%
   mutate(case = "base")
 tt_per_dist_group_teleported <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-teleported/mean_tt_per_distance_bin.csv") %>%
   mutate(case = "teleported")
@@ -116,7 +116,7 @@ ggsave("tt_per_dist_group_car_plot.pdf", tt_per_dist_group_car_plot, dpi = 500, 
 ############################################ dist group distr per case plot ##################################################
 
 # read data
-modal_dist_groups_base <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-base-case-ctd/analysis/population/mode_share_per_dist.csv") %>%
+modal_dist_groups_base <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-base-case-ctd-no-routes/analysis/population/mode_share_per_dist.csv") %>%
   mutate(case = "base")
 modal_dist_groups_teleported <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-teleported/analysis/population/mode_share_per_dist.csv") %>%
   mutate(case = "teleported")
@@ -130,7 +130,7 @@ modal_dist_groups_qsim0.2 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_
   mutate(case = "qsim0.2")
 modal_dist_groups_qsim0.3 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.3/analysis/population/mode_share_per_dist.csv") %>%
   mutate(case = "qsim0.3")
-modal_dist_groups_ref <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-base-case-ctd/analysis/resources/mode_share_per_dist_ref.csv") %>%
+modal_dist_groups_ref <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-base-case-ctd-no-routes/analysis/resources/mode_share_per_dist_ref.csv") %>%
   mutate(case = "ref")
 
 dist_levels_modal <- c(
@@ -244,24 +244,24 @@ elasticities_share <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network
   filter(`speed factor`!=0.95) %>% 
   filter(`speed factor`!=1.05)
 
-elasticities_share_base_no_routes <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/bike_speed_elasticities_share_bike_network_paper_with_base_no_routes.csv") %>% 
-  mutate(
-    elasticity = elasticity %>%
-      na_if("#DIV/0!") %>%
-      replace_na("0")
-  ) %>% 
-  mutate(elasticity = as.numeric(elasticity)) %>% 
-  mutate(
-    case = case_when(
-      str_detect(run, "base-case-ctd") ~ "base",
-      str_detect(run, "bike-teleported") ~ "teleported",
-      str_detect(run, "bike-in-qsim") ~ paste0("qsim", str_extract(run, "(?<=pce-)[0-9.]+")),
-      TRUE ~ "Other"
-    )
-  ) %>% 
-  mutate(case = factor(case, levels = unique(case))) %>% 
-  filter(`speed factor`!=0.95) %>% 
-  filter(`speed factor`!=1.05)
+# elasticities_share_base_no_routes <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/bike_speed_elasticities_share_bike_network_paper_with_base_no_routes.csv") %>%
+#   mutate(
+#     elasticity = elasticity %>%
+#       na_if("#DIV/0!") %>%
+#       replace_na("0")
+#   ) %>%
+#   mutate(elasticity = as.numeric(elasticity)) %>%
+#   mutate(
+#     case = case_when(
+#       str_detect(run, "base-case-ctd") ~ "base",
+#       str_detect(run, "bike-teleported") ~ "teleported",
+#       str_detect(run, "bike-in-qsim") ~ paste0("qsim", str_extract(run, "(?<=pce-)[0-9.]+")),
+#       TRUE ~ "Other"
+#     )
+#   ) %>%
+#   mutate(case = factor(case, levels = unique(case))) %>%
+#   filter(`speed factor`!=0.95) %>%
+#   filter(`speed factor`!=1.05)
 
 
 elasticities_share_same_jar <- read_csv(file="C:/Users/Simon/Desktop/wd/2026-10-19/bike_speed_elasticities_share_bike_network_paper_additional_teleported_runs_same_jar.csv") %>% 
@@ -284,8 +284,8 @@ elasticities_share_same_jar <- read_csv(file="C:/Users/Simon/Desktop/wd/2026-10-
 elasticities_no_0 <- elasticities_share %>% 
   filter(elasticity != 0)
 
-elasticities_base_no_routes_no_0 <- elasticities_share_base_no_routes %>% 
-  filter(elasticity != 0)
+# elasticities_base_no_routes_no_0 <- elasticities_share_base_no_routes %>%
+#   filter(elasticity != 0)
 
 elasticities_teleported <- elasticities_share %>% 
   filter(case=="teleported")
@@ -356,46 +356,46 @@ elasticities_plot <- ggplot(
 
 elasticities_plot
 
-elasticities_plot_base_no_routes <- ggplot(
-  elasticities_base_no_routes_no_0,
-  aes(
-    x = `bike speed [km/h]`,
-    y = elasticity,
-    color = case,
-    group = case
-  )
-) +
-  geom_vline(
-    xintercept = 10.3,
-    linetype = "longdash",
-    linewidth = 1
-  ) +
-  geom_vline(
-    xintercept = 10.7,
-    linetype = "dashed",
-    linewidth = 1
-  ) +
-  geom_line(linewidth = 2) +
-  geom_point(size = 3) +
-  scale_color_okabe_ito(order = c(1, 2, 3, 4, 5, 6, 7)) +
-  labs(
-    x = "bicycle speed [km/h]",
-    y = "bicycle speed elasticity"
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 20),
-    axis.title = element_text(size = 21),
-    axis.text = element_text(size = 20),
-    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
-    legend.title = element_text(size = 20),
-    legend.text = element_text(size = 19),
-    plot.margin = margin(5, 5, 5, 5)
-  )
-elasticities_plot_base_no_routes
+# elasticities_plot_base_no_routes <- ggplot(
+#   elasticities_base_no_routes_no_0,
+#   aes(
+#     x = `bike speed [km/h]`,
+#     y = elasticity,
+#     color = case,
+#     group = case
+#   )
+# ) +
+#   geom_vline(
+#     xintercept = 10.3,
+#     linetype = "longdash",
+#     linewidth = 1
+#   ) +
+#   geom_vline(
+#     xintercept = 10.7,
+#     linetype = "dashed",
+#     linewidth = 1
+#   ) +
+#   geom_line(linewidth = 2) +
+#   geom_point(size = 3) +
+#   scale_color_okabe_ito(order = c(1, 2, 3, 4, 5, 6, 7)) +
+#   labs(
+#     x = "bicycle speed [km/h]",
+#     y = "bicycle speed elasticity"
+#   ) +
+#   theme_minimal() +
+#   theme(
+#     plot.title = element_text(hjust = 0.5, size = 20),
+#     axis.title = element_text(size = 21),
+#     axis.text = element_text(size = 20),
+#     axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+#     legend.title = element_text(size = 20),
+#     legend.text = element_text(size = 19),
+#     plot.margin = margin(5, 5, 5, 5)
+#   )
+# elasticities_plot_base_no_routes
 
-# ggsave("bicycle_speed_elasticities_plot.pdf", elasticities_plot, dpi = 500, w = 9, h = 9)
-ggsave("bicycle_speed_elasticities_plot_additional_teleported_runs.pdf", elasticities_plot, dpi = 500, w = 9, h = 9)
+ggsave("bicycle_speed_elasticities_plot.pdf", elasticities_plot, dpi = 500, w = 9, h = 9)
+# ggsave("bicycle_speed_elasticities_plot_additional_teleported_runs.pdf", elasticities_plot, dpi = 500, w = 9, h = 9)
 
 ############################################ avg bicycle network speed per link type ##################################################
 avg_speed_per_road_type_qsim0.0 <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/output-berlin-v6.4-3pct-bike-in-qsim-pce-0.0/analysis/traffic/traffic_stats_by_road_type_daily_bike.csv") %>%
@@ -470,6 +470,13 @@ avg_cycling_speed_per_road_type_plot <- ggplot(combined_avg_speed_per_road_type,
 avg_cycling_speed_per_road_type_plot
 ggsave("avg_cycling_speed_per_road_type_plot.pdf", avg_cycling_speed_per_road_type_plot, dpi = 500, w = 9, h = 9)
 
+avg_cycling_speed_primary <- combined_avg_speed_per_road_type %>% 
+  filter(road_type=="primary")
+avg_cycling_speed_secondary <- combined_avg_speed_per_road_type %>% 
+  filter(road_type=="secondary")
+avg_cycling_speed_tertiary <- combined_avg_speed_per_road_type %>% 
+  filter(road_type=="tertiary")
+
 ############################################ counts vs matsim bike volumes ##################################################
 # read data
 count_data <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/dtv_typical_weekday_bicycle_counts_2018_wgs84.csv")
@@ -530,8 +537,8 @@ counts_plot <- ggplot(count_plot_data,
                           group = case)) +
   geom_abline(slope = 1, intercept = 0, size=1) +
   geom_point(size = 3) +
-  scale_x_continuous(limits = c(0, 15000)) +
-  scale_y_continuous(limits = c(0, 15000)) +
+  scale_x_continuous(limits = c(0, 16000)) +
+  scale_y_continuous(limits = c(0, 16000)) +
   scale_color_okabe_ito(order = c(3, 4, 5, 6, 7)) +
   labs(
     x = "bicycle count dtv 2018",
@@ -553,6 +560,12 @@ ggsave("bicycle_counts_to_volumes_plot.pdf", counts_plot, dpi = 500, w = 9, h = 
 
 count_highway_types <- c("primary", "secondary", "tertiary", "cycleway", "path", "residential")
 
+counts_secondary_qsim0.0 <- count_plot_data %>% 
+  filter(str_detect(highway_types, "secondary")) %>% 
+  filter(case=="qsim0.0") %>% 
+  mutate(diff = simulation - dtv_2018)
+  
+
 for (type in count_highway_types) {
   count_plot_data_type <- count_plot_data %>%
     filter(str_detect(highway_types, type))
@@ -564,8 +577,8 @@ for (type in count_highway_types) {
                                     group = case)) +
     geom_abline(slope = 1, intercept = 0, size=1) +
     geom_point(size = 3) +
-    scale_x_continuous(limits = c(0, 15000)) +
-    scale_y_continuous(limits = c(0, 15000)) +
+    scale_x_continuous(limits = c(0, 16000)) +
+    scale_y_continuous(limits = c(0, 16000)) +
     scale_color_okabe_ito(order = c(3, 4, 5, 6, 7)) +
     labs(
       # title = paste0(type, ", n=", n_distinct(count_plot_data_type$station)),
