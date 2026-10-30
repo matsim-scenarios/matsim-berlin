@@ -17,6 +17,8 @@ jar="${RUN_JAR:-matsim-berlin.jar}"
 config="${RUN_CONFIG:-input/v7.2-pre-1/berlin-v7.2-pre-1-1pct.config.xml}"
 output="${RUN_DIR:-output/elasticities}"
 factors=(0.9 1.1)
+# true: scale car distance AND daily costs by each factor; false: distance costs only.
+car_daily_costs="${CAR_DAILY_COSTS:-false}"
 # Array IDs must run from 0 to twice the number of factors: 2 factors -> 0-4; 3 -> 0-6.
 
 if [[ ! -r "$jar" ]]; then
@@ -53,10 +55,57 @@ if (( task < 0 || task > 2 * ${#factors[@]} )); then
 fi
 
 car_factor=1.0
+car_daily_factor=1.0
 pt_factor=1.0
+case "$car_daily_costs" in
+    true|false) ;;
+    *) echo "CAR_DAILY_COSTS must be true or false." >&2; exit 2;;
+esac
 if (( task > 0 )); then
     factor="${factors[$(( (task - 1) / 2 ))]}"
     if (( task % 2 == 1 )); then car_factor="$factor"; else pt_factor="$factor"; fi
+fi
+if [[ "$car_daily_costs" == true ]]; then car_daily_factor="$car_factor"; fi
+
+# Read the original costs; standard MATSim overrides are applied after Berlin's config setup.
+overrides="$(python3 - "$config" "$car_factor" "$car_daily_factor" "$pt_factor" <<'PY'
+import math
+import sys
+import xml.etree.ElementTree as ET
+
+distance, daily, pt = map(float, sys.argv[2:])
+if any(not math.isfinite(f) or f < 0 for f in (distance, daily, pt)):
+    raise SystemExit("Cost factors must be finite and non-negative.")
+scoring = ET.parse(sys.argv[1]).findall("./module[@name='scoring']/parameterset[@type='scoringParameters']")
+if not scoring:
+    raise SystemExit("Config needs scoring/scoringParameters.")
+for group in scoring:
+    subpop = group.find("./param[@name='subpopulation']")
+    subpop = subpop.get("value") if subpop is not None else "null"
+    for mode in group.findall("./parameterset[@type='modeParams']"):
+        name = mode.find("./param[@name='mode']").get("value")
+        costs = {"car": (("monetaryDistanceRate", distance), ("dailyMonetaryConstant", daily)),
+                 "pt": (("dailyMonetaryConstant", pt),)}.get(name, ())
+        for parameter, factor in costs:
+            value = mode.find("./param[@name='%s']" % parameter)
+            if factor == 1 or value is None:
+                continue
+            value = float(value.get("value")) * factor
+            if not math.isfinite(value):
+                raise SystemExit("Non-finite monetary parameter: " + parameter)
+            print("--config:scoring.scoringParameters[subpopulation=%s].modeParams[mode=%s].%s" % (subpop, name, parameter))
+            print(format(value, ".17g"))
+PY
+)"
+name=base
+if (( task > 0 )); then
+    name="car-${car_factor}"
+    if [[ "$car_daily_factor" != 1.0 ]]; then name+="_carDaily-${car_daily_factor}"; fi
+    name+="_pt-${pt_factor}"
+fi
+args=(run --config "$config" --output "$output/$name" --runId "${name//./p}")
+if [[ -n "$overrides" ]]; then
+    while IFS= read -r option; do args+=("$option"); done <<< "$overrides"
 fi
 
 # Submit the report directly: Slurm's spool copy is not a shared script path.
@@ -79,9 +128,6 @@ EOF
     fi
 fi
 
-echo "Starting array task $task: car factor=$car_factor, PT factor=$pt_factor"
+echo "Starting array task $task: car distance=$car_factor, car daily=$car_daily_factor, PT daily=$pt_factor"
 exec srun "$java_bin" "-Xmx${RUN_MEMORY:-46G}" -Dmatsim.preferLocalDtds=true \
-    -cp "$jar" org.matsim.run.RunOpenBerlinElasticities run --config "$config" \
-    --car-monetary-distance-rate-factor "$car_factor" \
-    --pt-daily-monetary-constant-factor "$pt_factor" \
-    --output "$output"
+    -cp "$jar" org.matsim.run.OpenBerlinScenarioWrapper "${args[@]}"

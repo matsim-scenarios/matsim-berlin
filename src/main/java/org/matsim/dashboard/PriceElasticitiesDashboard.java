@@ -28,6 +28,7 @@ public final class PriceElasticitiesDashboard implements Dashboard {
 		header.title = "Price elasticities";
 		header.description = "Trips of the person subpopulation, excluding trucks. Demographic bins match the Berlin Trips dashboard. " +
 			"Elasticity = relative change in trips / relative change in cost, including cross-price effects. " +
+			"Car distance and daily costs scaled together use their common percentage change. " +
 			"Tables show absolute simulated trip counts and changes; missing attributes appear as Unknown.";
 		for (int i = 0; i < groups.size(); i++) {
 			String group = groups.get(i);

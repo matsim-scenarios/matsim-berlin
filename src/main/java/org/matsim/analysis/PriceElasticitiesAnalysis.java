@@ -62,7 +62,7 @@ public final class PriceElasticitiesAnalysis implements MATSimAppCommand {
 		return 0;
 	}
 
-	public record Row(String experiment, String scenario, String price, double carFactor, double ptFactor, Double costChange,
+	public record Row(String experiment, String scenario, String price, double carFactor, double carDailyFactor, double ptFactor, Double costChange,
 					  String category, String group, String mode, long baseTrips, long trips, long tripDelta,
 					  Double tripChange, Double elasticity, String status) {
 	}
@@ -79,7 +79,7 @@ public final class PriceElasticitiesAnalysis implements MATSimAppCommand {
 	private record Run(String name, Config config, Map<Key, Long> counts, Map<Cost, Double> costs) {
 	}
 
-	private record Prices(double carFactor, double ptFactor, String component, Double change, String label) {
+	private record Prices(double carFactor, double carDailyFactor, double ptFactor, String component, Double change, String label) {
 	}
 
 	/** Read completed runs, validate them, and write overview and demographic comparisons. */
@@ -113,7 +113,8 @@ public final class PriceElasticitiesAnalysis implements MATSimAppCommand {
 			throw new IllegalArgumentException("No experiment results found in " + directory);
 		for (Run run : runs) validate(base, run);
 		runs.subList(1, runs.size()).sort(Comparator.comparing((Run r) -> prices(base, r).component)
-			.thenComparingDouble(r -> prices(base, r).carFactor).thenComparingDouble(r -> prices(base, r).ptFactor)
+			.thenComparingDouble(r -> prices(base, r).carFactor).thenComparingDouble(r -> prices(base, r).carDailyFactor)
+			.thenComparingDouble(r -> prices(base, r).ptFactor)
 			.thenComparing(Run::name));
 
 		Map<String, Set<String>> groups = new LinkedHashMap<>();
@@ -142,7 +143,7 @@ public final class PriceElasticitiesAnalysis implements MATSimAppCommand {
 						String status = run == base ? "Base" : prices.change == null ? "Multiple prices changed"
 							: equal(prices.change, 0) ? "No price change" : before == 0 ? "No baseline trips" : "OK";
 						Double elasticity = status.equals("OK") ? demandChange / prices.change : null;
-						rows.add(new Row(run.name, prices.label, prices.component, prices.carFactor, prices.ptFactor,
+						rows.add(new Row(run.name, prices.label, prices.component, prices.carFactor, prices.carDailyFactor, prices.ptFactor,
 							prices.change == null ? null : prices.change * 100, category.getKey(), group, mode, before, after,
 							after - before, demandChange == null ? null : demandChange * 100, elasticity, status));
 					}
@@ -259,7 +260,7 @@ public final class PriceElasticitiesAnalysis implements MATSimAppCommand {
 		if (!base.costs.keySet().equals(run.costs.keySet()))
 			throw new IllegalArgumentException("Different scoring modes/subpopulations in " + run.name);
 		for (Cost key : base.costs.keySet()) {
-			if (key.mode.equals("car") && key.parameter.equals("monetaryDistanceRate")
+			if (key.mode.equals("car")
 				|| key.mode.equals("pt") && key.parameter.equals("dailyMonetaryConstant")) continue;
 			if (!equal(base.costs.get(key), run.costs.get(key)))
 				throw new IllegalArgumentException("Unrelated monetary parameter changed in " + run.name + ": " + key);
@@ -268,13 +269,24 @@ public final class PriceElasticitiesAnalysis implements MATSimAppCommand {
 
 	private static Prices prices(Run base, Run run) {
 		double car = factor(base, run, "car", "monetaryDistanceRate");
+		double carDaily = factor(base, run, "car", "dailyMonetaryConstant");
 		double pt = factor(base, run, "pt", "dailyMonetaryConstant");
-		boolean carChanged = !equal(car, 1), ptChanged = !equal(pt, 1);
-		String component = carChanged && ptChanged ? "Car distance and PT daily" : carChanged ? "Car distance" : ptChanged ? "PT daily" : "Unchanged";
-		Double change = carChanged && ptChanged ? null : carChanged ? car - 1 : pt - 1;
-		String label = run == base ? "Base (continued)" : carChanged && ptChanged ? "Car " + percent(car) + " / PT " + percent(pt)
-			: carChanged ? "Car " + percent(car) : ptChanged ? "PT " + percent(pt) : run.name;
-		return new Prices(car, pt, component, change, label);
+		boolean distanceChanged = !equal(car, 1), dailyChanged = !equal(carDaily, 1), ptChanged = !equal(pt, 1);
+		boolean carChanged = distanceChanged || dailyChanged;
+		boolean combinedCar = distanceChanged && dailyChanged;
+		boolean differentCarFactors = combinedCar && !equal(car, carDaily);
+		String component = combinedCar ? "Car distance and daily" : distanceChanged ? "Car distance" : dailyChanged ? "Car daily" : "";
+		String label = combinedCar ? differentCarFactors ? "Car distance " + percent(car) + " / daily " + percent(carDaily)
+			: "Car distance + daily " + percent(car) : distanceChanged ? "Car " + percent(car) : dailyChanged ? "Car daily " + percent(carDaily) : "";
+		if (ptChanged) {
+			component += (carChanged ? " and " : "") + "PT daily";
+			label += (carChanged ? " / " : "") + "PT " + percent(pt);
+		}
+		// A common multiplier for both car components defines one price change, not their sum.
+		Double change = (carChanged && ptChanged) || differentCarFactors ? null
+			: distanceChanged ? car - 1 : dailyChanged ? carDaily - 1 : pt - 1;
+		return new Prices(car, carDaily, pt, component.isEmpty() ? "Unchanged" : component, change,
+			run == base ? "Base (continued)" : label.isEmpty() ? run.name : label);
 	}
 
 	private static String percent(double factor) {
@@ -316,13 +328,14 @@ public final class PriceElasticitiesAnalysis implements MATSimAppCommand {
 	}
 
 	private static void writePrices(Path file, Run base, List<Run> runs) throws IOException {
-		String[] header = {"Scenario", "Experiment", "Car factor", "PT factor", "Base car rate [EUR/km]", "Car rate [EUR/km]",
-			"Base PT daily constant [EUR/day]", "PT daily constant [EUR/day]"};
+		String[] header = {"Scenario", "Experiment", "Car factor", "Car daily factor", "PT factor", "Base car rate [EUR/km]", "Car rate [EUR/km]",
+			"Base car daily constant [EUR/day]", "Car daily constant [EUR/day]", "Base PT daily constant [EUR/day]", "PT daily constant [EUR/day]"};
 		try (CSVPrinter csv = new CSVPrinter(Files.newBufferedWriter(file), CSVFormat.DEFAULT.builder().setHeader(header).build())) {
 			for (Run run : runs) {
 				Prices prices = prices(base, run);
-				csv.printRecord(prices.label, run.name, decimal(prices.carFactor, 8), decimal(prices.ptFactor, 8),
+				csv.printRecord(prices.label, run.name, decimal(prices.carFactor, 8), decimal(prices.carDailyFactor, 8), decimal(prices.ptFactor, 8),
 					decimal(personCost(base, "car", true), 8), decimal(personCost(run, "car", true), 8),
+					decimal(personCost(base, "car", false), 8), decimal(personCost(run, "car", false), 8),
 					decimal(personCost(base, "pt", false), 8), decimal(personCost(run, "pt", false), 8));
 			}
 		}
