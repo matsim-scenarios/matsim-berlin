@@ -12,15 +12,18 @@ import picocli.CommandLine;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Runs one of the policy cases provided by {@link CornerCases} on top of the Open Berlin scenario.
+ * Runs a combination of the policy cases provided by {@link CornerCases} on top of the Open Berlin scenario.
  *
  * <p>The base case continues to run through {@link OpenBerlinScenario}. This class is used only for policy runs,
- * and every invocation applies exactly one policy to freshly prepared base inputs. Spatial policies require a local
+ * and every invocation applies its selected policies once to freshly prepared base inputs. Spatial policies require a local
  * shapefile supplied through {@code --policy-shp}.</p>
  */
 @CommandLine.Command(header = ":: Open Berlin Corner Cases ::", version = OpenBerlinScenario.VERSION,
@@ -40,17 +43,26 @@ public final class RunOpenBerlinCornerCases extends OpenBerlinScenario {
 	static final String DEFAULT_EXCLUDED_ROAD_TYPES =
 			"highway.motorway,highway.motorway_link,highway.trunk,highway.trunk_link";
 
-	@CommandLine.Option(names = "--policy", required = true,
-			description = "Policy case: ${COMPLETION-CANDIDATES}.")
-	private PolicyCase policy;
+	@CommandLine.Option(names = "--policy", required = true, split = ",",
+			description = "Policy cases: ${COMPLETION-CANDIDATES}. Repeat the option or separate policies with commas.")
+	private List<PolicyCase> policies = new ArrayList<>();
 
 	@CommandLine.Option(names = "--policy-shp", paramLabel = "<file.shp>",
 			description = "Local shape file used by spatial policies.")
 	private Path policyShape;
 
 	@CommandLine.Option(names = "--policy-factor", paramLabel = "<factor>",
-			description = "Bike speed factor (> 0 and not 1), or car speed/capacity factor in (0, 1).")
+			description = "Factor for a single policy. For combinations, use the separate policy factor options.")
 	private Double policyFactor;
+
+	@CommandLine.Option(names = "--bike-speed-factor", description = "Bike speed multiplier (> 0 and not 1).")
+	private Double bikeSpeedFactor;
+
+	@CommandLine.Option(names = "--car-speed-factor", description = "Car speed multiplier in (0, 1).")
+	private Double carSpeedFactor;
+
+	@CommandLine.Option(names = "--car-capacity-factor", description = "Car capacity multiplier in (0, 1).")
+	private Double carCapacityFactor;
 
 	@CommandLine.Option(names = "--excluded-road-types", split = ",",
 			defaultValue = DEFAULT_EXCLUDED_ROAD_TYPES,
@@ -78,12 +90,12 @@ public final class RunOpenBerlinCornerCases extends OpenBerlinScenario {
 		validatePolicyOptions();
 		Config prepared = super.prepareConfig(config);
 
-		if (policy == PolicyCase.PARKING_COST) {
+		if (policies.contains(PolicyCase.PARKING_COST)) {
 			CornerCases.prepareConfigForParkingCost(prepared);
 		}
 
-		log.info("Running Berlin policy {} with shape={}, factor={}, excludedRoadTypes={}",
-				policy, policyShape, policyFactor, excludedRoadTypeSet());
+		log.info("Running Berlin policies {} with shape={}, excludedRoadTypes={}",
+				policies, policyShape, excludedRoadTypeSet());
 		return prepared;
 	}
 
@@ -97,51 +109,53 @@ public final class RunOpenBerlinCornerCases extends OpenBerlinScenario {
 	protected void prepareControler(Controler controler) {
 		super.prepareControler(controler);
 
-		if (policy == PolicyCase.PARKING_COST) {
+		if (policies.contains(PolicyCase.PARKING_COST)) {
 			CornerCases.prepareControllerForParkingCost(controler);
 		}
 	}
 
 	/**
-	 * Applies exactly one selected policy and verifies that a spatial policy actually touched the network.
+	 * Applies each selected policy once and verifies that every spatial policy actually touched the network.
 	 * Package visibility is intentional for focused unit tests.
 	 */
 	void applyPolicy(Scenario scenario) {
 		validatePolicyOptions();
 		rejectPreexistingPolicyMarkers(scenario);
 
-		switch (policy) {
+		for (PolicyCase policy : EnumSet.copyOf(policies)) switch (policy) {
 			case BIKE_SPEED -> {
-				CornerCases.modifyBikeSpeed(scenario, policyFactor);
-				scenario.getNetwork().getAttributes().putAttribute(BIKE_SPEED_FACTOR_ATTRIBUTE, policyFactor);
+				CornerCases.modifyBikeSpeed(scenario, factor(policy));
+				scenario.getNetwork().getAttributes().putAttribute(BIKE_SPEED_FACTOR_ATTRIBUTE, factor(policy));
 			}
 			case CAR_SPEED -> {
-				CornerCases.reduceCarSpeed(scenario, normalizedPolicyShape(), policyFactor, excludedRoadTypeSet());
-				verifyModifiedLinks(scenario, CornerCases.SPEED_REDUCTION_FACTOR_ATTRIBUTE);
+				CornerCases.reduceCarSpeed(scenario, normalizedPolicyShape(), factor(policy), excludedRoadTypeSet());
+				verifyModifiedLinks(scenario, policy, CornerCases.SPEED_REDUCTION_FACTOR_ATTRIBUTE);
 			}
 			case CAR_CAPACITY -> {
-				CornerCases.reduceCarCapacities(scenario, normalizedPolicyShape(), policyFactor,
+				CornerCases.reduceCarCapacities(scenario, normalizedPolicyShape(), factor(policy),
 						excludedRoadTypeSet());
-				verifyModifiedLinks(scenario, CornerCases.CAPACITY_REDUCTION_FACTOR_ATTRIBUTE);
+				verifyModifiedLinks(scenario, policy, CornerCases.CAPACITY_REDUCTION_FACTOR_ATTRIBUTE);
 			}
 			case PARKING_COST -> {
 				CornerCases.prepareScenarioForParkingCost(scenario, normalizedPolicyShape(), firstHourParkingCost,
 						extraHourParkingCost, residentialParkingFee);
-				verifyModifiedLinks(scenario, FIRST_HOUR_PARKING_COST_ATTRIBUTE);
+				verifyModifiedLinks(scenario, policy, FIRST_HOUR_PARKING_COST_ATTRIBUTE);
 			}
 		}
 	}
 
 	private void validatePolicyOptions() {
-		if (policy == null) {
+		if (policies.isEmpty()) {
 			throw new IllegalArgumentException("--policy must be set.");
 		}
+		if (policyFactor != null && EnumSet.copyOf(policies).size() > 1)
+			throw new IllegalArgumentException("For combinations, use --bike-speed-factor, --car-speed-factor and --car-capacity-factor instead of --policy-factor.");
 
-		switch (policy) {
-			case BIKE_SPEED -> validatePositiveFactor();
+		for (PolicyCase policy : EnumSet.copyOf(policies)) switch (policy) {
+			case BIKE_SPEED -> validatePositiveFactor(factor(policy));
 			case CAR_SPEED, CAR_CAPACITY -> {
 				validateShape();
-				validateReductionFactor();
+				validateReductionFactor(factor(policy));
 			}
 			case PARKING_COST -> {
 				validateShape();
@@ -155,25 +169,37 @@ public final class RunOpenBerlinCornerCases extends OpenBerlinScenario {
 		}
 	}
 
+	private Double factor(PolicyCase policy) {
+		Double specific = switch (policy) {
+			case BIKE_SPEED -> bikeSpeedFactor;
+			case CAR_SPEED -> carSpeedFactor;
+			case CAR_CAPACITY -> carCapacityFactor;
+			case PARKING_COST -> null;
+		};
+		if (specific != null && policyFactor != null)
+			throw new IllegalArgumentException("Use either --policy-factor or the separate factor for " + policy + ".");
+		return specific != null ? specific : policyFactor;
+	}
+
 	private void validateShape() {
 		if (policyShape == null) {
-			throw new IllegalArgumentException("--policy-shp is required for policy " + policy + ".");
+			throw new IllegalArgumentException("--policy-shp is required for spatial policies.");
 		}
 		if (!Files.isRegularFile(normalizedPolicyShape())) {
 			throw new IllegalArgumentException("Policy shape does not exist or is not a file: " + policyShape);
 		}
 	}
 
-	private void validatePositiveFactor() {
-		if (policyFactor == null || !Double.isFinite(policyFactor) || policyFactor <= 0. || policyFactor == 1.) {
+	private void validatePositiveFactor(Double factor) {
+		if (factor == null || !Double.isFinite(factor) || factor <= 0. || factor == 1.) {
 			throw new IllegalArgumentException(
-					"--policy-factor must be finite, greater than zero, and different from one for " + policy + ".");
+					"--bike-speed-factor (or --policy-factor for a single policy) must be finite, greater than zero, and different from one.");
 		}
 	}
 
-	private void validateReductionFactor() {
-		if (policyFactor == null || !Double.isFinite(policyFactor) || policyFactor <= 0. || policyFactor >= 1.) {
-			throw new IllegalArgumentException("--policy-factor must be finite and in (0, 1) for " + policy + ".");
+	private void validateReductionFactor(Double factor) {
+		if (factor == null || !Double.isFinite(factor) || factor <= 0. || factor >= 1.) {
+			throw new IllegalArgumentException("--car-speed-factor/--car-capacity-factor (or --policy-factor for a single policy) must be finite and in (0, 1).");
 		}
 	}
 
@@ -209,7 +235,7 @@ public final class RunOpenBerlinCornerCases extends OpenBerlinScenario {
 		return policyShape.toAbsolutePath().normalize();
 	}
 
-	private void verifyModifiedLinks(Scenario scenario, String attribute) {
+	private void verifyModifiedLinks(Scenario scenario, PolicyCase policy, String attribute) {
 		long modifiedLinks = scenario.getNetwork().getLinks().values().stream()
 				.filter(link -> link.getAttributes().getAttribute(attribute) != null)
 				.count();
