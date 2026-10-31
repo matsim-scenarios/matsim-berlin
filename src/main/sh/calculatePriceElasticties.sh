@@ -25,8 +25,8 @@ if [[ ! -r "$jar" ]]; then
     echo "Cannot read shaded JAR: $jar. Set jar or RUN_JAR before submitting." >&2
     exit 2
 fi
-# Load Java 25+ before submission, or specify your cluster's module name.
-if [[ -n "${JAVA_MODULE:-}" ]]; then module load "$JAVA_MODULE"; fi
+# Load the cluster's Java 25 module; JAVA_MODULE can select another module.
+module load "${JAVA_MODULE:-java/openjdk25}"
 # Use the module's executable, even when an inherited JAVA_HOME still points at Java 8.
 java_bin="$(command -v java)"
 java_version="$("$java_bin" -XshowSettings:properties -version 2>&1 | awk '$1 == "java.specification.version" {print $3}')"
