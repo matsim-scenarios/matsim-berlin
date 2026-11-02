@@ -72,6 +72,8 @@ public class OpenBerlinScenario extends MATSimApplication {
 			"the same value.")
 	private double simulationPeriodInDays = DEFAULT_SIMULATION_PERIOD_IN_DAYS;
 
+	@CommandLine.Option(names = "--income-method", description = "Income assignment: ${COMPLETION-CANDIDATES}.")
+	private AssignIncome.Method incomeMethod = AssignIncome.Method.DRESDEN;
 	// TODO this should go away and be part of matsim-libs
 	@CommandLine.Option(names = "--agent-wise-comparison-base",
 		description = "Output directory of a base run. After the run, compare the scores of this run's agents against " +
@@ -160,9 +162,9 @@ public class OpenBerlinScenario extends MATSimApplication {
 		// kai, oct'26
 
 		// TODO: Resolve income smoothing in the demand pipeline; apply it here temporarily for existing demand.
-		AssignIncome.assignIncomeToPersons(scenario.getPopulation());
+		AssignIncome.assignIncomeToPersons(scenario.getPopulation(), incomeMethod);
 
-		log.info("Added income distribution to the population");
+		log.info("Added income distribution to the population using {}", incomeMethod);
 
 		// add hbefa link attributes. Shouldn't this go upstream?
 		OsmHbefaMapping.build().addHbefaMappings(scenario.getNetwork() );

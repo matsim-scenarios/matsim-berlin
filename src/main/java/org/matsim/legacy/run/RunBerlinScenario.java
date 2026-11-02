@@ -193,7 +193,7 @@ public final class RunBerlinScenario {
 			downsample(scenario.getPopulation().getPersons(), berlinCfg.getPopulationDownsampleFactor());
 		}
 
-		AssignIncome.assignIncomeToPersons(scenario.getPopulation());
+		AssignIncome.assignIncomeToPersons(scenario.getPopulation(), AssignIncome.Method.DRESDEN);
 		return scenario;
 	}
 
