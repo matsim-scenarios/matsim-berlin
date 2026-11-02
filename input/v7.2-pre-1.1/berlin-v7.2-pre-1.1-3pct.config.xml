@@ -41,6 +41,37 @@
 		<!-- input file name to counts package -->
 		<param name="inputCountsFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-counts-vmz.xml.gz" />
 	</module>
+	<module name="dsim" >
+		<!-- it seems that some of the parameters (flow/storage) are used from qsim. -->
+
+
+		<!-- End time of the simulation. Default: 24:00:00 -->
+		<param name="endTime" value="36:00:00" />
+
+		<!-- Link dynamics determine how vehicles can overtake. Options: [FIFO, PassingQ, Seepage(not implemented)], Default: PassingQ -->
+		<param name="linkDynamics" value="PassingQ" />
+
+		<!-- Modes which are simulated on the network. All other modes, expect pt will be teleported. Default: car -->
+		<param name="networkModes" value="car,truck,freight" />
+
+		<!-- Partitioning strategy for the network. Options: [none, bisect, metis], default: 'bisect' -->
+		<param name="partitioning" value="metis" />
+
+		<!-- Start time of the simulation. Default: 00:00:00 -->
+		<param name="startTime" value="00:00:00" />
+
+		<!-- Stuck time [s] after which a vehicle is pushed onto the next link regardless of available capacity. Default: 30 -->
+		<param name="stuckTime" value="30.0" />
+
+		<!-- Number of threads to use for execution. If <= 0, the number of available processors is used. -->
+		<param name="threads" value="12" />
+
+		<!-- Traffic dynamics determine how storage capacities and inflow capacities are freed. Options: [queue, kinematicWaves, withHoles (not implemented), Default: kinematicWaves -->
+		<param name="trafficDynamics" value="kinematicWaves" />
+
+		<!-- Determines how agents can access vehicles when starting a trip. Options=[teleport, wait (not implemented), exception], Default: teleport -->
+		<param name="vehicleBehavior" value="teleport" />
+	</module>
 	<module name="facilities" >
 		<!-- This defines how facilities should be created. Possible values: none fromFile setInScenario onePerActivityLinkInPlansFile onePerActivityLinkInPlansFileExceptWhenCoordinatesAreGiven onePerActivityLocationInPlansFile  -->
 		<param name="facilitiesSource" value="fromFile" />

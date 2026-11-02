@@ -166,6 +166,34 @@ This will update your repository to the newest version.
 
 (Requires either cloning or downloading the repository.)
 
+### Note on `dsim`
+
+The configs in `input/v7.2-pre-2` use the distributed mobsim `dsim`
+(`<param name="mobsim" value="dsim" />`) instead of `qsim`. `dsim` accesses an internal JDK API,
+so the JVM has to be started with
+
+```
+--add-exports java.base/jdk.internal.misc=ALL-UNNAMED
+```
+
+Without that argument the run fails on start-up. Pass it before `-jar` or before the main class,
+e.g.
+
+```bash
+java --add-exports java.base/jdk.internal.misc=ALL-UNNAMED -jar [FILENAME].jar
+```
+
+In an IDE, add it to the VM options of the run configuration. Note that the argument has to go to
+the JVM that actually runs MATSim: when starting the jar by double-click, the MATSim GUI opens a
+second JVM for the run, so start the jar from the command line as shown above instead.
+
+
+When running on a HPC-cluster you also need to add to your runscript or .bashrc
+
+```
+module load metis-5.1
+```
+
 <details>
 <summary>    
     <h3>... using a runnable jar file</h3>

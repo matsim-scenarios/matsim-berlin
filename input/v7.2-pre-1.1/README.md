@@ -6,8 +6,8 @@ checkout:
 
 | config | sample | from |
 | --- | --- | --- |
-| `berlin-v7.2-pre-2-1pct.config.xml` | 1 % | ASC calibration trial 009 of ten |
-| `berlin-v7.2-pre-2-3pct.config.xml` | 3 % | ASC calibration trial 010 of eleven |
+| `berlin-v7.2-pre-2.1-1pct.config.xml` | 1 % | ASC calibration trial 007 of ten |
+| `berlin-v7.2-pre-2.1-1pct-dsim.config.xml` | 1 % | ASC calibration trial 010 of ten, using dsim |
 
 pre-1.1 is pre-1 with the typical durations of the activities kept on the person, in the
 `typicalDurations` attribute, instead of in a `typicalDuration` attribute on each activity. The
