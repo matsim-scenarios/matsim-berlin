@@ -162,7 +162,7 @@ public class OpenBerlinWithParking extends OpenBerlinScenario {
         NetworkUtils.writeNetwork(scenario.getNetwork(), "network-v6.4-with-parking.xml.gz");
     }
 
-	//TODO replace this by a modul
+	//TODO replace this by a modul from matsim libs once matsim version is updated (see https://github.com/matsim-org/matsim-libs/pull/5221)
     @Override
     protected void prepareControler(Controler controler) {
         super.prepareControler(controler);

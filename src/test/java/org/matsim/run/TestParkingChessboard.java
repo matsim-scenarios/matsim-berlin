@@ -97,7 +97,7 @@ public class TestParkingChessboard {
 
 		config.controller().setLastIteration(0);
 		config.controller().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles);
-		config.controller().setOutputDirectory("./parkingChessboardOutput5ParkingSpotsPerLink");
+		config.controller().setOutputDirectory(utils.getOutputDirectory());
 		config.routing().setAccessEgressType(RoutingConfigGroup.AccessEgressType.accessEgressModeToLink);
 		config.scoring().setWriteExperiencedPlans(true);
 
@@ -148,6 +148,11 @@ public class TestParkingChessboard {
 				}
 			});
 		controler.run();
+
+		// Reference events were produced with the contrib's ParkingOccupancyObserver registered as mobsim-scope event handler.
+		MatsimTestUtils.assertEqualEventsFiles(
+			utils.getInputDirectory() + "output_events.xml.zst",
+			utils.getOutputDirectory() + "output_events.xml.zst");
 	}
 
 	@Test
