@@ -107,7 +107,9 @@ def main():
     parser.add_argument("--trials", type=int, default=10,
                         help="Number of runs to add to the study. A study that is already in "
                              "--run-dir is continued, not restarted.")
-    parser.add_argument("--jvm-args", default="-Xmx60G -Xms60G -XX:+AlwaysPreTouch -XX:+UseParallelGC")
+    parser.add_argument("--jvm-args", default="-Xmx60G -Xms60G -XX:+AlwaysPreTouch -XX:+UseParallelGC "
+                                               "--add-exports java.base/jdk.internal.misc=ALL-UNNAMED",
+                        help="Options of the JVM. dsim needs the --add-exports, see the README.")
     parser.add_argument("--args", default="", help="Further arguments for the scenario.")
     parser.add_argument("--base-params", default=None,
                         help="Yaml with the estimated parameters of the choice model, used as the "

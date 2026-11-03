@@ -49,6 +49,7 @@ import org.matsim.core.scoring.functions.ScoringParameters;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.scoring.functions.SubpopulationScoringParameters;
 import org.matsim.core.utils.geometry.CoordUtils;
+import org.matsim.dsim.DSimConfigGroup;
 import org.matsim.prepare.choices.ComputePlanChoices;
 import org.matsim.prepare.choices.ComputeTripChoices;
 import org.matsim.prepare.counts.CreateCountsFromGeoPortalBerlin;
@@ -217,6 +218,7 @@ public class RunOpenBerlinCalibration extends MATSimApplication {
 		);
 
 		config.qsim().setMainModes(List.of(TransportMode.car));
+		ConfigUtils.addOrGetModule(config, DSimConfigGroup.class).setNetworkModes(Set.of(TransportMode.car));
 
 		// Required for all calibration strategies
 		for (String subpopulation : List.of("person", "commercialPersonTraffic", "commercialPersonTraffic_service", "goodsTraffic")) {
