@@ -13,6 +13,9 @@ VERSION=$2
 ## sample token, e.g. 25pct / 10pct / 3pct / 1pct. Must be one of the samples declared in
 ## RunOpenBerlinCalibration's SampleOptions, since it is passed through as the --<N>pct switch.
 SAMPLE_PCT=${3:-25pct}
+## multiplies the road capacity on top of the sample size, see CADYTS_SCALE_FACTOR in the Makefile.
+## Not given: RunOpenBerlinCalibration's default.
+SCALE_FACTOR=$4
 
 # check if we're on SLURM-cluster or if we really wan't to run this locally
 checkIfSlurmAndChangeDirOrAbort
@@ -22,7 +25,7 @@ hostname
 pwd
 
 ## the location of the population-file needs to be relative to the cadyts-config.xml, which is kind of weird to me
-arguments="--output output/cadyts-${SAMPLE_PCT} --${SAMPLE_PCT} --iterations 50 --population ./berlin-cadyts-input-${VERSION}-${SAMPLE_PCT}.plans.xml.gz"
+arguments="--output output/cadyts-${SAMPLE_PCT} --${SAMPLE_PCT} --iterations 50 --population ./berlin-cadyts-input-${VERSION}-${SAMPLE_PCT}.plans.xml.gz ${SCALE_FACTOR:+--scale-factor $SCALE_FACTOR}"
 
 # Don't change anything below
 ################
