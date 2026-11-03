@@ -168,7 +168,8 @@ This will update your repository to the newest version.
 
 ### Note on `dsim`
 
-The configs in `input/v7.2-pre-2` use the distributed mobsim `dsim`
+The `-dsim` config in `input/v7.2-pre-2.1` and the pipeline's config templates (`input/*-template.xml`)
+use the distributed mobsim `dsim`
 (`<param name="mobsim" value="dsim" />`) instead of `qsim`. `dsim` accesses an internal JDK API,
 so the JVM has to be started with
 
@@ -176,7 +177,8 @@ so the JVM has to be started with
 --add-exports java.base/jdk.internal.misc=ALL-UNNAMED
 ```
 
-Without that argument the run fails on start-up. Pass it before `-jar` or before the main class,
+Without that argument the run fails on start-up. The pipeline's scripts (`src/main/sh/cadyts.sh`,
+`src/main/python/calibrate.py`) pass it. Pass it before `-jar` or before the main class,
 e.g.
 
 ```bash

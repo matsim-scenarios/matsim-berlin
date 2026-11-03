@@ -70,7 +70,11 @@ MODE_CONSTANT_SIGMAS ?= car=1.506777,bike=0.879757,pt=1.737971,ride=2.861008
 # drivers, at 25 %: 0.25 x 5 x 3.2 = 4.0. The counts are still compared at 1 / (0.25 x 5). With the 1.5 that
 # RunOpenBerlinCalibration defaults to, the run stays jammed through its 50 iterations (4.7 % of the agents stuck
 # in the last one). At 3.2 it starts congested, with 10.7 % stuck, and nobody is stuck from iteration 16 on.
+# Both measured with qsim. With dsim, 3.2 is uncongested from iteration 0 on (0 stuck), so the factor is to be
+# found again.
 CADYTS_SCALE_FACTOR ?= 3.2
+# The runs simulate with dsim (see the config templates), which needs this JVM option, see the README
+DSIM_JVM_ARGS := --add-exports java.base/jdk.internal.misc=ALL-UNNAMED
 # Scenario creation tool
 JAVA_CP := java -Xmx$(MAKE_XMX) -XX:+UseParallelGC -Dorg.geotools.referencing.forceXY=true -Djava.io.tmpdir=$(TMP_DIR) -cp $(JAR)
 JAVA_APP := $(JAVA_CP) org.matsim.prepare.RunOpenBerlinCalibration
@@ -642,7 +646,7 @@ $(BERLIN_ASC_CALIB_PARAMS): $(BERLIN_ASC_CALIB_CONFIG) $(BERLIN_PLANS_INITIAL) $
 	 --output $@\
 	 --output-plans $(BERLIN_ASC_CALIB_PLANS)\
 	 --trials $(ASC_CALIB_TRIALS)\
-	 --jvm-args "-Xmx$(ASC_CALIB_XMX) -Xms$(ASC_CALIB_XMX) -XX:+AlwaysPreTouch -XX:+UseParallelGC"\
+	 --jvm-args "-Xmx$(ASC_CALIB_XMX) -Xms$(ASC_CALIB_XMX) -XX:+AlwaysPreTouch -XX:+UseParallelGC $(DSIM_JVM_ARGS)"\
 	 --args "--iterations $(ASC_CALIB_ITERATIONS) --simulation-period-in-days $(SIM_PERIOD_DAYS)\
 	 --config:controller.overwriteFiles=deleteDirectoryIfExists\
 	 --config:controller.compressionType=gzip\

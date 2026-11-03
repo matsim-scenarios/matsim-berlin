@@ -30,7 +30,8 @@ arguments="--output output/cadyts-${SAMPLE_PCT} --${SAMPLE_PCT} --iterations 50 
 # Don't change anything below
 ################
 
-jvm_opts="-Xmx$MEMORY -Xms$MEMORY -XX:+AlwaysPreTouch -XX:+UseParallelGC -XX:-UseGCOverheadLimit"
+## dsim needs the export, see the README
+jvm_opts="-Xmx$MEMORY -Xms$MEMORY -XX:+AlwaysPreTouch -XX:+UseParallelGC -XX:-UseGCOverheadLimit --add-exports java.base/jdk.internal.misc=ALL-UNNAMED"
 command="java $jvm_opts $JAVA_OPTS -cp $jar org.matsim.prepare.RunOpenBerlinCalibration --config $CONFIG $RUN_ARGS $arguments run"
 
 ## If there is a run dir, set it to the run name
