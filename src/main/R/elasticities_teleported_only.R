@@ -2,7 +2,7 @@ library(tidyverse)
 library(ggokabeito)
 
 # read data
-elasticities_share <- read_csv(file="C:/Users/Simon/Desktop/wd/2026-10-26/elasticities_bike_network_paper_teleported_only.csv") %>%
+elasticities_share <- read_csv(file="C:/Users/Simon/Desktop/wd/2026-11-02/elasticities_bike_network_paper_teleported_only.csv") %>%
   mutate(
     elasticity = elasticity %>%
       na_if("#DIV/0!") %>%
@@ -116,10 +116,11 @@ elasticities_plot <- ggplot(
   # ) +
   geom_line(linewidth = 1) +
   geom_point(size = 3) +
-  scale_color_okabe_ito(order = c(1, 2, 3, 4, 5, 6, 7, 8, 9)) +
+  scale_color_okabe_ito(order = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) +
   labs(
     x = "bicycle speed [km/h]",
-    y = "bicycle speed elasticity"
+    y = "bicycle speed elasticity",
+    title="elasticities teleported experiments"
   ) +
   theme_minimal() +
   theme(

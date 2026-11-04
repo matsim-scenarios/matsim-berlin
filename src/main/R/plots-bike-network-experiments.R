@@ -224,8 +224,8 @@ ggsave("modal_dist_group_car_plot.pdf", modal_dist_group_car_plot, dpi = 500, w 
 ############################################ bicycle speed elasticities plot ##################################################
 
 # read data
-elasticities_share <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/bike_speed_elasticities_share_bike_network_paper.csv") %>%
-# elasticities_share <- read_csv(file="C:/Users/Simon/Desktop/wd/2026-10-19/bike_speed_elasticities_share_bike_network_paper_additional_teleported_runs.csv") %>% 
+# elasticities_share <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/bike_speed_elasticities_share_bike_network_paper.csv") %>%
+elasticities_share <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network_study/bike_speed_elasticities_share_bike_network_paper_w_teleported_speed_2.98.csv") %>%
   mutate(
     elasticity = elasticity %>%
       na_if("#DIV/0!") %>%
@@ -234,6 +234,7 @@ elasticities_share <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network
   mutate(elasticity = as.numeric(elasticity)) %>% 
   mutate(
     case = case_when(
+      str_detect(run, "speed-2.98") ~ "teleported-speed-2.98",
       str_detect(run, "base-case-ctd") ~ "base",
       str_detect(run, "bike-teleported") ~ "teleported",
       str_detect(run, "bike-in-qsim") ~ paste0("qsim", str_extract(run, "(?<=pce-)[0-9.]+")),
@@ -264,22 +265,22 @@ elasticities_share <- read_csv(file="D:/runs-svn/matsim-berlin/v6.4_bike_network
 #   filter(`speed factor`!=1.05)
 
 
-elasticities_share_same_jar <- read_csv(file="C:/Users/Simon/Desktop/wd/2026-10-19/bike_speed_elasticities_share_bike_network_paper_additional_teleported_runs_same_jar.csv") %>% 
-  mutate(
-    elasticity = elasticity %>%
-      na_if("#DIV/0!") %>%
-      replace_na("0")
-  ) %>% 
-  mutate(elasticity = as.numeric(elasticity)) %>% 
-  mutate(
-    case = case_when(
-      str_detect(run, "base-case-ctd") ~ "base",
-      str_detect(run, "bike-teleported") ~ "teleported",
-      str_detect(run, "bike-in-qsim") ~ paste0("qsim", str_extract(run, "(?<=pce-)[0-9.]+")),
-      TRUE ~ "Other"
-    )
-  ) %>% 
-  mutate(case = factor(case, levels = unique(case)))
+# elasticities_share_same_jar <- read_csv(file="C:/Users/Simon/Desktop/wd/2026-10-19/bike_speed_elasticities_share_bike_network_paper_additional_teleported_runs_same_jar.csv") %>%
+#   mutate(
+#     elasticity = elasticity %>%
+#       na_if("#DIV/0!") %>%
+#       replace_na("0")
+#   ) %>%
+#   mutate(elasticity = as.numeric(elasticity)) %>%
+#   mutate(
+#     case = case_when(
+#       str_detect(run, "base-case-ctd") ~ "base",
+#       str_detect(run, "bike-teleported") ~ "teleported",
+#       str_detect(run, "bike-in-qsim") ~ paste0("qsim", str_extract(run, "(?<=pce-)[0-9.]+")),
+#       TRUE ~ "Other"
+#     )
+#   ) %>%
+#   mutate(case = factor(case, levels = unique(case)))
 
 elasticities_no_0 <- elasticities_share %>% 
   filter(elasticity != 0)
@@ -288,7 +289,7 @@ elasticities_no_0 <- elasticities_share %>%
 #   filter(elasticity != 0)
 
 elasticities_teleported <- elasticities_share %>% 
-  filter(case=="teleported")
+  filter(str_detect(case, "teleported"))
 
 shares_plot <- ggplot(
   elasticities_teleported,
@@ -302,17 +303,17 @@ shares_plot <- ggplot(
   geom_point(size = 3)
 shares_plot
 
-shares_plot_same_jar <- ggplot(
-  elasticities_share_same_jar,
-  aes(
-    x = `speed factor`,
-    y = `bike share`,
-    color = case
-  )
-)+
-  geom_line(linewidth = 2) +
-  geom_point(size = 3)
-shares_plot_same_jar
+# shares_plot_same_jar <- ggplot(
+#   elasticities_share_same_jar,
+#   aes(
+#     x = `speed factor`,
+#     y = `bike share`,
+#     color = case
+#   )
+# )+
+#   geom_line(linewidth = 2) +
+#   geom_point(size = 3)
+# shares_plot_same_jar
 
 
 
@@ -336,9 +337,9 @@ elasticities_plot <- ggplot(
     linetype = "dashed",
     linewidth = 1
   ) +
-  geom_line(linewidth = 2) +
+  geom_line(linewidth = 1) +
   geom_point(size = 3) +
-  scale_color_okabe_ito(order = c(1, 2, 3, 4, 5, 6, 7)) +
+  scale_color_okabe_ito(order = c(1, 2, 3, 4, 5, 6, 7, 8)) +
   labs(
     x = "bicycle speed [km/h]",
     y = "bicycle speed elasticity"
