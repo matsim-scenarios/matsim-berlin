@@ -102,7 +102,7 @@
 		<param name="linkDynamics" value="PassingQ"/>
 		<param name="vehicleBehavior" value="teleport"/>
 		<param name="partitioning" value="bisect"/>
-		<param name="threads" value="12"/>
+		<param name="threads" value="16"/>
 	</module>
 
 	<module name="subtourModeChoice">
