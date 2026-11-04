@@ -100,6 +100,15 @@ endif
 ASC_CALIB_ITERATIONS ?= 500
 ASC_CALIB_TRIALS ?= 10
 ASC_CALIB_XMX ?= 60G
+## Learning rate of the constants, and the largest change of a constant from one trial to the next.
+ASC_CALIB_LR ?= 0.25
+ASC_CALIB_MAX_STEP ?= 0.4
+## Constants of the first trial: v6.4's of the sample, which were calibrated per sample (1 %: its published
+## run 013, 3 %: berlin-v6.4-3pct.params.yaml, 10 %: berlin-v6.4.config.xml). Empty: calibrate.py's default.
+ASC_CALIB_INITIAL_1 := car=0.38709756406728074,pt=-0.05667946733174506,bike=-1.1112247503331607,ride=-1.7467953196549324
+ASC_CALIB_INITIAL_3 := car=-0.24687102068884909,pt=0.31212885153753606,bike=-0.9122497448793461,ride=-1.1981093625263186
+ASC_CALIB_INITIAL_10 := car=-0.487593225702316,pt=0.43220302370275404,bike=-0.8720995248245994,ride=-1.153972863285258
+ASC_CALIB_INITIAL ?= $(ASC_CALIB_INITIAL_$(SAMPLE))
 ## Optional yaml with the estimated (non-ASC) parameters of the choice model, used as the base of
 ## every trial. Empty means the parameters stay as they are in the generated config.
 ASC_CALIB_BASE_PARAMS ?=
@@ -647,6 +656,9 @@ $(BERLIN_ASC_CALIB_PARAMS): $(BERLIN_ASC_CALIB_CONFIG) $(BERLIN_PLANS_INITIAL) $
 	 --output $@\
 	 --output-plans $(BERLIN_ASC_CALIB_PLANS)\
 	 --trials $(ASC_CALIB_TRIALS)\
+	 --lr $(ASC_CALIB_LR)\
+	 --max-step $(ASC_CALIB_MAX_STEP)\
+	 $(if $(ASC_CALIB_INITIAL),--initial $(ASC_CALIB_INITIAL))\
 	 --jvm-args "-Xmx$(ASC_CALIB_XMX) -Xms$(ASC_CALIB_XMX) -XX:+AlwaysPreTouch -XX:+UseParallelGC $(DSIM_JVM_ARGS)"\
 	 --args "--iterations $(ASC_CALIB_ITERATIONS) --simulation-period-in-days $(SIM_PERIOD_DAYS)\
 	 --config:controller.overwriteFiles=deleteDirectoryIfExists\

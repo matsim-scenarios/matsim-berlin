@@ -22,8 +22,8 @@ from matsim.calibration import create_calibration, ASCCalibrator, utils
 modes = ["walk", "car", "pt", "bike", "ride"]
 fixed_mode = "walk"
 
-# Starting point of the calibration; the same values are in the config, this is what the first
-# trial uses. Taken over from the last calibrated release, so the calibration starts warm.
+# Starting point of the calibration, what the first trial uses: v7.1's constants, unless --initial
+# gives others (the Makefile does, per sample).
 initial = {
     "bike": -1.0925403188187748,
     "pt": -1.1827952556051875,
@@ -41,6 +41,29 @@ target = {
     "car": 0.200673,
     "ride": 0.059607
 }
+
+
+def capped_rate(learning_rate, max_step):
+    """Learning rate for the calibrator: constant, but scaled down so that no constant moves by more than max_step.
+
+    The update is a full Newton step for shares that move by 1 in log per util of constant. Where they move by
+    more, a rate of 1 overshoots by that factor and the shares flip between trials. Far from the target the log
+    share errors are large, and the capped step keeps the shares out of saturation.
+    """
+    def rate(n, param, step, *args):
+        if step == 0:
+            return learning_rate
+        return min(learning_rate, max_step / abs(step))
+    return rate
+
+
+def parse_constants(s):
+    """Parses mode=constant pairs, separated by commas."""
+    pairs = (p.split("=") for p in s.split(","))
+    constants = {mode.strip(): float(value) for mode, value in pairs}
+    if set(constants) != set(initial):
+        raise ValueError("Expected constants for %s, got %s" % (sorted(initial), sorted(constants)))
+    return constants
 
 
 def filter_persons(persons):
@@ -114,6 +137,12 @@ def main():
     parser.add_argument("--base-params", default=None,
                         help="Yaml with the estimated parameters of the choice model, used as the "
                              "base of every trial. Without it the config carries them.")
+    parser.add_argument("--initial", type=parse_constants, default=initial,
+                        help="Constants of the first trial, as mode=constant pairs separated by commas, "
+                             "for %s. Default: v7.1's." % ", ".join(sorted(initial)))
+    parser.add_argument("--lr", type=float, default=0.25, help="Learning rate of the constants, constant.")
+    parser.add_argument("--max-step", type=float, default=0.4,
+                        help="Largest change of a constant from one trial to the next, in utils.")
     parser.add_argument("--study-name", default="calib")
     parser.add_argument("--quiet", action="store_true",
                         help="Swallow the output of the scenario runs instead of passing it through.")
@@ -134,8 +163,8 @@ def main():
 
     study, obj = create_calibration(
         args.study_name,
-        ASCCalibrator(modes, initial, target, fixed_mode=fixed_mode,
-                      lr=utils.linear_scheduler(start=0.8, end=1.4, interval=15)),
+        ASCCalibrator(modes, args.initial, target, fixed_mode=fixed_mode,
+                      lr=capped_rate(args.lr, args.max_step)),
         jar,
         config,
         args=args.args,
