@@ -3,9 +3,9 @@
 ########### SETUP #################
 ###################################
 JAR := matsim-berlin-*.jar
-## The version this pipeline produces, named as the release candidate it builds. The run configs in
-## input/v*/ are the published models and stay as released, the run config of this version is generated
-## from input/run-config-template.xml. Bumping this renames every artifact in $(OUTPUT).
+## The version this pipeline produces, named as the release candidate it builds. Its run config is generated
+## from input/run-config-template.xml; input/v7.2-pre-2.1/ holds the last hand-made configs. Bumping this
+## renames every artifact in $(OUTPUT).
 VERSION := v7.2-pre-3
 
 ## Sample size of the scenario to build, in percent. Override per invocation, e.g.

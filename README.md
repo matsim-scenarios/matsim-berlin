@@ -16,9 +16,11 @@ For further information, refer to the paper under the [Citation](#Citation) sect
 
 Currently, there are multiple versions of the MATSim Open Berlin model:
 
-### 10pct scenario (`input/v7.0`)
+### 1pct scenario (`input/v7.2-pre-2.1`)
 
-This scenario contains a 10pct, 3pct and 1pct sample of the Greater Berlin population; road capacities are accordingly reduced. The scenario is calibrated taking into consideration the traffic counts, modal split and mode-specific trip distance distributions.
+This scenario contains a 1pct sample of the Greater Berlin population; road capacities are accordingly reduced. It scores as v6.4 did, reimplemented on the current code, and its mode constants are calibrated against the modal split. Its input files are on shared-svn, which needs the VSP login: set `MATSIM_HTTP_USER` and `MATSIM_HTTP_PASSWORD`.
+
+The released versions up to v7.1 are on public-svn (see the [Note](#note) below). Their configs were removed from `input/`, because their scoring parameters don't fit the current code.
 
 ## Citation
 
