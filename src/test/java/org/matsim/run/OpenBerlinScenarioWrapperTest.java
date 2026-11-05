@@ -7,6 +7,7 @@ import org.matsim.application.MATSimApplication;
 import org.matsim.testcases.MatsimTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class OpenBerlinScenarioWrapperTest {
 
@@ -16,8 +17,12 @@ public class OpenBerlinScenarioWrapperTest {
 	@Test
 	public void pct1() {
 
+		// the inputs are on shared-svn, behind the VSP login; CI gets it from the repository secrets, forks don't
+		assumeTrue(HttpAuthentication.get(HttpAuthentication.USER) != null && HttpAuthentication.get(HttpAuthentication.PASSWORD) != null,
+			"needs " + HttpAuthentication.USER + " and " + HttpAuthentication.PASSWORD + " for the shared-svn inputs");
+
 		int code = MATSimApplication.execute(OpenBerlinScenario.class,
-			"--config", String.format("input/v%s/berlin-v%s-1pct.config.xml", OpenBerlinScenario.VERSION, OpenBerlinScenario.VERSION),
+			"--config", "input/v7.2-pre-2.1/berlin-v7.2-pre-2.1-1pct.config.xml",
 			"--output", utils.getOutputDirectory(),
 			"--iterations", "2",
 			"--config:qsim.numberOfThreads", "2",

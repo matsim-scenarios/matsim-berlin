@@ -31,6 +31,9 @@ jobs:
           name: test-coverage
           path: target/site/jacoco/
     env:
+      # The VSP login for the shared-svn inputs of OpenBerlinScenarioWrapperTest, which is skipped without it.
+      MATSIM_HTTP_USER: ${{ secrets.MATSIM_HTTP_USER }}
+      MATSIM_HTTP_PASSWORD: ${{ secrets.MATSIM_HTTP_PASSWORD }}
       # Bound how long a single unresponsive repository can hold up resolution.
       # Set for both the default resolver transport and wagon, whichever ends up being used.
       MAVEN_OPTS: >-
