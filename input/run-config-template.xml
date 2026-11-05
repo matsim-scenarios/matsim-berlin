@@ -144,31 +144,29 @@
 
 		<parameterset type="scoringParameters">
 
-			<!-- All parameters in this section are based on estimated MXL model -->
-			<!-- Variations are loaded from person attributes -->
-			<param name="marginalUtilityOfMoney" value="0.397322"/>
-			<param name="performing" value="5.501071"/>
+			<!-- v6.4's scoring on the current code, as in input/v7.2-pre-2.1, which took it from
+			     OpenBerlinScenario.applyV64ScoringParameters (removed in fbf03ca2, PR #222). -->
+			<param name="marginalUtilityOfMoney" value="1"/>
+			<param name="performing" value="6"/>
 			<param name="utilityOfLineSwitch" value="-1"/>
 
 			<parameterset type="tasteVariations" >
 				<!-- Exponent for income dependent scoring. Exponent for (global_income / personal_income) ** x. -->
-				<param name="incomeExponent" value="0.275502" />
+				<param name="incomeExponent" value="0.6" />
 
-				<!-- The per person deviation from the mode constants, drawn and stored by
-				     prepare draw-mode-constant-variations and added to the constants below. -->
-				<param name="variationsOf" value="constant" />
+				<!-- No per person parameters. The population still carries the constants drawn by
+				     prepare draw-mode-constant-variations; they are not used. -->
+				<param name="variationsOf" value="" />
 
-				<!-- These don't have any variations -->
 				<param name="excludeSubpopulations" value="commercialPersonTraffic,commercialPersonTraffic_service,freight,goodsTraffic"/>
 			</parameterset>
 
-			<!-- The mode constants are the starting point of the ASC calibration; every calibration run
-			     overwrites them with the constants of its trial, and write-run-config replaces them with
-			     the calibrated ones. -->
+			<!-- The mode constants are v7.2-pre-2.1's, calibrated at 1 %. Every calibration run overwrites
+			     them with the constants of its trial, and write-run-config replaces them with the calibrated
+			     ones. -->
 			<parameterset type="modeParams">
-				<param name="constant" value="-2.0901447661509565" />
-				<!-- 14.90€ * 0.268622 (fixed cost perception) -->
-				<param name="dailyMonetaryConstant" value="-3.8412946" />
+				<param name="constant" value="0.44984080698638507" />
+				<param name="dailyMonetaryConstant" value="-5.0" />
 				<param name="dailyUtilityConstant" value="0" />
 				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
@@ -176,22 +174,21 @@
 				<param name="monetaryDistanceRate" value="-1.49E-4" />
 				<param name="mode" value="car" />
 			</parameterset>
+			<!-- Only the constant counts: OpenBerlinScenario derives the rest from car's
+			     (RideScoringParamsFromCarParams). -->
 			<parameterset type="modeParams">
-				<param name="constant" value="-5.783899879391965" />
+				<param name="constant" value="-0.9407254829066438" />
 				<param name="dailyMonetaryConstant" value="0.0" />
 				<param name="dailyUtilityConstant" value="0.0" />
 				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-				<!-- Result of estimation -->
 				<param name="marginalUtilityOfTraveling_util_hr" value="-4.442946" />
-				<!-- car_monetaryDistanceRate -->
 				<param name="monetaryDistanceRate" value="-1.49E-4" />
 				<param name="mode" value="ride" />
 			</parameterset>
 			<parameterset type="modeParams">
-				<param name="constant" value="-1.1827952556051875" />
+				<param name="constant" value="-0.005203682796750559" />
 				<!-- 2022: 4-trips AB 10Euro -> 2.5 Eu/trip. yearly 761 Eu / 250 days ~ 3.00 Eu/day -->
-				<!-- (fixed cost perception) 0.268622 * 3.00 -->
-				<param name="dailyMonetaryConstant" value="-0.805866" />
+				<param name="dailyMonetaryConstant" value="-3.0" />
 				<param name="dailyUtilityConstant" value="0.0" />
 				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
@@ -199,11 +196,11 @@
 				<param name="mode" value="pt" />
 			</parameterset>
 			<parameterset type="modeParams">
-				<param name="constant" value="-1.0925403188187748" />
+				<param name="constant" value="-1.0374132179772666" />
 				<param name="dailyMonetaryConstant" value="0.0" />
 				<param name="dailyUtilityConstant" value="0.0" />
 				<param name="marginalUtilityOfDistance_util_m" value="0.0" />
-				<param name="marginalUtilityOfTraveling_util_hr" value="-1.309362" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="monetaryDistanceRate" value="0.0" />
 				<param name="mode" value="bike" />
 			</parameterset>
