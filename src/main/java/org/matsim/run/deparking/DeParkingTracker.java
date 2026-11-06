@@ -26,6 +26,7 @@ import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.events.ActivityStartEvent;
 import org.matsim.api.core.v01.events.PersonMoneyEvent;
+import org.matsim.api.core.v01.events.PersonScoreEvent;
 import org.matsim.api.core.v01.events.VehicleEntersTrafficEvent;
 import org.matsim.api.core.v01.events.VehicleLeavesTrafficEvent;
 import org.matsim.api.core.v01.events.handler.ActivityStartEventHandler;
@@ -165,7 +166,11 @@ public class DeParkingTracker implements ActivityStartEventHandler, VehicleEnter
 
 		// emit fewer events
 		if (parkingCost > 0) {
-			this.events.processEvent(new PersonMoneyEvent(now, pi.driverId, -parkingCost, purpose, null, link.getId().toString()));
+			DeparkingConfigGroup deparkingConfigGroup = ConfigUtils.addOrGetModule(config, DeparkingConfigGroup.class);
+			switch (deparkingConfigGroup.getPenaltyEventType()) {
+				case MONEY -> this.events.processEvent(new PersonMoneyEvent(now, pi.driverId, -parkingCost, purpose, null, link.getId().toString()));
+				case SCORE -> this.events.processEvent(new PersonScoreEvent(now, pi.driverId, -parkingCost, purpose + ";linkId=" + link.getId()));
+			}
 		}
 	}
 

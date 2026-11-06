@@ -9,15 +9,20 @@ public class DeparkingConfigGroup extends ReflectiveConfigGroup {
 		super(GROUP_NAME);
 	}
 
+	// Penalty rates are in €/h for MONEY or score units/h for SCORE; no conversion is applied.
 	@Parameter
-	private double K_p = 1.0; // [€/h] used in relativeError * K_p
+	private double K_p = 1.0; // [penalty units/h] used in relativeError * K_p
 	@Parameter
-	private double K_i = 0.25; // [€/h] used in integral * K_i, where integral is the sum of all past relative errors
+	private double K_i = 0.25; // [penalty units/h] used in integral * K_i, where integral is the sum of all past relative errors
 	@Parameter
-	private double K_d = 0.25; // [€/h] used in derivative * K_d, where derivative is the change of the relative error compared to the last iteration
+	private double K_d = 0.25; // [penalty units/h] used in derivative * K_d, where derivative is the change of the relative error compared to the last iteration
 
 	@Parameter
-	private double maxCost = 3.0; // = 3 €/h, which is the normal parking cost in Berlin.
+	private double maxCost = 3.0; // 3 €/h in MONEY mode (normal parking cost in Berlin), or 3 score units/h in SCORE mode.
+
+	@Parameter
+	@Comment("MONEY emits monetary penalties in euros; SCORE emits direct score penalties without money-utility conversion.")
+	private PenaltyEventType penaltyEventType = PenaltyEventType.MONEY;
 
 	@Parameter
 	private double targetRelativeOccupancy = 1.0;
@@ -42,6 +47,10 @@ public class DeparkingConfigGroup extends ReflectiveConfigGroup {
 
 	public enum FirstAndLastParkingCharging {
 		IGNORE, CHARGE_BOTH
+	}
+
+	public enum PenaltyEventType {
+		MONEY, SCORE
 	}
 
 	public enum DeParkingApproachType {
@@ -115,6 +124,14 @@ public class DeparkingConfigGroup extends ReflectiveConfigGroup {
 
 	public void setMaxCost(double maxCost) {
 		this.maxCost = maxCost;
+	}
+
+	public PenaltyEventType getPenaltyEventType() {
+		return penaltyEventType;
+	}
+
+	public void setPenaltyEventType(PenaltyEventType penaltyEventType) {
+		this.penaltyEventType = penaltyEventType;
 	}
 
 	public double getTargetRelativeOccupancy() {

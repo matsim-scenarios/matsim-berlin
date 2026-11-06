@@ -51,7 +51,7 @@ public class ParkingCostTracker implements IterationEndsListener {
 	/// Returns the cost of parking at a given link at a given time in a given iteration.
 	public double cost(Id<Link> link, double time) {
 		int bin = ((int) time) / binSizeInSeconds;
-		return costs[linkIndexMap.get(link)][bin]; // €/h
+		return costs[linkIndexMap.get(link)][bin]; // €/h or score units/h, depending on penaltyEventType
 	}
 
 	@Override

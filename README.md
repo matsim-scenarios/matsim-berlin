@@ -119,6 +119,29 @@ java -jar [FILENAME].jar
 </details>
 
 ---
+## Berlin autofrei: deparking penalties
+
+`RunAutofreiPolicyDeparking` supports monetary penalties and direct score penalties. Select the event type in the `deparking` configuration module:
+
+```xml
+<module name="deparking">
+    <param name="penaltyEventType" value="SCORE" />
+</module>
+```
+
+The supported values are `MONEY` (default, also when the parameter is omitted) and `SCORE`.
+Both modes use the same occupancy-based calculation, parameter values, parking durations and charging rules.
+In `MONEY` mode, rates such as `maxCost` are in euros per hour and the resulting monetary penalties are converted to score using the person's marginal utility of money.
+In `SCORE` mode, rates are in score units per hour and penalties are deducted directly from score without conversion or additional scaling. Identical parameter values therefore need not produce identical travel behavior.
+
+Score events include the parking link in `kind`, using `<purpose>;linkId=<parkingLinkId>`, for example `car parking cost first;linkId=12345`.
+The existing `first` and `last` labels are retained; the link identifies where the vehicle was parked, even if the subsequent departure is registered on another link.
+Money-event metadata remains unchanged.
+
+The `parking_costs.csv.zst` filename and columns remain unchanged; its `cost` values are euros per hour in `MONEY` mode and score units per hour in `SCORE` mode.
+Existing money-event analyses do not include score penalties.
+
+---
 ## More information
 
 For more information about MATSim, see here: https://www.matsim.org/
