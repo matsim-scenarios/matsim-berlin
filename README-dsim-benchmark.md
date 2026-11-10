@@ -1,14 +1,20 @@
-# Berlin v7.1.1 with DSim: runtime comparison with the parallel QSim in rust
+# Berlin v7.1.1 with DSim: comparison with the parallel QSim in rust
 
-This branch is based on the tag `v7.1.1` and uses MATSim `2027.0-PR5206` (the same version as `dr/test-dsim`), which contains DSim.
-It runs Berlin v7.1 for 10 iterations with DSim, set up like `berlin_iterations_v7` of the parallel QSim in rust
-(repository `parallel-qsim-berlin`), so that the runtimes of mobsim, replanning and scoring can be compared without any
-profiling code.
+This branch is based on the tag `v7.1.1` and uses MATSim `2027.0-PR5260`, which contains DSim (with #5217, #5248 and #5249) and
+the command `TripsAndLegsCsvWriter`, which writes the trips of the rust runs. It runs Berlin v7.1 with DSim, set up like
+`berlin_iterations_v7` of the parallel QSim in rust (repository `parallel-qsim-berlin`), to compare the runtimes and the
+results of both simulations.
 
-- Configs: `input/v7.1/berlin-v7.1-{1,3,10}pct.dsim.config.xml`
-- Run class: `org.matsim.run.dsim.OpenBerlinDSimBenchmark`. It only adds what the rust binary does in code: persons with a pt
-  leg in any plan are removed, and plans are scored by travel time only (`OnlyTravelTimeScoringFunctionFactory`).
+- Configs: in parallel-qsim-berlin, `input/v7.1/berlin-v7.1-<pct>pct.{pt,nopt}.dsim.config.xml`, next to the rust configs that
+  read the same files (see the README there). The configs `input/v7.1/berlin-v7.1-{1,3,10}pct.dsim.config.xml` of this branch
+  are those of the first runtime comparison (experiments `dsim-scaling` and `dsim-scaling-minconn`, jar of ff27314).
+- Run class: `org.matsim.run.dsim.OpenBerlinDSimBenchmark`. It reads the scoring parameters from `--scoring-config` and scores
+  with the standard MATSim scoring. Which persons are simulated is decided by the plans file; of each person, only the
+  selected plan is kept. Until ff27314, it removed the pt users itself and scored by travel time only
+  (`OnlyTravelTimeScoringFunctionFactory`, removed since).
 - Phase times: `<runId>.stopwatch.csv`, or with millisecond resolution `src/main/python/dsim_phase_times.py`
+
+The sections below describe the first runtime comparison (until ff27314).
 
 ## Build and run
 

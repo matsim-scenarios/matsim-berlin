@@ -1,46 +1,42 @@
 package org.matsim.run.dsim;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Node;
-import org.matsim.api.core.v01.population.Person;
 import org.matsim.application.MATSimApplication;
 import org.matsim.contrib.bicycle.BicycleConfigGroup;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigReader;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
-import org.matsim.core.router.TripStructureUtils;
+import org.matsim.core.population.PersonUtils;
 import org.matsim.dsim.DSimConfigGroup;
 import org.matsim.dsim.NetworkDecomposition;
-import org.matsim.run.Activities;
 import org.matsim.run.OpenBerlinScenario;
 import picocli.CommandLine;
 
-import java.util.List;
+import java.nio.file.Path;
 
 /**
  * Runs Berlin v7.1 with DSim, set up like {@code berlin_iterations_v7} of the parallel QSim in rust (repository parallel-qsim-berlin),
- * so that the runtimes of mobsim, replanning and scoring per iteration can be compared via the stopwatch ({@code *.stopwatch.csv}).
+ * to compare the runtimes and the results of both simulations.
  * <p>
- * All settings that can be configured are in {@code input/v7.1/berlin-v7.1-*pct.dsim.config.xml}. This class only adds what the rust
- * binary does in code:
- * <ul>
- *     <li>Persons with a pt leg in any of their plans are removed, as pt is not simulated.</li>
- *     <li>Plans are scored by travel time only, see {@link OnlyTravelTimeScoringFunctionFactory}.</li>
- * </ul>
+ * The configs are in parallel-qsim-berlin ({@code input/v7.1/berlin-v7.1-*pct.{pt,nopt}.dsim.config.xml}) and read the same input files
+ * as the rust configs there. The scoring parameters come from a config of their own ({@code --scoring-config}), which rust reads as well.
+ * Plans are scored with the standard MATSim scoring and these parameters, without the Berlin scoring function, pseudo-random errors or
+ * taste variations. Which persons are simulated is decided by the plans file alone, e.g. a file without pt users. Of each person, only
+ * the selected plan is kept.
+ * <p>
  * Unlike {@link OpenBerlinScenario}, no strategies, dashboards or analysis modules are added.
  */
 @CommandLine.Command(header = ":: Open Berlin Scenario, DSim benchmark ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true, showDefaultValues = true)
 public class OpenBerlinDSimBenchmark extends MATSimApplication {
 
-	private static final Logger log = LogManager.getLogger(OpenBerlinDSimBenchmark.class);
-
 	@CommandLine.Option(names = "--threads", description = "Number of DSim threads (= partitions) and replanning threads. Overrides dsim.threads and global.numberOfThreads.")
 	private Integer threads;
+
+	@CommandLine.Option(names = "--scoring-config", required = true, description = "MATSim config with the scoringParameters sets of the scoring module, "
+		+ "e.g. berlin-v7.1-1pct.scoring.xml in shared-svn. Read on top of the config.")
+	private Path scoringConfig;
 
 	public static void main(String[] args) {
 		MATSimApplication.execute(OpenBerlinDSimBenchmark.class, args);
@@ -49,8 +45,9 @@ public class OpenBerlinDSimBenchmark extends MATSimApplication {
 	@Override
 	protected Config prepareConfig(Config config) {
 
-		// Not scored, but used by the travel disutility of the router, as in OpenBerlinScenario
-		Activities.addScoringParams(config, true);
+		// Replaces the default scoring parameter set by the sets of the file. The scoring parameters are also used by the travel
+		// disutility of the router.
+		new ConfigReader(config).readFile(scoringConfig.toString());
 
 		// Needed for the bicycle travel time of the router
 		ConfigUtils.addOrGetModule(config, BicycleConfigGroup.class);
@@ -65,31 +62,14 @@ public class OpenBerlinDSimBenchmark extends MATSimApplication {
 
 	@Override
 	protected void prepareScenario(Scenario scenario) {
-
-		List<Id<Person>> ptUsers = scenario.getPopulation().getPersons().values().stream()
-			.filter(p -> p.getPlans().stream()
-				.flatMap(plan -> TripStructureUtils.getLegs(plan).stream())
-				.anyMatch(leg -> TransportMode.pt.equals(leg.getRoutingMode())))
-			.map(Person::getId)
-			.toList();
-
-		ptUsers.forEach(scenario.getPopulation()::removePerson);
-		log.info("Removed {} persons using pt, {} persons remain.", ptUsers.size(), scenario.getPopulation().getPersons().size());
-
+		// only the selected plans are kept, as in berlin_iterations_v7
+		scenario.getPopulation().getPersons().values().forEach(PersonUtils::removeUnselectedPlans);
 		checkPartitions(scenario);
 	}
 
 	@Override
 	protected void prepareControler(Controler controler) {
-
 		controler.addOverridingModule(new OpenBerlinScenario.TravelTimeBinding());
-
-		controler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				bindScoringFunctionFactory().to(OnlyTravelTimeScoringFunctionFactory.class);
-			}
-		});
 	}
 
 	/**
