@@ -16,6 +16,10 @@ For further information, refer to the paper under the [Citation](#Citation) sect
 
 Currently, there are multiple versions of the MATSim Open Berlin model:
 
+### 3pct scenario (`input/v7.2-pre-3`)
+
+This scenario contains a 3pct sample of the Greater Berlin population, built by the pipeline (the `Makefile`) at 25pct and downsampled; road capacities are accordingly reduced. It scores as v7.2-pre-2.1 does, its mode constants are calibrated against the modal split at 3pct, and it is simulated with `dsim` (see the [Note on `dsim`](#note-on-dsim)). Its input files are on shared-svn, in `berlin-v7.2-pre-3`, which needs the VSP login: set `MATSIM_HTTP_USER` and `MATSIM_HTTP_PASSWORD`. The `README.txt` there says how they were made. They were made on the branch `michaz/v7.2-pre-3-dsim`, with matsim 2027.0-PR5248; this branch's matsim (2027.0-PR5217) runs the config with a `dsim` that lacks matsim-libs #5248.
+
 ### 1pct scenario (`input/v7.2-pre-2.1`)
 
 This scenario contains a 1pct sample of the Greater Berlin population; road capacities are accordingly reduced. It scores as v6.4 did, reimplemented on the current code, and its mode constants are calibrated against the modal split. Its input files are on shared-svn, which needs the VSP login: set `MATSIM_HTTP_USER` and `MATSIM_HTTP_PASSWORD`.
@@ -170,7 +174,8 @@ This will update your repository to the newest version.
 
 ### Note on `dsim`
 
-The `-dsim` config in `input/v7.2-pre-2.1` uses the distributed mobsim `dsim`
+The config in `input/v7.2-pre-3` and the `-dsim` config in `input/v7.2-pre-2.1` use the distributed
+mobsim `dsim`
 (`<param name="mobsim" value="dsim" />`) instead of `qsim`. `dsim` accesses an internal JDK API,
 so the JVM has to be started with
 
