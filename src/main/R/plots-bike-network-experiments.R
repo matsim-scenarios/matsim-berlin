@@ -625,6 +625,14 @@ counts_performance <- count_plot_data %>%
       abs((simulation - dtv_2018) / dtv_2018),
       na.rm = TRUE
     ),
+    SQV = mean(
+      1 / (1 + sqrt((simulation - dtv_2018)^2 / (10000 * dtv_2018))),
+      na.rm = TRUE
+      ),
+    GEH = mean(
+      sqrt(2 * (simulation - dtv_2018)^2 / (simulation + dtv_2018)),
+      na.rm = TRUE
+      ),
     .groups = "drop"
   )
 
