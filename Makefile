@@ -3,10 +3,10 @@
 ########### SETUP #################
 ###################################
 JAR := matsim-berlin-*.jar
-## The version this pipeline produces. Not the published version: the run configs in input/v*/ are
-## the published models and stay as released, the run config of this version is generated from
-## input/run-config-template.xml. Bumping this renames every artifact in $(OUTPUT).
-VERSION := v7.2
+## The version this pipeline produces, named as the release candidate it builds. Its run config is generated
+## from input/run-config-template.xml; input/v7.2-pre-2.1/ holds the last hand-made configs. Bumping this
+## renames every artifact in $(OUTPUT).
+VERSION := v7.2-pre-3
 
 ## Sample size of the scenario to build, in percent. Override per invocation, e.g.
 ##   make prepare SAMPLE=10
@@ -66,6 +66,11 @@ SIM_PERIOD_DAYS ?= 1.125
 # constants of the estimated mixed logit model. The mean is the constant in the config, which the ASC calibration
 # tunes. Walk is the reference mode, and the bus constant is fixed, so neither of them varies.
 MODE_CONSTANT_SIGMAS ?= car=1.506777,bike=0.879757,pt=1.737971,ride=2.861008
+# Multiplies the road capacity of the cadyts run on top of the sample size and the CAR_FACTOR copies of the car
+# drivers, at 25 %: 0.25 x 5 x 3.2 = 4.0. The counts are still compared at 1 / (0.25 x 5). With the 1.5 that
+# RunOpenBerlinCalibration defaults to, the run stays jammed through its 50 iterations (4.7 % of the agents stuck
+# in the last one). At 3.2 it starts congested, with 10.7 % stuck, and nobody is stuck from iteration 16 on.
+CADYTS_SCALE_FACTOR ?= 3.2
 # Scenario creation tool
 JAVA_CP := java -Xmx$(MAKE_XMX) -XX:+UseParallelGC -Dorg.geotools.referencing.forceXY=true -Djava.io.tmpdir=$(TMP_DIR) -cp $(JAR)
 JAVA_APP := $(JAVA_CP) org.matsim.prepare.RunOpenBerlinCalibration
@@ -516,7 +521,7 @@ $(VEHICLESFILE_OUT): $(VEHICLESFILE_IN) | setup
 
 $(BERLIN_CADYTS_OUTPUT): $(BERLIN_CADYTS_INPUT) $(NETWORK_MATSIM_PT) $(VEHICLESFILE_OUT) | setup
 	cat input/cadyts-config-template.xml | sed -e "s/==VERSION==/$(VERSION)/g" -e "s/==SAMPLE==/$(PIPELINE_PCT)/g" > $(BERLIN_CADYTS_CONFIG)
-	./src/main/sh/cadyts.sh $(BERLIN_CADYTS_CONFIG) $(VERSION) $(PIPELINE_PCT)
+	./src/main/sh/cadyts.sh $(BERLIN_CADYTS_CONFIG) $(VERSION) $(PIPELINE_PCT) $(CADYTS_SCALE_FACTOR)
 
 $(BERLIN_CADYTS_FINAL): $(BERLIN_CADYTS_OUTPUT) $(BERLIN_CADYTS_INPUT) | setup
 	$(JAVA_APP) prepare extract-plans-idx\

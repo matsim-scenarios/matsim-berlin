@@ -55,7 +55,7 @@ final class HttpAuthentication {
 		log.info("Input files from URLs that ask for a login will be read as user {}", user);
 	}
 
-	private static String get(String name) {
+	static String get(String name) {
 		String value = System.getProperty(name, System.getenv(name));
 		return value == null || value.isBlank() ? null : value;
 	}

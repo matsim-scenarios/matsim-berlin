@@ -1,35 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE config SYSTEM "http://www.matsim.org/files/dtd/config_v2.dtd">
-<!--
-	Run config of the 3 % sample of berlin-v7.2-pre-1.1, for running the scenario as published.
-
-	berlin-v7.2-pre-1.1 is berlin-v7.2-pre-1 with the typical durations of the activities kept on
-	the person (the typicalDurations attribute) instead of on each activity; nothing else changed.
-	This is NOT a v7.2 release. It is the run config the pipeline generated from the ASC
-	calibration of the pre-release (trial 010 of eleven), starting from that trial's output
-	population. The population is read from
-	  shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1.1/
-	and every other input from what was published under
-	  shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/
-
-	shared-svn needs a login, and MATSim reads URLs without authenticating. Set
-
-	  MATSIM_HTTP_USER, MATSIM_HTTP_PASSWORD
-
-	(environment variables or -D system properties) to your VSP SVN credentials, and the
-	scenario installs an authenticator for them at startup; see HttpAuthentication. In an IDE,
-	put them into the run configuration's environment. Without them every input URL fails with
-	HTTP 401. Nothing is cached: each start downloads about 420 MB.
-
-	See input/v7.2-pre-1.1/README.md, and the known issues in the README of the pre-1 folder.
--->
 <config>
 	<module name="controller" >
 		<!-- Default=1000. Last Iteration of a simulation. -->
 		<param name="lastIteration" value="500" />
-		<param name="outputDirectory" value="./output/berlin-v7.2-pre-1.1-3pct" />
+		<!-- Defines which mobility simulation will be used. Currently supported: [qsim, hermes, dsim]
+		Depending on the chosen mobsim, you'll have to add additional config modules to configure the corresponding mobsim.
+		For 'qsim', add a module 'qsim' to the config. -->
+		<param name="mobsim" value="dsim" />
+		<param name="outputDirectory" value="./output/berlin-v7.2-pre-3-3pct" />
 		<!-- An identifier for the current run which is used as prefix for output files and mentioned in output xml files etc. -->
-		<param name="runId" value="berlin-v7.2-pre-1.1-3pct" />
+		<param name="runId" value="berlin-v7.2-pre-3-3pct" />
 		<!-- iterationNumber % writeEventsInterval == 0 defines in which iterations events are written to a file. `0' disables events writing completely. -->
 		<param name="writeEventsInterval" value="100" />
 		<!-- iterationNumber % writePlansInterval == 0 defines (hopefully) in which iterations plans are written to a file. `0' disables plans writing completely.  Some plans in early iterations are always written -->
@@ -39,43 +20,20 @@
 		<!-- factor by which to re-scale the simulated values.  necessary when simulation runs with something different from 100%.  needs to be adapted manually -->
 		<param name="countsScaleFactor" value="33.333333" />
 		<!-- input file name to counts package -->
-		<param name="inputCountsFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-counts-vmz.xml.gz" />
+		<param name="inputCountsFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-3/output/berlin-v7.2-pre-3-counts-vmz.xml.gz" />
 	</module>
 	<module name="dsim" >
-		<!-- it seems that some of the parameters (flow/storage) are used from qsim. -->
-
-
 		<!-- End time of the simulation. Default: 24:00:00 -->
 		<param name="endTime" value="36:00:00" />
-
-		<!-- Link dynamics determine how vehicles can overtake. Options: [FIFO, PassingQ, Seepage(not implemented)], Default: PassingQ -->
-		<param name="linkDynamics" value="PassingQ" />
-
 		<!-- Modes which are simulated on the network. All other modes, expect pt will be teleported. Default: car -->
-		<param name="networkModes" value="car,truck,freight" />
-
-		<!-- Partitioning strategy for the network. Options: [none, bisect, metis], default: 'bisect' -->
-		<param name="partitioning" value="metis" />
-
-		<!-- Start time of the simulation. Default: 00:00:00 -->
-		<param name="startTime" value="00:00:00" />
-
-		<!-- Stuck time [s] after which a vehicle is pushed onto the next link regardless of available capacity. Default: 30 -->
-		<param name="stuckTime" value="30.0" />
-
+		<param name="networkModes" value="car, freight, truck" />
 		<!-- Number of threads to use for execution. If <= 0, the number of available processors is used. -->
-		<param name="threads" value="12" />
-
-		<!-- Traffic dynamics determine how storage capacities and inflow capacities are freed. Options: [queue, kinematicWaves, withHoles (not implemented), Default: kinematicWaves -->
-		<param name="trafficDynamics" value="kinematicWaves" />
-
-		<!-- Determines how agents can access vehicles when starting a trip. Options=[teleport, wait (not implemented), exception], Default: teleport -->
-		<param name="vehicleBehavior" value="teleport" />
+		<param name="threads" value="16" />
 	</module>
 	<module name="facilities" >
 		<!-- This defines how facilities should be created. Possible values: none fromFile setInScenario onePerActivityLinkInPlansFile onePerActivityLinkInPlansFileExceptWhenCoordinatesAreGiven onePerActivityLocationInPlansFile  -->
 		<param name="facilitiesSource" value="fromFile" />
-		<param name="inputFacilitiesFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-facilities.xml.gz" />
+		<param name="inputFacilitiesFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-3/output/berlin-v7.2-pre-3-facilities.xml.gz" />
 	</module>
 	<module name="global" >
 		<param name="coordinateSystem" value="EPSG:25832" />
@@ -84,10 +42,10 @@
 		<param name="relativeToleranceForSampleSizeFactors" value="1.0E-6" />
 	</module>
 	<module name="network" >
-		<param name="inputNetworkFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-network-with-pt.xml.gz" />
+		<param name="inputNetworkFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-3/output/berlin-v7.2-pre-3-network-with-pt.xml.gz" />
 	</module>
 	<module name="plans" >
-		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1.1/output/berlin-v7.2-pre-1.1-3pct.plans.xml.gz" />
+		<param name="inputPlansFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-3/output/berlin-v7.2-pre-3-3pct.plans-calibrated.xml.gz" />
 		<!-- (not tested) will remove plan attributes that are presumably not used, such as activityStartTime. default=false. Use with Caution! -->
 		<param name="removingUnnecessaryPlanAttributes" value="true" />
 	</module>
@@ -149,14 +107,12 @@
 		<param name="fractionOfIterationsToStartScoreMSA" value="0.9" />
 		<param name="pathSizeLogitBeta" value="0.0" />
 		<parameterset type="scoringParameters" >
-			<param name="marginalUtilityOfMoney" value="0.397322" />
-			<param name="performing" value="5.501071" />
 			<param name="waitingPt" value="0.0" />
 			<parameterset type="modeParams" >
 				<!-- [utils] alternative-specific constant.  Normally per trip, but that is probably buggy for multi-leg trips. -->
-				<param name="constant" value="-1.8698220038137554" />
+				<param name="constant" value="0.17764932499917363" />
 				<!-- [unit_of_money/day] Fixed cost of mode, per day. -->
-				<param name="dailyMonetaryConstant" value="-3.8412946" />
+				<param name="dailyMonetaryConstant" value="-5.0" />
 				<!-- [utils/hr] additional marginal utility of traveling.  normally negative.  this comes on top of the opportunity cost of time -->
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="car" />
@@ -164,20 +120,20 @@
 				<param name="monetaryDistanceRate" value="-1.49E-4" />
 			</parameterset>
 			<parameterset type="modeParams" >
-				<param name="constant" value="-5.244946156261954" />
+				<param name="constant" value="-0.6464062974243092" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="-4.442946" />
 				<param name="mode" value="ride" />
 				<param name="monetaryDistanceRate" value="-1.49E-4" />
 			</parameterset>
 			<parameterset type="modeParams" >
-				<param name="constant" value="-1.4306720679146272" />
-				<param name="dailyMonetaryConstant" value="-0.805866" />
+				<param name="constant" value="0.23730821577466144" />
+				<param name="dailyMonetaryConstant" value="-3.0" />
 				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="pt" />
 			</parameterset>
 			<parameterset type="modeParams" >
-				<param name="constant" value="-1.151811243816922" />
-				<param name="marginalUtilityOfTraveling_util_hr" value="-1.309362" />
+				<param name="constant" value="-0.8157358120562015" />
+				<param name="marginalUtilityOfTraveling_util_hr" value="0.0" />
 				<param name="mode" value="bike" />
 			</parameterset>
 			<parameterset type="modeParams" >
@@ -203,9 +159,7 @@
 				<!-- List of subpopulations for which no variations will be applied. -->
 				<param name="excludeSubpopulations" value="commercialPersonTraffic, commercialPersonTraffic_service, freight, goodsTraffic" />
 				<!-- Exponent for income dependent scoring. Exponent for (average_income / personal_income) ** x. Default is x=0, which disables it. -->
-				<param name="incomeExponent" value="0.275502" />
-				<!-- List of utility parameters that are loaded from each person. -->
-				<param name="variationsOf" value="constant" />
+				<param name="incomeExponent" value="0.6" />
 			</parameterset>
 		</parameterset>
 	</module>
@@ -238,11 +192,11 @@
 	</module>
 	<module name="transit" >
 		<!-- Input file containing the transit schedule to be simulated. -->
-		<param name="transitScheduleFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-transitSchedule.xml.gz" />
+		<param name="transitScheduleFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-3/output/berlin-v7.2-pre-3-transitSchedule.xml.gz" />
 		<!-- Set this parameter to true if transit should be simulated, false if not. -->
 		<param name="useTransit" value="true" />
 		<!-- Input file containing the vehicles used by the departures in the transit schedule. -->
-		<param name="vehiclesFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-transitVehicles.xml.gz" />
+		<param name="vehiclesFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-3/output/berlin-v7.2-pre-3-transitVehicles.xml.gz" />
 	</module>
 	<module name="transitRouter" >
 		<!-- maximum beeline distance between stops that agents could transfer to by walking -->
@@ -253,7 +207,7 @@
 		<param name="analyzedModes" value="car,truck" />
 	</module>
 	<module name="vehicles" >
-		<param name="vehiclesFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-1/output/berlin-v7.2-vehicleTypes-hbefaFixed.xml" />
+		<param name="vehiclesFile" value="https://svn.vsp.tu-berlin.de/repos/shared-svn/matsim/scenarios/countries/de/berlin/berlin-v7.2-pre-3/output/berlin-v7.2-pre-3-vehicleTypes.xml" />
 	</module>
 	<module name="vspExperimental" >
 		<!-- Options: | ignore | info | warn | abort | .  When violating VSP defaults, this results in nothing, logfile infos, logfile warnings, or aborts.  Members of VSP should use `abort' or talk to kai. -->
