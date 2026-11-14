@@ -109,6 +109,21 @@
 			<param name="shp" value="==AREA_SHP=="/>
 		</parameterset>
 	</module>
+	<!-- read only by the emissions dashboard after the run, which the ASC calibration skips; as in
+	     input/v7.2-pre-2.1. The HBEFA tables are encrypted, the dashboard needs MATSIM_DECRYPTION_PASSWORD. -->
+	<module name="emissions">
+		<param name="averageFleetColdEmissionFactorsFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/0e73947443d68f95202b71a156b337f7f71604ae/r9230ru2n209r30u2fn0c9rn20n2rujkhkjhoewt84202.enc"/>
+		<param name="averageFleetWarmEmissionFactorsFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/0e73947443d68f95202b71a156b337f7f71604ae/7eff8f308633df1b8ac4d06d05180dd0c5fdf577.enc"/>
+		<param name="detailedColdEmissionFactorsFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/0e73947443d68f95202b71a156b337f7f71604ae/82t7b02rc0rji2kmsahfwp933u2rfjlkhfpi2u9r20.enc"/>
+		<param name="detailedWarmEmissionFactorsFile" value="https://svn.vsp.tu-berlin.de/repos/public-svn/3507bb3997e5657ab9da76dbedbb13c9b5991d3e/0e73947443d68f95202b71a156b337f7f71604ae/944637571c833ddcf1d0dfcccb59838509f397e6.enc"/>
+		<param name="detailedVsAverageLookupBehavior" value="tryDetailedThenTechnologyAverageThenAverageTable"/>
+		<param name="emissionsComputationMethod" value="StopAndGoFraction"/>
+		<param name="handleHighAverageSpeeds" value="false"/>
+		<param name="hbefaTableConsistencyCheckingLevel" value="consistent"/>
+		<param name="hbefaVehicleDescriptionSource" value="asEngineInformationAttributes"/>
+		<param name="isWritingEmissionsEvents" value="true"/>
+		<param name="nonScenarioVehicles" value="abort"/>
+	</module>
 
 	<module name="transitRouter">
 		<param name="directWalkFactor" value="1.0"/>
