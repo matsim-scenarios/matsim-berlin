@@ -16,9 +16,9 @@ For further information, refer to the paper under the [Citation](#Citation) sect
 
 Currently, there are multiple versions of the MATSim Open Berlin model:
 
-### 3pct scenario (`input/v7.2-pre-3`)
+### 1pct, 3pct and 10pct scenarios (`input/v7.2-pre-3`)
 
-This scenario contains a 3pct sample of the Greater Berlin population, built by the pipeline (the `Makefile`) at 25pct and downsampled; road capacities are accordingly reduced. It scores as v7.2-pre-2.1 does, its mode constants are calibrated against the modal split at 3pct, and it is simulated with `dsim` (see the [Note on `dsim`](#note-on-dsim)). Its input files are on shared-svn, in `berlin-v7.2-pre-3`, which needs the VSP login: set `MATSIM_HTTP_USER` and `MATSIM_HTTP_PASSWORD`. The `README.txt` there says how they were made.
+These scenarios contain a 1pct, 3pct and 10pct sample of the Greater Berlin population, built by the pipeline (the `Makefile`) at 25pct and downsampled; road capacities are accordingly reduced. They score as v7.2-pre-2.1 does, their mode constants are calibrated against the modal split for each sample, and they are simulated with `dsim` (see the [Note on `dsim`](#note-on-dsim)). Their input files are on shared-svn, in `berlin-v7.2-pre-3`, which needs the VSP login: set `MATSIM_HTTP_USER` and `MATSIM_HTTP_PASSWORD`. The `README.txt` there says how they were made.
 
 ### 1pct scenario (`input/v7.2-pre-2.1`)
 
@@ -174,7 +174,7 @@ This will update your repository to the newest version.
 
 ### Note on `dsim`
 
-The config in `input/v7.2-pre-3`, the `-dsim` config in `input/v7.2-pre-2.1` and the pipeline's config
+The configs in `input/v7.2-pre-3`, the `-dsim` config in `input/v7.2-pre-2.1` and the pipeline's config
 templates (`input/*-template.xml`) use the distributed mobsim `dsim`
 (`<param name="mobsim" value="dsim" />`) instead of `qsim`. `dsim` accesses an internal JDK API,
 so the JVM has to be started with
