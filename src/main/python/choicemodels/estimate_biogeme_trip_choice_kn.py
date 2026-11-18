@@ -17,7 +17,9 @@ FIXED = 1
 if __name__ == "__main__":
     os.chdir("estimationOutput")
     parser = argparse.ArgumentParser(description="Estimate the trip choice model")
-    parser.add_argument("--input", help="Path to the input file", type=str, default="../../../../../trip-choices.csv")
+    # parser.add_argument("--input", help="Path to the input file", type=str, default="../../../../../trip-choices.csv")
+    parser.add_argument("--input", help="Path to the input file", type=str,
+                        default="/Users/kainagel/shared-svn/projects/matsim-berlin/data/SrV/2018/halil/Train-Test Data/train_dataAllAttributes.csv")
 
     parser.add_argument("--no-income", help="Don't consider the income", action="store_true", default=0)
     # this is useful since it removes the term from the equation. kai, mar'26
@@ -48,9 +50,9 @@ if __name__ == "__main__":
 
     # df.drop(df[   (df["dist_weight"] * df["beelineDist"]) > 3   ].index, inplace=True) # yy ??
 
-    df.drop( df[ df["choice"]==5 ].index, inplace=True ) # ride
-    df.drop( df[ df["choice"]==4 ].index, inplace=True ) # bike
-    df.drop( df[ df["choice"]==1 ].index, inplace=True ) # walk
+    # df.drop( df[ df["choice"]==5 ].index, inplace=True ) # ride
+    # df.drop( df[ df["choice"]==4 ].index, inplace=True ) # bike
+    # df.drop( df[ df["choice"]==1 ].index, inplace=True ) # walk
 
 
     database = db.Database("data/choices", df)     # convert from pandas to biogeme data container.  "database" is needed later.
@@ -115,13 +117,13 @@ if __name__ == "__main__":
 
     # money:
     # UTIL_MONEY = 0.
-    # BETA_CAR_PRICE_PERCEPTION = 0.0
-    # BETA_PT_PRICE_PERCEPTION = BETA_CAR_PRICE_PERCEPTION
-    EXP_INCOME = 0
+    BETA_CAR_PRICE_PERCEPTION = 1.
+    BETA_PT_PRICE_PERCEPTION = BETA_CAR_PRICE_PERCEPTION
+    # EXP_INCOME = 0
 
     # other:
-    BETA_PT_SWITCHES = 0.
-    BETA_RIDE_ALPHA = 0.
+    BETA_PT_SWITCHES = 0
+    BETA_RIDE_ALPHA = 1.
 
     # == end overriding some things
     ############################################
@@ -166,11 +168,11 @@ if __name__ == "__main__":
                 price *= BETA_RIDE_ALPHA
 
             # the following has the advantage that it will not be in the printed equation when not relevant
-            # if daily_costs[mode] != 0:
-            #     if mode == "car" and BETA_CAR_PRICE_PERCEPTION != 0:
-            #         price += daily_costs[mode] * vv["dist_weight"] * BETA_CAR_PRICE_PERCEPTION
-            #     if mode != "car" and BETA_PT_PRICE_PERCEPTION != 0:
-            #         price += daily_costs[mode] * vv["dist_weight"] * BETA_PT_PRICE_PERCEPTION
+            if daily_costs[mode] != 0:
+                if mode == "car" and BETA_CAR_PRICE_PERCEPTION != 0:
+                    price += daily_costs[mode] * vv["dist_weight"] * BETA_CAR_PRICE_PERCEPTION
+                if mode != "car" and BETA_PT_PRICE_PERCEPTION != 0:
+                    price += daily_costs[mode] * vv["dist_weight"] * BETA_PT_PRICE_PERCEPTION
 
             if EXP_INCOME != 0:
                 price *= ( vv['income'] / round(ds.global_income,0) ) ** EXP_INCOME
