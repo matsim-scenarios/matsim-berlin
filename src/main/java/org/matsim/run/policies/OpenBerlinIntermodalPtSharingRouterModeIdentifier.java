@@ -36,6 +36,8 @@ final class OpenBerlinIntermodalPtSharingRouterModeIdentifier implements Analysi
 		}
 		modeHierarchy.add( TransportMode.pt ) ;
 		modeHierarchy.add( "freight" );
+		modeHierarchy.add(OpenBerlinEBikeScenario.E_BIKE);
+		modeHierarchy.add(OpenBerlinAdditionalCarModeScenario.CAR_EXPENSIVE);
 
 		// NOTE: This hierarchical stuff is not so great: is park-n-ride a car trip or a pt trip?  Could weigh it by distance, or by time spent
 		// in respective mode.  Or have combined modes as separate modes.  In any case, can't do it at the leg level, since it does not
