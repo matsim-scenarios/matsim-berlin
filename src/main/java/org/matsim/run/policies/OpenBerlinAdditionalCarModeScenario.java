@@ -53,7 +53,7 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 		//		apply all config changes from base scenario class
 		super.prepareConfig(config);
 
-		configureAdditionalCarModeInConfig(config);
+		configureAdditionalCarModeInConfig(config, expensiveMonetaryDistanceRate);
 
 		return config;
 	}
@@ -63,7 +63,7 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 		//		apply all scenario changes from base scenario class
 		super.prepareScenario(scenario);
 
-		configureAdditionalCarModeInScenario(scenario);
+		configureAdditionalCarModeInScenario(scenario, sigma, mean);
 	}
 
 	@Override
@@ -75,7 +75,7 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 	/**
 	 * Make all necessary configs for the additional car mode in config.
 	 */
-	static void configureAdditionalCarModeInConfig(Config config) {
+	static void configureAdditionalCarModeInConfig(Config config, double expensiveMonetaryDistanceRate) {
 //		add new car mode to qsim modes
 		Collection<String> mainModes = new HashSet<>(config.qsim().getMainModes());
 		mainModes.add(CAR_EXPENSIVE);
@@ -121,7 +121,7 @@ public class OpenBerlinAdditionalCarModeScenario extends OpenBerlinScenario {
 	 * add new mode to network.
 	 * tag rich agents.
 	 */
-	static void configureAdditionalCarModeInScenario(Scenario scenario) {
+	static void configureAdditionalCarModeInScenario(Scenario scenario, double sigma, double mean) {
 		//		add vehicle type for car expensive
 		EngineInformation carEngineInfo = scenario.getVehicles().getVehicleTypes().get(Id.create(TransportMode.car, VehicleType.class)).getEngineInformation();
 		VehicleType carExpensiveType = VehicleUtils.createVehicleType(Id.create(CAR_EXPENSIVE, VehicleType.class));

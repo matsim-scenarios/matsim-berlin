@@ -36,12 +36,12 @@ public class OpenBerlinEBikeScenario extends OpenBerlinScenario {
 
 //	see link below for default cost calculation
 	@CommandLine.Option(names = "--ebike-distance-cost", description = "Defines to which value the monetary distance rate for ebike is set. " +
-		"Default = -0.0000047Eu/m. This is an approximation of energy cost needed to recharge the vehicle in 2022.", defaultValue = "-0.0000047")
+		"Default = -0.0000046Eu/m. This is an approximation of energy cost needed to recharge the vehicle in 2022.", defaultValue = "-0.0000046")
 	private static double eBikeMonetaryDistanceRate;
 //	see following like for default cost calculation
 //	https://docs.google.com/document/d/12XPMBvQFwVve_tIXJW26IF_G1_CpRLUn/edit
 	@CommandLine.Option(names = "--ebike-fix-cost", description = "Defines to which value the daily monetary constant for ebike is set. " +
-		"Default = -1.6Eu/d, which basically is purchase price (2022) / 7 year of usage / 250 days.", defaultValue = "-1.6")
+		"Default = -1.47Eu/d, which basically is a mixture price for eBike and eScooter, as this mode depicts both.", defaultValue = "-1.47")
 	private static double eBikeMonetaryConstant;
 	@CommandLine.Option(names = "--agent-wise-asc-handling", description = "Decides whether the agent wise asc for eBike is copied from bike or distributed individually.")
 	static EBikeAgentWiseAscHandling eBikeAgentWiseAscHandling = EBikeAgentWiseAscHandling.FROM_BIKE;
@@ -55,7 +55,7 @@ public class OpenBerlinEBikeScenario extends OpenBerlinScenario {
 		//		apply all config changes from base scenario class
 		super.prepareConfig(config);
 
-		addEBikeInConfig(config);
+		addEBikeInConfig(config, eBikeMonetaryConstant, eBikeMonetaryDistanceRate);
 
 		return config;
 	}
@@ -65,7 +65,7 @@ public class OpenBerlinEBikeScenario extends OpenBerlinScenario {
 		//		apply all scenario changes from base scenario class
 		super.prepareScenario(scenario);
 
-		addEBikeInScenario(scenario);
+		addEBikeInScenario(scenario, eBikeSpeed, eBikeAgentWiseAscHandling);
 	}
 
 	@Override
@@ -73,13 +73,13 @@ public class OpenBerlinEBikeScenario extends OpenBerlinScenario {
 		//		apply all controller changes from base scenario class
 		super.prepareControler(controler);
 
-		controler.addOverridingModule(new EBikeTravelTimeBinding());
+		addEBikeTravelTimeBindingInController(controler);
 	}
 
 	/**
 	 * Add eBike to all relevant config groups to route it on network + teleport it. (like bike).
 	 */
-	static void addEBikeInConfig(Config config) {
+	static void addEBikeInConfig(Config config, double eBikeMonetaryConstant, double eBikeMonetaryDistanceRate) {
 //		add eBike mode to routed modes
 		Collection<String> routingModes = new HashSet<>(config.routing().getNetworkModes());
 		routingModes.add(E_BIKE);
@@ -90,8 +90,8 @@ public class OpenBerlinEBikeScenario extends OpenBerlinScenario {
 		ScoringConfigGroup.ModeParams ebikeParams = config.scoring().getOrCreateModeParams(E_BIKE);
 
 		if (eBikeMonetaryDistanceRate >= bikeParams.getMonetaryDistanceRate()) {
-			log.fatal("You defined a monetary distance rate for the new expensive car mode of {}, " +
-				"which is equal or cheaper than the monetary distance rate of 'normal' car ({}). Aborting!", eBikeMonetaryDistanceRate, bikeParams.getMonetaryDistanceRate());
+			log.fatal("You defined a monetary distance rate for the new eBike mode of {}, " +
+				"which is equal or cheaper than the monetary distance rate of 'normal' bike ({}). Aborting!", eBikeMonetaryDistanceRate, bikeParams.getMonetaryDistanceRate());
 			throw new IllegalStateException("");
 		}
 
@@ -115,14 +115,15 @@ public class OpenBerlinEBikeScenario extends OpenBerlinScenario {
 	 * add new mode to network.
 	 * add agent wise eBike ASC to population.
 	 */
-	static void addEBikeInScenario(Scenario scenario) {
+	static void addEBikeInScenario(Scenario scenario, double eBikeSpeed, EBikeAgentWiseAscHandling eBikeAgentWiseAscHandling) {
 //		add vehicle type for eBike
 //		copy value from bike for eBike veh type
 		VehicleType bikeType = scenario.getVehicles().getVehicleTypes().get(Id.create(TransportMode.bike, VehicleType.class));
 		EngineInformation bikeEngineInfo = bikeType.getEngineInformation();
 		VehicleType eBikeType = VehicleUtils.createVehicleType(Id.create(E_BIKE, VehicleType.class));
 		eBikeType.setNetworkMode(E_BIKE);
-//		max speed for eBike is 25kmh
+//		max speed for eBike is 25kmh, but here we are setting the mean speed because with high(er than eBike speed) freespeeds
+//		on links (for car), eBike users will travel at their max speed all the time.
 		eBikeType.setMaximumVelocity(eBikeSpeed / 3.6);
 		eBikeType.setLength(bikeType.getLength());
 		eBikeType.setWidth(bikeType.getWidth());
@@ -178,7 +179,14 @@ public class OpenBerlinEBikeScenario extends OpenBerlinScenario {
 		}
 	}
 
-	private enum EBikeAgentWiseAscHandling {FROM_BIKE, SEPARATE_AGENT_MODAL_ASC}
+	/**
+	 * add travel time binding (equal to bike) to controller.
+	 */
+	static void addEBikeTravelTimeBindingInController(Controler controler) {
+		controler.addOverridingModule(new EBikeTravelTimeBinding());
+	}
+
+	enum EBikeAgentWiseAscHandling {FROM_BIKE, SEPARATE_AGENT_MODAL_ASC}
 
 	/**
 	 * Add travel time bindings for eBike like also done for bike.

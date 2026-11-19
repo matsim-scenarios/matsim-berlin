@@ -32,11 +32,11 @@ import javax.annotation.Nullable;
  * In this class, all changes regarding the chosen indicators are made.
  * The changes are called as methods from the according scenarios (e.g. OpenBerlinBetaMoneyScenario).
  * For the sake of readability and trying to prevent chaos the order of changes in each method of this class will be:
- * 1) vehicle composition
+ * 1) vehicle composition / addition of carExpensive mode
  * 2) price change in pt
  * 3) drt
  * 4) marginal utility of money
- * 5) bicycle speed
+ * 5) separate private eBike / eScooter mode
  * 6) sharing
  * 7) home office
  * 8) road capacity
@@ -51,19 +51,26 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 	private static final double DRT_RIDE_TIME_ALPHA = 1.5;
 	private static final double DRT_RIDE_TIME_BETA = 360.;
 	private static final double DRT_RIDE_TIME_STD = 0.3;
-	private static final OpenBerlinDrtEstimatorScenario.DrtIntermodalityHandling DRT_INTERMODALITY_HANDLING = OpenBerlinDrtEstimatorScenario.DrtIntermodalityHandling.INTERMODAL_DRT_ONLY;
+	private static final OpenBerlinDrtEstimatorScenario.DrtIntermodalityHandling DRT_INTERMODALITY_HANDLING =
+		OpenBerlinDrtEstimatorScenario.DrtIntermodalityHandling.INTERMODAL_DRT_ONLY;
 //	private static final double BETA_MONEY = 1.0;
 //	this is the "scaled" bike speed after analyzing elasticities of bike speed and bike modal share
-	private static final double MAX_BIKE_SPEED = 15.;
+//	private static final double MAX_BIKE_SPEED = 15.;
 	private static final double SHARING_BASE_FARE = 1.0;
 	private static final double SHARING_DISTANCE_FARE = 0.0;
 	private static final double SHARING_TIME_FARE = 0.0045;
-	private static final OpenBerlinScooterSharingScenario.EScooterIntermodalityHandling SHARING_INTERMODALITY_HANDLING = OpenBerlinScooterSharingScenario.EScooterIntermodalityHandling.INTERMODAL_E_SCOOTER_ONLY;
+	private static final OpenBerlinScooterSharingScenario.EScooterIntermodalityHandling SHARING_INTERMODALITY_HANDLING =
+		OpenBerlinScooterSharingScenario.EScooterIntermodalityHandling.E_SCOOTER_REGULAR_AND_INTERMODAL;
 	private static final double ADDITIONAL_HOME_OFFICE_PCT = 0.1;
 //	private static final double REL_ROAD_CAPACITY_CHANGE = 1.0;
 	private static final double DAILY_MONETARY_CONSTANT_PT = 0.;
 	private static final double CAR_FIX_COST = -5.0;
-	private static final double CAR_DISTANCE_COST = -0.000149 * 1.5;
+//	-0.000149 (default car mon dist) * 1.5 = -0.0002235
+	private static final double CAR_DISTANCE_COST = -0.0002235;
+//	-0.000149 (default car mon dist) * 23 = -0.003427
+	private static final double CAR_EXPENSIVE_MONETARY_DISTANCE_RATE = -0.0034;
+	private static final double CAR_EXPENSIVE_TASTE_VAR_SIGMA = 3.;
+	private static final double CAR_EXPENSIVE_TASTE_VAR_MEAN = 0.;
 
 	//	necessary input files have to be provided via cmd line option to avoid relative path problems by defining the paths in this class.
 	@CommandLine.Option(names = "--drt-config",
@@ -80,21 +87,21 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 		//		apply all config changes from base scenario class
 		super.prepareConfig(config);
 
-//		1) vehicle composition
-//		TODO: do this here or completely in post-processing?
+//		1) vehicle composition / addition of carExpensive mode
+//		factor 23 of "normal" car mon dist cost
+		OpenBerlinAdditionalCarModeScenario.configureAdditionalCarModeInConfig(config, CAR_EXPENSIVE_MONETARY_DISTANCE_RATE);
 //		2) price change in pt
+//		pt fare = 0Eu/d
 		OpenBerlinPtPricingScenario.setDailyMonetaryConstantPtInConfig(config, DAILY_MONETARY_CONSTANT_PT);
 //		3) drt
-//		drt fare = pt fare = -3; intermodal drt only
+//		drt fare = default pt fare = -3; intermodal drt only
 		OpenBerlinDrtEstimatorScenario.configureDrtInConfig(config, drtConfig, DRT_FARE, DRT_INTERMODALITY_HANDLING);
 //		4) marginal utility of money
-//		set marginal utility of money to 0.5: everything is/feels less expensive now (default 1.0)
-//		OpenBerlinBetaMoneyScenario.setBetaMoneyInConfig(config, BETA_MONEY);
-//		5) bicycle speed
-//		max bike speed 20km/h due to improved infrastructure
-		OpenBerlinBikeSpeedScenario.assertNoTeleportedBikeParamsInConfig(config, MAX_BIKE_SPEED);
+//		no changes in config compared to base case
+//		5) separate private eBike / eScooter mode
+//		no changes in config compared to base case
 //		6) sharing
-//		intermodal sharing only, base fare 1Eu, time fare 0.0045Eu/s, no distance fare
+//		intermodal sharing + as separate sharing mode, base fare 1Eu, time fare 0.0045Eu/s, no distance fare
 //		sharing stations with 1000 veh capacity and 10 scooters each
 		OpenBerlinScooterSharingScenario.addSharingServiceInConfig(config,
 			serviceFile,
@@ -107,6 +114,9 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 //		8) road capacity
 //		no changes in config compared to base case
 //		9) price changes in car mode params
+//		this needs to be after the creation of carExpensive mode. carExpensive cost ist dependent on _default_ car mode params.
+//		-5.0 Fix cost is default value
+//		car distance cost increased by factor 1.5
 		OpenBerlinCarCostScenario.setCarCostInConfig(config, CAR_FIX_COST, CAR_DISTANCE_COST);
 
 		return config;
@@ -123,8 +133,10 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 		//		apply all scenario changes from base scenario class
 		super.prepareScenario(scenario);
 
-//		1) vehicle composition
-//		TODO: do this here or completely in post-processing?
+//		1) vehicle composition / addition of carExpensive mode
+//		sigma = 3; mean = 0 for taste preferences of carExpensive following GL elasticities paper
+		OpenBerlinAdditionalCarModeScenario.configureAdditionalCarModeInScenario(scenario,
+			CAR_EXPENSIVE_TASTE_VAR_SIGMA, CAR_EXPENSIVE_TASTE_VAR_MEAN);
 //		2) price change in pt
 //		no changes in scenario compared to base case
 //		3) drt
@@ -132,9 +144,8 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 		OpenBerlinDrtEstimatorScenario.configureDrtInScenario(scenario);
 //		4) marginal utility of money
 //		no changes in scenario compared to base case
-//		5) bicycle speed
-//		set max bike speed in bike vehicle type
-		OpenBerlinBikeSpeedScenario.setMaxBikeSpeedInScenario(scenario, MAX_BIKE_SPEED);
+//		5) separate private eBike / eScooter mode
+//		no changes in scenario compared to base case
 //		6) sharing
 //		copy mode constants := tase preferences from bike to eScooter if available
 		OpenBerlinScooterSharingScenario.copyBikeValuesForSharingInScenario(scenario);
@@ -155,8 +166,8 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 		//		apply all controller changes from base scenario class
 		super.prepareControler(controler);
 
-//		1) vehicle composition
-//		TODO: do this here or completely in post-processing?
+//		1) vehicle composition / addition of carExpensive mode
+//		no changes in controller compared to base case
 //		2) price change in pt
 //		no changes in controller compared to base case
 //		3) drt
@@ -194,7 +205,7 @@ public class OpenBerlinM2GMultimodalMassScenario extends OpenBerlinScenario {
 		}
 //		4) marginal utility of money
 //		no changes in controller compared to base case
-//		5) bicycle speed
+//		5) separate private eBike / eScooter mode
 //		no changes in controller compared to base case
 //		6) sharing
 //		OpenBerlinScooterSharingScenario.addSharingModuleAndIntermodalFareCompensationInController(controler);

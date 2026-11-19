@@ -12,11 +12,11 @@ import javax.annotation.Nullable;
  * In this class, all changes regarding the chosen indicators are made.
  * The changes are called as methods from the according scenarios (e.g. OpenBerlinBetaMoneyScenario).
  * For the sake of readability and trying to prevent chaos the order of changes in each method of this class will be:
- * 1) vehicle composition
+ * 1) vehicle composition / addition of carExpensive mode
  * 2) price change in pt
  * 3) drt
  * 4) marginal utility of money
- * 5) bicycle speed
+ * 5) separate private eBike / eScooter mode
  * 6) sharing
  * 7) home office
  * 8) road capacity
@@ -25,6 +25,10 @@ import javax.annotation.Nullable;
  */
 public class OpenBerlinM2GStagnationScenario extends OpenBerlinScenario {
 	private static final double BETA_MONEY = 1.5;
+	//	-0.000149 (default car mon dist) * 2 = -0.000298
+	private static final double CAR_EXPENSIVE_MONETARY_DISTANCE_RATE = -0.0003;
+	private static final double CAR_EXPENSIVE_TASTE_VAR_SIGMA = 3.;
+	private static final double CAR_EXPENSIVE_TASTE_VAR_MEAN = 0.;
 
 	@Nullable
 	@Override
@@ -32,8 +36,9 @@ public class OpenBerlinM2GStagnationScenario extends OpenBerlinScenario {
 		//		apply all config changes from base scenario class
 		super.prepareConfig(config);
 
-//		1) vehicle composition
-//		TODO: do this here or completely in post-processing?
+//		1) vehicle composition / addition of carExpensive mode
+//		factor 2 of "normal" car mon dist cost
+		OpenBerlinAdditionalCarModeScenario.configureAdditionalCarModeInConfig(config, CAR_EXPENSIVE_MONETARY_DISTANCE_RATE);
 //		2) price change in pt
 //		no changes in config compared to base case
 //		3) drt
@@ -41,7 +46,7 @@ public class OpenBerlinM2GStagnationScenario extends OpenBerlinScenario {
 //		4) marginal utility of money
 //		set marginal utility of money to 1.5: everything is/feels more expensive now (default 1.0)
 		OpenBerlinBetaMoneyScenario.setBetaMoneyInConfig(config, BETA_MONEY);
-//		5) bicycle speed
+//		5) separate private eBike / eScooter mode
 //		no changes in config compared to base case
 //		6) sharing
 //		no changes in config compared to base case
@@ -60,15 +65,17 @@ public class OpenBerlinM2GStagnationScenario extends OpenBerlinScenario {
 		//		apply all scenario changes from base scenario class
 		super.prepareScenario(scenario);
 
-//		1) vehicle composition
-//		TODO: do this here or completely in post-processing?
+//		1) vehicle composition / addition of carExpensive mode
+//		sigma = 3; mean = 0 for taste preferences of carExpensive following GL elasticities paper
+		OpenBerlinAdditionalCarModeScenario.configureAdditionalCarModeInScenario(scenario,
+			CAR_EXPENSIVE_TASTE_VAR_SIGMA, CAR_EXPENSIVE_TASTE_VAR_MEAN);
 //		2) price change in pt
 //		no changes in scenario compared to base case
 //		3) drt
 //		no changes in scenario compared to base case
 //		4) marginal utility of money
 //		no changes in scenario compared to base case
-//		5) bicycle speed
+//		5) separate private eBike / eScooter mode
 //		no changes in scenario compared to base case
 //		6) sharing
 //		no changes in scenario compared to base case
@@ -85,15 +92,15 @@ public class OpenBerlinM2GStagnationScenario extends OpenBerlinScenario {
 		//		apply all controller changes from base scenario class
 		super.prepareControler(controler);
 
-//		1) vehicle composition
-//		TODO: do this here or completely in post-processing?
+//		1) vehicle composition / addition of carExpensive mode
+//		no changes in controller compared to base case
 //		2) price change in pt
 //		no changes in controller compared to base case
 //		3) drt
 //		no changes in controller compared to base case
 //		4) marginal utility of money
 //		no changes in controller compared to base case
-//		5) bicycle speed
+//		5) separate private eBike / eScooter mode
 //		no changes in controller compared to base case
 //		6) sharing
 //		no changes in controller compared to base case
