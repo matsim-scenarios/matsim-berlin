@@ -41,6 +41,7 @@ import org.matsim.vehicles.VehicleUtils;
 import picocli.CommandLine;
 import playground.vsp.scoring.IncomeDependentUtilityOfMoneyPersonScoringParameters;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 @CommandLine.Command(header = ":: Open Berlin Scenario ::", version = OpenBerlinScenario.VERSION, mixinStandardHelpOptions = true, showDefaultValues = true)
@@ -81,8 +82,21 @@ public class OpenBerlinScenario extends MATSimApplication {
 	@CommandLine.Option(names = "--bike-pce", description = "PCE (passenger car equivalents) for bike, if simulated in qsim. Default seems to be 0.2.")
 	private static double bikePce = 0.2;
 
+	@CommandLine.Option(names = "--bike-speed-handling", description = "see enum java doc")
+	private static OpenBerlinBikeNetworkScenario.BikeSpeedHandling bikeSpeedHandling = OpenBerlinBikeNetworkScenario.BikeSpeedHandling.BICYCLE_LINK_SPEED_CALCULATOR;
+
+	@CommandLine.Option(names = "--bike-travel-disutility-handling", description = "see enum java doc")
+	private static OpenBerlinBikeNetworkScenario.BikeTravelDisutilityHandling bikeTravelDisutilityHandling = OpenBerlinBikeNetworkScenario.BikeTravelDisutilityHandling.ONLY_TIME_DEPENDENT_DISUTILITY;
+
+	@CommandLine.Option(names = "--bike-travel-time-handling", description = "see enum java doc")
+	private static OpenBerlinBikeNetworkScenario.BikeTravelTimeHandling bikeTravelTimeHandling = OpenBerlinBikeNetworkScenario.BikeTravelTimeHandling.BICYCLE_TRAVEL_TIME;
+
 	public OpenBerlinScenario() {
 		super(String.format("input/v%s/berlin-v%s.config.xml", VERSION, VERSION));
+	}
+
+	public OpenBerlinScenario(@Nullable Config config) {
+		super(config);
 	}
 
 	public static void main(String[] args) {
@@ -321,11 +335,18 @@ public class OpenBerlinScenario extends MATSimApplication {
 				addTravelDisutilityFactoryBinding("freight").to(Key.get(TravelDisutilityFactory.class, Names.named(TransportMode.truck)));
 
 
-				bind(BicycleLinkSpeedCalculator.class).to(BicycleLinkSpeedCalculatorDefaultImpl.class);
+				if (bikeSpeedHandling == OpenBerlinBikeNetworkScenario.BikeSpeedHandling.BICYCLE_LINK_SPEED_CALCULATOR) {
+					bind(BicycleLinkSpeedCalculator.class).to(BicycleLinkSpeedCalculatorDefaultImpl.class);
+				}
 
-				// Bike should use free speed travel time
-				addTravelTimeBinding(TransportMode.bike).to(BicycleTravelTime.class);
-				addTravelDisutilityFactoryBinding(TransportMode.bike).to(OnlyTimeDependentTravelDisutilityFactory.class);
+				if (bikeTravelTimeHandling == OpenBerlinBikeNetworkScenario.BikeTravelTimeHandling.BICYCLE_TRAVEL_TIME) {
+					// Bike should use free speed travel time
+					addTravelTimeBinding(TransportMode.bike).to(BicycleTravelTime.class);
+				}
+
+				if (bikeTravelDisutilityHandling == OpenBerlinBikeNetworkScenario.BikeTravelDisutilityHandling.ONLY_TIME_DEPENDENT_DISUTILITY) {
+					addTravelDisutilityFactoryBinding(TransportMode.bike).to(OnlyTimeDependentTravelDisutilityFactory.class);
+				}
 			}
 		}
 	}
