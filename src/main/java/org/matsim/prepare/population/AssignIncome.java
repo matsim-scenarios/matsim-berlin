@@ -153,9 +153,9 @@ public final class AssignIncome implements MATSimAppCommand, PersonAlgorithm {
 		if (method != Method.DRESDEN && incomeGroup > 0) {
 			LogNormalDistribution distribution = logNormal;
 			if (method == Method.LOGNORMAL_BERLIN) {
-				Object lor = person.getAttributes().getAttribute(Attributes.LOR);
+				// Resolve the current LOR from home coordinates; stored LOR codes can be obsolete.
 				// Outside Berlin, or with missing/suppressed LOR data, ratio = 1 leaves the curve unchanged.
-				double median = BerlinIncomeUtils.medianGrossIncome(lor);
+				double median = BerlinIncomeUtils.medianGrossIncomeAtHome(person);
 				// Gross individual pay is NOT household net/equivalent income: use only the relative spatial pattern.
 				// Shifting mu by ln(local gross median / Berlin gross median) scales the curve's median by that ratio.
 				// Sigma and class membership stay unchanged; this does not force local output medians to match the data.
