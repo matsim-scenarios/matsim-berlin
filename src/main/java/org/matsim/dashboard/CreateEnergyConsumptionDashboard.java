@@ -37,7 +37,7 @@ public class CreateEnergyConsumptionDashboard implements MATSimAppCommand {
 	//	for car on average 15.0 kWh/100km
 //	for eBike on average 1.06 kWh/100km; source: https://link.springer.com/article/10.1007/s11116-025-10661-2
 	@CommandLine.Option(names = "--modes-energy-consumption", split = ",", description = "Modes to consider for analysis + their average energy consumption. consumption in kwH/100km", required = true)
-	private Map<String, Double> modesToEnergyConsumption = Map.of(TransportMode.car, 15.0);
+	private Map<String, Double> modesToEnergyConsumption = Map.of(TransportMode.car, 22.1);
 
     private CreateEnergyConsumptionDashboard() {
     }
