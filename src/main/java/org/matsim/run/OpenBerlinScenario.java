@@ -290,7 +290,6 @@ public class OpenBerlinScenario extends MATSimApplication {
 //			it is commented out in v6.4 input cfg, so I assume it is not used anymore. -sm0226
 			if (ConfigUtils.hasModule(controler.getConfig(), AdvancedScoringConfigGroup.class)) {
 				controler.addOverridingModule(new AdvancedScoringModule());
-				controler.getConfig().scoring().setExplainScores(true);
 			} else {
 				// if the above config group is not present we still need income dependent scoring
 				// this implementation also allows for person specific asc
@@ -302,6 +301,7 @@ public class OpenBerlinScenario extends MATSimApplication {
 				});
 			}
 		}
+		controler.getConfig().scoring().setExplainScores(true);
 		controler.addOverridingModule(new PersonMoneyEventsAnalysisModule());
 	}
 
